@@ -47,8 +47,8 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, compa
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="bg-white rounded-2xl max-w-xl w-full p-4 shadow-2xl border border-[#EDEDEB] relative">
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-10 sm:pt-20 px-3 sm:px-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-150">
+      <div className="bg-white rounded-2xl max-w-xl w-full p-3.5 sm:p-4 shadow-2xl border border-[#EDEDEB] relative">
 
         {/* Search Input Bar */}
         <div className="flex items-center gap-3 px-3 py-2 border-b border-[#EDEDEB]">
@@ -70,7 +70,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, compa
         </div>
 
         {/* Results Body */}
-        <div className="py-3 max-h-80 overflow-y-auto space-y-2">
+        <div className="py-3 max-h-[65vh] sm:max-h-80 overflow-y-auto space-y-2">
           {query.trim() === '' ? (
             <div className="p-4 text-xs text-[#8A8A8A] text-center space-y-1">
               <Sparkles className="w-4 h-4 text-[#E8A33D] mx-auto mb-1" />

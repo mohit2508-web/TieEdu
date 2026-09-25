@@ -200,7 +200,7 @@ export const CompanyOrbitHero3D: React.FC<CompanyOrbitProps> = ({ companies = DE
   }, [companies]);
 
   return (
-    <div className="relative w-full h-[360px] flex items-center justify-center">
+    <div className="relative w-full h-[260px] sm:h-[360px] flex items-center justify-center">
       <div ref={mountRef} className="w-full h-full cursor-grab active:cursor-grabbing" />
       <div className="absolute bottom-2 text-[10px] font-mono font-semibold text-[#1F3A5F] bg-white/80 backdrop-blur-md px-3 py-1 rounded-full border border-[#EDEDEB] shadow-2xs">
         ✨ Interactive 3D Company Vault Orbits • Move Cursor to Tilt

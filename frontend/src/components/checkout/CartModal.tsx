@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Company, ContentModule, CartItem, CompanyModuleItem } from '@/types';
 import { BrandTile } from '@/components/common/BrandTile';
 import {
@@ -313,7 +313,7 @@ export const CartModal: React.FC<CartModalProps> = ({
         aria-label="Cart"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-200 shrink-0 bg-white">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200 shrink-0 bg-white">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-[#1F3A5F]/5 border border-[#1F3A5F]/10 text-[#1F3A5F] flex items-center justify-center shadow-sm">
               <ShoppingBag className="w-5 h-5 text-[#E8A33D]" />
@@ -467,7 +467,7 @@ export const CartModal: React.FC<CartModalProps> = ({
         {step === 'cart' && items.length > 0 && (
           <>
             {/* Scrollable content */}
-            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+            <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-5 space-y-4 sm:space-y-5">
 
               {/* Combo helper */}
               {missingModules.length > 0 && (
@@ -628,7 +628,7 @@ export const CartModal: React.FC<CartModalProps> = ({
             </div>
 
             {/* Sticky Footer */}
-            <div className="px-6 py-5 border-t border-gray-200 bg-[#FAFAF9] shrink-0 space-y-3">
+            <div className="px-4 sm:px-6 py-4 sm:py-5 border-t border-gray-200 bg-[#FAFAF9] shrink-0 space-y-3">
               <div className="text-sm space-y-1.5">
                 <div className="flex justify-between text-gray-500">
                   <span>Subtotal{summary.savingsTotal > 0 ? ` (${summary.moduleCount} module pack)` : ''}</span><span>₹{summary.subtotal}</span>

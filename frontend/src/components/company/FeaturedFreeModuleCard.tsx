@@ -1,6 +1,6 @@
 import React from 'react';
 import { ContentModule } from '@/types';
-import { Sparkles, BookOpen, Lock, FileText } from 'lucide-react';
+import { Sparkles, BookOpen, Lock, FileText, CheckCircle2 } from 'lucide-react';
 
 interface Props {
   module: ContentModule;
@@ -8,6 +8,8 @@ interface Props {
   onOpenModule: () => void;
   onUnlockClick: () => void;
   onOpenPdf?: () => void;
+  isUnlocked?: boolean;
+  unlockPrice?: number;
 }
 
 const SECTION_CHIPS = [
@@ -20,7 +22,7 @@ const SECTION_CHIPS = [
   ['HR answers', 'bg-teal-50 text-teal-700 border-teal-200'],
 ] as const;
 
-export const FeaturedFreeModuleCard: React.FC<Props> = ({ module, companyName, onOpenModule, onUnlockClick, onOpenPdf }) => {
+export const FeaturedFreeModuleCard: React.FC<Props> = ({ module, companyName, onOpenModule, onUnlockClick, onOpenPdf, isUnlocked = false, unlockPrice = 249 }) => {
   const itemCount = module.items?.length || 0;
 
   return (
@@ -71,12 +73,18 @@ export const FeaturedFreeModuleCard: React.FC<Props> = ({ module, companyName, o
               <FileText className="w-4 h-4" /> PDF Guide
             </button>
           )}
+          {isUnlocked ? (
+            <span className="inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-emerald-600 text-white text-sm font-bold rounded-xl shadow-md uppercase tracking-wide">
+              <CheckCircle2 className="w-5 h-5" /> Vault Unlocked
+            </span>
+          ) : (
           <button
             onClick={onUnlockClick}
             className="inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-[#E8A33D] hover:bg-[#D4902C] text-white text-sm font-bold rounded-xl shadow-md transition-all"
           >
-            <Lock className="w-4 h-4" /> Unlock Premium — ₹249
+            <Lock className="w-4 h-4" /> {unlockPrice < 249 ? `Finish Pack — ₹${unlockPrice}` : `Unlock Premium — ₹${unlockPrice}`}
           </button>
+          )}
         </div>
       </div>
     </section>

@@ -46,8 +46,8 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onCl
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
-      <div className="vault-card bg-white rounded-2xl max-w-lg w-full p-6 shadow-float border-[#E9E7E1] relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3.5 sm:p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
+      <div className="vault-card bg-white rounded-2xl max-w-lg w-full p-4 sm:p-6 shadow-float border-[#E9E7E1] relative">
 
         <div className="flex items-center justify-between pb-4 border-b border-[#E9E7E1] mb-5">
           <div className="flex items-center gap-2.5">
@@ -94,7 +94,7 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onCl
           </div>
         )}
 
-        <div className="space-y-2 max-h-64 overflow-y-auto">
+        <div className="space-y-2 max-h-[55vh] sm:max-h-64 overflow-y-auto">
           <h4 className="text-xs font-bold text-[#10151C] mb-3 flex items-center gap-1.5">
             <Trophy className="w-3.5 h-3.5 text-[#E8A33D]" /> Placement season ranking
           </h4>

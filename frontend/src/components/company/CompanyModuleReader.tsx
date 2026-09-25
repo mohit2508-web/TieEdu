@@ -119,30 +119,31 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {module.is_premium && !isModuleUnlocked && (
             <button
               onClick={onUnlockClick}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#E8A33D] hover:bg-[#D4902C] text-white rounded-xl text-sm font-bold shadow-xs transition-colors"
+              className="inline-flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 bg-[#E8A33D] hover:bg-[#D4902C] text-white rounded-xl text-xs sm:text-sm font-bold shadow-xs transition-colors"
             >
-              <ShoppingCart className="w-4 h-4" />
-              Unlock Full Vault — ₹{unlockPrice}
+              <ShoppingCart className="w-4 h-4 shrink-0" />
+              <span className="whitespace-nowrap">Unlock ₹{unlockPrice}</span>
             </button>
           )}
 
           {module.is_premium && isModuleUnlocked && (
-            <span className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-sm font-bold">
-              <CheckCircle2 className="w-4 h-4" />
-              In your vault
+            <span className="inline-flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-xs sm:text-sm font-bold">
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
+              <span className="hidden sm:inline">In your vault</span>
             </span>
           )}
 
           <button
             onClick={() => setActiveSection('pdfs')}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#0284C7] hover:bg-[#0369A1] text-white rounded-xl text-sm font-bold shadow-xs transition-all"
+            className="inline-flex items-center justify-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 bg-[#0284C7] hover:bg-[#0369A1] text-white rounded-xl text-xs sm:text-sm font-bold shadow-xs transition-all"
           >
-            <FileText className="w-4 h-4" />
-            <span>PDF Guide</span>
+            <FileText className="w-4 h-4 shrink-0" />
+            <span className="sm:hidden">PDF</span>
+            <span className="hidden sm:inline">PDF Guide</span>
           </button>
         </div>
       </header>
@@ -150,8 +151,8 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
       {/* Reader Layout: Left Navigation + Main Content (100% Full Width) */}
       <div className="flex-1 flex flex-col md:flex-row w-full px-4 sm:px-8 py-6 gap-6">
 
-        {/* Left Sidebar (GFG Style) */}
-        <aside className="w-full md:w-72 shrink-0 bg-white border border-gray-200 rounded-2xl p-4 h-fit md:sticky md:top-24 shadow-xs">
+        {/* Left Sidebar (GFG Style) — desktop only; mobile uses the chip bar below */}
+        <aside className="hidden md:block md:w-72 shrink-0 bg-white border border-gray-200 rounded-2xl p-4 h-fit md:sticky md:top-24 shadow-xs">
           <div className="px-3 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100 mb-3">
             Module Navigator
           </div>
@@ -204,6 +205,28 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
             </div>
           )}
         </aside>
+
+        {/* Mobile section switcher — swipeable chips, no buried navigation */}
+        <div className="md:hidden flex gap-2 overflow-x-auto pb-1 -my-1 mx-[-16px] sm:mx-[-32px] px-4 sm:px-8 -scroll-mb-1">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeSection === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveSection(item.id)}
+                className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-bold border transition-all ${
+                  isActive
+                    ? 'bg-[#0284C7] text-white border-[#0284C7] shadow-xs'
+                    : 'bg-white text-gray-600 border-gray-200 hover:border-[#0284C7]/40'
+                }`}
+              >
+                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-gray-400'}`} />
+                {item.label.replace(/^\d+\.\s*/, '')}
+              </button>
+            );
+          })}
+        </div>
 
         {/* Right Main Content Pane (GFG Enlarged Reading Container) */}
         <main className="flex-1 bg-white border border-gray-200 rounded-2xl p-6 sm:p-10 shadow-xs min-w-0">

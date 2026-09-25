@@ -13,7 +13,7 @@ export const CompanyCard: React.FC<CompanyCardProps> = ({ company }) => {
   return (
     <Link
       href={`/company/${company.slug}`}
-      className="vault-card group relative overflow-hidden p-6 flex flex-col justify-between bg-white"
+      className="vault-card group relative overflow-hidden p-4 sm:p-6 flex flex-col justify-between bg-white active:scale-[0.99] transition-transform"
     >
       <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#0284C7] via-[#E8A33D]/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 

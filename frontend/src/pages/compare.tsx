@@ -163,7 +163,8 @@ export default function ComparePage() {
               </div>
 
               {/* MAIN FULL-WIDTH COMPARISON MATRIX TABLE */}
-              <div className="bg-white border border-[#EDEDEB] rounded-2xl overflow-hidden shadow-sm w-full">
+              <div className="bg-white border border-[#EDEDEB] rounded-2xl overflow-hidden shadow-sm w-full overflow-x-auto">
+                <div className="min-w-[680px]">
 
                 {/* Table Header Row */}
                 <div className="grid grid-cols-4 border-b border-[#EDEDEB] bg-[#FAFAF9] p-5 font-mono text-[11px] uppercase font-bold text-[#8A8A8A]">
@@ -335,6 +336,7 @@ export default function ComparePage() {
                   ))}
                 </div>
 
+                </div>
               </div>
             </>
           )}

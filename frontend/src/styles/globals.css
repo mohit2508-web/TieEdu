@@ -472,6 +472,25 @@ code, pre, kbd, samp, .font-mono {
 }
 .sidebar-overlay.open { display: block; }
 
+/* Fixed bars respect iOS home-indicator notch */
+.safe-bottom {
+  padding-bottom: max(var(--safe-bottom-pad, 0.75rem), env(safe-area-inset-bottom));
+}
+
+/* Respect reduced-motion preferences (marquee, aerial 3D, entrance fades) */
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee,
+  .animate-fade-in,
+  .animate-slide-in-right,
+  .sidebar-drawer {
+    animation: none !important;
+  }
+  .vault-card:hover,
+  .card-hover:hover {
+    transform: none;
+  }
+}
+
 @keyframes slide-in-left {
   from { transform: translateX(-100%); }
   to { transform: translateX(0); }

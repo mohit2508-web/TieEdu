@@ -24,7 +24,7 @@ import { CompanyModuleReader } from '@/components/company/CompanyModuleReader';
 import { Company, PricingPlan, ContentItem, ContentModule, RoundType, CompanyModuleItem, CartItem } from '@/types';
 import {
   ArrowLeft, CheckCircle2, ChevronRight, ChevronLeft,
-  Sparkles, Bookmark, List
+  Sparkles, Bookmark, List, ShoppingBag
 } from 'lucide-react';
 
 export default function CompanyVaultPage() {
@@ -114,6 +114,9 @@ export default function CompanyVaultPage() {
   const isModuleOwned = (mod: ContentModule) => isUnlocked || mod.is_premium !== true || ownedModuleIds.includes(mod.id);
   const remainingPremium = premiumModules.filter(m => !ownedModuleIds.includes(m.id));
   const remainingPrice = remainingPremium.length > 0 ? packPrice(remainingPremium.length) : 0;
+  // Fully owned = whole vault bought, OR every premium round individually owned
+  // (in which case the buy CTA must vanish instead of asking to re-buy ₹249).
+  const vaultComplete = isUnlocked || remainingPremium.length === 0;
 
   const moduleOfItem = (item: ContentItem) =>
     modules.find(mod => (mod.items || []).some(i => i.id === item.id));
@@ -456,6 +459,8 @@ export default function CompanyVaultPage() {
               activeRoundTab={activeRoundTab}
               onSelectRoundTab={setActiveRoundTab}
               onUnlockClick={handleUnlockClick}
+              isUnlocked={vaultComplete}
+              unlockPrice={remainingPrice || 249}
             />
 
             <TrustBadgeBar trustStats={company.trust_stats} companyName={company.name} />
@@ -468,6 +473,8 @@ export default function CompanyVaultPage() {
                 onOpenModule={() => openModule(featuredFree)}
                 onOpenPdf={() => openModule(featuredFree, 'pdfs')}
                 onUnlockClick={handleUnlockClick}
+                isUnlocked={vaultComplete}
+                unlockPrice={remainingPrice || 249}
               />
             )}
 
@@ -518,6 +525,8 @@ export default function CompanyVaultPage() {
                       companyName={company.name}
                       isUnlocked={isUnlocked}
                       isOwned={isModuleOwned(mod)}
+                      solvedCount={(mod.items || []).filter(i => solvedItemIds.includes(i.id)).length}
+                      bookmarkedCount={(mod.items || []).filter(i => bookmarkedItemIds.includes(i.id)).length}
                       onAddToCart={handleAddModuleToCart}
                       onPreview={() => openModule(mod)}
                       onOpenPdf={mod.pdf ? () => openModule(mod, 'pdfs') : undefined}
@@ -553,28 +562,37 @@ export default function CompanyVaultPage() {
             STICKY UNLOCK BAR (only when locked)
             ================================================ */}
         {!isUnlocked && remainingPremium.length > 0 && (
-          <div className="fixed bottom-0 left-0 right-0 z-30 bg-[var(--brand-primary)] border-t border-white/10 text-white px-4 py-3 shadow-2xl">
-            <div className="max-w-[1100px] mx-auto flex items-center justify-between gap-4">
-              <div>
-                <p className="text-[13px] font-semibold">
+          <div className="fixed bottom-0 left-0 right-0 z-30 bg-[var(--brand-primary)] border-t border-white/10 text-white px-4 pt-3 safe-bottom shadow-2xl">
+            <div className="max-w-[1100px] mx-auto flex items-center justify-between gap-3 sm:gap-4">
+              <div className="min-w-0">
+                <p className="text-[13px] font-semibold leading-snug">
                   {ownedModuleIds.length > 0
                     ? `Finish ${company.name} prep — ${remainingPremium.length} round${remainingPremium.length === 1 ? '' : 's'} left`
                     : `Unlock full ${company.name} preparation pack`}
                   <span className="ml-2 bg-[var(--brand-accent)] text-white text-[11px] font-bold px-2 py-0.5 rounded">₹{remainingPrice}</span>
                 </p>
-                <p className="text-[11px] text-white/60 mt-0.5 hidden sm:block">
-                  {ownedModuleIds.length > 0
-                    ? 'Buy the remaining rounds at the combo pack price — no re-purchasing what you already own.'
-                    : '45+ verified questions · code solutions · system design guides'}
+                <p className="text-[11px] text-white/60 mt-1 truncate">
+                  {cartItems.length > 0
+                    ? `${company.name}: ${cartItems.length} item${cartItems.length === 1 ? '' : 's'} in cart · combo savings apply`
+                    : ownedModuleIds.length > 0
+                      ? 'Buy the remaining rounds at the combo pack price — no re-purchasing what you already own.'
+                      : '45+ verified questions · code solutions · system design guides'}
                 </p>
               </div>
-              <button
-                onClick={handleUnlockClick}
-                className="shrink-0 inline-flex items-center gap-2 px-5 py-2 bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-white text-[13px] font-bold rounded-xl transition-colors"
-              >
-                <Sparkles className="w-4 h-4" />
-                Unlock Now
-              </button>
+              <div className="flex items-center gap-2 shrink-0">
+                {cartItems.length > 0 && (
+                  <span className="hidden xs:inline-flex items-center min-w-[2rem] h-7 px-2 rounded-full bg-white/15 text-white text-[11px] font-bold border border-white/20" title="Items in cart">
+                    <ShoppingBag className="w-3.5 h-3.5 mr-1" />{cartItems.length}
+                  </span>
+                )}
+                <button
+                  onClick={() => (cartItems.length > 0 ? setIsCartOpen(true) : handleUnlockClick())}
+                  className="inline-flex items-center justify-center gap-2 min-h-[46px] px-5 sm:px-6 py-2.5 bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-white text-[13px] sm:text-sm font-bold rounded-xl transition-colors"
+                >
+                  <Sparkles className="w-4 h-4 shrink-0" />
+                  <span>{cartItems.length > 0 ? 'Checkout →' : 'Unlock Now'}</span>
+                </button>
+              </div>
             </div>
           </div>
         )}

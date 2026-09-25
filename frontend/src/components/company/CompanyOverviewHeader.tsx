@@ -1,20 +1,24 @@
 import React from 'react';
 import { Company, RoundStep, RoundType } from '@/types';
 import { BrandTile } from '@/components/common/BrandTile';
-import { Briefcase, DollarSign, GraduationCap, Calendar, Star, Sparkles } from 'lucide-react';
+import { Briefcase, DollarSign, GraduationCap, Calendar, Star, Sparkles, CheckCircle2 } from 'lucide-react';
 
 interface CompanyOverviewHeaderProps {
   company: Company;
   activeRoundTab: 'all' | RoundType;
   onSelectRoundTab: (round: 'all' | RoundType) => void;
   onUnlockClick?: () => void;
+  isUnlocked?: boolean;
+  unlockPrice?: number;
 }
 
 export const CompanyOverviewHeader: React.FC<CompanyOverviewHeaderProps> = ({
   company,
   activeRoundTab,
   onSelectRoundTab,
-  onUnlockClick
+  onUnlockClick,
+  isUnlocked = false,
+  unlockPrice = 249
 }) => {
   // Derive pipeline from real modules when a custom pipeline isn't configured.
   const defaultRounds: RoundStep[] = company.rounds_pipeline && company.rounds_pipeline.length > 0
@@ -38,13 +42,13 @@ export const CompanyOverviewHeader: React.FC<CompanyOverviewHeaderProps> = ({
   const ctcText = hasCtc ? `₹${company.ctc_min} - ₹${company.ctc_max} LPA` : 'Not disclosed yet';
 
   return (
-    <div className="w-full bg-white border border-[#EDEDEB] rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
+    <div className="w-full bg-white border border-[#EDEDEB] rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-xs space-y-6 overflow-hidden">
 
       {/* Top Banner: Logo + Company Info + Unlock Badge */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-[#EDEDEB]">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 sm:gap-6 pb-5 sm:pb-6 border-b border-[#EDEDEB]">
 
-        <div className="flex items-start gap-4 sm:gap-5">
-          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl border border-[#EDEDEB] p-2 bg-[#FAFAF9] shadow-inner flex items-center justify-center shrink-0 overflow-hidden">
+        <div className="flex items-start gap-3.5 sm:gap-5 min-w-0">
+          <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-2xl border border-[#EDEDEB] p-1.5 sm:p-2 bg-[#FAFAF9] shadow-inner flex items-center justify-center shrink-0 overflow-hidden">
             <BrandTile
               name={company.name}
               src={company.logo_url}
@@ -53,25 +57,25 @@ export const CompanyOverviewHeader: React.FC<CompanyOverviewHeaderProps> = ({
             />
           </div>
 
-          <div>
-            <div className="flex flex-wrap items-center gap-2 mb-1.5">
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#1A1A1A] tracking-tight">{company.name} Intelligence Hub</h1>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2 mb-1">
+              <h1 className="text-xl sm:text-3xl font-extrabold text-[#1A1A1A] tracking-tight truncate">{company.name} Intelligence Hub</h1>
               {company.status === 'published' && (
-                <span className="px-3 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold text-xs border border-emerald-200">
+                <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold text-[11px] sm:text-xs border border-emerald-200">
                   Active Vault
                 </span>
               )}
             </div>
 
-            <p className="text-sm sm:text-base text-gray-600 font-medium mb-3">
-              {company.industry}
-              {company.avg_rounds != null && ` • ${company.avg_rounds} Recruitment Rounds`}
-              {company.avg_process_days != null && ` • ${company.avg_process_days} Days Process`}
+            <p className="text-xs sm:text-base text-gray-600 font-medium mb-2.5 leading-snug">
+              {company.industry || 'General Tech'}
+              {company.avg_rounds != null && ` • ${company.avg_rounds} Rounds`}
+              {company.avg_process_days != null && ` • ${company.avg_process_days} Days`}
             </p>
 
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5 sm:gap-2">
               {(company.tags || []).map((tag, idx) => (
-                <span key={idx} className="px-2.5 py-1 rounded-lg bg-[#FAFAF9] border border-[#EDEDEB] text-[#1F3A5F] font-mono text-xs font-semibold">
+                <span key={idx} className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-[#FAFAF9] border border-[#EDEDEB] text-[#1F3A5F] font-mono text-[11px] sm:text-xs font-semibold">
                   #{tag}
                 </span>
               ))}
@@ -79,28 +83,48 @@ export const CompanyOverviewHeader: React.FC<CompanyOverviewHeaderProps> = ({
           </div>
         </div>
 
-        {/* Quick CTA Card */}
-        <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 p-4 sm:p-5 rounded-2xl flex flex-col items-start sm:items-end justify-between shrink-0 max-w-xs shadow-2xs">
+        {/* Quick CTA Card — hidden buy CTA once the vault is fully owned */}
+        <div className="w-full sm:w-auto sm:max-w-xs rounded-2xl p-4 sm:p-5 flex flex-col items-start sm:items-end justify-between shrink-0 shadow-2xs border ${
+          isUnlocked
+            ? 'bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-200'
+            : 'bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200'
+        }">
           <div className="text-left sm:text-right mb-3">
-            <span className="text-xs font-mono uppercase font-bold text-amber-800 tracking-wider">Placement Vault Price</span>
-            <div className="flex items-baseline gap-2 justify-start sm:justify-end">
-              <span className="text-2xl font-black text-[#1F3A5F]">₹249</span>
-              <span className="text-xs text-gray-500">complete pack · one-time</span>
-            </div>
+            <span className={`text-xs font-mono uppercase font-bold tracking-wider ${isUnlocked ? 'text-emerald-800' : 'text-amber-800'}`}>
+              {isUnlocked ? 'Placement Vault — Unlocked' : 'Placement Vault Price'}
+            </span>
+            {isUnlocked ? (
+              <div className="flex items-center gap-1.5 justify-start sm:justify-end mt-1">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                <span className="text-sm font-bold text-emerald-700">All rounds access granted</span>
+              </div>
+            ) : (
+              <div className="flex items-baseline gap-2 justify-start sm:justify-end">
+                <span className="text-2xl font-black text-[#1F3A5F]">₹{unlockPrice}</span>
+                <span className="text-xs text-gray-500">complete pack · one-time</span>
+              </div>
+            )}
           </div>
 
+          {isUnlocked ? (
+            <span className="w-full inline-flex items-center justify-center gap-1.5 px-5 py-2.5 bg-emerald-600 text-white text-xs sm:text-sm font-bold rounded-xl shadow-md uppercase tracking-wide">
+              <CheckCircle2 className="w-4 h-4" />
+              Vault Unlocked
+            </span>
+          ) : (
           <button
             onClick={onUnlockClick}
-            className="w-full px-5 py-2.5 bg-[#E8A33D] hover:bg-[#D4902C] text-white text-sm font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 uppercase tracking-wide"
+            className="w-full px-5 py-2.5 bg-[#E8A33D] hover:bg-[#D4902C] text-white text-xs sm:text-sm font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 uppercase tracking-wide"
           >
             <Sparkles className="w-4 h-4 fill-white" />
-            <span>Unlock Intelligence Hub</span>
+            <span>{unlockPrice < 249 ? `Finish Pack — ₹${unlockPrice}` : 'Unlock Intelligence Hub'}</span>
           </button>
+          )}
         </div>
       </div>
 
       {/* Overview Metadata Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4">
 
         <div className="p-4 bg-[#FAFAF9] rounded-2xl border border-[#EDEDEB] space-y-1">
           <div className="flex items-center gap-2 text-sm font-semibold text-gray-500">

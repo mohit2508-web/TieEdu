@@ -100,10 +100,10 @@ export const Header: React.FC<HeaderProps> = ({
 
           <button
             onClick={onOpenSearch}
-            className="sm:hidden p-2.5 text-[#3E4754] hover:bg-black/[0.04] rounded-xl transition-colors focus-ring"
+            className="sm:hidden w-10 h-10 flex items-center justify-center text-[#3E4754] hover:bg-black/[0.04] rounded-xl transition-colors focus-ring"
             aria-label="Search"
           >
-            <Search className="w-4 h-4" />
+            <Search className="w-5 h-5" />
           </button>
 
           <button
@@ -116,10 +116,10 @@ export const Header: React.FC<HeaderProps> = ({
 
           <button
             onClick={onOpenCart}
-            className="relative p-2.5 text-[#3E4754] hover:text-[#10151C] hover:bg-black/[0.04] rounded-xl transition-colors focus-ring"
+            className="relative w-10 h-10 flex items-center justify-center text-[#3E4754] hover:text-[#10151C] hover:bg-black/[0.04] rounded-xl transition-colors focus-ring"
             aria-label="Cart"
           >
-            <ShoppingBag className="w-4 h-4" />
+            <ShoppingBag className="w-5 h-5" />
             {cartCount > 0 && (
               <span className="absolute -top-0.5 -right-0.5 bg-[#E8A33D] text-white text-[10px] font-bold min-w-4 h-4 px-0.5 rounded-full flex items-center justify-center shadow-sm stat-num">
                 {cartCount}
@@ -200,7 +200,7 @@ export const Header: React.FC<HeaderProps> = ({
 
           <button
             onClick={() => setDrawerOpen(true)}
-            className="md:hidden p-2.5 text-[#3E4754] hover:bg-black/[0.04] rounded-xl transition-colors focus-ring"
+            className="md:hidden w-10 h-10 flex items-center justify-center text-[#3E4754] hover:bg-black/[0.04] rounded-xl transition-colors focus-ring"
             aria-label="Open menu"
           >
             <Menu className="w-5 h-5" />

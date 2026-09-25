@@ -46,6 +46,7 @@ export default function Home() {
   const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState<boolean>(false);
   const [dataError, setDataError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     let active = true;
@@ -55,7 +56,8 @@ export default function Home() {
       })
       .catch(() => {
         if (active) setDataError('Live vault data could not be loaded — please check the backend status.');
-      });
+      })
+      .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, []);
 
@@ -103,7 +105,7 @@ export default function Home() {
 
           {/* ===== HERO — Vault OS ===== */}
           <section className="hero-mesh">
-            <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 pt-16 pb-20 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center relative z-10">
+            <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 pt-12 pb-16 sm:pt-16 sm:pb-20 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center relative z-10">
 
               <div className="lg:col-span-7 space-y-7 text-center lg:text-left">
 
@@ -152,7 +154,7 @@ export default function Home() {
 
               </div>
 
-              <div className="lg:col-span-5 flex items-center justify-center">
+              <div className="hidden lg:flex lg:col-span-5 items-center justify-center">
                 <CompanyOrbitHero3D companies={(companies || []).map(c => ({ name: c?.name || 'Company' }))} />
               </div>
 
@@ -216,12 +218,12 @@ export default function Home() {
                   </p>
                 )}
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex gap-2 overflow-x-auto sm:overflow-visible sm:flex-wrap whitespace-nowrap pb-1 sm:pb-0 -mx-1 px-1">
                 {INDUSTRIES.map((ind) => (
                   <button
                     key={ind}
                     onClick={() => setSelectedIndustry(ind)}
-                    className={`chip focus-ring ${
+                    className={`chip shrink-0 focus-ring ${
                       selectedIndustry === ind
                         ? 'bg-[#0284C7] text-white border-[#0284C7] shadow-soft'
                         : 'hover:border-[#0284C7]/50 hover:text-[#0271B5]'
@@ -234,16 +236,38 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredCompanies.map((c) => (
-                <CompanyCard key={c.id} company={c} />
-              ))}
+              {loading ? (
+                Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="rounded-2xl border border-[#E9E7E1] bg-white p-6 flex flex-col gap-4 animate-pulse">
+                    <div className="flex items-center justify-between">
+                      <div className="h-5 w-20 rounded-full bg-[#F0EFEC]" />
+                      <div className="h-5 w-12 rounded-lg bg-[#F0EFEC]" />
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 rounded-2xl bg-[#F0EFEC]" />
+                      <div className="space-y-2">
+                        <div className="h-4 w-32 rounded-md bg-[#F0EFEC]" />
+                        <div className="h-3 w-20 rounded-md bg-[#F0EFEC]" />
+                      </div>
+                    </div>
+                    <div className="flex gap-1.5">
+                      <div className="h-6 w-16 rounded-full bg-[#F0EFEC]" />
+                      <div className="h-6 w-20 rounded-full bg-[#F0EFEC]" />
+                    </div>
+                    <div className="h-14 rounded-xl bg-[#F3F2EE]" />
+                  </div>
+                ))
+              ) : filteredCompanies.length > 0 ? (
+                filteredCompanies.map((c) => (
+                  <CompanyCard key={c.id} company={c} />
+                ))
+              ) : (
+                <div className="py-16 text-center space-y-2 col-span-full">
+                  <p className="text-3xl">🔍</p>
+                  <p className="text-[15px] text-[#7D8794]">No company matched your search — try another keyword.</p>
+                </div>
+              )}
             </div>
-            {filteredCompanies.length === 0 && (
-              <div className="py-16 text-center space-y-2">
-                <p className="text-3xl">🔍</p>
-                <p className="text-[15px] text-[#7D8794]">No company matched your search — try another keyword.</p>
-              </div>
-            )}
           </section>
 
           <PricingSection onSelectPlan={handleSelectPlan} />

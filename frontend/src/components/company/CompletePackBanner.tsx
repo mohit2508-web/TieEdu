@@ -34,7 +34,7 @@ export const CompletePackBanner: React.FC<Props> = ({ companyName, premiumCount,
           </div>
           <button
             onClick={onBrowseModules}
-            className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl shadow-lg transition-all shrink-0"
+            className="inline-flex items-center justify-center gap-2 min-h-[46px] px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl shadow-lg transition-all shrink-0"
           >
             <Layers className="w-5 h-5" /> Browse Modules
           </button>
@@ -105,7 +105,7 @@ export const CompletePackBanner: React.FC<Props> = ({ companyName, premiumCount,
           </div>
           <button
             onClick={onAddCompletePack}
-            className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-[#E8A33D] hover:bg-[#D4902C] text-[#1F3A5F] text-sm font-black rounded-xl shadow-lg transition-all"
+            className="inline-flex items-center justify-center gap-2 min-h-[46px] px-6 py-3.5 bg-[#E8A33D] hover:bg-[#D4902C] text-[#1F3A5F] text-sm font-black rounded-xl shadow-lg transition-all"
           >
             <ShoppingCart className="w-5 h-5" />
             {ownedCount > 0 ? `Add Remaining ${premiumCount - ownedCount} Rounds` : 'Add Complete Pack to Cart'}

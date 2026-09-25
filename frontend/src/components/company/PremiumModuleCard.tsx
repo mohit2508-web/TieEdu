@@ -1,12 +1,14 @@
 import React from 'react';
 import { ContentModule, RoundType } from '@/types';
-import { ShoppingCart, Eye, Lock, FileText, BadgeCheck } from 'lucide-react';
+import { ShoppingCart, Eye, Lock, FileText, BadgeCheck, Star } from 'lucide-react';
 
 interface Props {
   module: ContentModule;
   companyName: string;
   isUnlocked: boolean;
   isOwned?: boolean;
+  solvedCount?: number;
+  bookmarkedCount?: number;
   onAddToCart: (module: ContentModule) => void;
   onPreview: () => void;
   onOpenPdf?: () => void;
@@ -31,7 +33,7 @@ const MODULE_TYPE_LABEL: Record<string, string> = {
   complete_pack: 'Complete Pack',
 };
 
-export const PremiumModuleCard: React.FC<Props> = ({ module, companyName, isUnlocked, isOwned = false, onAddToCart, onPreview, onOpenPdf }) => {
+export const PremiumModuleCard: React.FC<Props> = ({ module, companyName, isUnlocked, isOwned = false, solvedCount = 0, bookmarkedCount = 0, onAddToCart, onPreview, onOpenPdf }) => {
   const rm = module.round_type ? ROUND_META[module.round_type] : null;
   const typeLabel = MODULE_TYPE_LABEL[module.module_type] || module.module_type.replace(/_/g, ' ');
   const price = 99;
@@ -62,9 +64,14 @@ export const PremiumModuleCard: React.FC<Props> = ({ module, companyName, isUnlo
         {module.description || `${companyName} round-specific prep — questions, solutions, and quick revision.`}
       </p>
 
-      <div className="flex items-center gap-2 text-xs text-[var(--text-muted)] mb-4">
-        <FileText className="w-3.5 h-3.5" />
-        {itemCount} questions
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[var(--text-muted)] mb-4">
+        <span className="inline-flex items-center gap-1.5"><FileText className="w-3.5 h-3.5" />{itemCount} questions</span>
+        {unlocked && solvedCount > 0 && (
+          <span className="inline-flex items-center gap-1.5 text-emerald-700 font-bold"><BadgeCheck className="w-3.5 h-3.5" />{solvedCount} solved</span>
+        )}
+        {unlocked && bookmarkedCount > 0 && (
+          <span className="inline-flex items-center gap-1.5"><Star className="w-3.5 h-3.5 text-[#E8A33D]" />{bookmarkedCount} saved</span>
+        )}
       </div>
 
       {unlocked ? (
@@ -85,14 +92,14 @@ export const PremiumModuleCard: React.FC<Props> = ({ module, companyName, isUnlo
         {unlocked ? (
           <button
             onClick={onPreview}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl shadow-sm transition-all"
+            className="inline-flex items-center justify-center gap-2 min-h-[46px] px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl shadow-sm transition-all"
           >
             <FileText className="w-4 h-4" /> Open Module
           </button>
         ) : (
           <button
             onClick={() => onAddToCart(module)}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#E8A33D] hover:bg-[#D4902C] text-white text-sm font-bold rounded-xl shadow-sm transition-all"
+            className="inline-flex items-center justify-center gap-2 min-h-[46px] px-4 py-2.5 bg-[#E8A33D] hover:bg-[#D4902C] text-white text-sm font-bold rounded-xl shadow-sm transition-all"
           >
             <ShoppingCart className="w-4 h-4" /> Add to Cart — ₹{price}
           </button>
