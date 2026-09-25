@@ -477,6 +477,19 @@ code, pre, kbd, samp, .font-mono {
   padding-bottom: max(var(--safe-bottom-pad, 0.75rem), env(safe-area-inset-bottom));
 }
 
+/* Compare matrix — sticky metric label column while swiping columns on mobile */
+.compare-sticky-col,
+.compare-sticky-col-alt {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  min-width: 148px;
+  max-width: 184px;
+  border-right: 1px solid #EDEDEB;
+}
+.compare-sticky-col { background-color: #FFFFFF; }
+.compare-sticky-col-alt { background-color: #FAFAF9; }
+
 /* Respect reduced-motion preferences (marquee, aerial 3D, entrance fades) */
 @media (prefers-reduced-motion: reduce) {
   .animate-marquee,

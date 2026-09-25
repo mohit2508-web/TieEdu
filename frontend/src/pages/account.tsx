@@ -558,7 +558,7 @@ const AccountPageContent: React.FC = () => {
                           {pwMsg.text}
                         </p>
                       )}
-                      <button type="submit" disabled={pwBusy} className="btn btn-primary px-4 py-2.5 text-[13px] w-full sm:w-auto disabled:opacity-60">
+                      <button type="submit" disabled={pwBusy} className="btn btn-primary px-4 py-2.5 min-h-[46px] text-[13px] w-full sm:w-auto disabled:opacity-60">
                         {pwBusy ? 'Updating…' : 'Update password'}
                       </button>
                     </form>
@@ -573,7 +573,7 @@ const AccountPageContent: React.FC = () => {
                         Signing out revokes your refresh session. Your access token expires automatically after 15 minutes.
                       </p>
                     </div>
-                    <button onClick={handleLogout} className="btn px-4 py-2.5 text-[13px] border border-[#F2C9BC] text-[#C1442D] hover:bg-[#FDEDE9] w-full sm:w-auto">
+                    <button onClick={handleLogout} className="btn px-4 py-2.5 min-h-[46px] text-[13px] border border-[#F2C9BC] text-[#C1442D] hover:bg-[#FDEDE9] w-full sm:w-auto">
                       <LogOut className="w-4 h-4" /> Sign out
                     </button>
                   </div>

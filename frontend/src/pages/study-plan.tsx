@@ -123,7 +123,7 @@ export default function StudyPlanPage() {
               <button
                 onClick={generate}
                 disabled={loading}
-                className="w-full py-2.5 bg-[#1F3A5F] hover:bg-[#2A4D7E] disabled:opacity-60 text-white text-xs font-semibold rounded-lg shadow-sm transition-all"
+                className="w-full min-h-[46px] py-2.5 bg-[#1F3A5F] hover:bg-[#2A4D7E] disabled:opacity-60 text-white text-xs font-semibold rounded-lg shadow-sm transition-all"
               >
                 {loading ? 'Generating…' : 'Generate Study Schedule'}
               </button>
@@ -151,7 +151,7 @@ export default function StudyPlanPage() {
               ) : (
                 <div className="space-y-3">
                   {scheduleDays.map((item, idx) => (
-                    <div key={idx} className="bg-white border border-[#EDEDEB] p-4 rounded-xl shadow-sm flex items-start gap-4">
+                    <div key={idx} className="bg-white border border-[#EDEDEB] p-4 rounded-xl shadow-sm flex items-start gap-3 sm:gap-4">
                       <div className="px-3 py-1.5 bg-[#1F3A5F] text-white rounded-lg text-xs font-mono font-bold shrink-0">
                         {item.day}
                       </div>

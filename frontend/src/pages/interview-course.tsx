@@ -311,7 +311,7 @@ export default function InterviewCoursePage() {
               </div>
 
               {/* Search Field */}
-              <div className="relative min-w-[280px]">
+              <div className="relative w-full md:w-auto md:min-w-[320px]">
                 <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
@@ -366,7 +366,7 @@ export default function InterviewCoursePage() {
                             e.stopPropagation();
                             handleToggleModule(mod.id);
                           }}
-                          className={`w-6 h-6 rounded-lg flex items-center justify-center transition-all ${
+                          className={`w-7 h-7 sm:w-6 sm:h-6 rounded-lg flex items-center justify-center transition-all ${
                             isDone
                               ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/30'
                               : 'bg-slate-800 border border-slate-700 text-transparent hover:border-slate-500'
@@ -499,10 +499,10 @@ export default function InterviewCoursePage() {
                         </div>
 
                         {/* Action Footer */}
-                        <div className="flex items-center justify-between pt-2">
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
                           <button
                             onClick={() => handleToggleModule(mod.id)}
-                            className={`text-xs font-semibold px-4 py-2 rounded-lg transition-all flex items-center gap-1.5 ${
+                            className={`inline-flex items-center justify-center gap-1.5 min-h-[44px] px-4 py-2 w-full sm:w-auto rounded-lg text-xs font-semibold transition-all ${
                               isDone
                                 ? 'bg-emerald-600 text-white'
                                 : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700'
@@ -514,7 +514,7 @@ export default function InterviewCoursePage() {
 
                           <button
                             onClick={() => setIsMockModalOpen(true)}
-                            className="text-xs font-semibold text-brand-orange hover:text-white flex items-center gap-1 transition-colors"
+                            className="inline-flex items-center justify-center gap-1 min-h-[44px] px-4 text-xs font-semibold text-brand-orange hover:text-white transition-colors"
                           >
                             Practice in Simulator <ArrowRight className="w-3.5 h-3.5" />
                           </button>
@@ -547,7 +547,7 @@ export default function InterviewCoursePage() {
       {/* COURSE CERTIFICATE MODAL */}
       {isCertModalOpen && certificateData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl p-6 sm:p-8 relative">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl p-6 sm:p-8 relative max-h-[92vh] overflow-y-auto">
             <button
               onClick={() => setIsCertModalOpen(false)}
               className="absolute top-4 right-4 text-slate-400 hover:text-white p-2"
