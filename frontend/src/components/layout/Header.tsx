@@ -13,11 +13,11 @@ interface HeaderProps {
 }
 
 const NAV_LINKS = [
-  { href: '/', label: 'Vaults' },
-  { href: '/compare', label: 'Compare' },
-  { href: '/interview-course', label: 'Free Course' },
-  { href: '/study-plan', label: 'Study Plan' },
-  { href: '/#pricing', label: 'Pricing' },
+  { href: '/', label: 'Vaults', Icon: LayoutGrid },
+  { href: '/compare', label: 'Compare', Icon: GraduationCap },
+  { href: '/interview-course', label: 'Free Course', Icon: CalendarRange },
+  { href: '/study-plan', label: 'Study Plan', Icon: Tag },
+  { href: '/#pricing', label: 'Pricing', Icon: Tag },
 ];
 
 export const Header: React.FC<HeaderProps> = ({
@@ -108,7 +108,7 @@ export const Header: React.FC<HeaderProps> = ({
 
           <button
             onClick={onOpenLeaderboard}
-            className="w-10 h-10 sm:w-auto sm:h-auto flex items-center justify-center sm:inline-flex gap-2 chip hover:border-[#E8A33D] hover:text-[#C77B12]" title="Daily streak leaderboard"
+            className="hidden sm:inline-flex w-10 h-10 sm:w-auto sm:h-auto items-center justify-center gap-2 chip hover:border-[#E8A33D] hover:text-[#C77B12]" title="Daily streak leaderboard"
           >
             <Flame className="w-4 h-4 text-[#B45309] fill-[#E8A33D]" />
             <span className="font-bold hidden sm:inline">Leaderboard</span>
@@ -234,7 +234,7 @@ export const Header: React.FC<HeaderProps> = ({
                     onClick={() => openDrawerNav()}
                     className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-[15px] font-bold text-[#3E4754] hover:bg-[#F3F2EE] hover:text-[#10151C] transition-colors"
                   >
-                    <LayoutGrid className="w-4 h-4 text-[#0284C7]" />
+                    <l.Icon className="w-4 h-4 text-[#0284C7]" />
                     {l.label}
                   </Link>
                 ))}

@@ -75,7 +75,7 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  overflow-x: hidden;
+  /* NOTE: Do NOT add overflow-x:hidden here — it breaks position:fixed overlays on iOS */
 }
 
 body {
@@ -85,10 +85,9 @@ body {
   line-height: 1.75;
   font-size: 16px;
   font-feature-settings: "tnum" 0, "ss01" 1;
-  overflow-x: hidden;
-  /* Prevent horizontal scroll caused by fixed drawers/modals */
-  width: 100%;
-  max-width: 100vw;
+  /* overflow-x:clip prevents horizontal scroll WITHOUT creating a scroll container,
+     so position:fixed modals/drawers are NOT clipped — unlike overflow:hidden */
+  overflow-x: clip;
 }
 
 /* ============================================
@@ -457,6 +456,25 @@ code, pre, kbd, samp, .font-mono {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #DDDDD8; border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: #B0B0A8; }
+
+/* scrollbar-none — hide scrollbar visually but keep scroll behavior */
+.scrollbar-none::-webkit-scrollbar { display: none; }
+.scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ============================================
+   TAILWIND animate-in PLUGIN FALLBACK
+   (Some modals use "animate-in fade-in duration-150/200"
+   Tailwind v3 doesn't include this by default without the plugin —
+   provide minimal CSS fallbacks so they gracefully appear)
+   ============================================ */
+@keyframes fade-in-modal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-in { animation-fill-mode: both; }
+.animate-in.fade-in { animation-name: fade-in-modal; }
+.duration-150 { animation-duration: 150ms; }
+.duration-200 { animation-duration: 200ms; }
 
 /* ============================================
    UTILITIES

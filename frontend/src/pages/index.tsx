@@ -119,11 +119,14 @@ export default function Home() {
 
               <div className="lg:col-span-7 space-y-7 text-center lg:text-left">
 
-                <div className="inline-flex items-center gap-2 pl-1.5 pr-4 py-1.5 rounded-full bg-white/70 border border-[#E9E7E1] shadow-soft backdrop-blur">
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#E8F4FB] text-[#0271B5] text-[11px] font-extrabold uppercase tracking-wide">
+                <div className="inline-flex items-center gap-2 pl-1.5 pr-4 py-1.5 rounded-full bg-white/70 border border-[#E9E7E1] shadow-soft backdrop-blur max-w-full overflow-hidden">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#E8F4FB] text-[#0271B5] text-[11px] font-extrabold uppercase tracking-wide shrink-0">
                     <Sparkles className="w-3 h-3" /> 2026
                   </span>
-                  <span className="text-[13px] font-bold text-[#3E4754]">Verified Campus &amp; Off-Campus Hiring Intelligence</span>
+                  <span className="text-[13px] font-bold text-[#3E4754] truncate">
+                    <span className="hidden sm:inline">Verified Campus &amp; Off-Campus Hiring Intelligence</span>
+                    <span className="sm:hidden">Verified Hiring Intelligence</span>
+                  </span>
                 </div>
 
                 <h1 className="display-1">
@@ -148,10 +151,10 @@ export default function Home() {
                   <Search className="w-4 h-4 text-[--text-muted] absolute left-4 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
-                    placeholder="Search company — Google, TCS, Zscaler, Razorpay…"
+                    placeholder="Search company — Google, TCS, Zscaler…"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-11 pr-24 py-3.5 bg-white/90 border border-[#E9E7E1] shadow-soft rounded-2xl text-sm text-[#10151C] placeholder:text-[#AEB6BE] focus:outline-none focus:border-[#0284C7] focus:ring-4 focus:ring-[#0284C7]/10 transition-shadow"
+                    className="w-full pl-11 pr-4 sm:pr-24 py-3.5 bg-white/90 border border-[#E9E7E1] shadow-soft rounded-2xl text-sm text-[#10151C] placeholder:text-[#AEB6BE] focus:outline-none focus:border-[#0284C7] focus:ring-4 focus:ring-[#0284C7]/10 transition-shadow"
                   />
                   <span className="absolute right-3.5 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-black/[0.05] text-[11px] font-bold text-[--text-muted]">⌘K</span>
                 </div>
