@@ -75,6 +75,7 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  overflow-x: hidden;
 }
 
 body {
@@ -84,6 +85,10 @@ body {
   line-height: 1.75;
   font-size: 16px;
   font-feature-settings: "tnum" 0, "ss01" 1;
+  overflow-x: hidden;
+  /* Prevent horizontal scroll caused by fixed drawers/modals */
+  width: 100%;
+  max-width: 100vw;
 }
 
 /* ============================================
@@ -195,12 +200,19 @@ body {
 
 /* Big editorial headline */
 .display-1 {
-  font-size: clamp(2.5rem, 5.6vw, 4.2rem);
-  line-height: 1.04;
+  font-size: clamp(1.85rem, 5.6vw, 4.2rem);
+  line-height: 1.08;
   letter-spacing: -0.03em;
   font-weight: 800;
   color: var(--ink);
   text-wrap: balance;
+}
+@media (max-width: 480px) {
+  .display-1 {
+    font-size: 1.75rem;
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+  }
 }
 .display-2 {
   font-size: clamp(1.4rem, 2.6vw, 2rem);

@@ -296,19 +296,19 @@ export const CartModal: React.FC<CartModalProps> = ({
     setPayError(null);
   };
 
+  if (!isOpen) return null;
+
   return (
     <>
       {/* Backdrop */}
       <div
         onClick={onClose}
-        className={`fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
       />
 
       {/* Full-Height Slide-In Drawer */}
       <div
-        className={`fixed inset-y-0 right-0 z-50 w-full sm:w-[480px] md:w-[540px] bg-white border-l border-gray-200 shadow-2xl flex flex-col transition-transform duration-300 ease-out ${
-          isOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}
+        className="fixed inset-y-0 right-0 z-50 w-full sm:w-[480px] md:w-[540px] bg-white border-l border-gray-200 shadow-2xl flex flex-col animate-slide-in-right"
         role="dialog"
         aria-label="Cart"
         aria-modal="true"
