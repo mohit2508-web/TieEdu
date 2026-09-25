@@ -9,6 +9,7 @@ export const companiesRouter = Router();
 const LIST_KEEP_KEYS = [
   'id', 'slug', 'name', 'logo_url', 'tagline', 'description', 'careers_link',
   'status', 'last_updated_days_ago', 'comparison_metrics', 'verification_level',
+  'industry', 'tags', 'difficulty_rating', 'avg_process_days', 'ctc_min', 'ctc_max',
 ];
 
 function attachLiveStats(db: any, company: any) {

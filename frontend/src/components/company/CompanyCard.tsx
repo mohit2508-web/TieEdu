@@ -46,12 +46,12 @@ export const CompanyCard: React.FC<CompanyCardProps> = ({ company }) => {
             <h3 className="font-serif-heading text-lg font-extrabold text-[#10151C] group-hover:text-[#0271B5] transition-colors leading-snug">
               {company.name}
             </h3>
-            <p className="text-[13px] text-[#7D8794] font-medium mt-0.5">{company.industry}</p>
+            <p className="text-[13px] text-[#7D8794] font-medium mt-0.5">{company.industry || 'General'}</p>
           </div>
         </div>
 
         <div className="flex flex-wrap gap-1.5 mb-5">
-          {company.tags.map((tag, idx) => (
+          {(company.tags || []).map((tag, idx) => (
             <span key={idx} className="chip !text-[11px] !py-1 bg-[var(--bg-surface-hover)] border-[#ECEAE4]">
               {tag}
             </span>

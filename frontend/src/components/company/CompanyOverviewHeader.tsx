@@ -70,7 +70,7 @@ export const CompanyOverviewHeader: React.FC<CompanyOverviewHeaderProps> = ({
             </p>
 
             <div className="flex flex-wrap gap-2">
-              {company.tags.map((tag, idx) => (
+              {(company.tags || []).map((tag, idx) => (
                 <span key={idx} className="px-2.5 py-1 rounded-lg bg-[#FAFAF9] border border-[#EDEDEB] text-[#1F3A5F] font-mono text-xs font-semibold">
                   #{tag}
                 </span>

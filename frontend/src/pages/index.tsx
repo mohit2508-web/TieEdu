@@ -71,9 +71,9 @@ export default function Home() {
   }, []);
 
   const filteredCompanies = companies.filter(c => {
-    const matchesIndustry = selectedIndustry === 'All' || c.industry.includes(selectedIndustry);
-    const matchesSearch = c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          c.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesIndustry = selectedIndustry === 'All' || (c.industry || '').includes(selectedIndustry);
+    const matchesSearch = (c.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          (c.tags || []).some(t => t.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchesIndustry && matchesSearch;
   });
 
