@@ -39,23 +39,24 @@ interface BrandTileProps {
 // Shows the company logo image ONLY when a real URL exists.
 // Otherwise renders an honest initials tile — never a placeholder photo.
 export const BrandTile: React.FC<BrandTileProps> = ({ name, src, className = 'w-10 h-10 rounded-xl', title }) => {
+  const safeName = name || 'Company';
   if (isRealUrl(src)) {
     return (
       <img
         src={src!}
-        alt={name}
-        title={title || name}
+        alt={safeName}
+        title={title || safeName}
         className={`object-cover border border-[#E9E7E1] bg-white ${className}`}
       />
     );
   }
   return (
     <div
-      title={title || name}
-      className={`${TILE_COLORS[tileIndex(name)]} text-white flex items-center justify-center font-extrabold select-none ${className}`}
+      title={title || safeName}
+      className={`${TILE_COLORS[tileIndex(safeName)]} text-white flex items-center justify-center font-extrabold select-none ${className}`}
       style={{ letterSpacing: '0.02em' }}
     >
-      {initials(name)}
+      {initials(safeName)}
     </div>
   );
 };

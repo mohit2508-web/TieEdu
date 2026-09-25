@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { fetchCompanies } from '@/lib/api';
 import { Company } from '@/types';
@@ -41,9 +41,9 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, compa
 
   const q = query.toLowerCase();
   const matchedCompanies = companies.filter(c =>
-    c.name.toLowerCase().includes(q) ||
-    (c.tags || []).some(t => t.toLowerCase().includes(q)) ||
-    c.industry.toLowerCase().includes(q)
+    (c.name || '').toLowerCase().includes(q) ||
+    (c.tags || []).some(t => (t || '').toLowerCase().includes(q)) ||
+    (c.industry || '').toLowerCase().includes(q)
   );
 
   return (

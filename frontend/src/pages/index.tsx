@@ -153,7 +153,7 @@ export default function Home() {
               </div>
 
               <div className="lg:col-span-5 flex items-center justify-center">
-                <CompanyOrbitHero3D companies={companies.map(c => ({ name: c.name }))} />
+                <CompanyOrbitHero3D companies={(companies || []).map(c => ({ name: c?.name || 'Company' }))} />
               </div>
 
             </div>
