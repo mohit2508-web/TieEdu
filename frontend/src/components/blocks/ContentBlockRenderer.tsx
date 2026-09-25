@@ -1,12 +1,26 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import SyntaxHighlighter from 'react-syntax-highlighter/dist/cjs/prism-light';
+import cpp from 'react-syntax-highlighter/dist/cjs/languages/prism/cpp';
+import typescript from 'react-syntax-highlighter/dist/cjs/languages/prism/typescript';
+import java from 'react-syntax-highlighter/dist/cjs/languages/prism/java';
+import python from 'react-syntax-highlighter/dist/cjs/languages/prism/python';
+import bash from 'react-syntax-highlighter/dist/cjs/languages/prism/bash';
+import json from 'react-syntax-highlighter/dist/cjs/languages/prism/json';
 import { oneLight } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 import { ContentBlock } from '@/types';
 import {
   Lock, Copy, Check, Info, AlertTriangle, Lightbulb,
   Maximize2, X, ChevronRight, Play, Cpu, Layers, ZoomIn, Table2, Video, Music
 } from 'lucide-react';
+
+SyntaxHighlighter.registerLanguage('cpp', cpp);
+SyntaxHighlighter.registerLanguage('typescript', typescript);
+SyntaxHighlighter.registerLanguage('ts', typescript);
+SyntaxHighlighter.registerLanguage('java', java);
+SyntaxHighlighter.registerLanguage('python', python);
+SyntaxHighlighter.registerLanguage('bash', bash);
+SyntaxHighlighter.registerLanguage('json', json);
 
 interface ContentBlockRendererProps {
   block: ContentBlock;
