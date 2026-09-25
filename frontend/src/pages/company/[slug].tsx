@@ -75,6 +75,13 @@ export default function CompanyVaultPage({ initialCompany, initialSlug }: { init
     fetchCompanies().then(data => { if (data?.length > 0) setAllCompanies(data); }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
+  // Scroll to top when user opens a module or a specific question item
+  useEffect(() => {
+    if (typeof window !== 'undefined' && (selectedModule || selectedItem)) {
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    }
+  }, [selectedModule?.id, selectedItem?.id]);
+
   // Refresh-safe: keep whatever the user was reading (??m / ??q in the URL)
   // so a reload lands on the same module or question instead of the catalog.
   useEffect(() => {

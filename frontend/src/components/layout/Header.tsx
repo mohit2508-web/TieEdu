@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { Search, Flame, ShoppingBag, Command, ChevronDown, LogOut, UserRound, ShieldCheck, Menu, X, LayoutGrid, GraduationCap, CalendarRange, Tag } from 'lucide-react';
@@ -30,7 +31,12 @@ export const Header: React.FC<HeaderProps> = ({
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const onClickOutside = (e: MouseEvent) => {
@@ -209,8 +215,8 @@ export const Header: React.FC<HeaderProps> = ({
 
       </div>
 
-      {/* ===== Mobile Drawer ===== */}
-      {drawerOpen && (
+      {/* ===== Mobile Drawer (rendered via Portal to avoid backdrop-filter stacking context truncation) ===== */}
+      {drawerOpen && mounted && createPortal(
         <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-fade-in" onClick={() => setDrawerOpen(false)} />
           <div className="absolute right-0 top-0 bottom-0 w-[82%] max-w-[340px] bg-white shadow-2xl flex flex-col animate-slide-in-right">
@@ -324,7 +330,8 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </header>
   );

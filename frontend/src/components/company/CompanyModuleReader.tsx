@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Building2, BookOpen, Lightbulb, FileSpreadsheet, Flame, Zap, UserCheck,
   Download, ChevronRight, CheckCircle2, Copy, Sparkles, Filter, Lock, ArrowLeft,
@@ -46,6 +46,13 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
 
   const locked = module.is_premium === true && !isModuleUnlocked;
   const sectionData: ModuleSectionData = module.section_data || {};
+
+  // Automatically scroll to the top of the reader whenever module or section changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    }
+  }, [module.id, activeSection]);
 
   // Warm up pdfjs (library + worker) in the background so opening the PDF
   // viewer is instant instead of compiling/downloading it on the click.
