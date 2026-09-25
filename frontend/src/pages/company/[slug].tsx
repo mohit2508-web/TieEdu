@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import type { GetServerSideProps } from 'next';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { CompanyOverviewHeader } from '@/components/company/CompanyOverviewHeader';
@@ -14,11 +15,8 @@ import { FeaturedFreeModuleCard } from '@/components/company/FeaturedFreeModuleC
 import { PremiumModuleCard } from '@/components/company/PremiumModuleCard';
 import { CompletePackBanner } from '@/components/company/CompletePackBanner';
 import { IntelligenceTreeSidebar, MobileSidebarDrawer } from '@/components/company/IntelligenceTreeSidebar';
-import { CartModal } from '@/components/checkout/CartModal';
-import { SearchModal } from '@/components/modals/SearchModal';
-import { LeaderboardModal } from '@/components/modals/LeaderboardModal';
-import { SubmitReportModal } from '@/components/modals/SubmitReportModal';
-import { fetchCompanyBySlug, fetchCompanies } from '@/lib/api';
+import dynamic from 'next/dynamic';
+import { fetchCompanyBySlug, fetchCompanies, API_BASE_URL } from '@/lib/api';
 import { packPrice } from '@/lib/packPricing';
 import { CompanyModuleReader } from '@/components/company/CompanyModuleReader';
 import { Company, PricingPlan, ContentItem, ContentModule, RoundType, CompanyModuleItem, CartItem } from '@/types';
@@ -27,11 +25,28 @@ import {
   Sparkles, Bookmark, List, ShoppingBag
 } from 'lucide-react';
 
-export default function CompanyVaultPage() {
+const CartModal = dynamic(() => import('@/components/checkout/CartModal').then(m => m.CartModal), { ssr: false });
+const SearchModal = dynamic(() => import('@/components/modals/SearchModal').then(m => m.SearchModal), { ssr: false });
+const LeaderboardModal = dynamic(() => import('@/components/modals/LeaderboardModal').then(m => m.LeaderboardModal), { ssr: false });
+const SubmitReportModal = dynamic(() => import('@/components/modals/SubmitReportModal').then(m => m.SubmitReportModal), { ssr: false });
+
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const slug = String(context.params?.slug || '');
+  let initialCompany: Company | null = null;
+  try {
+    const res = await fetch(`${API_BASE_URL}/companies/${slug}`);
+    if (res.ok) initialCompany = await res.json();
+  } catch {
+    // Backend offline at SSR time — the client effect below retries.
+  }
+  return { props: { initialCompany, initialSlug: slug } };
+};
+
+export default function CompanyVaultPage({ initialCompany, initialSlug }: { initialCompany: Company | null; initialSlug: string }) {
   const router = useRouter();
   const { slug } = router.query;
 
-  const [company, setCompany] = useState<Company | null>(null);
+  const [company, setCompany] = useState<Company | null>(initialCompany);
   const [allCompanies, setAllCompanies] = useState<Company[]>([]);
   const [activeRoundTab, setActiveRoundTab] = useState<'all' | RoundType>('all');
 
@@ -48,7 +63,8 @@ export default function CompanyVaultPage() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
-  const [isSubmitReportOpen, setIsSubmitReportOpen] = useState(false); const [loading, setLoading] = useState(true);;
+  const [isSubmitReportOpen, setIsSubmitReportOpen] = useState(false);
+  const [loading, setLoading] = useState(!initialCompany);
   const [reportTick, setReportTick] = useState(0);
   const [mobileTreeOpen, setMobileTreeOpen] = useState(false);
   const [readerSection, setReaderSection] = useState<'overview' | 'pdfs'>('overview');
@@ -57,28 +73,41 @@ export default function CompanyVaultPage() {
     fetchCompanies().then(data => { if (data?.length > 0) setAllCompanies(data); }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
+  // Refresh-safe: keep whatever the user was reading (??m / ??q in the URL)
+  // so a reload lands on the same module or question instead of the catalog.
+  useEffect(() => {
+    if (!company) return;
+    const items: ContentItem[] = (company.modules || []).flatMap((mod: ContentModule) => mod.items || []);
+    const q = router.query.q;
+    const m = router.query.m;
+    if (q) {
+      const item = items.find(i => i.id === q);
+      if (item) { setSelectedItem(item); setActiveReaderTab('content'); return; }
+    }
+    if (m) {
+      const mod = (company.modules || []).find(x => x.id === m);
+      if (mod) setSelectedModule(mod);
+    }
+  }, [company]);
+
+  const loadedSlugRef = useRef(initialSlug);
   useEffect(() => {
     if (!slug) return;
-    fetchCompanyBySlug(slug as string).then(data => {
+    const key = String(slug);
+    // Already have data for this vault (from SSR or an earlier fetch) — skip.
+    if (loadedSlugRef.current === key && company) {
+      setLoading(false);
+      return;
+    }
+    loadedSlugRef.current = key;
+    let cancelled = false;
+    fetchCompanyBySlug(key).then(data => {
+      if (cancelled) return;
       setCompany(data);
       if (data.is_unlocked) setIsUnlocked(true);
-
-      // Refresh-safe: keep whatever the user was reading (??m / ??q in the URL)
-      // so a reload lands on the same module or question instead of the catalog.
-      const mods = data.modules || [];
-      const items: ContentItem[] = mods.flatMap((mod: ContentModule) => mod.items || []);
-      const q = router.query.q;
-      const m = router.query.m;
-      if (q) {
-        const item = items.find(i => i.id === q);
-        if (item) { setSelectedItem(item); setActiveReaderTab('content'); return; }
-      }
-      if (m) {
-        const mod = mods.find(x => x.id === m);
-        if (mod) setSelectedModule(mod);
-      }
-    }).catch(() => {}).finally(() => setLoading(false));
-  }, [slug]);
+    }).catch(() => {}).finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [slug, company]);
 
   if (!company) {
     return (
