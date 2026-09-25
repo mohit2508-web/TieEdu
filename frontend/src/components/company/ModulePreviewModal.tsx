@@ -74,7 +74,7 @@ export const ModulePreviewModal: React.FC<ModulePreviewModalProps> = ({
               onClick={() => onToggleSolve(item.id)}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border ${
                 isSolved
-                  ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
+                  ? 'bg-emerald-700 text-white border-emerald-600 shadow-2xs'
                   : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
               }`}
             >
@@ -117,7 +117,7 @@ export const ModulePreviewModal: React.FC<ModulePreviewModalProps> = ({
                 activeTab === 'content' ? 'border-[#E8A33D] text-[#1F3A5F]' : 'border-transparent hover:text-gray-900'
               }`}
             >
-              <Eye className="w-4 h-4 text-[#E8A33D]" />
+              <Eye className="w-4 h-4 text-[#B45309]" />
               <span>Verified Solution & Architecture Diagram</span>
             </button>
 
@@ -177,7 +177,7 @@ export const ModulePreviewModal: React.FC<ModulePreviewModalProps> = ({
 
             <button
               onClick={onUnlockClick}
-              className="w-full sm:w-auto px-7 py-3 bg-[#E8A33D] hover:bg-[#D4902C] text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2 shrink-0"
+              className="w-full sm:w-auto px-7 py-3 bg-[#E8A33D] hover:bg-[#D4902C] text-[#241A06] font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2 shrink-0"
             >
               <span>Unlock Intelligence Hub Now — ₹249</span>
               <ArrowRight className="w-4 h-4" />

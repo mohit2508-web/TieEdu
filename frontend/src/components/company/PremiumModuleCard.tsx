@@ -70,7 +70,7 @@ export const PremiumModuleCard: React.FC<Props> = ({ module, companyName, isUnlo
           <span className="inline-flex items-center gap-1.5 text-emerald-700 font-bold"><BadgeCheck className="w-3.5 h-3.5" />{solvedCount} solved</span>
         )}
         {unlocked && bookmarkedCount > 0 && (
-          <span className="inline-flex items-center gap-1.5"><Star className="w-3.5 h-3.5 text-[#E8A33D]" />{bookmarkedCount} saved</span>
+          <span className="inline-flex items-center gap-1.5"><Star className="w-3.5 h-3.5 text-[#B45309]" />{bookmarkedCount} saved</span>
         )}
       </div>
 
@@ -84,7 +84,7 @@ export const PremiumModuleCard: React.FC<Props> = ({ module, companyName, isUnlo
       ) : (
         <div className="flex items-baseline gap-2 mb-4">
           <span className="text-2xl font-extrabold text-[var(--brand-primary)]">₹{price}</span>
-          <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-md">One-Time</span>
+          <span className="text-[11px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-md">One-Time</span>
         </div>
       )}
 
@@ -92,14 +92,14 @@ export const PremiumModuleCard: React.FC<Props> = ({ module, companyName, isUnlo
         {unlocked ? (
           <button
             onClick={onPreview}
-            className="inline-flex items-center justify-center gap-2 min-h-[46px] px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl shadow-sm transition-all"
+            className="inline-flex items-center justify-center gap-2 min-h-[46px] px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-bold rounded-xl shadow-sm transition-all"
           >
             <FileText className="w-4 h-4" /> Open Module
           </button>
         ) : (
           <button
             onClick={() => onAddToCart(module)}
-            className="inline-flex items-center justify-center gap-2 min-h-[46px] px-4 py-2.5 bg-[#E8A33D] hover:bg-[#D4902C] text-white text-sm font-bold rounded-xl shadow-sm transition-all"
+            className="inline-flex items-center justify-center gap-2 min-h-[46px] px-4 py-2.5 bg-[#E8A33D] hover:bg-[#D4902C] text-[#241A06] text-sm font-bold rounded-xl shadow-sm transition-all"
           >
             <ShoppingCart className="w-4 h-4" /> Add to Cart — ₹{price}
           </button>
@@ -132,7 +132,7 @@ export const PremiumModuleCard: React.FC<Props> = ({ module, companyName, isUnlo
             </button>
           )}
           {!unlocked && (
-            <span className="inline-flex items-center gap-1 px-3 py-2 bg-gray-50 border border-gray-200 text-gray-400 text-[11px] font-semibold rounded-xl">
+            <span className="inline-flex items-center gap-1 px-3 py-2 bg-gray-50 border border-gray-200 text-gray-600 text-[11px] font-semibold rounded-xl">
               <Lock className="w-3 h-3" /> Unlocks with pack
             </span>
           )}

@@ -54,7 +54,7 @@ export const CouponsManager: React.FC = () => {
     <div className="space-y-5">
       <div className="bg-white border border-gray-200 rounded-3xl p-5 shadow-xs">
         <h3 className="text-base font-extrabold text-[#1E293B] flex items-center gap-2 mb-1">
-          <Tag className="w-5 h-5 text-[#E8A33D]" /> Discount Coupons
+          <Tag className="w-5 h-5 text-[#B45309]" /> Discount Coupons
         </h3>
         <p className="text-xs text-gray-500 mb-4">Server-side validated. Frontend sirf backend se jo coupons bheje wo dikhaye.</p>
 

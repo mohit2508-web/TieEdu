@@ -89,14 +89,14 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onCl
               <Sparkles className="w-3.5 h-3.5 text-[#0284C7]" /> Interview course se XP kamao
             </Link>
             <Link href="/" onClick={onClose} className="chip hover:border-[#E8A33D] hover:text-[#C77B12]">
-              <Award className="w-3.5 h-3.5 text-[#E8A33D]" /> +50 XP for submitting a report
+              <Award className="w-3.5 h-3.5 text-[#B45309]" /> +50 XP for submitting a report
             </Link>
           </div>
         )}
 
         <div className="space-y-2 max-h-[55vh] sm:max-h-64 overflow-y-auto">
           <h4 className="text-xs font-bold text-[#10151C] mb-3 flex items-center gap-1.5">
-            <Trophy className="w-3.5 h-3.5 text-[#E8A33D]" /> Placement season ranking
+            <Trophy className="w-3.5 h-3.5 text-[#B45309]" /> Placement season ranking
           </h4>
 
           {loading && (
@@ -141,7 +141,7 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onCl
             >
               <div className="flex items-center gap-3">
                 <span className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-[11px] ${
-                  u.rank === 1 ? 'bg-[#E8A33D] text-white' : u.rank === 2 ? 'bg-[#D6D2C8] text-[#3E4754]' : 'bg-[#EEF1F4] text-[#3E4754]'
+                  u.rank === 1 ? 'bg-[#E8A33D] text-[#241A06]' : u.rank === 2 ? 'bg-[#D6D2C8] text-[#3E4754]' : 'bg-[#EEF1F4] text-[#3E4754]'
                 }`}>
                   {u.rank}
                 </span>

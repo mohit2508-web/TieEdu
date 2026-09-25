@@ -129,7 +129,7 @@ export const ContentBuilder: React.FC<ContentBuilderProps> = ({ companies, selec
         </div>
         <div className="flex items-center gap-3">
           {savedMsg && <span className="text-xs text-emerald-700 font-bold flex items-center gap-1"><CheckCircle2 className="w-4 h-4" /> {savedMsg}</span>}
-          <button onClick={() => openModuleModal()} className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-colors">
+          <button onClick={() => openModuleModal()} className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition-colors">
             <Plus className="w-4 h-4" /> Create Module
           </button>
         </div>
@@ -224,7 +224,7 @@ export const ContentBuilder: React.FC<ContentBuilderProps> = ({ companies, selec
         <div className="p-12 text-center bg-white border border-gray-200 rounded-3xl space-y-3">
           <BookOpen className="w-8 h-8 text-gray-300 mx-auto" />
           <p className="text-sm font-bold text-[#1F3A5F]">No modules for {company?.name} yet.</p>
-          <button onClick={() => openModuleModal()} className="px-4 py-2 bg-emerald-600 text-white text-xs font-bold rounded-xl">+ Create First Module</button>
+          <button onClick={() => openModuleModal()} className="px-4 py-2 bg-emerald-700 text-white text-xs font-bold rounded-xl">+ Create First Module</button>
         </div>
       )}
 
@@ -272,7 +272,7 @@ export const ContentBuilder: React.FC<ContentBuilderProps> = ({ companies, selec
                 </div>
               </div>
             </div>
-            <button onClick={handleModuleSubmit} className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all">
+            <button onClick={handleModuleSubmit} className="w-full py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all">
               {editingModule ? 'Update Module' : 'Create Module'}
             </button>
           </div>
@@ -326,7 +326,7 @@ export const ContentBuilder: React.FC<ContentBuilderProps> = ({ companies, selec
                 </div>
               </div>
 
-              <button onClick={handleItemSubmit} className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all">
+              <button onClick={handleItemSubmit} className="w-full py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all">
                 {item ? 'Update Question' : 'Add Question'}
               </button>
             </div>

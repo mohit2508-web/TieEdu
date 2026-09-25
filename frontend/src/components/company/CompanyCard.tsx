@@ -25,7 +25,7 @@ export const CompanyCard: React.FC<CompanyCardProps> = ({ company }) => {
           </span>
           {company.difficulty_rating > 0 ? (
             <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#92400E] bg-[#FBF1E1] border border-[#F1DFC2] px-2.5 py-1 rounded-full" title={`Difficulty ${company.difficulty_rating}/5`}>
-              <Star className="w-3.5 h-3.5 fill-[#E8A33D] text-[#E8A33D]" />
+              <Star className="w-3.5 h-3.5 fill-[#E8A33D] text-[#B45309]" />
               {company.difficulty_rating}/5
             </span>
           ) : (
@@ -78,9 +78,9 @@ export const CompanyCard: React.FC<CompanyCardProps> = ({ company }) => {
         </div>
       </div>
 
-      <div className="pt-2 flex items-center justify-between text-[13px] font-bold text-[#0271B5] group-hover:text-[#E8A33D] transition-colors">
+      <div className="pt-2 flex items-center justify-between text-[13px] font-bold text-[#0271B5] group-hover:text-[#B45309] transition-colors">
         <span className="flex items-center gap-1.5">
-          <Building2 className="w-3.5 h-3.5 text-[#E8A33D]" />
+          <Building2 className="w-3.5 h-3.5 text-[#B45309]" />
           Explore Intelligence Hub
         </span>
         <div className="w-7 h-7 rounded-full bg-[var(--bg-surface-hover)] group-hover:bg-[#0284C7] group-hover:text-white flex items-center justify-center transition-all">

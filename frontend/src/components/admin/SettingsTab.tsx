@@ -131,7 +131,7 @@ export const SettingsTab: React.FC = () => {
 
           <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-xs space-y-4">
             <h3 className="text-sm font-extrabold text-[#1E293B] flex items-center gap-2">
-              <QrCode className="w-4 h-4 text-[#E8A33D]" /> UPI merchant details
+              <QrCode className="w-4 h-4 text-[#B45309]" /> UPI merchant details
             </h3>
             <p className="text-xs text-gray-400 -mt-2">Shown to students at checkout. Every transfer is verified manually by you before the vault unlocks.</p>
             <div>
@@ -176,7 +176,7 @@ export const SettingsTab: React.FC = () => {
 
           <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-xs space-y-4">
             <h3 className="text-sm font-extrabold text-[#1E293B] flex items-center gap-2">
-              <KeyRound className="w-4 h-4 text-[#E8A33D]" /> Admin password
+              <KeyRound className="w-4 h-4 text-[#B45309]" /> Admin password
             </h3>
             <input type="password" placeholder="Current password" value={curPw} onChange={(e) => setCurPw(e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#0284C7]/30" />
             <input type="password" placeholder="New password (min 8 chars)" value={newPw} onChange={(e) => setNewPw(e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#0284C7]/30" />

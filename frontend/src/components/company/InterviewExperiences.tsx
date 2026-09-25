@@ -87,7 +87,7 @@ export const InterviewExperiences: React.FC<InterviewExperiencesProps> = ({
 
         <button
           onClick={onShare}
-          className="px-4 py-2 bg-[#E8A33D] hover:bg-[#D4902C] text-white text-[13px] font-bold rounded-xl transition-all shadow-sm shrink-0 inline-flex items-center gap-1.5"
+          className="px-4 py-2 bg-[#E8A33D] hover:bg-[#D4902C] text-[#241A06] text-[13px] font-bold rounded-xl transition-all shadow-sm shrink-0 inline-flex items-center gap-1.5"
         >
           <MessageSquare className="w-4 h-4" />
           Share Your Drive Experience
@@ -139,7 +139,7 @@ export const InterviewExperiences: React.FC<InterviewExperiencesProps> = ({
 
             <div className="pt-2 border-t border-[#EDEDEB]">
               <span className="text-[12px] font-semibold text-[--text-muted] block mb-1.5 flex items-center gap-1">
-                <Award className="w-3.5 h-3.5 text-[#E8A33D]" /> Rounds Cleared
+                <Award className="w-3.5 h-3.5 text-[#B45309]" /> Rounds Cleared
               </span>
               <div className="flex flex-wrap gap-1.5">
                 {exp.rounds_passed.map((r, idx) => (
@@ -151,7 +151,7 @@ export const InterviewExperiences: React.FC<InterviewExperiencesProps> = ({
             </div>
 
             <p className="flex items-start gap-1.5 text-[12px] text-[--text-muted]">
-                <Sparkles className="w-3.5 h-3.5 text-[#E8A33D] mt-0.5 shrink-0" />
+                <Sparkles className="w-3.5 h-3.5 text-[#B45309] mt-0.5 shrink-0" />
                 Candidate-verified drive log — reviewed by TieEdu content editors.
               </p>
           </div>

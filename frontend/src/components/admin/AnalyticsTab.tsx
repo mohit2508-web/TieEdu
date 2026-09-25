@@ -92,7 +92,7 @@ export const AnalyticsTab: React.FC<{ companies: Company[] }> = ({ companies }) 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-xs">
           <h3 className="text-sm font-extrabold text-[#1E293B] flex items-center gap-2 mb-4">
-            <Receipt className="w-4 h-4 text-[#E8A33D]" /> Revenue by day (paid orders)
+            <Receipt className="w-4 h-4 text-[#B45309]" /> Revenue by day (paid orders)
           </h3>
           {series.length === 0 ? (
             <p className="text-sm text-gray-400 italic">No paid orders — series is empty.</p>
@@ -136,7 +136,7 @@ export const AnalyticsTab: React.FC<{ companies: Company[] }> = ({ companies }) 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-xs">
           <h3 className="text-sm font-extrabold text-[#1E293B] flex items-center gap-2 mb-4">
-            <Ticket className="w-4 h-4 text-[#E8A33D]" /> Coupon usage
+            <Ticket className="w-4 h-4 text-[#B45309]" /> Coupon usage
           </h3>
           {coupons.length === 0 ? (
             <p className="text-sm text-gray-400 italic">No coupons created.</p>
@@ -159,7 +159,7 @@ export const AnalyticsTab: React.FC<{ companies: Company[] }> = ({ companies }) 
 
         <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-xs">
           <h3 className="text-sm font-extrabold text-[#1E293B] flex items-center gap-2 mb-4">
-            <Crown className="w-4 h-4 text-[#E8A33D]" /> Top contributors (leaderboard)
+            <Crown className="w-4 h-4 text-[#B45309]" /> Top contributors (leaderboard)
           </h3>
           {leaderboard.length === 0 ? (
             <p className="text-sm text-gray-400 italic">Leaderboard is empty — no XP or contributions yet.</p>

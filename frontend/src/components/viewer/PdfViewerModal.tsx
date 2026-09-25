@@ -305,7 +305,7 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
         {/* loading */}
         {status === 'loading' && (
           <div className="flex flex-col items-center gap-3 text-center w-full max-w-xs">
-            <Loader2 className="w-8 h-8 text-[#E8A33D] animate-spin" />
+            <Loader2 className="w-8 h-8 text-[#B45309] animate-spin" />
             <p className="text-[13px] text-gray-400">Rendering PDF — this can take a moment…</p>
             <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
               <div

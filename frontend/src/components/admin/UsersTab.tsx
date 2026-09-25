@@ -234,7 +234,7 @@ export const UsersTab: React.FC<{ companies: Company[] }> = ({ companies }) => {
                   <option value="" disabled>Select vault…</option>
                   {notUnlocked.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
-                <span className="text-[11px] text-gray-400 flex items-center gap-1"><Unlock className="w-3.5 h-3.5 text-[#E8A33D]" /> admin grant</span>
+                <span className="text-[11px] text-gray-400 flex items-center gap-1"><Unlock className="w-3.5 h-3.5 text-[#B45309]" /> admin grant</span>
               </div>
             </div>
             <div className="px-6 py-4 border-t border-[#EDEDEB] flex items-center justify-between">

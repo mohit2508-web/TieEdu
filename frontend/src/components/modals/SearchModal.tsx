@@ -73,7 +73,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, compa
         <div className="py-3 max-h-[65vh] sm:max-h-80 overflow-y-auto space-y-2">
           {query.trim() === '' ? (
             <div className="p-4 text-xs text-[--text-muted] text-center space-y-1">
-              <Sparkles className="w-4 h-4 text-[#E8A33D] mx-auto mb-1" />
+              <Sparkles className="w-4 h-4 text-[#B45309] mx-auto mb-1" />
               <p>Search company vaults and verified interview questions.</p>
               <p className="text-[10px] text-[#A8A8A2]">Use ESC to close</p>
             </div>

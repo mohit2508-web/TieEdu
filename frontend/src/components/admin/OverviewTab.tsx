@@ -129,8 +129,8 @@ export const OverviewTab: React.FC<{ companiesCount: number; pendingReportsCount
           <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-xs">
             <p className="eyebrow">Commerce</p>
             <div className="mt-3 space-y-2.5 text-sm">
-              <div className="flex justify-between items-center"><span className="text-gray-500 flex items-center gap-1.5"><TicketCheck className="w-4 h-4 text-[#E8A33D]" />Coupon redemptions</span><strong>{c.coupon_redemptions}</strong></div>
-              <div className="flex justify-between items-center"><span className="text-gray-500 flex items-center gap-1.5"><Coins className="w-4 h-4 text-[#E8A33D]" />Paid orders with coupon</span><strong>{c.coupons_applied}</strong></div>
+              <div className="flex justify-between items-center"><span className="text-gray-500 flex items-center gap-1.5"><TicketCheck className="w-4 h-4 text-[#B45309]" />Coupon redemptions</span><strong>{c.coupon_redemptions}</strong></div>
+              <div className="flex justify-between items-center"><span className="text-gray-500 flex items-center gap-1.5"><Coins className="w-4 h-4 text-[#B45309]" />Paid orders with coupon</span><strong>{c.coupons_applied}</strong></div>
             </div>
           </div>
           <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-xs">
@@ -154,7 +154,7 @@ export const OverviewTab: React.FC<{ companiesCount: number; pendingReportsCount
 
       <div className="bg-[#1F3A5F] text-white rounded-3xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-md">
         <div className="flex items-center gap-3">
-          <Database className="w-6 h-6 text-[#E8A33D]" />
+          <Database className="w-6 h-6 text-[#B45309]" />
           <div>
             <p className="text-sm font-extrabold">Storage: {analytics.system.storage}</p>
             <p className="text-xs text-gray-300">Uptime {Math.floor(analytics.system.uptime_seconds / 60)} min · snapshot {new Date(analytics.system.time).toLocaleString()}</p>

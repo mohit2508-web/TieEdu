@@ -504,7 +504,7 @@ export default function InterviewCoursePage() {
                             onClick={() => handleToggleModule(mod.id)}
                             className={`inline-flex items-center justify-center gap-1.5 min-h-[44px] px-4 py-2 w-full sm:w-auto rounded-lg text-xs font-semibold transition-all ${
                               isDone
-                                ? 'bg-emerald-600 text-white'
+                                ? 'bg-emerald-700 text-white'
                                 : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700'
                             }`}
                           >

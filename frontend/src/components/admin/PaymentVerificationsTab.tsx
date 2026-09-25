@@ -131,7 +131,7 @@ export const PaymentVerificationsTab: React.FC = () => {
                 <button
                   onClick={() => verify(p)}
                   disabled={busyId === p.id}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold disabled:opacity-50"
                 >
                   <ShieldCheck className="w-3.5 h-3.5" /> {busyId === p.id ? 'Working…' : 'I received this — verify & unlock'}
                 </button>

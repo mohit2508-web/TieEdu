@@ -125,7 +125,7 @@ export const AdminCmsView: React.FC = () => {
                       : 'text-gray-600 hover:bg-[#F3F2EE] hover:text-[#10151C]'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 ${activeTab === t.id ? 'text-[#E8A33D]' : 'text-[#0284C7]'}`} />
+                  <Icon className={`w-4 h-4 ${activeTab === t.id ? 'text-[#B45309]' : 'text-[#0284C7]'}`} />
                   <span className="flex-1">{t.label}</span>
                   {badge !== null && badge > 0 && (
                     <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${activeTab === t.id ? 'bg-amber-400/20 text-amber-300' : 'bg-[#1F3A5F] text-white'}`}>{badge}</span>

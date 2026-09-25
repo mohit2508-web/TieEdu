@@ -89,7 +89,7 @@ export default function ComparePage() {
           <div className="mb-8 flex flex-col lg:flex-row lg:items-end justify-between gap-4">
             <div>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-[#1F3A5F] border border-indigo-100 mb-3 shadow-sm">
-                <Scale className="w-3.5 h-3.5 text-[#E8A33D]" />
+                <Scale className="w-3.5 h-3.5 text-[#B45309]" />
                 Full-Width Comparative Intelligence Matrix
               </div>
               <h1 className="font-serif-heading text-3xl sm:text-4xl lg:text-5xl font-bold text-[#1A1A1A] mb-2 leading-tight">
@@ -135,7 +135,7 @@ export default function ComparePage() {
                       onClick={() => applyPreset([companies[0].slug, companies[1].slug, companies[2].slug])}
                       className="px-4 py-2 bg-[#FAFAF9] hover:bg-indigo-50 text-[#1F3A5F] border border-[#EDEDEB] hover:border-indigo-200 rounded-xl font-semibold transition-all flex items-center gap-2"
                     >
-                      <Zap className="w-4 h-4 text-[#E8A33D]" /> Top 3 published vaults
+                      <Zap className="w-4 h-4 text-[#B45309]" /> Top 3 published vaults
                     </button>
                   </div>
                 </div>
@@ -269,7 +269,7 @@ export default function ComparePage() {
                 {/* Row 8: Round 3 (System Design Focus) */}
                 <div className="grid grid-cols-4 p-5 border-b border-[#EDEDEB] text-xs sm:text-sm">
                   <div className="compare-sticky-col font-semibold text-[--text-muted] flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-[#E8A33D]" /> Round 3: System Design
+                    <Sparkles className="w-4 h-4 text-[#B45309]" /> Round 3: System Design
                   </div>
                   {comparedList.map((c, i) => (
                     <div key={i} className="text-[#4A4A4A] leading-relaxed text-xs font-medium">
@@ -293,7 +293,7 @@ export default function ComparePage() {
                 {/* Row 10: Top High-Frequency Questions Previews */}
                 <div className="grid grid-cols-4 p-5 border-b border-[#EDEDEB] text-xs sm:text-sm">
                   <div className="compare-sticky-col font-semibold text-[--text-muted] flex items-center gap-2">
-                    <HelpCircle className="w-4 h-4 text-[#E8A33D]" /> Top Questions Asked
+                    <HelpCircle className="w-4 h-4 text-[#B45309]" /> Top Questions Asked
                   </div>
                   {comparedList.map((c, i) => (
                     <div key={i} className="space-y-2">
@@ -326,7 +326,7 @@ export default function ComparePage() {
                       ) : (
                         <button
                           onClick={() => handleUnlock(c)}
-                          className="px-5 py-2.5 bg-[#E8A33D] hover:bg-[#D4902C] text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all"
+                          className="px-5 py-2.5 bg-[#E8A33D] hover:bg-[#D4902C] text-[#241A06] rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all"
                         >
                           <Lock className="w-3.5 h-3.5" />
                           <span>Unlock Vault</span>

@@ -94,7 +94,7 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
           </p>
           <button
             onClick={onUnlockClick}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#E8A33D] hover:bg-[#d6922e] text-white text-sm font-bold rounded-xl transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#E8A33D] hover:bg-[#d6922e] text-[#241A06] text-sm font-bold rounded-xl transition-colors"
           >
             Unlock Access — ₹249
             <ChevronRight className="w-4 h-4" />
@@ -159,7 +159,7 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
               <button
                 onClick={runCode}
                 disabled={isRunning}
-                className="inline-flex items-center gap-1.5 px-3 py-1 bg-[--brand-accent] hover:bg-[--brand-accent-hover] text-white text-[11px] font-bold rounded-lg transition-colors disabled:opacity-60 font-mono"
+                className="inline-flex items-center gap-1.5 px-3 py-1 bg-[--brand-accent] hover:bg-[--brand-accent-hover] text-[#241A06] text-[11px] font-bold rounded-lg transition-colors disabled:opacity-60 font-mono"
               >
                 {isRunning ? <Cpu className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5 fill-current" />}
                 {isRunning ? 'Running…' : 'Run'}

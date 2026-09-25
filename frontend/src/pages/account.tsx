@@ -567,7 +567,7 @@ const AccountPageContent: React.FC = () => {
                   <div className="vault-card p-6 flex flex-col justify-between gap-4">
                     <div>
                       <h3 className="text-[15px] font-extrabold text-[#10151C] flex items-center gap-2">
-                        <LockKeyhole className="w-4 h-4 text-[#E8A33D]" /> Session
+                        <LockKeyhole className="w-4 h-4 text-[#B45309]" /> Session
                       </h3>
                       <p className="text-[13px] text-[--text-muted] mt-2">
                         Signing out revokes your refresh session. Your access token expires automatically after 15 minutes.

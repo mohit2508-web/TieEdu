@@ -372,7 +372,7 @@ export const SectionPackEditor: React.FC<SectionPackEditorProps> = ({ module, co
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white rounded-xl text-xs font-bold transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 disabled:opacity-60 text-white rounded-xl text-xs font-bold transition-colors"
           >
             <Save className="w-4 h-4" /> {isSaving ? 'Saving...' : 'Save Full Pack'}
           </button>

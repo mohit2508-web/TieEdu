@@ -111,7 +111,7 @@ export const BlockEditorModal: React.FC<BlockEditorModalProps> = ({
         <div className="flex items-center justify-between pb-4 border-b border-gray-200 mb-4 shrink-0">
           <div>
             <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold uppercase bg-amber-100 text-amber-900 px-2 py-0.5 rounded">
-              <Sparkles className="w-3 h-3 text-[#E8A33D]" /> Live CMS Block Builder
+              <Sparkles className="w-3 h-3 text-[#B45309]" /> Live CMS Block Builder
             </span>
             <h3 className="text-xl font-bold text-[#1E293B] pt-1">Add Content Block</h3>
             <p className="text-xs text-gray-500">{moduleTitle} · {companyName}</p>
@@ -265,7 +265,7 @@ export const BlockEditorModal: React.FC<BlockEditorModalProps> = ({
                 type="button"
                 onClick={handleSave}
                 disabled={isSaving}
-                className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
+                className="w-full py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
               >
                 <Save className="w-4 h-4" />
                 <span>{isSaving ? 'Publishing...' : 'Save & Publish Block'}</span>

@@ -66,7 +66,7 @@ export const TrustBadgeBar: React.FC<TrustBadgeBarProps> = ({
 
         {/* Accuracy score — real */}
         <div className="flex items-center gap-1.5 bg-[#1F3A5F]/5 px-3 py-1.5 rounded-xl border border-[#1F3A5F]/15 font-bold text-[#1F3A5F] text-[13px]">
-          <Award className="w-4 h-4 text-[#E8A33D]" />
+          <Award className="w-4 h-4 text-[#B45309]" />
           <span>{accuracy > 0 ? `${accuracy}% Exam Match Score` : 'Match score pending reports'}</span>
         </div>
 

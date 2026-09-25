@@ -44,7 +44,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectPlan }) 
 
         <div className="text-center max-w-2xl mx-auto mb-12">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-[#1F3A5F] border border-indigo-100 mb-3">
-            <Sparkles className="w-3.5 h-3.5 text-[#E8A33D]" />
+            <Sparkles className="w-3.5 h-3.5 text-[#B45309]" />
             Transparent Pricing Structure
           </span>
           <h2 className="font-serif-heading text-2xl sm:text-3xl font-bold text-[#1A1A1A] mb-3">

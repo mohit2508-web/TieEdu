@@ -18,7 +18,7 @@ export const RelatedVaults: React.FC<RelatedVaultsProps> = ({ currentCompanySlug
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h3 className="text-[15px] font-bold text-[#1F3A5F] flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-[#E8A33D]" />
+            <Sparkles className="w-5 h-5 text-[#B45309]" />
             More Company Vaults
           </h3>
           <p className="text-[13px] text-[--text-muted] mt-0.5">
@@ -41,7 +41,7 @@ export const RelatedVaults: React.FC<RelatedVaultsProps> = ({ currentCompanySlug
                 className="w-10 h-10 rounded-xl p-1"
               />
               <div>
-                <h4 className="font-bold text-[14px] text-[#1A1A1A] group-hover:text-[#E8A33D] transition-colors">{company.name} Vault</h4>
+                <h4 className="font-bold text-[14px] text-[#1A1A1A] group-hover:text-[#B45309] transition-colors">{company.name} Vault</h4>
                 <p className="text-[13px] text-[--text-muted]">
                   {company.ctc_min != null && company.ctc_max != null
                     ? `₹${company.ctc_min} - ₹${company.ctc_max} LPA`
@@ -52,7 +52,7 @@ export const RelatedVaults: React.FC<RelatedVaultsProps> = ({ currentCompanySlug
 
             <div className="flex items-center justify-between pt-3 border-t border-[#EDEDEB] text-[13px] font-semibold text-[#1F3A5F]">
               <span>{company.unlock_count ? `${company.unlock_count} Unlocks` : 'No unlocks yet'}</span>
-              <span className="flex items-center gap-1 group-hover:translate-x-1 transition-transform text-[#E8A33D]">
+              <span className="flex items-center gap-1 group-hover:translate-x-1 transition-transform text-[#B45309]">
                 <span>Inspect Vault</span>
                 <ArrowRight className="w-4 h-4" />
               </span>

@@ -72,7 +72,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
         </div>
         <button
           onClick={onUnlockClick}
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#E8A33D] hover:bg-[#D4902C] text-white text-sm font-bold rounded-xl transition-colors"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#E8A33D] hover:bg-[#D4902C] text-[#241A06] text-sm font-bold rounded-xl transition-colors"
         >
           <ShoppingCart className="w-4 h-4" /> Unlock Full Vault — ₹{unlockPrice}
         </button>
@@ -123,7 +123,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
           {module.is_premium && !isModuleUnlocked && (
             <button
               onClick={onUnlockClick}
-              className="inline-flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 bg-[#E8A33D] hover:bg-[#D4902C] text-white rounded-xl text-xs sm:text-sm font-bold shadow-xs transition-colors"
+              className="inline-flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 bg-[#E8A33D] hover:bg-[#D4902C] text-[#241A06] rounded-xl text-xs sm:text-sm font-bold shadow-xs transition-colors"
             >
               <ShoppingCart className="w-4 h-4 shrink-0" />
               <span className="whitespace-nowrap">Unlock ₹{unlockPrice}</span>
@@ -594,7 +594,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                   <p className="text-base text-gray-600 max-w-md mx-auto leading-relaxed">
                     {companyName}&apos;s full vault includes this PDF guide: <strong>{module.pdf ? module.pdf.title + ' — view & download' : 'round-wise guides, cheat sheets, and last-minute revision'}</strong>. Unlock once, and the entire company vault is yours.
                   </p>
-                  <button onClick={onUnlockClick} className="inline-flex items-center gap-2 px-6 py-3 bg-[#E8A33D] hover:bg-[#D4902C] text-white text-sm font-bold rounded-xl shadow-md transition-all">
+                  <button onClick={onUnlockClick} className="inline-flex items-center gap-2 px-6 py-3 bg-[#E8A33D] hover:bg-[#D4902C] text-[#241A06] text-sm font-bold rounded-xl shadow-md transition-all">
                     <ShoppingCart className="w-4 h-4" /> Unlock Full Vault — ₹{unlockPrice}
                   </button>
                 </div>
@@ -640,7 +640,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
           {/* NEXT-STEP STRIP — after-buy aware */}
           {isUnlocked ? (
             <div className="mt-10 rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-6 sm:p-8 text-center space-y-4 animate-fade-in">
-              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-600 text-white shadow-md mb-1">
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-700 text-white shadow-md mb-1">
                 <CheckCircle2 className="w-7 h-7" />
               </div>
               <div>
@@ -654,7 +654,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
               <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
                 <button
                   onClick={onBack}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl shadow-md transition-all"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-bold rounded-xl shadow-md transition-all"
                 >
                   <BookOpen className="w-4 h-4" /> Browse All Modules
                 </button>
@@ -676,7 +676,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
               <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
                 <button
                   onClick={onUnlockClick}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-[#E8A33D] hover:bg-[#D4902C] text-white text-sm font-bold rounded-xl shadow-md transition-all"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-[#E8A33D] hover:bg-[#D4902C] text-[#241A06] text-sm font-bold rounded-xl shadow-md transition-all"
                 >
                   <ShoppingCart className="w-4 h-4" /> Unlock Full Vault — ₹{unlockPrice}
                 </button>

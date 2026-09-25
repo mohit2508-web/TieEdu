@@ -317,7 +317,7 @@ export const CartModal: React.FC<CartModalProps> = ({
         <div className="flex items-center justify-between px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200 shrink-0 bg-white">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-[#1F3A5F]/5 border border-[#1F3A5F]/10 text-[#1F3A5F] flex items-center justify-center shadow-sm">
-              <ShoppingBag className="w-5 h-5 text-[#E8A33D]" />
+              <ShoppingBag className="w-5 h-5 text-[#B45309]" />
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -382,7 +382,7 @@ export const CartModal: React.FC<CartModalProps> = ({
                 <span>After transferring, tap <b>“I&apos;ve made the payment”</b>. Our team verifies every UPI payment manually before unlocking.</span>
               </div>
               <div className="flex items-start gap-2">
-                <Hourglass className="w-4 h-4 text-[#E8A33D] mt-0.5 shrink-0" />
+                <Hourglass className="w-4 h-4 text-[#B45309] mt-0.5 shrink-0" />
                 <span>Verification usually takes a few minutes. Your vault unlocks automatically once approved.</span>
               </div>
             </div>
@@ -390,7 +390,7 @@ export const CartModal: React.FC<CartModalProps> = ({
             <button
               onClick={handleConfirmPayment}
               disabled={isProcessing || (!upiId && !upiQr)}
-              className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2 shadow-md transition-all"
+              className="w-full py-3.5 bg-emerald-700 hover:bg-emerald-800 disabled:opacity-60 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2 shadow-md transition-all"
             >
               {isProcessing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
               {isProcessing ? 'Confirming…' : "I&apos;ve made the payment"}
@@ -474,7 +474,7 @@ export const CartModal: React.FC<CartModalProps> = ({
               {missingModules.length > 0 && (
                 <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-4 space-y-3">
                   <div className="flex items-start gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-[#E8A33D] text-white flex items-center justify-center shrink-0">
+                    <div className="w-9 h-9 rounded-xl bg-[#E8A33D] text-[#241A06] flex items-center justify-center shrink-0">
                       <Layers className="w-5 h-5" />
                     </div>
                     <div>
@@ -495,7 +495,7 @@ export const CartModal: React.FC<CartModalProps> = ({
                     </button>
                     <button
                       onClick={() => onAddCompletePack?.()}
-                      className="flex-1 px-3 py-2 bg-[#E8A33D] hover:bg-[#D4902C] text-white text-[13px] font-bold rounded-xl transition-all"
+                      className="flex-1 px-3 py-2 bg-[#E8A33D] hover:bg-[#D4902C] text-[#241A06] text-[13px] font-bold rounded-xl transition-all"
                     >
                       Complete Pack ₹249
                     </button>
@@ -555,7 +555,7 @@ export const CartModal: React.FC<CartModalProps> = ({
               {/* Coupon Section */}
               <div className="bg-[#FAFAF9] p-4 rounded-xl border border-gray-200 space-y-2.5">
                 <span className="text-[13px] font-bold text-[#4A4A4A] flex items-center gap-1.5">
-                  <Tag className="w-4 h-4 text-[#E8A33D]" /> Apply Discount Code <span className="text-[12px] font-semibold text-emerald-600">server-validated</span>
+                  <Tag className="w-4 h-4 text-[#B45309]" /> Apply Discount Code <span className="text-[12px] font-semibold text-emerald-600">server-validated</span>
                 </span>
 
                 <div className="flex gap-2">
@@ -579,7 +579,7 @@ export const CartModal: React.FC<CartModalProps> = ({
                         onClick={() => applyCouponHandler(c.code)}
                         className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 text-[12px] font-bold rounded-md transition-all flex items-center gap-1"
                       >
-                        <Sparkles className="w-3 h-3 text-[#E8A33D]" /> {c.label || c.code}
+                        <Sparkles className="w-3 h-3 text-[#B45309]" /> {c.label || c.code}
                       </button>
                     ))}
                   </div>
@@ -596,7 +596,7 @@ export const CartModal: React.FC<CartModalProps> = ({
               {suggestedCompanies.length > 0 && (
                 <div className="bg-[#FAFAF9] p-4 rounded-xl border border-gray-200 space-y-2.5">
                   <span className="text-[13px] font-bold text-[#4A4A4A] flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-[#E8A33D]" /> Students also add these packs
+                    <Sparkles className="w-4 h-4 text-[#B45309]" /> Students also add these packs
                   </span>
                   {suggestedCompanies.map(c => (
                     <button
@@ -611,7 +611,7 @@ export const CartModal: React.FC<CartModalProps> = ({
                           <span className="text-[13px] text-[--text-muted]">{c.accuracy_report_count ? `${c.accuracy_report_count} verified detail` : 'Full round-by-round detail'} · 4 Rounds</span>
                         </div>
                       </div>
-                      <span className="text-[13px] font-extrabold text-[#E8A33D] group-hover:underline">+ Add ₹249</span>
+                      <span className="text-[13px] font-extrabold text-[#B45309] group-hover:underline">+ Add ₹249</span>
                     </button>
                   ))}
                 </div>
@@ -652,7 +652,7 @@ export const CartModal: React.FC<CartModalProps> = ({
                 </div>
               </div>
 
-              <button onClick={handlePay} disabled={isProcessing} className="w-full py-3.5 bg-[#E8A33D] hover:bg-[#D4902C] text-white text-xs sm:text-sm font-bold rounded-xl flex items-center justify-center gap-2 shadow-md transition-all disabled:opacity-75">
+              <button onClick={handlePay} disabled={isProcessing} className="w-full py-3.5 bg-[#E8A33D] hover:bg-[#D4902C] text-[#241A06] text-xs sm:text-sm font-bold rounded-xl flex items-center justify-center gap-2 shadow-md transition-all disabled:opacity-75">
                 {isProcessing ? (
                   <>
                     <RefreshCw className="w-4 h-4 animate-spin" />

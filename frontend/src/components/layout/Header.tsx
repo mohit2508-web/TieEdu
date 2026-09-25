@@ -110,7 +110,7 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={onOpenLeaderboard}
             className="w-10 h-10 sm:w-auto sm:h-auto flex items-center justify-center sm:inline-flex gap-2 chip hover:border-[#E8A33D] hover:text-[#C77B12]" title="Daily streak leaderboard"
           >
-            <Flame className="w-4 h-4 text-[#E8A33D] fill-[#E8A33D]" />
+            <Flame className="w-4 h-4 text-[#B45309] fill-[#E8A33D]" />
             <span className="font-bold hidden sm:inline">Leaderboard</span>
           </button>
 
@@ -121,7 +121,7 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <ShoppingBag className="w-5 h-5" />
             {cartCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 bg-[#E8A33D] text-white text-[10px] font-bold min-w-4 h-4 px-0.5 rounded-full flex items-center justify-center shadow-sm stat-num">
+              <span className="absolute -top-0.5 -right-0.5 bg-[#E8A33D] text-[#241A06] text-[10px] font-bold min-w-4 h-4 px-0.5 rounded-full flex items-center justify-center shadow-sm stat-num">
                 {cartCount}
               </span>
             )}
@@ -251,7 +251,7 @@ export const Header: React.FC<HeaderProps> = ({
                   onClick={() => openDrawerNav(() => onOpenLeaderboard())}
                   className="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-[15px] font-bold text-[#3E4754] hover:bg-[#F3F2EE] transition-colors text-left"
                 >
-                  <Flame className="w-4 h-4 text-[#E8A33D]" /> Leaderboard
+                  <Flame className="w-4 h-4 text-[#B45309]" /> Leaderboard
                 </button>
                 <button
                   onClick={() => openDrawerNav(() => onOpenCart())}
@@ -259,7 +259,7 @@ export const Header: React.FC<HeaderProps> = ({
                 >
                   <ShoppingBag className="w-4 h-4 text-[#0284C7]" /> Cart
                   {cartCount > 0 && (
-                    <span className="ml-auto inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-[#E8A33D] text-white text-[11px] font-bold">
+                    <span className="ml-auto inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-[#E8A33D] text-[#241A06] text-[11px] font-bold">
                       {cartCount}
                     </span>
                   )}

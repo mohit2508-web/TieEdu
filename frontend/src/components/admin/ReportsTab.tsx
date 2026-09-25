@@ -147,7 +147,7 @@ export const ReportsTab: React.FC<{ companies: Company[]; onChanged?: () => void
                 <div className="flex items-center gap-2">
                   {r.status === 'pending_review' && (
                     <>
-                      <button onClick={() => changeStatus(r.id, 'published')} className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold flex items-center gap-1">
+                      <button onClick={() => changeStatus(r.id, 'published')} className="px-2.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-[10px] font-bold flex items-center gap-1">
                         <Check className="w-3 h-3" /> Publish (+50 XP)
                       </button>
                       <button onClick={() => changeStatus(r.id, 'rejected')} className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg text-[10px] font-bold flex items-center gap-1">

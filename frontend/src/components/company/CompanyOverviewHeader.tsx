@@ -107,14 +107,14 @@ export const CompanyOverviewHeader: React.FC<CompanyOverviewHeaderProps> = ({
           </div>
 
           {isUnlocked ? (
-            <span className="w-full inline-flex items-center justify-center gap-1.5 px-5 py-2.5 bg-emerald-600 text-white text-xs sm:text-sm font-bold rounded-xl shadow-md uppercase tracking-wide">
+            <span className="w-full inline-flex items-center justify-center gap-1.5 px-5 py-2.5 bg-emerald-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-md uppercase tracking-wide">
               <CheckCircle2 className="w-4 h-4" />
               Vault Unlocked
             </span>
           ) : (
           <button
             onClick={onUnlockClick}
-            className="w-full px-5 py-2.5 bg-[#E8A33D] hover:bg-[#D4902C] text-white text-xs sm:text-sm font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 uppercase tracking-wide"
+            className="w-full px-5 py-2.5 bg-[#E8A33D] hover:bg-[#D4902C] text-[#241A06] text-xs sm:text-sm font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 uppercase tracking-wide"
           >
             <Sparkles className="w-4 h-4 fill-white" />
             <span>{unlockPrice < 249 ? `Finish Pack — ₹${unlockPrice}` : 'Unlock Intelligence Hub'}</span>
@@ -172,13 +172,13 @@ export const CompanyOverviewHeader: React.FC<CompanyOverviewHeaderProps> = ({
       {defaultRounds.length > 0 && (
       <div className="pt-2">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm sm:text-base font-bold uppercase tracking-wider text-[#1F3A5F] flex items-center gap-2">
+          <h2 className="text-sm sm:text-base font-bold uppercase tracking-wider text-[#1F3A5F] flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[#E8A33D]"></span>
             Recruitment Process Pipeline (Click to filter round modules)
-          </h3>
+          </h2>
           <button
             onClick={() => onSelectRoundTab('all')}
-            className={`text-xs sm:text-sm font-semibold font-mono ${activeRoundTab === 'all' ? 'text-[#E8A33D] underline' : 'text-gray-500 hover:text-gray-900'}`}
+            className={`text-xs sm:text-sm font-semibold font-mono ${activeRoundTab === 'all' ? 'text-[#B45309] underline' : 'text-gray-500 hover:text-gray-900'}`}
           >
             Show All Rounds
           </button>
@@ -208,7 +208,7 @@ export const CompanyOverviewHeader: React.FC<CompanyOverviewHeaderProps> = ({
                   </span>
                 </div>
 
-                <h4 className="text-sm sm:text-base font-bold truncate mb-0.5">{r.title}</h4>
+                <h3 className="text-sm sm:text-base font-bold truncate mb-0.5">{r.title}</h3>
                 <p className={`text-xs sm:text-sm ${isActive ? 'text-gray-200' : 'text-gray-500'}`}>{r.subtitle}</p>
               </button>
             );

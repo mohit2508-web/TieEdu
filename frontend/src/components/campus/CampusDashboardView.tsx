@@ -31,7 +31,7 @@ export const CampusDashboardView: React.FC = () => {
       <div className="bg-[#1F3A5F] text-white p-6 sm:p-8 rounded-3xl mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-md">
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/10 text-amber-300 border border-white/20 mb-3">
-            <Building className="w-3.5 h-3.5 text-[#E8A33D]" />
+            <Building className="w-3.5 h-3.5 text-[#B45309]" />
             B2B Campus Placement Cell Control Plane
           </div>
           <h1 className="font-serif-heading text-2xl sm:text-3xl font-bold mb-2">
@@ -65,7 +65,7 @@ export const CampusDashboardView: React.FC = () => {
           <span className="text-xs text-[--text-muted] font-semibold block">Active Prep Rate</span>
           <div className="flex items-baseline justify-between">
             <span className="font-serif-heading text-3xl font-bold text-[#1E8E5A]">{cohort.prep_rate_percent}%</span>
-            <Sparkles className="w-5 h-5 text-[#E8A33D]" />
+            <Sparkles className="w-5 h-5 text-[#B45309]" />
           </div>
           <span className="text-[10px] text-[--text-muted] block">{cohort.active_prep_students} Candidates Active</span>
         </div>
@@ -82,8 +82,8 @@ export const CampusDashboardView: React.FC = () => {
         <div className="bg-white p-5 rounded-2xl border border-[#EDEDEB] shadow-sm space-y-1">
           <span className="text-xs text-[--text-muted] font-semibold block">Verified Drive Reports</span>
           <div className="flex items-baseline justify-between">
-            <span className="font-serif-heading text-3xl font-bold text-[#E8A33D]">{cohort.verified_reports_submitted ?? 0} Published</span>
-            <BarChart3 className="w-5 h-5 text-[#E8A33D]" />
+            <span className="font-serif-heading text-3xl font-bold text-[#B45309]">{cohort.verified_reports_submitted ?? 0} Published</span>
+            <BarChart3 className="w-5 h-5 text-[#B45309]" />
           </div>
           <span className="text-[10px] text-[--text-muted] block">+50 XP credited per approved report</span>
         </div>

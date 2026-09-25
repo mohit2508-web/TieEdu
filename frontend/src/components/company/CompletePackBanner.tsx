@@ -17,7 +17,7 @@ export const CompletePackBanner: React.FC<Props> = ({ companyName, premiumCount,
       <section className="rounded-3xl border-2 border-emerald-200 bg-gradient-to-r from-emerald-50 via-white to-emerald-50 shadow-sm p-6 sm:p-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
           <div className="flex items-start gap-4 min-w-0">
-            <div className="w-14 h-14 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-md">
+            <div className="w-14 h-14 rounded-2xl bg-emerald-700 text-white flex items-center justify-center shrink-0 shadow-md">
               <BadgeCheck className="w-7 h-7" />
             </div>
             <div className="min-w-0">
@@ -34,7 +34,7 @@ export const CompletePackBanner: React.FC<Props> = ({ companyName, premiumCount,
           </div>
           <button
             onClick={onBrowseModules}
-            className="inline-flex items-center justify-center gap-2 min-h-[46px] px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl shadow-lg transition-all shrink-0"
+            className="inline-flex items-center justify-center gap-2 min-h-[46px] px-6 py-3.5 bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-bold rounded-xl shadow-lg transition-all shrink-0"
           >
             <Layers className="w-5 h-5" /> Browse Modules
           </button>

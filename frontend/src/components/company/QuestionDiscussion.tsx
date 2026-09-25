@@ -203,7 +203,7 @@ export const QuestionDiscussion: React.FC<QuestionDiscussionProps> = ({ itemId, 
                 onClick={() => handleUpvote(comment.id)}
                 className="flex items-center gap-1 text-xs font-mono font-semibold text-gray-600 hover:text-[#1F3A5F] bg-[#FAFAF9] px-2.5 py-1 rounded-lg border border-[#EDEDEB]"
               >
-                <ThumbsUp className="w-3.5 h-3.5 text-[#E8A33D]" />
+                <ThumbsUp className="w-3.5 h-3.5 text-[#B45309]" />
                 <span>{comment.upvotes}</span>
               </button>
             </div>

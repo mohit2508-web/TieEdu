@@ -61,7 +61,7 @@ export const FeaturedFreeModuleCard: React.FC<Props> = ({ module, companyName, o
         <div className="flex flex-col sm:flex-row lg:flex-col xl:flex-row items-stretch gap-3 shrink-0 lg:pl-6">
           <button
             onClick={onOpenModule}
-            className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl shadow-md transition-all"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-bold rounded-xl shadow-md transition-all"
           >
             <BookOpen className="w-5 h-5" /> Open Free Module
           </button>
@@ -74,13 +74,13 @@ export const FeaturedFreeModuleCard: React.FC<Props> = ({ module, companyName, o
             </button>
           )}
           {isUnlocked ? (
-            <span className="inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-emerald-600 text-white text-sm font-bold rounded-xl shadow-md uppercase tracking-wide">
+            <span className="inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-emerald-700 text-white text-sm font-bold rounded-xl shadow-md uppercase tracking-wide">
               <CheckCircle2 className="w-5 h-5" /> Vault Unlocked
             </span>
           ) : (
           <button
             onClick={onUnlockClick}
-            className="inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-[#E8A33D] hover:bg-[#D4902C] text-white text-sm font-bold rounded-xl shadow-md transition-all"
+            className="inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-[#E8A33D] hover:bg-[#D4902C] text-[#241A06] text-sm font-bold rounded-xl shadow-md transition-all"
           >
             <Lock className="w-4 h-4" /> {unlockPrice < 249 ? `Finish Pack — ₹${unlockPrice}` : `Unlock Premium — ₹${unlockPrice}`}
           </button>

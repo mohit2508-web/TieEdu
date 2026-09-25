@@ -32,7 +32,7 @@ const FT_ITEMS = [
 const OFFERS = [
   { icon: ShieldCheck, text: 'Verified round-by-round intelligence — no fake question dumps', cls: 'text-[#0284C7]' },
   { icon: FileText, text: 'Official PDF guides in every premium module — view or download after unlock', cls: 'text-[#15803D]' },
-  { icon: Layers, text: 'Complete Pack ₹249 covers all rounds — always cheaper than singles', cls: 'text-[#E8A33D]' },
+  { icon: Layers, text: 'Complete Pack ₹249 covers all rounds — always cheaper than singles', cls: 'text-[#B45309]' },
   { icon: Sparkles, text: 'Free 7-section pack open in every vault — no signup needed to read', cls: 'text-[#0E2A44]' },
   { icon: ShieldCheck, text: '2026 drive prep — new company vaults added every month', cls: 'text-[#C77B12]' },
 ];
@@ -140,7 +140,7 @@ export default function Home() {
                     Compare Companies <ArrowRight className="w-4 h-4" />
                   </Link>
                   <Link href="/study-plan" className="btn btn-ghost px-6 py-3 text-sm focus-ring">
-                    <span className="text-[#E8A33D]">★</span> Generate Auto Study Plan
+                    <span className="text-[#B45309]">★</span> Generate Auto Study Plan
                   </Link>
                 </div>
 
@@ -159,7 +159,7 @@ export default function Home() {
                 <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2.5 pt-1">
                   <span className="chip"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Server-verified pricing</span>
                   <span className="chip"><ShieldCheck className="w-3.5 h-3.5 text-[#0284C7]" /> 7-day refund guarantee</span>
-                  <span className="chip"><Star className="w-3.5 h-3.5 text-[#E8A33D] fill-[#E8A33D]" /> PDF notes you can view & download</span>
+                  <span className="chip"><Star className="w-3.5 h-3.5 text-[#B45309] fill-[#E8A33D]" /> PDF notes you can view & download</span>
                 </div>
 
               </div>

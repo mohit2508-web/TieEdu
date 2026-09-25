@@ -77,7 +77,7 @@ export const CompanyHubManager: React.FC<CompanyHubManagerProps> = ({ companies,
           </h3>
           <p className="text-xs text-gray-500">{companies.length} companies · full metadata CRUD</p>
         </div>
-        <button onClick={openNew} className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-colors">
+        <button onClick={openNew} className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition-colors">
           <Plus className="w-4 h-4" /> Add Company
         </button>
       </div>
@@ -220,7 +220,7 @@ export const CompanyHubManager: React.FC<CompanyHubManagerProps> = ({ companies,
               </div>
             </div>
 
-            <button onClick={handleSubmit} disabled={saving} className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all disabled:opacity-60 flex items-center justify-center gap-2">
+            <button onClick={handleSubmit} disabled={saving} className="w-full py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all disabled:opacity-60 flex items-center justify-center gap-2">
               {saving && <CheckCircle2 className="w-4 h-4" />} {saving ? 'Saving...' : editing ? 'Update Company' : 'Create Company'}
             </button>
           </div>

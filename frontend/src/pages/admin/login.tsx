@@ -61,7 +61,7 @@ export default function AdminLoginPage() {
 
           <div className="vault-card p-8 shadow-float border-[#E8CFA7]">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0E2A44] text-white text-[11px] font-extrabold uppercase tracking-widest mb-4">
-              <ShieldCheck className="w-3.5 h-3.5 text-[#E8A33D]" /> Restricted
+              <ShieldCheck className="w-3.5 h-3.5 text-[#B45309]" /> Restricted
             </div>
             <h1 className="display-2 mb-1.5">Platform admin portal</h1>
             <p className="text-[15px] text-[--text-muted] mb-7">

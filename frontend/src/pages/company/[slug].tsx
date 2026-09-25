@@ -364,7 +364,7 @@ export default function CompanyVaultPage() {
                       onClick={() => handleToggleSolve(selectedItem.id)}
                       className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold border transition-all ${
                         solvedItemIds.includes(selectedItem.id)
-                          ? 'bg-emerald-600 text-white border-emerald-600'
+                          ? 'bg-emerald-700 text-white border-emerald-600'
                           : 'bg-white text-[var(--text-muted)] border-[var(--border-subtle)] hover:border-gray-300'
                       }`}
                     >
@@ -569,9 +569,9 @@ export default function CompanyVaultPage() {
                   {ownedModuleIds.length > 0
                     ? `Finish ${company.name} prep — ${remainingPremium.length} round${remainingPremium.length === 1 ? '' : 's'} left`
                     : `Unlock full ${company.name} preparation pack`}
-                  <span className="ml-2 bg-[var(--brand-accent)] text-white text-[11px] font-bold px-2 py-0.5 rounded">₹{remainingPrice}</span>
+                  <span className="ml-2 bg-[var(--brand-accent)] text-[#241A06] text-[11px] font-bold px-2 py-0.5 rounded">₹{remainingPrice}</span>
                 </p>
-                <p className="text-[11px] text-white/60 mt-1 truncate">
+                <p className="text-[11px] text-white/90 mt-1 truncate">
                   {cartItems.length > 0
                     ? `${company.name}: ${cartItems.length} item${cartItems.length === 1 ? '' : 's'} in cart · combo savings apply`
                     : ownedModuleIds.length > 0
@@ -587,7 +587,7 @@ export default function CompanyVaultPage() {
                 )}
                 <button
                   onClick={() => (cartItems.length > 0 ? setIsCartOpen(true) : handleUnlockClick())}
-                  className="inline-flex items-center justify-center gap-2 min-h-[46px] px-5 sm:px-6 py-2.5 bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-white text-[13px] sm:text-sm font-bold rounded-xl transition-colors"
+                  className="inline-flex items-center justify-center gap-2 min-h-[46px] px-5 sm:px-6 py-2.5 bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[#241A06] text-[13px] sm:text-sm font-bold rounded-xl transition-colors"
                 >
                   <Sparkles className="w-4 h-4 shrink-0" />
                   <span>{cartItems.length > 0 ? 'Checkout →' : 'Unlock Now'}</span>

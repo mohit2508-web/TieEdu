@@ -160,7 +160,7 @@ export const SubmitReportModal: React.FC<SubmitReportModalProps> = ({
         )}
 
         <div className="mt-4 flex items-start gap-1.5 text-[12px] text-[--text-muted]">
-          <Award className="w-3.5 h-3.5 text-[#E8A33D] mt-0.5 shrink-0" />
+          <Award className="w-3.5 h-3.5 text-[#B45309] mt-0.5 shrink-0" />
           Reports appear on the company page only after verification by our content editors.
         </div>
       </div>

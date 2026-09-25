@@ -69,7 +69,7 @@ export default function StudyPlanPage() {
           {/* Header */}
           <div className="mb-8">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-[#1F3A5F] border border-indigo-100 mb-2">
-              <Sparkles className="w-3.5 h-3.5 text-[#E8A33D]" />
+              <Sparkles className="w-3.5 h-3.5 text-[#B45309]" />
               Prep Plan Generator
             </div>
             <h1 className="font-serif-heading text-2xl sm:text-3xl font-bold text-[#1A1A1A]">
