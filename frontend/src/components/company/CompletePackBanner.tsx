@@ -4,12 +4,14 @@ import { ShoppingCart, BadgeCheck, Layers, CheckCircle2 } from 'lucide-react';
 interface Props {
   companyName: string;
   premiumCount: number;
+  ownedCount?: number;
+  remainingPrice?: number;
   onAddCompletePack: () => void;
   isUnlocked?: boolean;
   onBrowseModules?: () => void;
 }
 
-export const CompletePackBanner: React.FC<Props> = ({ companyName, premiumCount, onAddCompletePack, isUnlocked, onBrowseModules }) => {
+export const CompletePackBanner: React.FC<Props> = ({ companyName, premiumCount, ownedCount = 0, remainingPrice, onAddCompletePack, isUnlocked, onBrowseModules }) => {
   if (isUnlocked) {
     return (
       <section className="rounded-3xl border-2 border-emerald-200 bg-gradient-to-r from-emerald-50 via-white to-emerald-50 shadow-sm p-6 sm:p-8">
@@ -54,15 +56,25 @@ export const CompletePackBanner: React.FC<Props> = ({ companyName, premiumCount,
               <span className="text-xs font-mono font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-400 text-[#1F3A5F]">
                 Best Value · 37% OFF
               </span>
-              <span className="text-xs font-mono font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/10 text-amber-200 border border-white/20">
-                {premiumCount} Round Packs
-              </span>
+              {ownedCount > 0 ? (
+                <span className="text-xs font-mono font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/10 text-amber-200 border border-white/20">
+                  {premiumCount - ownedCount} rounds left
+                </span>
+              ) : (
+                <span className="text-xs font-mono font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/10 text-amber-200 border border-white/20">
+                  {premiumCount} Round Packs
+                </span>
+              )}
             </div>
             <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight leading-tight">
-              {companyName} Complete Pack — all {premiumCount} rounds, everything included
+              {ownedCount > 0
+                ? `${companyName} Complete Pack — finish your pack (${premiumCount - ownedCount} round${premiumCount - ownedCount === 1 ? '' : 's'} left)`
+                : `${companyName} Complete Pack — all ${premiumCount} rounds, everything included`}
             </h2>
             <p className="text-sm sm:text-base text-sky-100/90 mt-2 max-w-xl leading-relaxed">
-              OA + Technical + System Design + HR — more content than the single packs, at one price.
+              {ownedCount > 0
+                ? 'Top up with the remaining rounds at a single pack price — no need to buy them one by one.'
+                : 'OA + Technical + System Design + HR — more content than the single packs, at one price.'}
             </p>
             <div className="flex flex-wrap gap-2 mt-3">
               {['OA + DSA', 'Technical R1', 'System Design', 'HR & STAR'].map(label => (
@@ -77,17 +89,26 @@ export const CompletePackBanner: React.FC<Props> = ({ companyName, premiumCount,
         <div className="flex flex-col sm:flex-row lg:flex-col xl:flex-row items-stretch sm:items-center gap-3 shrink-0 lg:pl-6">
           <div className="text-white">
             <div className="flex items-baseline justify-center sm:justify-start gap-2">
-              <span className="text-3xl font-black">₹249</span>
-              <span className="text-sm text-sky-300/80 line-through">₹396</span>
-              <BadgeCheck className="w-4 h-4 text-emerald-300" />
+              <span className="text-3xl font-black">₹{remainingPrice ?? 249}</span>
+              {ownedCount === 0 && (
+                <>
+                  <span className="text-sm text-sky-300/80 line-through">₹396</span>
+                  <BadgeCheck className="w-4 h-4 text-emerald-300" />
+                </>
+              )}
             </div>
-            <p className="text-[11px] text-sky-200/70 text-center sm:text-left mt-0.5">₹99 × 4 singles = ₹396 → ₹249 for the full pack</p>
+            <p className="text-[11px] text-sky-200/70 text-center sm:text-left mt-0.5">
+              {ownedCount > 0
+                ? `${premiumCount - ownedCount} round${premiumCount - ownedCount === 1 ? '' : 's'} at one combo price`
+                : '₹99 × 4 singles = ₹396 → ₹249 for the full pack'}
+            </p>
           </div>
           <button
             onClick={onAddCompletePack}
             className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-[#E8A33D] hover:bg-[#D4902C] text-[#1F3A5F] text-sm font-black rounded-xl shadow-lg transition-all"
           >
-            <ShoppingCart className="w-5 h-5" /> Add Complete Pack to Cart
+            <ShoppingCart className="w-5 h-5" />
+            {ownedCount > 0 ? `Add Remaining ${premiumCount - ownedCount} Rounds` : 'Add Complete Pack to Cart'}
           </button>
         </div>
       </div>

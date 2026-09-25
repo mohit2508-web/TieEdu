@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { Company, ContentModule, InterviewReport } from '@/types';
-import { fetchCompanies, fetchModerationReportsApi, fetchPendingPaymentsApi } from '@/lib/api';
+import { fetchAdminCompaniesApi, fetchModerationReportsApi, fetchPendingPaymentsApi } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import { ContentBuilder } from '@/components/admin/ContentBuilder';
@@ -49,7 +49,7 @@ export const AdminCmsView: React.FC = () => {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const comps = await fetchCompanies();
+      const comps = await fetchAdminCompaniesApi();
       if (comps && comps.length > 0) {
         setCompaniesList(comps);
         if (!comps.find((c) => c.id === selectedCompanyId)) {

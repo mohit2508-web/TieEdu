@@ -642,12 +642,26 @@ const INTERVIEW_MODULES: InterviewModule[] = [
   }
 ];
 
-// GET /api/interview-course/modules — Retrieve all 50 masterclass modules
-interviewCourseRouter.get('/modules', (req: Request, res: Response) => {
+// GET /api/interview-course/modules — all 50 masterclass modules, but premium
+// (is_free:false) content only ships to an authenticated account. Anonymous
+// visitors get the module list with lock placeholders — never the answers.
+const CONTENT_KEYS = ['sample_answer', 'star_breakdown', 'expert_tip', 'red_flag_trap', 'scoring_criteria'];
+interviewCourseRouter.get('/modules', optionalAuth, (req: Request, res: Response) => {
+  const isMember = !!req.userId;
+  const data = INTERVIEW_MODULES.map((m) => {
+    if (m.is_free || isMember) {
+      return { ...m, unlocked: true };
+    }
+    const locked: any = { ...m };
+    CONTENT_KEYS.forEach((k) => { delete locked[k]; });
+    locked.unlocked = false;
+    return locked;
+  });
+
   res.json({
     success: true,
     total_modules: INTERVIEW_MODULES.length,
-    data: INTERVIEW_MODULES
+    data
   });
 });
 

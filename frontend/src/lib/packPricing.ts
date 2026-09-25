@@ -45,7 +45,9 @@ export const summarizePackItems = (items: CartItem[]): PackSummary => {
   let listTotal = planTotal;
   let moduleCount = 0;
   for (const c of perCompany.values()) {
-    const n = c.isComplete ? Math.max(c.moduleIds.size, 4) : c.moduleIds.size;
+    // A plain company line (no module ids) = every round; array pack lines =
+    // exactly the modules listed (e.g. "finish your pack" with 2 left → ₹169).
+    const n = c.isComplete && c.moduleIds.size === 0 ? 4 : c.moduleIds.size;
     subtotal += packPrice(n);
     listTotal += n * SINGLE_MODULE_PRICE;
     moduleCount += n;

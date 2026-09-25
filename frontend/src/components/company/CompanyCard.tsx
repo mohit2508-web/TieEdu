@@ -67,7 +67,7 @@ export const CompanyCard: React.FC<CompanyCardProps> = ({ company }) => {
           </div>
           <div>
             <span className="text-[10px] text-[#7D8794] block uppercase font-bold tracking-wider">Modules</span>
-            <span className="text-[13px] font-extrabold text-[#0271B5] stat-num">{company.modules?.length ?? 0}</span>
+            <span className="text-[13px] font-extrabold text-[#0271B5] stat-num">{company.module_count ?? company.modules?.length ?? 0}</span>
           </div>
           <div>
             <span className="text-[10px] text-[#7D8794] block uppercase font-bold tracking-wider">CTC</span>

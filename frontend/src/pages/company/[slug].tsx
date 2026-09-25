@@ -19,6 +19,7 @@ import { SearchModal } from '@/components/modals/SearchModal';
 import { LeaderboardModal } from '@/components/modals/LeaderboardModal';
 import { SubmitReportModal } from '@/components/modals/SubmitReportModal';
 import { fetchCompanyBySlug, fetchCompanies } from '@/lib/api';
+import { packPrice } from '@/lib/packPricing';
 import { CompanyModuleReader } from '@/components/company/CompanyModuleReader';
 import { Company, PricingPlan, ContentItem, ContentModule, RoundType, CompanyModuleItem, CartItem } from '@/types';
 import {
@@ -50,6 +51,7 @@ export default function CompanyVaultPage() {
   const [isSubmitReportOpen, setIsSubmitReportOpen] = useState(false); const [loading, setLoading] = useState(true);;
   const [reportTick, setReportTick] = useState(0);
   const [mobileTreeOpen, setMobileTreeOpen] = useState(false);
+  const [readerSection, setReaderSection] = useState<'overview' | 'pdfs'>('overview');
 
   useEffect(() => {
     fetchCompanies().then(data => { if (data?.length > 0) setAllCompanies(data); }).catch(() => {}).finally(() => setLoading(false));
@@ -60,6 +62,21 @@ export default function CompanyVaultPage() {
     fetchCompanyBySlug(slug as string).then(data => {
       setCompany(data);
       if (data.is_unlocked) setIsUnlocked(true);
+
+      // Refresh-safe: keep whatever the user was reading (??m / ??q in the URL)
+      // so a reload lands on the same module or question instead of the catalog.
+      const mods = data.modules || [];
+      const items: ContentItem[] = mods.flatMap((mod: ContentModule) => mod.items || []);
+      const q = router.query.q;
+      const m = router.query.m;
+      if (q) {
+        const item = items.find(i => i.id === q);
+        if (item) { setSelectedItem(item); setActiveReaderTab('content'); return; }
+      }
+      if (m) {
+        const mod = mods.find(x => x.id === m);
+        if (mod) setSelectedModule(mod);
+      }
     }).catch(() => {}).finally(() => setLoading(false));
   }, [slug]);
 
@@ -91,6 +108,32 @@ export default function CompanyVaultPage() {
   const prevItem = currentIdx > 0 ? allItems[currentIdx - 1] : null;
   const nextItem = currentIdx >= 0 && currentIdx < allItems.length - 1 ? allItems[currentIdx + 1] : null;
 
+  // Per-module ownership: a user can own the whole vault (isUnlocked) or just
+  // the specific modules they bought. Owned == readable == not re-buyable.
+  const ownedModuleIds = company.owned_module_ids || [];
+  const isModuleOwned = (mod: ContentModule) => isUnlocked || mod.is_premium !== true || ownedModuleIds.includes(mod.id);
+  const remainingPremium = premiumModules.filter(m => !ownedModuleIds.includes(m.id));
+  const remainingPrice = remainingPremium.length > 0 ? packPrice(remainingPremium.length) : 0;
+
+  const moduleOfItem = (item: ContentItem) =>
+    modules.find(mod => (mod.items || []).some(i => i.id === item.id));
+  const isItemUnlocked = (item: ContentItem) =>
+    isUnlocked || item.is_free_preview || ownedModuleIds.includes(moduleOfItem(item)?.id || '');
+
+  // URL-syncs the open module (??m) / question (??q) so refresh keeps the page.
+  const pushState = (m?: string | null, q?: string | null) => {
+    const next: Record<string, string> = { slug: Array.isArray(slug) ? slug[0] : String(slug) };
+    if (m) next.m = m;
+    if (q) next.q = q;
+    router.replace({ query: next }, undefined, { shallow: true });
+  };
+
+  const openModule = (mod: ContentModule, section: 'overview' | 'pdfs' = 'overview') => {
+    setReaderSection(section);
+    setSelectedModule(mod);
+    pushState(mod.id);
+  };
+
   const handleToggleSolve = (id: string) =>
     setSolvedItemIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
 
@@ -98,6 +141,7 @@ export default function CompanyVaultPage() {
     setBookmarkedItemIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
 
   const handleUnlockClick = () => {
+    if (remainingPremium.length === 0) return;
     addToCart([completePackItem()], true);
   };
 
@@ -107,9 +151,9 @@ export default function CompanyVaultPage() {
     slug: company.slug,
     name: company.name,
     logo_url: company.logo_url,
-    module_ids: premiumModules.map(m => m.id),
-    module_count: premiumModules.length || 4,
-    price: 249,
+    module_ids: remainingPremium.map(m => m.id),
+    module_count: remainingPremium.length || 1,
+    price: remainingPrice || 99,
   });
 
   const moduleLineItem = (mod: ContentModule): CompanyModuleItem => ({
@@ -158,13 +202,20 @@ export default function CompanyVaultPage() {
     if (open) setIsCartOpen(true);
   };
 
-  const handleAddModuleToCart = (mod: ContentModule) => addToCart([moduleLineItem(mod)], true);
-  const handleAddCompletePack = () => addToCart([completePackItem()], true);
+  const handleAddModuleToCart = (mod: ContentModule) => {
+    if (isModuleOwned(mod)) return;
+    addToCart([moduleLineItem(mod)], true);
+  };
+  const handleAddCompletePack = () => {
+    if (remainingPremium.length === 0) return;
+    addToCart([completePackItem()], true);
+  };
 
   const selectItem = (item: ContentItem) => {
     setSelectedItem(item);
     setActiveReaderTab('content');
     setMobileTreeOpen(false);
+    pushState(null, item.id);
     // scroll to top of article on mobile
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -193,10 +244,12 @@ export default function CompanyVaultPage() {
             companyName={company.name}
             companySlug={company.slug}
             isUnlocked={isUnlocked}
+            isModuleUnlocked={isModuleOwned(selectedModule)}
             allModules={modules}
-            onSwitchModule={mod => setSelectedModule(mod)}
-            onBack={() => setSelectedModule(null)}
+            onSwitchModule={mod => { setSelectedModule(mod); pushState(mod.id); }}
+            onBack={() => { setSelectedModule(null); pushState(); }}
             onUnlockClick={handleUnlockClick}
+            initialSection={readerSection}
           />
         ) : selectedItem ? (
           <div className="flex flex-1 overflow-hidden" style={{ minHeight: 'calc(100vh - 56px)' }}>
@@ -208,7 +261,7 @@ export default function CompanyVaultPage() {
               solvedItemIds={solvedItemIds}
               isUnlocked={isUnlocked}
               onSelectItem={selectItem}
-              onBackToModules={() => setSelectedItem(null)}
+              onBackToModules={() => { setSelectedItem(null); pushState(); }}
               companyName={company.name}
             />
 
@@ -221,7 +274,7 @@ export default function CompanyVaultPage() {
               solvedItemIds={solvedItemIds}
               isUnlocked={isUnlocked}
               onSelectItem={selectItem}
-              onBackToModules={() => setSelectedItem(null)}
+              onBackToModules={() => { setSelectedItem(null); pushState(); }}
               companyName={company.name}
             />
 
@@ -273,7 +326,7 @@ export default function CompanyVaultPage() {
                       Asked Often
                     </span>
                   )}
-                  {(selectedItem.is_free_preview || isUnlocked) && (
+                  {(selectedItem.is_free_preview || isItemUnlocked(selectedItem)) && (
                     <span className="inline-block px-2.5 py-0.5 rounded text-[11px] font-bold uppercase tracking-wide bg-emerald-100 text-emerald-700">
                       Free Preview
                     </span>
@@ -339,7 +392,7 @@ export default function CompanyVaultPage() {
                           <ContentBlockRenderer
                             key={block.id}
                             block={block}
-                            isLocked={!selectedItem.is_free_preview && !isUnlocked}
+                            isLocked={!isItemUnlocked(selectedItem)}
                             companyName={company.name}
                             onUnlockClick={handleUnlockClick}
                           />
@@ -412,7 +465,8 @@ export default function CompanyVaultPage() {
               <FeaturedFreeModuleCard
                 module={featuredFree}
                 companyName={company.name}
-                onOpenModule={() => setSelectedModule(featuredFree)}
+                onOpenModule={() => openModule(featuredFree)}
+                onOpenPdf={() => openModule(featuredFree, 'pdfs')}
                 onUnlockClick={handleUnlockClick}
               />
             )}
@@ -444,13 +498,17 @@ export default function CompanyVaultPage() {
                   </div>
                 </div>
 
+                {remainingPremium.length > 0 && (
                 <CompletePackBanner
                   companyName={company.name}
                   premiumCount={premiumModules.length}
+                  ownedCount={premiumModules.filter(m => ownedModuleIds.includes(m.id)).length}
+                  remainingPrice={remainingPrice}
                   onAddCompletePack={handleAddCompletePack}
                   isUnlocked={isUnlocked}
                   onBrowseModules={() => document.getElementById('premium-modules')?.scrollIntoView({ behavior: 'smooth' })}
                 />
+              )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                   {filteredPremium.map(mod => (
@@ -459,8 +517,10 @@ export default function CompanyVaultPage() {
                       module={mod}
                       companyName={company.name}
                       isUnlocked={isUnlocked}
+                      isOwned={isModuleOwned(mod)}
                       onAddToCart={handleAddModuleToCart}
-                      onPreview={() => setSelectedModule(mod)}
+                      onPreview={() => openModule(mod)}
+                      onOpenPdf={mod.pdf ? () => openModule(mod, 'pdfs') : undefined}
                     />
                   ))}
                 </div>
@@ -492,16 +552,20 @@ export default function CompanyVaultPage() {
         {/* ================================================
             STICKY UNLOCK BAR (only when locked)
             ================================================ */}
-        {!isUnlocked && (
+        {!isUnlocked && remainingPremium.length > 0 && (
           <div className="fixed bottom-0 left-0 right-0 z-30 bg-[var(--brand-primary)] border-t border-white/10 text-white px-4 py-3 shadow-2xl">
             <div className="max-w-[1100px] mx-auto flex items-center justify-between gap-4">
               <div>
                 <p className="text-[13px] font-semibold">
-                  Unlock full {company.name} preparation pack
-                  <span className="ml-2 bg-[var(--brand-accent)] text-white text-[11px] font-bold px-2 py-0.5 rounded">₹249</span>
+                  {ownedModuleIds.length > 0
+                    ? `Finish ${company.name} prep — ${remainingPremium.length} round${remainingPremium.length === 1 ? '' : 's'} left`
+                    : `Unlock full ${company.name} preparation pack`}
+                  <span className="ml-2 bg-[var(--brand-accent)] text-white text-[11px] font-bold px-2 py-0.5 rounded">₹{remainingPrice}</span>
                 </p>
                 <p className="text-[11px] text-white/60 mt-0.5 hidden sm:block">
-                  45+ verified questions · code solutions · system design guides
+                  {ownedModuleIds.length > 0
+                    ? 'Buy the remaining rounds at the combo pack price — no re-purchasing what you already own.'
+                    : '45+ verified questions · code solutions · system design guides'}
                 </p>
               </div>
               <button
@@ -520,19 +584,20 @@ export default function CompanyVaultPage() {
           isOpen={isCartOpen}
           items={cartItems}
           companyName={company.name}
-          missingModules={premiumModules.filter(m => !cartItems.some(i => {
+          missingModules={premiumModules.filter(m => !isModuleOwned(m) && !cartItems.some(i => {
             if ('module_id' in i && i.module_id === m.id) return true;
             const ids = (i as CompanyModuleItem).module_ids;
             return Array.isArray(ids) && ids.includes(m.id);
           }))}
           onClose={() => setIsCartOpen(false)}
           onRemoveItem={idx => setCartItems(cartItems.filter((_, i) => i !== idx))}
-          onAddModules={mods => addToCart(mods.map(moduleLineItem), true)}
+          onAddModules={mods => addToCart(mods.filter(m => !isModuleOwned(m)).map(moduleLineItem), true)}
           onAddCompletePack={handleAddCompletePack}
           suggestedCompanies={allCompanies.filter(c => c.slug !== company.slug).slice(0, 3)}
           onAddCompany={c => {
-            const packCount = (c.modules || []).filter(m => m.is_premium).length;
-            addToCart([{ kind: 'company', id: c.id, slug: c.slug, name: c.name, logo_url: c.logo_url, module_ids: (c.modules || []).filter(m => m.is_premium).map(m => m.id), module_count: packCount || 4, price: 249 }], true);
+            const ids = (c.premium_module_ids || []).slice();
+            const count = ids.length || c.premium_module_count || 1;
+            addToCart([{ kind: 'company', id: c.id, slug: c.slug, name: c.name, logo_url: c.logo_url, module_ids: ids, module_count: count, price: packPrice(count) }], true);
           }}
           onCheckoutSuccess={() => { setIsUnlocked(true); setIsCartOpen(false); }}
         />

@@ -25,7 +25,7 @@ const INDUSTRIES = ['All', 'Big Tech', 'IT Services', 'Cybersecurity', 'Fintech'
 const FT_ITEMS = [
   { icon: ShieldCheck, title: 'Verified Drive Intelligence', body: 'Round-by-round questions, PYQs and answers curated from real drive experiences.', tint: 'text-[#0284C7] bg-[#E8F4FB]' },
   { icon: FileText, title: 'Official PDF Guides', body: 'Every premium module carries an admin-uploaded PDF — open in the reader or download the original.', tint: 'text-[#C77B12] bg-[#FBF1E1]' },
-  { icon: FileDown, title: 'Unlock-and-Download Notes', body: 'Once a pack is unlocked, markdown notes are ready — copy, download and revise anytime.', tint: 'text-[#15803D] bg-[#E9F6EE]' },
+  { icon: FileDown, title: 'Unlock-and-Download Notes', body: 'Once a vault is unlocked, PDF study guides are yours — read them in the app or download and revise offline anytime.', tint: 'text-[#15803D] bg-[#E9F6EE]' },
   { icon: Layers, title: 'Complete Pack Ladder', body: '1→₹99 · 2→₹169 · 3→₹219 · 4→₹249. More modules, bigger saving — server-driven pricing.', tint: 'text-[#0E2A44] bg-[#E8EEF4]' },
 ];
 

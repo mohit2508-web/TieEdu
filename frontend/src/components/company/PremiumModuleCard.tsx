@@ -1,14 +1,15 @@
 import React from 'react';
 import { ContentModule, RoundType } from '@/types';
-import { ShoppingCart, Eye, Lock, FileText, BadgeCheck, Download } from 'lucide-react';
-import { downloadModuleAsMarkdown } from '@/lib/moduleDownload';
+import { ShoppingCart, Eye, Lock, FileText, BadgeCheck } from 'lucide-react';
 
 interface Props {
   module: ContentModule;
   companyName: string;
   isUnlocked: boolean;
+  isOwned?: boolean;
   onAddToCart: (module: ContentModule) => void;
   onPreview: () => void;
+  onOpenPdf?: () => void;
 }
 
 const ROUND_META: Record<RoundType, { label: string; cls: string; dot: string }> = {
@@ -30,11 +31,12 @@ const MODULE_TYPE_LABEL: Record<string, string> = {
   complete_pack: 'Complete Pack',
 };
 
-export const PremiumModuleCard: React.FC<Props> = ({ module, companyName, isUnlocked, onAddToCart, onPreview }) => {
+export const PremiumModuleCard: React.FC<Props> = ({ module, companyName, isUnlocked, isOwned = false, onAddToCart, onPreview, onOpenPdf }) => {
   const rm = module.round_type ? ROUND_META[module.round_type] : null;
   const typeLabel = MODULE_TYPE_LABEL[module.module_type] || module.module_type.replace(/_/g, ' ');
   const price = 99;
   const itemCount = module.items?.length || 0;
+  const unlocked = isUnlocked || isOwned;
 
   return (
     <div className="relative flex flex-col bg-white border border-[var(--border-subtle)] hover:border-[#0284C7]/40 hover:shadow-md rounded-2xl p-5 transition-all">
@@ -65,10 +67,10 @@ export const PremiumModuleCard: React.FC<Props> = ({ module, companyName, isUnlo
         {itemCount} questions
       </div>
 
-      {isUnlocked ? (
+      {unlocked ? (
         <div className="flex items-center gap-2 mb-4">
           <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
-            <BadgeCheck className="w-3.5 h-3.5" /> Included in your vault
+            <BadgeCheck className="w-3.5 h-3.5" /> In your vault
           </span>
           <span className="text-[11px] font-semibold text-[var(--text-muted)]">One-time purchase · lifetime access</span>
         </div>
@@ -80,7 +82,7 @@ export const PremiumModuleCard: React.FC<Props> = ({ module, companyName, isUnlo
       )}
 
       <div className="mt-auto flex flex-col gap-2">
-        {isUnlocked ? (
+        {unlocked ? (
           <button
             onClick={onPreview}
             className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl shadow-sm transition-all"
@@ -96,14 +98,23 @@ export const PremiumModuleCard: React.FC<Props> = ({ module, companyName, isUnlo
           </button>
         )}
         <div className="flex gap-2">
-          {isUnlocked ? (
-            <button
-              onClick={() => downloadModuleAsMarkdown(module, companyName, false)}
-              title="Download (.md)"
-              className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 bg-white border-2 border-gray-200 hover:border-gray-300 text-gray-800 text-xs font-bold rounded-xl transition-all"
-            >
-              <Download className="w-3.5 h-3.5" /> Download Notes (.md)
-            </button>
+          {unlocked ? (
+            module.pdf ? (
+              <button
+                onClick={onOpenPdf || onPreview}
+                className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 bg-white border-2 border-[#0284C7]/30 hover:border-[#0284C7] text-[#0284C7] text-xs font-bold rounded-xl transition-all"
+              >
+                <FileText className="w-3.5 h-3.5" /> PDF Guide
+              </button>
+            ) : (
+              <button
+                onClick={onPreview}
+                className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 bg-white border-2 border-gray-200 hover:border-gray-300 text-gray-800 text-xs font-bold rounded-xl transition-all"
+              >
+                <Eye className="w-3.5 h-3.5" />
+                Open Module
+              </button>
+            )
           ) : (
             <button
               onClick={onPreview}
@@ -113,7 +124,7 @@ export const PremiumModuleCard: React.FC<Props> = ({ module, companyName, isUnlo
               Preview Module
             </button>
           )}
-          {!isUnlocked && (
+          {!unlocked && (
             <span className="inline-flex items-center gap-1 px-3 py-2 bg-gray-50 border border-gray-200 text-gray-400 text-[11px] font-semibold rounded-xl">
               <Lock className="w-3 h-3" /> Unlocks with pack
             </span>

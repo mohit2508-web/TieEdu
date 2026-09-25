@@ -410,7 +410,26 @@ export default function InterviewCoursePage() {
                     </div>
 
                     {/* Expanded Module Details */}
-                    {isExpanded && (
+                    {isExpanded && mod.unlocked === false ? (
+                      <div className="p-6 border-t border-slate-800/80 bg-slate-950/60 space-y-6 animate-fadeIn">
+                        <div className="py-10 text-center space-y-4">
+                          <div className="w-16 h-16 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center">
+                            <Lock className="w-8 h-8" />
+                          </div>
+                          <div>
+                            <h4 className="text-lg font-extrabold text-white">Premium module — sign in to read the full answer</h4>
+                            <p className="text-sm text-slate-400 mt-1 max-w-md mx-auto leading-relaxed">
+                              The gold-standard sample answer, S.T.A.R. breakdown and expert tips for this module are reserved for signed-in members.
+                            </p>
+                          </div>
+                          <Link href="/login?next=/interview-course">
+                            <span className="inline-flex items-center gap-2 px-6 py-3 bg-brand-orange hover:opacity-90 text-[#1F3A5F] text-sm font-black rounded-xl transition-all">
+                              <ArrowRight className="w-4 h-4" /> Sign in — it&apos;s free
+                            </span>
+                          </Link>
+                        </div>
+                      </div>
+                    ) : isExpanded && (
                       <div className="p-6 border-t border-slate-800/80 bg-slate-950/60 space-y-6 animate-fadeIn">
                         {/* Primary Question Box */}
                         <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl">

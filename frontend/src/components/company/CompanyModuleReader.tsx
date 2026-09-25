@@ -6,7 +6,6 @@ import {
 } from 'lucide-react';
 import { ContentModule, ModuleSectionData, ModulePdf } from '@/types';
 import { API_BASE_URL, downloadPdfApi } from '@/lib/api';
-import { downloadModuleAsMarkdown } from '@/lib/moduleDownload';
 import { PdfViewerModal, preloadPdfjs } from '@/components/viewer/PdfViewerModal';
 
 interface CompanyModuleReaderProps {
@@ -14,11 +13,13 @@ interface CompanyModuleReaderProps {
   companyName: string;
   companySlug: string;
   isUnlocked: boolean;
+  isModuleUnlocked?: boolean;
   allModules?: ContentModule[];
   onSwitchModule?: (mod: ContentModule) => void;
   onBack: () => void;
   onUnlockClick: () => void;
   unlockPrice?: number;
+  initialSection?: 'overview' | 'pdfs';
 }
 
 export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
@@ -26,21 +27,24 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
   companyName,
   companySlug,
   isUnlocked,
+  isModuleUnlocked = isUnlocked,
   allModules,
   onSwitchModule,
   onBack,
   onUnlockClick,
   unlockPrice = 249,
+  initialSection = 'overview',
 }) => {
   const [activeSection, setActiveSection] = useState<
     'overview' | 'pdfs' | 'core_subjects' | 'interview_questions' | 'cheatsheets' | 'never_skip' | 'last_minute' | 'hr_round'
-  >('overview');
+  >(initialSection);
 
   const [selectedYear, setSelectedYear] = useState<number | 'all'>('all');
   const [copiedCodeIndex, setCopiedCodeIndex] = useState<number | null>(null);
   const [viewerPdf, setViewerPdf] = useState<ModulePdf | null>(null);
   const [dlNote, setDlNote] = useState<string | null>(null);
 
+  const locked = module.is_premium === true && !isModuleUnlocked;
   const sectionData: ModuleSectionData = module.section_data || {};
 
   // Warm up pdfjs (library + worker) in the background so opening the PDF
@@ -56,9 +60,26 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
     setTimeout(() => setCopiedCodeIndex(null), 2000);
   };
 
-  /* ---- One-click Markdown download of the current module (locked premium = preview only) ---- */
-  const handleDownloadModule = () =>
-    downloadModuleAsMarkdown(module, companyName, module.is_premium && !isUnlocked);
+  const MissingContent: React.FC<{ label: string }> = ({ label }) =>
+    locked ? (
+      <div className="py-10 text-center space-y-4">
+        <div className="w-12 h-12 mx-auto rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center">
+          <Lock className="w-6 h-6" />
+        </div>
+        <div>
+          <p className="font-bold text-gray-900">{label} is part of the premium pack</p>
+          <p className="text-base text-gray-500 mt-1">Unlock the vault to read the complete verified guide.</p>
+        </div>
+        <button
+          onClick={onUnlockClick}
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#E8A33D] hover:bg-[#D4902C] text-white text-sm font-bold rounded-xl transition-colors"
+        >
+          <ShoppingCart className="w-4 h-4" /> Unlock Full Vault — ₹{unlockPrice}
+        </button>
+      </div>
+    ) : (
+      <p className="text-base text-gray-400">{label} content loading...</p>
+    );
 
   const navItems = [
     { id: 'overview', label: '1. Company Overview', icon: Building2 },
@@ -99,7 +120,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
         </div>
 
         <div className="flex items-center gap-3 shrink-0">
-          {module.is_premium && !isUnlocked && (
+          {module.is_premium && !isModuleUnlocked && (
             <button
               onClick={onUnlockClick}
               className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#E8A33D] hover:bg-[#D4902C] text-white rounded-xl text-sm font-bold shadow-xs transition-colors"
@@ -109,7 +130,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
             </button>
           )}
 
-          {module.is_premium && isUnlocked && (
+          {module.is_premium && isModuleUnlocked && (
             <span className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-sm font-bold">
               <CheckCircle2 className="w-4 h-4" />
               In your vault
@@ -117,11 +138,11 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
           )}
 
           <button
-            onClick={handleDownloadModule}
+            onClick={() => setActiveSection('pdfs')}
             className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#0284C7] hover:bg-[#0369A1] text-white rounded-xl text-sm font-bold shadow-xs transition-all"
           >
-            <Download className="w-4 h-4" />
-            <span>Download Module (.md)</span>
+            <FileText className="w-4 h-4" />
+            <span>PDF Guide</span>
           </button>
         </div>
       </header>
@@ -157,7 +178,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
           </nav>
 
           {/* Pack Rounds — jump between premium packs without going back */}
-          {isUnlocked && allModules && allModules.length > 1 && onSwitchModule && (
+          {allModules && allModules.length > 1 && onSwitchModule && (
             <div className="mt-4 pt-4 border-t border-gray-100">
               <div className="px-3 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
                 Pack Rounds — sab kuch yahin
@@ -236,7 +257,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                   )}
                 </div>
               ) : (
-                <p className="text-base text-gray-400">Overview content loading...</p>
+                <MissingContent label="Overview" />
               )}
             </div>
           )}
@@ -325,7 +346,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                   ))}
                 </div>
               ) : (
-                <p className="text-base text-gray-400">Core subjects content loading...</p>
+                <MissingContent label="Core subjects" />
               )}
             </div>
           )}
@@ -378,7 +399,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                   ))}
                 </div>
               ) : (
-                <p className="text-base text-gray-400">Interview questions content loading...</p>
+                <MissingContent label="Interview questions" />
               )}
             </div>
           )}
@@ -409,7 +430,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                   ))}
                 </div>
               ) : (
-                <p className="text-base text-gray-400">Cheatsheet content loading...</p>
+                <MissingContent label="Cheatsheets" />
               )}
             </div>
           )}
@@ -445,7 +466,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                   ))}
                 </div>
               ) : (
-                <p className="text-base text-gray-400">Never-skip topics loading...</p>
+                <MissingContent label="Never-skip topics" />
               )}
             </div>
           )}
@@ -480,7 +501,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                   ))}
                 </div>
               ) : (
-                <p className="text-base text-gray-400">Revision notes loading...</p>
+                <MissingContent label="Revision notes" />
               )}
             </div>
           )}
@@ -521,7 +542,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                   ))}
                 </div>
               ) : (
-                <p className="text-base text-gray-400">HR round guide loading...</p>
+                <MissingContent label="HR round guide" />
               )}
             </div>
           )}
@@ -539,7 +560,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                 </p>
               </div>
 
-              {module.is_premium && !isUnlocked ? (
+              {module.is_premium && !isModuleUnlocked ? (
                 <div className="p-8 bg-gray-50 border border-gray-200 rounded-2xl text-center space-y-4">
                   <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center">
                     <Lock className="w-7 h-7" />

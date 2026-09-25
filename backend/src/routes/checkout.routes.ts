@@ -3,7 +3,7 @@ import { loadDb, saveDb } from '../data/db';
 import { requireAuth } from '../middleware/auth';
 import { getGateway, verifyRazorpaySignature, CreatedOrder } from '../payments/gateway';
 import { effectivePaymentMode } from '../config';
-import { completePaidOrder, pushAudit, unlockedCompanyIds } from '../payments/orders';
+import { completePaidOrder, pushAudit, unlockedCompanyIds, ownedModuleIdsFor } from '../payments/orders';
 
 export const checkoutRouter = Router();
 
@@ -57,7 +57,9 @@ export function summarizePack(items: CartItem[]) {
   let listTotal = 0;
   const savingsByCompany: string[] = [];
   for (const c of Object.values(perCompany)) {
-    const n = c.isComplete ? Math.max(c.moduleIds.size, COMPLETE_PACK_COUNT) : c.moduleIds.size;
+    // A plain company line (no module ids) = every round; array pack lines =
+    // exactly the modules listed (e.g. a "finish your pack" with 2 left → ₹169).
+    const n = c.isComplete && c.moduleIds.size === 0 ? COMPLETE_PACK_COUNT : c.moduleIds.size;
     const listPrice = n * SINGLE_MODULE_PRICE;
     const pack = packPrice(n);
     const savings = Math.max(0, listPrice - pack);
@@ -138,9 +140,27 @@ checkoutRouter.post('/create-order', async (req: Request, res: Response) => {
   const { amount, items = [], coupon_code } = req.body;
   const user_id = req.user!.id;
 
+  // Drop anything the user already owns (company fully unlocked or module already bought).
+  const ownedModuleIds = ownedModuleIdsFor(db, user_id);
+  const ownedCompanyIds = new Set(unlockedCompanyIds(db, user_id));
+  const unowned: CartItem[] = (items as CartItem[] || []).filter((it: CartItem) => {
+    if (it.kind === 'plan') return true;
+    const companyId = it.id || it.company_id || it.slug || '';
+    if (ownedCompanyIds.has(companyId)) return false;
+    if (Array.isArray(it.module_ids) && it.module_ids.length > 0) {
+      return it.module_ids.some((m: string) => !ownedModuleIds.includes(m)) as unknown as boolean;
+    }
+    if (it.module_id) return !ownedModuleIds.includes(it.module_id);
+    return true; // plain company line — not an owned company, keep
+  });
+
+  if (unowned.length === 0) {
+    return res.status(400).json({ error: 'You already own this pack — nothing to buy here.' });
+  }
+
   // Server-authoritative subtotal via combo ladder
-  const pack = summarizePack(items as CartItem[]);
-  const hasLadderableItems = items.some((it: CartItem) => it.kind !== 'plan');
+  const pack = summarizePack(unowned as CartItem[]);
+  const hasLadderableItems = unowned.some((it: CartItem) => it.kind !== 'plan');
   const subtotal = hasLadderableItems ? pack.subtotal : Number(amount) || pack.subtotal;
 
   let appliedCoupon: any = null;
@@ -165,7 +185,7 @@ checkoutRouter.post('/create-order', async (req: Request, res: Response) => {
     status: 'created',
     user_id,
     coupon_code: appliedCoupon?.code || null,
-    items: items.map((it: CartItem) => ({
+    items: unowned.map((it: CartItem) => ({
       kind: it.kind || (it.slug ? 'company' : 'plan'),
       id: it.id || it.company_id || it.slug || it.scope || 'unknown',
       name: it.name || it.slug || 'Vault',

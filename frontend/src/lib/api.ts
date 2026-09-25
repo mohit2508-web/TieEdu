@@ -312,6 +312,11 @@ const adminFetch = async (path: string, options?: RequestInit) => {
   return res.json();
 };
 
+export const fetchAdminCompaniesApi = async (): Promise<Company[]> => {
+  const res = await adminFetch('/admin/companies');
+  return Array.isArray(res) ? res : [];
+};
+
 export const updateCompanyApi = async (companyId: string, data: any) =>
   adminFetch(`/admin/companies/${companyId}`, { method: 'PUT', body: JSON.stringify(data) });
 
@@ -391,7 +396,7 @@ export const generateStudyPlanApi = async (payload: { targetCompany: string; tar
 
 export const fetchInterviewModulesApi = async () => {
   try {
-    const res = await fetch(`${API_BASE_URL}/interview-course/modules`);
+    const res = await apiFetch(`${API_BASE_URL}/interview-course/modules`);
     if (!res.ok) throw new Error('API request failed');
     return await res.json();
   } catch (err) {

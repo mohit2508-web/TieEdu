@@ -221,6 +221,11 @@ export interface Company {
   interview_reports?: InterviewReport[];
   comparison_metrics?: CompanyComparisonMetrics;
   is_unlocked?: boolean;
+  owned_module_ids?: string[];
+  premium_module_ids?: string[];
+  premium_module_count?: number;
+  owned_module_count?: number;
+  module_count?: number;
 }
 
 export interface SuccessStory {

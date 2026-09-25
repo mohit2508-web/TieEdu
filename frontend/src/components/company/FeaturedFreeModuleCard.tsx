@@ -1,13 +1,13 @@
 import React from 'react';
 import { ContentModule } from '@/types';
-import { Sparkles, BookOpen, Download, Lock } from 'lucide-react';
-import { downloadModuleAsMarkdown } from '@/lib/moduleDownload';
+import { Sparkles, BookOpen, Lock, FileText } from 'lucide-react';
 
 interface Props {
   module: ContentModule;
   companyName: string;
   onOpenModule: () => void;
   onUnlockClick: () => void;
+  onOpenPdf?: () => void;
 }
 
 const SECTION_CHIPS = [
@@ -20,7 +20,7 @@ const SECTION_CHIPS = [
   ['HR answers', 'bg-teal-50 text-teal-700 border-teal-200'],
 ] as const;
 
-export const FeaturedFreeModuleCard: React.FC<Props> = ({ module, companyName, onOpenModule, onUnlockClick }) => {
+export const FeaturedFreeModuleCard: React.FC<Props> = ({ module, companyName, onOpenModule, onUnlockClick, onOpenPdf }) => {
   const itemCount = module.items?.length || 0;
 
   return (
@@ -63,12 +63,14 @@ export const FeaturedFreeModuleCard: React.FC<Props> = ({ module, companyName, o
           >
             <BookOpen className="w-5 h-5" /> Open Free Module
           </button>
-          <button
-            onClick={() => downloadModuleAsMarkdown(module, companyName, false)}
-            className="inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-white border-2 border-gray-200 hover:border-gray-300 text-gray-800 text-sm font-bold rounded-xl transition-all"
-          >
-            <Download className="w-4 h-4" /> Download (.md)
-          </button>
+          {module.pdf && (
+            <button
+              onClick={onOpenPdf || onOpenModule}
+              className="inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-white border-2 border-gray-200 hover:border-gray-300 text-gray-800 text-sm font-bold rounded-xl transition-all"
+            >
+              <FileText className="w-4 h-4" /> PDF Guide
+            </button>
+          )}
           <button
             onClick={onUnlockClick}
             className="inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-[#E8A33D] hover:bg-[#D4902C] text-white text-sm font-bold rounded-xl shadow-md transition-all"
