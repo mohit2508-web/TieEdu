@@ -56,10 +56,10 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onCl
             </div>
             <div>
               <h3 className="font-serif-heading text-lg font-bold text-[#10151C]">XP Leaderboard</h3>
-              <p className="text-[11px] text-[#7D8794]">Real accounts · real XP — no seeded names</p>
+              <p className="text-[11px] text-[--text-muted]">Real accounts · real XP — no seeded names</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1 text-[#7D8794] hover:text-[#10151C]" aria-label="Close">
+          <button onClick={onClose} className="p-1 text-[--text-muted] hover:text-[#10151C]" aria-label="Close">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -111,11 +111,11 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onCl
 
           {!loading && !error && entries.length === 0 && (
             <div className="vault-card p-6 text-center space-y-2">
-              <span className="inline-flex items-center justify-center w-11 h-11 rounded-2xl bg-[#EEF1F4] text-[#7D8794]">
+              <span className="inline-flex items-center justify-center w-11 h-11 rounded-2xl bg-[#EEF1F4] text-[--text-muted]">
                 <UserRound className="w-5 h-5" />
               </span>
               <p className="text-[14px] font-bold text-[#10151C]">Leaderboard is empty right now</p>
-              <p className="text-[13px] text-[#7D8794]">
+              <p className="text-[13px] text-[--text-muted]">
                 The first student to earn XP will appear here. Complete the free interview course or submit a verified report to get started.
               </p>
               {!user && (
@@ -147,7 +147,7 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onCl
                 </span>
                 <div>
                   <span className="text-[#10151C] block font-bold">{u.name}</span>
-                  <span className="text-[11px] text-[#7D8794]">{u.college} · {u.badge}</span>
+                  <span className="text-[11px] text-[--text-muted]">{u.college} · {u.badge}</span>
                 </div>
               </div>
               <div className="text-right">

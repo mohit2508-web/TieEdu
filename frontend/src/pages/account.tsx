@@ -39,15 +39,15 @@ interface MyReportRow {
 }
 
 const statusChip = (status: string, map: Record<string, string>) =>
-  map[status] || 'bg-[#EEF1F4] text-[#7D8794]';
+  map[status] || 'bg-[#EEF1F4] text-[--text-muted]';
 
 function OrdersView({ orders }: { orders: MyAccount['orders'] }) {
   if (orders.length === 0) {
     return (
       <div className="vault-card p-6 text-center">
-        <Package className="w-8 h-8 text-[#7D8794] mx-auto mb-2" />
+        <Package className="w-8 h-8 text-[--text-muted] mx-auto mb-2" />
         <p className="text-[14px] font-bold text-[#10151C]">No orders yet</p>
-        <p className="text-[13px] text-[#7D8794] mt-1">Unlock a vault pack — your orders will appear here.</p>
+        <p className="text-[13px] text-[--text-muted] mt-1">Unlock a vault pack — your orders will appear here.</p>
       </div>
     );
   }
@@ -59,7 +59,7 @@ function OrdersView({ orders }: { orders: MyAccount['orders'] }) {
             <p className="text-[13px] font-extrabold text-[#10151C] truncate">
               {(o.items || []).map((i) => i.name).join(', ') || o.id}
             </p>
-            <p className="text-[11px] text-[#7D8794] mt-0.5">
+            <p className="text-[11px] text-[--text-muted] mt-0.5">
               {new Date(o.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
               {o.coupon_code ? ` · coupon ${o.coupon_code}` : ''}
             </p>
@@ -84,9 +84,9 @@ function VaultView({ unlockedIds, companies }: { unlockedIds: string[]; companie
   if (unlockedIds.length === 0) {
     return (
       <div className="vault-card p-6 text-center">
-        <FolderOpen className="w-8 h-8 text-[#7D8794] mx-auto mb-2" />
+        <FolderOpen className="w-8 h-8 text-[--text-muted] mx-auto mb-2" />
         <p className="text-[14px] font-bold text-[#10151C]">No vault unlocked yet</p>
-        <p className="text-[13px] text-[#7D8794] mt-1 mb-4">Purchase a pack — your unlocked company vaults will appear here.</p>
+        <p className="text-[13px] text-[--text-muted] mt-1 mb-4">Purchase a pack — your unlocked company vaults will appear here.</p>
         <Link href="/#pricing" className="btn btn-primary px-4 py-2 text-[13px]">See pricing</Link>
       </div>
     );
@@ -104,7 +104,7 @@ function VaultView({ unlockedIds, companies }: { unlockedIds: string[]; companie
             <BrandTile name={c.name} src={c.logo_url} className="w-10 h-10 rounded-xl" />
             <div className="min-w-0">
               <p className="text-[13px] font-extrabold text-[#10151C] truncate group-hover:text-[#0271B5]">{c.name}</p>
-              <p className="text-[11px] text-[#7D8794] truncate">{c.industry || 'Interview Vault'}</p>
+              <p className="text-[11px] text-[--text-muted] truncate">{c.industry || 'Interview Vault'}</p>
             </div>
             <ArrowUpRight className="w-4 h-4 text-[#AEB6BE] group-hover:text-[#0284C7] ml-auto shrink-0" />
           </div>
@@ -121,9 +121,9 @@ function ReportsView({ reports }: { reports: MyReportRow[] }) {
   if (reports.length === 0) {
     return (
       <div className="vault-card p-6 text-center">
-        <FileText className="w-8 h-8 text-[#7D8794] mx-auto mb-2" />
+        <FileText className="w-8 h-8 text-[--text-muted] mx-auto mb-2" />
         <p className="text-[14px] font-bold text-[#10151C]">No reports submitted yet</p>
-        <p className="text-[13px] text-[#7D8794] mt-1">Submit an interview report from any company vault — published reports earn +50 XP.</p>
+        <p className="text-[13px] text-[--text-muted] mt-1">Submit an interview report from any company vault — published reports earn +50 XP.</p>
       </div>
     );
   }
@@ -136,7 +136,7 @@ function ReportsView({ reports }: { reports: MyReportRow[] }) {
               {r.company_name || r.company_id}
               {r.user_role ? ` · ${r.user_role}` : ''}
             </p>
-            <p className="text-[11px] text-[#7D8794] mt-0.5">{new Date(r.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+            <p className="text-[11px] text-[--text-muted] mt-0.5">{new Date(r.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             {typeof r.accuracy_rating === 'number' && (
@@ -331,7 +331,7 @@ const AccountPageContent: React.FC = () => {
           {!account && !error && (
             <div className="py-24 flex flex-col items-center gap-3">
               <div className="w-10 h-10 border-[3px] border-[#E8F4FB] border-t-[#0284C7] rounded-full animate-spin" />
-              <p className="text-[13px] font-semibold text-[#7D8794]">Loading your dashboard…</p>
+              <p className="text-[13px] font-semibold text-[--text-muted]">Loading your dashboard…</p>
             </div>
           )}
 
@@ -398,8 +398,8 @@ const AccountPageContent: React.FC = () => {
                             <Pencil className="w-3.5 h-3.5" /> Edit profile
                           </button>
                         </div>
-                        <p className="text-[13px] text-[#7D8794] mt-1">{account.user.email}</p>
-                        <p className="text-[13px] text-[#7D8794]">
+                        <p className="text-[13px] text-[--text-muted] mt-1">{account.user.email}</p>
+                        <p className="text-[13px] text-[--text-muted]">
                           {account.user.college || 'No college added'}
                           {joinedAt ? ` · Joined ${joinedAt}` : ''}
                         </p>
@@ -478,7 +478,7 @@ const AccountPageContent: React.FC = () => {
                       </span>
                       <div>
                         <p className="font-mono font-extrabold text-[#10151C] text-[15px] stat-num">{s.value}</p>
-                        <p className="text-[11px] text-[#7D8794]">{s.label}</p>
+                        <p className="text-[11px] text-[--text-muted]">{s.label}</p>
                       </div>
                     </div>
                   ))}
@@ -514,7 +514,7 @@ const AccountPageContent: React.FC = () => {
                       style={{ width: `${Math.min(100, (modules.completed / 50) * 100)}%` }}
                     />
                   </div>
-                  <p className="text-[12px] text-[#7D8794] mt-3">
+                  <p className="text-[12px] text-[--text-muted] mt-3">
                     Every completed module adds +50 XP to your real account — <Link href="/interview-course" className="font-bold text-[#0271B5] hover:underline">continue the course</Link>.
                   </p>
                 </div>
@@ -569,7 +569,7 @@ const AccountPageContent: React.FC = () => {
                       <h3 className="text-[15px] font-extrabold text-[#10151C] flex items-center gap-2">
                         <LockKeyhole className="w-4 h-4 text-[#E8A33D]" /> Session
                       </h3>
-                      <p className="text-[13px] text-[#7D8794] mt-2">
+                      <p className="text-[13px] text-[--text-muted] mt-2">
                         Signing out revokes your refresh session. Your access token expires automatically after 15 minutes.
                       </p>
                     </div>

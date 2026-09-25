@@ -1,14 +1,14 @@
 import React from 'react';
 
 const TILE_COLORS = [
-  'bg-[#1F3A5F]/90',
-  'bg-[#0284C7]/90',
-  'bg-[#0F766E]/90',
-  'bg-[#B45309]/90',
-  'bg-[#6D28D9]/90',
-  'bg-[#BE123C]/90',
-  'bg-[#4D7C0F]/90',
-  'bg-[#334155]/90',
+  'bg-[#1F3A5F]',
+  'bg-[#0369A1]',
+  'bg-[#115E59]',
+  'bg-[#92400E]',
+  'bg-[#6D28D9]',
+  'bg-[#BE123C]',
+  'bg-[#3F6212]',
+  'bg-[#334155]',
 ];
 
 const isRealUrl = (src?: string | null): boolean => {

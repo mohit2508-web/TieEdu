@@ -22,7 +22,7 @@ const AdminBootGate: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center py-28 gap-4 bg-[#FAFAF9] min-h-screen">
         <div className="w-9 h-9 border-[3px] border-[#FBF1E1] border-t-[#0284C7] rounded-full animate-spin" />
-        <p className="text-[13px] font-semibold text-[#7D8794]">Authorizing admin token…</p>
+        <p className="text-[13px] font-semibold text-[--text-muted]">Authorizing admin token…</p>
       </div>
     );
   }
@@ -35,7 +35,7 @@ const AdminBootGate: React.FC = () => {
             <ShieldX className="w-6 h-6" />
           </span>
           <h2 className="text-lg font-extrabold text-[#10151C]">Admin token rejected</h2>
-          <p className="text-[13px] text-[#7D8794] mt-1.5 mb-5">
+          <p className="text-[13px] text-[--text-muted] mt-1.5 mb-5">
             Your session is no longer valid for the admin surface — please sign in again.
           </p>
           <button onClick={async () => { await logout(); }} className="btn btn-primary px-5 py-2.5 text-sm">

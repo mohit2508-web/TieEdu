@@ -80,7 +80,7 @@ export const InterviewExperiences: React.FC<InterviewExperiencesProps> = ({
             <ShieldCheck className="w-5 h-5 text-emerald-500" />
             Verified {companyName} Interview Experiences ({count})
           </h3>
-          <p className="text-[13px] text-[#8A8A8A] mt-0.5">
+          <p className="text-[13px] text-[--text-muted] mt-0.5">
             Real candidate round-by-round reports published on TieEdu.
           </p>
         </div>
@@ -96,10 +96,10 @@ export const InterviewExperiences: React.FC<InterviewExperiencesProps> = ({
 
       {/* Experience Cards */}
       {mode === 'loading' ? (
-        <p className="text-[13px] text-[#8A8A8A]">Loading verified drive logs…</p>
+        <p className="text-[13px] text-[--text-muted]">Loading verified drive logs…</p>
       ) : mode === 'empty' ? (
         <div className="p-8 bg-white border border-[#EDEDEB] rounded-2xl text-center">
-          <p className="text-[13px] text-[#8A8A8A]">
+          <p className="text-[13px] text-[--text-muted]">
             No verified candidate reports published for {companyName} yet. Be the first —
             share your drive experience below.
           </p>
@@ -112,7 +112,7 @@ export const InterviewExperiences: React.FC<InterviewExperiencesProps> = ({
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h4 className="font-bold text-[15px] text-[#1A1A1A]">{exp.candidate_name}</h4>
-                <p className="text-[13px] text-[#8A8A8A]">{exp.role} • {exp.date}</p>
+                <p className="text-[13px] text-[--text-muted]">{exp.role} • {exp.date}</p>
               </div>
 
               <span className={`px-2.5 py-1 border text-[12px] font-bold rounded-lg whitespace-nowrap bg-emerald-50 text-emerald-800 border-emerald-200`}>
@@ -130,15 +130,15 @@ export const InterviewExperiences: React.FC<InterviewExperiencesProps> = ({
                   {[1, 2, 3, 4, 5].map((i) => (
                     <Star key={i} className={`w-4 h-4 ${i <= exp.rating! ? 'fill-amber-400 text-amber-500' : 'text-[#E5E5E3]'}`} />
                   ))}
-                  <span className="ml-1.5 text-[12px] text-[#8A8A8A]">content accuracy match</span>
+                  <span className="ml-1.5 text-[12px] text-[--text-muted]">content accuracy match</span>
                 </>
               ) : (
-                <span className="ml-1.5 text-[12px] text-[#8A8A8A]">No accuracy rating yet</span>
+                <span className="ml-1.5 text-[12px] text-[--text-muted]">No accuracy rating yet</span>
               )}
             </div>
 
             <div className="pt-2 border-t border-[#EDEDEB]">
-              <span className="text-[12px] font-semibold text-[#8A8A8A] block mb-1.5 flex items-center gap-1">
+              <span className="text-[12px] font-semibold text-[--text-muted] block mb-1.5 flex items-center gap-1">
                 <Award className="w-3.5 h-3.5 text-[#E8A33D]" /> Rounds Cleared
               </span>
               <div className="flex flex-wrap gap-1.5">
@@ -150,7 +150,7 @@ export const InterviewExperiences: React.FC<InterviewExperiencesProps> = ({
               </div>
             </div>
 
-            <p className="flex items-start gap-1.5 text-[12px] text-[#8A8A8A]">
+            <p className="flex items-start gap-1.5 text-[12px] text-[--text-muted]">
                 <Sparkles className="w-3.5 h-3.5 text-[#E8A33D] mt-0.5 shrink-0" />
                 Candidate-verified drive log — reviewed by TieEdu content editors.
               </p>

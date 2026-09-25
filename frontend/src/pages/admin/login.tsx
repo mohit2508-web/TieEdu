@@ -64,7 +64,7 @@ export default function AdminLoginPage() {
               <ShieldCheck className="w-3.5 h-3.5 text-[#E8A33D]" /> Restricted
             </div>
             <h1 className="display-2 mb-1.5">Platform admin portal</h1>
-            <p className="text-[15px] text-[#7D8794] mb-7">
+            <p className="text-[15px] text-[--text-muted] mb-7">
               This surface is only for TieEdu platform owners. Guest access is not allowed.
             </p>
 
@@ -80,7 +80,7 @@ export default function AdminLoginPage() {
                   Admin email
                 </label>
                 <div className="relative">
-                  <Mail className="w-4 h-4 text-[#7D8794] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <Mail className="w-4 h-4 text-[--text-muted] absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     id="admin-email"
                     type="email"
@@ -98,7 +98,7 @@ export default function AdminLoginPage() {
                   Password
                 </label>
                 <div className="relative">
-                  <Lock className="w-4 h-4 text-[#7D8794] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <Lock className="w-4 h-4 text-[--text-muted] absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     id="admin-password"
                     type="password"

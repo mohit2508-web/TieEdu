@@ -61,7 +61,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="sticky top-0 z-40 glass-surface">
-      <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 h-16 flex items-center justify-between">
+      <div className="w-full max-w-[1700px] mx-auto px-3 sm:px-8 lg:px-12 h-16 flex items-center justify-between">
 
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2 group" aria-label="TieEdu home">
@@ -89,11 +89,11 @@ export const Header: React.FC<HeaderProps> = ({
 
           <button
             onClick={onOpenSearch}
-            className="hidden sm:flex items-center gap-2 bg-white/70 border border-[#E9E7E1] hover:border-[#D6D2C8] text-[#7D8794] hover:text-[#3E4754] pl-3 pr-2 py-2 rounded-xl text-[13px] transition-all shadow-xs focus-ring"
+            className="hidden sm:flex items-center gap-2 bg-white/70 border border-[#E9E7E1] hover:border-[#D6D2C8] text-[--text-muted] hover:text-[#3E4754] pl-3 pr-2 py-2 rounded-xl text-[13px] transition-all shadow-xs focus-ring"
           >
             <Search className="w-4 h-4" />
             <span className="font-medium">Search</span>
-            <span className="hidden lg:inline-flex items-center gap-0.5 ml-1 px-1.5 py-0.5 rounded-md bg-black/[0.05] text-[11px] font-bold text-[#7D8794]">
+            <span className="hidden lg:inline-flex items-center gap-0.5 ml-1 px-1.5 py-0.5 rounded-md bg-black/[0.05] text-[11px] font-bold text-[--text-muted]">
               <Command className="w-3 h-3" />K
             </span>
           </button>
@@ -108,10 +108,10 @@ export const Header: React.FC<HeaderProps> = ({
 
           <button
             onClick={onOpenLeaderboard}
-            className="chip hover:border-[#E8A33D] hover:text-[#C77B12]" title="Daily streak leaderboard"
+            className="w-10 h-10 sm:w-auto sm:h-auto flex items-center justify-center sm:inline-flex gap-2 chip hover:border-[#E8A33D] hover:text-[#C77B12]" title="Daily streak leaderboard"
           >
             <Flame className="w-4 h-4 text-[#E8A33D] fill-[#E8A33D]" />
-            <span className="font-bold">Leaderboard</span>
+            <span className="font-bold hidden sm:inline">Leaderboard</span>
           </button>
 
           <button
@@ -131,7 +131,7 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="relative" ref={menuRef}>
               <button
                 onClick={() => setMenuOpen((o) => !o)}
-                className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-xl border border-[#E9E7E1] bg-white/70 hover:border-[#D6D2C8] transition-colors focus-ring"
+                className="flex items-center gap-1.5 sm:gap-2 pl-1 pr-1.5 sm:pr-2 py-1 rounded-xl border border-[#E9E7E1] bg-white/70 hover:border-[#D6D2C8] transition-colors focus-ring"
                 aria-haspopup="menu"
                 aria-expanded={menuOpen}
               >
@@ -145,14 +145,14 @@ export const Header: React.FC<HeaderProps> = ({
                 <span className="hidden lg:block text-[13px] font-bold text-[#10151C] max-w-[140px] truncate">
                   {user.name.split(' ')[0]}
                 </span>
-                <ChevronDown className={`w-3.5 h-3.5 text-[#7D8794] transition-transform ${menuOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`hidden sm:inline w-3.5 h-3.5 text-[--text-muted] transition-transform ${menuOpen ? 'rotate-180' : ''}`} />
               </button>
 
               {menuOpen && (
                 <div className="absolute right-0 top-[calc(100%+8px)] w-64 vault-card p-2 shadow-raised animate-fade-in" role="menu">
                   <div className="px-3 py-2.5 border-b border-[#E9E7E1]">
                     <p className="text-[13px] font-bold text-[#10151C] truncate">{user.name}</p>
-                    <p className="text-[11px] text-[#7D8794] truncate">{user.email}</p>
+                    <p className="text-[11px] text-[--text-muted] truncate">{user.email}</p>
                     <span className={`inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wide ${
                       isAdmin ? 'bg-[#0E2A44] text-[#E8A33D]' : 'bg-[#E8F4FB] text-[#0271B5]'
                     }`}>
@@ -280,7 +280,7 @@ export const Header: React.FC<HeaderProps> = ({
                         )}
                         <div className="min-w-0">
                           <p className="text-[14px] font-bold text-[#10151C] truncate">{user.name}</p>
-                          <p className="text-[11px] text-[#7D8794] truncate">{user.email}</p>
+                          <p className="text-[11px] text-[--text-muted] truncate">{user.email}</p>
                         </div>
                       </div>
                       <span className={`inline-flex items-center gap-1 mt-1.5 px-1.5 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wide ${

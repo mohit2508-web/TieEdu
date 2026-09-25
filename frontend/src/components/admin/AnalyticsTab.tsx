@@ -41,7 +41,7 @@ export const AnalyticsTab: React.FC<{ companies: Company[] }> = ({ companies }) 
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
         <div className="w-9 h-9 border-[3px] border-[#FBF1E1] border-t-[#0284C7] rounded-full animate-spin" />
-        <p className="text-[13px] font-semibold text-[#7D8794]">Compiling analytics…</p>
+        <p className="text-[13px] font-semibold text-[--text-muted]">Compiling analytics…</p>
       </div>
     );
   }

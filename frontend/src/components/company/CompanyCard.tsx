@@ -24,12 +24,12 @@ export const CompanyCard: React.FC<CompanyCardProps> = ({ company }) => {
             Updated {company.last_updated_days_ago || 1}d ago
           </span>
           {company.difficulty_rating > 0 ? (
-            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#C77B12] bg-[#FBF1E1] border border-[#F1DFC2] px-2.5 py-1 rounded-full" title={`Difficulty ${company.difficulty_rating}/5`}>
+            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#92400E] bg-[#FBF1E1] border border-[#F1DFC2] px-2.5 py-1 rounded-full" title={`Difficulty ${company.difficulty_rating}/5`}>
               <Star className="w-3.5 h-3.5 fill-[#E8A33D] text-[#E8A33D]" />
               {company.difficulty_rating}/5
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#7D8794] bg-[#F7F6F3] border border-[#ECEAE4] px-2.5 py-1 rounded-full">
+            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[--text-muted] bg-[#F7F6F3] border border-[#ECEAE4] px-2.5 py-1 rounded-full">
               <Star className="w-3.5 h-3.5 text-[#C9C7C1]" />
               Not rated
             </span>
@@ -46,7 +46,7 @@ export const CompanyCard: React.FC<CompanyCardProps> = ({ company }) => {
             <h3 className="font-serif-heading text-lg font-extrabold text-[#10151C] group-hover:text-[#0271B5] transition-colors leading-snug">
               {company.name}
             </h3>
-            <p className="text-[13px] text-[#7D8794] font-medium mt-0.5">{company.industry || 'General'}</p>
+            <p className="text-[13px] text-[--text-muted] font-medium mt-0.5">{company.industry || 'General'}</p>
           </div>
         </div>
 
@@ -60,17 +60,17 @@ export const CompanyCard: React.FC<CompanyCardProps> = ({ company }) => {
 
         <div className="grid grid-cols-3 gap-2 py-3 border-y border-[#E9E7E1] my-4 text-center bg-[#F7F6F3] rounded-xl">
           <div>
-            <span className="text-[10px] text-[#7D8794] block uppercase font-bold tracking-wider">Duration</span>
+            <span className="text-[10px] text-[--text-muted] block uppercase font-bold tracking-wider">Duration</span>
             <span className="text-[13px] font-extrabold text-[#10151C] stat-num">
               {company.avg_process_days != null ? `${company.avg_process_days} days` : '—'}
             </span>
           </div>
           <div>
-            <span className="text-[10px] text-[#7D8794] block uppercase font-bold tracking-wider">Modules</span>
+            <span className="text-[10px] text-[--text-muted] block uppercase font-bold tracking-wider">Modules</span>
             <span className="text-[13px] font-extrabold text-[#0271B5] stat-num">{company.module_count ?? company.modules?.length ?? 0}</span>
           </div>
           <div>
-            <span className="text-[10px] text-[#7D8794] block uppercase font-bold tracking-wider">CTC</span>
+            <span className="text-[10px] text-[--text-muted] block uppercase font-bold tracking-wider">CTC</span>
             <span className="text-[13px] font-extrabold text-emerald-700 stat-num">
               {company.ctc_min != null && company.ctc_max != null ? `₹${company.ctc_min}–${company.ctc_max}L` : '—'}
             </span>

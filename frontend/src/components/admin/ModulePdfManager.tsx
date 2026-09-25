@@ -95,7 +95,7 @@ export const ModulePdfManager: React.FC<ModulePdfManagerProps> = ({ module, comp
             <h3 className="font-bold text-[15px] text-[#1F3A5F] flex items-center gap-2">
               <FileText className="w-5 h-5 text-[#0284C7]" /> PDF Library — Module
             </h3>
-            <p className="text-[13px] text-[#8A8A8A] mt-0.5">
+            <p className="text-[13px] text-[--text-muted] mt-0.5">
               {companyName || 'Company'} • {module.round_type || ''} • {module.title} — 1 PDF per module (replace karne par purani delete)
             </p>
           </div>
@@ -117,7 +117,7 @@ export const ModulePdfManager: React.FC<ModulePdfManagerProps> = ({ module, comp
                 <div className="w-10 h-10 rounded-xl bg-[#0284C7] text-white flex items-center justify-center shrink-0"><FileText className="w-5 h-5" /></div>
                 <div className="min-w-0">
                   <p className="font-bold text-[#1E293B] truncate">{pdf.title}</p>
-                  <p className="text-[12px] text-[#8A8A8A] truncate">{pdf.file_name} • {fmtSize(pdf.size_bytes)} • {pdf.uploaded_at}</p>
+                  <p className="text-[12px] text-[--text-muted] truncate">{pdf.file_name} • {fmtSize(pdf.size_bytes)} • {pdf.uploaded_at}</p>
                 </div>
               </div>
               <button onClick={handleDelete} disabled={busy} className="inline-flex items-center gap-1.5 px-3 py-2 bg-red-50 hover:bg-red-100 text-red-700 rounded-xl text-[12px] font-bold transition-colors shrink-0">
@@ -131,14 +131,14 @@ export const ModulePdfManager: React.FC<ModulePdfManagerProps> = ({ module, comp
               {previewUrl ? (
                 <iframe src={previewUrl} title={pdf.title} className="w-full h-64" />
               ) : (
-                <div className="w-full h-64 flex items-center justify-center text-[12px] text-[#8A8A8A]">Preview loading…</div>
+                <div className="w-full h-64 flex items-center justify-center text-[12px] text-[--text-muted]">Preview loading…</div>
               )}
             </div>
           </div>
         ) : (
           <div className="p-6 bg-gray-50 border border-gray-200 rounded-2xl text-center space-y-2">
             <FileText className="w-8 h-8 text-gray-300 mx-auto" />
-            <p className="text-[13px] text-[#8A8A8A]">No PDF uploaded for this module yet — upload one below.</p>
+            <p className="text-[13px] text-[--text-muted]">No PDF uploaded for this module yet — upload one below.</p>
           </div>
         )}
 
@@ -159,7 +159,7 @@ export const ModulePdfManager: React.FC<ModulePdfManagerProps> = ({ module, comp
           />
           <Upload className="w-7 h-7 text-[#0284C7] mx-auto mb-2" />
           <p className="text-sm font-bold text-[#1E293B]">{pdf ? 'Replace PDF (old one auto-deletes)' : 'Drag & drop, or click to choose a PDF'}</p>
-          <p className="text-[12px] text-[#8A8A8A] mt-1">application/pdf • 25MB max</p>
+          <p className="text-[12px] text-[--text-muted] mt-1">application/pdf • 25MB max</p>
           {file && (
             <p className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 bg-sky-50 border border-sky-200 text-[#0284C7] rounded-xl text-[12px] font-bold">
               <FileText className="w-3.5 h-3.5" /> {file.name} ({fmtSize(file.size)})

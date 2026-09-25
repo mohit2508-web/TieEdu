@@ -50,7 +50,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectPlan }) 
           <h2 className="font-serif-heading text-2xl sm:text-3xl font-bold text-[#1A1A1A] mb-3">
             Invest in Placement Success, Not Static PDFs
           </h2>
-          <p className="text-xs sm:text-sm text-[#8A8A8A]">
+          <p className="text-xs sm:text-sm text-[--text-muted]">
             Continuous updates, candidate-verified reports, and round-by-round interview intelligence.
             Pay once per module or grab the complete pack — no subscriptions.
           </p>
@@ -79,7 +79,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectPlan }) 
                   <h3 className="font-serif-heading font-bold text-lg text-[#1A1A1A] mb-1">{plan.name}</h3>
                   <div className="flex items-baseline gap-2 mb-6">
                     <span className="font-serif-heading text-3xl font-bold text-[#1A1A1A]">₹{plan.price}</span>
-                    <span className="text-xs text-[#8A8A8A]">one-time</span>
+                    <span className="text-xs text-[--text-muted]">one-time</span>
                   </div>
 
                   <ul className="space-y-2.5 mb-8 text-xs text-[#4A4A4A]">
@@ -96,7 +96,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectPlan }) 
                   onClick={() => onSelectPlan(plan)}
                   className={`w-full py-2.5 rounded-lg text-xs font-semibold transition-all shadow-sm ${
                     isPopular
-                      ? 'bg-[#E8A33D] hover:bg-[#D4902C] text-white'
+                      ? 'bg-[#E8A33D] hover:bg-[#D4902C] text-[#241A06]'
                       : 'bg-[#1F3A5F] hover:bg-[#2A4D7E] text-white'
                   }`}
                 >
@@ -107,7 +107,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectPlan }) 
           })}
         </div>
 
-        <p className="mt-8 text-center text-xs text-[#8A8A8A] max-w-2xl mx-auto">
+        <p className="mt-8 text-center text-xs text-[--text-muted] max-w-2xl mx-auto">
           Prices are set by the pack ladder on the server: ₹99 for one module,
           ₹169 for two, ₹219 for three and ₹{COMPLETE_PACK_PRICE} for the complete pack.
           Payments are verified manually by our team after you complete the UPI transfer.

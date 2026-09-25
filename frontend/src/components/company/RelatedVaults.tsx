@@ -21,7 +21,7 @@ export const RelatedVaults: React.FC<RelatedVaultsProps> = ({ currentCompanySlug
             <Sparkles className="w-5 h-5 text-[#E8A33D]" />
             More Company Vaults
           </h3>
-          <p className="text-[13px] text-[#8A8A8A] mt-0.5">
+          <p className="text-[13px] text-[--text-muted] mt-0.5">
             Browse other company vaults to expand your prep coverage.
           </p>
         </div>
@@ -42,7 +42,7 @@ export const RelatedVaults: React.FC<RelatedVaultsProps> = ({ currentCompanySlug
               />
               <div>
                 <h4 className="font-bold text-[14px] text-[#1A1A1A] group-hover:text-[#E8A33D] transition-colors">{company.name} Vault</h4>
-                <p className="text-[13px] text-[#8A8A8A]">
+                <p className="text-[13px] text-[--text-muted]">
                   {company.ctc_min != null && company.ctc_max != null
                     ? `₹${company.ctc_min} - ₹${company.ctc_max} LPA`
                     : 'CTC not disclosed'}

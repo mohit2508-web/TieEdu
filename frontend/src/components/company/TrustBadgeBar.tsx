@@ -31,12 +31,12 @@ export const TrustBadgeBar: React.FC<TrustBadgeBarProps> = ({
               <span>{rating.toFixed(1)}</span>
             </div>
           ) : (
-            <div className="flex items-center px-2.5 py-1 rounded-lg bg-[#EEF1F4] text-[#7D8794] font-semibold">
+            <div className="flex items-center px-2.5 py-1 rounded-lg bg-[#EEF1F4] text-[--text-muted] font-semibold">
               <Star className="w-4 h-4 text-[#AEB6BE] mr-1" />
               <span>No ratings yet</span>
             </div>
           )}
-          <span className="text-[#8A8A8A] font-medium">({ratingCount} verified reports)</span>
+          <span className="text-[--text-muted] font-medium">({ratingCount} verified reports)</span>
         </div>
 
         {/* Weekly Unlocks — live ledger count */}
@@ -46,7 +46,7 @@ export const TrustBadgeBar: React.FC<TrustBadgeBarProps> = ({
           </div>
           <div>
             <span className="font-bold text-[#1F3A5F]">{weeklyUnlocks} candidates</span>
-            <span className="text-[13px] text-[#8A8A8A]"> unlocked this week</span>
+            <span className="text-[13px] text-[--text-muted]"> unlocked this week</span>
           </div>
         </div>
 

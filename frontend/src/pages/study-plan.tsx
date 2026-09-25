@@ -62,7 +62,7 @@ export default function StudyPlanPage() {
 
         <main className="flex-1 w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 py-8">
 
-          <Link href="/" className="inline-flex items-center gap-1 text-xs text-[#8A8A8A] hover:text-[#1A1A1A] mb-6">
+          <Link href="/" className="inline-flex items-center gap-1 text-xs text-[--text-muted] hover:text-[#1A1A1A] mb-6">
             <ArrowLeft className="w-3.5 h-3.5" /> Back to Directory
           </Link>
 
@@ -75,7 +75,7 @@ export default function StudyPlanPage() {
             <h1 className="font-serif-heading text-2xl sm:text-3xl font-bold text-[#1A1A1A]">
               Personalized Candidate Study Plan
             </h1>
-            <p className="text-xs text-[#8A8A8A]">Generates a day-by-day roadmap tailored to your target company and interview date.</p>
+            <p className="text-xs text-[--text-muted]">Generates a day-by-day roadmap tailored to your target company and interview date.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -143,7 +143,7 @@ export default function StudyPlanPage() {
                   <div className="mx-auto w-12 h-12 rounded-full bg-[#1F3A5F]/5 flex items-center justify-center mb-3">
                     <FlaskConical className="w-5 h-5 text-[#1F3A5F]" />
                   </div>
-                  <p className="text-xs text-[#8A8A8A]">
+                  <p className="text-xs text-[--text-muted]">
                     Pick your target company and interview date, then hit
                     Generate Study Schedule to build a roadmap.
                   </p>
@@ -161,7 +161,7 @@ export default function StudyPlanPage() {
                       </div>
                     </div>
                   ))}
-                  <p className="text-[11px] text-[#8A8A8A] flex items-center gap-1.5">
+                  <p className="text-[11px] text-[--text-muted] flex items-center gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5 text-[#1E8E5A]" />
                     Sample roadmap generated on the server. Adjust timings to your real interview date.
                   </p>

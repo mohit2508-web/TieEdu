@@ -53,7 +53,7 @@ export default function SignupPage() {
           <div className="vault-card p-8 shadow-raised">
             <span className="eyebrow">Join the Vault</span>
             <h1 className="display-2 mt-1 mb-1.5">Create your account</h1>
-            <p className="text-[15px] text-[#7D8794] mb-7">
+            <p className="text-[15px] text-[--text-muted] mb-7">
               Free account — unlocks, purchases aur progress hamesha tumhare saath.
             </p>
 
@@ -67,7 +67,7 @@ export default function SignupPage() {
               <div>
                 <label className="block text-[12px] font-bold text-[#3E4754] mb-1.5 tracking-wide uppercase">Full name</label>
                 <div className="relative">
-                  <User className="w-4 h-4 text-[#7D8794] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <User className="w-4 h-4 text-[--text-muted] absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     value={name}
                     onChange={(e) => setName(e.target.value)}
@@ -80,7 +80,7 @@ export default function SignupPage() {
               <div>
                 <label className="block text-[12px] font-bold text-[#3E4754] mb-1.5 tracking-wide uppercase">Email</label>
                 <div className="relative">
-                  <Mail className="w-4 h-4 text-[#7D8794] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <Mail className="w-4 h-4 text-[--text-muted] absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="email"
                     autoComplete="email"
@@ -95,7 +95,7 @@ export default function SignupPage() {
               <div>
                 <label className="block text-[12px] font-bold text-[#3E4754] mb-1.5 tracking-wide uppercase">College (optional)</label>
                 <div className="relative">
-                  <GraduationCap className="w-4 h-4 text-[#7D8794] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <GraduationCap className="w-4 h-4 text-[--text-muted] absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     value={college}
                     onChange={(e) => setCollege(e.target.value)}
@@ -108,7 +108,7 @@ export default function SignupPage() {
               <div>
                 <label className="block text-[12px] font-bold text-[#3E4754] mb-1.5 tracking-wide uppercase">Password</label>
                 <div className="relative">
-                  <Lock className="w-4 h-4 text-[#7D8794] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <Lock className="w-4 h-4 text-[--text-muted] absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="password"
                     autoComplete="new-password"
@@ -123,7 +123,7 @@ export default function SignupPage() {
               <div>
                 <label className="block text-[12px] font-bold text-[#3E4754] mb-1.5 tracking-wide uppercase">Confirm password</label>
                 <div className="relative">
-                  <Lock className="w-4 h-4 text-[#7D8794] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <Lock className="w-4 h-4 text-[--text-muted] absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="password"
                     autoComplete="new-password"

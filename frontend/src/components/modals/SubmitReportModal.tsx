@@ -67,9 +67,9 @@ export const SubmitReportModal: React.FC<SubmitReportModalProps> = ({
         <div className="flex items-center justify-between pb-3 border-b border-[#EDEDEB] mb-4">
           <div>
             <h3 className="text-[15px] font-bold text-[#1F3A5F]">Submit Verified Interview Report</h3>
-            <p className="text-[13px] text-[#8A8A8A]">Earn +50 XP once reviewed by admin content editors</p>
+            <p className="text-[13px] text-[--text-muted]">Earn +50 XP once reviewed by admin content editors</p>
           </div>
-          <button onClick={onClose} className="p-1 text-[#8A8A8A] hover:text-[#1A1A1A]">
+          <button onClick={onClose} className="p-1 text-[--text-muted] hover:text-[#1A1A1A]">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -78,7 +78,7 @@ export const SubmitReportModal: React.FC<SubmitReportModalProps> = ({
           <div className="py-8 text-center space-y-2">
             <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
             <h4 className="font-bold text-base text-[#1A1A1A]">Report Submitted for Moderation!</h4>
-            <p className="text-[13px] text-[#8A8A8A]">+50 XP will be added to your account upon admin approval.</p>
+            <p className="text-[13px] text-[--text-muted]">+50 XP will be added to your account upon admin approval.</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-3 text-[14px]">
@@ -88,7 +88,7 @@ export const SubmitReportModal: React.FC<SubmitReportModalProps> = ({
                 type="text"
                 disabled
                 value={companyName}
-                className="w-full px-3 py-2 bg-[#FAFAF9] border rounded-lg text-[#8A8A8A] font-semibold"
+                className="w-full px-3 py-2 bg-[#FAFAF9] border rounded-lg text-[--text-muted] font-semibold"
               />
             </div>
 
@@ -159,7 +159,7 @@ export const SubmitReportModal: React.FC<SubmitReportModalProps> = ({
           </form>
         )}
 
-        <div className="mt-4 flex items-start gap-1.5 text-[12px] text-[#8A8A8A]">
+        <div className="mt-4 flex items-start gap-1.5 text-[12px] text-[--text-muted]">
           <Award className="w-3.5 h-3.5 text-[#E8A33D] mt-0.5 shrink-0" />
           Reports appear on the company page only after verification by our content editors.
         </div>

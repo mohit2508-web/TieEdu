@@ -16,7 +16,7 @@ export const CampusDashboardView: React.FC = () => {
     return (
       <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 py-8">
         <div className="bg-white border border-[#EDEDEB] p-10 rounded-3xl text-center">
-          <p className="text-sm text-[#8A8A8A]">
+          <p className="text-sm text-[--text-muted]">
             Campus cohort analytics are loading.
           </p>
         </div>
@@ -53,7 +53,7 @@ export const CampusDashboardView: React.FC = () => {
       {/* Stats Overview Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div className="bg-white p-5 rounded-2xl border border-[#EDEDEB] shadow-sm space-y-1">
-          <span className="text-xs text-[#8A8A8A] font-semibold block">Total Batch Students</span>
+          <span className="text-xs text-[--text-muted] font-semibold block">Total Batch Students</span>
           <div className="flex items-baseline justify-between">
             <span className="font-serif-heading text-3xl font-bold text-[#1A1A1A]">{cohort.total_students}</span>
             <Users className="w-5 h-5 text-[#1F3A5F]" />
@@ -62,16 +62,16 @@ export const CampusDashboardView: React.FC = () => {
         </div>
 
         <div className="bg-white p-5 rounded-2xl border border-[#EDEDEB] shadow-sm space-y-1">
-          <span className="text-xs text-[#8A8A8A] font-semibold block">Active Prep Rate</span>
+          <span className="text-xs text-[--text-muted] font-semibold block">Active Prep Rate</span>
           <div className="flex items-baseline justify-between">
             <span className="font-serif-heading text-3xl font-bold text-[#1E8E5A]">{cohort.prep_rate_percent}%</span>
             <Sparkles className="w-5 h-5 text-[#E8A33D]" />
           </div>
-          <span className="text-[10px] text-[#8A8A8A] block">{cohort.active_prep_students} Candidates Active</span>
+          <span className="text-[10px] text-[--text-muted] block">{cohort.active_prep_students} Candidates Active</span>
         </div>
 
         <div className="bg-white p-5 rounded-2xl border border-[#EDEDEB] shadow-sm space-y-1">
-          <span className="text-xs text-[#8A8A8A] font-semibold block">Average Student XP</span>
+          <span className="text-xs text-[--text-muted] font-semibold block">Average Student XP</span>
           <div className="flex items-baseline justify-between">
             <span className="font-serif-heading text-3xl font-bold text-[#1F3A5F]">{cohort.avg_xp ?? 0}</span>
             <Award className="w-5 h-5 text-[#1F3A5F]" />
@@ -80,12 +80,12 @@ export const CampusDashboardView: React.FC = () => {
         </div>
 
         <div className="bg-white p-5 rounded-2xl border border-[#EDEDEB] shadow-sm space-y-1">
-          <span className="text-xs text-[#8A8A8A] font-semibold block">Verified Drive Reports</span>
+          <span className="text-xs text-[--text-muted] font-semibold block">Verified Drive Reports</span>
           <div className="flex items-baseline justify-between">
             <span className="font-serif-heading text-3xl font-bold text-[#E8A33D]">{cohort.verified_reports_submitted ?? 0} Published</span>
             <BarChart3 className="w-5 h-5 text-[#E8A33D]" />
           </div>
-          <span className="text-[10px] text-[#8A8A8A] block">+50 XP credited per approved report</span>
+          <span className="text-[10px] text-[--text-muted] block">+50 XP credited per approved report</span>
         </div>
       </div>
 
@@ -97,7 +97,7 @@ export const CampusDashboardView: React.FC = () => {
 
         <div className="space-y-4">
           {(cohort.top_targeted_companies || []).length === 0 && (
-            <p className="text-xs text-[#8A8A8A]">
+            <p className="text-xs text-[--text-muted]">
               No published candidate reports yet — rankings appear once verified reports are approved.
             </p>
           )}
@@ -105,7 +105,7 @@ export const CampusDashboardView: React.FC = () => {
             <div key={idx} className="p-4 bg-[#FAFAF9] rounded-xl border border-[#EDEDEB] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h4 className="font-bold text-sm text-[#1A1A1A] mb-1">{c.name}</h4>
-                <p className="text-xs text-[#8A8A8A]">{c.candidates_targeting} Published Candidate Reports</p>
+                <p className="text-xs text-[--text-muted]">{c.candidates_targeting} Published Candidate Reports</p>
               </div>
 
               <div className="flex items-center gap-4 shrink-0">
@@ -113,10 +113,10 @@ export const CampusDashboardView: React.FC = () => {
                   {c.avg_score != null ? (
                     <>
                       <span className="text-xs font-bold text-[#1E8A5A] block">{c.avg_score}% Matched</span>
-                      <span className="text-[10px] text-[#8A8A8A]">Questions Matched</span>
+                      <span className="text-[10px] text-[--text-muted]">Questions Matched</span>
                     </>
                   ) : (
-                    <span className="text-[10px] text-[#8A8A8A]">Match rate pending reports</span>
+                    <span className="text-[10px] text-[--text-muted]">Match rate pending reports</span>
                   )}
                 </div>
                 <div className="w-32 bg-[#EDEDEB] h-2.5 rounded-full overflow-hidden">

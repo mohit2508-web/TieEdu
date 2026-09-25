@@ -135,7 +135,7 @@ export default function Home() {
                 </div>
 
                 <div className="max-w-xl relative pt-2 mx-auto lg:mx-0 w-full">
-                  <Search className="w-4 h-4 text-[#7D8794] absolute left-4 top-1/2 -translate-y-1/2" />
+                  <Search className="w-4 h-4 text-[--text-muted] absolute left-4 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     placeholder="Search company — Google, TCS, Zscaler, Razorpay…"
@@ -143,7 +143,7 @@ export default function Home() {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full pl-11 pr-24 py-3.5 bg-white/90 border border-[#E9E7E1] shadow-soft rounded-2xl text-sm text-[#10151C] placeholder:text-[#AEB6BE] focus:outline-none focus:border-[#0284C7] focus:ring-4 focus:ring-[#0284C7]/10 transition-shadow"
                   />
-                  <span className="absolute right-3.5 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-black/[0.05] text-[11px] font-bold text-[#7D8794]">⌘K</span>
+                  <span className="absolute right-3.5 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-black/[0.05] text-[11px] font-bold text-[--text-muted]">⌘K</span>
                 </div>
 
                 <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2.5 pt-1">
@@ -186,6 +186,7 @@ export default function Home() {
           )}
 
           <section className="bg-white border-b border-[#E9E7E1] py-10">
+            <h2 className="sr-only">Why TieEdu</h2>
             <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
               {FT_ITEMS.map((f, i) => (
                 <div key={i} className="vault-card p-5 flex items-start gap-4">
@@ -193,8 +194,8 @@ export default function Home() {
                     <f.icon className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="text-[14px] font-bold text-[#10151C]">{f.title}</h4>
-                    <p className="text-[13px] text-[#7D8794] mt-1 leading-relaxed">{f.body}</p>
+                    <h3 className="text-[14px] font-bold text-[#10151C]">{f.title}</h3>
+                    <p className="text-[13px] text-[--text-muted] mt-1 leading-relaxed">{f.body}</p>
                   </div>
                 </div>
               ))}
@@ -209,7 +210,7 @@ export default function Home() {
                 <h2 className="font-serif-heading text-3xl sm:text-4xl font-extrabold text-[#10151C] leading-tight">
                   Company Recruitment Vaults
                 </h2>
-                <p className="text-[15px] text-[#7D8794]">
+                <p className="text-[15px] text-[--text-muted]">
                   Select a company to open its complete recruitment intelligence portal.
                 </p>
                 {!dataError && companies.length > 0 && (
@@ -264,7 +265,7 @@ export default function Home() {
               ) : (
                 <div className="py-16 text-center space-y-2 col-span-full">
                   <p className="text-3xl">🔍</p>
-                  <p className="text-[15px] text-[#7D8794]">No company matched your search — try another keyword.</p>
+                  <p className="text-[15px] text-[--text-muted]">No company matched your search — try another keyword.</p>
                 </div>
               )}
             </div>

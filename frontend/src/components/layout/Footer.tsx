@@ -14,8 +14,8 @@ export const Footer: React.FC = () => {
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-              <h5 className="text-[14px] font-bold text-[#10151C]">Candidate Verified</h5>
-              <p className="text-[13px] text-[#7D8794] mt-1 leading-relaxed">Real interview questions verified by candidates placed at top tech firms.</p>
+              <h3 className="text-[14px] font-bold text-[#10151C]">Candidate Verified</h3>
+              <p className="text-[13px] text-[--text-muted] mt-1 leading-relaxed">Real interview questions verified by candidates placed at top tech firms.</p>
             </div>
           </div>
 
@@ -24,8 +24,8 @@ export const Footer: React.FC = () => {
               <Lock className="w-5 h-5" />
             </div>
             <div>
-              <h5 className="text-[14px] font-bold text-[#10151C]">View-Only PDF Security</h5>
-              <p className="text-[13px] text-[#7D8794] mt-1 leading-relaxed">Watermarked licensed PDFs, server-side unlock checks — no raw download paths.</p>
+              <h3 className="text-[14px] font-bold text-[#10151C]">View-Only PDF Security</h3>
+              <p className="text-[13px] text-[--text-muted] mt-1 leading-relaxed">Watermarked licensed PDFs, server-side unlock checks — no raw download paths.</p>
             </div>
           </div>
 
@@ -34,24 +34,24 @@ export const Footer: React.FC = () => {
               <Server className="w-5 h-5" />
             </div>
             <div>
-              <h5 className="text-[14px] font-bold text-[#10151C]">Honest, Server-Driven</h5>
-              <p className="text-[13px] text-[#7D8794] mt-1 leading-relaxed">Pricing, coupons and unlocks are verified by the backend — no bypasses.</p>
+              <h3 className="text-[14px] font-bold text-[#10151C]">Honest, Server-Driven</h3>
+              <p className="text-[13px] text-[--text-muted] mt-1 leading-relaxed">Pricing, coupons and unlocks are verified by the backend — no bypasses.</p>
             </div>
           </div>
         </div>
 
-        <div className="pt-6 flex flex-col lg:flex-row items-center justify-between gap-5 text-[13px] text-[#7D8794]">
+        <div className="pt-6 flex flex-col lg:flex-row items-center justify-between gap-5 text-[13px] text-[--text-muted]">
           <div className="flex items-center gap-3">
             <TieEduLogo size="sm" showTagline={false} />
             <p>© 2026 TieEdu Technologies. All rights reserved.</p>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-4 text-[13px] font-bold text-[#3E4754]">
-            <Link href="/" className="hover:text-[#0284C7] transition-colors">Vaults</Link>
-            <Link href="/compare" className="hover:text-[#0284C7] transition-colors">Compare</Link>
-            <Link href="/interview-course" className="hover:text-[#0284C7] transition-colors">Free Course</Link>
-            <Link href="/study-plan" className="hover:text-[#0284C7] transition-colors">Study Plan</Link>
-            <Link href="/campus" className="hover:text-[#0284C7] transition-colors">Campus TPO Portal</Link>
-            <Link href="/admin/login" className="hover:text-[#0284C7] transition-colors">Admin</Link>
+            <Link href="/" className="hover:text-[--brand-sky] transition-colors">Vaults</Link>
+            <Link href="/compare" className="hover:text-[--brand-sky] transition-colors">Compare</Link>
+            <Link href="/interview-course" className="hover:text-[--brand-sky] transition-colors">Free Course</Link>
+            <Link href="/study-plan" className="hover:text-[--brand-sky] transition-colors">Study Plan</Link>
+            <Link href="/campus" className="hover:text-[--brand-sky] transition-colors">Campus TPO Portal</Link>
+            <Link href="/admin/login" className="hover:text-[--brand-sky] transition-colors">Admin</Link>
           </div>
           <div className="flex items-center gap-1">
             <span>Built for placement season with</span>

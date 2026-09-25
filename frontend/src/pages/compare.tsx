@@ -81,7 +81,7 @@ export default function ComparePage() {
         <main className="flex-1 w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 py-8">
 
           {/* Back Navigation */}
-          <Link href="/" className="inline-flex items-center gap-1 text-xs text-[#8A8A8A] hover:text-[#1A1A1A] mb-6 font-medium">
+          <Link href="/" className="inline-flex items-center gap-1 text-xs text-[--text-muted] hover:text-[#1A1A1A] mb-6 font-medium">
             <ArrowLeft className="w-3.5 h-3.5" /> Back to Company Directory
           </Link>
 
@@ -95,7 +95,7 @@ export default function ComparePage() {
               <h1 className="font-serif-heading text-3xl sm:text-4xl lg:text-5xl font-bold text-[#1A1A1A] mb-2 leading-tight">
                 Side-by-Side Company Comparison Matrix
               </h1>
-              <p className="text-xs sm:text-sm text-[#8A8A8A] max-w-3xl leading-relaxed">
+              <p className="text-xs sm:text-sm text-[--text-muted] max-w-3xl leading-relaxed">
                 Compare CTC ranges, hiring process duration, round breakdowns, top high-frequency questions, and system design focus across the vaults in your directory.
               </p>
             </div>
@@ -103,12 +103,12 @@ export default function ComparePage() {
             {/* Live Counter */}
             <div className="bg-white p-3.5 px-5 rounded-xl border border-[#EDEDEB] shadow-sm shrink-0 flex items-center gap-4 text-xs">
               <div>
-                <span className="text-[10px] text-[#8A8A8A] font-mono uppercase block">Published Vaults</span>
+                <span className="text-[10px] text-[--text-muted] font-mono uppercase block">Published Vaults</span>
                 <span className="font-bold text-[#1A1A1A] text-sm">{loading ? '…' : companies.length}</span>
               </div>
               <div className="h-8 w-px bg-[#EDEDEB]"></div>
               <div>
-                <span className="text-[10px] text-[#8A8A8A] font-mono uppercase block">Verified Reports</span>
+                <span className="text-[10px] text-[--text-muted] font-mono uppercase block">Verified Reports</span>
                 <span className="font-bold text-[#1E8E5A] text-sm">{loading ? '…' : verifiedReportCount}</span>
               </div>
             </div>
@@ -127,7 +127,7 @@ export default function ComparePage() {
               {/* Benchmark Preset Quick Chips Bar */}
               {companies.length >= 3 && (
                 <div className="mb-6 bg-white p-5 rounded-2xl border border-[#EDEDEB] shadow-sm w-full">
-                  <span className="text-[11px] font-mono uppercase tracking-wider text-[#8A8A8A] font-bold block mb-3">
+                  <span className="text-[11px] font-mono uppercase tracking-wider text-[--text-muted] font-bold block mb-3">
                     Quick presets
                   </span>
                   <div className="flex flex-wrap gap-3 text-xs">
@@ -145,7 +145,7 @@ export default function ComparePage() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8 bg-white p-5 rounded-2xl border border-[#EDEDEB] shadow-sm w-full">
                 {[comp1Slug, comp2Slug, comp3Slug].map((slug, i) => (
                   <div key={i}>
-                    <label className="block text-[11px] font-mono uppercase text-[#8A8A8A] font-bold mb-1.5">Company Column {i + 1}</label>
+                    <label className="block text-[11px] font-mono uppercase text-[--text-muted] font-bold mb-1.5">Company Column {i + 1}</label>
                     <select
                       value={slug}
                       onChange={(e) => {
@@ -167,7 +167,7 @@ export default function ComparePage() {
                 <div className="min-w-[680px]">
 
                 {/* Table Header Row */}
-                <div className="grid grid-cols-4 border-b border-[#EDEDEB] bg-[#FAFAF9] p-5 font-mono text-[11px] uppercase font-bold text-[#8A8A8A]">
+                <div className="grid grid-cols-4 border-b border-[#EDEDEB] bg-[#FAFAF9] p-5 font-mono text-[11px] uppercase font-bold text-[--text-muted]">
                   <div className="compare-sticky-col-alt">Comparison Metrics</div>
                   {comparedList.map((c, i) => <div key={i}>{c.name}</div>)}
                 </div>
@@ -180,7 +180,7 @@ export default function ComparePage() {
                       <BrandTile name={c.name} src={c.logo_url} className="w-10 h-10 rounded-xl p-1" />
                       <div>
                         <span className="font-bold text-sm sm:text-base text-[#1A1A1A] block leading-snug">{c.name}</span>
-                        <span className="text-xs text-[#8A8A8A]">{c.industry}</span>
+                        <span className="text-xs text-[--text-muted]">{c.industry}</span>
                       </div>
                     </div>
                   ))}
@@ -188,7 +188,7 @@ export default function ComparePage() {
 
                 {/* Row 2: Compensation Package (CTC) */}
                 <div className="grid grid-cols-4 p-5 border-b border-[#EDEDEB] text-xs sm:text-sm items-center">
-                  <div className="compare-sticky-col font-semibold text-[#8A8A8A] flex items-center gap-2">
+                  <div className="compare-sticky-col font-semibold text-[--text-muted] flex items-center gap-2">
                     <Award className="w-4 h-4 text-[#1E8E5A]" /> CTC Package Range
                   </div>
                   {comparedList.map((c, i) => (
@@ -200,7 +200,7 @@ export default function ComparePage() {
 
                 {/* Row 3: Process Duration */}
                 <div className="grid grid-cols-4 p-5 border-b border-[#EDEDEB] text-xs sm:text-sm items-center">
-                  <div className="compare-sticky-col font-semibold text-[#8A8A8A] flex items-center gap-2">
+                  <div className="compare-sticky-col font-semibold text-[--text-muted] flex items-center gap-2">
                     <Clock className="w-4 h-4 text-[#1F3A5F]" /> Avg Process Duration
                   </div>
                   {comparedList.map((c, i) => (
@@ -212,7 +212,7 @@ export default function ComparePage() {
 
                 {/* Row 4: Total Rounds */}
                 <div className="grid grid-cols-4 p-5 border-b border-[#EDEDEB] text-xs sm:text-sm items-center">
-                  <div className="compare-sticky-col font-semibold text-[#8A8A8A] flex items-center gap-2">
+                  <div className="compare-sticky-col font-semibold text-[--text-muted] flex items-center gap-2">
                     <Layers className="w-4 h-4 text-[#1F3A5F]" /> Total Hiring Rounds
                   </div>
                   {comparedList.map((c, i) => (
@@ -224,7 +224,7 @@ export default function ComparePage() {
 
                 {/* Row 5: Accuracy (derived from published reports) */}
                 <div className="grid grid-cols-4 p-5 border-b border-[#EDEDEB] text-xs sm:text-sm items-center">
-                  <div className="compare-sticky-col font-semibold text-[#8A8A8A] flex items-center gap-2">
+                  <div className="compare-sticky-col font-semibold text-[--text-muted] flex items-center gap-2">
                     <ShieldCheck className="w-4 h-4 text-[#1F3A5F]" /> Verified Match Accuracy
                   </div>
                   {comparedList.map((c, i) => (
@@ -244,7 +244,7 @@ export default function ComparePage() {
 
                 {/* Row 6: Round 1 (Online Assessment) */}
                 <div className="grid grid-cols-4 p-5 border-b border-[#EDEDEB] text-xs sm:text-sm">
-                  <div className="compare-sticky-col font-semibold text-[#8A8A8A] flex items-center gap-2">
+                  <div className="compare-sticky-col font-semibold text-[--text-muted] flex items-center gap-2">
                     <FileText className="w-4 h-4 text-[#1F3A5F]" /> Round 1: OA Format
                   </div>
                   {comparedList.map((c, i) => (
@@ -256,7 +256,7 @@ export default function ComparePage() {
 
                 {/* Row 7: Round 2 (Technical Core & Coding) */}
                 <div className="grid grid-cols-4 p-5 border-b border-[#EDEDEB] text-xs sm:text-sm">
-                  <div className="compare-sticky-col font-semibold text-[#8A8A8A] flex items-center gap-2">
+                  <div className="compare-sticky-col font-semibold text-[--text-muted] flex items-center gap-2">
                     <Cpu className="w-4 h-4 text-[#1F3A5F]" /> Round 2: Tech Core
                   </div>
                   {comparedList.map((c, i) => (
@@ -268,7 +268,7 @@ export default function ComparePage() {
 
                 {/* Row 8: Round 3 (System Design Focus) */}
                 <div className="grid grid-cols-4 p-5 border-b border-[#EDEDEB] text-xs sm:text-sm">
-                  <div className="compare-sticky-col font-semibold text-[#8A8A8A] flex items-center gap-2">
+                  <div className="compare-sticky-col font-semibold text-[--text-muted] flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-[#E8A33D]" /> Round 3: System Design
                   </div>
                   {comparedList.map((c, i) => (
@@ -280,7 +280,7 @@ export default function ComparePage() {
 
                 {/* Row 9: Round 4 (HR & Values) */}
                 <div className="grid grid-cols-4 p-5 border-b border-[#EDEDEB] text-xs sm:text-sm">
-                  <div className="compare-sticky-col font-semibold text-[#8A8A8A] flex items-center gap-2">
+                  <div className="compare-sticky-col font-semibold text-[--text-muted] flex items-center gap-2">
                     <Users className="w-4 h-4 text-[#1F3A5F]" /> Round 4: HR & Values
                   </div>
                   {comparedList.map((c, i) => (
@@ -292,7 +292,7 @@ export default function ComparePage() {
 
                 {/* Row 10: Top High-Frequency Questions Previews */}
                 <div className="grid grid-cols-4 p-5 border-b border-[#EDEDEB] text-xs sm:text-sm">
-                  <div className="compare-sticky-col font-semibold text-[#8A8A8A] flex items-center gap-2">
+                  <div className="compare-sticky-col font-semibold text-[--text-muted] flex items-center gap-2">
                     <HelpCircle className="w-4 h-4 text-[#E8A33D]" /> Top Questions Asked
                   </div>
                   {comparedList.map((c, i) => (
@@ -304,7 +304,7 @@ export default function ComparePage() {
                           </div>
                         ))
                       ) : (
-                        <p className="text-xs text-[#8A8A8A]">—</p>
+                        <p className="text-xs text-[--text-muted]">—</p>
                       )}
                     </div>
                   ))}

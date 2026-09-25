@@ -305,12 +305,13 @@ export const CartModal: React.FC<CartModalProps> = ({
       />
 
       {/* Full-Height Slide-In Drawer */}
-      <aside
+      <div
         className={`fixed inset-y-0 right-0 z-50 w-full sm:w-[480px] md:w-[540px] bg-white border-l border-gray-200 shadow-2xl flex flex-col transition-transform duration-300 ease-out ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
         role="dialog"
         aria-label="Cart"
+        aria-modal="true"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200 shrink-0 bg-white">
@@ -325,10 +326,10 @@ export const CartModal: React.FC<CartModalProps> = ({
                   {items.length} {items.length === 1 ? 'item' : 'items'}
                 </span>
               </div>
-              <p className="text-[13px] text-[#8A8A8A]">Combo pricing · server-validated coupons</p>
+              <p className="text-[13px] text-[--text-muted]">Combo pricing · server-validated coupons</p>
             </div>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-full bg-[#FAFAF9] hover:bg-[#F0EFEC] text-[#8A8A8A] flex items-center justify-center transition-colors">
+          <button onClick={onClose} aria-label="Close cart" className="w-10 h-10 rounded-full bg-[#FAFAF9] hover:bg-[#F0EFEC] text-[--text-muted] flex items-center justify-center transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -337,7 +338,7 @@ export const CartModal: React.FC<CartModalProps> = ({
         {step === 'pay' && (
           /* UPI PAYMENT SCREEN */
           <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
-            <button onClick={resetToCart} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#8A8A8A] hover:text-[#1F3A5F]">
+            <button onClick={resetToCart} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[--text-muted] hover:text-[#1F3A5F]">
               <ArrowLeft className="w-4 h-4" /> Back to cart
             </button>
 
@@ -414,7 +415,7 @@ export const CartModal: React.FC<CartModalProps> = ({
             <p className="text-[13px] text-[#4A4A4A] max-w-sm leading-relaxed">
               Order <b className="text-[#1F3A5F]">{order?.id}</b> is now with our team. We manually verify every UPI transfer; your vault unlocks automatically once approved. This page updates on its own.
             </p>
-            <div className="flex items-center gap-2 text-[12px] text-[#8A8A8A]">
+            <div className="flex items-center gap-2 text-[12px] text-[--text-muted]">
               <Hourglass className="w-4 h-4" /> Usually approved within minutes
             </div>
             <button onClick={onClose} className="mt-2 px-5 py-2.5 bg-[#FAFAF9] hover:bg-[#F0EFEC] border border-gray-200 text-[#4A4A4A] text-[13px] font-semibold rounded-xl transition-all">
@@ -451,11 +452,11 @@ export const CartModal: React.FC<CartModalProps> = ({
         {step === 'cart' && items.length === 0 && (
           /* EMPTY STATE */
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
-            <div className="w-14 h-14 rounded-2xl bg-[#FAFAF9] text-[#8A8A8A] flex items-center justify-center border border-gray-200">
+            <div className="w-14 h-14 rounded-2xl bg-[#FAFAF9] text-[--text-muted] flex items-center justify-center border border-gray-200">
               <ShoppingBag className="w-7 h-7" />
             </div>
             <h4 className="font-bold text-lg text-[#1A1A1A]">Your cart is empty</h4>
-            <p className="text-[13px] text-[#8A8A8A] max-w-xs">
+            <p className="text-[13px] text-[--text-muted] max-w-xs">
               Add a premium round pack or the full {companyName} Complete Pack to start.
             </p>
             <button onClick={onClose} className="px-5 py-2.5 bg-[#1F3A5F] hover:bg-[#2A4D7E] text-white text-[14px] font-semibold rounded-xl transition-all shadow-sm">
@@ -528,7 +529,7 @@ export const CartModal: React.FC<CartModalProps> = ({
                         <div className="min-w-0">
                           <span className="font-bold text-[#1A1A1A] block truncate">{name}</span>
                           <div className="flex items-center gap-1.5 mt-0.5">
-                            <span className="text-[13px] text-[#8A8A8A] truncate">{label}</span>
+                            <span className="text-[13px] text-[--text-muted] truncate">{label}</span>
                             {isModule && mi!.round_type && (
                               <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded ${ROUND_CHIP[mi!.round_type] || 'bg-gray-100 text-gray-600'}`}>
                                 {mi!.round_type}
@@ -607,7 +608,7 @@ export const CartModal: React.FC<CartModalProps> = ({
                         <BrandTile name={c.name} src={c.logo_url} className="w-8 h-8 rounded-lg p-0.5" />
                         <div className="text-left min-w-0">
                           <span className="font-bold text-[13px] text-[#1A1A1A] block truncate">{c.name} Complete Pack</span>
-                          <span className="text-[13px] text-[#8A8A8A]">{c.accuracy_report_count ? `${c.accuracy_report_count} verified detail` : 'Full round-by-round detail'} · 4 Rounds</span>
+                          <span className="text-[13px] text-[--text-muted]">{c.accuracy_report_count ? `${c.accuracy_report_count} verified detail` : 'Full round-by-round detail'} · 4 Rounds</span>
                         </div>
                       </div>
                       <span className="text-[13px] font-extrabold text-[#E8A33D] group-hover:underline">+ Add ₹249</span>
@@ -670,13 +671,13 @@ export const CartModal: React.FC<CartModalProps> = ({
                 <div className="mt-2 text-[12px] text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{payError}</div>
               )}
 
-              <div className="flex items-center justify-center text-[12px] text-[#8A8A8A] pt-1">
+              <div className="flex items-center justify-center text-[12px] text-[--text-muted] pt-1">
                 <div className="flex items-center gap-1"><ShieldCheck className="w-4 h-4 text-[#1E8E5A]" /> 256-Bit SSL Encrypted</div>
               </div>
             </div>
           </>
         )}
-      </aside>
+      </div>
     </>
   );
 };

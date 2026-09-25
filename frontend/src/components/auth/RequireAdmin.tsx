@@ -7,7 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 const GuardSpinner = () => (
   <div className="min-h-screen flex flex-col items-center justify-center gap-3 bg-[var(--bg-app)]">
     <div className="w-9 h-9 border-[3px] border-[#FBF1E1] border-t-[#0284C7] rounded-full animate-spin" />
-    <p className="text-[13px] font-semibold text-[#7D8794] tracking-wide">Securing admin console…</p>
+    <p className="text-[13px] font-semibold text-[--text-muted] tracking-wide">Securing admin console…</p>
   </div>
 );
 

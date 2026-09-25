@@ -52,7 +52,7 @@ export default function LoginPage() {
           <div className="vault-card p-8 shadow-raised">
             <span className="eyebrow">Account Access</span>
             <h1 className="display-2 mt-1 mb-1.5">Sign in to TieEdu</h1>
-            <p className="text-[15px] text-[#7D8794] mb-7">
+            <p className="text-[15px] text-[--text-muted] mb-7">
               Your purchased vaults, unlocks and progress all live here.
             </p>
 
@@ -68,7 +68,7 @@ export default function LoginPage() {
                   Email
                 </label>
                 <div className="relative">
-                  <Mail className="w-4 h-4 text-[#7D8794] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <Mail className="w-4 h-4 text-[--text-muted] absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     id="email"
                     type="email"
@@ -86,7 +86,7 @@ export default function LoginPage() {
                   Password
                 </label>
                 <div className="relative">
-                  <Lock className="w-4 h-4 text-[#7D8794] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <Lock className="w-4 h-4 text-[--text-muted] absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     id="password"
                     type="password"
@@ -121,7 +121,7 @@ export default function LoginPage() {
           <div className="mt-6 text-center">
             <Link
               href="/admin/login"
-              className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[#7D8794] hover:text-[#0284C7] transition-colors"
+              className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[--text-muted] hover:text-[#0284C7] transition-colors"
             >
               <ShieldCheck className="w-3.5 h-3.5" /> Platform owner? Admin portal
             </Link>

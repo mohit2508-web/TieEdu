@@ -59,11 +59,11 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, compa
             placeholder="Type a company (e.g. Zscaler, Razorpay) or topic (e.g. Zero Trust)..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full text-sm text-[#1A1A1A] placeholder-[#8A8A8A] focus:outline-none font-sans"
+            className="w-full text-sm text-[#1A1A1A] placeholder-[--text-muted] focus:outline-none font-sans"
           />
           <button
             onClick={onClose}
-            className="p-1 rounded-md text-[#8A8A8A] hover:text-[#1A1A1A] hover:bg-[#FAFAF9]"
+            className="p-1 rounded-md text-[--text-muted] hover:text-[#1A1A1A] hover:bg-[#FAFAF9]"
           >
             <X className="w-4 h-4" />
           </button>
@@ -72,13 +72,13 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, compa
         {/* Results Body */}
         <div className="py-3 max-h-[65vh] sm:max-h-80 overflow-y-auto space-y-2">
           {query.trim() === '' ? (
-            <div className="p-4 text-xs text-[#8A8A8A] text-center space-y-1">
+            <div className="p-4 text-xs text-[--text-muted] text-center space-y-1">
               <Sparkles className="w-4 h-4 text-[#E8A33D] mx-auto mb-1" />
               <p>Search company vaults and verified interview questions.</p>
               <p className="text-[10px] text-[#A8A8A2]">Use ESC to close</p>
             </div>
           ) : matchedCompanies.length === 0 ? (
-            <p className="p-4 text-xs text-[#8A8A8A] text-center">No company vaults match &quot;{query}&quot;</p>
+            <p className="p-4 text-xs text-[--text-muted] text-center">No company vaults match &quot;{query}&quot;</p>
           ) : (
             matchedCompanies.map((c) => (
               <Link
@@ -91,7 +91,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, compa
                   <BrandTile name={c.name} src={c.logo_url} className="w-8 h-8 rounded-lg p-0.5" />
                   <div>
                     <span className="font-bold text-[#1A1A1A] group-hover:text-[#1F3A5F] block">{c.name}</span>
-                    <span className="text-[10px] text-[#8A8A8A]">{c.industry}{c.avg_rounds ? ` • ${c.avg_rounds} rounds` : ''}</span>
+                    <span className="text-[10px] text-[--text-muted]">{c.industry}{c.avg_rounds ? ` • ${c.avg_rounds} rounds` : ''}</span>
                   </div>
                 </div>
 
@@ -105,7 +105,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, compa
                       New vault
                     </span>
                   )}
-                  <ArrowRight className="w-3.5 h-3.5 text-[#8A8A8A] group-hover:text-[#1F3A5F] group-hover:translate-x-0.5 transition-all" />
+                  <ArrowRight className="w-3.5 h-3.5 text-[--text-muted] group-hover:text-[#1F3A5F] group-hover:translate-x-0.5 transition-all" />
                 </div>
               </Link>
             ))
