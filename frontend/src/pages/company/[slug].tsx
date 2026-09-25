@@ -15,6 +15,7 @@ import { FeaturedFreeModuleCard } from '@/components/company/FeaturedFreeModuleC
 import { PremiumModuleCard } from '@/components/company/PremiumModuleCard';
 import { CompletePackBanner } from '@/components/company/CompletePackBanner';
 import { IntelligenceTreeSidebar, MobileSidebarDrawer } from '@/components/company/IntelligenceTreeSidebar';
+import { useAuth } from '@/context/AuthContext';
 import dynamic from 'next/dynamic';
 import { fetchCompanyBySlug, fetchCompanies, API_BASE_URL } from '@/lib/api';
 import { packPrice } from '@/lib/packPricing';
@@ -45,6 +46,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 export default function CompanyVaultPage({ initialCompany, initialSlug }: { initialCompany: Company | null; initialSlug: string }) {
   const router = useRouter();
   const { slug } = router.query;
+  const { user } = useAuth();
 
   const [company, setCompany] = useState<Company | null>(initialCompany);
   const [allCompanies, setAllCompanies] = useState<Company[]>([]);
@@ -94,8 +96,10 @@ export default function CompanyVaultPage({ initialCompany, initialSlug }: { init
   useEffect(() => {
     if (!slug) return;
     const key = String(slug);
-    // Already have data for this vault (from SSR or an earlier fetch) — skip.
-    if (loadedSlugRef.current === key && company) {
+    // Anonymous + fresh SSR data already in hand — skip the redundant client fetch.
+    // Signed-in users refetch so per-user unlock/ownership state (Bearer token)
+    // wins over the unauthenticated SSR snapshot.
+    if (!user && loadedSlugRef.current === key && company) {
       setLoading(false);
       return;
     }
@@ -107,7 +111,7 @@ export default function CompanyVaultPage({ initialCompany, initialSlug }: { init
       if (data.is_unlocked) setIsUnlocked(true);
     }).catch(() => {}).finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [slug, company]);
+  }, [slug, company, user]);
 
   if (!company) {
     return (
