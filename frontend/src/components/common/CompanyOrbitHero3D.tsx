@@ -36,7 +36,7 @@ export const CompanyOrbitHero3D: React.FC<CompanyOrbitProps> = ({ companies = DE
 
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
     mountNode.appendChild(renderer.domElement);
 
     // 2. Lighting (Warm ambient & directional)
@@ -143,12 +143,12 @@ export const CompanyOrbitHero3D: React.FC<CompanyOrbitProps> = ({ companies = DE
     // 6. Mouse Interactive Parallax
     let mouseX = 0;
     let mouseY = 0;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const handleMouseMove = (e: MouseEvent) => {
       const rect = mountNode.getBoundingClientRect();
       mouseX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       mouseY = -((e.clientY - rect.top) / rect.height) * 2 + 1;
     };
-    window.addEventListener('mousemove', handleMouseMove);
 
     // 7. Animation Loop
     let reqId: number;
@@ -176,7 +176,12 @@ export const CompanyOrbitHero3D: React.FC<CompanyOrbitProps> = ({ companies = DE
 
       renderer.render(scene, camera);
     };
-    animate();
+    if (reducedMotion) {
+      renderer.render(scene, camera);
+    } else {
+      window.addEventListener('mousemove', handleMouseMove);
+      animate();
+    }
 
     // Resize Handler
     const handleResize = () => {

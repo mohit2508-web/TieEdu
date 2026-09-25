@@ -47,6 +47,16 @@ export default function Home() {
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState<boolean>(false);
   const [dataError, setDataError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [showOrbit, setShowOrbit] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const update = () => setShowOrbit(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -155,7 +165,7 @@ export default function Home() {
               </div>
 
               <div className="hidden lg:flex lg:col-span-5 items-center justify-center">
-                <CompanyOrbitHero3D companies={(companies || []).map(c => ({ name: c?.name || 'Company' }))} />
+                {showOrbit && <CompanyOrbitHero3D companies={(companies || []).map(c => ({ name: c?.name || 'Company' }))} />}
               </div>
 
             </div>
