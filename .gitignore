@@ -1,0 +1,30 @@
+# ---- dependencies ----
+node_modules/
+
+# ---- frontend build output ----
+.next/
+out/
+*.tsbuildinfo
+frontend/public/pdfjs/
+
+# ---- backend build / runtime ----
+backend/dist/
+backend/data/db.json
+backend/uploads/
+backend/.env
+backend/.env.*
+backend/*.log
+
+# ---- env / secrets ----
+.env
+.env.*
+!.env.example
+
+# ---- logs ----
+*.log
+
+# ---- OS / editor ----
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

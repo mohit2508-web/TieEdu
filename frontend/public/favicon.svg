@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <!-- Crisp White Rounded Tile for Universal Visibility on Light & Dark Browser Tabs -->
+  <rect width="120" height="120" rx="28" fill="#FFFFFF" stroke="#EDEDEB" stroke-width="3"/>
+  
+  <g transform="translate(6, 10)">
+    <!-- T -->
+    <text x="4" y="80" font-family="'Rockwell', 'Clarendon', 'Georgia', 'Times New Roman', serif" font-weight="900" font-size="68" fill="#FF3300">T</text>
+
+    <!-- i Stem -->
+    <text x="44" y="80" font-family="'Rockwell', 'Clarendon', 'Georgia', 'Times New Roman', serif" font-weight="900" font-size="68" fill="#FF3300">i</text>
+
+    <!-- Globe Tittle replacing dot of 'i' -->
+    <g id="globe" transform="translate(52, 28)">
+      <circle cx="0" cy="0" r="11" fill="#1B6CA8" />
+      <path d="M -9 -2 C -6 -8, 2 -9, 8 -5 C 10 -2, 8 6, 2 8 C -3 9 -7 5 -9 -2 Z" fill="#7AB648" />
+      <path d="M -4 -5 C -1 -7, 4 -6, 5 -3 C 4 0, -1 1 -4 -5 Z" fill="#E8C547" opacity="0.95" />
+      <circle cx="0" cy="0" r="11" fill="none" stroke="#FFC107" stroke-width="1.2" opacity="0.8" />
+    </g>
+
+    <!-- E -->
+    <text x="66" y="80" font-family="'Rockwell', 'Clarendon', 'Georgia', 'Times New Roman', serif" font-weight="900" font-size="68" fill="#FF3300">E</text>
+  </g>
+</svg>
