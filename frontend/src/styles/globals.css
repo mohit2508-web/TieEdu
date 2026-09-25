@@ -578,21 +578,9 @@ code, pre, kbd, samp, .font-mono {
 
 /* ============================================
    TYPOGRAPHY BOOST — PORTAL-WIDE READABILITY
-   Bum all overly small utility sizes up to a
-   comfortable, consistent Calibre reading scale.
    ============================================ */
-.text-\[9px\], .text-\[10px\], .text-\[10\.5px\], .text-\[11px\], .text-\[11\.5px\], .text-\[12px\], .text-\[12\.5px\] {
-  font-size: 0.8rem !important;
-}
-.text-xs {
-  font-size: 0.875rem !important;
-}
-
 body {
-  font-size: 16.5px;
-  line-height: 1.8;
+  font-size: 15px;
+  line-height: 1.65;
 }
 
-p {
-  font-size: 17.5px;
-}

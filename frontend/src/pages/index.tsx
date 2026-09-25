@@ -110,12 +110,10 @@ export default function Home() {
           onOpenSearch={() => setIsSearchOpen(true)}
           onOpenLeaderboard={() => setIsLeaderboardOpen(true)}
         />
-
-        <main className="flex-1">
-
+        <main className="flex-grow w-full overflow-x-clip">
           {/* ===== HERO — Vault OS ===== */}
           <section className="hero-mesh">
-            <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 pt-12 pb-16 sm:pt-16 sm:pb-20 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center relative z-10">
+            <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 pt-10 pb-10 sm:pt-16 sm:pb-20 lg:grid lg:grid-cols-12 lg:gap-10 lg:items-center relative z-10">
 
               <div className="lg:col-span-7 space-y-7 text-center lg:text-left">
 
@@ -162,14 +160,17 @@ export default function Home() {
                 <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2.5 pt-1">
                   <span className="chip"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Server-verified pricing</span>
                   <span className="chip"><ShieldCheck className="w-3.5 h-3.5 text-[#0284C7]" /> 7-day refund guarantee</span>
-                  <span className="chip"><Star className="w-3.5 h-3.5 text-[#B45309] fill-[#E8A33D]" /> PDF notes you can view & download</span>
+                  <span className="chip"><Star className="w-3.5 h-3.5 text-[#B45309] fill-[#E8A33D]" /> PDF notes you can view &amp; download</span>
                 </div>
 
               </div>
 
-              <div className="hidden lg:flex lg:col-span-5 items-center justify-center">
-                {showOrbit && <CompanyOrbitHero3D companies={(companies || []).map(c => ({ name: c?.name || 'Company' }))} />}
-              </div>
+              {/* 3D Orbit — only rendered AND shown on desktop (lg+) */}
+              {showOrbit && (
+                <div className="lg:col-span-5 flex items-center justify-center">
+                  <CompanyOrbitHero3D companies={(companies || []).map(c => ({ name: c?.name || 'Company' }))} />
+                </div>
+              )}
 
             </div>
           </section>
