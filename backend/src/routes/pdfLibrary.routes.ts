@@ -46,7 +46,14 @@ function findModuleAndCompany(db: any, moduleId: string) {
   return null;
 }
 
-// POST /api/pdf/admin/modules/:moduleId/upload — Upload/replace the module's single PDF
+// Helper: get pdfs array — supports old single-pdf format AND new array format
+function getModulePdfs(module: any): ModulePdf[] {
+  if (Array.isArray(module.pdfs)) return module.pdfs;
+  if (module.pdf) return [module.pdf]; // backward compat with old single-pdf
+  return [];
+}
+
+// POST /api/pdf/admin/modules/:moduleId/upload — Add a new PDF to the module's list
 pdfLibraryRouter.post('/admin/modules/:moduleId/upload', (req: Request, res: Response) => {
   upload(req, res, (err: any) => {
     if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
@@ -65,13 +72,6 @@ pdfLibraryRouter.post('/admin/modules/:moduleId/upload', (req: Request, res: Res
     const file = req.file as Express.Multer.File | undefined;
     if (!file) return res.status(400).json({ error: 'No file field named "file"' });
 
-    // Replace existing module.pdf (purani disk file hatao)
-    const old = found.module.pdf as ModulePdf | null | undefined;
-    if (old && old.stored_name && STORED_NAME_RE.test(old.stored_name)) {
-      const oldPath = path.join(UPLOAD_DIR, old.stored_name);
-      fs.rm(oldPath, { force: true }, () => {});
-    }
-
     const pdf: ModulePdf = {
       id: `pdf-${Date.now()}`,
       file_name: file.originalname || 'document.pdf',
@@ -81,32 +81,59 @@ pdfLibraryRouter.post('/admin/modules/:moduleId/upload', (req: Request, res: Res
       uploaded_at: new Date().toISOString().split('T')[0],
     };
 
-    found.module.pdf = pdf;
+    // Migrate old single-pdf to array, then append new pdf
+    const existingPdfs = getModulePdfs(found.module);
+    found.module.pdfs = [...existingPdfs, pdf];
+    delete found.module.pdf; // remove legacy single-pdf field
+
     found.company.last_updated_days_ago = 0;
     saveDb(db);
-    return res.status(201).json({ status: 'success', pdf });
+    return res.status(201).json({ status: 'success', pdf, pdfs: found.module.pdfs });
   });
 });
 
-// DELETE /api/pdf/admin/modules/:moduleId/pdf — Remove module PDF (meta + disk)
+// DELETE /api/pdf/admin/modules/:moduleId/pdfs/:pdfId — Remove one specific PDF by id
+pdfLibraryRouter.delete('/admin/modules/:moduleId/pdfs/:pdfId', (req: Request, res: Response) => {
+  const db = loadDb();
+  const found = findModuleAndCompany(db, req.params.moduleId);
+  if (!found) return res.status(404).json({ error: 'Module not found' });
+
+  const pdfs: ModulePdf[] = getModulePdfs(found.module);
+  const idx = pdfs.findIndex((p: ModulePdf) => p.id === req.params.pdfId);
+  if (idx === -1) return res.status(404).json({ error: 'PDF not found' });
+
+  const [removed] = pdfs.splice(idx, 1);
+  if (STORED_NAME_RE.test(removed.stored_name)) {
+    fs.rm(path.join(UPLOAD_DIR, removed.stored_name), { force: true }, () => {});
+  }
+
+  found.module.pdfs = pdfs;
+  delete found.module.pdf; // remove legacy field if present
+  found.company.last_updated_days_ago = 0;
+  saveDb(db);
+  res.json({ status: 'success', message: 'PDF removed', pdfs });
+});
+
+// DELETE /api/pdf/admin/modules/:moduleId/pdf — Legacy: clear all pdfs (backward compat)
 pdfLibraryRouter.delete('/admin/modules/:moduleId/pdf', (req: Request, res: Response) => {
   const db = loadDb();
   const found = findModuleAndCompany(db, req.params.moduleId);
   if (!found) return res.status(404).json({ error: 'Module not found' });
 
-  const pdf = found.module.pdf as ModulePdf | null | undefined;
-  if (!pdf) return res.status(404).json({ error: 'No PDF is uploaded for this module' });
-
-  if (STORED_NAME_RE.test(pdf.stored_name)) {
-    fs.rm(path.join(UPLOAD_DIR, pdf.stored_name), { force: true }, () => {});
+  const pdfs = getModulePdfs(found.module);
+  for (const p of pdfs) {
+    if (STORED_NAME_RE.test(p.stored_name)) {
+      fs.rm(path.join(UPLOAD_DIR, p.stored_name), { force: true }, () => {});
+    }
   }
+  found.module.pdfs = [];
   delete found.module.pdf;
   found.company.last_updated_days_ago = 0;
   saveDb(db);
-  res.json({ status: 'success', message: 'PDF removed' });
+  res.json({ status: 'success', message: 'All PDFs removed' });
 });
 
-// GET /api/pdf/file/:storedName — View-only inline serve (dynamically watermarked with cover page & student details)
+// GET /api/pdf/file/:storedName — Serve with student watermark
 pdfLibraryRouter.get('/file/:storedName', optionalAuth, async (req: Request, res: Response) => {
   const { storedName } = req.params;
   if (!STORED_NAME_RE.test(storedName)) return res.status(404).json({ error: 'Invalid file' });
@@ -118,15 +145,18 @@ pdfLibraryRouter.get('/file/:storedName', optionalAuth, async (req: Request, res
   let owner: { company: any; module: any } | null = null;
   for (const c of db.companies || []) {
     for (const m of c.modules || []) {
-      if (m.pdf && m.pdf.stored_name === storedName) owner = { company: c, module: m };
+      const pdfs = getModulePdfs(m);
+      if (pdfs.some((p: ModulePdf) => p.stored_name === storedName)) {
+        owner = { company: c, module: m };
+      }
     }
   }
   if (!owner) return res.status(404).json({ error: 'File not found' });
 
-  // Premium module PDFs require an unlock for that company (admin preview always allowed).
+  // Premium module PDFs require an unlock (admin always allowed)
   if (owner.module.is_premium === true && !isAdmin) {
     const unlocked = !!userId && (db.unlocks || []).some(
-      (u: any) => u.user_id === userId && u.company_id === owner.company.id && (u.status === 'active' || !u.status)
+      (u: any) => u.user_id === userId && u.company_id === owner!.company.id && (u.status === 'active' || !u.status)
     );
     if (!unlocked) return res.status(403).json({ error: 'Unlock this pack to view the PDF' });
   }
@@ -134,8 +164,11 @@ pdfLibraryRouter.get('/file/:storedName', optionalAuth, async (req: Request, res
   const filePath = path.join(UPLOAD_DIR, storedName);
   if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'File missing on disk' });
 
+  const allPdfs = getModulePdfs(owner.module);
+  const pdfMeta = allPdfs.find((p: ModulePdf) => p.stored_name === storedName) || allPdfs[0];
+
   res.setHeader('Content-Type', 'application/pdf');
-  res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(owner.module.pdf.file_name)}"`);
+  res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(pdfMeta?.file_name || 'document.pdf')}"`);
   res.setHeader('Cache-Control', 'private, no-store');
   res.setHeader('X-Content-Type-Options', 'nosniff');
 
@@ -154,12 +187,11 @@ pdfLibraryRouter.get('/file/:storedName', optionalAuth, async (req: Request, res
       rollNo,
       licenseId,
       companyName: owner.company?.name || 'TieEdu Placement Vault',
-      moduleTitle: owner.module?.title || owner.module?.pdf?.title || 'Study Material',
+      moduleTitle: owner.module?.title || pdfMeta?.title || 'Study Material',
     });
 
     return res.send(outputBuffer);
-  } catch (err) {
-    // Fallback to serving raw file if pdf-lib parsing fails
+  } catch {
     return res.sendFile(filePath);
   }
 });

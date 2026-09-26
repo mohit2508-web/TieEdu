@@ -128,7 +128,8 @@ export interface ContentModule {
   is_premium: boolean;
   price?: number;
   section_data?: ModuleSectionData;
-  pdf?: ModulePdf | null;
+  pdfs?: ModulePdf[];     // multiple PDFs per module (new)
+  pdf?: ModulePdf | null;  // legacy single-pdf (backward compat — prefer pdfs[])
   items: ContentItem[];
 }
 

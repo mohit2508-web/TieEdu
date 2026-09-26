@@ -605,42 +605,58 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                     <ShoppingCart className="w-4 h-4" /> Unlock Full Vault — ₹{unlockPrice}
                   </button>
                 </div>
-              ) : module.pdf ? (
-                <div className="p-6 bg-sky-50/60 border border-sky-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-4 min-w-0">
-                    <div className="w-12 h-12 rounded-2xl bg-[#0284C7] text-white flex items-center justify-center shrink-0">
-                      <FileText className="w-6 h-6" />
+              ) : (() => {
+                const pdfList = Array.isArray(module.pdfs) && module.pdfs.length > 0
+                  ? module.pdfs
+                  : module.pdf ? [module.pdf] : [];
+
+                if (pdfList.length === 0) {
+                  return (
+                    <div className="p-6 bg-gray-50 border border-gray-200 rounded-2xl text-center space-y-2">
+                      <FileText className="w-8 h-8 text-gray-300 mx-auto" />
+                      <p className="text-base text-gray-500">No PDF uploaded for this module yet — the team is preparing it.</p>
                     </div>
-                    <div className="min-w-0">
-                      <h3 className="font-bold text-gray-900 text-lg truncate">{module.pdf.title}</h3>
-                      <p className="text-base text-gray-600 truncate">{module.pdf.file_name} • {(module.pdf.size_bytes > 1024 * 1024) ? `${(module.pdf.size_bytes / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(module.pdf.size_bytes / 1024))} KB`}</p>
-                    </div>
+                  );
+                }
+
+                return (
+                  <div className="space-y-4">
+                    {pdfList.map((pdfItem) => (
+                      <div key={pdfItem.id} className="p-6 bg-sky-50/60 border border-sky-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="flex items-center gap-4 min-w-0">
+                          <div className="w-12 h-12 rounded-2xl bg-[#0284C7] text-white flex items-center justify-center shrink-0">
+                            <FileText className="w-6 h-6" />
+                          </div>
+                          <div className="min-w-0">
+                            <h3 className="font-bold text-gray-900 text-lg truncate">{pdfItem.title}</h3>
+                            <p className="text-base text-gray-600 truncate">
+                              {pdfItem.file_name} • {(pdfItem.size_bytes > 1024 * 1024) ? `${(pdfItem.size_bytes / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(pdfItem.size_bytes / 1024))} KB`}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2 shrink-0">
+                          <button
+                            onClick={() => setViewerPdf(pdfItem)}
+                            className="inline-flex items-center gap-2 px-5 py-3 bg-[#0284C7] hover:bg-[#0369A1] text-white text-sm font-bold rounded-xl shadow-md transition-all"
+                          >
+                            <Eye className="w-4 h-4" /> Open Viewer
+                          </button>
+                          <button
+                            onClick={() => downloadPdfApi(pdfItem.stored_name, pdfItem.file_name)
+                              .catch(() => setDlNote(`Could not download "${pdfItem.title}". Please try again.`))}
+                            className="inline-flex items-center gap-2 px-4 py-3 bg-white border border-[#0284C7]/30 hover:border-[#0284C7] text-[#0284C7] text-sm font-bold rounded-xl shadow-sm transition-all"
+                          >
+                            <Download className="w-4 h-4" /> Download PDF
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    {dlNote && (
+                      <p className="w-full text-sm text-red-600 font-semibold">{dlNote}</p>
+                    )}
                   </div>
-                  <div className="flex flex-wrap items-center gap-2 shrink-0">
-                    <button
-                      onClick={() => setViewerPdf(module.pdf!)}
-                      className="inline-flex items-center gap-2 px-5 py-3 bg-[#0284C7] hover:bg-[#0369A1] text-white text-sm font-bold rounded-xl shadow-md transition-all"
-                    >
-                      <Eye className="w-4 h-4" /> Open Viewer
-                    </button>
-                    <button
-                      onClick={() => downloadPdfApi(module.pdf!.stored_name, module.pdf!.file_name)
-                        .catch(() => setDlNote('Could not download the PDF right now. Please try again.'))}
-                      className="inline-flex items-center gap-2 px-4 py-3 bg-white border border-[#0284C7]/30 hover:border-[#0284C7] text-[#0284C7] text-sm font-bold rounded-xl shadow-sm transition-all"
-                    >
-                      <Download className="w-4 h-4" /> Download PDF
-                    </button>
-                  </div>
-                  {dlNote && (
-                    <p className="w-full text-sm text-red-600 font-semibold">{dlNote}</p>
-                  )}
-                </div>
-              ) : (
-                <div className="p-6 bg-gray-50 border border-gray-200 rounded-2xl text-center space-y-2">
-                  <FileText className="w-8 h-8 text-gray-300 mx-auto" />
-                  <p className="text-base text-gray-500">No PDF uploaded for this module yet — the team is preparing it.</p>
-                </div>
-              )}
+                );
+              })()}
             </div>
           )}
 

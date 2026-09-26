@@ -111,6 +111,14 @@ export const deleteModulePdfApi = async (moduleId: string) => {
   return await res.json();
 };
 
+// Delete a single PDF from a module by its pdf id (multi-pdf support)
+export const deleteModulePdfByIdApi = async (moduleId: string, pdfId: string) => {
+  const res = await apiFetch(`${API_BASE_URL}/pdf/admin/modules/${encodeURIComponent(moduleId)}/pdfs/${encodeURIComponent(pdfId)}`, {
+    method: 'DELETE',
+  });
+  return await res.json();
+};
+
 export const fetchPdfBytesApi = async (storedName: string, onProgress?: (fraction: number) => void) => {
   const res = await apiFetch(`${API_BASE_URL}/pdf/file/${encodeURIComponent(storedName)}`);
   if (res.status === 403) throw new Error('LOCKED');
