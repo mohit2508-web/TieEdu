@@ -30,6 +30,8 @@ const CartModal = dynamic(() => import('@/components/checkout/CartModal').then(m
 const SearchModal = dynamic(() => import('@/components/modals/SearchModal').then(m => m.SearchModal), { ssr: false });
 const LeaderboardModal = dynamic(() => import('@/components/modals/LeaderboardModal').then(m => m.LeaderboardModal), { ssr: false });
 const SubmitReportModal = dynamic(() => import('@/components/modals/SubmitReportModal').then(m => m.SubmitReportModal), { ssr: false });
+const AuthRequiredModal = dynamic(() => import('@/components/modals/AuthRequiredModal').then(m => m.AuthRequiredModal), { ssr: false });
+const FeedbackAdModal = dynamic(() => import('@/components/modals/FeedbackAdModal').then(m => m.FeedbackAdModal), { ssr: false });
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const slug = String(context.params?.slug || '');
@@ -71,6 +73,11 @@ export default function CompanyVaultPage({ initialCompany, initialSlug }: { init
   const [mobileTreeOpen, setMobileTreeOpen] = useState(false);
   const [readerSection, setReaderSection] = useState<'overview' | 'pdfs'>('overview');
 
+  const [isAuthRequiredOpen, setIsAuthRequiredOpen] = useState(false);
+  const [pendingModule, setPendingModule] = useState<{ mod: ContentModule; section: 'overview' | 'pdfs' } | null>(null);
+  const [isFeedbackAdOpen, setIsFeedbackAdOpen] = useState(false);
+  const moduleClickCountRef = useRef(0);
+
   useEffect(() => {
     fetchCompanies().then(data => { if (data?.length > 0) setAllCompanies(data); }).catch(() => {}).finally(() => setLoading(false));
   }, []);
@@ -86,6 +93,10 @@ export default function CompanyVaultPage({ initialCompany, initialSlug }: { init
   // so a reload lands on the same module or question instead of the catalog.
   useEffect(() => {
     if (!company) return;
+    if (!user && (router.query.m || router.query.q)) {
+      setIsAuthRequiredOpen(true);
+      return;
+    }
     const items: ContentItem[] = (company.modules || []).flatMap((mod: ContentModule) => mod.items || []);
     const q = router.query.q;
     const m = router.query.m;
@@ -97,7 +108,7 @@ export default function CompanyVaultPage({ initialCompany, initialSlug }: { init
       const mod = (company.modules || []).find(x => x.id === m);
       if (mod) setSelectedModule(mod);
     }
-  }, [company]);
+  }, [company, user]);
 
   const loadedSlugRef = useRef(initialSlug);
   useEffect(() => {
@@ -172,9 +183,28 @@ export default function CompanyVaultPage({ initialCompany, initialSlug }: { init
   };
 
   const openModule = (mod: ContentModule, section: 'overview' | 'pdfs' = 'overview') => {
+    if (!user) {
+      setPendingModule({ mod, section });
+      setIsAuthRequiredOpen(true);
+      return;
+    }
     setReaderSection(section);
     setSelectedModule(mod);
     pushState(mod.id);
+
+    moduleClickCountRef.current += 1;
+    if (moduleClickCountRef.current % 3 === 0) {
+      setIsFeedbackAdOpen(true);
+    }
+  };
+
+  const handleAuthSuccess = () => {
+    if (pendingModule) {
+      setReaderSection(pendingModule.section);
+      setSelectedModule(pendingModule.mod);
+      pushState(pendingModule.mod.id);
+      setPendingModule(null);
+    }
   };
 
   const handleToggleSolve = (id: string) =>
@@ -667,6 +697,18 @@ export default function CompanyVaultPage({ initialCompany, initialSlug }: { init
           companyId={company.id}
           onSubmitted={() => setReportTick(t => t + 1)}
           onClose={() => setIsSubmitReportOpen(false)}
+        />
+        <AuthRequiredModal
+          isOpen={isAuthRequiredOpen}
+          targetTitle={pendingModule?.mod.title}
+          onClose={() => setIsAuthRequiredOpen(false)}
+          onSuccess={handleAuthSuccess}
+        />
+        <FeedbackAdModal
+          isOpen={isFeedbackAdOpen}
+          companyName={company.name}
+          onClose={() => setIsFeedbackAdOpen(false)}
+          onOpenFeedbackForm={() => setIsSubmitReportOpen(true)}
         />
 
         <Footer />

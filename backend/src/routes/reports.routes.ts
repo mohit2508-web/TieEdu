@@ -28,26 +28,26 @@ reportsRouter.get('/mine', requireAuth, (req: Request, res: Response) => {
   res.json({ status: 'success', reports: mine });
 });
 
-// POST /api/reports — Submit a candidate interview report. Identity is the signed-in user.
-reportsRouter.post('/', requireAuth, (req: Request, res: Response) => {
-  const { company_id, company_name, user_role, accuracy_rating, outcome, round_summary, difficulty } = req.body;
+// POST /api/reports — Submit a candidate interview report. Optional auth (guests allowed).
+reportsRouter.post('/', optionalAuth, (req: Request, res: Response) => {
+  const { company_id, company_name, user_role, accuracy_rating, outcome, round_summary, difficulty, user_name } = req.body;
   const db = loadDb();
 
   if (!company_id) {
     return res.status(400).json({ error: 'company_id is required' });
   }
   const text = (round_summary || '').toString().trim();
-  if (text.length < 20) {
-    return res.status(400).json({ error: 'Please describe the round in at least 20 characters' });
+  if (text.length < 5) {
+    return res.status(400).json({ error: 'Please describe the interview breakdown in at least 5 characters' });
   }
 
-  const user = req.user!;
+  const user = req.user;
   const newReport: ReportItem = {
     id: `rep-${Date.now()}`,
     company_id,
-    company_name: company_name || user.name || 'Company',
-    user_id: user.id,
-    user_name: user.name || 'TieEdu Student',
+    company_name: company_name || 'Company',
+    user_id: user?.id || null,
+    user_name: user_name || user?.name || 'TieEdu Student',
     user_role: user_role || 'Applicant',
     rounds: [
       {

@@ -24,39 +24,47 @@ export const SubmitReportModal: React.FC<SubmitReportModalProps> = ({
   const [outcome, setOutcome] = useState<'selected' | 'rejected' | 'in_process'>('selected');
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg(null);
     setIsSubmitting(true);
 
-    const reportData = {
-      company_name: companyName,
-      user_name: userName || 'Candidate',
-      user_role: userRole,
-      accuracy_rating: accuracyRating,
-      outcome,
-      round_summary: roundSummary || 'Core questions asked',
-    };
+    try {
+      const reportData = {
+        company_name: companyName,
+        user_name: userName || 'Candidate',
+        user_role: userRole,
+        accuracy_rating: accuracyRating,
+        outcome,
+        round_summary: roundSummary || 'Core questions asked',
+      };
 
-    if (companyId) {
-      await submitInterviewReportForCompanyApi(companyId, reportData);
-    } else {
-      const { submitInterviewReportApi } = await import('@/lib/api');
-      await submitInterviewReportApi(reportData);
+      if (companyId) {
+        await submitInterviewReportForCompanyApi(companyId, reportData);
+      } else {
+        const { submitInterviewReportApi } = await import('@/lib/api');
+        await submitInterviewReportApi(reportData);
+      }
+
+      setIsSubmitting(false);
+      setSubmitted(true);
+      onSubmitted?.();
+      setTimeout(() => {
+        setSubmitted(false);
+        setUserName('');
+        setRoundSummary('');
+        setAccuracyRating(5);
+        setErrorMsg(null);
+        onClose();
+      }, 1800);
+    } catch (err: any) {
+      setIsSubmitting(false);
+      setErrorMsg(err.message || 'Submission failed. Please try again.');
     }
-
-    setIsSubmitting(false);
-    setSubmitted(true);
-    onSubmitted?.();
-    setTimeout(() => {
-      setSubmitted(false);
-      setUserName('');
-      setRoundSummary('');
-      setAccuracyRating(5);
-      onClose();
-    }, 1800);
   };
 
   return (
@@ -73,6 +81,12 @@ export const SubmitReportModal: React.FC<SubmitReportModalProps> = ({
             <X className="w-5 h-5" />
           </button>
         </div>
+
+        {errorMsg && (
+          <div className="p-3 mb-3 bg-red-50 border border-red-200 text-red-700 text-[13px] font-semibold rounded-lg">
+            {errorMsg}
+          </div>
+        )}
 
         {submitted ? (
           <div className="py-8 text-center space-y-2">
