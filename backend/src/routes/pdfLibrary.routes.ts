@@ -4,6 +4,7 @@ import path from 'path';
 import multer from 'multer';
 import { loadDb, saveDb, ModulePdf } from '../data/db';
 import { requireAdmin, optionalAuth } from '../middleware/auth';
+import { buildPersonalizedPdf } from '../lib/pdfWatermark';
 
 export const pdfLibraryRouter = Router();
 
@@ -104,7 +105,7 @@ pdfLibraryRouter.delete('/admin/modules/:moduleId/pdf', (req: Request, res: Resp
   res.json({ status: 'success', message: 'PDF removed' });
 });
 
-// GET /api/pdf/file/:storedName — View-only inline serve (dynamically watermarked with student details)
+// GET /api/pdf/file/:storedName — View-only inline serve (dynamically watermarked with cover page & student details)
 pdfLibraryRouter.get('/file/:storedName', optionalAuth, async (req: Request, res: Response) => {
   const { storedName } = req.params;
   if (!STORED_NAME_RE.test(storedName)) return res.status(404).json({ error: 'Invalid file' });
@@ -146,52 +147,16 @@ pdfLibraryRouter.get('/file/:storedName', optionalAuth, async (req: Request, res
     const rollNo = user?.roll_no || `ROLL-${rawId.slice(-6).toUpperCase()}`;
 
     const pdfBytes = fs.readFileSync(filePath);
-    const { PDFDocument, rgb, degrees, StandardFonts } = await import('pdf-lib');
-    const pdfDoc = await PDFDocument.load(pdfBytes);
-    const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-    const pages = pdfDoc.getPages();
-
-    const line1 = `LICENSED TO: ${studentName.toUpperCase()} • ${studentEmail}`;
-    const line2 = `LIC ID: ${licenseId} | ROLL NO: ${rollNo} | TieEdu Vault • ${new Date().toISOString().split('T')[0]}`;
-
-    pages.forEach((page) => {
-      const { width, height } = page.getSize();
-      
-      // Center diagonal watermark - Line 1 (Name & Email)
-      page.drawText(line1, {
-        x: Math.max(30, width / 8),
-        y: height / 2 + 25,
-        size: Math.min(13, Math.floor(width / 32)),
-        font,
-        color: rgb(0.5, 0.5, 0.5),
-        opacity: 0.22,
-        rotate: degrees(-30),
-      });
-
-      // Center diagonal watermark - Line 2 (License ID & Roll No)
-      page.drawText(line2, {
-        x: Math.max(30, width / 8),
-        y: height / 2 - 10,
-        size: Math.min(11, Math.floor(width / 38)),
-        font,
-        color: rgb(0.5, 0.5, 0.5),
-        opacity: 0.20,
-        rotate: degrees(-30),
-      });
-
-      // Bottom Footer Watermark (Non-intrusive security footer on every page)
-      page.drawText(`SECURE COPY • ${studentName} (${studentEmail}) | ROLL: ${rollNo} | LIC: ${licenseId}`, {
-        x: 20,
-        y: 12,
-        size: 8,
-        font,
-        color: rgb(0.4, 0.4, 0.4),
-        opacity: 0.40,
-      });
+    const outputBuffer = await buildPersonalizedPdf(pdfBytes, {
+      studentName,
+      studentEmail,
+      rollNo,
+      licenseId,
+      companyName: owner.company?.name || 'TieEdu Placement Vault',
+      moduleTitle: owner.module?.title || owner.module?.pdf?.title || 'Study Material',
     });
 
-    const watermarkedPdfBytes = await pdfDoc.save();
-    return res.send(Buffer.from(watermarkedPdfBytes));
+    return res.send(outputBuffer);
   } catch (err) {
     // Fallback to serving raw file if pdf-lib parsing fails
     return res.sendFile(filePath);
