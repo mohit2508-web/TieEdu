@@ -17,7 +17,15 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('tieedu_cached_user');
+        if (cached) return JSON.parse(cached);
+      } catch {}
+    }
+    return null;
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -29,9 +37,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const uid = data.user.id;
         setAuthSession(data.accessToken, uid);
         setUser(data.user);
+        try { localStorage.setItem('tieedu_cached_user', JSON.stringify(data.user)); } catch {}
       } else {
         setAuthSession(null, null);
         setUser(null);
+        try { localStorage.removeItem('tieedu_cached_user'); } catch {}
       }
       setLoading(false);
     })();
@@ -42,6 +52,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const data = await apiLogin(email, password);
     setAuthSession(data.accessToken, data.user.id);
     setUser(data.user);
+    try { localStorage.setItem('tieedu_cached_user', JSON.stringify(data.user)); } catch {}
     return data.user;
   };
 
@@ -49,6 +60,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const data = await apiSignup(payload);
     setAuthSession(data.accessToken, data.user.id);
     setUser(data.user);
+    try { localStorage.setItem('tieedu_cached_user', JSON.stringify(data.user)); } catch {}
     return data.user;
   };
 
@@ -56,6 +68,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     await apiLogout();
     setAuthSession(null, null);
     setUser(null);
+    try { localStorage.removeItem('tieedu_cached_user'); } catch {}
   };
 
   const value: AuthContextValue = { user, loading, login, signup, logout, setUser };

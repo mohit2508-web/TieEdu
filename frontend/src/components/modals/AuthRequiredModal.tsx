@@ -16,7 +16,7 @@ export const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({
   onSuccess,
   targetTitle,
 }) => {
-  const { login, signup } = useAuth();
+  const { user, login, signup } = useAuth();
   const [tab, setTab] = useState<'login' | 'signup'>('signup');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -24,7 +24,7 @@ export const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (!isOpen) return null;
+  if (!isOpen || user) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
