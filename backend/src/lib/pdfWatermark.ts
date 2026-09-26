@@ -10,6 +10,18 @@ export interface PdfWatermarkOptions {
   issuedDate?: string;
 }
 
+function cleanText(str: string): string {
+  if (!str) return '';
+  return str
+    .replace(/[•●▪]/g, '|')
+    .replace(/[–—]/g, '-')
+    .replace(/[“”]/g, '"')
+    .replace(/[‘’]/g, "'")
+    .replace(/©/g, '(c)')
+    .replace(/⌘/g, ' ')
+    .replace(/[^\x20-\x7E]/g, '');
+}
+
 export async function buildPersonalizedPdf(
   originalPdfBuffer: Buffer,
   opts: PdfWatermarkOptions
@@ -20,6 +32,13 @@ export async function buildPersonalizedPdf(
   const fontOblique = await pdfDoc.embedFont(StandardFonts.HelveticaOblique);
 
   const issuedDate = opts.issuedDate || new Date().toISOString().split('T')[0];
+
+  const studentName = cleanText(opts.studentName);
+  const studentEmail = cleanText(opts.studentEmail);
+  const rollNo = cleanText(opts.rollNo);
+  const licenseId = cleanText(opts.licenseId);
+  const companyName = cleanText(opts.companyName);
+  const moduleTitle = cleanText(opts.moduleTitle);
 
   // 1. Create Cover Page (Page 0)
   const coverPage = pdfDoc.insertPage(0, [595.28, 841.89]); // Standard A4
@@ -58,7 +77,7 @@ export async function buildPersonalizedPdf(
     font: fontBold,
     color: rgb(1, 1, 1),
   });
-  coverPage.drawText('Learn   Evolve   Develop', {
+  coverPage.drawText('Learn    Evolve    Develop', {
     x: 96,
     y: cH - 82,
     size: 11,
@@ -84,8 +103,8 @@ export async function buildPersonalizedPdf(
     color: rgb(0.85, 0.45, 0.1), // Orange Accent
   });
 
-  // Title: [Company Name] – [Module Title]
-  const titleText = `${opts.companyName} – ${opts.moduleTitle}`;
+  // Title: [Company Name] - [Module Title]
+  const titleText = `${companyName} - ${moduleTitle}`;
   coverPage.drawText(titleText.length > 45 ? titleText.slice(0, 45) + '...' : titleText, {
     x: 40,
     y: cH - 195,
@@ -95,7 +114,7 @@ export async function buildPersonalizedPdf(
   });
 
   // Subtitle bullet points
-  coverPage.drawText('Technical MCQs  •  Output Prediction  •  DSA Coding  •  Debugging  •  Solutions', {
+  coverPage.drawText('Technical MCQs  |  Output Prediction  |  DSA Coding  |  Debugging  |  Solutions', {
     x: 40,
     y: cH - 220,
     size: 10,
@@ -114,7 +133,7 @@ export async function buildPersonalizedPdf(
   // Metadata Key-Value List
   const metaY = cH - 275;
   const metaItems = [
-    { label: 'Module code', val: `[TE-${opts.companyName.toUpperCase().slice(0, 3)}-01]` },
+    { label: 'Module code', val: `[TE-${companyName.toUpperCase().slice(0, 3)}-01]` },
     { label: 'Target batch', val: '[B.Tech CSE / IT, Placement Batch 2026]' },
     { label: 'Difficulty', val: '[Medium to Advanced]' },
     { label: 'Total pages', val: `[${pdfDoc.getPageCount() - 1} Content Pages]` },
@@ -123,14 +142,14 @@ export async function buildPersonalizedPdf(
 
   metaItems.forEach((item, idx) => {
     const y = metaY - idx * 22;
-    coverPage.drawText(item.label, {
+    coverPage.drawText(cleanText(item.label), {
       x: 40,
       y,
       size: 10,
       font: fontBold,
       color: rgb(0.2, 0.25, 0.35),
     });
-    coverPage.drawText(item.val, {
+    coverPage.drawText(cleanText(item.val), {
       x: 160,
       y,
       size: 10,
@@ -165,14 +184,14 @@ export async function buildPersonalizedPdf(
   });
 
   // Box Line 1: Name & Roll/Email
-  coverPage.drawText(`Name: ${opts.studentName}`, {
+  coverPage.drawText(`Name: ${studentName}`, {
     x: 55,
     y: boxY + boxH - 45,
     size: 10,
     font: fontBold,
     color: rgb(0.2, 0.2, 0.2),
   });
-  coverPage.drawText(`Roll No / Email: ${opts.rollNo} (${opts.studentEmail})`, {
+  coverPage.drawText(`Roll No / Email: ${rollNo} (${studentEmail})`, {
     x: 240,
     y: boxY + boxH - 45,
     size: 10,
@@ -181,7 +200,7 @@ export async function buildPersonalizedPdf(
   });
 
   // Box Line 2: Licence ID & Issued Date
-  coverPage.drawText(`Licence ID: ${opts.licenseId}`, {
+  coverPage.drawText(`Licence ID: ${licenseId}`, {
     x: 55,
     y: boxY + boxH - 68,
     size: 10,
@@ -210,7 +229,7 @@ export async function buildPersonalizedPdf(
   );
 
   // Cover Page Bottom Footer
-  coverPage.drawText(`© ${new Date().getFullYear()} TieEdu Technologies. All rights reserved.  |  tieedu.in`, {
+  coverPage.drawText(`(c) ${new Date().getFullYear()} TieEdu Technologies. All rights reserved.  |  tieedu.in`, {
     x: 40,
     y: 35,
     size: 8,
@@ -222,7 +241,7 @@ export async function buildPersonalizedPdf(
   const pages = pdfDoc.getPages();
   const totalPages = pages.length;
 
-  const watermarkText = 'TiEdu  •  tieedu.in  •  Licensed copy  •  Do not share';
+  const watermarkText = 'TiEdu  |  tieedu.in  |  Licensed copy  |  Do not share';
 
   for (let i = 1; i < totalPages; i++) {
     const page = pages[i];
@@ -236,7 +255,7 @@ export async function buildPersonalizedPdf(
       font: fontBold,
       color: rgb(0.91, 0.64, 0.24), // Orange
     });
-    const headerMeta = `[${opts.companyName}] – [${opts.moduleTitle}]  |  Confidential study material`;
+    const headerMeta = `[${companyName}] - [${moduleTitle}]  |  Confidential study material`;
     page.drawText(headerMeta.length > 55 ? headerMeta.slice(0, 55) + '...' : headerMeta, {
       x: Math.max(120, pW - 320),
       y: pH - 20,
@@ -253,7 +272,7 @@ export async function buildPersonalizedPdf(
     });
 
     // Bottom Red License Running Line
-    const licenseLine = `Licensed to: ${opts.studentName}  |  [${opts.rollNo} / ${opts.studentEmail}]  |  Licence ID: ${opts.licenseId} — Not for redistribution`;
+    const licenseLine = `Licensed to: ${studentName}  |  [${rollNo} / ${studentEmail}]  |  Licence ID: ${licenseId} - Not for redistribution`;
     page.drawText(licenseLine.length > 85 ? licenseLine.slice(0, 85) + '...' : licenseLine, {
       x: Math.max(25, (pW - licenseLine.length * 4) / 2),
       y: 26,
@@ -263,7 +282,7 @@ export async function buildPersonalizedPdf(
     });
 
     // Bottom Footer Row
-    page.drawText(`© ${new Date().getFullYear()} TieEdu Technologies`, {
+    page.drawText(`(c) ${new Date().getFullYear()} TieEdu Technologies`, {
       x: 25,
       y: 12,
       size: 7.5,
@@ -304,3 +323,4 @@ export async function buildPersonalizedPdf(
   const outputBytes = await pdfDoc.save();
   return Buffer.from(outputBytes);
 }
+
