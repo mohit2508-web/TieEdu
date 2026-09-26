@@ -29,11 +29,22 @@ export const ModulePdfManager: React.FC<ModulePdfManagerProps> = ({ module, comp
   // Admin live preview — authenticated blob URL (premium module PDFs work for admins now)
   useEffect(() => {
     let active = true;
+    let createdUrl: string | null = null;
     if (!pdf) { setPreviewUrl(null); return; }
     pdfFileObjectUrlApi(pdf.stored_name)
-      .then((url) => { if (active) setPreviewUrl(url); })
+      .then((url) => {
+        if (active) {
+          createdUrl = url;
+          setPreviewUrl(url);
+        } else {
+          URL.revokeObjectURL(url);
+        }
+      })
       .catch(() => { if (active) setPreviewUrl(null); });
-    return () => { active = false; };
+    return () => {
+      active = false;
+      if (createdUrl) URL.revokeObjectURL(createdUrl);
+    };
   }, [pdf?.stored_name]);
 
   const flash = (t: string, type: 'ok' | 'err') => { setMsg({ text: t, type }); setTimeout(() => setMsg(null), 4000); };

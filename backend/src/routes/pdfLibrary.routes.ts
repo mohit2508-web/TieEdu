@@ -48,10 +48,6 @@ function findModuleAndCompany(db: any, moduleId: string) {
 
 // POST /api/pdf/admin/modules/:moduleId/upload — Upload/replace the module's single PDF
 pdfLibraryRouter.post('/admin/modules/:moduleId/upload', (req: Request, res: Response) => {
-  const db = loadDb();
-  const found = findModuleAndCompany(db, req.params.moduleId);
-  if (!found) return res.status(404).json({ error: 'Module not found' });
-
   upload(req, res, (err: any) => {
     if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
       return res.status(413).json({ error: 'PDF 25MB se bada hai' });
@@ -61,6 +57,11 @@ pdfLibraryRouter.post('/admin/modules/:moduleId/upload', (req: Request, res: Res
       if (msg.includes('ONLY_PDF_ALLOWED')) return res.status(400).json({ error: 'Sirf application/pdf files allowed hain' });
       return res.status(400).json({ error: 'Upload failed: ' + msg });
     }
+
+    const db = loadDb();
+    const found = findModuleAndCompany(db, req.params.moduleId);
+    if (!found) return res.status(404).json({ error: 'Module not found' });
+
     const file = req.file as Express.Multer.File | undefined;
     if (!file) return res.status(400).json({ error: 'No file field named "file"' });
 
@@ -83,7 +84,7 @@ pdfLibraryRouter.post('/admin/modules/:moduleId/upload', (req: Request, res: Res
     found.module.pdf = pdf;
     found.company.last_updated_days_ago = 0;
     saveDb(db);
-    res.status(201).json({ status: 'success', pdf });
+    return res.status(201).json({ status: 'success', pdf });
   });
 });
 

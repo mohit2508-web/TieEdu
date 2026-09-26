@@ -52,31 +52,56 @@ export const uploadModulePdfApi = async (
   file: File,
   title: string,
   onProgress?: (percent: number) => void
-) => {
-  return new Promise<any>((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    const form = new FormData();
-    form.append('file', file);
-    form.append('title', title || file.name.replace(/\.pdf$/i, ''));
-    xhr.open('POST', `${API_BASE_URL}/pdf/admin/modules/${encodeURIComponent(moduleId)}/upload`);
-    if (getAccessToken()) {
-      xhr.setRequestHeader('Authorization', `Bearer ${getAccessToken()}`);
-    }
-    xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100));
-    };
-    xhr.onload = () => {
-      try {
-        const data = JSON.parse(xhr.responseText);
-        if (xhr.status >= 200 && xhr.status < 300) resolve(data);
-        else reject(new Error(data.error || 'Upload failed'));
-      } catch {
-        reject(new Error('Upload failed'));
+): Promise<any> => {
+  const sendUpload = (token?: string | null): Promise<any> => {
+    return new Promise<any>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      const form = new FormData();
+      form.append('file', file);
+      form.append('title', title || file.name.replace(/\.pdf$/i, ''));
+      xhr.open('POST', `${API_BASE_URL}/pdf/admin/modules/${encodeURIComponent(moduleId)}/upload`);
+      xhr.timeout = 120000; // 120s timeout
+      const authToken = token !== undefined ? token : getAccessToken();
+      if (authToken) {
+        xhr.setRequestHeader('Authorization', `Bearer ${authToken}`);
       }
-    };
-    xhr.onerror = () => reject(new Error('Network error during upload'));
-    xhr.send(form);
-  });
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100));
+      };
+      xhr.onload = () => {
+        try {
+          if (xhr.status === 401) {
+            return resolve({ __is401: true });
+          }
+          if (xhr.status === 413) {
+            return reject(new Error('File size exceeds Nginx/Server upload limit (25MB max).'));
+          }
+          const data = JSON.parse(xhr.responseText);
+          if (xhr.status >= 200 && xhr.status < 300) resolve(data);
+          else reject(new Error(data.error || `Upload failed (Status ${xhr.status})`));
+        } catch {
+          reject(new Error(`Upload failed with server status ${xhr.status}`));
+        }
+      };
+      xhr.onerror = () => reject(new Error('Network error during upload — check server connectivity or Nginx config.'));
+      xhr.ontimeout = () => reject(new Error('Upload timed out after 120 seconds.'));
+      xhr.send(form);
+    });
+  };
+
+  let res = await sendUpload();
+  if (res && res.__is401) {
+    const refreshed = await tryRefreshSession();
+    if (refreshed) {
+      res = await sendUpload(getAccessToken());
+    } else {
+      throw new Error('Session expired — please sign in again as admin.');
+    }
+  }
+  if (res && res.__is401) {
+    throw new Error('Session expired — please sign in again as admin.');
+  }
+  return res;
 };
 
 export const deleteModulePdfApi = async (moduleId: string) => {
