@@ -46,7 +46,7 @@ export async function buildPersonalizedPdf(
     const coverPage = pdfDoc.insertPage(0, [595.28, 841.89]);
     const { width: cW, height: cH } = coverPage.getSize();
 
-    // Top Dark Navy Header Banner (#1B365D => rgb(0.106, 0.212, 0.365))
+    // Top Dark Navy Header Banner (#1B365D)
     coverPage.drawRectangle({
       x: 0,
       y: cH - 120,
@@ -55,7 +55,7 @@ export async function buildPersonalizedPdf(
       color: rgb(0.106, 0.212, 0.365),
     });
 
-    // Logo Square Icon (#E8A33D => rgb(0.91, 0.64, 0.24))
+    // Logo Square Icon (#E8A33D)
     coverPage.drawRectangle({
       x: 36,
       y: cH - 85,
@@ -96,7 +96,7 @@ export async function buildPersonalizedPdf(
       color: rgb(0.7, 0.8, 0.9),
     });
 
-    // Body: Section Category Tag
+    // Category Tag
     coverPage.drawText('PLACEMENT STUDY MATERIAL', {
       x: 40,
       y: cH - 165,
@@ -159,109 +159,37 @@ export async function buildPersonalizedPdf(
         color: rgb(0.45, 0.5, 0.55),
       });
     });
-
-    // Red Box
-    const boxY = cH - 485;
-    const boxW = cW - 80;
-    const boxH = 95;
-
-    coverPage.drawRectangle({
-      x: 40,
-      y: boxY,
-      width: boxW,
-      height: boxH,
-      color: rgb(0.99, 0.95, 0.95),
-      borderColor: rgb(0.86, 0.15, 0.15),
-      borderWidth: 1.5,
-    });
-
-    coverPage.drawText('LICENSED TO', {
-      x: 55,
-      y: boxY + boxH - 22,
-      size: 11,
-      font: fontBold,
-      color: rgb(0.86, 0.15, 0.15),
-    });
-
-    coverPage.drawText(`Name: ${studentName}`, {
-      x: 55,
-      y: boxY + boxH - 45,
-      size: 10,
-      font: fontBold,
-      color: rgb(0.2, 0.2, 0.2),
-    });
-    coverPage.drawText(`Roll No / Email: ${rollNo} (${studentEmail})`, {
-      x: 240,
-      y: boxY + boxH - 45,
-      size: 10,
-      font: fontRegular,
-      color: rgb(0.3, 0.3, 0.3),
-    });
-
-    coverPage.drawText(`Licence ID: ${licenseId}`, {
-      x: 55,
-      y: boxY + boxH - 68,
-      size: 10,
-      font: fontBold,
-      color: rgb(0.2, 0.2, 0.2),
-    });
-    coverPage.drawText(`Issued on: ${issuedDate}`, {
-      x: 240,
-      y: boxY + boxH - 68,
-      size: 10,
-      font: fontRegular,
-      color: rgb(0.3, 0.3, 0.3),
-    });
-
-    coverPage.drawText(
-      'This material is licensed for the personal use of the student named above. Copying, forwarding, uploading or reselling any part of it is prohibited and traceable to this licence.',
-      {
-        x: 40,
-        y: boxY - 24,
-        size: 7.5,
-        font: fontOblique,
-        color: rgb(0.45, 0.45, 0.45),
-        maxWidth: boxW,
-      }
-    );
-
-    coverPage.drawText(`(c) ${new Date().getFullYear()} TieEdu Technologies. All rights reserved.  |  tieedu.in`, {
-      x: 40,
-      y: 35,
-      size: 8,
-      font: fontRegular,
-      color: rgb(0.5, 0.5, 0.5),
-    });
   }
 
   // 2. Process ALL pages (Pages 0 to Total Pages)
   const pages = pdfDoc.getPages();
   const totalPages = pages.length;
 
-  // On Page 0 (Page 1 of uploaded document), stamp the real student details into the LICENSED TO Callout Box
+  // On Page 0 (Cover Page in template), stamp real student details into the Red LICENSED TO Callout Box
   if (pages.length > 0 && !opts.insertNewCoverPage) {
     const page1 = pages[0];
     const { width: p1W, height: p1H } = page1.getSize();
 
-    // Fill rectangle over the placeholder text inside the Red Box on Page 1
-    // Matches the light red fill (#FDF2F2) & red border (#DC2626) of the TieEdu template
-    const boxW = Math.min(515, p1W - 80);
-    const boxX = (p1W - boxW) / 2;
-    const boxY = p1H > 800 ? 210 : p1H * 0.25;
-    const boxH = 75;
+    // Box inner bounds on template (y = 265 to 345 pt from bottom on A4)
+    const boxX = 45;
+    const boxW = Math.min(505, p1W - 90);
+    const boxY = p1H > 800 ? 265 : p1H * 0.32;
+    const boxH = 76;
 
+    // Fill rectangle over the placeholder text inside the Red Box on Page 1
+    // Color matches the light red fill (#FDF2F2) of the TieEdu template box
     page1.drawRectangle({
-      x: boxX + 2,
-      y: boxY + 2,
-      width: boxW - 4,
-      height: boxH - 4,
-      color: rgb(0.99, 0.95, 0.95), // Clean light-red fill erases [Student Name] placeholders
+      x: boxX,
+      y: boxY,
+      width: boxW,
+      height: boxH,
+      color: rgb(0.99, 0.95, 0.95),
     });
 
     // Write REAL student details inside the Red Box on Page 1
     page1.drawText('LICENSED TO', {
       x: boxX + 15,
-      y: boxY + boxH - 20,
+      y: boxY + boxH - 18,
       size: 10.5,
       font: fontBold,
       color: rgb(0.86, 0.15, 0.15),
@@ -269,7 +197,7 @@ export async function buildPersonalizedPdf(
 
     page1.drawText(`Name: ${studentName}`, {
       x: boxX + 15,
-      y: boxY + boxH - 42,
+      y: boxY + boxH - 40,
       size: 9.5,
       font: fontBold,
       color: rgb(0.15, 0.15, 0.15),
@@ -277,8 +205,8 @@ export async function buildPersonalizedPdf(
 
     const rollEmailText = `Roll No / Email: ${rollNo} / ${studentEmail}`;
     page1.drawText(rollEmailText.length > 45 ? rollEmailText.slice(0, 45) + '...' : rollEmailText, {
-      x: boxX + 200,
-      y: boxY + boxH - 42,
+      x: boxX + 210,
+      y: boxY + boxH - 40,
       size: 9,
       font: fontBold,
       color: rgb(0.2, 0.2, 0.2),
@@ -286,15 +214,15 @@ export async function buildPersonalizedPdf(
 
     page1.drawText(`Licence ID: ${licenseId}`, {
       x: boxX + 15,
-      y: boxY + boxH - 62,
+      y: boxY + boxH - 60,
       size: 9.5,
       font: fontBold,
       color: rgb(0.15, 0.15, 0.15),
     });
 
     page1.drawText(`Issued on: ${issuedDate}`, {
-      x: boxX + 200,
-      y: boxY + boxH - 62,
+      x: boxX + 210,
+      y: boxY + boxH - 60,
       size: 9,
       font: fontRegular,
       color: rgb(0.3, 0.3, 0.3),
@@ -308,40 +236,28 @@ export async function buildPersonalizedPdf(
     const page = pages[i];
     const { width: pW, height: pH } = page.getSize();
 
-    // Bottom Red License Running Line
+    // Erase template's placeholder red line at y = 33..50 on content pages
+    if (i > 0 || !opts.insertNewCoverPage) {
+      page.drawRectangle({
+        x: 30,
+        y: 34,
+        width: pW - 60,
+        height: 16,
+        color: rgb(1, 1, 1), // Erases template's placeholder [Student Name] red line
+      });
+    }
+
+    // Draw real red running license text at y = 38
     const licenseLine = `Licensed to: ${studentName}  |  [${rollNo} / ${studentEmail}]  |  Licence ID: ${licenseId} - Not for redistribution`;
     page.drawText(licenseLine.length > 90 ? licenseLine.slice(0, 90) + '...' : licenseLine, {
-      x: Math.max(15, (pW - licenseLine.length * 4) / 2),
-      y: 24,
+      x: Math.max(15, (pW - licenseLine.length * 4.1) / 2),
+      y: 38,
       size: 7.5,
       font: fontBold,
       color: rgb(0.86, 0.15, 0.15), // Red
     });
 
-    // Bottom Footer Row
-    page.drawText(`(c) ${new Date().getFullYear()} TieEdu Technologies`, {
-      x: 25,
-      y: 10,
-      size: 7.5,
-      font: fontRegular,
-      color: rgb(0.5, 0.5, 0.5),
-    });
-    page.drawText('tieedu.in', {
-      x: pW / 2 - 15,
-      y: 10,
-      size: 7.5,
-      font: fontBold,
-      color: rgb(0.4, 0.4, 0.4),
-    });
-    page.drawText(`Page ${i + 1} of ${totalPages}`, {
-      x: pW - 65,
-      y: 10,
-      size: 7.5,
-      font: fontRegular,
-      color: rgb(0.5, 0.5, 0.5),
-    });
-
-    // Repeating Diagonal Watermarks Grid on Every Page
+    // Repeating Diagonal Watermarks Grid on Every Page if not already watermarked
     for (let row = 0; row < 3; row++) {
       for (let col = 0; col < 2; col++) {
         page.drawText(watermarkText, {
@@ -350,7 +266,7 @@ export async function buildPersonalizedPdf(
           size: 10,
           font: fontBold,
           color: rgb(0.55, 0.55, 0.55),
-          opacity: 0.13,
+          opacity: 0.12,
           rotate: degrees(-28),
         });
       }
