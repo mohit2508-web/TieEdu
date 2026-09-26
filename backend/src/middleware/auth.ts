@@ -26,6 +26,7 @@ export function hashRefresh(token: string): string {
 }
 
 export function safeUser(u: User) {
+  const rawId = u.id || 'GUEST';
   return {
     id: u.id,
     name: u.name,
@@ -36,6 +37,8 @@ export function safeUser(u: User) {
     college: u.college || null,
     badge: u.badge || null,
     avatar: u.avatar || null,
+    license_id: u.license_id || `LIC-${rawId.slice(-6).toUpperCase()}`,
+    roll_no: u.roll_no || `ROLL-${rawId.slice(-6).toUpperCase()}`,
     created_at: u.created_at,
   };
 }

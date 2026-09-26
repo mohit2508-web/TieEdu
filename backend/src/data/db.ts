@@ -49,6 +49,8 @@ export interface User {
   college?: string;
   badge?: string;
   avatar?: string;
+  license_id?: string;
+  roll_no?: string;
   disabled?: boolean;
   created_at: string;
 }

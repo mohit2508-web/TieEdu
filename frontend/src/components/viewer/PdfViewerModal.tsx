@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ModulePdf } from '@/types';
 import { authHeaders, fetchPdfBytesApi, pdfFileUrl } from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
 import {
   X, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, Maximize,
   Loader2, FileWarning, RefreshCw, Eye, ShieldCheck
@@ -44,8 +45,6 @@ export const preloadPdfjs = (): Promise<any> => {
   return pdfjsImportPromise;
 };
 
-const WATERMARK_YEARS = ['2026'];
-
 const fmtSize = (bytes: number) =>
   bytes > 1024 * 1024 ? `${(bytes / (1024 * 1024)).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
 
@@ -56,6 +55,9 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
   isOpen,
   onClose,
 }) => {
+  const auth = useAuth();
+  const user = auth?.user;
+
   const containerRef = useRef<HTMLDivElement>(null);
   const pageWrapRef = useRef<HTMLDivElement>(null);
   const docRef = useRef<PdfJsDoc | null>(null);
@@ -71,7 +73,14 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
   const [progress, setProgress] = useState<number | null>(null);
   const [dimensions, setDimensions] = useState({ w: 720, h: 900 });
 
-  const watermark = `LICENSED TO: ${companyName.toUpperCase()} VAULT • TieEdu • ${new Date().toISOString().split('T')[0]}`;
+  const studentName = user?.name || 'Authorized Student';
+  const studentEmail = user?.email || 'student@tieedu.com';
+  const rawId = user?.id || 'GUEST';
+  const licenseId = user?.license_id || `LIC-${rawId.slice(-6).toUpperCase()}`;
+  const rollNo = user?.roll_no || `ROLL-${rawId.slice(-6).toUpperCase()}`;
+
+  const watermarkLine1 = `LICENSED TO: ${studentName.toUpperCase()} • ${studentEmail}`;
+  const watermarkLine2 = `LIC: ${licenseId} • ROLL: ${rollNo} • ${companyName.toUpperCase()} Vault`;
 
   // Anti-print / anti-copy while open
   useEffect(() => {
@@ -347,14 +356,15 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
               {Array.from({ length: 9 }).map((_, i) => (
                 <div
                   key={i}
-                  className="absolute text-[11px] tracking-widest text-gray-100/10 font-semibold whitespace-nowrap"
+                  className="absolute text-[11px] tracking-widest text-gray-100/10 font-bold whitespace-nowrap select-none flex flex-col items-center gap-0.5"
                   style={{
                     transform: `rotate(-28deg)`,
                     top: `${(i % 3) * 34 + 8}%`,
                     left: `${Math.floor(i / 3) * 34 - 6}%`,
                   }}
                 >
-                  {watermark}
+                  <span>{watermarkLine1}</span>
+                  <span className="text-[10px] text-amber-300/20">{watermarkLine2}</span>
                 </div>
               ))}
             </div>

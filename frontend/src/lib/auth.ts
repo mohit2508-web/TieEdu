@@ -10,6 +10,8 @@ export interface AuthUser {
   college?: string | null;
   badge?: string | null;
   avatar?: string | null;
+  license_id?: string | null;
+  roll_no?: string | null;
   created_at: string;
 }
 
