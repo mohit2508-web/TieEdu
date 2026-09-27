@@ -14,6 +14,7 @@ export default function SignupPage() {
   const [college, setCollege] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -28,6 +29,7 @@ export default function SignupPage() {
     if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return setError('Enter a valid email address');
     if (password.length < 6) return setError('Password must be at least 6 characters');
     if (password !== confirm) return setError('Passwords do not match');
+    if (!acceptedTerms) return setError('You must agree to the Terms & Conditions to register.');
     setSubmitting(true);
     try {
       await signup({ name: name.trim(), email: email.trim(), password, college: college.trim() || undefined });
@@ -133,6 +135,19 @@ export default function SignupPage() {
                     className="w-full pl-10 pr-4 py-3 bg-white/90 border border-[#E9E7E1] rounded-xl text-sm text-[#10151C] placeholder:text-[#AEB6BE] focus:outline-none focus:border-[#0284C7] focus:ring-4 focus:ring-[#0284C7]/10 transition-shadow"
                   />
                 </div>
+              </div>
+
+              <div className="flex items-start gap-2.5 pt-1">
+                <input
+                  id="tc-checkbox"
+                  type="checkbox"
+                  checked={acceptedTerms}
+                  onChange={(e) => setAcceptedTerms(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 rounded border-[#E9E7E1] text-[#0284C7] focus:ring-[#0284C7] cursor-pointer shrink-0"
+                />
+                <label htmlFor="tc-checkbox" className="text-[13px] text-[#3E4754] leading-snug cursor-pointer select-none">
+                  I agree to the <span className="font-semibold text-[#0284C7] underline underline-offset-2">Terms &amp; Conditions</span> and <span className="font-semibold text-[#0284C7] underline underline-offset-2">Privacy Policy</span>.
+                </label>
               </div>
 
               <button

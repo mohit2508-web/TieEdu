@@ -21,6 +21,7 @@ export const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,6 +30,11 @@ export const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (tab === 'signup' && !acceptedTerms) {
+      return setError('You must agree to the Terms & Conditions to register.');
+    }
+
     setLoading(true);
 
     try {
@@ -144,6 +150,21 @@ export const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({
               className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0284C7] focus:bg-white transition-all"
             />
           </div>
+
+          {tab === 'signup' && (
+            <div className="flex items-start gap-2 pt-1">
+              <input
+                id="modal-tc-checkbox"
+                type="checkbox"
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                className="mt-0.5 w-4 h-4 rounded border-gray-300 text-[#0284C7] focus:ring-[#0284C7] cursor-pointer shrink-0"
+              />
+              <label htmlFor="modal-tc-checkbox" className="text-xs text-gray-600 leading-tight cursor-pointer select-none">
+                I agree to the <span className="font-semibold text-[#0284C7] underline underline-offset-2">Terms &amp; Conditions</span> and <span className="font-semibold text-[#0284C7] underline underline-offset-2">Privacy Policy</span>.
+              </label>
+            </div>
+          )}
 
           <button
             type="submit"
