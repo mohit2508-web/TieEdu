@@ -49,6 +49,8 @@ export const Footer: React.FC = () => {
             <Link href="/" className="hover:text-[--brand-sky] transition-colors">Vaults</Link>
             <Link href="/compare" className="hover:text-[--brand-sky] transition-colors">Compare</Link>
             <Link href="/interview-course" className="hover:text-[--brand-sky] transition-colors">Free Course</Link>
+ <Link href="/courses" className="hover:text-[--brand-sky] transition-colors">Courses</Link>
+ <Link href="/my-courses" className="hover:text-[--brand-sky] transition-colors">My Courses</Link>
             <Link href="/study-plan" className="hover:text-[--brand-sky] transition-colors">Study Plan</Link>
             <Link href="/campus" className="hover:text-[--brand-sky] transition-colors">Campus TPO Portal</Link>
             <Link href="/admin/login" className="hover:text-[--brand-sky] transition-colors">Admin</Link>

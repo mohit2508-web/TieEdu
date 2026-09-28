@@ -1,0 +1,142 @@
+{
+  "_comment": "Shared pack-content fixture. Asserted by BOTH frontend/scripts/rich-text.test.ts and backend/scripts/pack-content.test.ts so the two normaliser implementations cannot drift. Any change here must pass in both.",
+  "htmlCases": [
+    {
+      "name": "br runs collapse to newlines (the reported CTC bug)",
+      "input": "Base: 12L<br><br>Bonus: 2L<br>Stock: 4Y",
+      "expected": "Base: 12L\n\nBonus: 2L\nStock: 4Y"
+    },
+    {
+      "name": "bold and italic become markdown",
+      "input": "<p><strong>Tier 1</strong> is <em>entry</em> level.</p>",
+      "expected": "**Tier 1** is *entry* level."
+    },
+    {
+      "name": "unordered list becomes a real bullet list",
+      "input": "<ul><li>60% and above</li><li>No backlogs</li></ul>",
+      "expected": "- 60% and above\n- No backlogs"
+    },
+    {
+      "name": "ordered list is numbered",
+      "input": "<ol><li>Tell me about yourself</li><li>Why this role?</li></ol>",
+      "expected": "1. Tell me about yourself\n2. Why this role?"
+    },
+    {
+      "name": "headings keep their level",
+      "input": "<h3>Package</h3><p>Details below.</p>",
+      "expected": "### Package\n\nDetails below."
+    },
+    {
+      "name": "table becomes a markdown table",
+      "input": "<table><tr><th>Tier</th><th>CTC</th></tr><tr><td>T1</td><td>12L</td></tr></table>",
+      "expected": "| Tier | CTC |\n| --- | --- |\n| T1 | 12L |"
+    },
+    {
+      "name": "entities are decoded",
+      "input": "R&amp;D &lt;team&gt;&nbsp;&mdash;&nbsp;&quot;great&quot;",
+      "expected": "R&D <team> — \"great\""
+    },
+    {
+      "name": "numeric entities including a surrogate pair",
+      "input": "caf&#233; &#128512;",
+      "expected": "café 😀"
+    },
+    {
+      "name": "unknown tags are unwrapped, text survives",
+      "input": "<section><custom-tag>Keep this text</custom-tag></section>",
+      "expected": "Keep this text"
+    },
+    {
+      "name": "hr becomes a thematic break",
+      "input": "<p>Above</p><hr><p>Below</p>",
+      "expected": "Above\n\n---\n\nBelow"
+    },
+    {
+      "name": "preformatted code block keeps its newlines",
+      "input": "<pre>if (a) {\n  b();\n}</pre>",
+      "expected": "```\nif (a) {\n  b();\n}\n```"
+    },
+    {
+      "name": "links keep label and href",
+      "input": "See <a href=\"https://example.com/x\">the guide</a>.",
+      "expected": "See [the guide](https://example.com/x)."
+    }
+  ],
+  "cleanMarkdownCases": [
+    "### Heading\n- a\n**b** `c`",
+    "Plain sentence with no markup at all.",
+    "1. first\n2. second",
+    "| A | B |\n| --- | --- |\n| 1 | 2 |",
+    "```cpp\nint main() { return 0; }\n```",
+    "An email in prose: someone@example.com stays put.",
+    "A url among facts: https://x.com stays put.",
+    "Use < for less-than in prose.",
+    "",
+    "   "
+  ],
+  "sectionData": {
+    "overview": {
+      "companyInfo": "<p>Capgemini <strong>Exceller</strong> program.</p>",
+      "eligibility": "<ul><li>60% and above</li><li>No active backlogs</li></ul>",
+      "salaryBreakdown": "Tier 1<br><br>Base 12L<br>Bonus 2L",
+      "reviews": [
+        { "name": "A", "role": "SDE-1", "rating": 5, "text": "<p>Great process.</p>" }
+      ]
+    },
+    "core_subjects": [
+      {
+        "subject": "DBMS",
+        "topics": [
+          {
+            "title": "Normalisation",
+            "content": "<h4>Why it matters</h4><p>Reduces redundancy.</p>",
+            "pyqs": [
+              { "year": 2024, "question": "Explain 3NF", "answer": "<ol><li>1NF</li><li>2NF</li></ol>", "frequency": "High" }
+            ]
+          }
+        ]
+      }
+    ],
+    "interview_questions": [
+      {
+        "category": "Coding",
+        "title": "Reverse a linked list",
+        "question": "Reverse in place?",
+        "solution": "<p>Use three pointers.</p>",
+        "code": "ListNode* rev(ListNode* h) {\n  return NULL;\n}",
+        "language": "cpp"
+      }
+    ],
+    "cheatsheets": [
+      { "title": "Ports", "summary": "Common ports", "content": "Port 22   SSH\nPort 80   HTTP" }
+    ],
+    "never_skip_topics": [
+      { "topic": "B-Tree", "priority": "High", "notes": "<p>Asked every year.</p>" }
+    ],
+    "last_minute_revision": [
+      { "title": "OS", "points": ["Paging", "Scheduling"] }
+    ],
+    "hr_round": [
+      { "question": "Why Capgemini?", "answer": "<p>Because <b>growth</b>.</p>", "tips": ["Be specific"] }
+    ]
+  },
+  "preformattedFields": [
+    "cheatsheets.0.content",
+    "interview_questions.0.code"
+  ],
+  "richTextPaths": [
+    "overview.companyInfo",
+    "overview.eligibility",
+    "overview.salaryBreakdown",
+    "overview.reviews.[].text",
+    "core_subjects.[].topics.[].content",
+    "core_subjects.[].topics.[].pyqs.[].question",
+    "core_subjects.[].topics.[].pyqs.[].answer",
+    "interview_questions.[].question",
+    "interview_questions.[].solution",
+    "cheatsheets.[].summary",
+    "never_skip_topics.[].notes",
+    "hr_round.[].question",
+    "hr_round.[].answer"
+  ]
+}

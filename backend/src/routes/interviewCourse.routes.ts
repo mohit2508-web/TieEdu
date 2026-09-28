@@ -1,8 +1,12 @@
 import { Router, Request, Response } from 'express';
 import { loadDb, saveDb } from '../data/db';
 import { requireAuth, optionalAuth } from '../middleware/auth';
+import { awardAndCommit, totalXpForUser } from '../lib/xp';
 
 export const interviewCourseRouter = Router();
+
+/** XP for finishing one interview module. Mirrors XP.LESSON_COMPLETE. */
+const MODULE_XP = 25;
 
 export interface InterviewModule {
   id: number;
@@ -695,6 +699,12 @@ interviewCourseRouter.get('/progress/:userId', optionalAuth, (req: Request, res:
 
 // POST /api/interview-course/progress — Toggle module completion & update XP
 // Identity comes from the Bearer token — no anonymous progress, no spoofable user_id.
+//
+// XP goes through the append-only ledger (lib/xp.ts), so:
+//   * the same module can never be farmed by ticking and unticking it — each
+//     toggle is a new ledger row, and the balance is their sum,
+//   * user.xp is a cache recomputed from the ledger, never a mutable counter,
+//   * every point is attributable to a specific module and a specific moment.
 interviewCourseRouter.post('/progress', requireAuth, (req: Request, res: Response) => {
   const { module_id } = req.body;
   const user_id = req.user!.id;
@@ -716,71 +726,81 @@ interviewCourseRouter.post('/progress', requireAuth, (req: Request, res: Respons
   };
 
   const isCompleted = userProgress.completed_module_ids.includes(module_id);
-  const MODULE_XP = 50;
+
   if (isCompleted) {
     userProgress.completed_module_ids = userProgress.completed_module_ids.filter((id: number) => id !== module_id);
-    userProgress.total_xp = Math.max(0, userProgress.total_xp - MODULE_XP);
   } else {
     userProgress.completed_module_ids.push(module_id);
-    userProgress.total_xp += MODULE_XP;
   }
 
+  // Derive this feature's own subtotal from what is actually completed, so the
+  // stored total_xp can never disagree with the module list above it.
+  userProgress.total_xp = userProgress.completed_module_ids.length * MODULE_XP;
   userProgress.updated_at = new Date().toISOString();
   db.interview_progress[user_id] = userProgress;
 
-  // Sync real account XP/streak (leaderboard + /account isi se padhte hain)
+  // One ledger row per action. Un-completing appends a reversal rather than
+  // silently decrementing, which is what makes the history auditable.
+  const result = awardAndCommit(db, {
+    userId: user_id,
+    key: `interview-module:${module_id}:${isCompleted ? 'rev' : 'done'}:${Date.now()}`,
+    reason: isCompleted ? 'reversal' : 'lesson_complete',
+    xp: isCompleted ? -MODULE_XP : MODULE_XP,
+    courseId: null,
+    note: `${isCompleted ? 'Un-completed' : 'Completed'} interview module #${module_id}`,
+  });
+
+  // A streak is consecutive days, so a module toggle must never touch it.
   const account = (db.users || []).find((u: any) => u.id === user_id && u.role === 'user' && !u.disabled);
   if (account) {
-    if (isCompleted) {
-      account.xp = Math.max(0, (Number(account.xp) || 0) - MODULE_XP);
-      account.streak = Math.max(0, (Number(account.streak) || 0) - 1);
-    } else {
-      account.xp = (Number(account.xp) || 0) + MODULE_XP;
-      account.streak = (Number(account.streak) || 0) + 1;
-    }
+    account.xp = result.total_xp;
+    account.streak = Math.max(0, Number(account.streak) || 0);
   }
-
   saveDb(db);
 
   res.json({
     success: true,
-    message: isCompleted ? 'Module unchecked' : 'Module completed! +50 XP',
+    message: isCompleted
+      ? `Module unchecked. ${MODULE_XP} XP reversed — your ledger now shows ${result.total_xp} XP.`
+      : `Module completed! +${MODULE_XP} XP`,
     progress: userProgress,
+    xp_delta: isCompleted ? -MODULE_XP : MODULE_XP,
+    total_xp: result.total_xp,
     percentage: Math.round((userProgress.completed_module_ids.length / 50) * 100)
   });
 });
 
-// POST /api/interview-course/certificate — Generate Certificate Metadata (honest eligibility gate)
-interviewCourseRouter.post('/certificate', requireAuth, (req: Request, res: Response) => {
-  const candidate_name = (req.body.candidate_name || req.user!.name || 'Candidate').toString();
-  const user_id = req.user!.id;
-  const db = loadDb();
-
-  const userProgress = (db.interview_progress && db.interview_progress[user_id]) || {
-    completed_module_ids: [],
-    total_xp: 0,
-    certificate_issued: false,
-    updated_at: new Date().toISOString()
-  };
-
-  const COMPLETION_THRESHOLD = 50;
-  const completed = userProgress.completed_module_ids.length;
-  const eligible = completed >= COMPLETION_THRESHOLD;
-
-  const certificateData = {
-    certificate_id: eligible ? `TIEEDU-CERT-${Math.floor(100000 + Math.random() * 900000)}` : null,
-    candidate_name,
-    course_name: '50-Module Masterclass: Free Online Interview Skills & STAR Mastery',
-    completion_date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
-    total_modules_completed: completed,
-    modules_required: COMPLETION_THRESHOLD,
-    issuer: 'TiEedu Placement Intelligence Authority',
-    verification_url: `https://tieedu.com/verify-cert/${user_id}`,
-    status: eligible ? 'ACTIVE_VALIDATED' : 'IN_PROGRESS'
-  };
-
-  res.json({
-    success: true,
-    data: certificateData
+// ---------------------------------------------------------------------------
+// RETIRED: the legacy interview-course certificate
+// ---------------------------------------------------------------------------
+//
+// This used to mint `TIEEDU-CERT-<6 random digits>` for anyone who finished 50
+// interview modules. It was retired because it was not a certificate in any
+// meaningful sense:
+//
+//   * the serial came from Math.random(), so it was guessable and proved nothing,
+//   * there was no signature, so anyone could fabricate one by hand,
+//   * `verification_url` pointed at /verify-cert/<user_id>, a route that never
+//     existed, so the "verify" link on every certificate it produced was dead.
+//
+// It also competed with the real system (backend/src/lib/certificate.ts), which
+// is HMAC-signed, publicly verifiable at /verify/<serial>, revocable, and
+// re-checked against stored progress at issue time.
+//
+// A 410 rather than a 404 is deliberate: any client still holding a cached build
+// gets a truthful "this is gone, use this instead" rather than a 404 that reads
+// like a bug. Certificates issued by the old endpoint were never verifiable and
+// are not honoured — ask support to reissue through the course engine.
+interviewCourseRouter.post('/certificate', requireAuth, (_req: Request, res: Response) => {
+  return res.status(410).json({
+    success: false,
+    error: 'This certificate endpoint has been retired.',
+    message:
+      'Interview-course completion is tracked here, but certificates are now issued by the course engine, which signs every serial and publishes a public verification page. Finish a course at /courses to earn a verifiable certificate.',
+    replacement: {
+      catalog: '/api/courses',
+      claim: 'POST /api/courses/:slug/certificate',
+      verify: '/api/courses/verify/:serial',
+    },
   });
 });

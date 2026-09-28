@@ -1,12 +1,23 @@
 import { Router, Request, Response } from 'express';
 import { loadDb } from '../data/db';
+import { totalXpForUser } from '../lib/xp';
+import { daysUntil, resolvePlan } from '../lib/studyPlanTemplates';
+import type { ContentBlockRecord } from '../data/db';
 
 export const gamificationRouter = Router();
 
-const BADGES = ['Placement Legend', 'Vault Contributor', 'Top Reviewer'];
+/** First markdown block of a phase, used only to fill the deprecated roadmap field. */
+function firstMarkdown(blocks: ContentBlockRecord[]): string {
+  const md = (blocks || []).find((b) => b.block_type === 'markdown');
+  return String(md?.payload?.text || '').trim();
+}
 
 // GET /api/leaderboard — Honest ranking of real registered accounts by XP.
-// No seeded/placeholder names. Empty until real students earn XP.
+//
+// XP is read from the append-only ledger, not from user.xp, so the ranking
+// cannot be inflated by editing a counter in the users table: every point
+// traces back to a specific completed lesson, quiz, course or review.
+// No seeded or placeholder names — empty until real students earn XP.
 gamificationRouter.get('/leaderboard', (req: Request, res: Response) => {
   const db = loadDb();
   const users = (db.users || [])
@@ -14,66 +25,73 @@ gamificationRouter.get('/leaderboard', (req: Request, res: Response) => {
     .map((u: any) => ({
       id: u.id,
       name: u.name,
-      xp: Math.max(0, Number(u.xp) || 0),
-      streak: Math.max(0, Number(u.streak) || 0),
-      college: u.college || '-',
+      xp: totalXpForUser(db, u.id),
+      college: u.college || '',
+      // Only a badge the account actually earned (stored by an admin or awarded
+      // from real activity). Never derived from rank: a rank fallback handed
+      // the #2 student the label "Top Reviewer" while they had published zero
+      // reports, which is exactly the kind of invented credential this
+      // leaderboard exists to avoid.
       badge: u.badge || null,
-      report_contributions: (db.reports || []).filter((r: any) => r.user_id === u.id).length,
+      report_contributions: (db.reports || []).filter((r: any) => r.user_id === u.id && r.status === 'published').length,
     }))
-    .sort((a: any, b: any) => b.xp - a.xp || b.streak - a.streak || a.name.localeCompare(b.name))
+    .filter((u: any) => u.xp > 0 || u.report_contributions > 0)
+    .sort((a: any, b: any) => b.xp - a.xp || b.report_contributions - a.report_contributions || String(a.name).localeCompare(String(b.name)))
     .map((u: any, idx: number) => ({
       rank: idx + 1,
+      id: u.id,
       name: u.name,
       xp: u.xp,
-      streak: u.streak,
       college: u.college,
-      badge: (u.badge as string) || BADGES[idx] || 'New Recruit',
+      badge: u.badge,
       report_contributions: u.report_contributions,
+      // Present so older clients still have something to render, but explicitly
+      // null: a streak is not derivable from the XP ledger and is no longer
+      // invented on the way out.
+      streak: null,
     }));
 
   res.json({
     status: 'success',
     honest: true,
     entries: users,
-    note: 'Ranked from live student accounts only.',
+    note: 'Ranked from live student accounts only. XP is derived from the verified activity ledger.',
   });
 });
 
-// POST /api/study-plan — Generate Study Plan Roadmap
+// POST /api/gamification/study-plan — Deprecated alias for POST /api/study-plan/generate.
+//
+// Kept for one release so existing clients do not break. Content now comes from
+// admin-authored templates via resolvePlan(); the hardcoded roadmap survives only
+// as the final fallback inside that resolver. The legacy `roadmap` field is derived
+// from the resolved phases so older frontends keep rendering.
 gamificationRouter.post('/study-plan', (req: Request, res: Response) => {
-  const { targetCompany, targetRole, daysRemaining } = req.body;
-  const days = daysRemaining || 14;
+  const db = loadDb();
+  const targetCompany = req.body.targetCompany || 'Target Company';
+  const targetRole = req.body.targetRole || 'SDE';
+  // Same precedence as the canonical route: a real interview date wins over any
+  // client-supplied day count, so the two endpoints cannot disagree about how
+  // long the window is.
+  const fromCalendar = daysUntil(req.body.interviewDate || null);
+  const days = fromCalendar != null
+    ? Math.max(1, Math.min(365, fromCalendar))
+    : Math.max(1, Math.min(365, Number(req.body.daysRemaining) || 14));
 
-  const company = targetCompany || 'Target Company';
-  const role = targetRole || 'SDE';
+  const resolved = resolvePlan(db, { companyName: targetCompany, role: targetRole, totalDays: days });
 
-  const roadmap = [
-    {
-      day: `Day 1–3`,
-      focus: 'HR & STAR Method Questions',
-      detail: `Prepare 5 STAR stories on conflict resolution, collaboration and role-relevant decisions for ${company}.`
-    },
-    {
-      day: `Day 4–7`,
-      focus: 'Core Technical & High-Frequency Qs',
-      detail: `Practice the core DSA, concurrency and language topics most commonly asked for ${role} roles.`
-    },
-    {
-      day: `Day 8–11`,
-      focus: 'System Design & High-Throughput Architecture',
-      detail: `Walk through idempotent transaction handling, rate limiting and scalable service design.`
-    },
-    {
-      day: `Day 12–${days}`,
-      focus: 'Mock Drives & Verified Candidate Reports',
-      detail: `Review verified candidate reports for ${company} and complete 45-minute timed mock tests.`
-    }
-  ];
+  const roadmap = resolved.phases.map((p) => ({
+    day: p.day_to ? `Day ${p.day_from}–${p.day_to}` : `Day ${p.day_from}+`,
+    focus: p.title,
+    detail: p.summary || firstMarkdown(p.blocks),
+  }));
 
   res.json({
-    targetCompany: targetCompany || 'Target Company',
-    targetRole: targetRole || 'SDE',
+    targetCompany,
+    targetRole,
     daysRemaining: days,
+    source: resolved.source,
+    templateId: resolved.template?.id || null,
+    phases: resolved.phases,
     roadmap
   });
 });

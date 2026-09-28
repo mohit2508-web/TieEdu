@@ -1,8 +1,14 @@
 import { Router, Request, Response } from 'express';
 import { loadDb, saveDb } from '../data/db';
 import { completePaidOrder, pushAudit } from '../payments/orders';
+import { studyPlanAdminRouter } from './studyPlan.routes';
+import { validateSectionData } from '../lib/sectionData';
 
 export const adminRouter = Router();
+
+// Study plan templates are mounted under /api/admin/study-plans, so they inherit
+// the requireAdmin guard applied to adminRouter in server.ts.
+adminRouter.use('/study-plans', studyPlanAdminRouter);
 
 // ------- Helpers -------
 
@@ -41,6 +47,133 @@ function findItemAnywhere(db: any, itemId: string) {
 const sanitizeModuleForApi = (mod: any) => JSON.parse(JSON.stringify(mod));
 
 // ============================================================
+// COMPANY PROFILE FIELD POLICY
+// ============================================================
+// Two separate groups, because they have very different trust levels:
+//
+//  EDITORIAL_FIELDS  — a human assertion (CTC, difficulty, round notes...). Allowed,
+//                       but the admin should attach provenance. Kept separate so
+//                       the API never silently merges a request body into a company.
+//  DERIVED_FIELDS    — counts and scores the SERVER owns. A request body value is
+//                       always discarded; these are recomputed from the ledger on
+//                       read (see lib/stats.ts). This is what stops a client from
+//                       POSTing unlock_count: 9999 or accuracy_score: 98.
+const EDITORIAL_FIELDS = [
+  'name', 'slug', 'logo_url', 'industry', 'tags',
+  'tagline', 'about', 'hq', 'founded_year', 'employee_band', 'careers_link',
+  'difficulty_rating', 'avg_process_days', 'avg_rounds', 'ctc_min', 'ctc_max',
+  'seo_title', 'seo_description', 'status',
+  'rounds_pipeline', 'comparison_metrics', 'metric_sources', 'fact_checked_at',
+] as const;
+
+const DERIVED_FIELDS = [
+  'id', 'unlock_count', 'accuracy_score', 'accuracy_report_count',
+  'trust_stats', 'modules', 'is_unlocked', 'owned_module_ids',
+  'premium_module_ids', 'premium_module_count', 'owned_module_count', 'module_count',
+] as const;
+
+const strOrNull = (v: any): string | null =>
+  typeof v === 'string' && v.trim() ? v.trim() : null;
+const numOrNull = (v: any): number | null => {
+  if (v === null || v === undefined || v === '') return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+};
+
+/**
+ * Coerce to a real boolean, or `fallback` when the value is not a boolean.
+ *
+ * `req.body.is_premium ?? true` used to store whatever arrived, so the string
+ * `"false"` was persisted and then read back as truthy — a free module silently
+ * becoming premium. Only genuine booleans are accepted; a form that posts
+ * `"true"`/`"false"` should post real booleans, and this rejects the ambiguity
+ * rather than guessing.
+ */
+const boolOr = (v: any, fallback: boolean): boolean =>
+  typeof v === 'boolean' ? v : fallback;
+
+/**
+ * Validate and normalise a `section_data` payload supplied to a module route.
+ *
+ * `PUT /modules/:id` and `POST /companies/:id/modules` accept `section_data` just
+ * like the dedicated `/section` route does, and both used to store the raw body.
+ * That let a client bypass validation entirely: the same field that the pack
+ * editor saves through a checked path could be written as an array, a bare
+ * string, or unbounded text by any other caller. Returns a 400-able result so
+ * the route can reject a body that is not an object at all.
+ */
+function normalizeSectionDataInput(input: unknown): { ok: true; value: Record<string, unknown>; warnings: string[] } | { ok: false; error: string } {
+  if (input === null || input === undefined) return { ok: true, value: null as any, warnings: [] };
+  if (typeof input !== 'object' || Array.isArray(input)) {
+    return { ok: false, error: 'section_data must be an object' };
+  }
+  const { data, warnings } = validateSectionData(input);
+  return { ok: true, value: data, warnings };
+}
+
+/** Validate a metric_sources payload: keep only real provenance records. */
+function sanitizeProvenance(input: any): Record<string, any> {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return {};
+  const out: Record<string, any> = {};
+  for (const [key, value] of Object.entries(input)) {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      out[key] = null;
+      continue;
+    }
+    const v = value as any;
+    const source = strOrNull(v.source);
+    // An empty source means "not verified" — store an explicit null so the UI can
+    // show the gap instead of silently inheriting a stale record.
+    out[key] = source
+      ? {
+          source,
+          verified_at: strOrNull(v.verified_at) || new Date().toISOString().slice(0, 10),
+          ...(strOrNull(v.note) ? { note: strOrNull(v.note) } : {}),
+        }
+      : null;
+  }
+  return out;
+}
+
+/** Only { round_1_oa, round_2_tech, round_3_system_design, round_4_hr } notes survive. */
+function sanitizeComparisonMetrics(input: any) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return null;
+  const out: Record<string, any> = {};
+  for (const key of ['round_1_oa', 'round_2_tech', 'round_3_system_design', 'round_4_hr']) {
+    const v = strOrNull(input[key]);
+    if (v) out[key] = v;
+  }
+  return Object.keys(out).length > 0 ? out : null;
+}
+
+/** Round types the compare pipeline and module reader understand. */
+const ROUND_TYPES = ['OA', 'Technical', 'System Design', 'HR'] as const;
+
+/**
+ * The pipeline renders verbatim on the public company page, so it is validated
+ * as strictly as the comparison notes: a step with no round_type, an unknown
+ * round_type, or a non-numeric module_count is dropped rather than shown.
+ */
+function sanitizeRoundsPipeline(input: any) {
+  if (!Array.isArray(input)) return [];
+  const out: any[] = [];
+  for (const step of input) {
+    if (!step || typeof step !== 'object' || Array.isArray(step)) continue;
+    const roundType = strOrNull((step as any).round_type);
+    if (!roundType || !(ROUND_TYPES as readonly string[]).includes(roundType)) continue;
+    out.push({
+      step_number: out.length + 1,
+      round_type: roundType,
+      title: strOrNull((step as any).title) || roundType,
+      subtitle: strOrNull((step as any).subtitle) || '',
+      difficulty: 'medium',
+      module_count: numOrNull((step as any).module_count) ?? 0,
+    });
+  }
+  return out;
+}
+
+// ============================================================
 // COMPANIES
 // ============================================================
 
@@ -59,6 +192,12 @@ adminRouter.get('/companies/:id', (req: Request, res: Response) => {
 });
 
 // POST /api/admin/companies — Create a new company vault
+//
+// Everything starts EMPTY on purpose. A brand-new vault has no modules, no
+// reports and no verified figures, so it must not claim an industry, must not
+// carry an SEO description promising "verified round-by-round intelligence", and
+// must not ship a pre-filled trust_stats shape. Every field below is either the
+// admin's own input or null, and the public UI renders the nulls honestly.
 adminRouter.post('/companies', (req: Request, res: Response) => {
   const db = loadDb();
   const { name } = req.body;
@@ -73,47 +212,136 @@ adminRouter.post('/companies', (req: Request, res: Response) => {
     id: `comp-${Date.now()}`,
     slug,
     name,
-    logo_url: req.body.logo_url || '',
-    industry: req.body.industry || 'Tech & IT Services',
-    tags: req.body.tags || [],
-    difficulty_rating: req.body.difficulty_rating ?? 0,
-    avg_process_days: req.body.avg_process_days ?? null,
-    avg_rounds: req.body.avg_rounds ?? null,
-    ctc_min: req.body.ctc_min ?? null,
-    ctc_max: req.body.ctc_max ?? null,
+    logo_url: strOrNull(req.body.logo_url) || '',
+    industry: strOrNull(req.body.industry),
+    tags: Array.isArray(req.body.tags) ? req.body.tags.filter((t: any) => typeof t === 'string') : [],
+    tagline: strOrNull(req.body.tagline),
+    about: strOrNull(req.body.about),
+    hq: strOrNull(req.body.hq),
+    founded_year: numOrNull(req.body.founded_year),
+    employee_band: strOrNull(req.body.employee_band),
+    careers_link: strOrNull(req.body.careers_link),
+    difficulty_rating: numOrNull(req.body.difficulty_rating),
+    avg_process_days: numOrNull(req.body.avg_process_days),
+    avg_rounds: numOrNull(req.body.avg_rounds),
+    ctc_min: numOrNull(req.body.ctc_min),
+    ctc_max: numOrNull(req.body.ctc_max),
+    fact_checked_at: strOrNull(req.body.fact_checked_at),
+    metric_sources: sanitizeProvenance(req.body.metric_sources),
+    // Derived — recomputed on every read, never accepted from the client.
     unlock_count: 0,
     accuracy_score: null,
     accuracy_report_count: 0,
     last_updated_days_ago: 0,
-    status: req.body.status || 'draft',
-    seo_title: req.body.seo_title || `${name} Interview Questions & Vault | TieEdu`,
-    seo_description: req.body.seo_description || `Verified round-by-round interview intelligence for ${name}.`,
-    trust_stats: req.body.trust_stats || { rating: 0, rating_count: 0, weekly_unlocks: 0, verified_by_role: null, recency_label: 'No verified reports yet', accuracy_rate: 0 },
-    rounds_pipeline: req.body.rounds_pipeline || [],
-    comparison_metrics: req.body.comparison_metrics || null,
+    status: req.body.status === 'published' ? 'published' : 'draft',
+    // Left empty on purpose. Generating "Verified round-by-round interview
+    // intelligence for <name>" for a vault with zero content is a false claim in
+    // a meta tag, which is exactly the sort of invented credibility we refuse.
+    seo_title: strOrNull(req.body.seo_title),
+    seo_description: strOrNull(req.body.seo_description),
+    rounds_pipeline: sanitizeRoundsPipeline(req.body.rounds_pipeline),
+    comparison_metrics: sanitizeComparisonMetrics(req.body.comparison_metrics),
     modules: []
   };
 
   db.companies.unshift(newCompany);
+  // Audit BEFORE save: pushAudit only mutates the in-memory object graph, so a
+  // saveDb() first would drop the entry and the vault would change with no trail.
+  pushAudit(db, {
+    action: 'company.create',
+    actor: req.userId || 'admin',
+    detail: `Created company vault "${name}" as ${newCompany.status}`,
+    meta: { company_id: newCompany.id, slug: newCompany.slug },
+  });
   saveDb(db);
   res.status(201).json({ status: 'success', company: newCompany });
 });
 
-// PUT /api/admin/companies/:id — Update company details (full metadata)
+// PUT /api/admin/companies/:id — Update company profile (whitelisted fields only)
+//
+// A blanket `...req.body` spread used to let a request overwrite derived fields
+// (unlock_count, accuracy_score, trust_stats) or the id/slug chain. Now only
+// EDITORIAL_FIELDS are accepted and each is validated by type.
 adminRouter.put('/companies/:id', (req: Request, res: Response) => {
   const db = loadDb();
   const compIndex = db.companies.findIndex((c: any) => c.id === req.params.id);
   if (compIndex === -1) return res.status(404).json({ error: 'Company not found' });
 
-  db.companies[compIndex] = {
-    ...db.companies[compIndex],
-    ...req.body,
-    id: db.companies[compIndex].id,
-    slug: req.body.slug || db.companies[compIndex].slug,
-    last_updated_days_ago: 0
-  };
+  const current = db.companies[compIndex];
+  const body = req.body || {};
+  const next: any = { ...current };
+
+  for (const field of EDITORIAL_FIELDS) {
+    if (!(field in body)) continue;
+    switch (field) {
+      case 'name': {
+        const v = strOrNull(body.name);
+        if (!v) return res.status(400).json({ error: 'Company name cannot be empty' });
+        next.name = v;
+        break;
+      }
+      case 'slug': {
+        const v = strOrNull(body.slug);
+        if (v) {
+          const clash = db.companies.some((c: any) => c.slug === v && c.id !== current.id);
+          if (clash) return res.status(409).json({ error: `Slug "${v}" is already used by another company` });
+          next.slug = v;
+        }
+        break;
+      }
+      case 'tags':
+        next.tags = Array.isArray(body.tags) ? body.tags.filter((t: any) => typeof t === 'string' && t.trim()) : [];
+        break;
+      case 'status':
+        next.status = ['draft', 'published', 'archived'].includes(body.status) ? body.status : current.status;
+        break;
+      case 'difficulty_rating':
+      case 'avg_process_days':
+      case 'avg_rounds':
+      case 'ctc_min':
+      case 'ctc_max':
+      case 'founded_year':
+        next[field] = numOrNull(body[field]);
+        break;
+      case 'metric_sources':
+        next.metric_sources = sanitizeProvenance(body.metric_sources);
+        break;
+      case 'comparison_metrics':
+        next.comparison_metrics = sanitizeComparisonMetrics(body.comparison_metrics);
+        break;
+      case 'rounds_pipeline':
+        next.rounds_pipeline = sanitizeRoundsPipeline(body.rounds_pipeline);
+        break;
+      case 'fact_checked_at': {
+        // The public page prints this as "fact-checked on <date>", so reject
+        // anything that is not a real calendar date.
+        const v = strOrNull(body.fact_checked_at);
+        if (v && !/^\d{4}-\d{2}-\d{2}$/.test(v)) {
+          return res.status(400).json({ error: 'fact_checked_at must be YYYY-MM-DD' });
+        }
+        next.fact_checked_at = v;
+        break;
+      }
+      default:
+        next[field] = strOrNull(body[field]);
+    }
+  }
+
+  next.id = current.id;
+  next.last_updated_days_ago = 0;
+  db.companies[compIndex] = next;
+
+  const changed = Object.keys(body).filter((k) => (EDITORIAL_FIELDS as readonly string[]).includes(k));
+  // Audit before save — see the create handler above for why order matters.
+  pushAudit(db, {
+    action: 'company.update',
+    actor: req.userId || 'admin',
+    detail: `Updated ${changed.join(', ') || 'no fields'}`,
+    meta: { company_id: next.id, fields: changed },
+  });
   saveDb(db);
-  res.json({ status: 'success', company: db.companies[compIndex] });
+
+  res.json({ status: 'success', company: next });
 });
 
 // DELETE /api/admin/companies/:id — Delete company
@@ -129,30 +357,49 @@ adminRouter.delete('/companies/:id', (req: Request, res: Response) => {
 // ============================================================
 
 // POST /api/admin/companies/:id/modules — Add module to company
+//
+// round_type and title are NOT defaulted. Defaulting round_type to 'OA' made a
+// brand-new blank module claim a place in a hiring round, which then showed up in
+// the comparison matrix as if the company actually ran an online assessment. The
+// UI sends both explicitly; when absent we store null and the module is simply
+// unclassified until an admin says what it is.
 adminRouter.post('/companies/:id/modules', (req: Request, res: Response) => {
   const db = loadDb();
   const company = findCompany(db, req.params.id);
   if (!company) return res.status(404).json({ error: 'Company not found' });
   if (!company.modules) company.modules = [];
 
+  // section_data goes through the same validator as the dedicated /section
+  // route. Storing the raw body here meant a module created via this endpoint
+  // could hold content the pack editor and the reader would both choke on.
+  const sectionInput = normalizeSectionDataInput(req.body?.section_data);
+  if (!sectionInput.ok) return res.status(400).json({ error: sectionInput.error });
+
   const newModule = {
     id: `mod-${Date.now()}`,
     company_id: company.id,
-    module_type: req.body.module_type || 'complete_pack',
-    round_type: req.body.round_type || 'OA',
-    title: req.body.title || 'New Recruitment Module',
-    description: req.body.description || '',
-    sort_order: req.body.sort_order ?? (company.modules.length + 1),
-    is_premium: req.body.is_premium ?? true,
-    price: req.body.price ?? null,
-    section_data: req.body.section_data || null,
+    module_type: strOrNull(req.body.module_type),
+    round_type: strOrNull(req.body.round_type),
+    title: strOrNull(req.body.title) || 'Untitled module',
+    description: strOrNull(req.body.description),
+    sort_order: numOrNull(req.body.sort_order) ?? (company.modules.length + 1),
+    is_premium: boolOr(req.body.is_premium, true),
+    price: numOrNull(req.body.price),
+    // Never auto-generated. A module with no authored section renders an honest
+    // "not published yet" state in the reader.
+    section_data: sectionInput.value,
     items: []
   };
 
   company.modules.push(newModule);
   company.last_updated_days_ago = 0;
   saveDb(db);
-  res.status(201).json({ status: 'success', module: newModule });
+  pushAudit(db, {
+    action: 'module.create',
+    detail: `Created module "${newModule.title}" (${newModule.id}) on company ${company.id}`,
+    meta: { company_id: company.id, module_id: newModule.id },
+  });
+  res.status(201).json({ status: 'success', module: newModule, warnings: sectionInput.warnings });
 });
 
 // PUT /api/admin/modules/:id — Update module (title, type, round, price, premium, sort)
@@ -161,19 +408,42 @@ adminRouter.put('/modules/:id', (req: Request, res: Response) => {
   const found = findModuleAndCompany(db, req.params.id);
   if (!found) return res.status(404).json({ error: 'Module not found' });
 
+  // Same validation as the dedicated /section route. Without it, this endpoint
+  // was a way to write arbitrary, unbounded, un-normalised section_data and
+  // sidestep every rule the pack editor relies on.
+  let sectionWarnings: string[] = [];
+  let normalizedSection: Record<string, unknown> | null | undefined;
+  if (req.body?.section_data !== undefined) {
+    const sectionInput = normalizeSectionDataInput(req.body.section_data);
+    if (!sectionInput.ok) return res.status(400).json({ error: sectionInput.error });
+    sectionWarnings = sectionInput.warnings;
+    normalizedSection = sectionInput.value;
+  }
+
   const { module, company } = found;
-  module.title = req.body.title ?? module.title;
-  module.module_type = req.body.module_type ?? module.module_type;
-  module.round_type = req.body.round_type ?? module.round_type;
-  module.description = req.body.description ?? module.description;
-  module.is_premium = req.body.is_premium ?? module.is_premium;
-  module.price = req.body.price !== undefined ? req.body.price : module.price;
-  module.sort_order = req.body.sort_order ?? module.sort_order;
-  module.section_data = req.body.section_data !== undefined ? req.body.section_data : module.section_data;
+  module.title = req.body.title !== undefined ? (strOrNull(req.body.title) ?? module.title) : module.title;
+  module.module_type = req.body.module_type !== undefined ? strOrNull(req.body.module_type) : module.module_type;
+  module.round_type = req.body.round_type !== undefined ? strOrNull(req.body.round_type) : module.round_type;
+  module.description = req.body.description !== undefined ? strOrNull(req.body.description) : module.description;
+  module.is_premium = req.body.is_premium !== undefined ? boolOr(req.body.is_premium, module.is_premium !== false) : module.is_premium;
+  // numOrNull so a posted price of "abc" becomes null instead of the string
+  // "abc", which would render as a broken amount on the checkout page.
+  module.price = req.body.price !== undefined ? numOrNull(req.body.price) : module.price;
+  module.sort_order = req.body.sort_order !== undefined
+    ? (numOrNull(req.body.sort_order) ?? module.sort_order)
+    : module.sort_order;
+  if (normalizedSection !== undefined) {
+    module.section_data = normalizedSection as any;
+  }
 
   company.last_updated_days_ago = 0;
   saveDb(db);
-  res.json({ status: 'success', module: sanitizeModuleForApi(module) });
+  pushAudit(db, {
+    action: 'module.update',
+    detail: `Updated module "${module.title}" (${module.id})${normalizedSection !== undefined ? ' including section_data' : ''}`,
+    meta: { company_id: company.id, module_id: module.id, section_data_updated: normalizedSection !== undefined },
+  });
+  res.json({ status: 'success', module: sanitizeModuleForApi(module), warnings: sectionWarnings });
 });
 
 // DELETE /api/admin/modules/:id — Delete module
@@ -215,11 +485,29 @@ adminRouter.put('/modules/:id/section', (req: Request, res: Response) => {
   const found = findModuleAndCompany(db, req.params.id);
   if (!found) return res.status(404).json({ error: 'Module not found' });
 
+  // The body is validated and clamped before it is stored. Previously the raw body
+  // was assigned straight onto the module, so a mistyped or oversized payload was
+  // persisted and only surfaced when a student opened the pack.
+  if (
+    req.body !== undefined &&
+    (typeof req.body !== 'object' || req.body === null || Array.isArray(req.body))
+  ) {
+    return res.status(400).json({ error: 'section_data must be an object' });
+  }
+  const { data, warnings } = validateSectionData(req.body ?? {});
+
   const { module, company } = found;
-  module.section_data = req.body || {};
+  module.section_data = data as any;
   company.last_updated_days_ago = 0;
   saveDb(db);
-  res.json({ status: 'success', section_data: module.section_data });
+  // Consistent with the study-plan routes: a pack is the whole point of a module,
+  // so overwriting it should leave a trace of who did it and what was rejected.
+  pushAudit(db, {
+    action: 'module.section_save',
+    detail: `Saved pack for module "${module.title}" (${module.id}) on company ${company.id}`,
+    meta: { company_id: company.id, module_id: module.id, warnings },
+  });
+  res.json({ status: 'success', section_data: module.section_data, warnings });
 });
 
 // ============================================================

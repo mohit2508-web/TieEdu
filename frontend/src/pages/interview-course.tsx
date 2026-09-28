@@ -9,12 +9,11 @@ import { CartModal } from '@/components/checkout/CartModal';
 import {
   fetchInterviewModulesApi,
   getInterviewCourseProgressApi,
-  saveInterviewCourseProgressApi,
-  generateCourseCertificateApi
+  saveInterviewCourseProgressApi
 } from '@/lib/api';
 import {
   Sparkles, CheckCircle2, Star, ShieldCheck, Trophy, Award, Search, ChevronDown, ChevronUp,
-  Play, BookOpen, Layers, Target, HelpCircle, Lock, ArrowRight, Download, Check, ExternalLink, Zap, X
+  Play, BookOpen, Layers, Target, HelpCircle, Lock, ArrowRight, Check, ExternalLink, Zap
 } from 'lucide-react';
 
 export default function InterviewCoursePage() {
@@ -23,15 +22,12 @@ export default function InterviewCoursePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedModuleId, setExpandedModuleId] = useState<number | null>(1);
 
-  // User Progress & Certificate State
+  // User Progress
   const [userProgress, setUserProgress] = useState<{ completed_module_ids: number[]; total_xp: number }>({
     completed_module_ids: [],
     total_xp: 0
   });
   const [isMockModalOpen, setIsMockModalOpen] = useState(false);
-  const [isCertModalOpen, setIsCertModalOpen] = useState(false);
-  const [candidateName, setCandidateName] = useState('');
-  const [certificateData, setCertificateData] = useState<any>(null);
 
   // Cart Modal State for Premium Unlocks
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -54,18 +50,6 @@ export default function InterviewCoursePage() {
     const res = await saveInterviewCourseProgressApi(moduleId);
     if (res.progress) {
       setUserProgress(res.progress);
-    }
-  };
-
-  const handleGenerateCert = async () => {
-    const certRes = await generateCourseCertificateApi(candidateName);
-    if (certRes.data) {
-      if (certRes.data.status === 'ACTIVE_VALIDATED') {
-        setCertificateData(certRes.data);
-        setIsCertModalOpen(true);
-      } else {
-        setCertificateData(certRes.data);
-      }
     }
   };
 
@@ -209,21 +193,29 @@ export default function InterviewCoursePage() {
                     </div>
                   </div>
 
-                  {/* Certificate Claim Button */}
-                  <button
-                    onClick={handleGenerateCert}
-                    className="w-full bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 font-semibold text-xs sm:text-sm py-3 rounded-xl transition-all flex items-center justify-center gap-2"
-                  >
-                    <Award className="w-4 h-4 text-brand-orange" /> Claim Official Course Certificate
-                  </button>
-
-                  {certificateData && certificateData.status !== 'ACTIVE_VALIDATED' && (
-                    <p className="mt-3 text-[11px] text-slate-400 leading-relaxed border border-slate-800 bg-slate-900/60 rounded-lg px-3 py-2">
-                      The certificate is valid after completing all <strong className="text-slate-200">{certificateData.modules_required || 50} modules</strong>.
-                      You have completed <strong className="text-amber-400">{certificateData.total_modules_completed || 0}/{certificateData.modules_required || 50}</strong> —
-                      keep going and claim it again.
-                    </p>
-                  )}
+      {/* Certificate pointer — the real certificate lives in the course engine. */}
+      <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 text-left">
+        <div className="flex items-start gap-2.5">
+          <Award className="w-4 h-4 mt-0.5 shrink-0 text-brand-orange" />
+          <div className="space-y-2">
+            <p className="text-xs sm:text-sm font-semibold text-slate-200">
+              Certificates now come from the course engine
+            </p>
+            <p className="text-[11px] text-slate-400 leading-relaxed">
+              These 50 interview modules still count for XP, but they no longer issue a certificate
+              of their own. The old one was unsigned and its verification link pointed at a page
+              that never existed, so anyone could have printed one by hand.
+            </p>
+            <Link
+              href="/courses"
+              className="inline-flex items-center gap-1.5 text-[11px] font-bold text-brand-orange hover:text-amber-400"
+            >
+              Browse verifiable courses
+              <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+        </div>
+      </div>
                 </div>
               </div>
             </div>
@@ -543,70 +535,6 @@ export default function InterviewCoursePage() {
           }));
         }}
       />
-
-      {/* COURSE CERTIFICATE MODAL */}
-      {isCertModalOpen && certificateData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl p-6 sm:p-8 relative max-h-[92vh] overflow-y-auto">
-            <button
-              onClick={() => setIsCertModalOpen(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white p-2"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            {/* Certificate Document Border */}
-            <div className="border-4 border-double border-brand-orange/40 rounded-2xl p-6 sm:p-8 bg-slate-950 text-center space-y-6 relative overflow-hidden">
-              <div className="space-y-2">
-                <span className="text-xs font-extrabold text-brand-orange uppercase tracking-widest block">
-                  OFFICIAL CERTIFICATE OF COMPLETION
-                </span>
-                <h2 className="text-2xl sm:text-3xl font-black text-white">
-                  TiEedu Placement Intelligence Authority
-                </h2>
-                <div className="w-24 h-1 bg-gradient-to-r from-brand-orange to-amber-500 mx-auto rounded-full" />
-              </div>
-
-              <div className="space-y-2 py-2">
-                <span className="text-xs text-slate-400 block">This is to certify that</span>
-                <input
-                  type="text"
-                  value={candidateName}
-                  onChange={(e) => setCandidateName(e.target.value)}
-                  className="bg-slate-900 border border-slate-800 text-xl font-bold text-center text-amber-400 px-4 py-1.5 rounded-lg focus:outline-none focus:border-brand-orange"
-                />
-                <span className="text-xs text-slate-400 block pt-2">
-                  has successfully mastered all 50 Modules of the
-                </span>
-                <p className="text-sm font-semibold text-slate-200">
-                  {certificateData.course_name}
-                </p>
-              </div>
-
-              {/* Certificate Footer Metadata */}
-              <div className="grid grid-cols-2 gap-4 border-t border-slate-800 pt-4 text-left text-xs">
-                <div>
-                  <span className="text-slate-500 block">Certificate ID:</span>
-                  <span className="font-mono text-slate-300 font-bold">{certificateData.certificate_id}</span>
-                </div>
-                <div className="text-right">
-                  <span className="text-slate-500 block">Issue Date:</span>
-                  <span className="text-slate-300 font-semibold">{certificateData.completion_date}</span>
-                </div>
-              </div>
-
-              <div className="pt-2 flex items-center justify-center gap-3">
-                <button
-                  onClick={() => window.print()}
-                  className="bg-brand-orange hover:bg-brand-orange/90 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition-all flex items-center gap-1.5"
-                >
-                  <Download className="w-4 h-4" /> Print / Save PDF Certificate
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* CART MODAL FOR PASS UNLOCKS */}
       <CartModal

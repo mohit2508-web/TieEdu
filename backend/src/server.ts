@@ -7,20 +7,24 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { companiesRouter } from './routes/companies.routes';
 import { checkoutRouter } from './routes/checkout.routes';
+import { pricingRouter } from './routes/pricing.routes';
 import { webhooksRouter } from './routes/webhooks.routes';
 import { reportsRouter } from './routes/reports.routes';
 import { adminRouter } from './routes/admin.routes';
 import { gamificationRouter } from './routes/gamification.routes';
+import { studyPlanRouter } from './routes/studyPlan.routes';
 import { pdfLibraryRouter } from './routes/pdfLibrary.routes';
 import { campusRouter } from './routes/campus.routes';
 import { analyticsRouter } from './routes/analytics.routes';
 import { interviewCourseRouter } from './routes/interviewCourse.routes';
+import { coursesRouter } from './routes/courses.routes';
+import { courseAdminRouter } from './routes/courseAdmin.routes';
 import { progressRouter } from './routes/progress.routes';
 import { commentsRouter } from './routes/comments.routes';
 import { sandboxRouter } from './routes/sandbox.routes';
 import { unlockRouter } from './routes/unlock.routes';
 import { authRouter } from './routes/auth.routes';
-import { requireAdmin } from './middleware/auth';
+import { requireAdmin, optionalAuth } from './middleware/auth';
 import { loadDb, saveDb, setMirrorHook } from './data/db';
 import { storage } from './store';
 
@@ -82,6 +86,7 @@ pdfLibraryRouter.use('/admin', requireAdmin); // upload/delete protected; GET /f
 
 // API Route Bindings
 app.use('/api/companies', companiesRouter);
+app.use('/api/pricing', pricingRouter);
 app.use('/api/pdf', pdfLibraryRouter);
 app.use('/api/checkout', checkoutRouter);
 app.use('/api/webhooks', webhooksRouter);
@@ -89,9 +94,13 @@ app.use('/api/reports', reportsRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/admin', requireAdmin, adminRouter);
 app.use('/api/gamification', gamificationRouter);
+// optionalAuth so guests can preview a plan; enrolment/progress routes add requireAuth themselves.
+app.use('/api/study-plan', optionalAuth, studyPlanRouter);
 app.use('/api/campus', campusRouter);
 app.use('/api/analytics', analyticsRouter);
 app.use('/api/interview-course', interviewCourseRouter);
+app.use('/api/courses', coursesRouter);
+app.use('/api/course-admin', courseAdminRouter);
 app.use('/api/progress', progressRouter);
 app.use('/api/comments', commentsRouter);
 app.use('/api/sandbox', sandboxRouter);

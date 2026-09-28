@@ -14,6 +14,12 @@ interface ModulePreviewModalProps {
   onToggleSolve: (itemId: string) => void;
   onToggleBookmark: (itemId: string) => void;
   onUnlockClick: () => void;
+  /**
+   * Real amount the pack ladder will charge for this company right now (already reduced to
+   * the modules the viewer still lacks). Never hardcode a price in this paywall — a company
+   * with a single round is charged the single-round price, not the complete-pack price.
+   */
+  unlockPrice?: number;
 }
 
 export const ModulePreviewModal: React.FC<ModulePreviewModalProps> = ({
@@ -25,7 +31,8 @@ export const ModulePreviewModal: React.FC<ModulePreviewModalProps> = ({
   onClose,
   onToggleSolve,
   onToggleBookmark,
-  onUnlockClick
+  onUnlockClick,
+  unlockPrice
 }) => {
   const [activeTab, setActiveTab] = useState<'content' | 'discussion'>('content');
 
@@ -146,6 +153,7 @@ export const ModulePreviewModal: React.FC<ModulePreviewModalProps> = ({
                     isLocked={!isFree}
                     companyName={companyName}
                     onUnlockClick={onUnlockClick}
+                    unlockPrice={unlockPrice}
                   />
                 ))
               ) : (
@@ -168,7 +176,9 @@ export const ModulePreviewModal: React.FC<ModulePreviewModalProps> = ({
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="font-bold text-amber-400 text-base">Unlock Complete {companyName} Intelligence Hub</span>
-                <span className="bg-amber-400 text-[#1F3A5F] text-[11px] font-mono px-2.5 py-0.5 rounded-md font-black uppercase">₹249 One-Time</span>
+                {typeof unlockPrice === 'number' && (
+                  <span className="bg-amber-400 text-[#1F3A5F] text-[11px] font-mono px-2.5 py-0.5 rounded-md font-black uppercase">₹{unlockPrice} One-Time</span>
+                )}
               </div>
               <p className="text-xs text-gray-300">
                 Contains the verified questions, solutions and system design guides for this round.
@@ -179,7 +189,7 @@ export const ModulePreviewModal: React.FC<ModulePreviewModalProps> = ({
               onClick={onUnlockClick}
               className="w-full sm:w-auto px-7 py-3 bg-[#E8A33D] hover:bg-[#D4902C] text-[#241A06] font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2 shrink-0"
             >
-              <span>Unlock Intelligence Hub Now — ₹249</span>
+              <span>Unlock Intelligence Hub{typeof unlockPrice === 'number' ? ` — ₹${unlockPrice}` : ' Now'}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>

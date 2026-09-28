@@ -3,6 +3,7 @@ node_modules/
 
 # ---- frontend build output ----
 .next/
+.next-*/
 out/
 *.tsbuildinfo
 frontend/public/pdfjs/

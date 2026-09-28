@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import ReactMarkdown from 'react-markdown';
+import { CODE_LANGS, prismName, resolveLang, type CodeLang } from '@/lib/codeLang';
+import { MarkdownContent } from '@/components/blocks/MarkdownContent';
 import SyntaxHighlighter from 'react-syntax-highlighter/dist/cjs/prism-light';
 import cpp from 'react-syntax-highlighter/dist/cjs/languages/prism/cpp';
 import typescript from 'react-syntax-highlighter/dist/cjs/languages/prism/typescript';
@@ -11,7 +12,8 @@ import { oneLight } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 import { ContentBlock } from '@/types';
 import {
   Lock, Copy, Check, Info, AlertTriangle, Lightbulb,
-  Maximize2, X, ChevronRight, Play, Cpu, Layers, ZoomIn, Table2, Video, Music
+  Maximize2, X, ChevronRight, Play, Cpu, Layers, ZoomIn, Table2, Video, Music,
+  ListChecks, Link2, PlayCircle
 } from 'lucide-react';
 
 SyntaxHighlighter.registerLanguage('cpp', cpp);
@@ -27,17 +29,28 @@ interface ContentBlockRendererProps {
   isLocked?: boolean;
   companyName?: string;
   onUnlockClick?: () => void;
+  /**
+   * Real amount the pack ladder will charge for this company right now (already reduced
+   * to the modules the viewer still lacks). Required whenever isLocked — showing a fixed
+   * price here is how a portal advertises Rs 249 and then charges Rs 99.
+   */
+  unlockPrice?: number;
 }
 
 export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
   block,
   isLocked = false,
   companyName = 'Target Company',
-  onUnlockClick
+  onUnlockClick,
+  unlockPrice
 }) => {
+  const { block_type, payload } = block;
+
   const [copied, setCopied] = useState(false);
-  const [selectedLang, setSelectedLang] = useState<'cpp' | 'java' | 'python' | 'ts'>('cpp');
-  const [lightboxOpen, setLightboxOpen] = useState(false);
+  // The authored language wins on first render. This used to be hardcoded to
+  // 'cpp', so a Python solution an admin had written was syntax-highlighted as
+  // C++ until the reader noticed and clicked the switcher themselves.
+  const [selectedLang, setSelectedLang] = useState<CodeLang>(() => resolveLang(payload?.language));  const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxSrc, setLightboxSrc] = useState('');
   const [activeStepIdx, setActiveStepIdx] = useState(0);
   const [mermaidSvg, setMermaidSvg] = useState<string | null>(null);
@@ -45,7 +58,13 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
   const [isRunning, setIsRunning] = useState(false);
   const [runOutput, setRunOutput] = useState<string | null>(null);
 
-  const { block_type, payload } = block;
+  // A block is authored once but can switch language per block instance, so the
+  // selection is local state seeded from the payload. Re-seed when the block
+  // itself changes (e.g. server-driven preview swapping blocks in place).
+  const authoredLang = payload?.language;
+  useEffect(() => {
+    setSelectedLang(resolveLang(authoredLang));
+  }, [block.id, authoredLang]);
 
   /* ------ Mermaid diagram rendering ------ */
   useEffect(() => {
@@ -110,7 +129,7 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
             onClick={onUnlockClick}
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#E8A33D] hover:bg-[#d6922e] text-[#241A06] text-sm font-bold rounded-xl transition-colors"
           >
-            Unlock Access — ₹249
+            Unlock Access{typeof unlockPrice === 'number' ? ` — ₹${unlockPrice}` : ''}
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
@@ -127,9 +146,7 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
     case 'markdown': {
       return (
         <div className="my-4">
-          <div className="prose-article">
-            <ReactMarkdown>{payload.text || ''}</ReactMarkdown>
-          </div>
+          <MarkdownContent>{payload.text || ''}</MarkdownContent>
         </div>
       );
     }
@@ -146,19 +163,34 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
               <span className="text-[12px] font-semibold text-[--text-heading] font-mono">
                 {payload.filename || 'Solution'}
               </span>
-              <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-semibold">
-                O(N) · O(1)
-              </span>
+              {/*
+                Only shown when the author stated a complexity. This was a
+                hardcoded "O(N) · O(1)" badge rendered on every code block
+                regardless of the code — a fabricated claim about the reader's
+                algorithm, on a page whose whole point is not making claims
+                nobody checked.
+              */}
+              {payload.complexity ? (
+                <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-semibold">
+                  {payload.complexity}
+                </span>
+              ) : null}
             </div>
 
             <div className="flex items-center gap-2">
               {/* Lang switcher */}
-              <div className="flex bg-white border border-[--border-subtle] rounded-lg overflow-hidden text-[11px] font-mono">
-                {(['cpp', 'java', 'python', 'ts'] as const).map(lang => (
+              <div
+                role="group"
+                aria-label="Code language"
+                className="flex bg-white border border-[--border-subtle] rounded-lg overflow-hidden text-[11px] font-mono"
+              >
+                {CODE_LANGS.map(lang => (
                   <button
                     key={lang}
+                    type="button"
                     onClick={() => setSelectedLang(lang)}
-                    className={`px-2.5 py-1 uppercase font-bold transition-colors ${
+                    aria-pressed={selectedLang === lang}
+                    className={`px-2.5 py-1 uppercase font-bold transition-colors focus-ring ${
                       selectedLang === lang
                         ? 'bg-[--brand-primary] text-white'
                         : 'text-gray-500 hover:text-gray-800'
@@ -193,7 +225,7 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
           {/* Code body */}
           <div className="overflow-x-auto bg-white text-[13px]">
             <SyntaxHighlighter
-              language={selectedLang === 'ts' ? 'typescript' : selectedLang}
+              language={prismName(selectedLang)}
               style={oneLight}
               showLineNumbers
               customStyle={{ margin: 0, padding: '1rem 1.25rem', background: 'transparent', fontSize: '0.82rem' }}
@@ -458,6 +490,161 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
               Your browser does not support audio playback.
             </audio>
           </div>
+        </div>
+      );
+    }
+
+    /* ---- STEPS ---- */
+    // The course seed and the admin editor both emit `steps` blocks with
+    // { title, steps: [{ title, desc, code_snippet }] }. Without this case they
+    // fell through to `default` and rendered as nothing at all.
+    case 'steps': {
+      const items: { title?: string; desc?: string; code_snippet?: string }[] = Array.isArray(payload.steps)
+        ? payload.steps
+        : [];
+      if (items.length === 0) {
+        return (
+          <div className="my-5 rounded-xl border border-dashed border-[--border-subtle] p-4 text-[13px] text-[--text-muted]">
+            Steps block with no steps.
+          </div>
+        );
+      }
+      return (
+        <div className="my-5">
+          {payload.title && (
+            <p className="text-[13px] font-bold text-[--text-heading] mb-3">{payload.title}</p>
+          )}
+          <ol className="space-y-3">
+            {items.map((s, i) => (
+              <li
+                key={i}
+                className="flex gap-3.5 rounded-xl border border-[--border-subtle] bg-white p-3.5"
+              >
+                <span className="shrink-0 w-6 h-6 rounded-full bg-[#E8F4FB] text-[#0271B5] text-[12px] font-extrabold flex items-center justify-center">
+                  {i + 1}
+                </span>
+                <div className="min-w-0 flex-1">
+                  {s.title && (
+                    <p className="text-[14px] font-semibold text-[--text-heading] mb-0.5">{s.title}</p>
+                  )}
+                  {s.desc && (
+                    <p className="text-[14px] text-[--text-body] leading-relaxed whitespace-pre-line">
+                      {s.desc}
+                    </p>
+                  )}
+                  {s.code_snippet && (
+                    <pre className="mt-2.5 rounded-lg bg-[#1E1E1E] text-[#E6EDF3] p-3 text-[12px] leading-relaxed overflow-x-auto font-mono">
+                      <code>{s.code_snippet}</code>
+                    </pre>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      );
+    }
+
+    /* ---- CHECKLIST ---- */
+    case 'checklist': {
+      const items: string[] = Array.isArray(payload.items) ? payload.items : [];
+      return (
+        <div className="my-5 border border-[--border-subtle] rounded-xl overflow-hidden bg-white">
+          <div className="flex items-center gap-2 bg-[#F4F4F2] px-4 py-2.5 border-b border-[--border-subtle]">
+            <ListChecks className="w-3.5 h-3.5 text-[--brand-accent]" />
+            <span className="text-[12px] font-semibold text-[--text-heading]">
+              {payload.title || 'Checklist'}
+            </span>
+            <span className="ml-auto text-[10px] font-mono text-[--text-muted]">{items.length} items</span>
+          </div>
+          {items.length === 0 ? (
+            <p className="px-4 py-4 text-[13px] text-[--text-muted]">No items in this checklist yet.</p>
+          ) : (
+            <ul className="divide-y divide-[--border-subtle]">
+              {items.map((item, i) => (
+                <li key={i} className="flex items-start gap-3 px-4 py-2.5">
+                  <span className="mt-0.5 w-4 h-4 rounded border-2 border-[--border-subtle] bg-white shrink-0" />
+                  <span className="text-[14px] text-[--text-body] leading-relaxed">{item}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      );
+    }
+
+    /* ---- RESOURCES ---- */
+    case 'resources': {
+      const items: { label: string; url: string }[] = Array.isArray(payload.links) ? payload.links : [];
+      return (
+        <div className="my-5 border border-[--border-subtle] rounded-xl overflow-hidden bg-white">
+          <div className="flex items-center gap-2 bg-[#F4F4F2] px-4 py-2.5 border-b border-[--border-subtle]">
+            <Link2 className="w-3.5 h-3.5 text-[--brand-accent]" />
+            <span className="text-[12px] font-semibold text-[--text-heading]">
+              {payload.title || 'Resources'}
+            </span>
+          </div>
+          {items.length === 0 ? (
+            <p className="px-4 py-4 text-[13px] text-[--text-muted]">No resources linked yet.</p>
+          ) : (
+            <ul className="divide-y divide-[--border-subtle]">
+              {items.map((item, i) => (
+                <li key={i}>
+                  <a
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-[#FAFAF9] transition-colors group"
+                  >
+                    <Link2 className="w-3.5 h-3.5 text-[--text-muted] shrink-0" />
+                    <span className="text-[14px] font-medium text-[--text-heading] group-hover:text-[--brand-primary] break-words">
+                      {item.label || item.url}
+                    </span>
+                    <ChevronRight className="w-4 h-4 text-[--text-muted] ml-auto shrink-0" />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      );
+    }
+
+    /* ---- VIDEO LINK ---- */
+    // Accepted by the admin API's BLOCK_TYPES but previously had no case here,
+    // so an author could add one and it would render as an empty gap. It is a
+    // plain outbound link to a video, not an embedded player: the tracked
+    // completion gate is driven by lesson.video, and an embed would let a
+    // learner watch without the server counting any of it.
+    case 'video_link': {
+      const url: string = payload.url || payload.video_url || '';
+      if (!url) {
+        return (
+          <div className="my-5 rounded-xl border border-dashed border-[--border-subtle] p-4 text-[13px] text-[--text-muted]">
+            Video link block with no URL.
+          </div>
+        );
+      }
+      return (
+        <div className="my-5 rounded-xl border border-[--border-subtle] bg-white overflow-hidden">
+          <div className="flex items-center gap-2 bg-[#F4F4F2] px-4 py-2.5 border-b border-[--border-subtle]">
+            <PlayCircle className="w-3.5 h-3.5 text-[--brand-accent]" />
+            <span className="text-[12px] font-semibold text-[--text-heading]">
+              {payload.title || 'Related video'}
+            </span>
+          </div>
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 px-4 py-3 hover:bg-[#FAFAF9] transition-colors group"
+          >
+            <Link2 className="w-3.5 h-3.5 text-[--text-muted] shrink-0" />
+            <span className="text-[14px] font-medium text-[--text-heading] group-hover:text-[--brand-primary] break-words">
+              {payload.title ? `Watch: ${url}` : url}
+            </span>
+            <ChevronRight className="w-4 h-4 text-[--text-muted] ml-auto shrink-0" />
+          </a>
         </div>
       );
     }

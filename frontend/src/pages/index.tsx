@@ -26,13 +26,13 @@ const FT_ITEMS = [
   { icon: ShieldCheck, title: 'Verified Drive Intelligence', body: 'Round-by-round questions, PYQs and answers curated from real drive experiences.', tint: 'text-[#0284C7] bg-[#E8F4FB]' },
   { icon: FileText, title: 'Official PDF Guides', body: 'Every premium module carries an admin-uploaded PDF — open in the reader or download the original.', tint: 'text-[#C77B12] bg-[#FBF1E1]' },
   { icon: FileDown, title: 'Unlock-and-Download Notes', body: 'Once a vault is unlocked, PDF study guides are yours — read them in the app or download and revise offline anytime.', tint: 'text-[#15803D] bg-[#E9F6EE]' },
-  { icon: Layers, title: 'Complete Pack Ladder', body: '1→₹99 · 2→₹169 · 3→₹219 · 4→₹249. More modules, bigger saving — server-driven pricing.', tint: 'text-[#0E2A44] bg-[#E8EEF4]' },
+  { icon: Layers, title: 'Complete Pack Ladder', body: 'Buy a single round or the whole pack — the more rounds you add, the more you save. Every price is computed by the server.', tint: 'text-[#0E2A44] bg-[#E8EEF4]' },
 ];
 
 const OFFERS = [
   { icon: ShieldCheck, text: 'Verified round-by-round intelligence — no fake question dumps', cls: 'text-[#0284C7]' },
   { icon: FileText, text: 'Official PDF guides in every premium module — view or download after unlock', cls: 'text-[#15803D]' },
-  { icon: Layers, text: 'Complete Pack ₹249 covers all rounds — always cheaper than singles', cls: 'text-[#B45309]' },
+  { icon: Layers, text: 'A Complete Pack always costs less than buying its rounds separately — see each company’s real price below', cls: 'text-[#B45309]' },
   { icon: Sparkles, text: 'Free 7-section pack open in every vault — no signup needed to read', cls: 'text-[#0E2A44]' },
   { icon: ShieldCheck, text: '2026 drive prep — new company vaults added every month', cls: 'text-[#C77B12]' },
 ];
@@ -88,13 +88,6 @@ export default function Home() {
                           (c.tags || []).some(t => t.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchesIndustry && matchesSearch;
   });
-
-  const handleSelectPlan = (plan: any) => {
-    if (!cartItems.some(item => 'scope' in item && item.id === plan.id)) {
-      setCartItems([...cartItems, plan]);
-    }
-    setIsCartOpen(true);
-  };
 
   return (
     <>
@@ -285,7 +278,7 @@ export default function Home() {
             </div>
           </section>
 
-          <PricingSection onSelectPlan={handleSelectPlan} />
+          <PricingSection />
         </main>
 
         <Footer />

@@ -1,6 +1,7 @@
 import React from 'react';
 import { ContentModule } from '@/types';
 import { Sparkles, BookOpen, Lock, FileText, CheckCircle2 } from 'lucide-react';
+import { COMPLETE_PACK_PRICE } from '@/lib/packPricing';
 
 interface Props {
   module: ContentModule;
@@ -22,7 +23,7 @@ const SECTION_CHIPS = [
   ['HR answers', 'bg-teal-50 text-teal-700 border-teal-200'],
 ] as const;
 
-export const FeaturedFreeModuleCard: React.FC<Props> = ({ module, companyName, onOpenModule, onUnlockClick, onOpenPdf, isUnlocked = false, unlockPrice = 249 }) => {
+export const FeaturedFreeModuleCard: React.FC<Props> = ({ module, companyName, onOpenModule, onUnlockClick, onOpenPdf, isUnlocked = false, unlockPrice }) => {
   const itemCount = module.items?.length || 0;
 
   return (
@@ -82,7 +83,12 @@ export const FeaturedFreeModuleCard: React.FC<Props> = ({ module, companyName, o
             onClick={onUnlockClick}
             className="inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-[#E8A33D] hover:bg-[#D4902C] text-[#241A06] text-sm font-bold rounded-xl shadow-md transition-all"
           >
-            <Lock className="w-4 h-4" /> {unlockPrice < 249 ? `Finish Pack — ₹${unlockPrice}` : `Unlock Premium — ₹${unlockPrice}`}
+            <Lock className="w-4 h-4" />{' '}
+            {typeof unlockPrice === 'number' && unlockPrice < COMPLETE_PACK_PRICE
+              ? `Finish Pack — ₹${unlockPrice}`
+              : typeof unlockPrice === 'number'
+                ? `Unlock Premium — ₹${unlockPrice}`
+                : 'Unlock Premium'}
           </button>
           )}
         </div>

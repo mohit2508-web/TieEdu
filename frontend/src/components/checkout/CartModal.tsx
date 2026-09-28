@@ -1,11 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Company, ContentModule, CartItem, CompanyModuleItem } from '@/types';
+import { Company, ContentModule, CartItem, CompanyModuleItem, CourseCartItem } from '@/types';
 import { BrandTile } from '@/components/common/BrandTile';
 import {
   validateCouponApi, createOrderApi, confirmPaymentApi, getOrderStatusApi,
   getCheckoutPaymentInfoApi, verifyRazorpayPaymentApi, fetchActiveCouponsApi,
 } from '@/lib/api';
-import { summarizePackItems, isCompanyItem, isModuleItem } from '@/lib/packPricing';
+import { summarizePackItems, isCompanyItem, isModuleItem, isCourseItem, SINGLE_MODULE_PRICE, COMPLETE_PACK_PRICE, packPrice } from '@/lib/packPricing';
 import {
   X, ShoppingBag, Lock, ShieldCheck, CheckCircle2, Trash2,
   Tag, ArrowRight, Sparkles, RefreshCw, PartyPopper, Layers, Zap,
@@ -71,9 +71,12 @@ export const CartModal: React.FC<CartModalProps> = ({
 
   const summary = summarizePackItems(items);
   const finalTotal = Math.max(0, summary.subtotal - discount);
-  const comboFillSavings = missingModules.length > 0 && onAddCompletePack
-    ? summarizePackItems([...items, ...missingModules.map(m => ({ kind: 'company' as const, id: missingModules[0].company_id || 'x', slug: 'x', name: companyName, logo_url: '', module_id: m.id, module_title: m.title, module_count: 1, price: 99 } as CompanyModuleItem))]).subtotal - summary.subtotal
-    : 0;
+  // What the cart would become if every missing round of the open vault were added.
+  const withMissing = missingModules.length > 0
+    ? summarizePackItems([...items, ...missingModules.map(m => ({ kind: 'company' as const, id: m.company_id || 'x', slug: 'x', name: companyName, logo_url: '', module_id: m.id, module_title: m.title, module_count: 1, price: SINGLE_MODULE_PRICE } as CompanyModuleItem))])
+    : null;
+  const filledSubtotal = withMissing?.subtotal ?? summary.subtotal;
+  const comboFillSavings = onAddCompletePack && withMissing ? filledSubtotal - summary.subtotal : 0;
 
   // Load merchant UPI settings + live coupon chips when the drawer opens.
   useEffect(() => {
@@ -132,6 +135,12 @@ export const CartModal: React.FC<CartModalProps> = ({
 
   const buildOrderItems = () => {
     return items.map((item) => {
+      if (isCourseItem(item)) {
+        const c = item as CourseCartItem;
+        // `price` is sent only so the receipt can be rendered optimistically —
+        // the server re-reads `price_inr` from the stored course and ignores it.
+        return { kind: 'course', id: c.id, course_id: c.id, slug: c.slug, name: c.name, price: c.price };
+      }
       if (isModuleItem(item)) {
         const mi = item as CompanyModuleItem;
         return {
@@ -144,12 +153,12 @@ export const CartModal: React.FC<CartModalProps> = ({
           module_title: mi.module_title,
           round_type: mi.round_type,
           module_ids: mi.module_ids,
-          price: mi.price || 99,
+          price: mi.price || SINGLE_MODULE_PRICE,
         };
       }
       if (isCompanyItem(item)) {
         const company = item as Company;
-        return { kind: 'company', id: company.id, slug: company.slug, name: company.name, price: 249 };
+        return { kind: 'company', id: company.id, slug: company.slug, name: company.name, price: COMPLETE_PACK_PRICE };
       }
       const plan = item as any;
       return { kind: 'plan', id: plan.id, scope: plan.scope, name: plan.name, price: plan.price };
@@ -482,7 +491,7 @@ export const CartModal: React.FC<CartModalProps> = ({
                         Complete Pack for just ₹{Math.max(0, comboFillSavings)} more — unlock everything
                       </h4>
                       <p className="text-[13px] text-[#4A4A4A] leading-relaxed mt-1">
-                        Missing {missingModules.map(m => m.round_type).filter(Boolean).join(', ') || 'rounds'} included — add them and save more with the combo. Compare: {summary.moduleCount} module{summary.moduleCount === 1 ? '' : 's'} = ₹{summary.subtotal}, the whole pack = ₹249 only.
+                        Missing {missingModules.map(m => m.round_type).filter(Boolean).join(', ') || 'rounds'} included — add them and save more with the combo. Compare: {summary.moduleCount} module{summary.moduleCount === 1 ? '' : 's'} = ₹{summary.subtotal}, the whole pack = ₹{filledSubtotal} only.
                       </p>
                     </div>
                   </div>
@@ -497,7 +506,7 @@ export const CartModal: React.FC<CartModalProps> = ({
                       onClick={() => onAddCompletePack?.()}
                       className="flex-1 px-3 py-2 bg-[#E8A33D] hover:bg-[#D4902C] text-[#241A06] text-[13px] font-bold rounded-xl transition-all"
                     >
-                      Complete Pack ₹249
+                      Complete Pack ₹{filledSubtotal}
                     </button>
                   </div>
                 </div>
@@ -506,15 +515,24 @@ export const CartModal: React.FC<CartModalProps> = ({
               {/* Item List */}
               <div className="space-y-2.5">
                 {items.map((item, idx) => {
-                  const isModule = isModuleItem(item);
+                  const isCourse = isCourseItem(item);
+                  const isModule = !isCourse && isModuleItem(item);
                   const mi = isModule ? (item as CompanyModuleItem) : null;
-                  const isCompanyLegacy = !isModule && isCompanyItem(item);
-                  const name = isModule ? mi!.name : 'name' in item ? item.name : (item as any).name;
-                  const logoUrl = isModule ? mi!.logo_url : isCompanyLegacy ? (item as Company).logo_url : null;
-                  const price = isModule ? (mi!.price || 99) : isCompanyLegacy ? 249 : (item as any).price;
-                  const label = isModule
-                    ? (mi!.module_ids && mi!.module_ids.length > 0 ? 'Complete Pack — all rounds' : mi!.module_title || 'Round pack')
-                    : isCompanyLegacy ? 'Company vault unlock' : 'All-Access Placement Pass';
+                  const isCompanyLegacy = !isModule && !isCourse && isCompanyItem(item);
+                  const name = isCourse
+                    ? (item as CourseCartItem).name
+                    : isModule ? mi!.name : 'name' in item ? item.name : (item as any).name;
+                  const logoUrl = isCourse
+                    ? null
+                    : isModule ? mi!.logo_url : isCompanyLegacy ? (item as Company).logo_url : null;
+                  const price = isCourse
+                    ? (item as CourseCartItem).price
+                    : isModule ? (mi!.price || SINGLE_MODULE_PRICE) : isCompanyLegacy ? COMPLETE_PACK_PRICE : (item as any).price;
+                  const label = isCourse
+                    ? `Course${(item as CourseCartItem).lesson_count ? ` · ${(item as CourseCartItem).lesson_count} lessons` : ''}`
+                    : isModule
+                      ? (mi!.module_ids && mi!.module_ids.length > 0 ? 'Complete Pack — all rounds' : mi!.module_title || 'Round pack')
+                      : isCompanyLegacy ? 'Company vault unlock' : 'All-Access Placement Pass';
 
                   return (
                     <div key={idx} className="flex items-center justify-between p-3.5 bg-[#FAFAF9] rounded-xl border border-gray-200 text-sm hover:border-[#0284C7]/40 transition-all">
@@ -523,7 +541,7 @@ export const CartModal: React.FC<CartModalProps> = ({
                           <img src={logoUrl} alt={name} className="w-10 h-10 rounded-lg object-cover border bg-white p-0.5" />
                         ) : (
                           <div className="w-10 h-10 rounded-lg bg-[#1F3A5F] text-white flex items-center justify-center font-bold text-xs">
-                            {isModule ? 'PK' : 'PRO'}
+                            {isModule ? 'PK' : isCourse ? 'CRS' : 'PRO'}
                           </div>
                         )}
                         <div className="min-w-0">
@@ -598,7 +616,12 @@ export const CartModal: React.FC<CartModalProps> = ({
                   <span className="text-[13px] font-bold text-[#4A4A4A] flex items-center gap-1.5">
                     <Sparkles className="w-4 h-4 text-[#B45309]" /> Students also add these packs
                   </span>
-                  {suggestedCompanies.map(c => (
+                  {suggestedCompanies.map(c => {
+                    // Real, per-company pack price — a vault with one premium round is
+                    // Rs 99, not a "Complete Pack Rs 249".
+                    const cRounds = c.premium_module_count ?? 0;
+                    const cPrice = packPrice(cRounds);
+                    return (
                     <button
                       key={c.id}
                       onClick={() => onAddCompany?.(c)}
@@ -607,13 +630,18 @@ export const CartModal: React.FC<CartModalProps> = ({
                       <div className="flex items-center gap-2.5 min-w-0">
                         <BrandTile name={c.name} src={c.logo_url} className="w-8 h-8 rounded-lg p-0.5" />
                         <div className="text-left min-w-0">
-                          <span className="font-bold text-[13px] text-[#1A1A1A] block truncate">{c.name} Complete Pack</span>
-                          <span className="text-[13px] text-[--text-muted]">{c.accuracy_report_count ? `${c.accuracy_report_count} verified detail` : 'Full round-by-round detail'} · 4 Rounds</span>
+                          <span className="font-bold text-[13px] text-[#1A1A1A] block truncate">
+                            {c.name} {cRounds > 1 ? 'Complete Pack' : 'Round Pack'}
+                          </span>
+                          <span className="text-[13px] text-[--text-muted]">
+                            {c.accuracy_report_count ? `${c.accuracy_report_count} verified detail` : 'Full round-by-round detail'} · {cRounds} Round{cRounds === 1 ? '' : 's'}
+                          </span>
                         </div>
                       </div>
-                      <span className="text-[13px] font-extrabold text-[#B45309] group-hover:underline">+ Add ₹249</span>
+                      <span className="text-[13px] font-extrabold text-[#B45309] group-hover:underline">+ Add ₹{cPrice}</span>
                     </button>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
 
@@ -644,9 +672,6 @@ export const CartModal: React.FC<CartModalProps> = ({
                     <span>Coupon Discount ({appliedCouponCode})</span><span>-₹{discount}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-gray-500">
-                  <span>GST & Taxes</span><span className="text-emerald-700">Inclusive</span>
-                </div>
                 <div className="flex justify-between font-bold text-lg text-[#1A1A1A] pt-2 border-t border-dashed border-gray-300">
                   <span>Total Payable</span><span className="text-[#0284C7]">₹{finalTotal}</span>
                 </div>

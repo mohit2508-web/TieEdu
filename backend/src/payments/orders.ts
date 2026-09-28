@@ -63,11 +63,34 @@ export function completePaidOrder(db: any, order: any, user_id: string) {
 
   return order;
 }
-
 export function unlockedCompanyIds(db: any, user_id: string): string[] {
   return (db.unlocks || [])
     .filter((u: any) => u.user_id === user_id && u.status === 'active')
     .map((u: any) => u.company_id);
+}
+
+/**
+ * Which course ids a user actually owns.
+ *
+ * A course line is `{ kind: 'course', id: <course_id> }` on a paid order. There
+ * is no expiry and no partial access: one paid line grants the course for good,
+ * and progress already written against it is never touched.
+ *
+ * This is the same shape as `ownedModuleIdsFor` and for the same reason — the
+ * course router must be able to ask "may this person open this?" as a pure
+ * lookup rather than re-walking the order history at every call site.
+ */
+export function ownedCourseIdsFor(db: any, user_id: string): string[] {
+  const owned = new Set<string>();
+  for (const o of db.orders || []) {
+    if (o.user_id !== user_id || o.status !== 'paid') continue;
+    for (const it of o.items || []) {
+      if (it?.kind !== 'course') continue;
+      const id = it.course_id || it.id;
+      if (typeof id === 'string' && id) owned.add(id);
+    }
+  }
+  return Array.from(owned);
 }
 
 // Which premium module ids a user actually owns (from paid orders + full-company

@@ -1,7 +1,12 @@
 import React from 'react';
 import { Company, RoundStep, RoundType } from '@/types';
 import { BrandTile } from '@/components/common/BrandTile';
-import { Briefcase, DollarSign, GraduationCap, Calendar, Star, Sparkles, CheckCircle2 } from 'lucide-react';
+import { ProvenanceChip, ProvenanceNote, formatDay } from '@/lib/provenance';
+import {
+  Briefcase, DollarSign, Layers, Calendar, Star, Sparkles, CheckCircle2,
+  ExternalLink, FileText, MapPin, Building2
+} from 'lucide-react';
+import { COMPLETE_PACK_PRICE, COMPLETE_PACK_COUNT, packSizeLabel } from '@/lib/packPricing';
 
 interface CompanyOverviewHeaderProps {
   company: Company;
@@ -9,7 +14,14 @@ interface CompanyOverviewHeaderProps {
   onSelectRoundTab: (round: 'all' | RoundType) => void;
   onUnlockClick?: () => void;
   isUnlocked?: boolean;
+  /**
+   * Real amount the ladder will charge for the rounds this viewer still lacks.
+   * No default — a fake fallback here is what makes a vault advertise a price
+   * the checkout will not honour.
+   */
   unlockPrice?: number;
+  /** How many premium rounds remain — drives an honest "complete pack" label. */
+  remainingRounds?: number;
 }
 
 export const CompanyOverviewHeader: React.FC<CompanyOverviewHeaderProps> = ({
@@ -18,8 +30,11 @@ export const CompanyOverviewHeader: React.FC<CompanyOverviewHeaderProps> = ({
   onSelectRoundTab,
   onUnlockClick,
   isUnlocked = false,
-  unlockPrice = 249
+  unlockPrice,
+  remainingRounds
 }) => {
+  const roundsLeft = remainingRounds ?? 0;
+  const packLabel = roundsLeft > 0 ? packSizeLabel(roundsLeft) : 'pack';
   // Derive pipeline from real modules when a custom pipeline isn't configured.
   const defaultRounds: RoundStep[] = company.rounds_pipeline && company.rounds_pipeline.length > 0
     ? company.rounds_pipeline
@@ -40,6 +55,22 @@ export const CompanyOverviewHeader: React.FC<CompanyOverviewHeaderProps> = ({
 
   const hasCtc = company.ctc_min != null && company.ctc_max != null;
   const ctcText = hasCtc ? `₹${company.ctc_min} - ₹${company.ctc_max} LPA` : 'Not disclosed yet';
+
+  // Counted from the vault itself — the one number on this card that cannot be
+  // wrong. Replaces a hardcoded "On-Campus & Off-Campus" drive-window claim.
+  const questionCount = (company.modules || []).reduce((s, m) => s + (m.items?.length || 0), 0);
+  const moduleCount = (company.modules || []).length;
+  const authoredPacks = (company.modules || []).filter((m) => m.section_data && Object.keys(m.section_data).length > 0).length;
+
+  const factCheckedDay = formatDay(company.fact_checked_at);
+  const careersHref = company.careers_link
+    ? (company.careers_link.startsWith('http') ? company.careers_link : `https://${company.careers_link}`)
+    : null;
+
+  const profileFacts: Array<{ icon: typeof MapPin; text: string }> = [];
+  if (company.hq) profileFacts.push({ icon: MapPin, text: company.hq });
+  if (company.founded_year) profileFacts.push({ icon: Building2, text: `Founded ${company.founded_year}` });
+  if (company.employee_band) profileFacts.push({ icon: Building2, text: `${company.employee_band} employees` });
 
   return (
     <div className="w-full bg-white border border-[#EDEDEB] rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-xs space-y-6 overflow-hidden">
@@ -68,10 +99,16 @@ export const CompanyOverviewHeader: React.FC<CompanyOverviewHeaderProps> = ({
             </div>
 
             <p className="text-xs sm:text-base text-gray-600 font-medium mb-2.5 leading-snug">
-              {company.industry || 'General Tech'}
+              {company.industry || 'Industry not recorded'}
               {company.avg_rounds != null && ` • ${company.avg_rounds} Rounds`}
               {company.avg_process_days != null && ` • ${company.avg_process_days} Days`}
             </p>
+
+            {company.tagline && (
+              <p className="text-[13px] sm:text-[15px] text-[#1F3A5F] font-semibold leading-snug mb-2.5 max-w-xl">
+                {company.tagline}
+              </p>
+            )}
 
             <div className="flex flex-wrap gap-1.5 sm:gap-2">
               {(company.tags || []).map((tag, idx) => (
@@ -100,8 +137,16 @@ export const CompanyOverviewHeader: React.FC<CompanyOverviewHeaderProps> = ({
               </div>
             ) : (
               <div className="flex items-baseline gap-2 justify-start sm:justify-end">
-                <span className="text-2xl font-black text-[#1F3A5F]">₹{unlockPrice}</span>
-                <span className="text-xs text-gray-500">complete pack · one-time</span>
+                <span className="text-2xl font-black text-[#1F3A5F]">
+                  {typeof unlockPrice === 'number' ? `₹${unlockPrice}` : '—'}
+                </span>
+                <span className="text-xs text-gray-500">
+                  {roundsLeft === COMPLETE_PACK_COUNT
+                    ? 'complete pack · one-time'
+                    : roundsLeft === 1
+                      ? 'single round · one-time'
+                      : `${roundsLeft}-round pack · one-time`}
+                </span>
               </div>
             )}
           </div>
@@ -117,53 +162,132 @@ export const CompanyOverviewHeader: React.FC<CompanyOverviewHeaderProps> = ({
             className="w-full px-5 py-2.5 bg-[#E8A33D] hover:bg-[#D4902C] text-[#241A06] text-xs sm:text-sm font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 uppercase tracking-wide"
           >
             <Sparkles className="w-4 h-4 fill-white" />
-            <span>{unlockPrice < 249 ? `Finish Pack — ₹${unlockPrice}` : 'Unlock Intelligence Hub'}</span>
+            <span>
+              {typeof unlockPrice === 'number' && unlockPrice < COMPLETE_PACK_PRICE
+                ? `Finish Pack — ₹${unlockPrice}`
+                : `Unlock ${packLabel === 'pack' ? 'Intelligence Hub' : packLabel}`}
+            </span>
           </button>
           )}
         </div>
       </div>
+
+      {/* About + profile facts — all admin-written, gaps shown honestly */}
+      {(company.about || profileFacts.length > 0 || careersHref || factCheckedDay) && (
+        <div className="rounded-2xl border border-[#EDEDEB] bg-[#FAFAF9] p-4 sm:p-5 space-y-3">
+          {company.about && (
+            <div>
+              <h2 className="text-[11px] font-bold uppercase tracking-wider text-[--text-muted] mb-1.5 flex items-center gap-1.5">
+                <FileText className="w-3.5 h-3.5" /> About {company.name}
+              </h2>
+              <p className="text-[13px] sm:text-sm text-[#1F3A5F] leading-relaxed whitespace-pre-line">
+                {company.about}
+              </p>
+            </div>
+          )}
+
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[11.5px] text-[#4A4A4A]">
+            {profileFacts.map((f, i) => (
+              <span key={i} className="inline-flex items-center gap-1.5">
+                <f.icon className="w-3.5 h-3.5 text-[--text-muted] shrink-0" />
+                {f.text}
+              </span>
+            ))}
+            {careersHref && (
+              <a
+                href={careersHref}
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+                className="inline-flex items-center gap-1.5 font-semibold text-[#1F3A5F] hover:underline"
+              >
+                <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                Official careers page
+              </a>
+            )}
+          </div>
+
+          <p className="text-[11px] text-[--text-muted]">
+            {factCheckedDay
+              ? `Profile last fact-checked by an admin on ${factCheckedDay}.`
+              : 'This profile has not been fact-checked by an admin yet — treat the figures below as unconfirmed.'}
+          </p>
+        </div>
+      )}
 
       {/* Overview Metadata Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4">
 
         <div className="p-4 bg-[#FAFAF9] rounded-2xl border border-[#EDEDEB] space-y-1">
           <div className="flex items-center gap-2 text-sm font-semibold text-gray-500">
-            <DollarSign className="w-4 h-4 text-emerald-600" />
-            <span>CTC Package Range</span>
+            <DollarSign className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span className="truncate">CTC Package Range</span>
           </div>
           <p className="text-base sm:text-lg font-bold text-[#1F3A5F]">{ctcText}</p>
+          <ProvenanceChip sources={company.metric_sources} metricKey="ctc" hasValue={hasCtc} className="mt-1" />
+          <ProvenanceNote
+            sources={company.metric_sources}
+            metricKey="ctc"
+            hasValue={hasCtc}
+            absentText="No CTC figure recorded by an admin."
+          />
+        </div>
+
+        {/* Counted from the vault — cannot be fabricated */}
+        <div className="p-4 bg-[#FAFAF9] rounded-2xl border border-[#EDEDEB] space-y-1">
+          <div className="flex items-center gap-2 text-sm font-semibold text-gray-500">
+            <Layers className="w-4 h-4 text-indigo-600 shrink-0" />
+            <span className="truncate">Questions in Vault</span>
+          </div>
+          <p className="text-base sm:text-lg font-bold text-[#1F3A5F]">
+            {questionCount}
+            <span className="text-xs font-semibold text-[--text-muted]"> / {moduleCount} modules</span>
+          </p>
+          <p className="text-[10.5px] text-[--text-muted] leading-snug">
+            {authoredPacks === moduleCount && moduleCount > 0
+              ? 'Every module has a written pack.'
+              : `${authoredPacks} of ${moduleCount} modules have a written pack.`}
+          </p>
+        </div>
+
+        {/* Real process figure, not a hardcoded drive-window claim */}
+        <div className="p-4 bg-[#FAFAF9] rounded-2xl border border-[#EDEDEB] space-y-1">
+          <div className="flex items-center gap-2 text-sm font-semibold text-gray-500">
+            <Calendar className="w-4 h-4 text-amber-600 shrink-0" />
+            <span className="truncate">Avg Process Duration</span>
+          </div>
+          <p className="text-base sm:text-lg font-bold text-[#1F3A5F]">
+            {company.avg_process_days != null ? `${company.avg_process_days} days` : 'Not recorded'}
+          </p>
+          <ProvenanceChip sources={company.metric_sources} metricKey="process_days" hasValue={company.avg_process_days != null} className="mt-1" />
+          <ProvenanceNote
+            sources={company.metric_sources}
+            metricKey="process_days"
+            hasValue={company.avg_process_days != null}
+            absentText="No duration recorded by an admin."
+          />
         </div>
 
         <div className="p-4 bg-[#FAFAF9] rounded-2xl border border-[#EDEDEB] space-y-1">
           <div className="flex items-center gap-2 text-sm font-semibold text-gray-500">
-            <GraduationCap className="w-4 h-4 text-indigo-600" />
-            <span>Interview Rounds</span>
+            <Briefcase className="w-4 h-4 text-orange-600 shrink-0" />
+            <span className="truncate">Difficulty Rating</span>
           </div>
-          <p className="text-base sm:text-lg font-bold text-[#1F3A5F]">{defaultRounds.length || 'Pending'}</p>
-        </div>
-
-        <div className="p-4 bg-[#FAFAF9] rounded-2xl border border-[#EDEDEB] space-y-1">
-          <div className="flex items-center gap-2 text-sm font-semibold text-gray-500">
-            <Calendar className="w-4 h-4 text-amber-600" />
-            <span>Hiring Drive Window</span>
-          </div>
-          <p className="text-base sm:text-lg font-bold text-[#1F3A5F]">On-Campus & Off-Campus</p>
-        </div>
-
-        <div className="p-4 bg-[#FAFAF9] rounded-2xl border border-[#EDEDEB] space-y-1">
-          <div className="flex items-center gap-2 text-sm font-semibold text-gray-500">
-            <Briefcase className="w-4 h-4 text-orange-600" />
-            <span>Difficulty Rating</span>
-          </div>
-          <div className="flex items-center gap-1 text-amber-500 mt-1">
+          <div className="flex items-center gap-1 text-amber-500">
             {company.difficulty_rating > 0 ? (
               [1, 2, 3, 4, 5].map((s) => (
                 <Star key={s} className={`w-4 h-4 ${s <= company.difficulty_rating ? 'fill-amber-400 text-amber-500' : 'text-gray-300'}`} />
               ))
             ) : (
-              <span className="text-xs text-gray-500">Not rated yet</span>
+              <span className="text-xs text-gray-500">Not rated</span>
             )}
           </div>
+          <ProvenanceChip sources={company.metric_sources} metricKey="difficulty" hasValue={company.difficulty_rating > 0} className="mt-1" />
+          <ProvenanceNote
+            sources={company.metric_sources}
+            metricKey="difficulty"
+            hasValue={company.difficulty_rating > 0}
+            absentText="No difficulty rating recorded."
+          />
         </div>
 
       </div>

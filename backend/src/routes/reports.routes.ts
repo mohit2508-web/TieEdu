@@ -1,8 +1,12 @@
 import { Router, Request, Response } from 'express';
 import { loadDb, saveDb, ReportItem } from '../data/db';
 import { requireAdmin, requireAuth, optionalAuth } from '../middleware/auth';
+import { awardAndCommit } from '../lib/xp';
 
 export const reportsRouter = Router();
+
+/** XP awarded once, when a community report is approved and published. */
+const REPORT_XP = 50;
 
 // GET /api/reports — Public face only exposes PUBLISHED reports (moderation queue is admin-only).
 // Admin (Bearer admin) sees everything and can filter by status.
@@ -86,11 +90,20 @@ reportsRouter.patch('/:id', requireAdmin, (req: Request, res: Response) => {
 
   report.status = status;
   if (status === 'published' && report.user_id) {
-    // Award +50 XP +1 streak to the real contributor's account
+    // +50 XP for the real contributor, awarded through the append-only ledger.
+    // The key is derived from the report id, so an admin who re-saves the same
+    // report — or flips it unpublished and back — cannot farm the reward.
     const owner = (db.users || []).find((u: any) => u.id === report.user_id);
     if (owner) {
-      owner.xp = Math.max(0, Number(owner.xp) || 0) + 50;
-      owner.streak = Math.max(0, Number(owner.streak) || 0) + 1;
+      const result = awardAndCommit(db, {
+        userId: owner.id,
+        key: `report-published:${report.id}`,
+        reason: 'review',
+        xp: REPORT_XP,
+        courseId: null,
+        note: `Interview report #${report.id} published`,
+      });
+      owner.xp = result.total_xp;
     }
   }
 

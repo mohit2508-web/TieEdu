@@ -7,6 +7,7 @@ import {
 import { ContentModule, ModuleSectionData, ModulePdf } from '@/types';
 import { API_BASE_URL, downloadPdfApi } from '@/lib/api';
 import { PdfViewerModal, preloadPdfjs } from '@/components/viewer/PdfViewerModal';
+import { MarkdownContent } from '@/components/blocks/MarkdownContent';
 
 interface CompanyModuleReaderProps {
   module: ContentModule;
@@ -18,6 +19,10 @@ interface CompanyModuleReaderProps {
   onSwitchModule?: (mod: ContentModule) => void;
   onBack: () => void;
   onUnlockClick: () => void;
+  /**
+   * Real ladder price for the rounds this viewer still lacks. No default on purpose —
+   * a fallback price here is how a vault advertises one amount and charges another.
+   */
   unlockPrice?: number;
   initialSection?: 'overview' | 'pdfs';
 }
@@ -32,7 +37,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
   onSwitchModule,
   onBack,
   onUnlockClick,
-  unlockPrice = 249,
+  unlockPrice,
   initialSection = 'overview',
 }) => {
   const [activeSection, setActiveSection] = useState<
@@ -46,6 +51,10 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
 
   const locked = module.is_premium === true && !isModuleUnlocked;
   const sectionData: ModuleSectionData = module.section_data || {};
+
+  // Never print a rupee amount we were not handed — the cart recomputes the real
+  // ladder price server-side, and a stale number here is a promise the portal breaks.
+  const priceSuffix = typeof unlockPrice === 'number' ? ` — ₹${unlockPrice}` : '';
 
   // Automatically scroll to the top of the reader whenever module or section changes
   useEffect(() => {
@@ -81,7 +90,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
           onClick={onUnlockClick}
           className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#E8A33D] hover:bg-[#D4902C] text-[#241A06] text-sm font-bold rounded-xl transition-colors"
         >
-          <ShoppingCart className="w-4 h-4" /> Unlock Full Vault — ₹{unlockPrice}
+          <ShoppingCart className="w-4 h-4" /> Unlock Full Vault{priceSuffix}
         </button>
       </div>
     ) : (
@@ -98,6 +107,88 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
     { id: 'last_minute', label: '7. 24-Hr Revision Pack', icon: Zap },
     { id: 'hr_round', label: '8. HR & Behavioral Round', icon: UserCheck },
   ] as const;
+
+  /**
+   * True when an admin has written nothing for this module. The old build
+   * papered over this by auto-generating a pack on read, which meant a vault
+   * could show a confident-looking guide that nobody ever produced. Now we say
+   * nothing is published yet instead of inventing it.
+   */
+  const hasAuthoredContent = (() => {
+    const d = sectionData as Record<string, unknown>;
+    return Object.values(d).some((v) => {
+      if (Array.isArray(v)) return v.length > 0;
+      if (v && typeof v === 'object') return Object.keys(v as object).length > 0;
+      return typeof v === 'string' && v.trim().length > 0;
+    });
+  })();
+  const hasPdfs = Array.isArray(module.pdfs) && module.pdfs.length > 0;
+  const nothingPublished = !hasAuthoredContent && !hasPdfs;
+
+  if (nothingPublished) {
+    return (
+      <div
+        className="min-h-screen bg-[#F8FAFC] text-[#1E293B] flex flex-col font-sans"
+        style={{ fontFamily: "'Calibre', 'Calibri', 'Inter', -apple-system, sans-serif" }}
+      >
+        <header className="sticky top-0 z-40 bg-white border-b border-gray-200 px-4 sm:px-8 py-4 flex items-center justify-between shadow-xs">
+          <div className="flex items-center gap-3.5 min-w-0">
+            <button
+              onClick={onBack}
+              className="p-2 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-100 transition-colors"
+              title="Back to Modules"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 text-sm text-gray-500 font-medium truncate">
+                <span>{companyName}</span>
+                <span>/</span>
+                <span className="text-[#0284C7] font-semibold truncate">{module.title}</span>
+              </div>
+              <h1 className="text-lg sm:text-xl font-extrabold text-gray-900 truncate tracking-tight">
+                {module.title}
+              </h1>
+            </div>
+          </div>
+        </header>
+
+        <div className="flex-1 flex items-center justify-center px-4 sm:px-8 py-16">
+          <div className="max-w-lg w-full bg-white border border-gray-200 rounded-3xl p-8 sm:p-10 text-center shadow-xs space-y-4">
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-slate-100 text-slate-500 flex items-center justify-center">
+              <FileText className="w-7 h-7" />
+            </div>
+            <div>
+              <h2 className="text-xl font-extrabold text-gray-900">This pack isn&apos;t published yet</h2>
+              <p className="text-base text-gray-600 mt-2 leading-relaxed">
+                {companyName}&apos;s {module.title} module exists, but no written content has been added to it
+                yet. We don&apos;t show placeholder material here, so you&apos;re not reading anything invented.
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2.5 justify-center pt-1">
+              <button
+                onClick={onBack}
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#0284C7] hover:bg-[#0369A1] text-white text-sm font-bold rounded-xl transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" /> Back to {companyName}
+              </button>
+              {allModules && allModules.length > 1 && onSwitchModule && (
+                <button
+                  onClick={() => {
+                    const other = allModules.find((m) => m.id !== module.id);
+                    if (other) onSwitchModule(other);
+                  }}
+                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-800 text-sm font-bold rounded-xl transition-colors"
+                >
+                  Browse other rounds
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -133,7 +224,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
               className="inline-flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 bg-[#E8A33D] hover:bg-[#D4902C] text-[#241A06] rounded-xl text-xs sm:text-sm font-bold shadow-xs transition-colors"
             >
               <ShoppingCart className="w-4 h-4 shrink-0" />
-              <span className="whitespace-nowrap">Unlock ₹{unlockPrice}</span>
+              <span className="whitespace-nowrap">Unlock{priceSuffix}</span>
             </button>
           )}
 
@@ -255,17 +346,17 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                 <div className="space-y-6 text-base sm:text-lg leading-relaxed text-gray-800">
                   <div className="p-5 sm:p-6 bg-sky-50/70 border border-sky-200 rounded-2xl">
                     <h3 className="font-bold text-sky-950 text-lg sm:text-xl mb-2">Company Profile & Target Roles</h3>
-                    <p className="text-sky-900 leading-relaxed">{sectionData.overview.companyInfo}</p>
+                    <MarkdownContent className="text-sky-900">{sectionData.overview.companyInfo}</MarkdownContent>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div className="p-5 bg-gray-50 border border-gray-200 rounded-2xl">
                       <h4 className="font-bold text-gray-900 text-sm uppercase tracking-wider mb-2">Eligibility Criteria</h4>
-                      <p className="text-base text-gray-700 leading-relaxed">{sectionData.overview.eligibility}</p>
+                      <MarkdownContent className="text-base text-gray-700">{sectionData.overview.eligibility}</MarkdownContent>
                     </div>
                     <div className="p-5 bg-gray-50 border border-gray-200 rounded-2xl">
                       <h4 className="font-bold text-gray-900 text-sm uppercase tracking-wider mb-2">Salary & CTC Package</h4>
-                      <p className="text-base text-gray-700 leading-relaxed">{sectionData.overview.salaryBreakdown}</p>
+                      <MarkdownContent className="text-base text-gray-700">{sectionData.overview.salaryBreakdown}</MarkdownContent>
                     </div>
                   </div>
 
@@ -279,7 +370,9 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                               <span>{rev.name} ({rev.role})</span>
                               <span className="text-amber-500 font-mono text-lg">★ {rev.rating}/5</span>
                             </div>
-                            <p className="text-gray-700 italic leading-relaxed">&quot;{rev.text}&quot;</p>
+                            <blockquote className="text-gray-700 italic leading-relaxed">
+                              <MarkdownContent compact>{`"${rev.text}"`}</MarkdownContent>
+                            </blockquote>
                           </div>
                         ))}
                       </div>
@@ -337,9 +430,9 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                         {sub.topics.map((topic, tIdx) => (
                           <div key={tIdx} className="p-6 bg-gray-50/80 border border-gray-200 rounded-2xl space-y-4">
                             <h4 className="font-bold text-gray-900 text-lg sm:text-xl">{topic.title}</h4>
-                            <div className="text-base sm:text-lg text-gray-800 leading-relaxed whitespace-pre-line">
+                            <MarkdownContent className="text-base sm:text-lg text-gray-800">
                               {topic.content}
-                            </div>
+                            </MarkdownContent>
 
                             {/* PYQs inside Topic */}
                             {topic.pyqs && topic.pyqs.length > 0 && (
@@ -360,10 +453,13 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                                             {pyq.frequency} Frequency
                                           </span>
                                         )}
-                                        <span className="font-bold text-gray-900 text-base sm:text-lg">{pyq.question}</span>
                                       </div>
+                                      <MarkdownContent className="font-bold text-gray-900 text-base sm:text-lg">
+                                        {pyq.question}
+                                      </MarkdownContent>
                                       <div className="text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100 text-base leading-relaxed">
-                                        <strong className="text-gray-900">Answer:</strong> {pyq.answer}
+                                        <span className="block text-[11px] font-bold uppercase tracking-wider text-gray-900 mb-1">Answer</span>
+                                        <MarkdownContent className="text-gray-700">{pyq.answer}</MarkdownContent>
                                       </div>
                                     </div>
                                   ))}
@@ -407,10 +503,16 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                         <h3 className="font-bold text-gray-900 text-lg sm:text-xl">{q.title}</h3>
                       </div>
 
-                      <p className="text-base sm:text-lg text-gray-900 font-bold">Q: {q.question}</p>
+                      <div>
+                        <span className="block text-[11px] font-bold uppercase tracking-wider text-sky-900 mb-1">Question</span>
+                        <MarkdownContent className="text-base sm:text-lg text-gray-900 font-bold">
+                          {q.question}
+                        </MarkdownContent>
+                      </div>
 
                       <div className="p-4 bg-white border border-gray-200 rounded-xl text-base sm:text-lg text-gray-800 leading-relaxed">
-                        <strong className="text-sky-900 font-bold">Solution: </strong> {q.solution}
+                        <span className="block text-[11px] font-bold uppercase tracking-wider text-sky-900 mb-1">Solution</span>
+                        <MarkdownContent className="text-gray-800">{q.solution}</MarkdownContent>
                       </div>
 
                       {q.code && (
@@ -452,8 +554,11 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                   {sectionData.cheatsheets.map((sheet, idx) => (
                     <div key={idx} className="p-6 bg-amber-50/60 border border-amber-200 rounded-2xl space-y-3">
                       <h3 className="font-bold text-amber-950 text-xl">{sheet.title}</h3>
-                      <p className="text-base text-amber-900">{sheet.summary}</p>
-                      <div className="p-4 bg-white border border-amber-200 rounded-xl text-base font-mono text-gray-800 leading-relaxed">
+                      <MarkdownContent compact className="text-base text-amber-900">{sheet.summary}</MarkdownContent>
+                      {/* Deliberately NOT markdown: admins paste aligned ASCII tables and
+                          complexity charts here, and font-mono + pre-line is what keeps the
+                          columns lined up. */}
+                      <div className="p-4 bg-white border border-amber-200 rounded-xl text-base font-mono text-gray-800 leading-relaxed whitespace-pre-line overflow-x-auto">
                         {sheet.content}
                       </div>
                     </div>
@@ -490,7 +595,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                             {item.priority}
                           </span>
                         </div>
-                        <p className="text-base text-gray-700 leading-relaxed">{item.notes}</p>
+                        <MarkdownContent compact className="text-base text-gray-700">{item.notes}</MarkdownContent>
                       </div>
                     </div>
                   ))}
@@ -523,7 +628,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                         {lmr.points.map((pt, pIdx) => (
                           <li key={pIdx} className="flex items-start gap-3 text-base sm:text-lg text-gray-800 leading-relaxed">
                             <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-1" />
-                            <span>{pt}</span>
+                            <MarkdownContent compact>{pt}</MarkdownContent>
                           </li>
                         ))}
                       </ul>
@@ -555,15 +660,17 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                     <div key={idx} className="p-6 bg-sky-50/60 border border-sky-200 rounded-2xl space-y-4">
                       <h3 className="font-bold text-sky-950 text-lg sm:text-xl">Q: {hr.question}</h3>
                       <div className="p-4 bg-white border border-sky-100 rounded-xl text-base sm:text-lg text-gray-800 leading-relaxed">
-                        <strong className="text-sky-950 font-bold">Sample STAR Answer: </strong>
-                        {hr.answer}
+                        <span className="block text-[11px] font-bold uppercase tracking-wider text-sky-950 mb-1">Sample STAR answer</span>
+                        <MarkdownContent className="text-gray-800">{hr.answer}</MarkdownContent>
                       </div>
                       {hr.tips && hr.tips.length > 0 && (
                         <div className="text-base text-gray-700 space-y-2 pt-2">
                           <span className="font-bold text-gray-900">Pro Tips:</span>
                           <ul className="list-disc list-inside space-y-1.5 pl-2">
                             {hr.tips.map((tip, tIdx) => (
-                              <li key={tIdx}>{tip}</li>
+                              <li key={tIdx}>
+                                <MarkdownContent compact>{tip}</MarkdownContent>
+                              </li>
                             ))}
                           </ul>
                         </div>
@@ -602,7 +709,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                     {companyName}&apos;s full vault includes this PDF guide: <strong>{module.pdf ? module.pdf.title + ' — view & download' : 'round-wise guides, cheat sheets, and last-minute revision'}</strong>. Unlock once, and the entire company vault is yours.
                   </p>
                   <button onClick={onUnlockClick} className="inline-flex items-center gap-2 px-6 py-3 bg-[#E8A33D] hover:bg-[#D4902C] text-[#241A06] text-sm font-bold rounded-xl shadow-md transition-all">
-                    <ShoppingCart className="w-4 h-4" /> Unlock Full Vault — ₹{unlockPrice}
+                    <ShoppingCart className="w-4 h-4" /> Unlock Full Vault{priceSuffix}
                   </button>
                 </div>
               ) : (() => {
@@ -701,7 +808,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                   onClick={onUnlockClick}
                   className="inline-flex items-center gap-2 px-6 py-3 bg-[#E8A33D] hover:bg-[#D4902C] text-[#241A06] text-sm font-bold rounded-xl shadow-md transition-all"
                 >
-                  <ShoppingCart className="w-4 h-4" /> Unlock Full Vault — ₹{unlockPrice}
+                  <ShoppingCart className="w-4 h-4" /> Unlock Full Vault{priceSuffix}
                 </button>
                 <button
                   onClick={onBack}

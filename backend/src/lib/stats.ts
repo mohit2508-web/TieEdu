@@ -64,6 +64,11 @@ export function deriveCompanyStats(db: DbLike, company: any) {
     (r.rounds || []).some((rd: any) => rd.matched_questions)
   ).length;
   const accuracyRate = reports.length > 0 ? Math.round((matchedReports / reports.length) * 100) : 0;
+
+  // Freshness is a FACT about the ledger, not a marketing string. The newest
+  // published report date is the only honest "updated" signal we have; when no
+  // report has been published we report null and the UI says "no verified
+  // reports yet" rather than inventing a season label.
   const latest = [...reports].sort(
     (a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   )[0] as any;
@@ -75,7 +80,7 @@ export function deriveCompanyStats(db: DbLike, company: any) {
       rating_count: reports.length,
       weekly_unlocks: weekly,
       verified_by_role: latest?.user_role || null,
-      recency_label: 'Updated for 2026 Hiring Season',
+      last_report_at: latest?.created_at || null,
       accuracy_rate: accuracyRate,
     },
   };

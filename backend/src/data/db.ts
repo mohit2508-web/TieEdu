@@ -1,5 +1,7 @@
 import fs from 'fs';
 import path from 'path';
+import { getSeedCourses } from './seedCourses';
+import { seedStudyPlanTemplates } from './seedStudyPlans';
 
 export interface ReportItem {
   id: string;
@@ -55,6 +57,292 @@ export interface User {
   created_at: string;
 }
 
+// ============================================================================
+// COURSES ENGINE
+// A real, admin-authored learning path: Course -> Module -> Lesson.
+// Every lesson carries its own content blocks, an optional video and an
+// optional server-graded quiz. Nothing here is seeded as "fake": a course only
+// appears on the student catalog once an admin publishes it.
+// ============================================================================
+
+export type CourseLevel = 'beginner' | 'intermediate' | 'advanced';
+export type VideoProvider = 'youtube' | 'vimeo';
+
+export interface LessonVideo {
+  provider: VideoProvider;
+  /** Normalised watch page URL, exactly as the admin pasted it. */
+  url: string;
+  /** Extracted provider id, used to build the embed src. */
+  video_id: string;
+  title: string;
+  channel: string;
+  /** Author estimate, shown as "~N min". Never used for the completion gate. */
+  duration_minutes: number;
+  added_at: string;
+}
+
+export interface QuizQuestion {
+  id: string;
+  prompt: string;
+  options: string[];
+  /** Never leaves the server until the learner has submitted an attempt. */
+  correct_index: number;
+  explanation: string;
+}
+
+export interface LessonQuiz {
+  id: string;
+  passing_percent: number;
+  questions: QuizQuestion[];
+}
+
+export interface CourseLesson {
+  id: string;
+  module_id: string;
+  title: string;
+  summary: string;
+  sort_order: number;
+  /** Estimated reading/viewing time for the card grid. Author-supplied. */
+  duration_minutes: number;
+  /** Server-authoritative XP for finishing this lesson. The client cannot set it. */
+  xp_reward: number;
+  video?: LessonVideo | null;
+  blocks: ContentBlockRecord[];
+  quiz?: LessonQuiz | null;
+}
+
+export interface CourseModule {
+  id: string;
+  course_id: string;
+  title: string;
+  summary: string;
+  sort_order: number;
+  lessons: CourseLesson[];
+}
+
+export interface Course {
+  id: string;
+  slug: string;
+  title: string;
+  subtitle: string;
+  /** Markdown. Rendered on the course overview page. */
+  description: string;
+  category: string;
+  level: CourseLevel;
+  is_free: boolean;
+  price_inr: number;
+  thumbnail_url: string;
+  tags: string[];
+  outcomes: string[];
+  /** Gate: this course can only be opened once that course is 100% complete. */
+  prerequisite_course_id: string | null;
+  /** When false, completing the course still does not issue a certificate. */
+  certificate_eligible: boolean;
+  published: boolean;
+  created_at: string;
+  updated_at: string;
+  modules: CourseModule[];
+}
+
+/** A course lesson reuses the same block vocabulary as the company reader. */
+export interface ContentBlockRecord {
+  id: string;
+  block_type: ContentBlockType;
+  block_order: number;
+  payload: Record<string, any>;
+}
+
+export type ContentBlockType =
+  | 'markdown'
+  | 'code'
+  | 'image'
+  | 'diagram'
+  | 'animation'
+  | 'callout'
+  | 'audio'
+  | 'table'
+  | 'video'
+  | 'checklist'
+  | 'resources'
+  | 'steps'
+  | 'video_link';
+
+/**
+ * The single source of truth for the block vocabulary, as a runtime list.
+ *
+ * Every write path that filters `block_type` must derive its allow-list from
+ * here rather than retyping the union. The lists used to be maintained by hand
+ * and drifted: the course admin API was missing `checklist` and `resources`, so
+ * the lesson editor could offer a block the API silently dropped on save
+ * (HTTP 200, block gone on reload), while the study-plan API rejected `steps`
+ * and `video_link` that the renderer happily drew.
+ *
+ * The `satisfies` clause only proves every entry is a *valid* type — it happily
+ * accepts a list that is missing members, which is exactly the drift we are
+ * guarding against. The assertion below closes that hole: add a type to the
+ * union without adding it here, and `Exhaustive` stops being `never` and the
+ * build fails. Delete an entry that is still in the union and it fails too.
+ */
+export const ALL_BLOCK_TYPES = [
+  'markdown',
+  'code',
+  'image',
+  'diagram',
+  'animation',
+  'callout',
+  'audio',
+  'table',
+  'video',
+  'checklist',
+  'resources',
+  'steps',
+  'video_link',
+] as const satisfies readonly ContentBlockType[];
+
+/** Compile-time proof that the runtime list and the union are the same set. */
+type MissingBlockTypes = Exclude<ContentBlockType, (typeof ALL_BLOCK_TYPES)[number]>;
+
+/**
+ * If a type is added to the union but not to the list, `MissingBlockTypes` stops
+ * being `never`, the annotation below becomes that string, and assigning `true`
+ * fails to compile. Exported so it is never flagged as dead code.
+ */
+export const ALL_BLOCK_TYPES_EXHAUSTIVE: MissingBlockTypes extends never
+  ? true
+  : MissingBlockTypes = true;
+
+export type StudyPlanStatus = 'draft' | 'published' | 'archived';
+
+/** An admin-authored, reusable preparation plan. Phases hold the same block vocabulary. */
+export interface StudyPlanTemplate {
+  id: string;
+  title: string;
+  /**
+   * URL-safe identifier for this template. Unique across templates and used in
+   * admin deep links. Nullable because templates created before slugs existed
+   * have none; the routes derive and persist one on first write.
+   */
+  slug: string | null;
+  company_id: string | null;
+  company_name: string | null;
+  role: string | null;
+  status: StudyPlanStatus;
+  version: number;
+  created_at: string;
+  updated_at: string;
+  updated_by: string | null;
+}
+
+export interface StudyPlanPhase {
+  id: string;
+  template_id: string;
+  phase_order: number;
+  title: string;
+  day_from: number;
+  /** null means open-ended, e.g. "Day 12 onwards". */
+  day_to: number | null;
+  summary: string;
+  blocks: ContentBlockRecord[];
+}
+
+/** A student's personal copy of a plan, resolved from a template at a point in time. */
+export interface StudyPlanEnrollment {
+  id: string;
+  user_id: string | null;
+  template_id: string | null;
+  target_company: string;
+  target_role: string;
+  interview_date: string | null;
+  total_days: number;
+  source: 'template' | 'fallback';
+  generated_at: string;
+}
+
+export interface StudyPlanPhaseProgress {
+  id: string;
+  enrollment_id: string;
+  phase_id: string;
+  completed: boolean;
+  completed_at: string | null;
+}
+
+/** Per-user, per-course learning state. Persisted, never inferred client-side. */
+export interface CourseProgress {
+  user_id: string;
+  course_id: string;
+  enrolled_at: string;
+  updated_at: string;
+  completed_at: string | null;
+  /** lesson_id -> cumulative distinct watched seconds (server-clamped) */
+  video_watch_seconds: Record<string, number>;
+  /** lesson_id -> highest reported player duration, so % is stable across loads */
+  video_duration_seconds: Record<string, number>;
+  /**
+   * lesson_id -> ISO timestamp of the previous accepted heartbeat. Lets the
+   * server refuse to credit watch time faster than real time, so the client
+   * cannot farm a lesson by firing requests in a tight loop.
+   */
+  last_heartbeat_at: Record<string, string>;
+  /** lesson_id -> true once the server accepted the completion */
+  completed_lesson_ids: string[];
+  /** quiz_id -> best percentage score achieved */
+  quiz_best_percent: Record<string, number>;
+  /** quiz_id -> true once passed */
+  passed_quiz_ids: string[];
+}
+
+/**
+ * XP is an append-only ledger, never a mutable counter. `xp` on the user
+ * record is a cached sum of these rows; these rows are the source of truth.
+ * A negative row is an explicit reversal, never a silent decrement.
+ */
+export interface XpEvent {
+  id: string;
+  user_id: string;
+  course_id: string | null;
+  lesson_id: string | null;
+  /** Unique idempotency key — prevents double-awarding the same achievement. */
+  key: string;
+  reason: 'lesson_complete' | 'quiz_pass' | 'course_complete' | 'feedback_reward' | 'review' | 'reversal' | 'legacy_opening_balance';
+  xp: number;
+  created_at: string;
+  note: string;
+}
+
+export interface Certificate {
+  id: string;
+  /** Human-facing + verification key, e.g. TIEEDU-2026-7QK4M2XB. */
+  serial: string;
+  user_id: string;
+  course_id: string;
+  course_title: string;
+  /** Frozen at issue time so a later profile rename cannot rewrite history. */
+  recipient_name: string;
+  recipient_email: string;
+  issued_at: string;
+  xp_at_issue: number;
+  lessons_completed: number;
+  lessons_required: number;
+  /** HMAC-SHA256 over the canonical payload — see lib/certificate.ts. */
+  signature: string;
+  status: 'active' | 'revoked';
+  revoked_reason: string;
+  revoked_at: string | null;
+}
+
+export interface CourseFeedback {
+  id: string;
+  user_id: string;
+  user_name: string;
+  course_id: string;
+  rating: number;
+  what_learned: string;
+  would_recommend: boolean;
+  /** Feedback is only accepted after the course is genuinely complete. */
+  xp_awarded: number;
+  created_at: string;
+}
+
 export interface Session {
   id: string;
   user_id: string;
@@ -64,7 +352,11 @@ export interface Session {
 }
 
 const DATA_DIR = path.join(__dirname, '../../data');
-const DB_FILE = path.join(DATA_DIR, 'db.json');
+// DB_FILE lets an integration test point the store at a scratch file instead of
+// the install's real db.json. Unset in normal operation.
+const DB_FILE = process.env.DB_FILE
+  ? path.resolve(process.env.DB_FILE)
+  : path.join(DATA_DIR, 'db.json');
 
 const initialDbData = {
   companies: [
@@ -81,17 +373,17 @@ const initialDbData = {
       ctc_min: 18,
       ctc_max: 32,
       unlock_count: 0,
-      accuracy_score: 94,
+      accuracy_score: null,
       last_updated_days_ago: 2,
       status: 'published',
       seo_title: 'Zscaler Interview Questions & Vault | TieEdu',
-      seo_description: 'Verified round-by-round interview intelligence, HR Qs, Technical DSA bank, and Zero Trust system design guides for Zscaler.',
+      seo_description: 'Round-by-round interview intelligence, HR Qs, Technical DSA bank, and Zero Trust system design guides for Zscaler.',
       trust_stats: {
         rating: 0,
         rating_count: 0,
         weekly_unlocks: 0,
         verified_by_role: null,
-        recency_label: 'Updated for 2026 Hiring Season',
+        last_report_at: null,
         accuracy_rate: 0
       },
       rounds_pipeline: [
@@ -252,7 +544,7 @@ const initialDbData = {
       ctc_min: 20,
       ctc_max: 36,
       unlock_count: 0,
-      accuracy_score: 91,
+      accuracy_score: null,
       last_updated_days_ago: 4,
       status: 'published',
       seo_title: 'Palo Alto Networks Interview Intelligence | TieEdu',
@@ -353,11 +645,11 @@ const initialDbData = {
       ctc_min: 16,
       ctc_max: 28,
       unlock_count: 0,
-      accuracy_score: 95,
+      accuracy_score: null,
       last_updated_days_ago: 1,
       status: 'published',
       seo_title: 'Razorpay Interview Vault & System Design | TieEdu',
-      seo_description: 'Verified Razorpay hiring process questions, idempotent payment system design, and SDE interview breakdowns.',
+      seo_description: 'Razorpay hiring process questions, idempotent payment system design, and SDE interview breakdowns.',
       modules: [
         {
           id: 'mod-3-1',
@@ -447,7 +739,7 @@ const initialDbData = {
       ctc_min: 3.36,
       ctc_max: 9.0,
       unlock_count: 0,
-      accuracy_score: 97,
+      accuracy_score: null,
       last_updated_days_ago: 1,
       status: 'published',
       seo_title: 'TCS NQT & Digital Interview Preparation Guide 2026 | TieEdu',
@@ -541,7 +833,7 @@ const initialDbData = {
       ctc_min: 3.6,
       ctc_max: 9.5,
       unlock_count: 0,
-      accuracy_score: 95,
+      accuracy_score: null,
       last_updated_days_ago: 2,
       status: 'published',
       seo_title: 'Infosys HackWithInfy & Specialist Programmer Guide | TieEdu',
@@ -594,11 +886,11 @@ const initialDbData = {
       ctc_min: 32,
       ctc_max: 65,
       unlock_count: 0,
-      accuracy_score: 98,
+      accuracy_score: null,
       last_updated_days_ago: 1,
       status: 'published',
       seo_title: 'Google SDE L3/L4 Interview Questions & Vault | TieEdu',
-      seo_description: 'Verified Google coding rounds, Googliness & Leadership scenarios, and Large Scale Distributed System Design diagrams.',
+      seo_description: 'Google coding rounds, Googliness & Leadership scenarios, and Large Scale Distributed System Design diagrams.',
       modules: [
         {
           id: 'mod-6-1',
@@ -728,7 +1020,7 @@ const initialDbData = {
       ctc_min: 24,
       ctc_max: 48,
       unlock_count: 0,
-      accuracy_score: 96,
+      accuracy_score: null,
       last_updated_days_ago: 3,
       status: 'published',
       seo_title: 'Microsoft SDE Interview Questions & As-Appropriate Round | TieEdu',
@@ -781,7 +1073,7 @@ const initialDbData = {
       ctc_min: 28,
       ctc_max: 52,
       unlock_count: 0,
-      accuracy_score: 97,
+      accuracy_score: null,
       last_updated_days_ago: 1,
       status: 'published',
       seo_title: 'Amazon 16 Leadership Principles & SDE Vault | TieEdu',
@@ -842,7 +1134,7 @@ const initialDbData = {
       ctc_min: 22,
       ctc_max: 42,
       unlock_count: 0,
-      accuracy_score: 94,
+      accuracy_score: null,
       last_updated_days_ago: 3,
       status: 'published',
       seo_title: 'Adobe Interview Questions & C++ DSA Vault | TieEdu',
@@ -895,7 +1187,7 @@ const initialDbData = {
       ctc_min: 4.2,
       ctc_max: 7.5,
       unlock_count: 0,
-      accuracy_score: 96,
+      accuracy_score: null,
       last_updated_days_ago: 1,
       status: 'published',
       seo_title: 'Capgemini Exceller Interview Questions & Pseudo Code Guide | TieEdu',
@@ -956,6 +1248,15 @@ const initialDbData = {
   sessions: [],
   progress: {},
   interview_progress: {},
+  courses: getSeedCourses(),
+  course_progress: {},
+  xp_ledger: [],
+  certificates: [],
+  course_feedback: [],
+  study_plan_templates: [],
+  study_plan_phases: [],
+  study_plan_enrollments: [],
+  study_plan_progress: [],
   audit: [],
   settings: {
     platform_name: 'TieEdu',
@@ -983,22 +1284,83 @@ export function loadDb() {
       if (!data.progress) { data.progress = {}; upgraded = true; }
       if (!data.interview_progress) { data.interview_progress = {}; upgraded = true; }
       if (!data.audit) { data.audit = []; upgraded = true; }
+      if (!Array.isArray(data.courses)) { data.courses = []; upgraded = true; }
+      if (!data.course_progress) { data.course_progress = {}; upgraded = true; }
+      if (!Array.isArray(data.xp_ledger)) { data.xp_ledger = []; upgraded = true; }
+      if (!Array.isArray(data.certificates)) { data.certificates = []; upgraded = true; }
+      if (!Array.isArray(data.course_feedback)) { data.course_feedback = []; upgraded = true; }
+      if (!Array.isArray(data.study_plan_templates)) { data.study_plan_templates = []; upgraded = true; }
+      if (!Array.isArray(data.study_plan_phases)) { data.study_plan_phases = []; upgraded = true; }
+      if (!Array.isArray(data.study_plan_enrollments)) { data.study_plan_enrollments = []; upgraded = true; }
+      if (!Array.isArray(data.study_plan_progress)) { data.study_plan_progress = []; upgraded = true; }
+      // Starter roadmap, installed once. The seeded_at stamp is what keeps this
+      // from resurrecting a template an admin deliberately deleted: without it,
+      // an emptied collection would be re-seeded on every restart, exactly the
+      // bug the courses/coupons fallbacks above are documented to avoid.
+      if (!data.study_plan_seeded_at && (!data.study_plan_templates || data.study_plan_templates.length === 0)) {
+        const seed = seedStudyPlanTemplates();
+        data.study_plan_templates = seed.templates;
+        data.study_plan_phases = seed.phases;
+        data.study_plan_seeded_at = new Date().toISOString();
+        upgraded = true;
+      }
       if (!data.settings) { data.settings = initialDbData.settings; upgraded = true; }
       if (!Array.isArray(data.coupons) || data.coupons.length === 0) {
         data.coupons = initialDbData.coupons;
         upgraded = true;
       }
-      if (data.companies && data.companies.length > 0) {
-        data.companies.forEach((company: any) => {
-          if (company.modules) {
-            company.modules.forEach((mod: any) => {
-              if (!mod.section_data) {
-                mod.section_data = getDefaultSectionData(company.name, mod.title);
-                upgraded = true;
-              }
-            });
-          }
+      // The bundled starter course is the launch catalogue for an install that
+      // predates the course engine. Without this, loadDb() would happily return
+      // an empty course list forever: initialDbData is only consulted when
+      // db.json does not exist yet, and every existing install has one.
+      if (!Array.isArray(data.courses) || data.courses.length === 0) {
+        data.courses = initialDbData.courses;
+        upgraded = true;
+      }
+      // NOTE: modules are deliberately NOT auto-filled with placeholder section_data.
+      // A module with no admin-authored section_data stays empty and the reader
+      // renders an honest "content not published yet" state. Generating generic
+      // DBMS/OS/HR filler here made invented questions look like verified company
+      // intelligence. Admin must write it — see PUT /api/admin/modules/:id/section.
+      // XP ledger migration. Students who earned XP before the ledger existed
+      // have a balance in users[].xp with no ledger rows behind it. Left alone,
+      // the first new award would recompute their total from the ledger alone
+      // and silently delete their history. Record it once as an opening balance
+      // so the ledger is a faithful superset of the old counter.
+      //
+      // Only the portion the ledger does NOT already explain is recorded. Without
+      // that subtraction this migration reads its own output: every award ends
+      // with syncUserXp writing the ledger total into users[].xp, so on the very
+      // next load the freshly-awarded XP looks like unexplained pre-ledger history
+      // and a duplicate opening balance is minted - silently doubling a user's
+      // first award of the session.
+      const openingBalances: any[] = [];
+      for (const u of data.users || []) {
+        const legacyXp = Math.max(0, Number(u.xp) || 0);
+        if (legacyXp <= 0) continue;
+        const key = `legacy-opening-balance:${u.id}`;
+        const alreadyMigrated = (data.xp_ledger || []).some((e: any) => e && e.key === key);
+        if (alreadyMigrated) continue;
+        const ledgerXp = (data.xp_ledger || [])
+          .filter((e: any) => e && e.user_id === u.id)
+          .reduce((s: number, e: any) => s + (Number(e.xp) || 0), 0);
+        const unexplained = legacyXp - ledgerXp;
+        if (unexplained <= 0) continue;
+        openingBalances.push({
+          id: `xp_legacy_${u.id}`,
+          user_id: u.id,
+          course_id: null,
+          lesson_id: null,
+          key,
+          reason: 'legacy_opening_balance',
+          xp: unexplained,
+          created_at: new Date().toISOString(),
+          note: `Opening balance migrated from the pre-ledger XP counter (${unexplained} XP not explained by existing ledger rows).`,
         });
+      }
+      if (openingBalances.length > 0) {
+        data.xp_ledger = [...(data.xp_ledger || []), ...openingBalances];
+        upgraded = true;
       }
       if (upgraded) {
         saveDb(data);
@@ -1008,109 +1370,59 @@ export function loadDb() {
       // Fall through to rewrite
     }
   }
-  fs.writeFileSync(DB_FILE, JSON.stringify(initialDbData, null, 2), 'utf-8');
+  writeFileAtomic(DB_FILE, JSON.stringify(initialDbData, null, 2));
   return initialDbData;
 }
 
-export function getDefaultSectionData(companyName: string, moduleTitle: string) {
-  return {
-    overview: {
-      companyInfo: `${companyName} interview preparation for this module — ${moduleTitle}.`,
-      eligibility: 'Eligibility criteria vary by drive. Check the latest official notification from the company before applying.',
-      salaryBreakdown: 'Salary data not disclosed yet. Verified offer figures appear here once candidates share them.',
-      reviews: []
-    },
-    core_subjects: [
-      {
-        subject: 'Database Management Systems (DBMS)',
-        topics: [
-          {
-            title: 'SQL Indexing, ACID Properties & Transactions',
-            content: `### Core DBMS Concepts\nACID stands for Atomicity, Consistency, Isolation, and Durability. Indexes (B+ Trees) drastically speed up SELECT queries from O(N) to O(log N).`,
-            pyqs: [
-              { year: 2025, question: `Explain 4 isolation levels in SQL transactions and dirty reads.`, answer: `Read Uncommitted, Read Committed, Repeatable Read, Serializable. Dirty reads occur when a transaction reads uncommitted changes.` },
-              { year: 2024, question: `Difference between Clustered and Non-Clustered Indexing?`, answer: `Clustered index defines physical order of data rows (only 1 per table). Non-clustered stores index separately with pointer to data.` }
-            ]
-          }
-        ]
-      },
-      {
-        subject: 'Operating Systems (OS)',
-        topics: [
-          {
-            title: 'Virtual Memory, Paging & Process Scheduling',
-            content: `### Operating System Fundamentals\nVirtual memory maps process logical addresses to physical RAM pages. Page faults trigger page replacement algorithms like LRU, FIFO, and Optimal.`,
-            pyqs: [
-              { year: 2025, question: `What is Thrashing in OS and how to prevent it?`, answer: `Thrashing occurs when high page replacement frequency consumes CPU time. Fix by increasing RAM or lowering multiprogramming degree.` },
-              { year: 2023, question: `Differentiate between Process and Thread with memory layout.`, answer: `Process has its own virtual address space (Code, Data, Heap, Stack). Threads share Code, Data, and Heap, but have private Stacks.` }
-            ]
-          }
-        ]
+/**
+ * Windows filesystems fail a write for reasons that have nothing to do with the
+ * request: an antivirus scanner or indexer holding the file open surfaces as
+ * EBUSY, EPERM, EACCES or a bare UNKNOWN. Writing straight onto db.json made
+ * every one of those a 500 to the client, which looked like an application bug
+ * but was really a transient lock.
+ *
+ * Writing to a sibling temp file and renaming it over the target fixes both
+ * problems at once: the rename is atomic on the same volume, so an interrupted
+ * write can never leave a half-written db.json behind, and a transient lock is
+ * retried instead of thrown at the caller.
+ */
+const TRANSIENT_WRITE_ERRORS = new Set(['EBUSY', 'EPERM', 'EACCES', 'UNKNOWN']);
+
+function writeFileAtomic(file: string, contents: string, attempts = 5): void {
+  // Same directory on purpose: a rename across volumes is not atomic.
+  const tmp = `${file}.${process.pid}.tmp`;
+  let lastErr: any;
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    try {
+      fs.writeFileSync(tmp, contents, 'utf-8');
+      fs.renameSync(tmp, file);
+      return;
+    } catch (err: any) {
+      lastErr = err;
+      if (!TRANSIENT_WRITE_ERRORS.has(err?.code)) break;
+      try {
+        fs.unlinkSync(tmp);
+      } catch {
+        // best effort
       }
-    ],
-    interview_questions: [
-      {
-        category: 'Technical',
-        title: `Core Architectural Principles at ${companyName}`,
-        question: `How would you handle high concurrent traffic spike in ${companyName} distributed systems?`,
-        solution: `Use rate limiters (Token Bucket algorithm), load balancers (Nginx / ALB), Redis caching layer, and asynchronous message queues (Kafka / RabbitMQ).`
-      },
-      {
-        category: 'Coding',
-        title: 'Two Sum & Subarray Sum Equals K',
-        question: 'Find the total number of continuous subarrays whose sum equals to K.',
-        solution: 'Use Prefix Sum with HashMap to achieve O(N) time complexity and O(N) space complexity.',
-        code: `int subarraySum(vector<int>& nums, int k) {\n    unordered_map<int, int> prefixCounts;\n    prefixCounts[0] = 1;\n    int currSum = 0, count = 0;\n    for (int num : nums) {\n        currSum += num;\n        if (prefixCounts.find(currSum - k) != prefixCounts.end()) {\n            count += prefixCounts[currSum - k];\n        }\n        prefixCounts[currSum]++;\n    }\n    return count;\n}`,
-        language: 'cpp'
-      }
-    ],
-    cheatsheets: [
-      {
-        title: 'Core Computer Science Quick Cheatsheet',
-        summary: 'Essential formulas and complexity tables for instant revision.',
-        content: 'QuickSort: Avg O(N log N), Worst O(N^2) | MergeSort: O(N log N) | Binary Search: O(log N) | Hash Table: Avg O(1), Worst O(N)'
-      }
-    ],
-    never_skip_topics: [
-      {
-        topic: 'Dynamic Programming & Graph Traversal (BFS/DFS)',
-        priority: 'High',
-        notes: 'Commonly practiced for Round 1 Online Assessment and Technical rounds.'
-      },
-      {
-        topic: 'OOPs Design Patterns (Singleton, Factory, Observer)',
-        priority: 'Must Do',
-        notes: 'Frequently tested in low-level system design rounds.'
-      }
-    ],
-    last_minute_revision: [
-      {
-        title: '24-Hour Placement Sprint Checklist',
-        points: [
-          'Revise Time & Space complexity of Top 15 Sorting and Searching algorithms.',
-          'Review TCP 3-way handshake and HTTP response status codes (200, 301, 400, 401, 403, 404, 500, 502, 503).',
-          'Prepare your 90-second self introduction emphasizing your best technical projects.'
-        ]
-      }
-    ],
-    hr_round: [
-      {
-        question: `Why do you want to join ${companyName} over other tech companies?`,
-        answer: `I admire ${companyName}'s innovation leadership, growth culture, and engineering scale. My technical background in core CS and problem solving aligns directly with your team's mission.`,
-        tips: [
-          `Research ${companyName}'s recent product announcements or tech blogs before the interview.`,
-          `Structure your answer with the STAR framework (Situation, Task, Action, Result).`
-        ]
-      }
-    ]
-  };
+      // Synchronous backoff — saveDb is called from request handlers and has to
+      // stay synchronous. Atomics.wait is the only clean way to sleep here.
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 25 * (attempt + 1));
+    }
+  }
+  try {
+    fs.unlinkSync(tmp);
+  } catch {
+    // best effort
+  }
+  throw lastErr;
 }
 
 export function saveDb(data: any) {
   if (!fs.existsSync(DATA_DIR)) {
     fs.mkdirSync(DATA_DIR, { recursive: true });
   }
-  fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf-8');
+  writeFileAtomic(DB_FILE, JSON.stringify(data, null, 2));
   // Async waterfall to the CockroachDB replica (if enabled). Never blocks the sync API.
   if (mirrorHook) {
     try {

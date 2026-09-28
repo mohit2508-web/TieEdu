@@ -34,22 +34,36 @@ export const ModulePdfManager: React.FC<ModulePdfManagerProps> = ({ module, comp
   const [previewUrls, setPreviewUrls] = useState<Record<string, string>>({});
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // The set of live preview URLs, in a ref as well as state.
+  //
+  // The unmount cleanup below cannot read state: an effect with `[]` deps closes
+  // over the values from the *first* render, which is an empty object. So the
+  // "revoke every blob on unmount" effect was revoking nothing at all and every
+  // preview the admin opened leaked for the life of the page. A ref is always
+  // current, so the cleanup sees the real map.
+  const previewUrlsRef = useRef<Record<string, string>>({});
+
   // Load preview blob URL for currently previewed PDF
   useEffect(() => {
     if (!previewPdfId) return;
     const pdf = pdfs.find(p => p.id === previewPdfId);
     if (!pdf) return;
-    if (previewUrls[previewPdfId]) return; // already loaded
+    if (previewUrlsRef.current[previewPdfId]) return; // already loaded
     let active = true;
     pdfFileObjectUrlApi(pdf.stored_name)
-      .then(url => { if (active) setPreviewUrls(prev => ({ ...prev, [previewPdfId]: url })); })
+      .then(url => {
+        if (!active) { URL.revokeObjectURL(url); return; }
+        previewUrlsRef.current[previewPdfId] = url;
+        setPreviewUrls(prev => ({ ...prev, [previewPdfId]: url }));
+      })
       .catch(() => {});
     return () => { active = false; };
   }, [previewPdfId, pdfs]);
 
-  // Revoke all blob URLs on unmount
+  // Revoke all blob URLs on unmount.
   useEffect(() => {
-    return () => { Object.values(previewUrls).forEach(url => URL.revokeObjectURL(url)); };
+    const urls = previewUrlsRef.current;
+    return () => { Object.values(urls).forEach(url => URL.revokeObjectURL(url)); };
   }, []);
 
   const flash = (t: string, type: 'ok' | 'err') => { setMsg({ text: t, type }); setTimeout(() => setMsg(null), 4000); };

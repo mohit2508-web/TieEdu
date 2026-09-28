@@ -1,6 +1,11 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { ContentModule, ModuleSectionData } from '@/types';
 import { saveSectionDataApi } from '@/lib/api';
+import { MarkdownContent } from '@/components/blocks/MarkdownContent';
+import { MarkdownEditor as MdEditor, clearEditorDraftsWithPrefix } from '@/components/editor/MarkdownEditor';
+import {
+  pipeTextToMarkdownTable, RICH_TEXT_MAX, clampRichFields, overLimitRichTextPaths,
+} from '@/lib/richText';
 import {
   Save, Building2, BookOpen, Lightbulb, FileSpreadsheet, Flame,
   Zap, UserCheck, Plus, Trash2, CheckCircle2, Sparkles, ChevronDown, Eye
@@ -44,13 +49,40 @@ export const SectionPackEditor: React.FC<SectionPackEditorProps> = ({ module, co
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
 
+  /**
+   * The last state known to be on the server. Every field is compared against
+   * this to decide whether to show its "unsaved" dot, so it has to be updated
+   * exactly when a save succeeds and nowhere else.
+   */
+  const [savedSnapshot, setSavedSnapshot] = useState<ModuleSectionData>(module.section_data || emptySection());
+
+  /**
+   * Stable prefix for this module's per-field localStorage drafts. Includes the
+   * module id so two companies' packs never read each other's drafts.
+   */
+  const draftPrefix = `pack-${module.id}`;
+
   const set = (patch: any) => setDraft((prev: any) => ({ ...prev, ...patch }));
 
   const handleSave = async () => {
     setIsSaving(true);
     setError('');
     try {
-      await saveSectionDataApi(module.id, draft);
+      // Clamp before sending, so what the admin sees after the save is what the
+      // server kept. Letting the backend truncate silently would leave the
+      // student page disagreeing with the editor the admin is looking at.
+      const payload = clampRichFields(draft);
+      const overLimit = overLimitRichTextPaths(draft);
+      if (overLimit.length > 0) {
+        setError(`${overLimit.length} field${overLimit.length > 1 ? 's were' : ' was'} over the ${RICH_TEXT_MAX}-character limit and the end was cut off.`);
+      }
+      await saveSectionDataApi(module.id, payload);
+      setDraft(payload);
+      setSavedSnapshot(payload);
+      // Saved content is now the server's content, so any stored unsaved draft
+      // for these fields is stale. Leaving it behind would repopulate a field
+      // the admin deliberately cleared, on the next visit.
+      clearEditorDraftsWithPrefix(draftPrefix);
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
       onSaved();
@@ -76,6 +108,63 @@ export const SectionPackEditor: React.FC<SectionPackEditorProps> = ({ module, co
     </div>
   );
 
+  /**
+   * One markdown field: the shared editor plus a per-field unsaved marker.
+   *
+   * `path` is a dotted route into the draft (`core_subjects.0.topics.1.content`).
+   * It doubles as the storage key, so it must be derived from the item's own
+   * identity and its position, never from a counter that shifts when an earlier
+   * item is deleted — otherwise a delete would move every later field's key and
+   * orphan the drafts that were already saved against them.
+   */
+  const PackField = ({
+    path,
+    value,
+    onChange,
+    minHeight,
+    placeholder,
+    ariaLabel,
+  }: {
+    path: string;
+    value: string | undefined;
+    onChange: (next: string) => void;
+    minHeight?: number;
+    placeholder?: string;
+    ariaLabel?: string;
+  }) => {
+    const baseline = (path.split('.').reduce<any>(
+      (acc, part) => (acc == null ? acc : acc[part]),
+      savedSnapshot as any,
+    ));
+    const isDirty = String(baseline ?? '') !== String(value ?? '');
+
+    return (
+      <div className="space-y-1">
+        <div className="flex items-center gap-2">
+          {isDirty && (
+            <span
+              className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5"
+              title="Edited but not saved yet"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" aria-hidden="true" />
+              Unsaved
+            </span>
+          )}
+        </div>
+        <MdEditor
+          compact
+          maxChars={RICH_TEXT_MAX}
+          minHeight={minHeight}
+          value={value || ''}
+          onChange={onChange}
+          placeholder={placeholder}
+          ariaLabel={ariaLabel}
+          draftKey={`${draftPrefix}-${path}`}
+        />
+      </div>
+    );
+  };
+
   const ItemShell = ({ onRemove, children, accent = 'border-gray-200 bg-white' }: any) => (
     <div className={`relative p-4 border rounded-2xl ${accent} space-y-3`}>
       <button
@@ -98,18 +187,24 @@ export const SectionPackEditor: React.FC<SectionPackEditorProps> = ({ module, co
           <div className="space-y-5">
             <div>
               <label className={labelCls}>Company Profile & Target Roles</label>
-              <textarea rows={3} value={ov.companyInfo} onChange={(e) => set({ overview: { ...ov, companyInfo: e.target.value } })} className={inputCls}
+              <PackField path={`overview.companyInfo`} minHeight={150} ariaLabel="Company profile and target roles" value={ov.companyInfo} onChange={(v) => set({ overview: { ...ov, companyInfo: v } })}
                 placeholder={`${companyName} is a leading... Roles include SDE-1, Security Engineer...`} />
             </div>
             <div>
               <label className={labelCls}>Eligibility Criteria</label>
-              <textarea rows={2} value={ov.eligibility} onChange={(e) => set({ overview: { ...ov, eligibility: e.target.value } })} className={inputCls}
+              <PackField path={`overview.eligibility`} minHeight={110} ariaLabel="Eligibility criteria" value={ov.eligibility} onChange={(v) => set({ overview: { ...ov, eligibility: v } })}
                 placeholder="B.Tech / M.Tech with 60% or 6.5 CGPA..." />
             </div>
             <div>
-              <label className={labelCls}>Salary & CTC Breakdown</label>
-              <textarea rows={2} value={ov.salaryBreakdown} onChange={(e) => set({ overview: { ...ov, salaryBreakdown: e.target.value } })} className={inputCls}
-                placeholder="SDE-1 Base: ₹18L | Stocks: ₹6L | Bonus: ₹2L" />
+              <div className="flex items-center justify-between mb-1">
+                <label className={labelCls + ' mb-0'}>Salary & CTC Breakdown</label>
+                <button type="button" onClick={() => set({ overview: { ...ov, salaryBreakdown: pipeTextToMarkdownTable(ov.salaryBreakdown) } })}
+                  className="text-[11px] font-bold text-[#0284C7] hover:underline" title="Turn a 'Label: value | Label: value' line into a table">
+                  Make it a table
+                </button>
+              </div>
+              <PackField path={`overview.salaryBreakdown`} minHeight={150} ariaLabel="Salary and CTC breakdown" value={ov.salaryBreakdown} onChange={(v) => set({ overview: { ...ov, salaryBreakdown: v } })}
+                placeholder={'SDE-1 Base: ₹12L - ₹22L\nFixed Bonus: ₹2L\nJoining Stocks: ₹4L - ₹8L\n\nOr a markdown table:\n| Component | Amount |\n| --- | --- |\n| Base | ₹12L |'} />
             </div>
 
             <SectionCard title={`Candidate Reviews (${ov.reviews?.length || 0})`} onAdd={() => set({ overview: { ...ov, reviews: [...(ov.reviews || []), { name: '', role: '', rating: 5, text: '' }] } })} addLabel="Add Review">
@@ -120,7 +215,7 @@ export const SectionPackEditor: React.FC<SectionPackEditorProps> = ({ module, co
                     <input className={inputCls} placeholder="Role (SDE @ Co)" value={r.role} onChange={(e) => set({ overview: { ...ov, reviews: (ov.reviews || []).map((x: any, i: number) => i === idx ? { ...x, role: e.target.value } : x) } })} />
                     <input className={inputCls} type="number" min={1} max={5} placeholder="Rating" value={r.rating} onChange={(e) => set({ overview: { ...ov, reviews: (ov.reviews || []).map((x: any, i: number) => i === idx ? { ...x, rating: Number(e.target.value) } : x) } })} />
                   </div>
-                  <textarea rows={2} className={inputCls} placeholder="Review text" value={r.text} onChange={(e) => set({ overview: { ...ov, reviews: (ov.reviews || []).map((x: any, i: number) => i === idx ? { ...x, text: e.target.value } : x) } })} />
+                  <PackField path={`overview.reviews.${idx}.text`} minHeight={90} ariaLabel="Review text" value={r.text} onChange={(v) => set({ overview: { ...ov, reviews: (ov.reviews || []).map((x: any, i: number) => i === idx ? { ...x, text: v } : x) } })} />
                 </ItemShell>
               ))}
               {(ov.reviews || []).length === 0 && <p className="text-xs text-gray-400 italic">No reviews yet — add one.</p>}
@@ -150,8 +245,8 @@ export const SectionPackEditor: React.FC<SectionPackEditorProps> = ({ module, co
                       </div>
                       <input className={inputCls} placeholder="Topic title (e.g. ACID Properties & Transactions)" value={topic.title}
                         onChange={(e) => set({ core_subjects: subjects.map((x, i) => i === sIdx ? { ...x, topics: x.topics.map((t, j) => j === tIdx ? { ...t, title: e.target.value } : t) } : x) })} />
-                      <textarea rows={2} className={inputCls} placeholder="Topic content / explanation..." value={topic.content}
-                        onChange={(e) => set({ core_subjects: subjects.map((x, i) => i === sIdx ? { ...x, topics: x.topics.map((t, j) => j === tIdx ? { ...t, content: e.target.value } : t) } : x) })} />
+                      <PackField path={`core_subjects.${sIdx}.topics.${tIdx}.content`} minHeight={190} ariaLabel={`Topic content for ${topic.title || 'topic'}`} value={topic.content} onChange={(v) => set({ core_subjects: subjects.map((x, i) => i === sIdx ? { ...x, topics: x.topics.map((t, j) => j === tIdx ? { ...t, content: v } : t) } : x) })}
+                        placeholder={'Explain the concept. Use the toolbar for headings, bold and lists, or paste straight from a document.'} />
 
                       <div className="space-y-2 pt-1">
                         <div className="flex items-center justify-between">
@@ -174,11 +269,16 @@ export const SectionPackEditor: React.FC<SectionPackEditorProps> = ({ module, co
                                 onChange={(e) => set({ core_subjects: subjects.map((x, i) => i === sIdx ? { ...x, topics: x.topics.map((t, j) => j === tIdx ? { ...t, pyqs: (t.pyqs || []).map((p, k) => k === pIdx ? { ...p, frequency: e.target.value } : p) } : t) } : x) })}>
                                 {['High', 'Medium', 'Low'].map((f) => <option key={f}>{f}</option>)}
                               </select>
-                              <input className={inputCls + ' col-span-2'} placeholder="Question" value={pyq.question}
-                                onChange={(e) => set({ core_subjects: subjects.map((x, i) => i === sIdx ? { ...x, topics: x.topics.map((t, j) => j === tIdx ? { ...t, pyqs: (t.pyqs || []).map((p, k) => k === pIdx ? { ...p, question: e.target.value } : p) } : t) } : x) })} />
                             </div>
-                            <textarea rows={1.5} className={inputCls} placeholder="Answer" value={pyq.answer}
-                              onChange={(e) => set({ core_subjects: subjects.map((x, i) => i === sIdx ? { ...x, topics: x.topics.map((t, j) => j === tIdx ? { ...t, pyqs: (t.pyqs || []).map((p, k) => k === pIdx ? { ...p, answer: e.target.value } : p) } : t) } : x) })} />
+                            {/*
+                              The question is a markdown field — the reader renders it through
+                              `MarkdownContent`. It used to be a single-line `<input>`, which
+                              silently flattened every newline on save: an author who pasted a
+                              multi-line question (or whose existing data had one) got it joined
+                              into one run-on line the first time they touched the answer.
+                            */}
+                            <PackField path={`core_subjects.${sIdx}.topics.${tIdx}.pyqs.${pIdx}.question`} minHeight={90} ariaLabel="PYQ question" value={pyq.question} onChange={(v) => set({ core_subjects: subjects.map((x, i) => i === sIdx ? { ...x, topics: x.topics.map((t, j) => j === tIdx ? { ...t, pyqs: (t.pyqs || []).map((p, k) => k === pIdx ? { ...p, question: v } : p) } : t) } : x) })} />
+                            <PackField path={`core_subjects.${sIdx}.topics.${tIdx}.pyqs.${pIdx}.answer`} minHeight={110} ariaLabel="PYQ answer" value={pyq.answer} onChange={(v) => set({ core_subjects: subjects.map((x, i) => i === sIdx ? { ...x, topics: x.topics.map((t, j) => j === tIdx ? { ...t, pyqs: (t.pyqs || []).map((p, k) => k === pIdx ? { ...p, answer: v } : p) } : t) } : x) })} />
                           </div>
                         ))}
                       </div>
@@ -210,13 +310,27 @@ export const SectionPackEditor: React.FC<SectionPackEditorProps> = ({ module, co
                   <input className={inputCls + ' sm:col-span-2'} placeholder="Question title" value={q.title}
                     onChange={(e) => set({ interview_questions: qs.map((x, i) => i === idx ? { ...x, title: e.target.value } : x) })} />
                 </div>
-                <textarea rows={2} className={inputCls} placeholder="Full question..." value={q.question}
-                  onChange={(e) => set({ interview_questions: qs.map((x, i) => i === idx ? { ...x, question: e.target.value } : x) })} />
-                <textarea rows={2} className={inputCls} placeholder="Solution / explanation" value={q.solution}
-                  onChange={(e) => set({ interview_questions: qs.map((x, i) => i === idx ? { ...x, solution: e.target.value } : x) })} />
+                <PackField path={`interview_questions.${idx}.question`} minHeight={100} ariaLabel="Interview question" value={q.question} onChange={(v) => set({ interview_questions: qs.map((x, i) => i === idx ? { ...x, question: v } : x) })} />
+                <PackField path={`interview_questions.${idx}.solution`} minHeight={170} ariaLabel="Solution or explanation" value={q.solution} onChange={(v) => set({ interview_questions: qs.map((x, i) => i === idx ? { ...x, solution: v } : x) })}
+                  placeholder={'Explain the approach. Lists, code fences and bold all work here.'} />
+                {/*
+                  A monospace textarea, not an input and not a MarkdownEditor. The reader
+                  renders this inside a `<pre>` with a copy button, and the plan calls for
+                  it to stay plain preformatted: an ASCII layout or an aligned complexity
+                  table would be destroyed by markdown reflow. A single-line input was
+                  worse still — an author could not type a second line, and pasting a whole
+                  function joined it into one line.
+                */}
+                <textarea
+                  rows={6}
+                  spellCheck={false}
+                  className={inputCls + ' font-mono text-xs leading-relaxed resize-y'}
+                  placeholder={'Optional code. Plain text — newlines and indentation are preserved exactly.'}
+                  aria-label="Code sample"
+                  value={q.code || ''}
+                  onChange={(e) => set({ interview_questions: qs.map((x, i) => i === idx ? { ...x, code: e.target.value } : x) })}
+                />
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-                  <input className={inputCls} placeholder="Code (optional)" value={q.code || ''}
-                    onChange={(e) => set({ interview_questions: qs.map((x, i) => i === idx ? { ...x, code: e.target.value } : x) })} />
                   <select className={inputCls} value={q.language || 'cpp'}
                     onChange={(e) => set({ interview_questions: qs.map((x, i) => i === idx ? { ...x, language: e.target.value } : x) })}>
                     {['cpp', 'java', 'python', 'javascript', 'typescript', 'go'].map((l) => <option key={l}>{l}</option>)}
@@ -236,12 +350,22 @@ export const SectionPackEditor: React.FC<SectionPackEditorProps> = ({ module, co
             {sheets.map((s, idx) => (
               <ItemShell key={idx} accent="border-amber-200 bg-amber-50/40">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <input className={inputCls} placeholder="Title (e.g. TCP/IP Ports Cheatsheet)" value={s.title}
+                  <input className={inputCls} placeholder="Title (e.g. TCP/IP Ports Cheatsheet)" aria-label="Cheatsheet title" value={s.title}
                     onChange={(e) => set({ cheatsheets: sheets.map((x, i) => i === idx ? { ...x, title: e.target.value } : x) })} />
-                  <input className={inputCls} placeholder="Summary line" value={s.summary}
-                    onChange={(e) => set({ cheatsheets: sheets.map((x, i) => i === idx ? { ...x, summary: e.target.value } : x) })} />
+                  {/* The reader renders the summary through `MarkdownContent`, so it is authored
+                      as markdown. As a single-line input it flattened newlines on save, and an
+                      author had no way to bold the one fact the sheet exists to convey. */}
+                  <div className="sm:col-span-2">
+                    <PackField path={`cheatsheets.${idx}.summary`} minHeight={70} ariaLabel="Cheatsheet summary" value={s.summary || ''}
+                      onChange={(v) => set({ cheatsheets: sheets.map((x, i) => i === idx ? { ...x, summary: v } : x) })}
+                      placeholder="One line on what this sheet covers." />
+                  </div>
                 </div>
-                <textarea rows={4} className={inputCls + ' font-mono'} placeholder="Cheatsheet content (formulas, complexity tables...)" value={s.content}
+                {/* Deliberately a plain monospace textarea, not a MarkdownEditor. This field holds
+                    ASCII-art and fixed-width reference tables whose alignment is the whole point, and
+                    the reader renders it in a <pre> block, so markdown formatting would only get in
+                    the way. */}
+                <textarea rows={4} spellCheck={false} aria-label="Cheatsheet content" className={inputCls + ' font-mono'} placeholder="Cheatsheet content (formulas, complexity tables...)" value={s.content}
                   onChange={(e) => set({ cheatsheets: sheets.map((x, i) => i === idx ? { ...x, content: e.target.value } : x) })} />
               </ItemShell>
             ))}
@@ -264,8 +388,7 @@ export const SectionPackEditor: React.FC<SectionPackEditorProps> = ({ module, co
                     {['High', 'Must Do', 'Frequent'].map((p) => <option key={p}>{p}</option>)}
                   </select>
                 </div>
-                <textarea rows={2} className={inputCls} placeholder="Why it matters / notes" value={t.notes}
-                  onChange={(e) => set({ never_skip_topics: topics.map((x, i) => i === idx ? { ...x, notes: e.target.value } : x) })} />
+                <PackField path={`never_skip_topics.${idx}.notes`} minHeight={110} ariaLabel="Why this topic matters" value={t.notes} onChange={(v) => set({ never_skip_topics: topics.map((x, i) => i === idx ? { ...x, notes: v } : x) })} />
               </ItemShell>
             ))}
             {topics.length === 0 && <p className="text-xs text-gray-400 italic">No never-skip topics yet.</p>}
@@ -311,10 +434,10 @@ export const SectionPackEditor: React.FC<SectionPackEditorProps> = ({ module, co
           <SectionCard title={`HR Questions (${hrs.length})`} onAdd={() => set({ hr_round: [...hrs, { question: '', answer: '', tips: [] }] })} addLabel="Add HR Q">
             {hrs.map((hr, idx) => (
               <ItemShell key={idx} accent="border-sky-200 bg-sky-50/30">
-                <textarea rows={2} className={inputCls} placeholder="Question (e.g. Why do you want to join us?)" value={hr.question}
-                  onChange={(e) => set({ hr_round: hrs.map((x, i) => i === idx ? { ...x, question: e.target.value } : x) })} />
-                <textarea rows={3} className={inputCls} placeholder="Sample STAR answer..." value={hr.answer}
-                  onChange={(e) => set({ hr_round: hrs.map((x, i) => i === idx ? { ...x, answer: e.target.value } : x) })} />
+                <PackField path={`hr_round.${idx}.question`} minHeight={90} ariaLabel="HR question" value={hr.question} onChange={(v) => set({ hr_round: hrs.map((x, i) => i === idx ? { ...x, question: v } : x) })}
+                  placeholder="Question (e.g. Why do you want to join us?)" />
+                <PackField path={`hr_round.${idx}.answer`} minHeight={190} ariaLabel="Sample STAR answer" value={hr.answer} onChange={(v) => set({ hr_round: hrs.map((x, i) => i === idx ? { ...x, answer: v } : x) })}
+                  placeholder={'Sample STAR answer...\n\n**Situation:** ...\n**Task:** ...\n**Action:** ...\n**Result:** ...'} />
                 <div className="space-y-2">
                   {hr.tips.map((tip, tIdx) => (
                     <div key={tIdx} className="flex items-center gap-2">
@@ -343,8 +466,22 @@ export const SectionPackEditor: React.FC<SectionPackEditorProps> = ({ module, co
     }
   };
 
+  /**
+   * How much of each section is filled, shown in the editor header.
+   *
+   * `overview` used to be a hardcoded `1`, so a brand-new pack reported
+   * "7 / 7 sections filled" before the admin had typed a single character, and
+   * the one section with no items in it (so no other signal that it is empty)
+   * was the only one that looked done. It is counted from its actual fields now.
+   */
+  const ovFilled = draft.overview || { companyInfo: '', eligibility: '', salaryBreakdown: '', reviews: [] as Array<{ text?: string }> };
+  const overviewFilled = [
+    ovFilled.companyInfo, ovFilled.eligibility, ovFilled.salaryBreakdown,
+    ...(ovFilled.reviews || []).map((r) => r.text || ''),
+  ].filter((v) => String(v ?? '').trim().length > 0).length;
+
   const counts: Record<SectionId, number> = {
-    overview: 1,
+    overview: overviewFilled,
     core_subjects: draft.core_subjects?.length || 0,
     interview_questions: draft.interview_questions?.length || 0,
     cheatsheets: draft.cheatsheets?.length || 0,
@@ -355,8 +492,32 @@ export const SectionPackEditor: React.FC<SectionPackEditorProps> = ({ module, co
 
   const filledCount = Object.keys(counts).filter((k) => (counts as any)[k] > 0).length;
 
+  /**
+   * Which sections differ from the last saved copy. This covers the plain
+   * single-line inputs too, not just the markdown fields, so switching section
+   * tabs can warn before an admin walks away from a half-typed salary field.
+   */
+  const dirtySections = sections
+    .map((s) => s.id)
+    .filter((id) => JSON.stringify((draft as any)[id] ?? null) !== JSON.stringify((savedSnapshot as any)[id] ?? null));
+
+  const isDirty = dirtySections.length > 0;
+
+  // A pack can be a few thousand words of hand-written CTC tiers and PYQs. Losing
+  // that to an accidental tab close or refresh is the worst failure this screen
+  // has, so the browser's own confirm is the only backstop.
+  React.useEffect(() => {
+    if (!isDirty) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [isDirty]);
+
   return (
-    <div className="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-xs">
+    // `overflow-clip`, not `overflow-hidden`: `hidden` establishes a scroll
+    // container that never scrolls, and the sticky mobile save bar would then
+    // resolve against a zero-scroll-range ancestor and never actually stick.
+    <div className="bg-white border border-gray-200 rounded-3xl overflow-clip shadow-xs">
       {/* Header */}
       <div className="px-5 py-4 border-b border-gray-200 flex flex-wrap items-center justify-between gap-3 bg-gray-50/60">
         <div>
@@ -365,16 +526,22 @@ export const SectionPackEditor: React.FC<SectionPackEditorProps> = ({ module, co
           </div>
           <h3 className="text-base font-extrabold text-[#1E293B]">{module.title}</h3>
           <p className="text-xs text-gray-500">{filledCount} / 7 sections filled</p>
+          {isDirty && (
+            <p className="text-xs font-bold text-amber-700 mt-0.5">
+              Unsaved changes in {dirtySections.length} section{dirtySections.length > 1 ? 's' : ''} — save to keep them
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-3">
           {error && <span className="text-xs text-red-600 font-semibold">{error}</span>}
           {saved && <span className="text-xs text-emerald-700 font-bold flex items-center gap-1"><CheckCircle2 className="w-4 h-4" /> Saved!</span>}
           <button
             onClick={handleSave}
-            disabled={isSaving}
+            disabled={isSaving || !isDirty}
+            title={isDirty ? undefined : 'No unsaved changes'}
             className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 disabled:opacity-60 text-white rounded-xl text-xs font-bold transition-colors"
           >
-            <Save className="w-4 h-4" /> {isSaving ? 'Saving...' : 'Save Full Pack'}
+            <Save className="w-4 h-4" /> {isSaving ? 'Saving...' : isDirty ? 'Save Full Pack' : 'Saved'}
           </button>
         </div>
       </div>
@@ -393,6 +560,13 @@ export const SectionPackEditor: React.FC<SectionPackEditorProps> = ({ module, co
                 }`}>
                 <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-gray-400'}`} />
                 <span className="flex-1 truncate">{s.label}</span>
+                {dirtySections.includes(s.id) && (
+                  <span
+                    className={`w-2 h-2 shrink-0 rounded-full ${isActive ? 'bg-amber-300' : 'bg-amber-500'}`}
+                    title="This section has unsaved changes"
+                    aria-label="This section has unsaved changes"
+                  />
+                )}
                 {counts[s.id] > 0 && (
                   <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded-full ${isActive ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-800'}`}>
                     {counts[s.id]}
@@ -403,8 +577,12 @@ export const SectionPackEditor: React.FC<SectionPackEditorProps> = ({ module, co
           })}
         </div>
 
-        {/* Form Pane */}
-        <div className="flex-1 p-5 max-h-[70vh] overflow-y-auto">
+        {/* Form Pane. Uncapped on mobile: a `max-h` + `overflow-y-auto` pane
+            inside an already-scrolling page is a nested-scroll trap, and it is
+            what pushed the save button out of reach on a phone. The pane still
+            becomes a bounded scroll region from `lg` up, where the side-by-side
+            layout needs the vertical space back. */}
+        <div className="flex-1 p-5 lg:max-h-[70vh] lg:overflow-y-auto">
           {renderForm()}
         </div>
       </div>
@@ -414,8 +592,42 @@ export const SectionPackEditor: React.FC<SectionPackEditorProps> = ({ module, co
         <div className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">
           <Eye className="w-4 h-4 text-[#0284C7]" /> Live Student Preview — Calibre, 18px body
         </div>
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 max-h-[45vh] overflow-y-auto prose-article" style={{ fontFamily: "'Calibre','Calibri','Inter',sans-serif" }}>
+        {/* No prose-article here on purpose: each field below renders its own
+            MarkdownContent, and nesting both would apply the prose rules twice. */}
+        <div className="bg-white border border-gray-200 rounded-2xl p-6 max-h-[45vh] overflow-y-auto" style={{ fontFamily: "'Calibre','Calibri','Inter',sans-serif" }}>
           <PackPreview data={draft} active={active} companyName={companyName} />
+        </div>
+      </div>
+
+      {/* Sticky save bar (mobile only).
+          The only save button lived in this card's header, above a form pane that
+          is itself a 70vh scroll region — so on a phone you had to scroll back up
+          past seven sections to reach it. This pins the same action inside thumb
+          reach and only shows while there is something to save, so it does not
+          permanently cover the preview. */}
+      <div className="lg:hidden sticky bottom-0 z-20 px-5 py-3 bg-white/95 backdrop-blur border-t border-gray-200 safe-bottom">
+        <div className="flex items-center gap-3">
+          <div className="min-w-0 flex-1">
+            {error ? (
+              <p className="text-[12px] font-bold text-red-600 truncate">{error}</p>
+            ) : saved ? (
+              <p className="text-[12px] font-bold text-emerald-700 flex items-center gap-1"><CheckCircle2 className="w-4 h-4 shrink-0" /> Saved</p>
+            ) : isDirty ? (
+              <p className="text-[12px] font-bold text-amber-700 truncate">
+                Unsaved in {dirtySections.length} section{dirtySections.length > 1 ? 's' : ''}
+              </p>
+            ) : (
+              <p className="text-[12px] text-gray-400 truncate">All changes saved</p>
+            )}
+          </div>
+          <button
+            onClick={handleSave}
+            disabled={isSaving || !isDirty}
+            title={isDirty ? undefined : 'No unsaved changes'}
+            className="shrink-0 inline-flex items-center gap-2 px-5 min-h-[2.75rem] bg-emerald-700 hover:bg-emerald-800 disabled:opacity-60 text-white rounded-xl text-xs font-bold transition-colors focus-ring"
+          >
+            <Save className="w-4 h-4" /> {isSaving ? 'Saving...' : 'Save Pack'}
+          </button>
         </div>
       </div>
     </div>
@@ -437,15 +649,15 @@ const PackPreview: React.FC<{ data: ModuleSectionData; active: SectionId; compan
       return (
         <div className="space-y-5 text-base sm:text-lg leading-relaxed text-gray-800">
           <SectionTitle><Building2 className="w-6 h-6 text-[#0284C7]" /> Company Overview</SectionTitle>
-          {ov.companyInfo && <div className="p-5 bg-sky-50/70 border border-sky-200 rounded-2xl"><h3 className="font-bold text-sky-950 text-lg mb-2">Company Profile & Target Roles</h3><p className="text-sky-900">{ov.companyInfo}</p></div>}
+          {ov.companyInfo && <div className="p-5 bg-sky-50/70 border border-sky-200 rounded-2xl"><h3 className="font-bold text-sky-950 text-lg mb-2">Company Profile & Target Roles</h3><MarkdownContent className="text-sky-900">{ov.companyInfo}</MarkdownContent></div>}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {ov.eligibility && <div className="p-4 bg-gray-50 border border-gray-200 rounded-2xl"><h4 className="font-bold text-gray-900 text-sm uppercase tracking-wider mb-2">Eligibility</h4><p className="text-base text-gray-700">{ov.eligibility}</p></div>}
-            {ov.salaryBreakdown && <div className="p-4 bg-gray-50 border border-gray-200 rounded-2xl"><h4 className="font-bold text-gray-900 text-sm uppercase tracking-wider mb-2">CTC Package</h4><p className="text-base text-gray-700">{ov.salaryBreakdown}</p></div>}
+            {ov.eligibility && <div className="p-4 bg-gray-50 border border-gray-200 rounded-2xl"><h4 className="font-bold text-gray-900 text-sm uppercase tracking-wider mb-2">Eligibility</h4><MarkdownContent className="text-base text-gray-700">{ov.eligibility}</MarkdownContent></div>}
+            {ov.salaryBreakdown && <div className="p-4 bg-gray-50 border border-gray-200 rounded-2xl"><h4 className="font-bold text-gray-900 text-sm uppercase tracking-wider mb-2">CTC Package</h4><MarkdownContent className="text-base text-gray-700">{ov.salaryBreakdown}</MarkdownContent></div>}
           </div>
           {(ov.reviews || []).filter((r: any) => r.name || r.text).slice(0, 3).map((r: any, i: number) => (
             <div key={i} className="p-4 bg-gray-50 border border-gray-200 rounded-2xl space-y-1">
               <div className="flex items-center justify-between font-bold text-gray-900 text-sm">{r.name} ({r.role})<span className="text-amber-500 text-base">★ {r.rating}/5</span></div>
-              <p className="text-gray-700 italic text-base">&quot;{r.text}&quot;</p>
+              <MarkdownContent compact>{`"${r.text}"`}</MarkdownContent>
             </div>
           ))}
         </div>
@@ -464,13 +676,14 @@ const PackPreview: React.FC<{ data: ModuleSectionData; active: SectionId; compan
                 {sub.topics.map((t, tIdx) => (
                   <div key={tIdx} className="p-4 bg-gray-50/80 border border-gray-200 rounded-2xl">
                     <h4 className="font-bold text-gray-900 text-lg">{t.title}</h4>
-                    <p className="text-base text-gray-800 mt-1 whitespace-pre-line">{t.content}</p>
+                    <MarkdownContent className="text-base text-gray-800 mt-1">{t.content}</MarkdownContent>
                     {(t.pyqs || []).map((p, pIdx) => (
                       <div key={pIdx} className="mt-3 p-3 bg-white border border-gray-200 rounded-xl">
                         <span className="px-2 py-0.5 bg-sky-100 text-sky-800 rounded font-bold text-xs mr-2">Year {p.year}</span>
                         <span className="px-2 py-0.5 bg-purple-100 text-purple-800 rounded font-bold text-xs">{p.frequency}</span>
-                        <p className="font-bold text-gray-900 text-base mt-1.5">{p.question}</p>
-                        <p className="text-gray-700 text-base mt-1"><strong>Answer:</strong> {p.answer}</p>
+                        <MarkdownContent compact className="font-bold text-gray-900 text-base mt-1.5">{p.question}</MarkdownContent>
+                        <span className="block text-[11px] font-bold uppercase tracking-wider text-gray-900 mt-2">Answer</span>
+                        <MarkdownContent compact className="text-gray-700 text-base">{p.answer}</MarkdownContent>
                       </div>
                     ))}
                   </div>
@@ -493,8 +706,11 @@ const PackPreview: React.FC<{ data: ModuleSectionData; active: SectionId; compan
                 <span className="px-3 py-0.5 rounded-md text-xs font-bold uppercase bg-blue-100 text-blue-800">{q.category}</span>
                 <h3 className="font-bold text-gray-900 text-lg">{q.title}</h3>
               </div>
-              <p className="text-base text-gray-900 font-bold">Q: {q.question}</p>
-              <div className="p-3 bg-white border border-gray-200 rounded-xl text-base text-gray-800"><strong>Solution: </strong>{q.solution}</div>
+              <MarkdownContent className="text-base text-gray-900 font-bold">{q.question}</MarkdownContent>
+              <div className="p-3 bg-white border border-gray-200 rounded-xl text-base text-gray-800">
+                <span className="block text-[11px] font-bold uppercase tracking-wider text-sky-900 mb-1">Solution</span>
+                <MarkdownContent className="text-gray-800">{q.solution}</MarkdownContent>
+              </div>
               {q.code && <pre className="bg-[#0F172A] text-gray-100 rounded-xl p-4 font-mono text-sm overflow-x-auto">{q.code}</pre>}
             </div>
           ))}
@@ -510,8 +726,10 @@ const PackPreview: React.FC<{ data: ModuleSectionData; active: SectionId; compan
           {sheets.map((s, idx) => (
             <div key={idx} className="p-5 bg-amber-50/60 border border-amber-200 rounded-2xl">
               <h3 className="font-bold text-amber-950 text-xl">{s.title}</h3>
-              <p className="text-base text-amber-900">{s.summary}</p>
-              <div className="p-4 bg-white border border-amber-200 rounded-xl text-base text-gray-800 whitespace-pre-line">{s.content}</div>
+              <MarkdownContent compact className="text-base text-amber-900">{s.summary}</MarkdownContent>
+              {/* Plain on purpose: cheatsheets hold aligned ASCII tables / complexity
+                  charts, and font-mono + pre-line is what preserves the columns. */}
+              <div className="p-4 bg-white border border-amber-200 rounded-xl text-base text-gray-800 font-mono whitespace-pre-line overflow-x-auto">{s.content}</div>
             </div>
           ))}
         </div>
@@ -528,7 +746,7 @@ const PackPreview: React.FC<{ data: ModuleSectionData; active: SectionId; compan
               <Flame className="w-5 h-5 text-red-600 shrink-0 mt-1" />
               <div>
                 <span className="font-extrabold text-gray-900 text-lg mr-2">{t.topic}<span className="ml-2 px-2.5 py-0.5 bg-red-600 text-white rounded-md text-xs font-extrabold uppercase">{t.priority}</span></span>
-                <p className="text-base text-gray-700 mt-1">{t.notes}</p>
+                <MarkdownContent compact className="text-base text-gray-700 mt-1">{t.notes}</MarkdownContent>
               </div>
             </div>
           ))}
@@ -546,7 +764,7 @@ const PackPreview: React.FC<{ data: ModuleSectionData; active: SectionId; compan
               <h3 className="font-bold text-gray-900 text-lg">{lmr.title}</h3>
               <ul className="mt-2 space-y-2">
                 {lmr.points.map((pt, pIdx) => (
-                  <li key={pIdx} className="flex items-start gap-2 text-base text-gray-800"><CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />{pt}</li>
+                  <li key={pIdx} className="flex items-start gap-2 text-base text-gray-800"><CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" /><MarkdownContent compact>{pt}</MarkdownContent></li>
                 ))}
               </ul>
             </div>
@@ -563,9 +781,15 @@ const PackPreview: React.FC<{ data: ModuleSectionData; active: SectionId; compan
           {hrs.map((hr, idx) => (
             <div key={idx} className="p-5 bg-sky-50/60 border border-sky-200 rounded-2xl">
               <h3 className="font-bold text-sky-950 text-lg">Q: {hr.question}</h3>
-              <div className="p-3 bg-white border border-sky-100 rounded-xl text-base text-gray-800 mt-2"><strong>STAR Answer: </strong>{hr.answer}</div>
+              <div className="p-3 bg-white border border-sky-100 rounded-xl text-base text-gray-800 mt-2">
+                <span className="block text-[11px] font-bold uppercase tracking-wider text-sky-950 mb-1">Sample STAR answer</span>
+                <MarkdownContent className="text-gray-800">{hr.answer}</MarkdownContent>
+              </div>
               {hr.tips?.length > 0 && (
-                <ul className="mt-2 space-y-1.5 text-base text-gray-700"><strong className="text-gray-900">Pro Tips:</strong>{hr.tips.map((tip, tIdx) => <li key={tIdx} className="list-disc list-inside">{tip}</li>)}</ul>
+                <div className="mt-2 text-base text-gray-700">
+                  <span className="font-bold text-gray-900">Pro Tips:</span>
+                  <ul className="space-y-1.5 pl-2">{hr.tips.map((tip, tIdx) => <li key={tIdx} className="list-disc list-inside"><MarkdownContent compact>{tip}</MarkdownContent></li>)}</ul>
+                </div>
               )}
             </div>
           ))}

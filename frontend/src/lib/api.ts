@@ -1,4 +1,4 @@
-import { Company, InterviewReport, PricingPlan } from '@/types';
+import { Company, ComparisonMatrix, InterviewReport, PricingPlan, PricingCatalog, StudyPlanTemplateMeta } from '@/types';
 import { getAccessToken, getUserId, apiRefresh, setAuthSession } from './auth';
 
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
@@ -26,7 +26,9 @@ const tryRefreshSession = (): Promise<boolean> => {
   return refreshInFlight;
 };
 
-const apiFetch = async (url: string, options: RequestInit = {}): Promise<Response> => {
+// Exported so other API modules (e.g. lib/coursesApi.ts) share the single-flight
+// 401 -> refresh -> retry behaviour instead of reimplementing it.
+export const apiFetch = async (url: string, options: RequestInit = {}): Promise<Response> => {
   const doRequest = (): Promise<Response> =>
     fetch(url, {
       ...options,
@@ -186,6 +188,49 @@ export const fetchCompanyBySlug = async (slug: string): Promise<Company> => {
   return await res.json();
 };
 
+/**
+ * GET /companies/compare?slugs=a,b,c
+ *
+ * The comparison matrix is DERIVED server-side from the live ledger (see
+ * backend/src/lib/compare.ts). The browser never assembles a metric itself — it
+ * only renders what the server counted, and it shows the accompanying
+ * provenance so an unverified editorial figure is labelled as such.
+ *
+ * Passing an empty list lets the server pick the first published vaults, which
+ * is what the page does on first paint before the user picks columns.
+ */
+export const fetchComparisonMatrix = async (slugs: string[]): Promise<ComparisonMatrix | null> => {
+  try {
+    const qs = slugs.filter(Boolean).map((s) => encodeURIComponent(s)).join(',');
+    const res = await apiFetch(`${API_BASE_URL}/companies/compare${qs ? `?slugs=${qs}` : ''}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data && Array.isArray(data.companies) ? (data as ComparisonMatrix) : null;
+  } catch {
+    return null;
+  }
+};
+
+// ============================================================================
+// PRICING CATALOG — the only source of displayed prices
+// ============================================================================
+
+/**
+ * Fetches the server-computed pricing catalog (ladder + per-company + per-module).
+ * Public endpoint; the Bearer token is optional and only personalises rows to the
+ * caller's already-owned modules. Never build a price in the UI without this.
+ */
+export const fetchPricingCatalogApi = async (): Promise<PricingCatalog | null> => {
+  try {
+    const res = await apiFetch(`${API_BASE_URL}/pricing/catalog`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data && Array.isArray(data.companies) ? (data as PricingCatalog) : null;
+  } catch {
+    return null;
+  }
+};
+
 // ============================================================================
 // CHECKOUT (real orders only — failures throw, never fabricated)
 // ============================================================================
@@ -339,8 +384,18 @@ const adminFetch = async (path: string, options?: RequestInit) => {
   const res = await apiFetch(`${API_BASE_URL}${path}`, options);
   if (!res.ok) {
     let message = `API error ${res.status}`;
-    try { message = (await res.json()).error || message; } catch { /* ignore */ }
-    throw new Error(message);
+    // The whole parsed body is attached, not just `error`, because some
+    // refusals carry an actionable field alongside the message — a slug clash
+    // suggests a free alternative, which the admin UI offers as one click.
+    let body: any = null;
+    try {
+      body = await res.json();
+      message = body?.error || message;
+    } catch { /* ignore */ }
+    const err = new Error(message) as Error & { status?: number; body?: any };
+    err.status = res.status;
+    err.body = body;
+    throw err;
   }
   return res.json();
 };
@@ -417,15 +472,132 @@ export const fetchLeaderboardApi = async () => {
   return Array.isArray(data) ? data : (data?.entries || []);
 };
 
-export const generateStudyPlanApi = async (payload: { targetCompany: string; targetRole: string; daysRemaining: number }) => {
-  const res = await fetch(`${API_BASE_URL}/gamification/study-plan`, {
+export const generateStudyPlanApi = async (payload: {
+  targetCompany: string;
+  targetRole: string;
+  /**
+   * Optional hint, only used when there is no interview date. The server is
+   * authoritative: a supplied `interviewDate` always wins, so the client no
+   * longer has to guess (and get wrong) a day count.
+   */
+  daysRemaining?: number;
+  interviewDate?: string | null;
+}) => {
+  const res = await apiFetch(`${API_BASE_URL}/study-plan/generate`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
-  if (!res.ok) throw new Error('Study plan generation failed');
+  if (!res.ok) {
+    let message = 'Study plan generation failed';
+    try { message = (await res.json()).error || message; } catch { /* ignore */ }
+    throw new Error(message);
+  }
   return await res.json();
 };
+
+export const fetchStudyPlanTemplatesApi = async (): Promise<StudyPlanTemplateMeta[]> => {
+  const res = await apiFetch(`${API_BASE_URL}/study-plan/templates`);
+  return (await res.json())?.templates || [];
+};
+
+export const fetchMyStudyPlanApi = async () => {
+  const res = await apiFetch(`${API_BASE_URL}/study-plan/enrollment`);
+  return await res.json();
+};
+
+export const saveMyStudyPlanApi = async (payload: {
+  targetCompany: string;
+  targetRole: string;
+  interviewDate?: string | null;
+}) => {
+  const res = await apiFetch(`${API_BASE_URL}/study-plan/enrollment`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    let message = 'Could not save your plan';
+    try { message = (await res.json()).error || message; } catch { /* ignore */ }
+    throw new Error(message);
+  }
+  return await res.json();
+};
+
+export const setStudyPlanPhaseApi = async (phaseId: string, completed: boolean) => {
+  const res = await apiFetch(`${API_BASE_URL}/study-plan/enrollment/phases/${encodeURIComponent(phaseId)}`, {
+    method: 'PUT',
+    body: JSON.stringify({ completed }),
+  });
+  if (!res.ok) {
+    let message = 'Could not update progress';
+    try { message = (await res.json()).error || message; } catch { /* ignore */ }
+    throw new Error(message);
+  }
+  return await res.json();
+};
+
+export const resetMyStudyPlanApi = async () => {
+  const res = await apiFetch(`${API_BASE_URL}/study-plan/enrollment`, { method: 'DELETE' });
+  if (!res.ok) {
+    let message = 'Could not reset your plan';
+    try { message = (await res.json()).error || message; } catch { /* ignore */ }
+    throw new Error(message);
+  }
+  return await res.json();
+};
+
+// ---------- Study plan admin ----------
+
+export const adminListStudyPlansApi = async (status?: string) =>
+  adminFetch(`/admin/study-plans${status ? `?status=${encodeURIComponent(status)}` : ''}`);
+
+export const adminGetStudyPlanApi = async (id: string) =>
+  adminFetch(`/admin/study-plans/${encodeURIComponent(id)}`);
+
+export const adminCreateStudyPlanApi = async (data: any) =>
+  adminFetch('/admin/study-plans', { method: 'POST', body: JSON.stringify(data) });
+
+export const adminUpdateStudyPlanApi = async (id: string, data: any) =>
+  adminFetch(`/admin/study-plans/${encodeURIComponent(id)}`, { method: 'PUT', body: JSON.stringify(data) });
+
+export const adminDeleteStudyPlanApi = async (id: string, hard = false) =>
+  adminFetch(`/admin/study-plans/${encodeURIComponent(id)}${hard ? '?hard=1' : ''}`, { method: 'DELETE' });
+
+export const adminAddStudyPlanPhaseApi = async (templateId: string, data: any) =>
+  adminFetch(`/admin/study-plans/${encodeURIComponent(templateId)}/phases`, {
+    method: 'POST', body: JSON.stringify(data),
+  });
+
+export const adminUpdateStudyPlanPhaseApi = async (templateId: string, phaseId: string, data: any) =>
+  adminFetch(`/admin/study-plans/${encodeURIComponent(templateId)}/phases/${encodeURIComponent(phaseId)}`, {
+    method: 'PUT', body: JSON.stringify(data),
+  });
+
+export const adminDeleteStudyPlanPhaseApi = async (templateId: string, phaseId: string) =>
+  adminFetch(`/admin/study-plans/${encodeURIComponent(templateId)}/phases/${encodeURIComponent(phaseId)}`, {
+    method: 'DELETE',
+  });
+
+export const adminReorderStudyPlanPhasesApi = async (templateId: string, phaseIds: string[]) =>
+  adminFetch(`/admin/study-plans/${encodeURIComponent(templateId)}/phases/reorder`, {
+    method: 'POST', body: JSON.stringify({ phase_ids: phaseIds }),
+  });
+
+export const adminAddStudyPlanBlockApi = async (templateId: string, phaseId: string, data: any) =>
+  adminFetch(`/admin/study-plans/${encodeURIComponent(templateId)}/phases/${encodeURIComponent(phaseId)}/blocks`, {
+    method: 'POST', body: JSON.stringify(data),
+  });
+
+export const adminUpdateStudyPlanBlockApi = async (templateId: string, phaseId: string, blockId: string, data: any) =>
+  adminFetch(
+    `/admin/study-plans/${encodeURIComponent(templateId)}/phases/${encodeURIComponent(phaseId)}/blocks/${encodeURIComponent(blockId)}`,
+    { method: 'PUT', body: JSON.stringify(data) }
+  );
+
+export const adminDeleteStudyPlanBlockApi = async (templateId: string, phaseId: string, blockId: string) =>
+  adminFetch(
+    `/admin/study-plans/${encodeURIComponent(templateId)}/phases/${encodeURIComponent(phaseId)}/blocks/${encodeURIComponent(blockId)}`,
+    { method: 'DELETE' }
+  );
 
 export const fetchInterviewModulesApi = async () => {
   try {
@@ -454,14 +626,15 @@ export const saveInterviewCourseProgressApi = async (moduleId: number) => {
   return await res.json();
 };
 
-export const generateCourseCertificateApi = async (candidateName: string) => {
-  const res = await apiFetch(`${API_BASE_URL}/interview-course/certificate`, {
-    method: 'POST',
-    body: JSON.stringify({ candidate_name: candidateName }),
-  });
-  if (!res.ok) throw new Error('Certificate generation failed');
-  return await res.json();
-};
+/**
+ * REMOVED: generateCourseCertificateApi (interview-course certificate).
+ *
+ * The endpoint it called now answers 410 Gone. It minted an unsigned
+ * `TIEEDU-CERT-<Math.random()>` serial with a verification URL that pointed at a
+ * route which never existed. Certificates are issued by the course engine
+ * instead — see `issueCertificate` in `@/lib/coursesApi`, and verify them at
+ * `/verify/<serial>`.
+ */
 
 export interface MyAccount {
   user: {

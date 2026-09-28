@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Company, ContentModule, InterviewReport } from '@/types';
 import { fetchAdminCompaniesApi, fetchModerationReportsApi, fetchPendingPaymentsApi } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
@@ -14,12 +14,17 @@ import { ReportsTab } from '@/components/admin/ReportsTab';
 import { AnalyticsTab } from '@/components/admin/AnalyticsTab';
 import { SettingsTab } from '@/components/admin/SettingsTab';
 import { PaymentVerificationsTab } from '@/components/admin/PaymentVerificationsTab';
+import { StudyPlansTab } from '@/components/admin/StudyPlansTab';
 import {
   BookOpen, Building2, BarChart3, FileText, Layers, LayoutDashboard,
-  LogOut, RefreshCw, Settings2, ShoppingBag, Ticket, Users, ExternalLink, Wallet
+  LogOut, RefreshCw, Settings2, ShoppingBag, Ticket, Users, ExternalLink, Wallet, CalendarRange,
+  GraduationCap, Award, Zap
 } from 'lucide-react';
+import { AdminCoursesTab } from '@/components/admin/course/AdminCoursesTab';
+import { AdminCertificatesTab } from '@/components/admin/course/AdminCertificatesTab';
+import { AdminXpTab } from '@/components/admin/course/AdminXpTab';
 
-type TabId = 'overview' | 'orders' | 'payments' | 'users' | 'analytics' | 'hub' | 'content' | 'pack' | 'coupons' | 'reports' | 'settings';
+type TabId = 'overview' | 'orders' | 'payments' | 'users' | 'analytics' | 'hub' | 'content' | 'pack' | 'studyplans' | 'coupons' | 'courses' | 'certificates' | 'xp' | 'reports' | 'settings';
 
 const NAV: { id: TabId; label: string; icon: any; group: string }[] = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard, group: 'Commerce & Health' },
@@ -30,7 +35,11 @@ const NAV: { id: TabId; label: string; icon: any; group: string }[] = [
   { id: 'hub', label: 'Company Hub', icon: Building2, group: 'Content & Vault' },
   { id: 'content', label: 'Content Builder', icon: BookOpen, group: 'Content & Vault' },
   { id: 'pack', label: 'Pack Editor', icon: Layers, group: 'Content & Vault' },
+  { id: 'studyplans', label: 'Study Plans', icon: CalendarRange, group: 'Content & Vault' },
   { id: 'coupons', label: 'Coupons & Pricing', icon: Ticket, group: 'Content & Vault' },
+  { id: 'courses', label: 'Courses', icon: GraduationCap, group: 'Learning' },
+  { id: 'certificates', label: 'Certificates', icon: Award, group: 'Learning' },
+  { id: 'xp', label: 'XP Ledger', icon: Zap, group: 'Learning' },
   { id: 'reports', label: 'Candidate Reports', icon: FileText, group: 'Engagement' },
   { id: 'settings', label: 'Settings', icon: Settings2, group: 'System' },
 ];
@@ -74,8 +83,14 @@ export const AdminCmsView: React.FC = () => {
     setIsLoading(false);
   };
 
+  // `loadData` reads the auth token, so it must be in a dependency or a refresh
+  // triggered while the session was still loading would silently render the
+  // signed-out view. A ref keeps the identity stable so this does not re-run in
+  // a loop while the token is still resolving.
+  const loadDataRef = useRef(loadData);
+  useEffect(() => { loadDataRef.current = loadData; });
   useEffect(() => {
-    loadData();
+    loadDataRef.current();
   }, []);
 
   const selectedCompany = companiesList.find((c) => c.id === selectedCompanyId) || companiesList[0];
@@ -284,7 +299,15 @@ export const AdminCmsView: React.FC = () => {
             )}
 
             {/* TAB: COUPONS */}
-            {activeTab === 'coupons' && <CouponsManager />}
+            {activeTab === 'studyplans' && <StudyPlansTab />}
+
+        {activeTab === 'courses' && <AdminCoursesTab />}
+
+        {activeTab === 'certificates' && <AdminCertificatesTab />}
+
+        {activeTab === 'xp' && <AdminXpTab />}
+
+      {activeTab === 'coupons' && <CouponsManager />}
 
             {/* TAB: CANDIDATE REPORTS */}
             {activeTab === 'reports' && <ReportsTab companies={companiesList} onChanged={loadData} />}

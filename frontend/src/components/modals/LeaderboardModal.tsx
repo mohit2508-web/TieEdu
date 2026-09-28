@@ -9,13 +9,22 @@ interface LeaderboardModalProps {
   onClose: () => void;
 }
 
+/**
+ * Mirrors GET /api/gamification/leaderboard.
+ *
+ * `xp` is the authoritative ledger total. `streak` is intentionally nullable —
+ * the API no longer invents one, so the UI must not render "0d streak" as if
+ * that were a real measurement. `badge` is null unless the account genuinely
+ * earned it; it is never derived from rank.
+ */
 interface LeaderboardEntry {
   rank: number;
+  id: string;
   name: string;
   xp: number;
-  streak: number;
+  streak: number | null;
   college: string;
-  badge: string;
+  badge: string | null;
   report_contributions: number;
 }
 
@@ -72,13 +81,16 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onCl
               </span>
               <div>
                 <p className="text-xs font-bold text-[#0E2A44]">{user.name}</p>
-                <p className="text-[10px] text-[#0271B5]">
-                  {user.xp || 0} XP · {user.streak || 0}d streak
-                </p>
+                {/*
+                  XP only. A streak used to sit here, but the XP system no longer
+                  touches `user.streak`, so the stored number is frozen — showing
+                  it next to live XP would imply it is still being measured.
+                */}
+                <p className="text-[10px] text-[#0271B5]">{user.xp || 0} XP</p>
               </div>
             </div>
             <span className="text-[10px] font-extrabold uppercase tracking-wide text-[#0271B5] bg-white/70 px-2 py-1 rounded-md">
-              Rank #{entries.find((e) => e.name === user.name)?.rank ?? '—'}
+              Rank #{entries.find((e) => e.id === user.id)?.rank ?? '—'}
             </span>
           </div>
         )}
@@ -132,9 +144,9 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onCl
 
           {!loading && !error && entries.map((u) => (
             <div
-              key={`${u.rank}-${u.name}`}
+              key={u.id}
               className={`flex items-center justify-between p-3 rounded-xl border text-[13px] ${
-                user && u.name === user.name
+                user && u.id === user.id
                   ? 'bg-[#E8F4FB]/60 border-[#bcdced] font-semibold'
                   : 'bg-[#FCFBF8] border-[#E9E7E1]'
               }`}
@@ -147,12 +159,20 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onCl
                 </span>
                 <div>
                   <span className="text-[#10151C] block font-bold">{u.name}</span>
-                  <span className="text-[11px] text-[--text-muted]">{u.college} · {u.badge}</span>
+                  {/* Only render what is actually true. An empty college and a
+                      null badge must not print as " · " or "null". */}
+                  <span className="text-[11px] text-[--text-muted]">
+                    {[u.college, u.badge].filter(Boolean).join(' · ') || '—'}
+                  </span>
                 </div>
               </div>
               <div className="text-right">
                 <span className="text-[#0E2A44] font-mono font-bold block stat-num">{u.xp} XP</span>
-                <span className="text-[11px] text-[#C77B12] font-semibold">{u.streak}d streak</span>
+                <span className="text-[11px] text-[#C77B12] font-semibold">
+                  {u.report_contributions > 0
+                    ? `${u.report_contributions} published report${u.report_contributions > 1 ? 's' : ''}`
+                    : 'in progress'}
+                </span>
               </div>
             </div>
           ))}

@@ -2,14 +2,18 @@ import { Router, Request, Response } from 'express';
 import { loadDb } from '../data/db';
 import { optionalAuth } from '../middleware/auth';
 import { deriveCompanyStats, publishedReports } from '../lib/stats';
+import { buildComparisonMatrix } from '../lib/compare';
 import { ownedModuleIdsFor, unlockedCompanyIds } from '../payments/orders';
 
 export const companiesRouter = Router();
 
+// Presentation metadata ONLY. Never include section_data / items / blocks here.
 const LIST_KEEP_KEYS = [
-  'id', 'slug', 'name', 'logo_url', 'tagline', 'description', 'careers_link',
+  'id', 'slug', 'name', 'logo_url', 'tagline', 'about', 'description', 'careers_link',
+  'hq', 'founded_year', 'employee_band', 'fact_checked_at', 'metric_sources',
   'status', 'last_updated_days_ago', 'comparison_metrics', 'verification_level',
-  'industry', 'tags', 'difficulty_rating', 'avg_process_days', 'ctc_min', 'ctc_max',
+  'industry', 'tags', 'difficulty_rating', 'avg_process_days', 'avg_rounds',
+  'ctc_min', 'ctc_max', 'rounds_pipeline',
 ];
 
 function attachLiveStats(db: any, company: any) {
@@ -69,6 +73,38 @@ companiesRouter.get('/', optionalAuth, (req: Request, res: Response) => {
       return sanitized;
     });
   res.json(list);
+});
+
+// GET /api/companies/compare?slugs=a,b,c — honest side-by-side matrix.
+// MUST be declared before '/:slug' or Express will treat "compare" as a slug.
+//
+// Every counted field is derived live (see lib/compare.ts). Editorial fields ship
+// with their admin-recorded provenance so the UI can label unverified metrics
+// instead of presenting a hand-written number as fact. Locked question text is
+// never included — previews come only from free-preview items.
+companiesRouter.get('/compare', optionalAuth, (req: Request, res: Response) => {
+  const db = loadDb();
+
+  const raw = req.query.slugs;
+  const slugs: string[] = (Array.isArray(raw) ? raw : [raw])
+    .filter((v): v is string => typeof v === 'string')
+    .flatMap((v) => v.split(','))
+    .map((v) => v.trim())
+    .filter(Boolean);
+
+  // No selection supplied — bootstrap with the first published vaults so the page
+  // always has real columns instead of an empty shell.
+  const resolved = slugs.length > 0
+    ? slugs
+    : (db.companies || [])
+        .filter((c: any) => c.status !== 'draft')
+        .slice(0, 3)
+        .map((c: any) => c.slug);
+
+  return res.json(buildComparisonMatrix(db, resolved, {
+    userId: req.userId || '',
+    isAdmin: req.user?.role === 'admin',
+  }));
 });
 
 // GET /api/companies/:slug — real per-user unlock & ownership state (Bearer token optional)

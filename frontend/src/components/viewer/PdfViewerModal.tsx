@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ModulePdf } from '@/types';
 import { authHeaders, fetchPdfBytesApi, pdfFileUrl } from '@/lib/api';
+import { formatDay } from '@/lib/date';
 import { useAuth } from '@/context/AuthContext';
 import {
   X, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, Maximize,
@@ -112,8 +113,14 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
     }
   }, []);
 
+  // What this effect actually loads is `stored_name`, so that is what it keys on.
+  // It previously depended only on `pdf?.id`, which meant re-uploading a file
+  // under the same record id (new bytes, same id) left the viewer showing the
+  // document it had already cached until the modal was closed and reopened.
+  const storedName = pdf?.stored_name ?? null;
+
   useEffect(() => {
-    if (!isOpen || !pdf) return;
+    if (!isOpen || !storedName) return;
     let cancelled = false;
     setStatus('loading');
     setProgress(null);
@@ -130,14 +137,14 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
         const canStream = process.env.NODE_ENV === 'production';
 
         const loadFromBytes = async (): Promise<PdfJsDoc> => {
-          const bytes = await fetchPdfBytesApi(pdf.stored_name, (f) => setProgress(f));
+          const bytes = await fetchPdfBytesApi(storedName, (f) => setProgress(f));
           return pdfjsLib.getDocument({ data: new Uint8Array(bytes) }).promise;
         };
 
         let doc: PdfJsDoc;
         if (canStream) {
           const streaming = pdfjsLib.getDocument({
-            url: pdfFileUrl(pdf.stored_name),
+            url: pdfFileUrl(storedName),
             httpHeaders: authHeaders(),
             withCredentials: true,
           });
@@ -170,7 +177,7 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
 
     load();
     return () => { cancelled = true; cleanup(); };
-  }, [isOpen, pdf?.id, cleanup]);
+  }, [isOpen, storedName, cleanup]);
 
   // Measure container
   useEffect(() => {
@@ -234,7 +241,11 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
 
   useEffect(() => {
     if (status !== 'ready' || !cacheRef.current.has(page)) { showPage(page, true).catch(() => {}); }
-  }, [status, page, effectiveScale, fitMode]);
+    // `showPage` is listed because it closes over `numPages` and the renderer,
+    // both of which this effect needs. It is only rebuilt when `numPages`
+    // changes, and that happens once per loaded document, so this does not
+    // re-render the page on every keystroke of the zoom control.
+  }, [status, page, effectiveScale, fitMode, showPage]);
 
   const goTo = useCallback((targetPage: number) => {
     const target = Math.min(Math.max(1, targetPage), numPages);
@@ -259,7 +270,10 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
     showPage(page, true).catch(() => {});
   };
 
-  const dateLabel = pdf.uploaded_at ? ` • ${pdf.uploaded_at}` : '';
+  // Formatted rather than printed raw: `uploaded_at` is an ISO timestamp, so this
+  // used to render "2026-03-12T09:41:00.000Z" in the viewer chrome.
+  const uploadedLabel = formatDay(pdf.uploaded_at);
+  const dateLabel = uploadedLabel ? ` • ${uploadedLabel}` : '';
 
   return (
     <div

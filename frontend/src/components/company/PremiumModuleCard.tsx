@@ -1,6 +1,7 @@
 import React from 'react';
 import { ContentModule, RoundType } from '@/types';
 import { ShoppingCart, Eye, Lock, FileText, BadgeCheck, Star } from 'lucide-react';
+import { SINGLE_MODULE_PRICE } from '@/lib/packPricing';
 
 interface Props {
   module: ContentModule;
@@ -36,7 +37,8 @@ const MODULE_TYPE_LABEL: Record<string, string> = {
 export const PremiumModuleCard: React.FC<Props> = ({ module, companyName, isUnlocked, isOwned = false, solvedCount = 0, bookmarkedCount = 0, onAddToCart, onPreview, onOpenPdf }) => {
   const rm = module.round_type ? ROUND_META[module.round_type] : null;
   const typeLabel = MODULE_TYPE_LABEL[module.module_type] || module.module_type.replace(/_/g, ' ');
-  const price = 99;
+  // A round bought on its own always costs the single-module rung of the ladder.
+  const price = SINGLE_MODULE_PRICE;
   const itemCount = module.items?.length || 0;
   const unlocked = isUnlocked || isOwned;
 

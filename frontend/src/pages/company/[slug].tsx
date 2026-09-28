@@ -18,7 +18,7 @@ import { IntelligenceTreeSidebar, MobileSidebarDrawer } from '@/components/compa
 import { useAuth } from '@/context/AuthContext';
 import dynamic from 'next/dynamic';
 import { fetchCompanyBySlug, fetchCompanies, API_BASE_URL } from '@/lib/api';
-import { packPrice } from '@/lib/packPricing';
+import { packPrice, SINGLE_MODULE_PRICE } from '@/lib/packPricing';
 import { CompanyModuleReader } from '@/components/company/CompanyModuleReader';
 import { Company, PricingPlan, ContentItem, ContentModule, RoundType, CompanyModuleItem, CartItem } from '@/types';
 import {
@@ -32,6 +32,16 @@ const LeaderboardModal = dynamic(() => import('@/components/modals/LeaderboardMo
 const SubmitReportModal = dynamic(() => import('@/components/modals/SubmitReportModal').then(m => m.SubmitReportModal), { ssr: false });
 const AuthRequiredModal = dynamic(() => import('@/components/modals/AuthRequiredModal').then(m => m.AuthRequiredModal), { ssr: false });
 const FeedbackAdModal = dynamic(() => import('@/components/modals/FeedbackAdModal').then(m => m.FeedbackAdModal), { ssr: false });
+
+// Short, honest round names for the pack banner. Derived from the vault's real
+// modules — never a hardcoded OA/Technical/SD/HR row for a company that lacks them.
+const ROUND_SHORT_LABEL: Record<string, string> = {
+  OA: 'Online Assessment',
+  Technical: 'Technical',
+  SystemDesign: 'System Design',
+  HR: 'HR & Behavioral',
+  Managerial: 'Managerial',
+};
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const slug = String(context.params?.slug || '');
@@ -82,33 +92,42 @@ export default function CompanyVaultPage({ initialCompany, initialSlug }: { init
     fetchCompanies().then(data => { if (data?.length > 0) setAllCompanies(data); }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
-  // Scroll to top when user opens a module or a specific question item
+  // Scroll to top when user opens a module or a specific question item.
+  // Keyed on the ids, not the objects: the selection is replaced with a fresh
+  // object identity on every fetch, which would scroll the reader to the top
+  // every time the page revalidated underneath them. Reading the ids into
+  // locals (rather than the objects) keeps the effect honest about what it
+  // actually depends on.
+  const selectedModuleId = selectedModule?.id;
+  const selectedItemId = selectedItem?.id;
   useEffect(() => {
-    if (typeof window !== 'undefined' && (selectedModule || selectedItem)) {
+    if (typeof window !== 'undefined' && (selectedModuleId || selectedItemId)) {
       window.scrollTo({ top: 0, behavior: 'auto' });
     }
-  }, [selectedModule?.id, selectedItem?.id]);
+  }, [selectedModuleId, selectedItemId]);
 
   // Refresh-safe: keep whatever the user was reading (??m / ??q in the URL)
   // so a reload lands on the same module or question instead of the catalog.
+  // The query values are named dependencies rather than `router.query` itself:
+  // the router object is a new identity on every navigation, and depending on it
+  // re-ran this on unrelated route changes.
+  const { m: urlModuleId, q: urlItemId } = router.query;
   useEffect(() => {
     if (!company) return;
-    if (!user && (router.query.m || router.query.q)) {
+    if (!user && (urlModuleId || urlItemId)) {
       setIsAuthRequiredOpen(true);
       return;
     }
     const items: ContentItem[] = (company.modules || []).flatMap((mod: ContentModule) => mod.items || []);
-    const q = router.query.q;
-    const m = router.query.m;
-    if (q) {
-      const item = items.find(i => i.id === q);
+    if (urlItemId) {
+      const item = items.find(i => i.id === urlItemId);
       if (item) { setSelectedItem(item); setActiveReaderTab('content'); return; }
     }
-    if (m) {
-      const mod = (company.modules || []).find(x => x.id === m);
+    if (urlModuleId) {
+      const mod = (company.modules || []).find(x => x.id === urlModuleId);
       if (mod) setSelectedModule(mod);
     }
-  }, [company, user]);
+  }, [company, user, urlModuleId, urlItemId]);
 
   const loadedSlugRef = useRef(initialSlug);
   useEffect(() => {
@@ -148,8 +167,12 @@ export default function CompanyVaultPage({ initialCompany, initialSlug }: { init
 
   const modules = company.modules || [];
 
-  const featuredFree = modules.find(m => !m.is_premium || m.price === 0) || modules[0];
-  const premiumModules = modules.filter(m => m.id !== featuredFree?.id && (m.is_premium || (m.price && m.price > 0)));
+  // A module is "free" only when it is genuinely not premium. Testing `price === 0`
+  // here would let a zero-priced premium round hijack the free showcase slot and then
+  // be filtered out of the sellable list, making it impossible to ever buy.
+  const freeModules = modules.filter(m => m.is_premium !== true);
+  const featuredFree = freeModules[0] || modules[0];
+  const premiumModules = modules.filter(m => m.is_premium === true);
   const filteredPremium = activeRoundTab === 'all'
     ? premiumModules
     : premiumModules.filter(m => m.round_type === activeRoundTab);
@@ -226,7 +249,7 @@ export default function CompanyVaultPage({ initialCompany, initialSlug }: { init
     logo_url: company.logo_url,
     module_ids: remainingPremium.map(m => m.id),
     module_count: remainingPremium.length || 1,
-    price: remainingPrice || 99,
+    price: remainingPrice || SINGLE_MODULE_PRICE,
   });
 
   const moduleLineItem = (mod: ContentModule): CompanyModuleItem => ({
@@ -239,7 +262,7 @@ export default function CompanyVaultPage({ initialCompany, initialSlug }: { init
     module_title: mod.title,
     round_type: mod.round_type,
     module_count: 1,
-    price: 99,
+    price: SINGLE_MODULE_PRICE,
   });
 
   const cartKey = (item: CartItem): string =>
@@ -322,6 +345,7 @@ export default function CompanyVaultPage({ initialCompany, initialSlug }: { init
             onSwitchModule={mod => { setSelectedModule(mod); pushState(mod.id); }}
             onBack={() => { setSelectedModule(null); pushState(); }}
             onUnlockClick={handleUnlockClick}
+            unlockPrice={remainingPrice || undefined}
             initialSection={readerSection}
           />
         ) : selectedItem ? (
@@ -468,6 +492,7 @@ export default function CompanyVaultPage({ initialCompany, initialSlug }: { init
                             isLocked={!isItemUnlocked(selectedItem)}
                             companyName={company.name}
                             onUnlockClick={handleUnlockClick}
+                            unlockPrice={remainingPrice || undefined}
                           />
                         ))
                     ) : (
@@ -530,7 +555,8 @@ export default function CompanyVaultPage({ initialCompany, initialSlug }: { init
               onSelectRoundTab={setActiveRoundTab}
               onUnlockClick={handleUnlockClick}
               isUnlocked={vaultComplete}
-              unlockPrice={remainingPrice || 249}
+              unlockPrice={remainingPrice || undefined}
+              remainingRounds={remainingPremium.length}
             />
 
             <TrustBadgeBar trustStats={company.trust_stats} companyName={company.name} />
@@ -544,7 +570,7 @@ export default function CompanyVaultPage({ initialCompany, initialSlug }: { init
                 onOpenPdf={() => openModule(featuredFree, 'pdfs')}
                 onUnlockClick={handleUnlockClick}
                 isUnlocked={vaultComplete}
-                unlockPrice={remainingPrice || 249}
+                unlockPrice={remainingPrice || undefined}
               />
             )}
 
@@ -583,6 +609,9 @@ export default function CompanyVaultPage({ initialCompany, initialSlug }: { init
                   remainingPrice={remainingPrice}
                   onAddCompletePack={handleAddCompletePack}
                   isUnlocked={isUnlocked}
+                  roundLabels={premiumModules
+                    .filter(m => !ownedModuleIds.includes(m.id))
+                    .map(m => ROUND_SHORT_LABEL[m.round_type || ''] || m.module_type.replace(/_/g, ' ') || 'Round')}
                   onBrowseModules={() => document.getElementById('premium-modules')?.scrollIntoView({ behavior: 'smooth' })}
                 />
               )}
@@ -651,7 +680,7 @@ export default function CompanyVaultPage({ initialCompany, initialSlug }: { init
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 {cartItems.length > 0 && (
-                  <span className="hidden xs:inline-flex items-center min-w-[2rem] h-7 px-2 rounded-full bg-white/15 text-white text-[11px] font-bold border border-white/20" title="Items in cart">
+                  <span className="inline-flex items-center min-w-[2rem] h-7 px-2 rounded-full bg-white/15 text-white text-[11px] font-bold border border-white/20" title="Items in cart">
                     <ShoppingBag className="w-3.5 h-3.5 mr-1" />{cartItems.length}
                   </span>
                 )}

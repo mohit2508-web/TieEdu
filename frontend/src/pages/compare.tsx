@@ -1,72 +1,138 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
-import { CartModal } from '@/components/checkout/CartModal';
 import { SearchModal } from '@/components/modals/SearchModal';
 import { LeaderboardModal } from '@/components/modals/LeaderboardModal';
-import { fetchCompanies } from '@/lib/api';
-import { Company, PricingPlan } from '@/types';
+import { SubmitReportModal } from '@/components/modals/SubmitReportModal';
+import { fetchCompanies, fetchComparisonMatrix } from '@/lib/api';
+import { packPrice } from '@/lib/packPricing';
+import type { Company, CompanyModuleItem, CompareCompany, ComparisonMatrix } from '@/types';
 import { BrandTile } from '@/components/common/BrandTile';
+import { CompareMatrixTable, CompareColumnHeader } from '@/components/compare/CompareMatrixTable';
+import { CompareCompanyCards } from '@/components/compare/CompareCompanyCards';
+import { MatrixLegend } from '@/components/compare/CompanyActions';
+import { ROW_GROUPS, buildRoundRows } from '@/components/compare/comparisonRows';
 import {
-  ArrowLeft, ShieldCheck, Clock, Users, Lock, CheckCircle2, Scale,
-  Sparkles, Layers, FileText, Cpu, Award, Zap, HelpCircle, ArrowUpRight, RefreshCw
+  ArrowLeft, ChevronDown, Scale, Info, RefreshCw, ShieldCheck, X,
 } from 'lucide-react';
 
+const CartModal = dynamic(() => import('@/components/checkout/CartModal').then((m) => m.CartModal), { ssr: false });
+
+const MAX_COLUMNS = 4;
+
+/**
+ * Side-by-side company comparison.
+ *
+ * Every metric on this page is served by GET /companies/compare, which derives it
+ * from the live ledger (backend/src/lib/compare.ts). This page renders and
+ * navigates — it never computes a company fact, and never invents a round,
+ * a question or a verification claim.
+ */
 export default function ComparePage() {
   const [companies, setCompanies] = useState<Company[]>([]);
+  const [matrix, setMatrix] = useState<ComparisonMatrix | null>(null);
   const [loading, setLoading] = useState(true);
-  const [comp1Slug, setComp1Slug] = useState('');
-  const [comp2Slug, setComp2Slug] = useState('');
-  const [comp3Slug, setComp3Slug] = useState('');
+  const [matrixError, setMatrixError] = useState(false);
+  const [slugs, setSlugs] = useState<string[]>([]);
+  const [activeSlug, setActiveSlug] = useState<string>('');
+  const [picking, setPicking] = useState(false);
 
-  const [cartItems, setCartItems] = useState<(Company | PricingPlan)[]>([]);
+  const [cartItems, setCartItems] = useState<CompanyModuleItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
+  const [reportCompany, setReportCompany] = useState<{ id: string; name: string } | null>(null);
+  const [showMethodology, setShowMethodology] = useState(false);
 
+  // ---- Load the picker list, then seed a sensible default selection ----
   useEffect(() => {
     let active = true;
-    fetchCompanies().then((list) => {
-      if (!active) return;
-      const published = (list || []).filter((c) => c.status !== 'draft');
-      setCompanies(published);
-      setComp1Slug((s) => s || published[0]?.slug || '');
-      setComp2Slug((s) => s || published[1]?.slug || published[0]?.slug || '');
-      setComp3Slug((s) => s || published[2]?.slug || published[0]?.slug || '');
-    }).catch(() => { /* no data — honest empty state */ }).finally(() => {
-      if (active) setLoading(false);
-    });
+    fetchCompanies()
+      .then((list) => {
+        if (!active) return;
+        const published = (list || []).filter((c) => c.status !== 'draft');
+        setCompanies(published);
+        setSlugs((prev) => (prev.length > 0 ? prev : published.slice(0, 3).map((c) => c.slug)));
+      })
+      .catch(() => { /* honest empty state below */ })
+      .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, []);
 
-  const bySlug = (slug: string) => companies.find((c) => c.slug === slug);
-  const comp1 = bySlug(comp1Slug);
-  const comp2 = bySlug(comp2Slug);
-  const comp3 = bySlug(comp3Slug);
-  const comparedList = [comp1, comp2, comp3].filter(Boolean) as Company[];
+  // ---- Fetch the derived matrix whenever the selection changes ----
+  useEffect(() => {
+    if (slugs.length === 0) return;
+    let cancelled = false;
+    setMatrixError(false);
+    fetchComparisonMatrix(slugs)
+      .then((m) => {
+        if (cancelled) return;
+        if (!m) { setMatrixError(true); return; }
+        setMatrix(m);
+        setActiveSlug((prev) => (m.companies.some((c) => c.slug === prev) ? prev : m.companies[0]?.slug || ''));
+      })
+      .catch(() => { if (!cancelled) setMatrixError(true); });
+    return () => { cancelled = true; };
+  }, [slugs]);
 
-  const handleUnlock = (c: Company) => {
-    if (!cartItems.some(i => 'slug' in i && i.slug === c.slug)) {
-      setCartItems([...cartItems, c]);
-    }
+  const toggleSlug = useCallback((slug: string) => {
+    setSlugs((prev) => {
+      if (prev.includes(slug)) return prev.length > 1 ? prev.filter((s) => s !== slug) : prev;
+      if (prev.length >= MAX_COLUMNS) return prev;
+      return [...prev, slug];
+    });
+  }, []);
+
+  /**
+   * Unlock CTA — builds a proper module-scoped line with the EXACT rounds the
+   * user does not own. Passing a bare Company here (the previous behaviour) made
+   * CartModal bill the flat Rs 249 complete-pack price even for a 1-round vault.
+   */
+  const handleUnlock = useCallback((c: CompareCompany, moduleIds: string[]) => {
+    if (moduleIds.length === 0) return;
+    const line: CompanyModuleItem = {
+      kind: 'company',
+      id: c.id,
+      slug: c.slug,
+      name: c.name,
+      logo_url: c.logo_url,
+      module_ids: moduleIds,
+      module_count: moduleIds.length,
+      price: packPrice(moduleIds.length),
+    };
+    setCartItems((prev) => (prev.some((i) => i.id === c.id) ? prev : [...prev, line]));
     setIsCartOpen(true);
-  };
+  }, []);
 
-  const applyPreset = (slugs: string[]) => {
-    setComp1Slug(slugs[0] || '');
-    setComp2Slug(slugs[1] || '');
-    setComp3Slug(slugs[2] || '');
-  };
+  const cartKeys = useMemo(
+    () => new Set(cartItems.filter((i) => i.kind === 'company').map((i) => i.slug)),
+    [cartItems]
+  );
 
-  const verifiedReportCount = companies.reduce((s, c) => s + (c.accuracy_report_count || 0), 0);
+  const roundRows = useMemo(() => (matrix ? buildRoundRows(matrix) : []), [matrix]);
+
+  const totals = useMemo(() => {
+    if (!matrix) return null;
+    const cs = matrix.companies;
+    return {
+      vaults: cs.length,
+      questions: cs.reduce((s, c) => s + c.derived.question_count, 0),
+      reports: cs.reduce((s, c) => s + c.derived.published_report_count, 0),
+      freeVaults: cs.filter((c) => c.premium_module_count === 0).length,
+    };
+  }, [matrix]);
 
   return (
     <>
       <Head>
         <title>Side-by-Side Company Comparison Matrix | TieEdu</title>
-        <meta name="description" content="Compare difficulty ratings, hiring rounds, CTC packages, round-by-round breakdowns, top interview questions, and system design topics across top tech firms." />
+        <meta
+          name="description"
+          content="Compare vault size, hiring rounds, CTC, process duration and candidate-verified match accuracy across company interview vaults. Every count is derived live from real records."
+        />
       </Head>
 
       <div className="min-h-screen flex flex-col bg-[#FAFAF9]">
@@ -77,270 +143,203 @@ export default function ComparePage() {
           onOpenLeaderboard={() => setIsLeaderboardOpen(true)}
         />
 
-        {/* FULL PAGE WIDTH MAIN CONTAINER */}
-        <main className="flex-1 w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 py-8">
-
-          {/* Back Navigation */}
-          <Link href="/" className="inline-flex items-center gap-1 text-xs text-[--text-muted] hover:text-[#1A1A1A] mb-6 font-medium">
+        <main className="flex-1 w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 py-6 sm:py-8">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1 text-xs text-[--text-muted] hover:text-[#1A1A1A] mb-5 font-medium"
+          >
             <ArrowLeft className="w-3.5 h-3.5" /> Back to Company Directory
           </Link>
 
-          {/* Page Title & Hero Header */}
-          <div className="mb-8 flex flex-col lg:flex-row lg:items-end justify-between gap-4">
-            <div>
+          {/* Hero */}
+          <div className="mb-6 flex flex-col lg:flex-row lg:items-end justify-between gap-4">
+            <div className="min-w-0">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-[#1F3A5F] border border-indigo-100 mb-3 shadow-sm">
                 <Scale className="w-3.5 h-3.5 text-[#B45309]" />
-                Full-Width Comparative Intelligence Matrix
+                Comparison Matrix
               </div>
-              <h1 className="font-serif-heading text-3xl sm:text-4xl lg:text-5xl font-bold text-[#1A1A1A] mb-2 leading-tight">
-                Side-by-Side Company Comparison Matrix
+              <h1 className="font-serif-heading text-2xl sm:text-4xl lg:text-5xl font-bold text-[#1A1A1A] mb-2 leading-tight">
+                Compare Company Interview Vaults
               </h1>
               <p className="text-xs sm:text-sm text-[--text-muted] max-w-3xl leading-relaxed">
-                Compare CTC ranges, hiring process duration, round breakdowns, top high-frequency questions, and system design focus across the vaults in your directory.
+                Every count below is read from the database at the moment you load this page. Editorial figures such
+                as CTC and difficulty only count as fact once an admin has recorded where they came from — anything
+                without a source is labelled, not hidden and not dressed up.
               </p>
             </div>
 
-            {/* Live Counter */}
-            <div className="bg-white p-3.5 px-5 rounded-xl border border-[#EDEDEB] shadow-sm shrink-0 flex items-center gap-4 text-xs">
-              <div>
-                <span className="text-[10px] text-[--text-muted] font-mono uppercase block">Published Vaults</span>
-                <span className="font-bold text-[#1A1A1A] text-sm">{loading ? '…' : companies.length}</span>
+            {totals && (
+              <div className="bg-white rounded-xl border border-[#EDEDEB] shadow-sm shrink-0 px-4 py-3 grid grid-cols-2 sm:grid-cols-4 gap-x-5 gap-y-2 text-xs">
+                <Stat2 label="Vaults" value={String(totals.vaults)} />
+                <Stat2 label="Questions" value={String(totals.questions)} />
+                <Stat2 label="Reports" value={String(totals.reports)} />
+                <Stat2 label="Fully free" value={String(totals.freeVaults)} />
               </div>
-              <div className="h-8 w-px bg-[#EDEDEB]"></div>
-              <div>
-                <span className="text-[10px] text-[--text-muted] font-mono uppercase block">Verified Reports</span>
-                <span className="font-bold text-[#1E8E5A] text-sm">{loading ? '…' : verifiedReportCount}</span>
-              </div>
-            </div>
+            )}
           </div>
 
+          {/* Methodology disclosure */}
+          {matrix && (
+            <div className="mb-5">
+              <button
+                onClick={() => setShowMethodology((v) => !v)}
+                className="inline-flex items-center gap-1.5 text-[11.5px] font-semibold text-[#1F3A5F] hover:text-[#2A4D7E]"
+              >
+                <Info className="w-3.5 h-3.5" />
+                How to read this matrix
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showMethodology ? 'rotate-180' : ''}`} />
+              </button>
+              {showMethodology && (
+                <ul className="mt-2 space-y-1.5 bg-white border border-[#EDEDEB] rounded-xl p-3.5 text-[11.5px] text-[#4A4A4A] leading-relaxed">
+                  {matrix.methodology.map((m, i) => (
+                    <li key={i} className="flex gap-2">
+                      <span className="text-emerald-600 shrink-0">✓</span>
+                      <span>{m}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
+          {/* Company picker */}
+          <div className="bg-white border border-[#EDEDEB] rounded-2xl shadow-sm p-3.5 sm:p-4 mb-5">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <div className="min-w-0">
+                <h2 className="text-[13px] font-extrabold text-[#1A1A1A]">Companies to compare</h2>
+                <p className="text-[11px] text-[--text-muted] mt-0.5">
+                  Pick up to {MAX_COLUMNS}. A round is only listed for a company whose vault actually has it.
+                </p>
+              </div>
+              <button
+                onClick={() => setPicking((v) => !v)}
+                className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#1F3A5F]/20 text-[12px] font-bold text-[#1F3A5F] hover:bg-[#1F3A5F]/5"
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                {picking ? 'Done' : 'Change'}
+              </button>
+            </div>
+
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {slugs.map((s) => {
+                const c = companies.find((x) => x.slug === s);
+                const cmp = matrix?.companies.find((x) => x.slug === s);
+                return (
+                  <span
+                    key={s}
+                    className="inline-flex items-center gap-1.5 pl-1.5 pr-2 py-1 rounded-full bg-[#1F3A5F] text-white text-[12px] font-semibold"
+                  >
+                    <BrandTile name={c?.name || s} src={c?.logo_url} className="w-4 h-4 rounded-full p-0" />
+                    <span className="max-w-[120px] truncate">{c?.name || s}</span>
+                    {cmp && cmp.premium_module_count === 0 && (
+                      <span className="text-[9.5px] font-bold uppercase bg-emerald-400/25 text-emerald-100 px-1 rounded">
+                        Free
+                      </span>
+                    )}
+                    {slugs.length > 1 && (
+                      <button
+                        onClick={() => toggleSlug(s)}
+                        aria-label={`Remove ${c?.name || s}`}
+                        className="hover:text-amber-300"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </span>
+                );
+              })}
+            </div>
+
+            {picking && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1.5 pt-3 border-t border-[#EDEDEB] max-h-64 overflow-y-auto">
+                {companies.map((c) => {
+                  const on = slugs.includes(c.slug);
+                  const full = slugs.length >= MAX_COLUMNS && !on;
+                  return (
+                    <button
+                      key={c.id}
+                      disabled={full}
+                      onClick={() => toggleSlug(c.slug)}
+                      className={`flex items-center gap-2 px-2.5 py-2 rounded-lg border text-left transition-colors disabled:opacity-40 ${
+                        on
+                          ? 'border-[#1F3A5F] bg-[#1F3A5F]/5'
+                          : 'border-[#EDEDEB] hover:border-[#1F3A5F]/40'
+                      }`}
+                    >
+                      <BrandTile name={c.name} src={c.logo_url} className="w-6 h-6 rounded-lg p-0.5 shrink-0" />
+                      <span className="text-[12px] font-semibold text-[#1A1A1A] truncate min-w-0">{c.name}</span>
+                    </button>
+                  );
+                })}
+                {companies.length === 0 && (
+                  <p className="col-span-full text-[12px] text-[--text-muted] py-3 text-center">
+                    No published company vaults available to compare.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Body */}
           {loading ? (
-            <div className="flex items-center justify-center py-24 text-gray-400 text-sm">
+            <div className="flex items-center justify-center py-24 text-[--text-muted] text-sm">
               <RefreshCw className="w-4 h-4 animate-spin mr-2" /> Loading live vault data…
             </div>
-          ) : companies.length === 0 ? (
-            <div className="bg-white border border-gray-200 rounded-3xl p-12 text-center text-sm text-gray-400">
-              No published company vaults yet — check back once an admin publishes vaults.
+          ) : matrixError ? (
+            <div className="bg-white border border-[#EDEDEB] rounded-2xl p-10 text-center">
+              <p className="text-sm font-bold text-[#1A1A1A] mb-1">Could not load the comparison</p>
+              <p className="text-xs text-[--text-muted] mb-4">
+                The comparison service did not respond. No fallback numbers are shown — that is the point.
+              </p>
+              <button
+                onClick={() => setSlugs((s) => [...s])}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#1F3A5F] text-white text-xs font-bold"
+              >
+                <RefreshCw className="w-3.5 h-3.5" /> Retry
+              </button>
+            </div>
+          ) : !matrix || matrix.companies.length === 0 ? (
+            <div className="bg-white border border-[#EDEDEB] rounded-2xl p-10 text-center text-sm text-[--text-muted]">
+              No published company vaults to compare yet.
             </div>
           ) : (
             <>
-              {/* Benchmark Preset Quick Chips Bar */}
-              {companies.length >= 3 && (
-                <div className="mb-6 bg-white p-5 rounded-2xl border border-[#EDEDEB] shadow-sm w-full">
-                  <span className="text-[11px] font-mono uppercase tracking-wider text-[--text-muted] font-bold block mb-3">
-                    Quick presets
-                  </span>
-                  <div className="flex flex-wrap gap-3 text-xs">
-                    <button
-                      onClick={() => applyPreset([companies[0].slug, companies[1].slug, companies[2].slug])}
-                      className="px-4 py-2 bg-[#FAFAF9] hover:bg-indigo-50 text-[#1F3A5F] border border-[#EDEDEB] hover:border-indigo-200 rounded-xl font-semibold transition-all flex items-center gap-2"
-                    >
-                      <Zap className="w-4 h-4 text-[#B45309]" /> Top 3 published vaults
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Dropdown Company Selectors Bar */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8 bg-white p-5 rounded-2xl border border-[#EDEDEB] shadow-sm w-full">
-                {[comp1Slug, comp2Slug, comp3Slug].map((slug, i) => (
-                  <div key={i}>
-                    <label className="block text-[11px] font-mono uppercase text-[--text-muted] font-bold mb-1.5">Company Column {i + 1}</label>
-                    <select
-                      value={slug}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        if (i === 0) setComp1Slug(v);
-                        else if (i === 1) setComp2Slug(v);
-                        else setComp3Slug(v);
-                      }}
-                      className="w-full px-4 py-2.5 border rounded-xl text-xs sm:text-sm font-bold text-[#1A1A1A] bg-[#FAFAF9] focus:outline-none focus:border-[#1F3A5F]"
-                    >
-                      {companies.map(c => <option key={c.id} value={c.slug}>{c.name}</option>)}
-                    </select>
-                  </div>
-                ))}
+              <div className="mb-3">
+                <MatrixLegend />
               </div>
 
-              {/* MAIN FULL-WIDTH COMPARISON MATRIX TABLE */}
-              <div className="bg-white border border-[#EDEDEB] rounded-2xl overflow-hidden shadow-sm w-full overflow-x-auto">
-                <div className="min-w-[680px]">
+              {/* Desktop matrix */}
+              <div className="hidden lg:block space-y-3">
+                <CompareColumnHeader matrix={matrix} />
+                <CompareMatrixTable
+                  matrix={matrix}
+                  groups={ROW_GROUPS}
+                  onUnlock={handleUnlock}
+                  onSubmitReport={(c) => setReportCompany({ id: c.id, name: c.name })}
+                  cartKeys={cartKeys}
+                />
+              </div>
 
-                {/* Table Header Row */}
-                <div className="grid grid-cols-4 border-b border-[#EDEDEB] bg-[#FAFAF9] p-5 font-mono text-[11px] uppercase font-bold text-[--text-muted]">
-                  <div className="compare-sticky-col-alt">Comparison Metrics</div>
-                  {comparedList.map((c, i) => <div key={i}>{c.name}</div>)}
-                </div>
-
-                {/* Row 1: Company Card Header */}
-                <div className="grid grid-cols-4 p-5 border-b border-[#EDEDEB] items-center text-xs sm:text-sm">
-                  <div className="compare-sticky-col font-bold text-[#1A1A1A]">Target Company</div>
-                  {comparedList.map((c, i) => (
-                    <div key={i} className="flex items-center gap-3">
-                      <BrandTile name={c.name} src={c.logo_url} className="w-10 h-10 rounded-xl p-1" />
-                      <div>
-                        <span className="font-bold text-sm sm:text-base text-[#1A1A1A] block leading-snug">{c.name}</span>
-                        <span className="text-xs text-[--text-muted]">{c.industry}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Row 2: Compensation Package (CTC) */}
-                <div className="grid grid-cols-4 p-5 border-b border-[#EDEDEB] text-xs sm:text-sm items-center">
-                  <div className="compare-sticky-col font-semibold text-[--text-muted] flex items-center gap-2">
-                    <Award className="w-4 h-4 text-[#1E8E5A]" /> CTC Package Range
-                  </div>
-                  {comparedList.map((c, i) => (
-                    <div key={i} className="font-bold text-base text-[#1E8E5A]">
-                      {c.ctc_min && c.ctc_max ? `₹${c.ctc_min} – ${c.ctc_max} LPA` : '—'}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Row 3: Process Duration */}
-                <div className="grid grid-cols-4 p-5 border-b border-[#EDEDEB] text-xs sm:text-sm items-center">
-                  <div className="compare-sticky-col font-semibold text-[--text-muted] flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-[#1F3A5F]" /> Avg Process Duration
-                  </div>
-                  {comparedList.map((c, i) => (
-                    <div key={i} className="font-semibold text-[#1A1A1A]">
-                      {c.avg_process_days ? `${c.avg_process_days} Days` : '—'}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Row 4: Total Rounds */}
-                <div className="grid grid-cols-4 p-5 border-b border-[#EDEDEB] text-xs sm:text-sm items-center">
-                  <div className="compare-sticky-col font-semibold text-[--text-muted] flex items-center gap-2">
-                    <Layers className="w-4 h-4 text-[#1F3A5F]" /> Total Hiring Rounds
-                  </div>
-                  {comparedList.map((c, i) => (
-                    <div key={i} className="font-semibold text-[#1A1A1A]">
-                      {c.avg_rounds ? `${c.avg_rounds} Rounds` : '—'}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Row 5: Accuracy (derived from published reports) */}
-                <div className="grid grid-cols-4 p-5 border-b border-[#EDEDEB] text-xs sm:text-sm items-center">
-                  <div className="compare-sticky-col font-semibold text-[--text-muted] flex items-center gap-2">
-                    <ShieldCheck className="w-4 h-4 text-[#1F3A5F]" /> Verified Match Accuracy
-                  </div>
-                  {comparedList.map((c, i) => (
-                    <div key={i} className="space-y-1">
-                      {c.accuracy_report_count ? (
-                        <span className="inline-block px-2.5 py-0.5 bg-emerald-50 text-emerald-800 rounded font-semibold text-xs border border-emerald-200">
-                          {c.accuracy_score}% · {c.accuracy_report_count} student report{c.accuracy_report_count === 1 ? '' : 's'}
-                        </span>
-                      ) : (
-                        <span className="inline-block px-2.5 py-0.5 bg-[#FAFAF9] text-gray-500 rounded font-semibold text-xs border border-gray-200">
-                          No verified reports yet
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Row 6: Round 1 (Online Assessment) */}
-                <div className="grid grid-cols-4 p-5 border-b border-[#EDEDEB] text-xs sm:text-sm">
-                  <div className="compare-sticky-col font-semibold text-[--text-muted] flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-[#1F3A5F]" /> Round 1: OA Format
-                  </div>
-                  {comparedList.map((c, i) => (
-                    <div key={i} className="text-[#4A4A4A] leading-relaxed text-xs">
-                      {c.comparison_metrics?.round_1_oa || '—'}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Row 7: Round 2 (Technical Core & Coding) */}
-                <div className="grid grid-cols-4 p-5 border-b border-[#EDEDEB] text-xs sm:text-sm">
-                  <div className="compare-sticky-col font-semibold text-[--text-muted] flex items-center gap-2">
-                    <Cpu className="w-4 h-4 text-[#1F3A5F]" /> Round 2: Tech Core
-                  </div>
-                  {comparedList.map((c, i) => (
-                    <div key={i} className="text-[#4A4A4A] leading-relaxed text-xs">
-                      {c.comparison_metrics?.round_2_tech || '—'}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Row 8: Round 3 (System Design Focus) */}
-                <div className="grid grid-cols-4 p-5 border-b border-[#EDEDEB] text-xs sm:text-sm">
-                  <div className="compare-sticky-col font-semibold text-[--text-muted] flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-[#B45309]" /> Round 3: System Design
-                  </div>
-                  {comparedList.map((c, i) => (
-                    <div key={i} className="text-[#4A4A4A] leading-relaxed text-xs font-medium">
-                      {c.comparison_metrics?.round_3_system_design || '—'}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Row 9: Round 4 (HR & Values) */}
-                <div className="grid grid-cols-4 p-5 border-b border-[#EDEDEB] text-xs sm:text-sm">
-                  <div className="compare-sticky-col font-semibold text-[--text-muted] flex items-center gap-2">
-                    <Users className="w-4 h-4 text-[#1F3A5F]" /> Round 4: HR & Values
-                  </div>
-                  {comparedList.map((c, i) => (
-                    <div key={i} className="text-[#4A4A4A] leading-relaxed text-xs">
-                      {c.comparison_metrics?.round_4_hr || '—'}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Row 10: Top High-Frequency Questions Previews */}
-                <div className="grid grid-cols-4 p-5 border-b border-[#EDEDEB] text-xs sm:text-sm">
-                  <div className="compare-sticky-col font-semibold text-[--text-muted] flex items-center gap-2">
-                    <HelpCircle className="w-4 h-4 text-[#B45309]" /> Top Questions Asked
-                  </div>
-                  {comparedList.map((c, i) => (
-                    <div key={i} className="space-y-2">
-                      {c.comparison_metrics?.top_questions && c.comparison_metrics.top_questions.length > 0 ? (
-                        c.comparison_metrics.top_questions.map((q, qIdx) => (
-                          <div key={qIdx} className="p-2.5 bg-[#FAFAF9] rounded-lg border border-[#EDEDEB] text-xs text-[#1A1A1A] leading-snug">
-                            • {q}
-                          </div>
-                        ))
-                      ) : (
-                        <p className="text-xs text-[--text-muted]">—</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Row 11: Vault Unlock CTA Action */}
-                <div className="grid grid-cols-4 p-5 items-center text-xs sm:text-sm bg-[#FAFAF9]">
-                  <div className="compare-sticky-col-alt font-bold text-[#1A1A1A]">Vault Action</div>
-                  {comparedList.map((c, i) => (
-                    <div key={i}>
-                      {c.is_unlocked ? (
-                        <Link
-                          href={`/company/${c.slug}`}
-                          className="px-5 py-2.5 bg-[#1F3A5F] hover:bg-[#2A4D7E] text-white rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 shadow-sm transition-all"
-                        >
-                          <span>Open Vault</span>
-                          <ArrowUpRight className="w-4 h-4" />
-                        </Link>
-                      ) : (
-                        <button
-                          onClick={() => handleUnlock(c)}
-                          className="px-5 py-2.5 bg-[#E8A33D] hover:bg-[#D4902C] text-[#241A06] rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all"
-                        >
-                          <Lock className="w-3.5 h-3.5" />
-                          <span>Unlock Vault</span>
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-
-                </div>
+              {/* Mobile cards — same rows, stacked, no horizontal scroll */}
+              <div className="lg:hidden">
+                <CompareCompanyCards
+                  matrix={matrix}
+                  groups={ROW_GROUPS}
+                  activeSlug={activeSlug}
+                  onActiveSlugChange={setActiveSlug}
+                  onUnlock={handleUnlock}
+                  onSubmitReport={(c) => setReportCompany({ id: c.id, name: c.name })}
+                  cartKeys={cartKeys}
+                />
+                {roundRows.length > 0 && (
+                  <p className="text-[11px] text-[--text-muted] text-center mt-4 px-4 leading-relaxed">
+                    {roundRows.length} hiring round{roundRows.length === 1 ? '' : 's'} compared. Rounds a company
+                    does not cover are marked &ldquo;Not in this vault&rdquo;.
+                  </p>
+                )}
               </div>
             </>
           )}
-
         </main>
 
         <Footer />
@@ -350,13 +349,25 @@ export default function ComparePage() {
           onClose={() => setIsCartOpen(false)}
           items={cartItems}
           onRemoveItem={(idx) => setCartItems(cartItems.filter((_, i) => i !== idx))}
-          onCheckoutSuccess={() => {}}
+          onCheckoutSuccess={() => { setIsCartOpen(false); setCartItems([]); }}
         />
-
         <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} companies={companies} />
         <LeaderboardModal isOpen={isLeaderboardOpen} onClose={() => setIsLeaderboardOpen(false)} />
-
+        <SubmitReportModal
+          isOpen={!!reportCompany}
+          companyName={reportCompany?.name || ''}
+          companyId={reportCompany?.id || ''}
+          onClose={() => setReportCompany(null)}
+          onSubmitted={() => setReportCompany(null)}
+        />
       </div>
     </>
   );
 }
+
+const Stat2: React.FC<{ label: string; value: string }> = ({ label, value }) => (
+  <div>
+    <span className="text-[10px] text-[--text-muted] font-mono uppercase block">{label}</span>
+    <span className="font-bold text-[#1A1A1A] text-sm">{value}</span>
+  </div>
+);

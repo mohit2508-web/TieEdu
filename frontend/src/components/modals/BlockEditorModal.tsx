@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { ContentBlock, BlockType } from '@/types';
 import { ContentBlockRenderer } from '@/components/blocks/ContentBlockRenderer';
+import { MarkdownEditor, clearEditorDraft } from '@/components/editor/MarkdownEditor';
 import { addBlockApi } from '@/lib/api';
 import {
   X, Plus, Save, Code, FileText, Image as ImageIcon, MessageSquare, Layers,
-  Play, Eye, Table2, Music, Video, Sparkles
+  Play, Eye, Table2, Music, Video, Sparkles, ListChecks, Link2, Trash2
 } from 'lucide-react';
 
 interface BlockEditorModalProps {
@@ -19,7 +20,9 @@ interface BlockEditorModalProps {
 const inputCls = "w-full p-2.5 border border-gray-200 rounded-xl bg-[#FAFAF9] text-sm focus:outline-none focus:ring-2 focus:ring-[#0284C7]";
 
 const BLOCK_TYPES: { type: BlockType; label: string; icon: any }[] = [
-  { type: 'markdown', label: 'Markdown', icon: <FileText className="w-4 h-4" /> },
+  { type: 'markdown', label: 'Rich Text', icon: <FileText className="w-4 h-4" /> },
+  { type: 'checklist', label: 'Checklist', icon: <ListChecks className="w-4 h-4" /> },
+  { type: 'resources', label: 'Resources', icon: <Link2 className="w-4 h-4" /> },
   { type: 'code', label: 'Code', icon: <Code className="w-4 h-4" /> },
   { type: 'diagram', label: 'Mermaid', icon: <Layers className="w-4 h-4" /> },
   { type: 'image', label: 'Image', icon: <ImageIcon className="w-4 h-4" /> },
@@ -50,10 +53,19 @@ export const BlockEditorModal: React.FC<BlockEditorModalProps> = ({
   const [tableHeaders, setTableHeaders] = useState('Topic, Complexity');
   const [tableRows, setTableRows] = useState('Insert, O(log N)\nSearch, O(log N)');
   const [audioUrl, setAudioUrl] = useState('');
+  const [checklistTitle, setChecklistTitle] = useState('');
+  const [checklistItems, setChecklistItems] = useState<string[]>(['']);
+  const [resourcesTitle, setResourcesTitle] = useState('');
+  const [resourceLinks, setResourceLinks] = useState<{ label: string; url: string }[]>([
+    { label: '', url: '' },
+  ]);
   const [saved, setSaved] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [mobileTab, setMobileTab] = useState<'edit' | 'preview'>('edit');
 
   if (!isOpen) return null;
+
+  const draftKey = `block-${itemId}-${blockType}`;
 
   const buildPayload = () => {
     switch (blockType) {
@@ -75,8 +87,20 @@ export const BlockEditorModal: React.FC<BlockEditorModalProps> = ({
         return { video_url: videoUrl || 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', video_type: videoType, title: imageCaption || 'Video Walkthrough' };
       case 'audio':
         return { url: audioUrl || 'https://example.com/audio.mp3', title: imageCaption || 'Audio Guide', duration_seconds: 120 };
+      case 'checklist':
+        return {
+          title: checklistTitle || 'Checklist',
+          items: checklistItems.map((s) => s.trim()).filter(Boolean)
+        };
+      case 'resources':
+        return {
+          title: resourcesTitle || 'Resources',
+          links: resourceLinks
+            .filter((r) => r.url.trim())
+            .map((r) => ({ label: r.label.trim() || r.url.trim(), url: r.url.trim() }))
+        };
       default:
-        return { text: blockText || '### New Markdown Content\nWrite your content here...' };
+        return { text: blockText || '### New Content\n\nStart writing, or press **/** for blocks.' };
     }
   };
 
@@ -92,6 +116,7 @@ export const BlockEditorModal: React.FC<BlockEditorModalProps> = ({
     setIsSaving(true);
     try {
       await addBlockApi(itemId, { block_type: blockType, payload: buildPayload() });
+      clearEditorDraft(draftKey);
       setSaved(true);
       setTimeout(() => {
         setSaved(false);
@@ -103,20 +128,26 @@ export const BlockEditorModal: React.FC<BlockEditorModalProps> = ({
     }
   };
 
+  const updateChecklistItem = (i: number, v: string) =>
+    setChecklistItems((prev) => prev.map((s, idx) => (idx === i ? v : s)));
+
+  const updateResource = (i: number, patch: Partial<{ label: string; url: string }>) =>
+    setResourceLinks((prev) => prev.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="bg-white rounded-3xl max-w-5xl w-full p-6 sm:p-8 shadow-2xl border border-gray-200 relative max-h-[92vh] flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150">
+      <div className="bg-white rounded-none sm:rounded-3xl max-w-5xl w-full sm:p-6 lg:p-8 shadow-2xl border border-gray-200 relative h-full sm:h-auto sm:max-h-[92vh] flex flex-col overflow-hidden">
 
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-gray-200 mb-4 shrink-0">
-          <div>
+        <div className="flex items-center justify-between pb-4 border-b border-gray-200 mb-4 shrink-0 px-4 sm:px-0 pt-4 sm:pt-0">
+          <div className="min-w-0">
             <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold uppercase bg-amber-100 text-amber-900 px-2 py-0.5 rounded">
               <Sparkles className="w-3 h-3 text-[#B45309]" /> Live CMS Block Builder
             </span>
-            <h3 className="text-xl font-bold text-[#1E293B] pt-1">Add Content Block</h3>
-            <p className="text-xs text-gray-500">{moduleTitle} · {companyName}</p>
+            <h3 className="text-lg sm:text-xl font-bold text-[#1E293B] pt-1">Add Content Block</h3>
+            <p className="text-xs text-gray-500 truncate">{moduleTitle} · {companyName}</p>
           </div>
-          <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-900 rounded-full hover:bg-gray-100">
+          <button onClick={onClose} aria-label="Close" className="p-2 text-gray-400 hover:text-gray-900 rounded-full hover:bg-gray-100 shrink-0">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -127,32 +158,141 @@ export const BlockEditorModal: React.FC<BlockEditorModalProps> = ({
             <p className="text-xs text-gray-500 font-mono">Student views updated live.</p>
           </div>
         ) : (
-          <div className="flex flex-col lg:grid lg:grid-cols-2 gap-6 flex-1 overflow-y-auto pr-1">
+          <>
+            <div className="lg:hidden flex gap-1 p-1 bg-[#F1F5F9] rounded-xl mb-3 shrink-0 mx-4 sm:mx-0" role="tablist" aria-label="Editor panes">
+              {(['edit', 'preview'] as const).map((t) => (
+                <button
+                  key={t}
+                  role="tab"
+                  aria-selected={mobileTab === t}
+                  onClick={() => setMobileTab(t)}
+                  className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors min-h-[2.5rem] ${
+                    mobileTab === t ? 'bg-white text-[#0284C7] shadow-sm' : 'text-gray-500'
+                  }`}
+                >
+                  {t === 'edit' ? 'Edit' : 'Preview'}
+                </button>
+              ))}
+            </div>
+
+          <div className="flex flex-col lg:grid lg:grid-cols-2 gap-6 flex-1 overflow-y-auto px-4 sm:px-0 pb-4 lg:pb-0">
 
             {/* LEFT: Form Controls */}
-            <div className="space-y-4 text-xs order-2 lg:order-1">
+            <div className={`space-y-4 text-xs order-2 lg:order-1 ${mobileTab === 'edit' ? '' : 'hidden lg:block'}`}>
 
               {/* Block Type Selection */}
               <div>
                 <label className="block text-xs font-bold text-gray-500 mb-2 uppercase font-mono">Block Payload Type</label>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                   {BLOCK_TYPES.map((b) => (
                     <button
                       type="button"
                       key={b.type}
                       onClick={() => setBlockType(b.type)}
-                      className={`p-2.5 rounded-xl border text-center flex flex-col items-center gap-1 font-bold transition-all ${
+                      aria-pressed={blockType === b.type}
+                      className={`p-2.5 rounded-xl border text-center flex flex-col items-center justify-center gap-1 font-bold transition-all min-h-[3.25rem] ${
                         blockType === b.type
                           ? 'bg-[#0284C7] text-white border-[#0284C7] shadow-sm'
                           : 'bg-[#FAFAF9] text-gray-500 border-gray-200 hover:bg-white'
                       }`}
                     >
                       {b.icon}
-                      <span className="text-[10px] font-mono">{b.label}</span>
+                      <span className="text-[10px] font-mono leading-none">{b.label}</span>
                     </button>
                   ))}
                 </div>
               </div>
+
+              {blockType === 'markdown' && (
+                <div>
+                  <label className="block font-bold text-gray-500 mb-1.5 font-mono">Rich Text Content</label>
+                  <MarkdownEditor
+                    value={blockText}
+                    onChange={setBlockText}
+                    draftKey={draftKey}
+                    minHeight={200}
+                    placeholder={'Write your content here…\n\nUse the toolbar for bullets and checklists, or type / for blocks.'}
+                  />
+                </div>
+              )}
+
+              {blockType === 'checklist' && (
+                <div className="space-y-2">
+                  <div>
+                    <label className="block font-bold text-gray-500 mb-1 font-mono">Checklist Title</label>
+                    <input className={inputCls} value={checklistTitle} onChange={(e) => setChecklistTitle(e.target.value)} placeholder="Before the interview" />
+                  </div>
+                  <label className="block font-bold text-gray-500 mb-1 font-mono">Items</label>
+                  {checklistItems.map((item, i) => (
+                    <div key={i} className="flex gap-2">
+                      <input
+                        className={inputCls}
+                        value={item}
+                        onChange={(e) => updateChecklistItem(i, e.target.value)}
+                        placeholder={`Item ${i + 1}`}
+                      />
+                      <button
+                        type="button"
+                        aria-label={`Remove item ${i + 1}`}
+                        disabled={checklistItems.length === 1}
+                        onClick={() => setChecklistItems((p) => p.filter((_, idx) => idx !== i))}
+                        className="p-2.5 rounded-xl border border-gray-200 text-gray-400 hover:text-red-600 hover:border-red-200 disabled:opacity-30 shrink-0"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setChecklistItems((p) => [...p, ''])}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-dashed border-gray-300 text-gray-500 hover:border-[#0284C7] hover:text-[#0284C7] font-bold min-h-[2.5rem]"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Add item
+                  </button>
+                </div>
+              )}
+
+              {blockType === 'resources' && (
+                <div className="space-y-2">
+                  <div>
+                    <label className="block font-bold text-gray-500 mb-1 font-mono">Section Title</label>
+                    <input className={inputCls} value={resourcesTitle} onChange={(e) => setResourcesTitle(e.target.value)} placeholder="Further reading" />
+                  </div>
+                  <label className="block font-bold text-gray-500 mb-1 font-mono">Links</label>
+                  {resourceLinks.map((r, i) => (
+                    <div key={i} className="flex gap-2">
+                      <input
+                        className={inputCls}
+                        value={r.label}
+                        onChange={(e) => updateResource(i, { label: e.target.value })}
+                        placeholder="Label"
+                      />
+                      <input
+                        className={inputCls}
+                        value={r.url}
+                        onChange={(e) => updateResource(i, { url: e.target.value })}
+                        placeholder="https://"
+                      />
+                      <button
+                        type="button"
+                        aria-label={`Remove link ${i + 1}`}
+                        disabled={resourceLinks.length === 1}
+                        onClick={() => setResourceLinks((p) => p.filter((_, idx) => idx !== i))}
+                        className="p-2.5 rounded-xl border border-gray-200 text-gray-400 hover:text-red-600 hover:border-red-200 disabled:opacity-30 shrink-0"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setResourceLinks((p) => [...p, { label: '', url: '' }])}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-dashed border-gray-300 text-gray-500 hover:border-[#0284C7] hover:text-[#0284C7] font-bold min-h-[2.5rem]"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Add link
+                  </button>
+                </div>
+              )}
 
               {blockType === 'code' && (
                 <div className="grid grid-cols-2 gap-3">
@@ -239,12 +379,12 @@ export const BlockEditorModal: React.FC<BlockEditorModalProps> = ({
                 </div>
               )}
 
-              {/* Payload text area */}
-              <div>
-                <label className="block font-bold text-gray-500 mb-1.5 font-mono">
-                  {blockType === 'diagram' ? 'Mermaid.js Code' : blockType === 'code' ? 'Code Snippet' : blockType === 'table' ? '—' : 'Text / Markdown Payload'}
-                </label>
-                {blockType !== 'table' && blockType !== 'image' && blockType !== 'video' && blockType !== 'audio' && (
+              {/* Payload text area for non-rich-text types */}
+              {blockType !== 'markdown' && blockType !== 'table' && blockType !== 'image' && blockType !== 'video' && blockType !== 'audio' && blockType !== 'checklist' && blockType !== 'resources' && (
+                <div>
+                  <label className="block font-bold text-gray-500 mb-1.5 font-mono">
+                    {blockType === 'diagram' ? 'Mermaid.js Code' : blockType === 'code' ? 'Code Snippet' : 'Text Payload'}
+                  </label>
                   <textarea
                     rows={blockType === 'code' ? 10 : 7}
                     value={blockText}
@@ -253,19 +393,19 @@ export const BlockEditorModal: React.FC<BlockEditorModalProps> = ({
                       blockType === 'diagram'
                         ? 'flowchart LR\n  Step1[OA Round] --> Step2[Tech Interview R1]'
                         : blockType === 'code'
-                        ? 'int main() { return 0; }'
-                        : '# Heading\n\nMarkdown content, bullets, lists...'
+                          ? 'int main() { return 0; }'
+                          : 'Add the callout text here...'
                     }
                     className={'w-full p-3 font-mono text-xs border rounded-xl bg-[#FAFAF9] focus:bg-white focus:ring-2 focus:ring-[#0284C7] focus:outline-none'}
                   />
-                )}
-              </div>
+                </div>
+              )}
 
               <button
                 type="button"
                 onClick={handleSave}
                 disabled={isSaving}
-                className="w-full py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
+                className="w-full py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all flex items-center justify-center gap-2 min-h-[2.75rem]"
               >
                 <Save className="w-4 h-4" />
                 <span>{isSaving ? 'Publishing...' : 'Save & Publish Block'}</span>
@@ -274,7 +414,7 @@ export const BlockEditorModal: React.FC<BlockEditorModalProps> = ({
             </div>
 
             {/* RIGHT: Live Student Preview */}
-            <div className="bg-[#FAFAF9] p-4 rounded-2xl border border-gray-200 flex flex-col order-1 lg:order-2">
+            <div className={`bg-[#FAFAF9] p-4 rounded-2xl border border-gray-200 flex flex-col order-1 lg:order-2 ${mobileTab === 'preview' ? '' : 'hidden lg:flex'}`}>
               <div className="flex items-center justify-between border-b border-gray-200 pb-2 text-xs font-mono font-bold text-[#1F3A5F]">
                 <span className="flex items-center gap-1.5">
                   <Eye className="w-4 h-4 text-[#0284C7]" /> Live Student Preview
@@ -287,6 +427,7 @@ export const BlockEditorModal: React.FC<BlockEditorModalProps> = ({
             </div>
 
           </div>
+          </>
         )}
 
       </div>

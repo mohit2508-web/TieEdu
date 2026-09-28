@@ -16,6 +16,7 @@ import {
   fetchMyAccount, fetchMyReports, fetchCompanies, getInterviewCourseProgressApi,
   changePasswordApi, updateProfileApi, MyAccount,
 } from '@/lib/api';
+import { formatDate, formatDateLong } from '@/lib/date';
 
 interface VaultCompany {
   id: string;
@@ -60,7 +61,7 @@ function OrdersView({ orders }: { orders: MyAccount['orders'] }) {
               {(o.items || []).map((i) => i.name).join(', ') || o.id}
             </p>
             <p className="text-[11px] text-[--text-muted] mt-0.5">
-              {new Date(o.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+              {formatDate(o.created_at)}
               {o.coupon_code ? ` · coupon ${o.coupon_code}` : ''}
             </p>
           </div>
@@ -136,7 +137,7 @@ function ReportsView({ reports }: { reports: MyReportRow[] }) {
               {r.company_name || r.company_id}
               {r.user_role ? ` · ${r.user_role}` : ''}
             </p>
-            <p className="text-[11px] text-[--text-muted] mt-0.5">{new Date(r.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+            <p className="text-[11px] text-[--text-muted] mt-0.5">{formatDate(r.created_at)}</p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             {typeof r.accuracy_rating === 'number' && (
@@ -310,7 +311,7 @@ const AccountPageContent: React.FC = () => {
     }
   };
 
-  const joinedAt = user?.created_at ? new Date(user.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : null;
+  const joinedAt = formatDateLong(user?.created_at);
 
   return (
     <RequireAuth>

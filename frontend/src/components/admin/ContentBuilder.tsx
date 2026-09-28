@@ -6,6 +6,7 @@ import {
 } from '@/lib/api';
 import { BlockEditorModal } from '@/components/modals/BlockEditorModal';
 import { ModulePdfManager } from '@/components/admin/ModulePdfManager';
+import { SINGLE_MODULE_PRICE, packPrice } from '@/lib/packPricing';
 import {
   Plus, BookOpen, Lock, Edit3, Trash2, ChevronUp, ChevronDown,
   X, Eye, Sparkles, Layers, Save, CheckCircle2, FileText
@@ -24,12 +25,14 @@ const labelCls = "block text-[11px] font-bold text-gray-500 uppercase tracking-w
 
 const MODULE_TYPES = ['complete_pack', 'preparation_guide', 'technical_question', 'hr_question', 'dsa_question', 'system_design', 'cheat_sheet', 'salary_insight'];
 const ROUND_TYPES = ['OA', 'Technical', 'SystemDesign', 'HR', 'Managerial'];
+// Rungs shown to admins so the price they see matches the price the customer is charged.
+const COMPANY_PREMIUM_ROUNDS = [1, 2, 3, 4];
 
 export const ContentBuilder: React.FC<ContentBuilderProps> = ({ companies, selectedCompanyId, onSelectCompany, onEditModule, onRefresh }) => {
   const company = companies.find((c) => c.id === selectedCompanyId) || companies[0];
   const [showModuleModal, setShowModuleModal] = useState(false);
   const [editingModule, setEditingModule] = useState<ContentModule | null>(null);
-  const [moduleForm, setModuleForm] = useState({ title: '', module_type: 'complete_pack', round_type: 'OA', description: '', price: 249, is_premium: true });
+  const [moduleForm, setModuleForm] = useState({ title: '', module_type: 'complete_pack', round_type: 'OA', description: '', is_premium: true });
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [itemModal, setItemModal] = useState<{ moduleId: string; item: ContentItem | null; open: boolean }>({ moduleId: '', item: null, open: false });
   const [blockTarget, setBlockTarget] = useState<{ itemId: string; module: ContentModule } | null>(null);
@@ -41,10 +44,10 @@ export const ContentBuilder: React.FC<ContentBuilderProps> = ({ companies, selec
   const openModuleModal = (mod?: ContentModule) => {
     if (mod) {
       setEditingModule(mod);
-      setModuleForm({ title: mod.title, module_type: mod.module_type, round_type: mod.round_type || 'OA', description: mod.description || '', price: mod.price || 249, is_premium: mod.is_premium });
+      setModuleForm({ title: mod.title, module_type: mod.module_type, round_type: mod.round_type || 'OA', description: mod.description || '', is_premium: mod.is_premium });
     } else {
       setEditingModule(null);
-      setModuleForm({ title: '', module_type: 'complete_pack', round_type: 'OA', description: '', price: 249, is_premium: true });
+      setModuleForm({ title: '', module_type: 'complete_pack', round_type: 'OA', description: '', is_premium: true });
     }
     setShowModuleModal(true);
   };
@@ -151,7 +154,7 @@ export const ContentBuilder: React.FC<ContentBuilderProps> = ({ companies, selec
                       <div className="flex items-center gap-2 mb-0.5">
                         <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-900">{mod.round_type || 'Module'}</span>
                         <span className="text-[10px] font-mono bg-gray-100 px-2 py-0.5 rounded text-gray-600 uppercase">{mod.module_type}</span>
-                        {(mod.is_premium || mod.price) ? <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-indigo-50 text-[#1F3A5F]">₹{mod.price || 249}</span> : <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">FREE</span>}
+                        {mod.is_premium ? <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-indigo-50 text-[#1F3A5F]" title="Charged by the pack ladder, not per module">₹{SINGLE_MODULE_PRICE}+ ladder</span> : <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">FREE</span>}
                       </div>
                       <h3 className="font-bold text-[#1E293B] truncate">{mod.title}</h3>
                       <p className="text-[11px] text-gray-400 font-mono">{mod.items?.length || 0} questions · {blocksCount} blocks {mod.description ? `· ${mod.description}` : ''}</p>
@@ -260,16 +263,18 @@ export const ContentBuilder: React.FC<ContentBuilderProps> = ({ companies, selec
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className={labelCls}>Price (₹)</label>
-                  <input className={inputCls} type="number" min={0} value={moduleForm.price} onChange={(e) => setModuleForm({ ...moduleForm, price: Number(e.target.value) })} />
-                </div>
                 <div className="flex items-end pb-2">
                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-600">
                     <input type="checkbox" checked={moduleForm.is_premium} onChange={(e) => setModuleForm({ ...moduleForm, is_premium: e.target.checked })} className="accent-[#0284C7] w-4 h-4" />
                     Premium (locked)
                   </label>
                 </div>
+              </div>
+              <div className="rounded-xl border border-[#BFDBFE] bg-blue-50/60 p-3 text-[11px] text-blue-900 leading-relaxed">
+                <span className="font-bold">Pricing is set by the pack ladder, not per module.</span>{' '}
+                A round bought alone costs ₹{SINGLE_MODULE_PRICE}; the price falls as more rounds of the
+                same company are added ({COMPANY_PREMIUM_ROUNDS.map((n) => `${n}→₹${packPrice(n)}`).join(' · ')}).
+                Any purchase unlocks the whole company, so there is no per-module price to set.
               </div>
             </div>
             <button onClick={handleModuleSubmit} className="w-full py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all">

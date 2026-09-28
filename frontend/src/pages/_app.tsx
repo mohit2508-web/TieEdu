@@ -2,6 +2,11 @@ import type { AppProps } from 'next/app';
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
 import '@/styles/globals.css';
+// Carlito is the self-hosted, metric-compatible stand-in for Calibre (OFL, so
+// it can ship with the product). Self-hosting keeps the reading experience
+// intact offline and avoids depending on a font CDN.
+import '@fontsource/carlito/400.css';
+import '@fontsource/carlito/700.css';
 import { TieEduLoader } from '@/components/common/TieEduLoader';
 import { AuthProvider } from '@/context/AuthContext';
 

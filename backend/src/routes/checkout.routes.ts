@@ -3,7 +3,8 @@ import { loadDb, saveDb } from '../data/db';
 import { requireAuth } from '../middleware/auth';
 import { getGateway, verifyRazorpaySignature, CreatedOrder } from '../payments/gateway';
 import { effectivePaymentMode } from '../config';
-import { completePaidOrder, pushAudit, unlockedCompanyIds, ownedModuleIdsFor } from '../payments/orders';
+import { completePaidOrder, pushAudit, unlockedCompanyIds, ownedModuleIdsFor, ownedCourseIdsFor } from '../payments/orders';
+import { SINGLE_MODULE_PRICE, COMPLETE_PACK_COUNT, packPrice, listPriceFor } from '../lib/pricing';
 
 export const checkoutRouter = Router();
 
@@ -17,30 +18,29 @@ interface CartItem {
   scope?: string;
   price?: number;
   name?: string;
-  kind?: 'company' | 'plan';
+  kind?: 'company' | 'plan' | 'course';
   module_id?: string;
   module_title?: string;
   round_type?: string;
   module_ids?: string[];
+  /** `kind: 'course'` only. Falls back to `id`, which holds the course id. */
+  course_id?: string;
 }
 
-// Combo ladder: unique premium modules bought for one company -> pack price
-const PACK_LADDER: Record<number, number> = { 1: 99, 2: 169, 3: 219 };
-const SINGLE_MODULE_PRICE = 99;
-const COMPLETE_PACK_PRICE = 249;
-const COMPLETE_PACK_COUNT = 4;
+// Pricing ladder lives in lib/pricing.ts (single source of truth, shared with
+// GET /api/pricing/catalog) — never re-declare the numbers here.
 
-function packPrice(uniqueModuleCount: number): number {
-  if (uniqueModuleCount >= COMPLETE_PACK_COUNT) return COMPLETE_PACK_PRICE;
-  return PACK_LADDER[uniqueModuleCount] ?? uniqueModuleCount * SINGLE_MODULE_PRICE;
-}
-
-// Summarizes ladder pricing (server-authoritative): subtotal + savings text
+// Summarizes ladder pricing (server-authoritative): subtotal + savings text.
+// `byCompany` carries the per-company module count + the exact pack price charged,
+// so persisted order lines can be stamped with the price actually billed (never a
+// client-supplied or hardcoded number).
 export function summarizePack(items: CartItem[]) {
   const perCompany: Record<string, { id: string; name: string; moduleIds: Set<string>; isComplete: boolean }> = {};
 
   for (const it of items) {
-    if (it.kind === 'plan') continue;
+    // Plan lines are billed outside this ladder, and course lines are priced
+    // from the course catalogue by `summarizeCourseLines` instead.
+    if (it.kind === 'plan' || it.kind === 'course') continue;
     const id = it.id || it.company_id || it.slug || 'unknown';
     const c = perCompany[id] || (perCompany[id] = { id, name: it.name || it.slug || 'Vault', moduleIds: new Set(), isComplete: false });
     if (Array.isArray(it.module_ids) && it.module_ids.length > 0) {
@@ -56,19 +56,72 @@ export function summarizePack(items: CartItem[]) {
   let subtotal = 0;
   let listTotal = 0;
   const savingsByCompany: string[] = [];
+  const byCompany: Record<string, { name: string; module_count: number; pack_price: number; list_total: number; savings: number }> = {};
+
   for (const c of Object.values(perCompany)) {
     // A plain company line (no module ids) = every round; array pack lines =
-    // exactly the modules listed (e.g. a "finish your pack" with 2 left → ₹169).
+    // exactly the modules listed (e.g. a "finish your pack" with 2 left -> Rs 169).
     const n = c.isComplete && c.moduleIds.size === 0 ? COMPLETE_PACK_COUNT : c.moduleIds.size;
-    const listPrice = n * SINGLE_MODULE_PRICE;
+    const listPrice = listPriceFor(n);
     const pack = packPrice(n);
     const savings = Math.max(0, listPrice - pack);
     subtotal += pack;
     listTotal += listPrice;
+    byCompany[c.id] = { name: c.name, module_count: n, pack_price: pack, list_total: listPrice, savings };
     if (savings > 0) savingsByCompany.push(`Pack savings on ${c.name}: ₹${savings}`);
   }
 
-  return { subtotal, listTotal, savingsTotal: Math.max(0, listTotal - subtotal), savingsByCompany };
+  return { subtotal, listTotal, savingsTotal: Math.max(0, listTotal - subtotal), savingsByCompany, byCompany };
+}
+
+/**
+ * Resolves `kind: 'course'` cart lines against the course catalogue.
+ *
+ * A course is priced per course, not by the module-pack ladder, so it cannot go
+ * through `summarizePack`. The price always comes from the stored course record
+ * — never from the cart line — because a client that could name its own price
+ * could buy a ₹4,999 course for ₹1.
+ *
+ * Free courses are dropped rather than billed at zero: they are meant to be
+ * enrolled in directly, and a ₹0 line in a real order is just noise on the
+ * receipt.
+ */
+function summarizeCourseLines(db: any, items: CartItem[]) {
+  const lines: { course_id: string; slug: string; title: string; price: number }[] = [];
+  const seen = new Set<string>();
+  let subtotal = 0;
+
+  for (const it of items) {
+    if (it.kind !== 'course') continue;
+    const wanted = it.course_id || it.id || '';
+    const course = (db.courses || []).find(
+      (c: any) => c.id === wanted || (!!it.slug && c.slug === it.slug)
+    );
+    // Unknown course: dropped rather than rejected, so a stale cart line cannot
+    // block checkout of everything else in the basket.
+    if (!course) continue;
+    if (course.is_free) continue;
+    const price = Math.max(0, Number(course.price_inr) || 0);
+    if (price === 0) continue;
+    if (seen.has(course.id)) continue;
+    seen.add(course.id);
+
+    lines.push({ course_id: course.id, slug: course.slug, title: course.title, price });
+    subtotal += price;
+  }
+
+  return { lines, subtotal };
+}
+
+/** Order lines for course purchases, in the same shape as `buildOrderLines`. */
+function buildCourseOrderLines(courses: { course_id: string; slug: string; title: string; price: number }[]) {
+  return courses.map((c) => ({
+    kind: 'course' as const,
+    id: c.course_id,
+    course_id: c.course_id,
+    name: c.title,
+    price: c.price,
+  }));
 }
 
 // Compute discount for a coupon against a subtotal (single source of truth)
@@ -133,6 +186,66 @@ checkoutRouter.post('/validate-coupon', (req: Request, res: Response) => {
   });
 });
 
+/**
+ * Builds the persisted order lines so that the receipt is arithmetically honest:
+ *   sum(line.price) === pack.subtotal   and   sum(line.list_total) - sum(line.pack_savings) === subtotal
+ *
+ * A company's pack is priced ONCE for the whole company, so only the FIRST line of that
+ * company carries the pack price; the remaining lines are marked `included_in_pack: true`
+ * with price 0. Previously every line was stamped with a flat price, so an order for a
+ * 2-module pack (charged Rs 169) could show two Rs 99 lines that did not add up.
+ */
+function buildOrderLines(items: CartItem[], byCompany: Record<string, { module_count: number; pack_price: number; list_total: number; savings: number }>) {
+  const pricedCompanies = new Set<string>();
+  const seenLines = new Map<string, number>();
+
+  return items
+    // Course lines are billed by `buildCourseOrderLines`. Passing them through
+    // here as well would stamp a pack price on them too and the receipt would
+    // show the course twice.
+    .filter((it: CartItem) => it.kind !== 'course')
+    .map((it: CartItem) => {
+    const kind = it.kind || (it.slug ? 'company' : 'plan');
+    const lineId = it.id || it.company_id || it.slug || it.scope || 'unknown';
+    const lineNo = (seenLines.get(lineId) || 0) + 1;
+    seenLines.set(lineId, lineNo);
+
+    if (kind === 'plan') {
+      return {
+        kind,
+        id: lineId,
+        name: it.name || it.slug || 'Vault',
+        price: it.price || 0,
+        module_id: it.module_id,
+        module_title: it.module_title,
+        round_type: it.round_type,
+        module_ids: it.module_ids,
+      };
+    }
+
+    const bucket = byCompany[lineId];
+    const isFirstLineOfCompany = !pricedCompanies.has(lineId);
+    pricedCompanies.add(lineId);
+
+    return {
+      kind,
+      id: lineId,
+      name: it.name || it.slug || 'Vault',
+      // The pack price is billed once per company, on its first line only.
+      price: isFirstLineOfCompany ? (bucket?.pack_price ?? SINGLE_MODULE_PRICE) : 0,
+      included_in_pack: !isFirstLineOfCompany,
+      module_id: it.module_id,
+      module_title: it.module_title,
+      round_type: it.round_type,
+      module_ids: it.module_ids,
+      // Auditable pricing breakdown for this company's pack on this order.
+      module_count: bucket?.module_count ?? (it.module_id ? 1 : 0),
+      list_total: bucket?.list_total ?? 0,
+      pack_savings: bucket?.savings ?? 0,
+    };
+    });
+}
+
 // POST /api/checkout/create-order — Persist a real order for the active gateway.
 // UPI orders start in 'created' (awaiting payment); razorpay calls the provider first.
 checkoutRouter.post('/create-order', async (req: Request, res: Response) => {
@@ -140,11 +253,14 @@ checkoutRouter.post('/create-order', async (req: Request, res: Response) => {
   const { amount, items = [], coupon_code } = req.body;
   const user_id = req.user!.id;
 
-  // Drop anything the user already owns (company fully unlocked or module already bought).
+  // Drop anything the user already owns (company fully unlocked, module already
+  // bought, or course already paid for).
   const ownedModuleIds = ownedModuleIdsFor(db, user_id);
   const ownedCompanyIds = new Set(unlockedCompanyIds(db, user_id));
+  const ownedCourseIds = new Set(ownedCourseIdsFor(db, user_id));
   const unowned: CartItem[] = (items as CartItem[] || []).filter((it: CartItem) => {
     if (it.kind === 'plan') return true;
+    if (it.kind === 'course') return !ownedCourseIds.has(it.course_id || it.id || '');
     const companyId = it.id || it.company_id || it.slug || '';
     if (ownedCompanyIds.has(companyId)) return false;
     if (Array.isArray(it.module_ids) && it.module_ids.length > 0) {
@@ -155,13 +271,40 @@ checkoutRouter.post('/create-order', async (req: Request, res: Response) => {
   });
 
   if (unowned.length === 0) {
-    return res.status(400).json({ error: 'You already own this pack — nothing to buy here.' });
+    return res.status(400).json({ error: 'You already own everything in this cart — nothing to buy here.' });
   }
 
-  // Server-authoritative subtotal via combo ladder
+  // Server-authoritative subtotal: the pack ladder for vault lines, the course
+  // catalogue for course lines.
+  //
+  // The `amount` in the request body is a client claim and is only ever consulted
+  // for a plan-only cart, which has no server-side price table. That is a narrow
+  // exception and it must stay narrow: as soon as ANY line in the cart resolves
+  // against a catalogue record, the total comes from the catalogue alone.
+  //
+  // The trap this closes: a cart of one free course resolves to no priced lines
+  // at all, so a `courses.subtotal > 0 ? ... : Number(amount)` ladder falls
+  // through to the client figure and happily charges Rs 500 for a free course.
+  // Testing for the PRESENCE of course lines rather than the value of their sum
+  // is what makes that impossible.
   const pack = summarizePack(unowned as CartItem[]);
-  const hasLadderableItems = unowned.some((it: CartItem) => it.kind !== 'plan');
-  const subtotal = hasLadderableItems ? pack.subtotal : Number(amount) || pack.subtotal;
+  const courses = summarizeCourseLines(db, unowned as CartItem[]);
+  const hasCourseLines = unowned.some((it: CartItem) => it.kind === 'course');
+  const hasLadderableItems = unowned.some((it: CartItem) => it.kind !== 'plan' && it.kind !== 'course');
+
+  const subtotal = hasLadderableItems || hasCourseLines
+    ? pack.subtotal + courses.subtotal
+    : Number(amount) || pack.subtotal;
+
+  if (hasCourseLines && courses.lines.length === 0) {
+    return res.status(400).json({
+      error: 'No purchasable course in this cart — free and already-owned courses are not for sale.',
+    });
+  }
+
+  if (subtotal <= 0) {
+    return res.status(400).json({ error: 'Nothing in this cart costs anything.' });
+  }
 
   let appliedCoupon: any = null;
   let discount = 0;
@@ -185,16 +328,7 @@ checkoutRouter.post('/create-order', async (req: Request, res: Response) => {
     status: 'created',
     user_id,
     coupon_code: appliedCoupon?.code || null,
-    items: unowned.map((it: CartItem) => ({
-      kind: it.kind || (it.slug ? 'company' : 'plan'),
-      id: it.id || it.company_id || it.slug || it.scope || 'unknown',
-      name: it.name || it.slug || 'Vault',
-      price: it.kind === 'plan' ? it.price || 0 : (Array.isArray(it.module_ids) && it.module_ids.length > 0 ? COMPLETE_PACK_PRICE : it.price || SINGLE_MODULE_PRICE),
-      module_id: it.module_id,
-      module_title: it.module_title,
-      round_type: it.round_type,
-      module_ids: it.module_ids
-    })),
+    items: [...buildOrderLines(unowned, pack.byCompany), ...buildCourseOrderLines(courses.lines)],
     pack_subtotal: pack.subtotal,
     list_total: pack.listTotal,
     pack_savings: pack.savingsTotal,

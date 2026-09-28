@@ -405,6 +405,106 @@ code, pre, kbd, samp, .font-mono {
   margin-right: 0.4rem;
 }
 
+.prose-article ul.contains-task-list,
+.prose-article ol.contains-task-list {
+  list-style: none;
+  padding-left: 0.25rem;
+}
+
+.prose-article li.task-list-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.15rem;
+}
+
+.prose-article li.task-list-item input[type="checkbox"] {
+  margin-top: 0.45em;
+  flex-shrink: 0;
+}
+
+.prose-article li.task-list-item input[type="checkbox"]:checked + * {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+.prose-article table {
+  display: block;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .prose-article table {
+    white-space: normal;
+    font-size: 0.8rem;
+  }
+  .prose-article table th,
+  .prose-article table td {
+    padding: 0.45rem 0.6rem;
+  }
+}
+
+.prose-article pre code.hljs {
+  background: transparent;
+  padding: 0;
+}
+
+.prose-article .hljs-comment,
+.prose-article .hljs-quote { color: #8A8F98; font-style: italic; }
+.prose-article .hljs-keyword,
+.prose-article .hljs-selector-tag,
+.prose-article .hljs-literal,
+.prose-article .hljs-doctag { color: #A626A4; }
+.prose-article .hljs-string,
+.prose-article .hljs-regexp,
+.prose-article .hljs-addition { color: #50A14F; }
+.prose-article .hljs-number,
+.prose-article .hljs-symbol,
+.prose-article .hljs-bullet { color: #986801; }
+.prose-article .hljs-title,
+.prose-article .hljs-name,
+.prose-article .hljs-section,
+.prose-article .hljs-title.function_ { color: #4078F2; }
+.prose-article .hljs-attr,
+.prose-article .hljs-attribute,
+.prose-article .hljs-variable,
+.prose-article .hljs-template-variable { color: #E45649; }
+.prose-article .hljs-type,
+.prose-article .hljs-class .hljs-title,
+.prose-article .hljs-built_in { color: #C18401; }
+.prose-article .hljs-meta { color: #0184BC; }
+.prose-article .hljs-deletion { color: #E45649; }
+.prose-article .hljs-emphasis { font-style: italic; }
+.prose-article .hljs-strong { font-weight: 700; }
+
+.prose-compact { font-size: 15px; line-height: 1.7; }
+.prose-compact p { font-size: 15px; line-height: 1.7; margin: 0.85rem 0; }
+.prose-compact h1 { font-size: 1.5rem; margin: 1.5rem 0 0.75rem; }
+.prose-compact h2 { font-size: 1.25rem; margin: 1.35rem 0 0.6rem; padding-bottom: 0.3rem; }
+.prose-compact h3 { font-size: 1.1rem; margin: 1.15rem 0 0.5rem; }
+.prose-compact h4 { font-size: 1rem; margin: 1rem 0 0.4rem; }
+.prose-compact ul,
+.prose-compact ol { padding-left: 1.35rem; margin: 0.85rem 0; }
+.prose-compact li { font-size: 15px; line-height: 1.7; margin: 0.35rem 0; }
+.prose-compact blockquote { font-size: 14.5px; margin: 1.1rem 0; padding: 0.6rem 0.9rem; }
+  /* Markdown output sits directly under a label in several pack sections, so the
+     leading/trailing paragraph margin would read as a stray gap. */
+  .prose-article > *:first-child,
+  .prose-compact > *:first-child { margin-top: 0; }
+  .prose-article > *:last-child,
+  .prose-compact > *:last-child { margin-bottom: 0; }
+
+@media (max-width: 640px) {
+  .prose-article { font-size: 16px; line-height: 1.75; }
+  .prose-article p { font-size: 16px; line-height: 1.75; }
+  .prose-article li { font-size: 16px; }
+  .prose-article h1 { font-size: 1.75rem; }
+  .prose-article h2 { font-size: 1.4rem; }
+  .prose-article h3 { font-size: 1.2rem; }
+  .prose-article h4 { font-size: 1.05rem; }
+  .prose-article pre { padding: 1rem; font-size: 0.82rem; }
+}
+
 /* ============================================
    SIDEBAR TREE
    ============================================ */
@@ -508,18 +608,34 @@ code, pre, kbd, samp, .font-mono {
   padding-bottom: max(var(--safe-bottom-pad, 0.75rem), env(safe-area-inset-bottom));
 }
 
-/* Compare matrix — sticky metric label column while swiping columns on mobile */
+/* Compare matrix — sticky metric label column.
+   Desktop only: the mobile layout is per-company cards, so there is no
+   horizontally scrolling grid to pin against. Widths must match the first grid
+   track in CompareMatrixTable (200px) or the column renders narrower than its
+   track and leaves a visible gap. */
 .compare-sticky-col,
 .compare-sticky-col-alt {
   position: sticky;
   left: 0;
   z-index: 1;
-  min-width: 148px;
-  max-width: 184px;
+  min-width: 200px;
+  max-width: 200px;
   border-right: 1px solid #EDEDEB;
 }
 .compare-sticky-col { background-color: #FFFFFF; }
 .compare-sticky-col-alt { background-color: #FAFAF9; }
+
+/* Horizontal chip rails (company switcher, round filters) keep their scroll
+   affordance invisible so the row reads as a segmented control, not a scroller. */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
 
 /* Respect reduced-motion preferences (marquee, aerial 3D, entrance fades) */
 @media (prefers-reduced-motion: reduce) {
@@ -532,6 +648,43 @@ code, pre, kbd, samp, .font-mono {
   .vault-card:hover,
   .card-hover:hover {
     transform: none;
+  }
+
+  /* Utility animations: Tailwind generates `animate-spin` for spinners. A
+     spinner is the one animation that still needs to *look* busy or a loading
+     state reads as frozen, so it is left alone deliberately. */
+  .animate-pulse,
+  .animate-bounce {
+    animation: none !important;
+  }
+
+  /* Smooth scrolling is what actually triggers motion sickness on a long plan
+     page. Kill it globally rather than hunting down each `scroll-smooth`. */
+  html:focus-within,
+  html {
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Card/plan transitions are utility-driven (`transition-all`, `transition-
+   transform`), so they cannot be targeted by a class name. This opts them out
+   under reduced-motion without touching the markup. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  /* Re-exempt spinners. A frozen spinner reads as a hung page rather than a
+     loading one, so motion is information here — this is the one case where
+     honouring the preference would mislead. Declared after the blanket rule
+     because it is the more specific selector. */
+  .animate-spin {
+    animation-duration: 0.8s !important;
+    animation-iteration-count: infinite !important;
   }
 }
 

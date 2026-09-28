@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { Search, Flame, ShoppingBag, Command, ChevronDown, LogOut, UserRound, ShieldCheck, Menu, X, LayoutGrid, GraduationCap, CalendarRange, Tag } from 'lucide-react';
+import { Search, Flame, ShoppingBag, Command, ChevronDown, LogOut, UserRound, ShieldCheck, Menu, X, LayoutGrid, GraduationCap, CalendarRange, Tag, BookOpen, Award } from 'lucide-react';
 import { TieEduLogo } from '@/components/common/TieEduLogo';
 import { useAuth } from '@/context/AuthContext';
 
@@ -17,6 +17,7 @@ const NAV_LINKS = [
   { href: '/', label: 'Vaults', Icon: LayoutGrid },
   { href: '/compare', label: 'Compare', Icon: GraduationCap },
   { href: '/interview-course', label: 'Free Course', Icon: CalendarRange },
+  { href: '/courses', label: 'Courses', Icon: BookOpen },
   { href: '/study-plan', label: 'Study Plan', Icon: Tag },
   { href: '/#pricing', label: 'Pricing', Icon: Tag },
 ];
@@ -177,6 +178,13 @@ export const Header: React.FC<HeaderProps> = ({
                       </Link>
                     )}
                     <Link
+                      href="/my-courses"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-3 py-2 text-[13px] font-semibold text-[#3E4754] hover:bg-[#F3F2EE] rounded-lg"
+                    >
+                      <Award className="w-4 h-4 text-[#0E2A44]" /> My courses
+                    </Link>
+                    <Link
                       href="/account"
                       onClick={() => setMenuOpen(false)}
                       className="flex items-center gap-2.5 px-3 py-2 text-[13px] font-semibold text-[#3E4754] hover:bg-[#F3F2EE] rounded-lg"
@@ -304,6 +312,13 @@ export const Header: React.FC<HeaderProps> = ({
                         <ShieldCheck className="w-4 h-4 text-[#0E2A44]" /> Admin console
                       </Link>
                     )}
+                    <Link
+                      href="/my-courses"
+                      onClick={() => openDrawerNav()}
+                      className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-[15px] font-bold text-[#3E4754] hover:bg-[#F3F2EE] transition-colors"
+                    >
+                      <Award className="w-4 h-4 text-[#0E2A44]" /> My courses
+                    </Link>
                     <Link
                       href="/account"
                       onClick={() => openDrawerNav()}
