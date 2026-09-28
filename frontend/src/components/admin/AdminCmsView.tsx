@@ -15,16 +15,17 @@ import { AnalyticsTab } from '@/components/admin/AnalyticsTab';
 import { SettingsTab } from '@/components/admin/SettingsTab';
 import { PaymentVerificationsTab } from '@/components/admin/PaymentVerificationsTab';
 import { StudyPlansTab } from '@/components/admin/StudyPlansTab';
+import { PostersTab } from '@/components/admin/PostersTab';
 import {
   BookOpen, Building2, BarChart3, FileText, Layers, LayoutDashboard,
   LogOut, RefreshCw, Settings2, ShoppingBag, Ticket, Users, ExternalLink, Wallet, CalendarRange,
-  GraduationCap, Award, Zap
+  GraduationCap, Award, Zap, Megaphone
 } from 'lucide-react';
 import { AdminCoursesTab } from '@/components/admin/course/AdminCoursesTab';
 import { AdminCertificatesTab } from '@/components/admin/course/AdminCertificatesTab';
 import { AdminXpTab } from '@/components/admin/course/AdminXpTab';
 
-type TabId = 'overview' | 'orders' | 'payments' | 'users' | 'analytics' | 'hub' | 'content' | 'pack' | 'studyplans' | 'coupons' | 'courses' | 'certificates' | 'xp' | 'reports' | 'settings';
+type TabId = 'overview' | 'orders' | 'payments' | 'users' | 'analytics' | 'hub' | 'content' | 'pack' | 'studyplans' | 'coupons' | 'posters' | 'courses' | 'certificates' | 'xp' | 'reports' | 'settings';
 
 const NAV: { id: TabId; label: string; icon: any; group: string }[] = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard, group: 'Commerce & Health' },
@@ -32,6 +33,7 @@ const NAV: { id: TabId; label: string; icon: any; group: string }[] = [
   { id: 'payments', label: 'Payment Verify', icon: Wallet, group: 'Commerce & Health' },
   { id: 'users', label: 'Users & Access', icon: Users, group: 'Commerce & Health' },
   { id: 'analytics', label: 'Analytics', icon: BarChart3, group: 'Commerce & Health' },
+  { id: 'posters', label: 'Hero Posters', icon: Megaphone, group: 'Commerce & Health' },
   { id: 'hub', label: 'Company Hub', icon: Building2, group: 'Content & Vault' },
   { id: 'content', label: 'Content Builder', icon: BookOpen, group: 'Content & Vault' },
   { id: 'pack', label: 'Pack Editor', icon: Layers, group: 'Content & Vault' },
@@ -229,6 +231,9 @@ export const AdminCmsView: React.FC = () => {
 
             {/* TAB: ANALYTICS */}
             {activeTab === 'analytics' && <AnalyticsTab companies={companiesList} />}
+
+            {/* TAB: HERO POSTERS — the landing page banner rotation */}
+            {activeTab === 'posters' && <PostersTab />}
 
             {/* TAB: COMPANY HUB */}
             {activeTab === 'hub' && (

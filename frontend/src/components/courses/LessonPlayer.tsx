@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { PlayCircle, ListChecks, Check, X, Info, Lock, FileText } from 'lucide-react';
+import { ListChecks, Check, X, Lock, FileText } from 'lucide-react';
 import { ContentBlockRenderer } from '@/components/blocks/ContentBlockRenderer';
+import { TrackedVideoPlayer } from '@/components/courses/TrackedVideoPlayer';
 import { reportLessonProgress, submitLessonQuiz } from '@/lib/coursesApi';
 import type {
   CourseLessonView,
@@ -9,16 +10,28 @@ import type {
   CourseLessonBlock,
   LessonProgressResponse,
   LessonCompletionState,
+  VideoProvider,
 } from '@/types';
 
 const BEAT_MS = 5000;
 
-/** A lesson the server actually opened: it carries blocks, a video, or a quiz. */
+/**
+ * A lesson the server actually opened: it carries blocks, a video, or a quiz.
+ * `provider` and `video_id` matter as much as `embed_url` — the tracked player
+ * needs to know which player's API to talk to.
+ */
 const isOpenLesson = (
   l: CourseLessonView
 ): l is CourseLessonView & {
   blocks?: CourseLessonBlock[];
-  video?: { embed_url?: string; url: string; title: string } | null;
+  video?: {
+    provider?: VideoProvider;
+    video_id?: string;
+    embed_url?: string;
+    url: string;
+    title: string;
+    duration_minutes?: number;
+  } | null;
   quiz?: {
     id: string;
     question_count: number;
@@ -56,10 +69,18 @@ export const LessonPlayer: React.FC<{
 }) => {
   const beatTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastBeatAt = useRef<number>(0);
-  const furthestWatched = useRef<number>(0);
   const [playing, setPlaying] = useState(false);
   const [rejectedNote, setRejectedNote] = useState<string | null>(null);
   const [beatError, setBeatError] = useState<string | null>(null);
+
+  /**
+   * The playhead and player duration, held in refs because the heartbeat reads
+   * them on a timer rather than on render. `reportedDuration` is the real
+   * duration the player reports (not a value we invented); the server still
+   * bounds it, and `positionSeconds` is only ever a resume hint.
+   */
+  const reportedDuration = useRef<number>(0);
+  const positionSeconds = useRef<number>(0);
 
   const state = lesson.state as LessonCompletionState;
 
@@ -67,15 +88,15 @@ export const LessonPlayer: React.FC<{
    * A lesson with neither a video nor a quiz is gated on the learner actually
    * spending time reading it. Nothing on screen should have to be clicked for
    * that to progress, so the same heartbeat runs automatically while the lesson
-   * is on screen. Everything else is driven by the play button.
+   * is on screen. Video lessons are driven by real playback instead.
    */
   const readGated = (state?.requirements || []).some((r) => r.key === 'read' && !r.met);
 
   // ---- watch-time heartbeats -------------------------------------------------
-  // We deliberately do NOT try to read the video's currentTime. YouTube and
-  // Vimeo only expose that cross-origin to a parent that owns the frame, so a
-  // real duration cannot be trusted from JS. The server bounds whatever we send
-  // against the author's own estimate and against real elapsed time, and tells us
+  // The player reports its own real duration and playhead, so unlike the old
+  // blind "Mark as watching" button this reflects actual playback. The credit
+  // itself is still the server's to grant: it clamps the delta against real
+  // elapsed time and the duration against the author's estimate, and tells us
   // how much it threw away — which we surface rather than hide.
   const beat = useCallback(
     async (deltaSeconds: number) => {
@@ -84,9 +105,16 @@ export const LessonPlayer: React.FC<{
       try {
         const res = await reportLessonProgress(lesson.id, {
           delta_seconds: Math.max(0, Math.round(deltaSeconds)),
-          duration_seconds: furthestWatched.current,
+          duration_seconds: Math.round(reportedDuration.current),
+          position_seconds: Math.round(positionSeconds.current),
         });
         onProgress(res);
+        // The server may refuse the position outright (rate limit, missing
+        // duration). Trust its answer, not ours, or the next resume lands
+        // somewhere the learner never actually reached.
+        if (typeof res.position_seconds === 'number') {
+          positionSeconds.current = res.position_seconds;
+        }
         if (res.rejected_seconds > 0) {
           setRejectedNote(
             `We credited ${Math.round(res.credited_seconds)}s and ignored ${Math.round(
@@ -119,7 +147,6 @@ export const LessonPlayer: React.FC<{
       const now = Date.now();
       const delta = (now - lastBeatAt.current) / 1000;
       lastBeatAt.current = now;
-      furthestWatched.current = furthestWatched.current + Math.min(delta, 20);
       void beat(Math.min(delta, 20));
     }, BEAT_MS);
     return () => {
@@ -128,18 +155,31 @@ export const LessonPlayer: React.FC<{
     };
   }, [playing, readGated, canSubmit, beat]);
 
-  // A tab switch or navigation must not bank the time spent away from the page.
+  // A tab switch must not silently drop the seconds already earned. Flush the
+  // pending beat so the watch time (and the resume point) is banked before the
+  // page goes away. Note this does *not* stop the heartbeat: a video playing in a
+  // background tab is genuinely being watched, and the server still caps credit
+  // at real elapsed time.
   useEffect(() => {
+    const flush = () => {
+      if (!canSubmit) return;
+      if (!(playing || readGated)) return;
+      const delta = (Date.now() - lastBeatAt.current) / 1000;
+      if (delta <= 1) return;
+      lastBeatAt.current = Date.now();
+      void beat(Math.min(delta, 20));
+    };
     const onVisibility = () => {
-      if (document.hidden && (playing || readGated)) {
-        const delta = (Date.now() - lastBeatAt.current) / 1000;
-        if (delta > 1) void beat(Math.min(delta, 20));
-        setPlaying(false);
-      }
+      if (document.hidden) flush();
     };
     document.addEventListener('visibilitychange', onVisibility);
-    return () => document.removeEventListener('visibilitychange', onVisibility);
-  }, [playing, readGated, beat]);
+    // Also on unmount: navigating between lessons inside the SPA tears this
+    // component down without ever hiding the document.
+    return () => {
+      flush();
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [playing, readGated, canSubmit, beat]);
 
   if (!state) return null;
 
@@ -167,39 +207,26 @@ export const LessonPlayer: React.FC<{
         </Banner>
       )}
 
-      {video?.embed_url && (
+      {video?.embed_url && video.provider && (
         <section className="mb-6">
-          <div className="relative aspect-video w-full overflow-hidden rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-black">
-            <iframe
-              src={video.embed_url}
-              title={video.title || lesson.title}
-              className="h-full w-full"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
-          </div>
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-            <p className="text-[11px] text-[var(--text-muted)]">
-              Keep the video playing to record progress. You need to watch{' '}
-              <strong className="text-[var(--text-body)]">90%</strong> of it.
-            </p>
-            <button
-              type="button"
-              onClick={() => {
-                if (!canSubmit) return onSignInRequired();
-                setPlaying((p) => !p);
-              }}
-              className={[
-                'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-colors',
-                canSubmit
-                  ? 'bg-[var(--brand-sky)] text-white hover:bg-[var(--brand-sky-strong)]'
-                  : 'border border-[var(--border-subtle)] text-[var(--text-muted)]',
-              ].join(' ')}
-            >
-              <PlayCircle size={14} />
-              {playing ? 'Recording…' : 'Mark as watching'}
-            </button>
-          </div>
+          <TrackedVideoPlayer
+            provider={video.provider}
+            embedUrl={video.embed_url}
+            title={video.title || lesson.title}
+            watchedSeconds={state.video_watched_seconds || 0}
+            durationSeconds={state.video_duration_seconds || 0}
+            positionSeconds={state.video_position_seconds || 0}
+            watchPercent={state.video_percent || 0}
+            requiredPercent={state.watch_required_percent || 90}
+            isComplete={state.video_ok}
+            canSubmit={canSubmit}
+            onSignInRequired={onSignInRequired}
+            onPlayingChange={setPlaying}
+            onTimeUpdate={(position, duration) => {
+              if (duration > 0) reportedDuration.current = duration;
+              positionSeconds.current = position;
+            }}
+          />
           {rejectedNote && (
             <p className="mt-2 rounded-lg bg-[var(--bg-sky-soft)] px-3 py-2 text-[11px] leading-relaxed text-[var(--brand-sky-strong)]">
               {rejectedNote}

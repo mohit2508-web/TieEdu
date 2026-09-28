@@ -193,6 +193,40 @@ export interface ModulePdf {
   uploaded_at: string;
 }
 
+/**
+ * Public shape of a landing-hero poster, exactly as GET /api/posters returns
+ * it. `image_url` is already absolute against the API host, so the carousel can
+ * drop it straight into an <img src>.
+ */
+export interface HeroPoster {
+  id: string;
+  title: string;
+  subtitle: string;
+  badge: string;
+  cta_label: string;
+  /** In-app path ("/company/google") or an absolute external URL. */
+  href: string;
+  alt_text: string;
+  image_url: string;
+  is_featured: boolean;
+}
+
+/** Admin shape: the full record plus server-computed liveness and the image url. */
+export interface HeroPosterAdmin extends Omit<HeroPoster, 'image_url'> {
+  image_stored_name: string;
+  image_file_name: string;
+  image_url: string;
+  is_active: boolean;
+  sort_order: number;
+  start_at: string | null;
+  end_at: string | null;
+  /** True when the poster is active AND inside its run window, per the server. */
+  is_live: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+
 export interface ContentModule {
   id: string;
   company_id: string;
@@ -573,6 +607,15 @@ export interface LessonCompletionState {
   has_quiz: boolean;
   video_percent: number;
   video_ok: boolean;
+  /**
+   * The real numbers behind `video_percent`, so the player can say
+   * "12:34 of 18:20 watched" rather than a percentage the learner cannot act on.
+   * `video_duration_seconds` is the same bounded duration the gate divides by.
+   */
+  video_watched_seconds: number;
+  video_duration_seconds: number;
+  /** Playhead the server kept, so reopening the lesson resumes here. */
+  video_position_seconds: number;
   quiz_best_percent: number | null;
   quiz_ok: boolean;
   read_percent: number;
@@ -580,6 +623,8 @@ export interface LessonCompletionState {
   ready: boolean;
   is_complete: boolean;
   requirements: LessonRequirement[];
+  /** The server's watch gate as a percent, so the UI cannot drift from it. */
+  watch_required_percent: number;
 }
 
 export interface CourseLesson {
@@ -799,6 +844,11 @@ export interface LessonProgressResponse {
    */
   credited_seconds: number;
   rejected_seconds: number;
+  /**
+   * The playhead the server kept, bounded by its trusted duration. Echoed so a
+   * client whose seek did not land resumes from the truth rather than a guess.
+   */
+  position_seconds: number;
   xp: { reason: string; xp: number; awarded: boolean }[];
   xp_total: number;
   course_complete: boolean;

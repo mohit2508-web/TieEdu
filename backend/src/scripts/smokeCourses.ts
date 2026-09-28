@@ -400,6 +400,66 @@ async function main() {
     });
     check('a negative delta cannot subtract watch time', negative.status === 200 && (Number(readDb().course_progress[userId][listing.id].video_watch_seconds[firstVideo.id]) || 0) >= afterAbsurd);
 
+    // Resume position. The player sends the playhead so reopening a lesson picks
+    // up where the learner stopped. It must be stored, echoed, and bounded — and
+    // critically it must not feed the watch gate, or seeking to the end would
+    // complete the lesson.
+    const watchedBeforeSeek = Number(readDb().course_progress[userId][listing.id].video_watch_seconds[firstVideo.id]) || 0;
+    const seek = await api(`/api/courses/lessons/${encodeURIComponent(firstVideo.id)}/progress`, {
+      method: 'POST',
+      token,
+      body: { delta_seconds: 0, duration_seconds: authorSeconds, position_seconds: 120 },
+    });
+    check(
+      'the playhead is stored for resume',
+      Number(readDb().course_progress[userId][listing.id].video_position_seconds[firstVideo.id]) === 120,
+      `stored ${readDb().course_progress[userId][listing.id].video_position_seconds[firstVideo.id]}`
+    );
+    check('the response echoes the kept playhead', seek.body?.position_seconds === 120, `position_seconds=${seek.body?.position_seconds}`);
+    check(
+      'seeking to the end grants no watch credit',
+      (Number(readDb().course_progress[userId][listing.id].video_watch_seconds[firstVideo.id]) || 0) === watchedBeforeSeek
+    );
+
+    const seekPastEnd = await api(`/api/courses/lessons/${encodeURIComponent(firstVideo.id)}/progress`, {
+      method: 'POST',
+      token,
+      body: { delta_seconds: 0, duration_seconds: authorSeconds, position_seconds: 99_999 },
+    });
+    check(
+      'a playhead past the end is bounded by the real duration',
+      Number(seekPastEnd.body?.position_seconds) <= authorSeconds,
+      `position_seconds=${seekPastEnd.body?.position_seconds} vs ${authorSeconds}s`
+    );
+
+    const beforeNegativeSeek = Number(
+      readDb().course_progress[userId][listing.id].video_position_seconds[firstVideo.id]
+    );
+    const negativeSeek = await api(`/api/courses/lessons/${encodeURIComponent(firstVideo.id)}/progress`, {
+      method: 'POST',
+      token,
+      body: { delta_seconds: 0, duration_seconds: authorSeconds, position_seconds: -500 },
+    });
+    check(
+      'a negative playhead is ignored and the last good one kept',
+      negativeSeek.body?.position_seconds === beforeNegativeSeek && beforeNegativeSeek > 0,
+      `position_seconds=${negativeSeek.body?.position_seconds}, was ${beforeNegativeSeek}`
+    );
+
+    // The real seconds the UI needs to show "12:34 of 18:20 watched".
+    check(
+      'the lesson state carries watched and total seconds',
+      typeof negativeSeek.body?.lesson?.video_watched_seconds === 'number' &&
+        typeof negativeSeek.body?.lesson?.video_duration_seconds === 'number' &&
+        negativeSeek.body?.lesson?.video_duration_seconds > 0,
+      JSON.stringify(negativeSeek.body?.lesson).slice(0, 200)
+    );
+    check(
+      'the watch gate is sent rather than hardcoded client-side',
+      negativeSeek.body?.lesson?.watch_required_percent === 90,
+      `watch_required_percent=${negativeSeek.body?.lesson?.watch_required_percent}`
+    );
+
     console.log('\n[6] quiz grading happens on the server');
     const quizLesson = quizLessons[0];
     const answers = key[quizLesson.id];

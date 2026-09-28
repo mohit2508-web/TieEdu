@@ -40,6 +40,43 @@ export interface ModulePdf {
   uploaded_at: string;
 }
 
+/**
+ * A big rotating creative in the landing hero. Admin-authored end to end: the
+ * image, the overlay copy, the link and the run window are all set from the
+ * control plane, so the owner decides which poster is live without a deploy.
+ */
+export interface HeroPoster {
+  id: string;
+  /** Headline burned over the image. Empty means image-only creative. */
+  title: string;
+  /** Supporting line under the title. */
+  subtitle: string;
+  /** Pill above the title — "NEW", "LIVE DRIVE", "OFFER" and so on. */
+  badge: string;
+  /** Button copy. Empty hides the button and makes the whole poster the link. */
+  cta_label: string;
+  /**
+   * Where the poster points. An in-app path ("/company/google") stays inside the
+   * SPA; an absolute http(s) URL is allowed for partner/external campaigns and
+   * gets a target=_blank at render time.
+   */
+  href: string;
+  /** Accessible description — also the image's alt text on the student site. */
+  alt_text: string;
+  image_stored_name: string;
+  image_file_name: string;
+  is_active: boolean;
+  /** Manual ordering, low number shows first. Ties break on created_at. */
+  sort_order: number;
+  /** ISO datetimes; null/empty means "no bound". */
+  start_at: string | null;
+  end_at: string | null;
+  /** Rotating ad of the week. When set, the public list returns only this poster. */
+  is_featured: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -277,6 +314,13 @@ export interface CourseProgress {
   video_watch_seconds: Record<string, number>;
   /** lesson_id -> highest reported player duration, so % is stable across loads */
   video_duration_seconds: Record<string, number>;
+  /**
+   * lesson_id -> last playhead position, so reopening a lesson resumes where the
+   * learner stopped. Purely a convenience: the watch gate divides by duration
+   * and credits only server-clamped elapsed time, so seeking the player to the
+   * end grants nothing on its own.
+   */
+  video_position_seconds: Record<string, number>;
   /**
    * lesson_id -> ISO timestamp of the previous accepted heartbeat. Lets the
    * server refuse to credit watch time faster than real time, so the client
@@ -1246,6 +1290,10 @@ const initialDbData = {
   unlocks: [],
   users: [],
   sessions: [],
+  // Hero posters are admin-authored creatives. Seeded EMPTY on purpose: the
+  // landing hero falls back to the company orbit when there is nothing live, and
+  // auto-seeding fake "sale" creatives would put invented offers on the homepage.
+  posters: [],
   progress: {},
   interview_progress: {},
   courses: getSeedCourses(),
@@ -1293,6 +1341,7 @@ export function loadDb() {
       if (!Array.isArray(data.study_plan_phases)) { data.study_plan_phases = []; upgraded = true; }
       if (!Array.isArray(data.study_plan_enrollments)) { data.study_plan_enrollments = []; upgraded = true; }
       if (!Array.isArray(data.study_plan_progress)) { data.study_plan_progress = []; upgraded = true; }
+      if (!Array.isArray(data.posters)) { data.posters = []; upgraded = true; }
       // Starter roadmap, installed once. The seeded_at stamp is what keeps this
       // from resurrecting a template an admin deliberately deleted: without it,
       // an emptied collection would be re-seeded on every restart, exactly the

@@ -525,10 +525,12 @@ coursesRouter.get('/lessons/:lessonId', optionalAuth, (req: Request, res: Respon
 /**
  * POST /api/courses/lessons/:lessonId/progress
  *
- * The client reports a watch delta and the player duration. The server:
+ * The client reports a watch delta, the player duration and the playhead. The
+ * server:
  *   - refuses to credit more time than actually elapsed since the last
  *     heartbeat, and never more than MAX_HEARTBEAT_CREDIT_SECONDS,
  *   - keeps the highest duration reported so the percentage does not jump,
+ *   - stores the playhead for resume, bounded by the same trusted duration,
  *   - re-derives whether the lesson is now complete.
  *
  * XP is granted by settleCompletion, never by anything in the request body.
@@ -557,6 +559,7 @@ coursesRouter.post('/lessons/:lessonId/progress', requireAuth, (req: Request, re
   const now = Date.now();
   const reportedDelta = Math.max(0, Number(req.body?.delta_seconds) || 0);
   const reportedDuration = Math.max(0, Number(req.body?.duration_seconds) || 0);
+  const reportedPosition = Math.max(0, Number(req.body?.position_seconds) || 0);
 
   // Wall-clock clamp: a client cannot bank watch time faster than real time.
   const lastAt = progress.last_heartbeat_at?.[lesson.id];
@@ -583,6 +586,19 @@ coursesRouter.post('/lessons/:lessonId/progress', requireAuth, (req: Request, re
       (Number(progress.video_watch_seconds[lesson.id]) || 0) + creditedDelta;
   }
 
+  // Playhead, for "resume where you left off". Stored in a separate heartbeat
+  // slot from the watch credit and never fed into the completion maths, so a
+  // learner who drags the scrubber to the end still has to sit through the
+  // video to clear the watch gate — seeking only moves where they resume from.
+  if (reportedPosition > 0) {
+    const bounded = effectiveVideoSeconds(lesson, reportedDuration);
+    // Bound the stored position by the same trusted duration the gate uses, so a
+    // client cannot park a position far past the end and have the next load try
+    // to seek into nothing.
+    const ceiling = bounded > 0 ? bounded : 8 * 60 * 60;
+    progress.video_position_seconds[lesson.id] = Math.min(reportedPosition, ceiling);
+  }
+
   progress.updated_at = new Date(now).toISOString();
 
   const before = lessonCompletionState(progress, lesson);
@@ -603,6 +619,9 @@ coursesRouter.post('/lessons/:lessonId/progress', requireAuth, (req: Request, re
     // instead of continuing to claim a percentage the server will not honour.
     credited_seconds: Number(creditedDelta.toFixed(2)),
     rejected_seconds: Number((reportedDelta - creditedDelta).toFixed(2)),
+    // The playhead the server actually kept. A client whose own seek did not
+    // land (rate limit, stale value) must not assume it did.
+    position_seconds: after.video_position_seconds,
     xp: settlement?.xp || [],
     xp_total: totalXpForUser(db, userId),
     course_complete: settlement?.course_complete || false,

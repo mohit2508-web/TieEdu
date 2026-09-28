@@ -9,12 +9,19 @@ import { PricingSection } from '@/components/checkout/PricingSection';
 import { CartModal } from '@/components/checkout/CartModal';
 import { SearchModal } from '@/components/modals/SearchModal';
 import { LeaderboardModal } from '@/components/modals/LeaderboardModal';
-import { fetchCompanies } from '@/lib/api';
-import { Company } from '@/types';
+import { fetchCompanies, fetchHeroPostersApi } from '@/lib/api';
+import { Company, HeroPoster } from '@/types';
 import {
-  Search, Sparkles, ShieldCheck, CheckCircle2, ArrowRight, FileText, FileDown, Star, Layers, Ticket
+  Search, Sparkles, ShieldCheck, CheckCircle2, ArrowRight, FileText, FileDown, Star, Layers
 } from 'lucide-react';
 
+const HeroPosterCarousel = dynamic(
+  () => import('@/components/common/HeroPosterCarousel'),
+  { ssr: false }
+);
+
+// Fallback only. The hero is driven by admin-uploaded posters; this orbit shows
+// when there is no live creative, so the slot is never empty.
 const CompanyOrbitHero3D = dynamic(
   () => import('@/components/common/CompanyOrbitHero3D'),
   { ssr: false }
@@ -47,6 +54,7 @@ export default function Home() {
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState<boolean>(false);
   const [dataError, setDataError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [posters, setPosters] = useState<HeroPoster[]>([]);
   const [showOrbit, setShowOrbit] = useState(false);
 
   useEffect(() => {
@@ -68,6 +76,16 @@ export default function Home() {
         if (active) setDataError('Live vault data could not be loaded — please check the backend status.');
       })
       .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, []);
+
+  // Hero creatives. A failure here is not an error state for the visitor — the
+  // hero simply falls back to the orbit, same as an admin with nothing live.
+  useEffect(() => {
+    let active = true;
+    fetchHeroPostersApi()
+      .then(data => { if (active && data.length > 0) setPosters(data); })
+      .catch(() => { /* keep the orbit fallback */ });
     return () => { active = false; };
   }, []);
 
@@ -158,12 +176,18 @@ export default function Home() {
 
               </div>
 
-              {/* 3D Orbit — only rendered AND shown on desktop (lg+) */}
-              {showOrbit && (
-                <div className="lg:col-span-5 flex items-center justify-center">
-                  <CompanyOrbitHero3D companies={(companies || []).map(c => ({ name: c?.name || 'Company' }))} />
-                </div>
-              )}
+              {/* ===== HERO CREATIVE SLOT =====
+                  Admin-uploaded posters own this slot. The 3D orbit is only a
+                  fallback for when no creative is live (or the API is down). */}
+              <div className="lg:col-span-5 flex items-center justify-center">
+                {posters.length > 0 ? (
+                  <HeroPosterCarousel posters={posters} />
+                ) : (
+                  showOrbit && (
+                    <CompanyOrbitHero3D companies={(companies || []).map(c => ({ name: c?.name || 'Company' }))} />
+                  )
+                )}
+              </div>
 
             </div>
           </section>

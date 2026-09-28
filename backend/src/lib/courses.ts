@@ -123,7 +123,10 @@ function isYoutubeId(id: string): boolean {
 /** Privacy-preserving embed URL. youtube-nocookie stops ad-personalisation. */
 export function embedUrlFor(video: LessonVideo | null | undefined): string {
   if (!video?.video_id) return '';
-  if (video.provider === 'vimeo') return `https://player.vimeo.com/video/${video.video_id}`;
+  // `api=1` is what lets the page read real playback state out of a Vimeo
+  // player over postMessage — without it the course player has to fall back to
+  // asking the learner to vouch for their own watching.
+  if (video.provider === 'vimeo') return `https://player.vimeo.com/video/${video.video_id}?api=1`;
   return `https://www.youtube-nocookie.com/embed/${video.video_id}?enablejsapi=1&rel=0`;
 }
 
@@ -323,6 +326,7 @@ export function blankProgress(userId: string, courseId: string): CourseProgress 
     completed_at: null,
     video_watch_seconds: {},
     video_duration_seconds: {},
+    video_position_seconds: {},
     last_heartbeat_at: {},
     completed_lesson_ids: [],
     quiz_best_percent: {},
@@ -342,6 +346,7 @@ function normaliseProgress(p: CourseProgress): CourseProgress {
     ...p,
     video_watch_seconds: p.video_watch_seconds || {},
     video_duration_seconds: p.video_duration_seconds || {},
+    video_position_seconds: p.video_position_seconds || {},
     last_heartbeat_at: p.last_heartbeat_at || {},
     quiz_best_percent: p.quiz_best_percent || {},
     completed_lesson_ids: p.completed_lesson_ids || [],
@@ -485,6 +490,15 @@ export interface LessonCompletionState {
   has_quiz: boolean;
   video_percent: number;
   video_ok: boolean;
+  /**
+   * The real numbers behind `video_percent`, so the player can say "12:34 of
+   * 18:20 watched" instead of a bare percentage the learner cannot act on.
+   * `video_duration_seconds` is the same bounded duration the gate divides by,
+   * and `video_position_seconds` is where the learner stopped.
+   */
+  video_watched_seconds: number;
+  video_duration_seconds: number;
+  video_position_seconds: number;
   quiz_best_percent: number | null;
   quiz_ok: boolean;
   read_percent: number;
@@ -493,6 +507,12 @@ export interface LessonCompletionState {
   is_complete: boolean;
   /** What the learner still has to do, phrased for the UI. */
   requirements: { key: string; label: string; met: boolean }[];
+  /**
+   * The gate, as a percentage. Sent so the player can mark the 90% tick and
+   * phrase "N% still to go" without hardcoding a number that could drift from
+   * the server's WATCH_THRESHOLD.
+   */
+  watch_required_percent: number;
 }
 
 /** Seconds a read-only lesson must be on screen before it can be completed. */
@@ -510,6 +530,7 @@ export function lessonCompletionState(
 
   const watched = Number(progress?.video_watch_seconds?.[lesson.id]) || 0;
   const reported = Number(progress?.video_duration_seconds?.[lesson.id]) || 0;
+  const position = Number(progress?.video_position_seconds?.[lesson.id]) || 0;
   // Divide by the bounded duration, never by the raw client claim.
   const duration = hasVideo ? effectiveVideoSeconds(lesson, reported) : 0;
   const videoPercent = duration > 0 ? Math.min(100, Math.round((watched / duration) * 100)) : 0;
@@ -548,6 +569,11 @@ export function lessonCompletionState(
     has_quiz: hasQuiz,
     video_percent: videoPercent,
     video_ok: videoOk,
+    video_watched_seconds: Math.round(watched),
+    video_duration_seconds: Math.round(duration),
+    // Never hand back a playhead past the end: a resume target of duration
+    // would drop the learner straight onto the end screen with nothing to play.
+    video_position_seconds: Math.round(Math.min(Math.max(0, position), duration > 0 ? duration : position)),
     quiz_best_percent: quizBest ?? null,
     quiz_ok: quizOk,
     read_percent: readOk ? 100 : videoPercent,
@@ -555,6 +581,7 @@ export function lessonCompletionState(
     ready: requirements.every((r) => r.met),
     is_complete: (progress?.completed_lesson_ids || []).includes(lesson.id),
     requirements,
+    watch_required_percent: Math.round(WATCH_THRESHOLD * 100),
   };
 }
 

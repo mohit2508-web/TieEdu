@@ -28,6 +28,7 @@ import {
   courseAccessState,
   courseMaxXp,
   effectiveVideoSeconds,
+  embedUrlFor,
   formatInr,
   gradeQuiz,
   isLessonUnlocked,
@@ -142,6 +143,7 @@ function blankP(over: Partial<CourseProgress> = {}): CourseProgress {
     completed_at: null,
     video_watch_seconds: {},
     video_duration_seconds: {},
+    video_position_seconds: {},
     last_heartbeat_at: {},
     completed_lesson_ids: [],
     quiz_best_percent: {},
@@ -331,6 +333,46 @@ check(
 }
 
 // ---------------------------------------------------------------------------
+// The real seconds behind the percentage, and the resume point
+// ---------------------------------------------------------------------------
+// The player has to be able to say "12:34 of 18:20 watched" and resume where the
+// learner stopped, and it can only do that if the server hands back the numbers
+// it is actually gating on — not a percentage the client would have to guess at.
+{
+  const l = videoLesson();
+  const s = lessonCompletionState(
+    blankP({
+      video_watch_seconds: { l1: 300 },
+      video_duration_seconds: { l1: 600 },
+      video_position_seconds: { l1: 295 },
+    }),
+    l
+  );
+  check('watched seconds are reported', s.video_watched_seconds, 300);
+  check('the gate duration is reported', s.video_duration_seconds, 600);
+  check('the resume point is reported', s.video_position_seconds, 295);
+  check('the watch gate is sent so the UI cannot hardcode it', s.watch_required_percent, 90);
+}
+{
+  // A resume point past the end would drop the learner onto the end screen.
+  const l = videoLesson();
+  const s = lessonCompletionState(
+    blankP({ video_duration_seconds: { l1: 600 }, video_position_seconds: { l1: 5000 } }),
+    l
+  );
+  check('a resume point beyond the end is clamped to the duration', s.video_position_seconds, 600);
+}
+{
+  // Negative or junk input must not leak through as a negative playhead.
+  const l = videoLesson();
+  const s = lessonCompletionState(
+    blankP({ video_duration_seconds: { l1: 600 }, video_position_seconds: { l1: -30 } }),
+    l
+  );
+  check('a negative resume point is floored at zero', s.video_position_seconds, 0);
+}
+
+// ---------------------------------------------------------------------------
 // isLessonUnlocked — sequential gating
 // ---------------------------------------------------------------------------
 
@@ -443,6 +485,14 @@ check(
 {
   const l = videoLesson();
   check('the embed url is derived server-side', sanitizeLesson(l).video?.embed_url.includes('youtube-nocookie'), true);
+// The Vimeo embed has to opt into the postMessage API, or the course player
+// cannot read real playback state and has to fall back to a self-declared
+// "I am watching" button.
+check(
+  'a vimeo embed opts into the postMessage api',
+  embedUrlFor({ provider: 'vimeo', video_id: '76979871' } as any),
+  'https://player.vimeo.com/video/76979871?api=1'
+);
   check('a lesson with no video reports null, not undefined', sanitizeLesson(lesson()).video, null);
   check('a lesson with no quiz reports null', sanitizeLesson(lesson()).quiz, null);
 }

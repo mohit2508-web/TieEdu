@@ -93,7 +93,7 @@ export const enrollInCourse = async (slug: string): Promise<{ progress: unknown;
  */
 export const reportLessonProgress = async (
   lessonId: string,
-  payload: { delta_seconds: number; duration_seconds: number }
+  payload: { delta_seconds: number; duration_seconds: number; position_seconds: number }
 ): Promise<LessonProgressResponse> => {
   const res = await apiFetch(`${COURSES}/lessons/${encodeURIComponent(lessonId)}/progress`, {
     method: 'POST',

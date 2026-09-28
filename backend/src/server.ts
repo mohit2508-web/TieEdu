@@ -14,6 +14,7 @@ import { adminRouter } from './routes/admin.routes';
 import { gamificationRouter } from './routes/gamification.routes';
 import { studyPlanRouter } from './routes/studyPlan.routes';
 import { pdfLibraryRouter } from './routes/pdfLibrary.routes';
+import { postersRouter } from './routes/posters.routes';
 import { campusRouter } from './routes/campus.routes';
 import { analyticsRouter } from './routes/analytics.routes';
 import { interviewCourseRouter } from './routes/interviewCourse.routes';
@@ -88,6 +89,7 @@ pdfLibraryRouter.use('/admin', requireAdmin); // upload/delete protected; GET /f
 app.use('/api/companies', companiesRouter);
 app.use('/api/pricing', pricingRouter);
 app.use('/api/pdf', pdfLibraryRouter);
+app.use('/api/posters', postersRouter);
 app.use('/api/checkout', checkoutRouter);
 app.use('/api/webhooks', webhooksRouter);
 app.use('/api/reports', reportsRouter);

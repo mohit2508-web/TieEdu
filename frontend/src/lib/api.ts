@@ -1,4 +1,4 @@
-import { Company, ComparisonMatrix, InterviewReport, PricingPlan, PricingCatalog, StudyPlanTemplateMeta } from '@/types';
+import { Company, ComparisonMatrix, HeroPoster, HeroPosterAdmin, InterviewReport, PricingPlan, PricingCatalog, StudyPlanTemplateMeta } from '@/types';
 import { getAccessToken, getUserId, apiRefresh, setAuthSession } from './auth';
 
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
@@ -48,6 +48,18 @@ export const apiFetch = async (url: string, options: RequestInit = {}): Promise<
 // ============================================================================
 
 export const pdfFileUrl = (storedName: string) => `${API_BASE_URL}/pdf/file/${encodeURIComponent(storedName)}`;
+
+/**
+ * Turn a server-relative asset path ("/api/posters/file/x.jpg") into a URL the
+ * browser can actually load. The frontend and the API are different origins, so
+ * a bare relative path would silently 404 against Next.js.
+ */
+export const apiAssetUrl = (relativePath: string): string => {
+  if (!relativePath) return '';
+  if (/^https?:\/\//i.test(relativePath)) return relativePath;
+  const origin = API_BASE_URL.replace(/\/api\/?$/, '');
+  return `${origin}${relativePath.startsWith('/') ? relativePath : `/${relativePath}`}`;
+};
 
 export const uploadModulePdfApi = async (
   moduleId: string,
@@ -464,6 +476,73 @@ export const updateCouponApi = async (couponId: string, data: any) =>
 
 export const deleteCouponApi = async (couponId: string) =>
   adminFetch(`/admin/coupons/${couponId}`, { method: 'DELETE' });
+
+// ============================================================================
+// HERO POSTERS — admin-authored creatives that rotate in the landing hero
+// ============================================================================
+
+export const fetchHeroPostersApi = async (): Promise<HeroPoster[]> => {
+  // Plain fetch on purpose: this runs for logged-out visitors on the homepage,
+  // and a 401-refresh dance would be pure noise. A failed request just means
+  // "no posters", which the hero handles by falling back to the orbit.
+  try {
+    const res = await fetch(`${API_BASE_URL}/posters`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
+};
+
+export const fetchAdminPostersApi = async (): Promise<HeroPosterAdmin[]> => {
+  const data = await adminFetch('/posters/admin');
+  return Array.isArray(data) ? data : [];
+};
+
+export const createHeroPosterApi = async (data: any) =>
+  adminFetch('/posters/admin', { method: 'POST', body: JSON.stringify(data) });
+
+export const updateHeroPosterApi = async (posterId: string, data: any) =>
+  adminFetch(`/posters/admin/${encodeURIComponent(posterId)}`, { method: 'PUT', body: JSON.stringify(data) });
+
+export const deleteHeroPosterApi = async (posterId: string) =>
+  adminFetch(`/posters/admin/${encodeURIComponent(posterId)}`, { method: 'DELETE' });
+
+/**
+ * Upload a poster image. Uses XHR rather than `apiFetch` because adminFetch
+ * always sets a JSON content type, which multipart uploads cannot have, and
+ * because the progress callback is what makes a 6MB upload feel honest.
+ */
+export const uploadPosterImageApi = async (file: File, onProgress?: (percent: number) => void) => {
+  const form = new FormData();
+  form.append('file', file);
+
+  return new Promise<{ stored_name: string; file_name: string; size_bytes: number }>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `${API_BASE_URL}/posters/admin/upload`);
+    xhr.timeout = 120000;
+    const token = getAccessToken();
+    if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100));
+    };
+    xhr.onload = () => {
+      try {
+        const data = JSON.parse(xhr.responseText);
+        if (xhr.status === 401) return reject(new Error('Session expired — dobara admin login karo'));
+        if (xhr.status === 413) return reject(new Error('Image 6MB se bada hai'));
+        if (xhr.status >= 200 && xhr.status < 300) return resolve(data);
+        reject(new Error(data?.error || `Upload failed (Status ${xhr.status})`));
+      } catch {
+        reject(new Error(`Upload failed with server status ${xhr.status}`));
+      }
+    };
+    xhr.onerror = () => reject(new Error('Network error during upload'));
+    xhr.ontimeout = () => reject(new Error('Upload timed out after 120 seconds'));
+    xhr.send(form);
+  });
+};
 
 export const fetchLeaderboardApi = async () => {
   const res = await fetch(`${API_BASE_URL}/gamification/leaderboard`);
