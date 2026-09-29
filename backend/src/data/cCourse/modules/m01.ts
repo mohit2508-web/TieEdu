@@ -405,7 +405,7 @@ Commit the first three to memory. When you are stuck, the question "which stage 
             {
               name: 'link',
               tool: 'gcc (no -c)',
-              in: 'hello.o + libc',
+              in: 'hello.o',
               out: 'hello — an executable',
               detail:
                 'Places every section at a final address and fills in the holes left by the assembler, pulling printf and the rest of libc out of the standard library. Undefined reference and multiple definition are both link-stage errors.',

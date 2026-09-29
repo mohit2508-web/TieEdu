@@ -172,20 +172,20 @@ When the optimiser and the source disagree, the optimiser is usually right about
             {
               caption: 'At -O2 the function becomes mov eax, 1; ret. It never reads x.',
               note: 'Call it with INT_MAX and it returns 1 — but the caller has already written an expression whose result is undefined. The optimiser did exactly what the standard permits.',
-              line: 9,
+              line: 6,
               vars: [{ name: 'result', value: '1 (regardless of x)' }],
               output: 'f: mov eax, 1 / ret',
             },
             {
               caption: 'The same reasoning deletes the guard for an uninitialised pointer.',
               note: 'If flag is false, *p is UB. Since UB cannot happen, the compiler concludes flag is always true, and the if collapses. The "guard" you wrote is optimised away.',
-              line: 13,
+              line: 11,
               vars: [{ name: 'p', value: 'indeterminate when !flag' }],
             },
             {
               caption: 'The signed overflow itself: INT_MAX + 1. The standard specifies nothing.',
               note: 'gcc and clang optimise on the assumption that it never occurs. -fsanitize=undefined catches it and prints the exact line, converting silent UB into a report.',
-              line: 16,
+              line: 15,
               vars: [{ name: 'h', value: 'INT_MAX  ← + 1 is UB' }],
             },
           ],

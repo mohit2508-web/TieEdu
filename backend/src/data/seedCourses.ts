@@ -13,6 +13,7 @@
 
 import { Course, ContentBlockRecord } from './db';
 import { getCProgrammingCourse } from './cCourse';
+import { getPythonProgrammingCourse } from './pythonCourse';
 
 let blockSeq = 0;
 const blk = (
@@ -970,5 +971,6 @@ Pass this and the course is complete: you will be able to download your TieEdu c
       ],
     },
     getCProgrammingCourse(),
+    getPythonProgrammingCourse(),
   ];
 }

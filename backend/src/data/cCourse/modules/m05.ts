@@ -737,45 +737,44 @@ unsigned int ok = 1u << 31;          /* fine */
               ],
             },
             {
-              caption: 'Now b = 10. Align them:',
+              caption: 'Now b = 10, in a word of the same width so the columns line up:',
               fields: [
-                { label: 'a', bits: 8, tone: 'int', value: 12 },
-                { label: 'b', bits: 8, tone: 'warn', value: 10 },
+                { label: 'a = 12', bits: 16, tone: 'int', value: 12 },
               ],
             },
             {
               caption: 'AND (a & b): a bit is set only if it is set in BOTH. 1100 & 1010 = 1000 = 8.',
               note: 'This is the "is this flag set" test: a flag mask with one bit set, ANDed with the flags, is non-zero exactly when that flag is present.',
               fields: [
-                { label: 'a', bits: 8, tone: 'int', value: 12 },
-                { label: 'b', bits: 8, tone: 'warn', value: 10 },
-                { label: 'a & b', bits: 8, tone: 'ok', value: 8, note: '1000' },
+                { label: 'b = 10', bits: 16, tone: 'warn', value: 10, note: '1010' },
+              ],
+            },
+            {
+              caption: 'The result of the AND is its own 8-bit value, shown in the same 16-bit word:',
+              note: 'Because 8 fits in the low byte, the upper byte is all zeros. Bitwise operators are per-bit and never carry, which is the whole difference from arithmetic.',
+              fields: [
+                { label: 'a & b = 8', bits: 16, tone: 'ok', value: 8, note: '1000' },
               ],
             },
             {
               caption: 'OR (a | b): a bit is set if it is set in EITHER. 1100 | 1010 = 1110 = 14.',
               note: 'This is the "set this flag" operation: OR the current flags with a mask that has just this bit set.',
               fields: [
-                { label: 'a', bits: 8, tone: 'int', value: 12 },
-                { label: 'b', bits: 8, tone: 'warn', value: 10 },
-                { label: 'a | b', bits: 8, tone: 'ok', value: 14, note: '1110' },
+                { label: 'a | b = 14', bits: 16, tone: 'ok', value: 14, note: '1110' },
               ],
             },
             {
               caption: 'XOR (a ^ b): a bit is set if it is set in EXACTLY ONE. 1100 ^ 1010 = 0110 = 6.',
               note: 'XOR with an all-ones mask is the classic "invert these bits" operation, used for encryption and for toggling a flag.',
               fields: [
-                { label: 'a', bits: 8, tone: 'int', value: 12 },
-                { label: 'b', bits: 8, tone: 'warn', value: 10 },
-                { label: 'a ^ b', bits: 8, tone: 'ok', value: 6, note: '0110' },
+                { label: 'a ^ b = 6', bits: 16, tone: 'ok', value: 6, note: '0110' },
               ],
             },
             {
               caption: 'Shifting: 1 << 4 = 10000 = 16. Multiplying by 2^n is a left shift.',
-              note: 'So 1 << 3 is the mask with only bit 3 set — that is how BIT(3) and every C flag macro is built.',
+              note: 'So 1 << 3 is the mask with only bit 3 set — that is how BIT(3) and every C flag macro is built. Note the shift needs five bits, which is exactly why the whole word is 16 and not 8.',
               fields: [
-                { label: '1', bits: 4, tone: 'int', value: 1 },
-                { label: '1 << 4', bits: 4, tone: 'ok', value: 16, note: '10000' },
+                { label: '1 << 4 = 16', bits: 16, tone: 'ok', value: 16, note: '10000' },
               ],
             },
           ],

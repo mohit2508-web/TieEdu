@@ -754,6 +754,25 @@ export interface CourseAccess {
   is_free: boolean;
 }
 
+/**
+ * The numbers on a course card, counted from stored state by the server.
+ *
+ * `rating_avg` is `null`, not 0, when nobody has rated the course — feedback is
+ * only accepted after completion, so an unrated course is a young course rather
+ * than a bad one. The UI must render no star in that case. There is deliberately
+ * no fallback score anywhere in this codebase: a made-up 4.8 would be a lie
+ * about a product that grades everything else on the server.
+ */
+export interface CourseSignals {
+  rating_avg: number | null;
+  rating_count: number;
+  recommend_percent: number | null;
+  enrollment_count: number;
+  completion_count: number;
+}
+
+export type CourseBadge = 'new' | 'popular' | 'in_progress';
+
 export interface CourseCard {
   id: string;
   slug: string;
@@ -770,6 +789,15 @@ export interface CourseCard {
   progress: CourseProgress | null;
   access?: CourseAccess;
   lock_reason: string | null;
+  /** Present on catalogue and related rows. */
+  signals?: CourseSignals;
+  badges?: CourseBadge[];
+  is_new?: boolean;
+  is_popular?: boolean;
+  outcomes?: string[];
+  created_at?: string;
+  updated_at?: string;
+  description?: string;
 }
 
 export interface CourseDetail extends Omit<CourseCard, 'progress'> {
@@ -777,6 +805,7 @@ export interface CourseDetail extends Omit<CourseCard, 'progress'> {
   modules: CourseModule[];
   progress: CourseProgress | null;
   lock_reason: string | null;
+  signals?: CourseSignals;
   /**
    * The learner's own certificate for this course, if it has already been
    * issued. Without it the page can only ever say "claim", and a learner who has
@@ -785,12 +814,67 @@ export interface CourseDetail extends Omit<CourseCard, 'progress'> {
   certificate?: CertificateSummary | null;
 }
 
+export type CatalogSortKey = 'popular' | 'newest' | 'rating' | 'az' | 'za';
+
+export interface CatalogSortOption {
+  key: CatalogSortKey;
+  label: string;
+}
+
+/** One filter value and how many courses it would yield. */
+export interface FacetOption {
+  key: string;
+  label: string;
+  count: number;
+}
+
+export interface CatalogFacets {
+  category: FacetOption[];
+  tag: FacetOption[];
+  type: FacetOption[];
+  level: FacetOption[];
+}
+
+export interface CatalogFilterGroup {
+  key: 'category' | 'tag' | 'type' | 'level';
+  label: string;
+  param: string;
+}
+
+/** Everything the listing page needs to render its filter rail. */
+export interface CatalogFilters {
+  q: string;
+  category: string[];
+  tag: string[];
+  type: string[];
+  level: string[];
+  sort: CatalogSortKey;
+}
+
+export const EMPTY_CATALOG_FILTERS: CatalogFilters = {
+  q: '',
+  category: [],
+  tag: [],
+  type: [],
+  level: [],
+  sort: 'popular',
+};
+
 export interface CourseCatalogResponse {
   status: 'success';
   courses: CourseCard[];
+  /** Kept for the flat category list; prefer `facets.category`. */
   categories: string[];
+  facets: CatalogFacets;
+  sorts: CatalogSortOption[];
+  filter_groups: CatalogFilterGroup[];
+  total: number;
+  page: number;
+  page_size: number;
+  has_more: boolean;
   total_xp: number;
 }
+
 
 /**
  * A row in /my-courses. The API returns these FLAT — the course fields sit

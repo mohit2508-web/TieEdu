@@ -247,7 +247,18 @@ const main = async () => {
   // The client used to send a hardcoded `daysRemaining: 14` and the server took
   // it at face value, so a learner with an interview 45 days out was handed a
   // two-week plan and the date they had carefully entered was decorative.
-  const daysOut = (n: number) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);
+  //
+  // Stepped on the LOCAL calendar on purpose. This used to be
+  // `new Date(Date.now() + n * 86400000).toISOString().slice(0, 10)`, which adds
+  // a flat 24 hours per day and then truncates to the UTC date — so between
+  // local midnight and the UTC date rolling over, it produced a date one day
+  // short and the assertion failed for no reason other than the time of day.
+  // The test was measuring its own helper, not the server.
+  const daysOut = (n: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() + n);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
 
   const forty5 = await call('POST', '/api/study-plan/generate', {
     targetCompany: 'Initech', targetRole: 'SDE', interviewDate: daysOut(45),

@@ -474,6 +474,38 @@ void str_free(Str *s)
           'str.c'
         ),
         b.code(
+          `/* ---- strmap.h ---- */
+#ifndef STRMAP_H
+#define STRMAP_H
+#include <stddef.h>
+#include <stdbool.h>
+
+/* One entry. 'used' separates a live entry from an empty slot, which is what
+   lets the scan in strmap.c test the flag before touching key. */
+typedef struct {
+    char *key;
+    char *value;
+    bool  used;
+} Slot;
+
+typedef struct {
+    Slot  *slots;
+    size_t capacity;
+    size_t length;
+} StrMap;
+
+/* map_put copies both key and value, and frees whatever it replaces.
+   map_get returns a borrowed pointer: valid until the next map_put on the
+   same key or map_free. Copy it if you need it to outlive the map. */
+bool        map_init(StrMap *m);
+void        map_free(StrMap *m);
+bool        map_put(StrMap *m, const char *key, const char *value);
+const char *map_get(const StrMap *m, const char *key);
+#endif
+`,
+          'strmap.h'
+        ),
+        b.code(
           `/* ---- strmap.c (linear-scan version; the API is the lasting part) ---- */
 #include "strmap.h"
 #include <stdlib.h>

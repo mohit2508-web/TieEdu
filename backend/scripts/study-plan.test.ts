@@ -155,10 +155,51 @@ eq('an empty-string company_id is not treated as a real id', resolvePlan(db, { c
 eq('company names match despite punctuation', resolvePlan(db, { companyName: 'Acme, Corp.', role: 'SDE', totalDays: 20 }).template!.id, 'byId');
 eq('company names match despite extra spaces', resolvePlan(db, { companyName: '  Acme   Corp  ', role: 'SDE', totalDays: 20 }).template!.id, 'byId');
 
-const future = new Date(Date.now() + 10 * 86400000).toISOString().slice(0, 10);
-eq('daysUntil future ~10', Math.abs((daysUntil(future) ?? 0) - 10) <= 1, true);
-eq('daysUntil null', daysUntil(null), null);
-eq('daysUntil invalid', daysUntil('not-a-date'), null);
+// ---- daysUntil: calendar days, not elapsed milliseconds -------------------
+// These are EXACT on purpose, and they are pinned to a fixed `from` rather than
+// "now" so the suite cannot pass or fail depending on the hour it runs.
+//
+// The bug they guard: a date-only string used to be parsed as UTC
+// (`new Date('2026-11-13')` is UTC midnight, 05:30 in IST) and then differenced
+// against a local midnight. East of UTC that silently dropped a day; west of
+// UTC across a DST boundary it invented one. A learner in India asking for a
+// plan 45 days out was handed a 44-day plan for five and a half hours a day.
+const ymd = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const plusDays = (from: Date, n: number) => {
+  const d = new Date(from);
+  d.setDate(d.getDate() + n);
+  return ymd(d);
+};
+const atLocalMidnight = (y: number, mo: number, day: number) =>
+  new Date(y, mo - 1, day, 0, 0, 0, 0);
+
+const REF = atLocalMidnight(2026, 9, 30);
+eq('daysUntil: the same day is 0', daysUntil('2026-09-30', REF), 0);
+eq('daysUntil: tomorrow is 1', daysUntil('2026-10-01', REF), 1);
+eq('daysUntil: 7 days ahead is exactly 7', daysUntil(plusDays(REF, 7), REF), 7);
+eq('daysUntil: 45 days ahead is exactly 45', daysUntil(plusDays(REF, 45), REF), 45);
+eq('daysUntil: 365 days ahead is exactly 365', daysUntil(plusDays(REF, 365), REF), 365);
+eq('daysUntil: a past date is negative', daysUntil(plusDays(REF, -5), REF), -5);
+eq('daysUntil: null', daysUntil(null), null);
+eq('daysUntil: invalid', daysUntil('not-a-date'), null);
+eq('daysUntil: empty string', daysUntil(''), null);
+// A month boundary, where a naive millisecond diff is most likely to drift.
+eq('daysUntil: across a month boundary', daysUntil(plusDays(REF, 46), REF), 46);
+// A leap day, the other boundary a hand-rolled day count gets wrong.
+eq('daysUntil: across a leap day', daysUntil(plusDays(atLocalMidnight(2028, 2, 20), 9), atLocalMidnight(2028, 2, 20)), 9);
+// Leading zeros and surrounding whitespace are what a date input can produce.
+eq('daysUntil: padded and whitespace-padded input', daysUntil('  2026-10-07  ', REF), 7);
+// A full ISO timestamp names an instant, so which day it falls on is a question
+// of whose calendar: 18:30Z is already the 8th in IST. The server resolves it on
+// the local calendar, so the expectation is derived the same way rather than
+// pinned to a number that would only be right in some timezones.
+const STAMP = '2026-10-07T18:30:00.000Z';
+const stampLocalDay = (() => {
+  const d = new Date(STAMP);
+  return (daysUntil(ymd(d), REF) as number);
+})();
+eq('daysUntil: a full ISO timestamp is accepted and read on the local calendar', daysUntil(STAMP, REF), stampLocalDay);
 
 const seedA = seedStudyPlanTemplates();
 const seedB = seedStudyPlanTemplates();

@@ -669,14 +669,15 @@ This is more verbose and completely predictable, which is the right trade for an
         b.anim('bits', {
           title: 'A tagged union: one storage, a tag decides the view',
           badge: 'union layout',
+          total_bits: 128,
           steps: [
             {
               caption:
-                'struct Value stores an int64 tag plus a union of long, double, and char*. sizeof is at least 16.',
-              note: 'The union is 8 bytes (the largest member) and the tag is 4, so the struct is 16 with padding. Storage is reserved for the widest member even when a smaller one is live.',
+                'struct Value stores a 4-byte kind tag plus a union of long, double, and char*. sizeof is 16.',
+              note: 'The union is 8 bytes (the widest member) and the tag is 4, so the compiler inserts 4 bytes of padding to keep the union 8-byte aligned. Storage is reserved for the widest member even when a smaller one is live.',
               fields: [
-                { label: 'tag (4B)', bits: 32, tone: 'int' },
-                { label: 'rest of tag slot', bits: 0, tone: 'bad', note: 'padding' },
+                { label: 'kind (4B)', bits: 32, tone: 'int' },
+                { label: 'padding (4B)', bits: 32, tone: 'pad', note: 'inserted for alignment' },
                 { label: 'union (8B)', bits: 64, tone: 'char' },
               ],
             },
@@ -688,26 +689,29 @@ This is more verbose and completely predictable, which is the right trade for an
                 { label: 'kind = K_INT', bits: 32, tone: 'int' },
                 { label: 'u.i = 42', bits: 32, tone: 'ok' },
                 { label: 'overlaid bytes', bits: 32, tone: 'bad', note: 'not the live member' },
+                { label: 'padding (4B)', bits: 32, tone: 'pad' },
               ],
             },
             {
               caption:
                 'Write v.kind = K_REAL and v.u.r = 3.14. The same 8 bytes now hold a double.',
-              note: 'Writing one member overwrites the bytes of the previous member. The old integer value is gone — a union stores one value, it does not store all of them.',
+              note: 'Writing one member overwrites the bytes of the previous member. The old integer value is gone - a union stores one value, it does not store all of them.',
               fields: [
                 { label: 'kind = K_REAL', bits: 32, tone: 'int' },
                 { label: 'u.r (bits 0-31)', bits: 32, tone: 'char', note: 'low half of 3.14' },
                 { label: 'u.r (bits 32-63)', bits: 32, tone: 'char', note: 'high half of 3.14' },
+                { label: 'padding (4B)', bits: 32, tone: 'pad' },
               ],
             },
             {
               caption:
-                'Read u.i now and you get the low 32 bits of the double reinterpreted as an int — a bug, not a feature.',
+                'Read u.i now and you get the low 32 bits of the double reinterpreted as an int - a bug, not a feature.',
               note: 'This is why the tag is mandatory. Without it, there is no way to know which member is live, and any read of the wrong member is either implementation-defined or undefined behaviour.',
               fields: [
                 { label: 'kind = K_REAL', bits: 32, tone: 'int' },
                 { label: 'reading u.i', bits: 32, tone: 'bad', note: 'wrong view!' },
                 { label: 'the double is lost', bits: 32, tone: 'bad' },
+                { label: 'padding (4B)', bits: 32, tone: 'pad' },
               ],
             },
             {
@@ -718,6 +722,7 @@ This is more verbose and completely predictable, which is the right trade for an
                 { label: 'kind == K_STR?', bits: 32, tone: 'ok', note: 'check first' },
                 { label: 'then free(u.s)', bits: 32, tone: 'ok' },
                 { label: 'else: nothing', bits: 32, tone: 'int' },
+                { label: 'padding (4B)', bits: 32, tone: 'pad' },
               ],
             },
           ],

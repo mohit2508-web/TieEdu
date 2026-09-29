@@ -30,6 +30,8 @@ import type {
   VideoResolveResponse,
   CourseModule,
   CourseLessonView,
+  CatalogFilters,
+  CourseCard,
 } from '@/types';
 
 const COURSES = `${API_BASE_URL}/courses`;
@@ -43,12 +45,33 @@ async function apiError(res: Response, fallback: string): Promise<Error> {
 
 // --- Public: browsing -------------------------------------------------------
 
-export const fetchCourseCatalog = async (params?: { q?: string; category?: string }): Promise<CourseCatalogResponse> => {
+/** Serialise the filter state into the query string the catalogue endpoint reads. */
+function catalogQueryString(params?: Partial<CatalogFilters> & { page?: number }): string {
   const qs = new URLSearchParams();
-  if (params?.q) qs.set('q', params.q);
-  if (params?.category) qs.set('category', params.category);
-  const suffix = qs.toString() ? `?${qs}` : '';
-  const res = await apiFetch(`${COURSES}${suffix}`);
+  if (params?.q?.trim()) qs.set('q', params.q.trim());
+  // Repeated params, not comma-joined, so a value containing a comma cannot
+  // split into two filters. The server accepts both forms.
+  for (const key of ['category', 'tag', 'type', 'level'] as const) {
+    for (const value of params?.[key] || []) {
+      if (value) qs.append(key, value);
+    }
+  }
+  if (params?.sort && params.sort !== 'popular') qs.set('sort', params.sort);
+  if (params?.page && params.page > 1) qs.set('page', String(params.page));
+  const suffix = qs.toString();
+  return suffix ? `?${suffix}` : '';
+}
+
+/**
+ * Public catalogue. Filtering and sorting happen on the server so the facet
+ * counts returned alongside the cards describe the real result set — filtering
+ * in the browser would mean shipping every course to every visitor and then
+ * guessing at counts from one page.
+ */
+export const fetchCourseCatalog = async (
+  params?: Partial<CatalogFilters> & { page?: number }
+): Promise<CourseCatalogResponse> => {
+  const res = await apiFetch(`${COURSES}${catalogQueryString(params)}`);
   if (!res.ok) throw await apiError(res, 'Could not load the course catalogue');
   return res.json();
 };
@@ -58,6 +81,14 @@ export const fetchCourse = async (slug: string): Promise<CourseDetail> => {
   if (!res.ok) throw await apiError(res, 'Course not found');
   const data = await res.json();
   return data.course;
+};
+
+/** Sibling courses for the detail page. Fetched separately so it can be optional. */
+export const fetchRelatedCourses = async (slug: string): Promise<CourseCard[]> => {
+  const res = await apiFetch(`${COURSES}/${encodeURIComponent(slug)}/related`);
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.courses || [];
 };
 
 export const fetchLesson = async (

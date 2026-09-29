@@ -200,11 +200,11 @@ Traps:
           title: 'From source to running tool',
           badge: 'build and run',
           stages: [
-            { name: 'main.c', tool: 'editor', out: 'source', detail: 'One translation unit per .c file, with a matching header for anything shared.' },
-            { name: 'cc -c', tool: 'compile', out: 'main.o', detail: 'Warnings-as-errors, sanitizers in the dev build. Each .o has unresolved external symbols.' },
-            { name: 'cc -c', tool: 'compile', out: 'wordcount.o', detail: 'A second translation unit. It sees only the declarations from the shared header.' },
-            { name: 'cc main.o wordcount.o', tool: 'link', out: 'a.out', detail: 'Resolves symbols across objects and pulls in libc. Missing -lm shows up here, not in the compiler.' },
-            { name: './a.out file.txt', tool: 'run', out: 'word frequency', detail: 'stdin/stdout/stderr as designed. Redirect stdout to a file, leave stderr for the human.' },
+            { name: 'main.c', tool: 'editor', in: 'wordcount.h — the shared declarations', out: 'source', detail: 'One translation unit per .c file, with a matching header for anything shared.' },
+            { name: 'cc -c', tool: 'compile', in: 'main.c', out: 'main.o', detail: 'Warnings-as-errors, sanitizers in the dev build. Each .o has unresolved external symbols.' },
+            { name: 'cc -c', tool: 'compile', in: 'wordcount.c', out: 'wordcount.o', detail: 'A second translation unit. It sees only the declarations from the shared header.' },
+            { name: 'cc main.o wordcount.o', tool: 'link', in: 'main.o + wordcount.o + libc', out: 'a.out', detail: 'Resolves symbols across objects and pulls in libc. Missing -lm shows up here, not in the compiler.' },
+            { name: './a.out file.txt', tool: 'run', in: 'a.out + file.txt', out: 'word frequency', detail: 'stdin/stdout/stderr as designed. Redirect stdout to a file, leave stderr for the human.' },
           ],
         }),
         b.code(

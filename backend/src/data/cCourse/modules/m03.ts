@@ -167,6 +167,8 @@ nothing at all. With \`-Wall\`, GCC and Clang catch most of these at compile tim
         ),
         b.code(
           `/* Left-align in a field, right-align a number in a field. */
+#include <stdio.h>
+
 void print_row(const char *label, long value, int label_width, int value_width)
 {
     printf("%-*s | %*ld\\n", label_width, label, value_width, value);

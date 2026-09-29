@@ -21,8 +21,20 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
   try {
     // Public endpoint, no auth — the catalogue is the same list a visitor sees
     // before signing in, so this never needs a token.
-    const data = await fetchCourseCatalog();
-    courses = (data?.courses || []).map((c) => ({ slug: c.slug }));
+    //
+    // Paged on purpose. The catalogue endpoint returns 20 rows per call by
+    // default, so a single request would quietly list only the first 20 courses
+    // and every one added after that would be missing from the sitemap. A
+    // sitemap that silently truncates is worse than none: it looks complete and
+    // is not.
+    let page = 1;
+    for (;;) {
+      const data: any = await fetchCourseCatalog({ page });
+      const batch = data?.courses || [];
+      courses.push(...batch.map((c: { slug: string }) => ({ slug: c.slug })));
+      if (!data?.has_more || batch.length === 0) break;
+      if (++page > 50) break; // ~1000 courses: far past what this site can host.
+    }
   } catch {
     courses = [];
   }

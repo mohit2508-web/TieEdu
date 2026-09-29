@@ -490,11 +490,40 @@ export const normaliseWindow = (days: unknown): number => {
   return Math.min(Math.max(n, 1), MAX_TOTAL_DAYS);
 };
 
-/** Whole days from `from` to `dateStr`, or null when the date is unusable. */
+/** `YYYY-MM-DD`, the only date format a date picker produces. */
+const DATE_ONLY = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/**
+ * Whole calendar days from `from` to `dateStr`, or null when the date is unusable.
+ *
+ * A date-only string has to be read as a LOCAL calendar date, not as UTC.
+ * `new Date('2026-11-13')` is UTC midnight, which in IST is 05:30 local — and
+ * subtracting local midnights from that silently loses a whole day. In practice
+ * a learner in India picking an interview 45 days out was handed a 44-day plan,
+ * and a learner in every timezone east of UTC hit the same off-by-one for the
+ * first few hours of their local day.
+ *
+ * `Math.round` rather than `Math.ceil`: both ends are local midnights, so the
+ * difference is an exact multiple of 24 hours except across a DST change, where a
+ * day is 23 or 25 hours long. Ceiling would report a 25-hour day as two days;
+ * rounding reports both correctly.
+ */
 export function daysUntil(dateStr: string | null | undefined, from = new Date()): number | null {
   if (!dateStr) return null;
-  const target = new Date(dateStr);
-  if (Number.isNaN(target.getTime())) return null;
-  const ms = target.setHours(0, 0, 0, 0) - new Date(from).setHours(0, 0, 0, 0);
-  return Math.ceil(ms / 86400000);
+
+  const raw = String(dateStr).trim();
+  const dateOnly = DATE_ONLY.exec(raw);
+
+  let targetMidnight: number;
+  if (dateOnly) {
+    const [, year, month, day] = dateOnly;
+    targetMidnight = new Date(Number(year), Number(month) - 1, Number(day)).setHours(0, 0, 0, 0);
+  } else {
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.getTime())) return null;
+    targetMidnight = parsed.setHours(0, 0, 0, 0);
+  }
+
+  const fromMidnight = new Date(from).setHours(0, 0, 0, 0);
+  return Math.round((targetMidnight - fromMidnight) / 86400000);
 }

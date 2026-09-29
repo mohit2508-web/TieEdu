@@ -41,6 +41,17 @@ import {
   sanitizeQuizForLearner,
 } from '../lib/courses';
 import {
+  CATALOG_FILTER_GROUPS,
+  CATALOG_SORTS,
+  CourseBadges,
+  CourseSignals,
+  parseCatalogQuery,
+  relatedCourses,
+  runCatalog,
+  courseSignalsFor,
+  courseBadges,
+} from '../lib/catalog';
+import {
   buildCertificatePdf,
   signCertificate,
   verificationUrlFor,
@@ -147,6 +158,10 @@ function courseView(db: any, userId: string | null, course: Course, role?: strin
 
   return {
     ...sanitizeCourse(course),
+    outcomes: course.outcomes || [],
+    thumbnail_url: course.thumbnail_url,
+    created_at: course.created_at,
+    updated_at: course.updated_at,
     modules: orderedModules(course).map((m) => ({
       ...m,
       lessons: (m.lessons || [])
@@ -174,6 +189,9 @@ function courseView(db: any, userId: string | null, course: Course, role?: strin
         }),
     })),
     stats: courseStats(course),
+    // Same derived numbers the card shows, so the detail hero and the catalogue
+    // row can never disagree about how many learners or what rating.
+    signals: courseSignalsFor(db, [course]).get(course.id) || null,
     progress: state,
     access,
     // Enough for the client to render the right button without a second request.
@@ -228,67 +246,106 @@ function settleCompletion(
   return { xp, course_complete: after.is_complete };
 }
 
+/**
+ * The catalogue card.
+ *
+ * `signals` and `badges` are DERIVED, never stored — see lib/catalog.ts. A
+ * rating here is the mean of real post-completion feedback and an enrolment is
+ * a real progress row, so a course with no feedback carries `rating_avg: null`
+ * and the client renders no star rather than a placeholder score.
+ */
+function catalogCard(
+  db: any,
+  userId: string | null,
+  course: Course,
+  signals: CourseSignals,
+  badges: CourseBadges,
+  role?: string
+) {
+  return {
+    id: course.id,
+    slug: course.slug,
+    title: course.title,
+    subtitle: course.subtitle,
+    description: course.description || '',
+    category: course.category,
+    level: course.level,
+    is_free: course.is_free,
+    price_inr: course.price_inr,
+    thumbnail_url: course.thumbnail_url,
+    tags: course.tags,
+    outcomes: course.outcomes || [],
+    certificate_eligible: course.certificate_eligible,
+    created_at: course.created_at,
+    updated_at: course.updated_at,
+    signals,
+    badges: badges.badges,
+    is_new: badges.is_new,
+    is_popular: badges.is_popular,
+    stats: courseStats(course),
+    progress: userId ? completionState(db, userId, course) : null,
+    // The catalog needs the same verdict the detail page gives, so a card
+    // can say "Buy ₹1,299" instead of showing an enrol button that 402s.
+    access: courseAccessState(db, userId, course, { role }),
+    lock_reason: userId ? courseLockReason(db, userId, course) : null,
+  };
+}
+
 // ============================================================================
 // CATALOG
 // ============================================================================
 
-// GET /api/courses — published catalog, free first. Progress overlaid when signed in.
+/**
+ * GET /api/courses — the published catalogue.
+ *
+ * Filtering, sorting, faceting and pagination all happen here rather than in
+ * the browser, because the counts a learner reads next to each filter have to
+ * describe what clicking that filter will actually return. Doing it client-side
+ * means shipping every course to every visitor just to filter a list, and the
+ * facet counts would be guesses about the current page rather than facts about
+ * the result set.
+ *
+ * Every parameter is optional, so the no-query-string response is still the
+ * full default catalogue. Sorting deliberately does not preserve the old
+ * "in-progress first" behaviour as a default: that is now an explicit
+ * `sort=progress`-free rule inside `sortCourses`, applied on top of whatever
+ * the learner chose, because resuming is not a sort preference.
+ */
 coursesRouter.get('/', optionalAuth, (req: Request, res: Response) => {
   const db = loadDb();
   const userId = req.user?.id || null;
-  const q = (req.query.q as string || '').trim().toLowerCase();
-  const category = (req.query.category as string || '').trim();
+  const role = req.user?.role;
 
-  let list = publishedCourses(db);
+  const query = parseCatalogQuery(req.query as Record<string, unknown>);
 
-  if (q) {
-    list = list.filter((c) =>
-      [c.title, c.subtitle, c.category, ...(c.tags || [])]
-        .join(' ')
-        .toLowerCase()
-        .includes(q)
-    );
-  }
-  if (category) list = list.filter((c) => c.category === category);
-
-  const cards = list
-    .map((course) => {
-      const stats = courseStats(course);
-      const state = userId ? completionState(db, userId, course) : null;
-      return {
-        id: course.id,
-        slug: course.slug,
-        title: course.title,
-        subtitle: course.subtitle,
-        category: course.category,
-        level: course.level,
-        is_free: course.is_free,
-        price_inr: course.price_inr,
-        thumbnail_url: course.thumbnail_url,
-        tags: course.tags,
-        certificate_eligible: course.certificate_eligible,
-        stats,
-        progress: state,
-        // The catalog needs the same verdict the detail page gives, so a card
-        // can say "Buy ₹1,299" instead of showing an enrol button that 402s.
-        access: courseAccessState(db, userId, course, { role: req.user?.role }),
-        lock_reason: userId ? courseLockReason(db, userId, course) : null,
-      };
-    })
-    // In-progress first, then free, then the rest. Keeps a learner's open
-    // course at the top of their own catalog.
-    .sort((a, b) => {
-      const ap = a.progress?.enrolled && !a.progress.is_complete ? 0 : 1;
-      const bp = b.progress?.enrolled && !b.progress.is_complete ? 0 : 1;
-      if (ap !== bp) return ap - bp;
-      if (a.is_free !== b.is_free) return a.is_free ? -1 : 1;
-      return a.title.localeCompare(b.title);
-    });
+  const result = runCatalog(
+    db,
+    publishedCourses(db),
+    query,
+    (course, signals, badges) => catalogCard(db, userId, course, signals, badges, role),
+    {
+      // Read straight off the progress row. `completionState` would re-walk every
+      // lesson of every course just to learn whether one field is set.
+      isInProgress: (course) => {
+        if (!userId) return false;
+        const p = getProgress(db, userId, course.id);
+        return !!p && !p.completed_at;
+      },
+    }
+  );
 
   res.json({
     status: 'success',
-    courses: cards,
+    courses: result.rows,
+    // Retained for older clients: the flat category list the old UI expected.
     categories: Array.from(new Set(publishedCourses(db).map((c) => c.category).filter(Boolean))).sort(),
+    facets: result.facets,
+    sorts: CATALOG_SORTS,
+    filter_groups: CATALOG_FILTER_GROUPS,
+    total: result.total,
+    page: result.page,
+    page_size: result.page_size,
+    has_more: result.has_more,
     total_xp: userId ? totalXpForUser(db, userId) : 0,
   });
 });
@@ -438,6 +495,45 @@ coursesRouter.get('/:slug', optionalAuth, (req: Request, res: Response) => {
   res.json({
     status: 'success',
     course: courseView(db, userId, course, req.user?.role),
+  });
+});
+
+/**
+ * GET /api/courses/:slug/related — sibling courses for the detail page.
+ *
+ * Registered as its own route rather than folded into the detail payload so the
+ * course page can fetch it in parallel with the course itself instead of
+ * waiting for a slower first response. Signed-out visitors get it too: deciding
+ * what to learn next is exactly the job of someone who has not signed in yet.
+ */
+coursesRouter.get('/:slug/related', optionalAuth, (req: Request, res: Response) => {
+  const db = loadDb();
+  const course = findBySlug(db, req.params.slug);
+  if (!course) return res.status(404).json({ error: 'Course not found' });
+
+  const siblings = relatedCourses(course, publishedCourses(db), 4);
+  const signals = courseSignalsFor(db, siblings);
+
+  res.json({
+    status: 'success',
+    courses: siblings.map((c) => {
+      const s = signals.get(c.id)!;
+      return {
+        id: c.id,
+        slug: c.slug,
+        title: c.title,
+        subtitle: c.subtitle,
+        category: c.category,
+        level: c.level,
+        is_free: c.is_free,
+        price_inr: c.price_inr,
+        thumbnail_url: c.thumbnail_url,
+        tags: c.tags,
+        signals: s,
+        stats: courseStats(c),
+        badges: courseBadges(c, s, { topQuartile: s.enrollment_count > 0 }).badges,
+      };
+    }),
   });
 });
 

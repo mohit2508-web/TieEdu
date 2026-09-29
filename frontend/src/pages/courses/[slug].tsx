@@ -1,40 +1,68 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Head from 'next/head';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
+import type { GetServerSideProps } from 'next';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { LessonPlayer } from '@/components/courses/LessonPlayer';
 import { CartModal } from '@/components/checkout/CartModal';
-import { isLocked, LessonRow, ProgressBar } from '@/components/courses/CourseUi';
-import { Award, CheckCircle2, Download, Lock, ShieldCheck } from 'lucide-react';
+import { isLocked, LessonRow, ProgressBar, CourseRowCard, CtaButton } from '@/components/courses/CourseUi';
+import { Award, CheckCircle2, Download, Lock, ShieldCheck, Star, Users, Layers, FileText, Clock } from 'lucide-react';
 import {
   fetchCourse,
   fetchLesson,
+  fetchRelatedCourses,
   enrollInCourse,
   issueCertificate,
   downloadCertificatePdf,
   submitCourseFeedback,
 } from '@/lib/coursesApi';
+import { API_BASE_URL } from '@/lib/api';
+import {
+  courseCta,
+  formatDuration,
+  formatEnrolled,
+  formatLessonCount,
+  formatLevel,
+  formatModuleCount,
+  formatRating,
+  formatReviewCount,
+  plainText,
+} from '@/lib/courseFormat';
 import { useAuth } from '@/context/AuthContext';
 import type {
   CourseDetail,
   CourseLessonView,
   CourseCartItem,
+  CourseCard,
   CertificateSummary,
   LessonCompletionState,
   LessonProgressResponse,
 } from '@/types';
 
-export default function CoursePage() {
+const SITE_URL = 'https://tieedu.com';
+
+export default function CoursePage({
+  initialCourse,
+  initialRelated,
+}: {
+  initialCourse: CourseDetail | null;
+  initialRelated: CourseCard[];
+}) {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
 
   const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
   const requestedLesson = typeof router.query.lesson === 'string' ? router.query.lesson : null;
+  // A boolean rather than `user` itself: signing in and out is what should
+  // trigger a re-fetch, not a profile update re-rendering the same person.
+  const isSignedIn = !!user;
 
-  const [course, setCourse] = useState<CourseDetail | null>(null);
+  const [course, setCourse] = useState<CourseDetail | null>(initialCourse);
+  const [related, setRelated] = useState<CourseCard[]>(initialRelated);
   const [fetchedLesson, setFetchedLesson] = useState<CourseLessonView | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialCourse);
   const [error, setError] = useState<string | null>(null);
   const [enrolling, setEnrolling] = useState(false);
   const [certBusy, setCertBusy] = useState(false);
@@ -76,11 +104,35 @@ export default function CoursePage() {
     }
   }, [slug]);
 
+  /**
+   * The SSR payload is the signed-out view, which is the view that should be
+   * indexed — so it is kept as-is when nobody is signed in. A signed-in learner
+   * needs their own progress and access, so exactly one extra call re-fetches it
+   * with the token. Without the skip, every anonymous visit would pay for a
+   * request that could not return anything new.
+   */
+  const skipFirstCourseLoad = useRef(!!initialCourse);
   useEffect(() => {
-    if (authLoading) return;
+    if (authLoading || !slug) return;
+    if (skipFirstCourseLoad.current) {
+      skipFirstCourseLoad.current = false;
+      // Anonymous *and* already server-rendered: nothing left to re-fetch.
+      if (!isSignedIn && initialCourse) return;
+    }
     setLoading(true);
     loadCourse();
-  }, [authLoading, user?.id, loadCourse]);
+  }, [authLoading, isSignedIn, loadCourse, initialCourse, slug]);
+
+  // Related courses are not personalised, so they only need fetching if the
+  // server-rendered list came back empty.
+  useEffect(() => {
+    if (!slug || initialRelated.length > 0) return;
+    let cancelled = false;
+    fetchRelatedCourses(slug)
+      .then((rows) => { if (!cancelled) setRelated(rows); })
+      .catch(() => { /* Sibling courses are optional; the page works without them. */ });
+    return () => { cancelled = true; };
+  }, [slug, initialRelated.length]);
 
   /**
    * The course payload ships each unlocked lesson's blocks, but deliberately NOT
@@ -185,10 +237,130 @@ export default function CoursePage() {
   // ineligible course renders a claim button that the API refuses with a 400.
   const existingCert = course?.certificate || null;
 
+  // The single source of truth for "what should this button say and look like",
+  // shared with the catalogue card via lib/courseFormat.ts.
+  const cta = courseCta({
+    progress: course?.progress,
+    access: course?.access,
+    price_inr: course?.price_inr,
+  });
+
+  // Real counts only. An unrated course shows no rating, and a course nobody has
+  // enrolled in shows no learner count — see lib/courseFormat.ts.
+  const signals = course?.signals;
+  const rating = formatRating(signals);
+  const reviews = formatReviewCount(signals);
+  const enrolled = formatEnrolled(signals?.enrollment_count);
+  const duration = formatDuration(course?.stats?.total_minutes);
+  const metaDescription = course
+    ? plainText(course.description || course.subtitle, 155)
+    : 'A structured, sequential TieEdu course with server-tracked progress and a verifiable certificate.';
+
+  // The FAQ answers the questions a learner actually asks before enrolling, and
+  // every answer is derived from the platform's real rules and this course's own
+  // counts — so the page and the structured data can never disagree with what the
+  // product does.
+  const faq = useMemo(() => {
+    if (!course) return [] as { q: string; a: string }[];
+    const moduleCount = formatModuleCount(course.stats);
+    const lessonCount = formatLessonCount(course.stats);
+    const length = duration ? `about ${duration} of material` : `${moduleCount}`;
+    return [
+      {
+        q: `How much time does ${course.title} take?`,
+        a: `The course is ${moduleCount} and ${lessonCount} — ${length} in total. Lessons unlock in order, so the time it takes you depends on how much of each lesson you actually read.`,
+      },
+      {
+        q: 'Do I get a certificate?',
+        a: course.certificate_eligible
+          ? `Yes. Finish every lesson and a certificate is issued automatically. Its serial is public: anyone can check it at ${SITE_URL}/verify without an account, and a revoked certificate stops verifying.`
+          : 'This course does not award a certificate. Progress is still tracked and verifiable on your account.',
+      },
+      {
+        q: 'Is it really free?',
+        a: course.is_free
+          ? 'Yes — this course is free, and there is nothing to buy to start it.'
+          : `This course costs ₹${course.price_inr}. You can see the full syllabus before paying, and the certificate is issued on completion.`,
+      },
+      {
+        q: 'How is my progress tracked?',
+        a: 'On the server, lesson by lesson. Time is credited at real-time speed and capped, so a lesson cannot be marked complete faster than it can be read. That is why the percentage survives a new device.',
+      },
+      {
+        q: 'How do ratings work?',
+        a: 'Only learners who finished the course can rate it, and the average shown is calculated from those ratings alone. A course nobody has finished yet carries no rating rather than a default one.',
+      },
+    ];
+  }, [course, duration]);
+
+  const breadcrumb = {
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+      { '@type': 'ListItem', position: 2, name: 'Courses', item: `${SITE_URL}/courses` },
+      ...(course ? [{ '@type': 'ListItem', position: 3, name: course.title, item: `${SITE_URL}/courses/${course.slug}` }] : []),
+    ],
+  };
+
   return (
     <>
       <Head>
         <title>{course ? `${course.title} · TieEdu` : 'Course · TieEdu'}</title>
+        <meta name="description" content={metaDescription} />
+        {course && <link rel="canonical" href={`${SITE_URL}/courses/${course.slug}`} />}
+        <meta property="og:title" content={course ? `${course.title} · TieEdu` : 'Course · TieEdu'} />
+        <meta property="og:description" content={metaDescription} />
+        {course && <meta property="og:url" content={`${SITE_URL}/courses/${course.slug}`} />}
+        {course && <meta property="og:type" content="website" />}
+        {course?.thumbnail_url && <meta property="og:image" content={course.thumbnail_url} />}
+
+        {course && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                '@context': 'https://schema.org',
+                '@graph': [
+                  {
+                    '@type': 'Course',
+                    name: course.title,
+                    description: metaDescription,
+                    url: `${SITE_URL}/courses/${course.slug}`,
+                    inLanguage: 'en',
+                    ...(course.thumbnail_url ? { image: course.thumbnail_url } : {}),
+                    provider: { '@type': 'Organization', name: 'TieEdu', url: SITE_URL },
+                    ...(course.category ? { educationalLevel: course.category } : {}),
+                    ...(course.is_free
+                      ? { offers: { '@type': 'Offer', price: '0', priceCurrency: 'INR', availability: 'https://schema.org/InStock', category: 'Free' } }
+                      : {
+                          offers: {
+                            '@type': 'Offer',
+                            price: String(course.price_inr),
+                            priceCurrency: 'INR',
+                            availability: 'https://schema.org/InStock',
+                          },
+                        }),
+                    hasCourseInstance: {
+                      '@type': 'CourseInstance',
+                      courseMode: 'online',
+                      courseWorkload: duration ? duration : undefined,
+                      instructor: { '@type': 'Organization', name: 'TieEdu' },
+                    },
+                  },
+                  {
+                    '@type': 'FAQPage',
+                    mainEntity: faq.map((item) => ({
+                      '@type': 'Question',
+                      name: item.q,
+                      acceptedAnswer: { '@type': 'Answer', text: item.a },
+                    })),
+                  },
+                  breadcrumb,
+                ],
+              }),
+            }}
+          />
+        )}
       </Head>
       <Header cartCount={0} onOpenCart={() => {}} onOpenSearch={() => {}} onOpenLeaderboard={() => {}} />
 
@@ -221,6 +393,40 @@ export default function CoursePage() {
                 {course.subtitle}
               </p>
 
+              {/* Real, server-counted facts. Each one is omitted when it does not
+                  exist rather than replaced with a placeholder, so the row below
+                  the title is always true. */}
+              <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-[var(--text-body)]">
+                {rating && (
+                  <span className="inline-flex items-center gap-1.5 font-semibold">
+                    <Star size={15} className="text-[var(--brand-accent)]" fill="currentColor" />
+                    {rating}
+                    {reviews && <span className="font-normal text-[var(--text-muted)]">({reviews})</span>}
+                  </span>
+                )}
+                {enrolled && (
+                  <span className="inline-flex items-center gap-1.5">
+                    <Users size={15} className="text-[var(--text-muted)]" />
+                    {enrolled}
+                  </span>
+                )}
+                <span className="inline-flex items-center gap-1.5">
+                  <Layers size={15} className="text-[var(--text-muted)]" />
+                  {formatModuleCount(course.stats)}
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <FileText size={15} className="text-[var(--text-muted)]" />
+                  {formatLessonCount(course.stats)}
+                </span>
+                {duration && (
+                  <span className="inline-flex items-center gap-1.5">
+                    <Clock size={15} className="text-[var(--text-muted)]" />
+                    {duration}
+                  </span>
+                )}
+                <span className="text-[var(--text-muted)]">{formatLevel(course.level)}</span>
+              </div>
+
               <div className="mt-5 flex flex-wrap items-center gap-3">
                 {locked ? (
                   <PayWall
@@ -230,6 +436,10 @@ export default function CoursePage() {
                     buying={enrolling}
                   />
                 ) : progress?.enrolled ? (
+                  /* A learner who is already in the course is better served by
+                     the progress bar than by any button, so `courseCta`'s
+                     "Continue learning" label is not used here. The card shows
+                     it, because a card has nowhere else to say it. */
                   <div className="w-full max-w-xs">
                     <ProgressBar
                       percent={progress.percent}
@@ -237,14 +447,12 @@ export default function CoursePage() {
                     />
                   </div>
                 ) : (
-                  <button
-                    type="button"
-                    onClick={enrol}
-                    disabled={enrolling}
-                    className="rounded-lg bg-[var(--brand-sky)] px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[var(--brand-sky-strong)] disabled:opacity-50"
-                  >
-                    {enrolling ? 'Starting…' : 'Start this course'}
-                  </button>
+                  /* Label and tone come from `courseCta` — the same helper the
+                     catalogue card uses — so the same purchase state reads the
+                     same on both pages. */
+                  <CtaButton tone={cta.tone} onClick={enrol} disabled={enrolling} className="disabled:opacity-50">
+                    {enrolling ? 'Starting…' : cta.label}
+                  </CtaButton>
                 )}
               </div>
             </header>
@@ -293,8 +501,13 @@ export default function CoursePage() {
               </section>
             )}
 
-            <div className="grid gap-8 lg:grid-cols-[280px_1fr]">
-              <aside className="lg:sticky lg:top-6 lg:h-fit">
+            <div className="grid gap-8 lg:grid-cols-[280px_1fr] lg:items-start">
+              {/* The syllabus is sticky and scrolls on its own. Without the max
+                  height + internal scroll, a long syllabus (15 modules) is taller
+                  than the viewport, so it travels with the page and the learner
+                  loses it the moment they scroll the lesson. `items-start` stops
+                  the grid from stretching the aside to the content height. */}
+              <aside className="lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto lg:overscroll-contain lg:pr-1">
                 {(course.modules || []).map((m) => (
                   <div key={m.id} className="mb-5">
                     <h3 className="mb-1.5 px-3 text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
@@ -333,6 +546,61 @@ export default function CoursePage() {
                 )}
               </section>
             </div>
+
+            {/* What you can do by the end. Authored per course by the person who
+                wrote it, so it is specific to this course rather than a generic
+                promise reused on every page. */}
+            {(course.outcomes?.length || 0) > 0 && (
+              <section aria-labelledby="outcomes-heading" className="mt-14">
+                <h2 id="outcomes-heading" className="text-xl font-extrabold tracking-tight text-[var(--ink)]">
+                  What you will be able to do
+                </h2>
+                <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {course.outcomes!.map((outcome, i) => (
+                    <li key={i} className="flex gap-3 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4">
+                      <CheckCircle2 size={17} className="mt-0.5 shrink-0 text-[var(--color-success)]" />
+                      <span className="text-sm leading-relaxed text-[var(--text-body)]">{outcome}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            {faq.length > 0 && (
+              <section aria-labelledby="faq-heading" className="mt-14 max-w-3xl">
+                <h2 id="faq-heading" className="text-xl font-extrabold tracking-tight text-[var(--ink)]">
+                  Questions before you start
+                </h2>
+                <div className="mt-4 divide-y divide-[var(--border-subtle)] border-y border-[var(--border-subtle)]">
+                  {faq.map((item) => (
+                    <details key={item.q} className="group py-4">
+                      <summary className="cursor-pointer list-none text-sm font-bold text-[var(--ink)] marker:content-none">
+                        {item.q}
+                      </summary>
+                      <p className="mt-2 text-sm leading-relaxed text-[var(--text-body)]">{item.a}</p>
+                    </details>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {related.length > 0 && (
+              <section aria-labelledby="related-heading" className="mt-14">
+                <div className="flex items-baseline justify-between gap-4">
+                  <h2 id="related-heading" className="text-xl font-extrabold tracking-tight text-[var(--ink)]">
+                    Other courses
+                  </h2>
+                  <Link href="/courses" className="text-sm font-bold text-[var(--brand-sky)] hover:underline">
+                    See all
+                  </Link>
+                </div>
+                <div className="mt-4 space-y-4">
+                  {related.map((c) => (
+                    <CourseRowCard key={c.id} course={c} />
+                  ))}
+                </div>
+              </section>
+            )}
           </>
         )}
       </main>
@@ -559,3 +827,68 @@ const PayWall: React.FC<{
     <span className="text-xs text-[var(--text-muted)]">{reason}</span>
   </div>
 );
+
+/**
+ * Server-render the course so its title, description, outcomes and syllabus are
+ * in the HTML a crawler sees.
+ *
+ * The client previously fetched the whole course after mount, which meant the
+ * page a search engine indexed contained a loading message and nothing else —
+ * the single biggest SEO problem on the site.
+ *
+ * No token is sent. The catalogue is public and this renders the signed-out view,
+ * which is the one that should be indexed; per-learner progress and access are
+ * layered on after hydration.
+ */
+export const getServerSideProps: GetServerSideProps = async ({ params }) => {
+  const slug = String(params?.slug || '');
+  if (!slug) return { props: { initialCourse: null, initialRelated: [] } };
+
+  let initialCourse: CourseDetail | null = null;
+  let initialRelated: CourseCard[] = [];
+
+  // The upstream status is kept so a 404 can be told apart from our own failure
+  // to ask. `null` means the request never produced a response at all.
+  let upstreamStatus: number | null = null;
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/courses/${encodeURIComponent(slug)}`);
+    upstreamStatus = res.status;
+    if (res.ok) {
+      const data = await res.json();
+      initialCourse = data.course || null;
+    }
+  } catch {
+    // Backend unreachable at SSR time — the client effect retries.
+  }
+
+  // Sibling courses are a nicety, not a requirement, so a failure here must not
+  // take the page down with it.
+  if (initialCourse) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/courses/${encodeURIComponent(slug)}/related`);
+      if (res.ok) {
+        const data = await res.json();
+        initialRelated = Array.isArray(data.courses) ? data.courses : [];
+      }
+    } catch {
+      /* Related courses are optional. */
+    }
+  }
+
+  // An unknown slug is a real 404 rather than a page that says "not found" with
+  // a 200 status, so a search engine drops it instead of indexing the message.
+  //
+  // It is only a real 404 when a *reachable* API actually said so. Answering 404
+  // because the backend was down, restarting, or slow turns a temporary blip into
+  // a permanent verdict on a course that exists: the client never gets to retry
+  // because the response is already a 404, and a crawler is free to cache it.
+  if (!initialCourse && (upstreamStatus === 404 || upstreamStatus === 200)) {
+    return { notFound: true };
+  }
+
+  // Unreachable, 5xx, or any other non-answer: hand the page a null course and let
+  // the client fetch it. The status stays 200 so nothing downstream caches the
+  // outage as a missing page.
+  return { props: { initialCourse, initialRelated } };
+};
