@@ -2,8 +2,15 @@ import React from 'react';
 import Link from 'next/link';
 import { ShieldCheck, Lock, Server, Heart } from 'lucide-react';
 import { TieEduLogo } from '@/components/common/TieEduLogo';
+import { useAuth } from '@/context/AuthContext';
 
 export const Footer: React.FC = () => {
+  const { user } = useAuth();
+
+  // The campus cohort dashboard is a B2B control plane for TPOs — never
+  // advertised to students, so the link only exists for an admin session.
+  const isAdmin = user?.role === 'admin';
+
   return (
     <footer className="bg-white border-t border-[#E9E7E1] mt-16 pt-12 pb-8">
       <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12">
@@ -52,7 +59,9 @@ export const Footer: React.FC = () => {
  <Link href="/courses" className="hover:text-[--brand-sky] transition-colors">Courses</Link>
  <Link href="/my-courses" className="hover:text-[--brand-sky] transition-colors">My Courses</Link>
             <Link href="/study-plan" className="hover:text-[--brand-sky] transition-colors">Study Plan</Link>
-            <Link href="/campus" className="hover:text-[--brand-sky] transition-colors">Campus TPO Portal</Link>
+            {isAdmin && (
+              <Link href="/campus" className="hover:text-[--brand-sky] transition-colors">Campus TPO Portal</Link>
+            )}
             <Link href="/admin/login" className="hover:text-[--brand-sky] transition-colors">Admin</Link>
           </div>
           <div className="flex items-center gap-1">

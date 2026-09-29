@@ -33,6 +33,47 @@ const cl = sanitizeBlock({ block_type: 'checklist', payload: { title: 'T', items
 eq('accepts checklist with items', [cl!.block_type, cl!.block_order, cl!.payload], ['checklist', 1, { title: 'T', items: ['a', 'b'] }]);
 eq('generates an id', typeof cl!.id === 'string' && cl!.id.length > 0, true);
 
+// A table's rows are an array OF arrays. This used to be rebuilt with
+// Object.fromEntries, which turned [['a','b'],['c','d']] into
+// [{0:'a',1:'b'},{0:'c',1:'d'}] — and the reader crashed the whole page on
+// `row.map`. Any phase holding a table was affected, so it only showed up on a
+// deep link like #phase-2.
+const tbl = sanitizeBlock(
+  {
+    block_type: 'table',
+    payload: {
+      title: 'Complexity',
+      headers: ['Structure', 'Lookup'],
+      rows: [['Array', 'O(1)'], ['Hash map', 'O(1) avg']],
+    },
+  },
+  1
+);
+eq('table rows stay an array', Array.isArray(tbl!.payload.rows), true);
+eq('table row stays an array', Array.isArray(tbl!.payload.rows[0]), true);
+eq('table row values survive', tbl!.payload.rows[0], ['Array', 'O(1)']);
+eq('table headers survive', tbl!.payload.headers, ['Structure', 'Lookup']);
+
+// Object entries inside an array are still rebuilt key by key, and urls inside
+// them are still scheme-checked.
+const res2 = sanitizeBlock(
+  { block_type: 'resources', payload: { links: [{ label: 'A <script>x</script>', url: 'javascript:alert(1)' }] } },
+  1
+);
+eq('array of objects keeps its shape', res2!.payload.links[0], { label: 'A ', url: '' });
+
+// A table longer than MAX_PAYLOAD_DEPTH must keep every row. `.map(sanitizeArrayEntry)`
+// once passed the element index as the `depth` arg, so row 4 onward came back empty
+// - a silent data loss that a short table would never have exposed.
+const manyRows = Array.from({ length: 9 }, (_, i) => [`r${i}a`, `r${i}b`]);
+const longTbl = sanitizeBlock(
+  { block_type: 'table', payload: { title: 'Long', headers: ['A', 'B'], rows: manyRows } },
+  1
+);
+eq('a long table keeps every row', longTbl!.payload.rows.length, 9);
+eq('a long table keeps the last row intact', longTbl!.payload.rows[8], ['r8a', 'r8b']);
+eq('row depth is not the row index', longTbl!.payload.rows.map((r: any) => r.length), manyRows.map(() => 2));
+
 const phase = normalizePhase({ title: 'P1', day_from: 1, day_to: 3, blocks: [{ block_type: 'markdown', payload: { text: 'hi' } }] }, 't1', 1);
 eq('phase day range', [phase.day_from, phase.day_to], [1, 3]);
 eq('phase rejects inverted range', normalizePhase({ day_from: 5, day_to: 2 }, 't1', 1).day_to, 5);

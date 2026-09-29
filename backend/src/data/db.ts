@@ -1358,12 +1358,27 @@ export function loadDb() {
         data.coupons = initialDbData.coupons;
         upgraded = true;
       }
-      // The bundled starter course is the launch catalogue for an install that
+      // The bundled courses are the launch catalogue for an install that
       // predates the course engine. Without this, loadDb() would happily return
       // an empty course list forever: initialDbData is only consulted when
       // db.json does not exist yet, and every existing install has one.
-      if (!Array.isArray(data.courses) || data.courses.length === 0) {
-        data.courses = initialDbData.courses;
+      //
+      // Merge by slug rather than replacing the whole list. The old code only
+      // installed the catalogue when `courses` was empty, so a store created
+      // before a course existed (for example the C course) never received it.
+      // Matching on slug — not id — also means a course seeded under an older
+      // id is recognised, and an admin's edits to a seeded course are preserved:
+      // this only ever ADDS a missing slug, it never overwrites existing rows.
+      const seededCourseSlugs = new Set<string>(
+        (Array.isArray(data.courses) ? data.courses : [])
+          .map((c: any) => (c && typeof c.slug === 'string' ? c.slug : null))
+          .filter((s: string | null): s is string => !!s)
+      );
+      for (const seedCourse of initialDbData.courses) {
+        if (!seedCourse || typeof seedCourse.slug !== 'string') continue;
+        if (seededCourseSlugs.has(seedCourse.slug)) continue;
+        data.courses.push(seedCourse);
+        seededCourseSlugs.add(seedCourse.slug);
         upgraded = true;
       }
       // NOTE: modules are deliberately NOT auto-filled with placeholder section_data.

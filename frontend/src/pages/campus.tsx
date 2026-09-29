@@ -3,12 +3,14 @@ import Head from 'next/head';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { CampusDashboardView } from '@/components/campus/CampusDashboardView';
+import { RequireAdmin } from '@/components/auth/RequireAdmin';
 
 export default function CampusPage() {
   return (
-    <>
+    <RequireAdmin>
       <Head>
         <title>Institutional B2B Campus Placement Portal | TieEdu</title>
+        <meta name="robots" content="noindex, nofollow" />
         <meta name="description" content="Cohort dashboards for college placement cells tracking batch readiness, company target stats, and verified interview reports." />
       </Head>
 
@@ -21,6 +23,6 @@ export default function CampusPage() {
 
         <Footer />
       </div>
-    </>
+    </RequireAdmin>
   );
 }

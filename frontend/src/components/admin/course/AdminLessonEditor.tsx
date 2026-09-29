@@ -65,6 +65,16 @@ const BlockCard: React.FC<{
   const [type, setType] = useState<string>(block.block_type);
   const p = block.payload || {};
   const set = (patch: Record<string, any>) => onChange({ ...block, payload: { ...p, ...patch } });
+  // `rows` is typed `unknown[]` because only the API knows the shape — it once
+  // shipped rows as objects keyed by index. Narrowed once here, so a malformed
+  // row is repaired on the next edit instead of throwing mid-edit and losing the
+  // block the admin was writing.
+  const tableRows: string[][] =
+    type === 'table' && Array.isArray(p.rows)
+      ? (p.rows as unknown[])
+          .filter((r): r is unknown[] => Array.isArray(r))
+          .map((r) => r.map((c) => (c == null ? '' : String(c))))
+      : [];
 
   return (
     <div className="rounded-xl border border-[#E9E7E1] bg-white p-3.5">
@@ -122,7 +132,7 @@ const BlockCard: React.FC<{
               onChange={(e) => set({ language: e.target.value })}
               className="w-36"
             >
-              {['javascript', 'typescript', 'python', 'java', 'cpp', 'sql', 'bash', 'json', 'html', 'css'].map((l) => (
+              {['c', 'cpp', 'javascript', 'typescript', 'python', 'java', 'sql', 'bash', 'json', 'html', 'css'].map((l) => (
                 <option key={l}>{l}</option>
               ))}
             </Select>
@@ -187,14 +197,14 @@ const BlockCard: React.FC<{
             </Btn>
           </div>
           <div className="space-y-1.5">
-            {(p.rows || []).map((row: string[], ri: number) => (
+            {tableRows.map((row, ri) => (
               <div key={ri} className="flex gap-2">
                 {row.map((cell, ci) => (
                   <TextInput
                     key={ci}
                     value={cell}
                     onChange={(e) => {
-                      const rows = (p.rows || []).map((r: string[]) => r.slice());
+                      const rows = tableRows.map((r) => r.slice());
                       rows[ri][ci] = e.target.value;
                       set({ rows });
                     }}
@@ -202,7 +212,7 @@ const BlockCard: React.FC<{
                 ))}
                 <Btn
                   variant="danger"
-                  onClick={() => set({ rows: (p.rows || []).filter((_: string[], x: number) => x !== ri) })}
+                  onClick={() => set({ rows: tableRows.filter((_, x) => x !== ri) })}
                   title="Remove row"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -210,7 +220,7 @@ const BlockCard: React.FC<{
               </div>
             ))}
           </div>
-          <Btn onClick={() => set({ rows: [...(p.rows || []), (p.headers || ['', '']).map(() => '')] })}>
+          <Btn onClick={() => set({ rows: [...tableRows, (p.headers || ['', '']).map(() => '')] })}>
             <Plus className="w-3.5 h-3.5" /> Row
           </Btn>
         </div>

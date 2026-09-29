@@ -910,3 +910,14 @@ export const revokeUnlockApi = async (userId: string, companyId: string) => {
   }
   return await res.json();
 };
+
+/** Campus cohort analytics — admin-only on the server, so it must go through
+ *  apiFetch, which carries the bearer token and refreshes it when expired. */
+export const fetchCampusCohortApi = async (): Promise<any> => {
+  const res = await apiFetch(`${API_BASE_URL}/campus/cohort`);
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'Cohort feed unavailable');
+  }
+  return await res.json();
+};

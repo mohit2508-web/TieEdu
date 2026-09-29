@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { CODE_LANGS, prismName, resolveLang, type CodeLang } from '@/lib/codeLang';
 import { MarkdownContent } from '@/components/blocks/MarkdownContent';
+import { CourseAnimation } from '@/components/blocks/CourseAnimations';
 import SyntaxHighlighter from 'react-syntax-highlighter/dist/cjs/prism-light';
+import c from 'react-syntax-highlighter/dist/cjs/languages/prism/c';
 import cpp from 'react-syntax-highlighter/dist/cjs/languages/prism/cpp';
 import typescript from 'react-syntax-highlighter/dist/cjs/languages/prism/typescript';
 import java from 'react-syntax-highlighter/dist/cjs/languages/prism/java';
@@ -16,6 +18,7 @@ import {
   ListChecks, Link2, PlayCircle
 } from 'lucide-react';
 
+SyntaxHighlighter.registerLanguage('c', c);
 SyntaxHighlighter.registerLanguage('cpp', cpp);
 SyntaxHighlighter.registerLanguage('typescript', typescript);
 SyntaxHighlighter.registerLanguage('ts', typescript);
@@ -52,7 +55,6 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
   // C++ until the reader noticed and clicked the switcher themselves.
   const [selectedLang, setSelectedLang] = useState<CodeLang>(() => resolveLang(payload?.language));  const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxSrc, setLightboxSrc] = useState('');
-  const [activeStepIdx, setActiveStepIdx] = useState(0);
   const [mermaidSvg, setMermaidSvg] = useState<string | null>(null);
   const [mermaidError, setMermaidError] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
@@ -333,52 +335,13 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
       );
     }
 
-    /* ---- ANIMATION (Step trace) ---- */
+    /* ---- ANIMATION ----
+       Delegates to CourseAnimations, which dispatches on payload.kind. `step`
+       (the original step-trace widget) and every other kind render there, so
+       there is exactly one implementation of the chrome, the transport and the
+       reduced-motion behaviour. */
     case 'animation': {
-      const steps = payload.steps || [
-        { title: 'Step 1', desc: 'Initial state setup.' },
-        { title: 'Step 2', desc: 'Processing & comparison.' },
-        { title: 'Step 3', desc: 'Result propagation.' },
-      ];
-      return (
-        <div className="my-5 border border-[--border-subtle] rounded-xl overflow-hidden">
-          <div className="flex items-center justify-between bg-[#F4F4F2] px-4 py-2.5 border-b border-[--border-subtle]">
-            <div className="flex items-center gap-2">
-              <Play className="w-3.5 h-3.5 text-[--brand-accent] fill-current" />
-              <span className="text-[12px] font-semibold text-[--text-heading]">Step-by-Step Trace</span>
-            </div>
-            <span className="text-[11px] text-[--text-muted]">{activeStepIdx + 1} / {steps.length}</span>
-          </div>
-
-          {/* Step nav */}
-          <div className="flex gap-1.5 px-4 py-3 border-b border-[--border-subtle] overflow-x-auto">
-            {steps.map((s, i) => (
-              <button
-                key={i}
-                onClick={() => setActiveStepIdx(i)}
-                className={`shrink-0 px-3 py-1.5 text-[12px] font-semibold rounded-lg transition-colors border ${
-                  activeStepIdx === i
-                    ? 'bg-[--brand-primary] text-white border-[--brand-primary]'
-                    : 'bg-white text-gray-600 border-[--border-subtle] hover:border-gray-300'
-                }`}
-              >
-                {s.title.split(':')[0]}
-              </button>
-            ))}
-          </div>
-
-          {/* Active step content */}
-          <div className="bg-white px-5 py-4 space-y-2">
-            <h5 className="font-semibold text-[14px] text-[--text-heading]">{steps[activeStepIdx]?.title}</h5>
-            <p className="text-sm text-[--text-body] leading-relaxed">{steps[activeStepIdx]?.desc}</p>
-            {steps[activeStepIdx]?.code_snippet && (
-              <pre className="mt-2 p-3 bg-[#F4F4F2] rounded-lg text-[12px] font-mono text-[--brand-primary] overflow-x-auto">
-                {steps[activeStepIdx].code_snippet}
-              </pre>
-            )}
-          </div>
-        </div>
-      );
+      return <CourseAnimation payload={payload} />;
     }
 
     /* ---- CALLOUT ---- */
@@ -404,7 +367,13 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
     /* ---- TABLE ---- */
     case 'table': {
       const headers: string[] = payload.headers || [];
-      const rows: string[][] = payload.rows || [];
+      // A row is only rendered when it is genuinely an array of cells. Anything
+      // else is skipped rather than mapped over: one malformed row used to throw
+      // `row.map is not a function`, and an uncaught throw inside a phase body
+      // takes down the whole study-plan page, not just the table.
+      const rows: string[][] = (Array.isArray(payload.rows) ? payload.rows : [])
+        .filter((r): r is unknown[] => Array.isArray(r))
+        .map((r) => r.map((cell) => (cell == null ? '' : String(cell))));
       return (
         <div className="my-5 border border-[--border-subtle] rounded-xl overflow-hidden">
           <div className="flex items-center gap-2 bg-[#F4F4F2] px-4 py-2.5 border-b border-[--border-subtle]">
@@ -423,13 +392,19 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
                 </thead>
               )}
               <tbody>
-                {rows.map((row, ri) => (
-                  <tr key={ri} className="border-b border-[--border-subtle]/60 last:border-b-0 hover:bg-[#FAFAF9]">
-                    {row.map((cell, ci) => (
-                      <td key={ci} className="px-4 py-2.5 text-[13px] text-[--text-body] whitespace-nowrap">{cell}</td>
-                    ))}
+                {rows.length === 0 ? (
+                  <tr>
+                    <td className="px-4 py-4 text-[13px] text-[--text-muted]">No rows in this table yet.</td>
                   </tr>
-                ))}
+                ) : (
+                  rows.map((row, ri) => (
+                    <tr key={ri} className="border-b border-[--border-subtle]/60 last:border-b-0 hover:bg-[#FAFAF9]">
+                      {row.map((cell, ci) => (
+                        <td key={ci} className="px-4 py-2.5 text-[13px] text-[--text-body] whitespace-nowrap">{cell}</td>
+                      ))}
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

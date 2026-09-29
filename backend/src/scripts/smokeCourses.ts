@@ -197,7 +197,19 @@ async function main() {
     console.log('\n[2] catalog');
     const catalog = await api('/api/courses');
     check('catalog is public', catalog.status === 200, `got ${catalog.status}`);
-    const listing = catalog.body?.courses?.[0];
+    // The catalog now bundles more than one course (Coding Foundations and the
+    // C course). This suite exercises the video watch-time anti-cheat, which
+    // needs a course that actually ships video lessons, so select that course
+    // from the store and find its catalog card. Assuming the first catalog row
+    // is the video-bearing one broke as soon as a second, video-less course
+    // sorted ahead of it.
+    const publishedCourses = readDb().courses.filter((c: any) => c.published);
+    const videoCourse = publishedCourses.find((c: any) =>
+      (c.modules || []).some((m: any) => (m.lessons || []).some((l: any) => l.video))
+    );
+    const targetCourse = videoCourse || publishedCourses[0];
+    const listing =
+      (catalog.body?.courses || []).find((c: any) => c.id === targetCourse?.id) || catalog.body?.courses?.[0];
     check('catalog lists the bundled course', !!listing, JSON.stringify(catalog.body).slice(0, 160));
     check('the listed course is a real published course', !!listing?.slug && !!listing?.title, JSON.stringify(listing).slice(0, 140));
     check('catalog does not leak the answer key', !/"correct"\s*:\s*true/.test(JSON.stringify(catalog.body)));

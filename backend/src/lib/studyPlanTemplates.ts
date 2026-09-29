@@ -55,6 +55,44 @@ function sanitizeUrl(url: any): string {
   return raw;
 }
 
+/** Deepest array nesting a payload array may reach. A table's rows are the only
+ *  real case; past this the extra structure is dropped instead of walked. */
+const MAX_PAYLOAD_DEPTH = 4;
+
+/**
+ * One entry of a payload array.
+ *
+ * An entry that is ITSELF an array has to come back out as an array. Collapsing
+ * it into an object keyed by index is what turned a table block's
+ * `rows: [['a','b'],['c','d']]` into `[{0:'a',1:'b'},{0:'c',1:'d'}]` on its way
+ * through the store — and the reader then crashed the whole study-plan page on
+ * `row.map`, because a plain object has no `.map`. The symptom surfaced only on a
+ * deep link like `#phase-2`, since that was the first phase carrying a table.
+ *
+ * So: arrays are walked in place, and only plain objects are rebuilt key by key.
+ */
+function sanitizeArrayEntry(entry: any, depth = 1): any {
+  if (typeof entry === 'string') return sanitizeMarkdown(entry);
+  if (typeof entry === 'number' || typeof entry === 'boolean') return entry;
+
+  if (Array.isArray(entry)) {
+    if (depth >= MAX_PAYLOAD_DEPTH) return [];
+    return entry.slice(0, 200).map((inner) => sanitizeArrayEntry(inner, depth + 1));
+  }
+
+  if (entry && typeof entry === 'object') {
+    const out: Record<string, any> = {};
+    for (const [k, v] of Object.entries(entry)) {
+      if (typeof v === 'string') out[k] = k === 'url' ? sanitizeUrl(v) : sanitizeMarkdown(v);
+      else if (typeof v === 'number' || typeof v === 'boolean') out[k] = v;
+      else if (Array.isArray(v)) out[k] = v.slice(0, 200).map((inner) => sanitizeArrayEntry(inner, depth + 1));
+    }
+    return out;
+  }
+
+  return entry;
+}
+
 export function sanitizeBlock(input: any, order: number): ContentBlockRecord | null {
   if (!input || typeof input !== 'object') return null;
   const blockType = str(input.block_type, 40);
@@ -73,18 +111,10 @@ export function sanitizeBlock(input: any, order: number): ContentBlockRecord | n
     } else if (typeof value === 'number' || typeof value === 'boolean') {
       payload[key] = value;
     } else if (Array.isArray(value)) {
-      payload[key] = value.slice(0, 200).map((entry) =>
-        typeof entry === 'string'
-          ? sanitizeMarkdown(entry)
-          : entry && typeof entry === 'object'
-            ? Object.fromEntries(
-                Object.entries(entry).map(([k, v]) => [
-                  k,
-                  k === 'url' ? sanitizeUrl(v) : typeof v === 'string' ? sanitizeMarkdown(v) : v,
-                ])
-              )
-            : entry
-      );
+      // Wrapped in an arrow on purpose: a bare `.map(sanitizeArrayEntry)` also
+      // passes the element index as the 2nd arg, which would land in `depth` and
+      // start emptying the entry at index MAX_PAYLOAD_DEPTH.
+      payload[key] = value.slice(0, 200).map((entry) => sanitizeArrayEntry(entry));
     }
   }
 

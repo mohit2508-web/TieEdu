@@ -1,11 +1,22 @@
 import { Router, Request, Response } from 'express';
 import { loadDb } from '../data/db';
 import { publishedReports } from '../lib/stats';
+import { requireAdmin } from '../middleware/auth';
 
 export const campusRouter = Router();
 
-// GET /api/campus/cohort — B2B Institutional TPO Cohort Analytics.
-// No fabricated numbers: everything below is derived live from the real db.
+/*
+ * B2B Institutional TPO Cohort Analytics.
+ *
+ * This is an internal control plane, not a public surface: it aggregates every
+ * student's prep progress, XP and unlocks into one dashboard, so the whole
+ * router is admin-only. The frontend guard on /campus is cosmetic — this is
+ * what actually stops a student hitting the endpoint directly.
+ */
+campusRouter.use(requireAdmin);
+
+// GET /api/campus/cohort — no fabricated numbers: everything below is derived
+// live from the real db.
 campusRouter.get('/cohort', (req: Request, res: Response) => {
   const db = loadDb();
 

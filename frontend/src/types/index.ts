@@ -37,9 +37,15 @@ export interface ContentBlock {
     title?: string;
     duration_seconds?: number;
     steps?: { title: string; desc: string; code_snippet?: string }[];
-    // Table block
+    // Table block.
+    //
+    // `rows` is `unknown[]` and not `string[][]` on purpose: the API is the only
+    // thing that knows the rows are cells, and it once shipped rows as objects
+    // keyed by index. Typing the lie as `string[][]` meant `row.map(...)`
+    // type-checked here and then threw at runtime, taking the page down. The
+    // renderer narrows each row before using it.
     headers?: string[];
-    rows?: string[][];
+    rows?: unknown[];
     // Video block
     video_url?: string;
     video_type?: 'youtube' | 'mp4';

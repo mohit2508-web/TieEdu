@@ -6,8 +6,16 @@
  * would mean a DOM environment for a pure string mapping.
  */
 
-/** Languages the code block can switch between. */
-export const CODE_LANGS = ['cpp', 'java', 'python', 'ts'] as const;
+/**
+ * Languages the code block can switch between.
+ *
+ * `c` is a separate entry rather than an alias of `cpp` on purpose. The two
+ * grammars are close enough that a C++ highlighter still *reads* fine, which is
+ * exactly the problem: `#include <stdio.h>` got coloured as a C++ header and
+ * `printf` as a C++ iostream-adjacent name, so a C lesson rendered with the
+ * wrong mental model. Prism ships a real `c` grammar, so we use it.
+ */
+export const CODE_LANGS = ['c', 'cpp', 'java', 'python', 'ts'] as const;
 
 export type CodeLang = (typeof CODE_LANGS)[number];
 
@@ -34,7 +42,10 @@ export const resolveLang = (raw: unknown): CodeLang => {
     return 'ts';
   }
   if (value === 'py' || value === 'python3') return 'python';
-  if (value === 'c' || value === 'c++' || value === 'cplusplus' || value === 'cc') return 'cpp';
+  // 'c' is caught by the direct lookup above. These are the C++ spellings only.
+  if (value === 'c++' || value === 'cplusplus' || value === 'cc' || value === 'h' || value === 'hpp' || value === 'cxx') {
+    return 'cpp';
+  }
   if (value === 'jvm' || value === 'kotlin') return 'java';
 
   return 'cpp';

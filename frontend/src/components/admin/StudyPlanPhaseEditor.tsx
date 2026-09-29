@@ -58,7 +58,12 @@ const BlockForm: React.FC<{
   );
   const [tableText, setTableText] = useState(() => {
     const headers: string[] = block?.payload?.headers || [];
-    const rows: string[][] = block?.payload?.rows || [];
+    // `rows` is typed `unknown[]` because only the API knows the shape. Narrow it
+    // here — an editor that did `r.join()` on an object row would throw while an
+    // admin was mid-edit and lose the block they were writing.
+    const rows: string[][] = (Array.isArray(block?.payload?.rows) ? block!.payload.rows : [])
+      .filter((r): r is unknown[] => Array.isArray(r))
+      .map((r) => r.map((c) => (c == null ? '' : String(c))));
     return [headers.join(', '), ...rows.map((r) => r.join(', '))].join('\n');
   });
 

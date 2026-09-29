@@ -33,7 +33,12 @@ eq('py maps to python', resolveLang('py'), 'python');
 eq('python3 maps to python', resolveLang('python3'), 'python');
 eq('c++ maps to cpp', resolveLang('c++'), 'cpp');
 eq('cc maps to cpp', resolveLang('cc'), 'cpp');
-eq('c maps to cpp', resolveLang('c'), 'cpp');
+// 'c' used to be folded into 'cpp' here. That was a readability decision made
+// before there was a C course, and it silently mislabelled every C lesson:
+// #include <stdio.h> highlighted as a C++ header, printf as iostream-adjacent.
+eq('c is its own language, not cpp', resolveLang('c'), 'c');
+eq('C capitalised is still c', resolveLang('C'), 'c');
+eq('a C header is c', resolveLang('h'), 'cpp');
 eq('jvm maps to java', resolveLang('jvm'), 'java');
 eq('kotlin maps to java', resolveLang('kotlin'), 'java');
 
@@ -58,6 +63,7 @@ eq('resolution never invents a language outside the switcher', CODE_LANGS.every(
 // them, so the short key has to be expanded before it reaches Prism.
 eq('ts expands to typescript for prism', prismName('ts'), 'typescript');
 eq('cpp is passed through for prism', prismName('cpp'), 'cpp');
+eq('c is passed through for prism', prismName('c'), 'c');
 eq('python is passed through for prism', prismName('python'), 'python');
 
 // --- timezone-stable dates ----------------------------------------------------

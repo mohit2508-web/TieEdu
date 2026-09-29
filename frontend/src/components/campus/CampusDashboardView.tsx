@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Building, ShieldCheck, Award, Sparkles, ArrowRight, BarChart3 } from 'lucide-react';
-import { API_BASE_URL } from '@/lib/api';
+import { fetchCampusCohortApi } from '@/lib/api';
 
 export const CampusDashboardView: React.FC = () => {
   const [cohort, setCohort] = useState<any>(null);
 
   useEffect(() => {
-    fetch(`${API_BASE_URL}/campus/cohort`)
-      .then(res => res.json())
-      .then(data => setCohort(data))
+    fetchCampusCohortApi()
+      .then(setCohort)
       .catch(() => setCohort(null));
   }, []);
 
