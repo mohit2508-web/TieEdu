@@ -123,16 +123,6 @@ export const Header: React.FC = () => {
 
           <button
             type="button"
-            onClick={() => toggleOverlay('search')}
-            aria-label="Search vaults"
-            aria-haspopup="dialog"
-            className="icon-btn lg:hidden"
-          >
-            <Search size={19} strokeWidth={2} aria-hidden />
-          </button>
-
-          <button
-            type="button"
             onClick={() => toggleOverlay('leaderboard')}
             aria-label="Leaderboard"
             title="Placement season XP rankings"
@@ -142,12 +132,23 @@ export const Header: React.FC = () => {
             <span className="font-bold">Leaderboard</span>
           </button>
 
+          {/*
+            The cart and search buttons are `lg:inline-flex` — above `lg` the
+            top bar and the bottom tab bar were both offering them.
+
+            Below `lg` the bottom bar already has a Search slot and a Cart slot
+            (with the badge), so the two icons here were pure duplication. On a
+            360px phone the row needed ~374px: logo + search + cart + bell +
+            account + hamburger. That overflow is what made the page scale down
+            and the logo look like it was spilling out of the header. One
+            surface per action is also the point of the bottom bar.
+          */}
           <button
             type="button"
             onClick={() => toggleOverlay('cart')}
             aria-label={hydrated && count > 0 ? `Cart, ${count} items` : 'Cart, empty'}
             aria-haspopup="dialog"
-            className="icon-btn"
+            className="icon-btn hidden lg:inline-flex"
           >
             <span className="relative inline-flex">
               <ShoppingBag size={19} strokeWidth={2} aria-hidden />

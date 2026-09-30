@@ -75,6 +75,33 @@
   --tabbar-h: 56px;
 
   /* ---------------------------------------------------------------
+     READING WIDTH
+     A course page is a reader, not a marketing page, so it opts out
+     of the max-w-6xl shell the rest of the site uses. It has to: the
+     layout puts a 280px outline rail and a 300px enrolment card beside
+     the lesson, and inside 1152px that left the lesson itself 460px -
+     about 54 characters a line, against a comfortable 65-80. Code
+     blocks and the step-by-step file-anatomy reader in the Python
+     course are unusable at that measure.
+
+     The fix is only half the width. The three-column split also has to
+     wait until there is genuinely room for it, or it trades lesson
+     width for a card at exactly the widths where the card is least
+     worth having. See the grid in pages/courses/[slug].tsx.
+
+     1600px is the point where a 1920px monitor stops wasting the sides
+     and a 1440px laptop is not yet overflowing.
+     --------------------------------------------------------------- */
+  --reader-max: 1600px;
+  /* How far below the header a sticky rail pins, and how much of the
+     viewport is left for its own scroll. The header is 64px of real
+     estate; a rail pinned at top-6 (24px) slides under it and its
+     max-height runs 40px off the bottom of the screen, so its last
+     module could never be scrolled to. */
+  --rail-top: calc(var(--header-h) + 1.5rem);
+  --rail-max-h: calc(100vh - var(--header-h) - 3rem);
+
+  /* ---------------------------------------------------------------
      AMBER TEXT/FILL PAIR
      The cart badge and the leaderboard icon were both using raw
      `#241A06` and `#B45309`. Amber is the money colour in this
@@ -99,8 +126,17 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  /* NOTE: Do NOT add overflow-x:hidden here — it breaks position:fixed overlays on iOS */
+  /* Every jump to an in-page anchor - `scrollIntoView`, a `#hash` on load, a
+     permalink - has to land below the fixed 64px header. Without this the target
+     scrolls flush to the top of the viewport and its first line sits underneath
+     the nav, which is most visible in the course reader: tapping a lesson in the
+     outline appeared to do nothing because the lesson's own heading was hidden.
+     `scroll-padding-top` fixes it for every scroll container in the document
+     rather than each call site having to remember an offset. */
+  scroll-padding-top: calc(var(--header-h) + 1rem);
+  /* NOTE: Do NOT add overflow-x:hidden here - it breaks position:fixed overlays on iOS */
 }
+
 
 body {
   background-color: var(--bg-app);
@@ -609,6 +645,33 @@ code, pre, kbd, samp, .font-mono {
   line-height: 1.85;
   color: #1E293B;
   max-width: 100%;
+}
+
+/* Reading measure.
+
+   Widening the course reader to 1600px gave the lesson column ~880px on a large
+   display, and at 18px that is roughly 100 characters to a line. Long measure is
+   the reason a page can be objectively wider and still feel harder to read: the
+   return sweep loses the line, and the reader starts re-reading sentences to
+   find where they were. The comfortable range is roughly 45-85 characters, so
+   the running text is capped at 72ch.
+
+   The cap is on the *text* elements, not on `.prose-article`, because the
+   elements that genuinely need the width are the ones that are not prose: code
+   blocks, tables, and images. Those keep the full column.
+
+   `max-width` only ever narrows, so every narrow container that already renders
+   this - the long-form sections, the section pack editor, a lesson in the
+   two-column layout - is unaffected; the cap simply never engages. */
+.prose-article > p,
+.prose-article > ul,
+.prose-article > ol,
+.prose-article > blockquote,
+.prose-article > h1,
+.prose-article > h2,
+.prose-article > h3,
+.prose-article > h4 {
+  max-width: 72ch;
 }
 
 .prose-article h1 { font-size: 2.25rem; font-weight: 800; margin: 2.25rem 0 1.25rem; color: #0F172A; }

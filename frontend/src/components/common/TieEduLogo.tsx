@@ -15,9 +15,23 @@ interface TieEduLogoProps {
 const ASPECT = 2590 / 1664;
 
 /**
+ * HEIGHTS, not widths.
+ *
+ * This wordmark is nearly square (1.56:1), so a width-keyed size produces a very
+ * tall box. `sm` at 100px wide was 64px tall — the exact height of the header row
+ * it sits in, so the mark touched both edges and read as overlapping the nav
+ * next to it.
+ *
+ * Heights are what a header actually constrains, so they are what gets keyed.
+ * `sm` = 40px is the size the logo used to *appear* at, because the old
+ * `max-h-10` clamped a 100px-wide image down to 40px tall.
+ */
+const HEIGHTS = { sm: 40, md: 52, lg: 72 } as const;
+
+/**
  * The wordmark.
  *
- * Two fixes over the previous version:
+ * Three fixes over the previous version:
  *
  *  - `showTagline` was accepted and then ignored. Every call site passed
  *    `showTagline={true}` or `{false}` believing it controlled a second line,
@@ -25,13 +39,16 @@ const ASPECT = 2590 / 1664;
  *  - The SVG had no `viewBox`, which means it could not scale: any consumer that
  *    asked for a percentage width got a 2590px image. The `viewBox` is now on
  *    the file, and the component sizes off the intrinsic ratio.
+ *  - Sizing is height-keyed and hard-capped, so the logo cannot outgrow a
+ *    fixed-height row again.
  *
  * The SVG's full-canvas `#FEFEFD` backdrop path was also removed. It rendered
  * as a visible off-white box over the header's translucent blur, and as a pale
  * slab on `/interview-course`, which is a dark page.
  */
 export const TieEduLogo: React.FC<TieEduLogoProps> = ({ className = '', size = 'md' }) => {
-  const width = size === 'sm' ? 100 : size === 'lg' ? 220 : 145;
+  const height = HEIGHTS[size];
+  const width = Math.round(height * ASPECT);
 
   return (
     <div className={`inline-flex items-center ${className}`}>
@@ -39,9 +56,11 @@ export const TieEduLogo: React.FC<TieEduLogoProps> = ({ className = '', size = '
         src="/logo.svg"
         alt="TieEdu — Learn, Evolve, Develop"
         width={width}
-        height={Math.round(width / ASPECT)}
-        style={{ width: `${width}px`, height: `${Math.round(width / ASPECT)}px` }}
-        className="select-none object-contain"
+        height={height}
+        style={{ width: `${width}px`, height: `${height}px` }}
+        // `max-h-full`/`max-w-full` are the backstop: whatever slot this lands
+        // in, the mark stays inside it instead of overflowing.
+        className="block h-auto max-h-full w-auto max-w-full select-none object-contain"
       />
     </div>
   );

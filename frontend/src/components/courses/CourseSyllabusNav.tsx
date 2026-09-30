@@ -258,7 +258,17 @@ export const CourseSyllabusNav: React.FC<SyllabusNavProps> = ({
     <aside
       ref={sheetRef}
       aria-label="Course content"
-      className="lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto lg:overscroll-contain lg:pr-1"
+      // Pinned and height-capped off --header-h, not a bare `top-6`.
+      //
+      // The header is 64px and sticks to the top, so a rail at top-6 pinned itself
+      // 40px underneath it: the first module heading disappeared behind the nav the
+      // moment you scrolled. Worse, `max-h-[calc(100vh-3rem)]` sized the scroll box
+      // against the full viewport while the top 64px were already occupied, so the
+      // bottom of the rail hung 40px below the screen and its own scrollbar could
+      // never bring the last module into view. This is the outline for a
+      // fifteen-module course, so "cannot reach the end" was a real dead end rather
+      // than a cosmetic one.
+      className="lg:sticky lg:top-[var(--rail-top)] lg:max-h-[var(--rail-max-h)] lg:overflow-y-auto lg:overscroll-contain lg:pr-1"
     >
       {/* Small screens: a collapsed sheet, so the lesson is not pushed off-screen
           by a full outline. Large screens: a plain always-open column. */}

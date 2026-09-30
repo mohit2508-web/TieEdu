@@ -12,6 +12,7 @@
 // ============================================================================
 
 import { API_BASE_URL, apiFetch } from './api';
+import { certificateError } from './certificateErrors';
 import type {
   CourseCatalogResponse,
   CourseDetail,
@@ -42,6 +43,26 @@ const COURSE_ADMIN = `${API_BASE_URL}/course-admin`;
 async function apiError(res: Response, fallback: string): Promise<Error> {
   const data = await res.json().catch(() => ({}));
   return new Error(data?.error || fallback);
+}
+
+/**
+ * An error safe to show a learner, for the certificate endpoints.
+ *
+ * The policy — which failures are ours to hide and which are the learner's to read
+ * — lives in `certificateErrors` so it can be unit tested without a DOM. This is
+ * only the wiring: read the body once, hand over the status and the message.
+ *
+ * Scoped to the certificate calls on purpose. A blanket rewrite here would be
+ * wrong: the admin course form shows the server's own wording because
+ * "Instructor name is required" is written for the person typing into it.
+ */
+async function certificateApiError(res: Response, action: string): Promise<Error> {
+  const data = await res.json().catch(() => ({}));
+  const serverMessage = typeof data?.error === 'string' ? data.error : '';
+  return certificateError(res.status, serverMessage, action, (detail) => {
+    // eslint-disable-next-line no-console
+    console.error(`[certificate] ${action.toLowerCase()} unavailable (${res.status}):`, detail);
+  });
 }
 
 // --- Public: browsing -------------------------------------------------------
@@ -192,7 +213,7 @@ export const issueCertificate = async (slug: string): Promise<{ certificate: Cer
     method: 'POST',
     body: JSON.stringify({}),
   });
-  if (!res.ok) throw await apiError(res, 'Could not issue a certificate');
+  if (!res.ok) throw await certificateApiError(res, 'Issue');
   return res.json();
 };
 
@@ -231,7 +252,7 @@ export const certificateDownloadPath = (serial: string): string =>
 
 export const downloadCertificatePdf = async (downloadPath: string): Promise<{ blobUrl: string; filename: string }> => {
   const res = await apiFetch(`${API_BASE_URL}${downloadPath}`);
-  if (!res.ok) throw await apiError(res, 'Could not download the certificate');
+  if (!res.ok) throw await certificateApiError(res, 'Download');
   const blob = await res.blob();
   const serial = downloadPath.split('/').slice(-2, -1)[0] || 'certificate';
   return {

@@ -17,7 +17,7 @@ import { CourseSyllabusNav } from '@/components/courses/CourseSyllabusNav';
 import { CoursePreviewShell } from '@/components/courses/CoursePreviewShell';
 import { decideCoursePage } from '@/lib/courseSsr';
 import { CourseThumbnailEditor } from '@/components/courses/CourseThumbnailEditor';
-import { Award, CheckCircle2, Download, Lock, ShieldCheck, Star, Users, Layers, FileText, Clock } from 'lucide-react';
+import { Award, AlertTriangle, CheckCircle2, Download, Lock, ShieldCheck, Star, Users, Layers, FileText, Clock } from 'lucide-react';
 import {
   fetchCourse,
   fetchLesson,
@@ -620,7 +620,13 @@ export default function CoursePage({
         )}
       </Head>
 
-      <main className="mx-auto w-full max-w-6xl px-6 pb-24 pt-10">
+      {/* A reader shell, wider than the rest of the site. See --reader-max in
+        globals.css for the arithmetic: the outline rail and the enrolment card
+        together need 644px before the lesson gets anything, and inside the
+        site's usual max-w-6xl that left 460px of text - too narrow to read a code
+        block in. Prose on this page keeps its own measure (the FAQ is max-w-3xl,
+        outcomes max-w-2xl), so only the reading column widens. */}
+    <main className="mx-auto w-full max-w-[var(--reader-max)] px-4 pb-24 pt-10 sm:px-6 min-[1440px]:px-8">
         {loading && <p className="py-20 text-center text-sm text-[var(--text-muted)]">Loading course…</p>}
 
         {error && !loading && !preview && (
@@ -749,36 +755,76 @@ export default function CoursePage({
             )}
 
             {done && (
+              /* Two columns, because these are two different kinds of thing.
+
+                 On the left is the fact - you finished, here is the number. On the
+                 right are the two things you can do about it: rate the course, and
+                 take the certificate. Stacked, the second column's controls floated
+                 under a full-width paragraph with a heading that was already done
+                 saying something, and widening the page for the reader made that
+                 worse rather than better. Split, the panel reads as a summary with
+                 its actions beside it, and the rating stars land next to the review
+                 count they are answering. */
               <section className="mb-8 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 size={18} className="text-[var(--color-success)]" />
-                  <h2 className="text-lg font-bold text-[var(--ink)]">Course complete</h2>
+                <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:items-start">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 size={18} className="text-[var(--color-success)]" />
+                      <h2 className="text-lg font-bold text-[var(--ink)]">Course complete</h2>
+                    </div>
+                    <p className="mt-2 text-sm leading-relaxed text-[var(--text-body)]">
+                      You finished all {progress?.total} lessons
+                      {course.certificate_eligible ? '. Tell us what stuck, then claim your certificate.' : '.'}
+                    </p>
+                    {/*
+                      The two actions are siblings in the right-hand column, so
+                      whichever comes first gets the top edge rather than the
+                      FeedbackBlock's own `mt-5` pushing the certificate down.
+                    */}
+                    <div className="mt-1 lg:mt-0">
+                      <FeedbackBlock
+                        courseSlug={slug}
+                        done={feedbackSent}
+                        onSent={() => {
+                          setFeedbackSent(true);
+                          loadCourse();
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="lg:border-l lg:border-[var(--border-subtle)] lg:pl-6">
+                    {course.certificate_eligible ? (
+                      <>
+                        <h3 className="text-sm font-bold text-[var(--ink)]">Your certificate</h3>
+                        {/*
+                          Averaging stars are not a certificate, so this says which
+                          of the two it is. The issued panel below states the
+                          verifiability itself; this only has to explain the button
+                          that mints it, and say what the learner gets for the click.
+                        */}
+                        <p className="mt-1 text-xs leading-relaxed text-[var(--text-muted)]">
+                          Issued the moment you finish, with a serial anyone can check.
+                        </p>
+                        <div className="mt-4">
+                          <CertificateBlock
+                            courseSlug={slug}
+                            existing={existingCert}
+                            busy={certBusy}
+                            error={certError}
+                            onBusy={setCertBusy}
+                            onError={setCertError}
+                            onIssued={loadCourse}
+                          />
+                        </div>
+                      </>
+                    ) : (
+                      <p className="text-sm text-[var(--text-muted)]">
+                        This course does not award a certificate.
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--text-body)]">
-                  You finished all {progress?.total} lessons. Tell us what stuck
-                  {course.certificate_eligible ? ', then claim your certificate.' : '.'}
-                </p>
-
-                <FeedbackBlock
-                  courseSlug={slug}
-                  done={feedbackSent}
-                  onSent={() => {
-                    setFeedbackSent(true);
-                    loadCourse();
-                  }}
-                />
-
-                {course.certificate_eligible && (
-                  <CertificateBlock
-                    courseSlug={slug}
-                    existing={existingCert}
-                    busy={certBusy}
-                    error={certError}
-                    onBusy={setCertBusy}
-                    onError={setCertError}
-                    onIssued={loadCourse}
-                  />
-                )}
               </section>
             )}
 
@@ -803,12 +849,26 @@ export default function CoursePage({
               certificateEligible={course.certificate_eligible}
             />
 
-            {/* Three columns only from `xl` up: the syllabus rail and the
-                enrolment card both need real width, and squeezing them in at
-                `lg` would leave the lesson - the thing being read - too narrow.
-                Below `xl` this collapses to the rail plus the lesson, and the
-                hero's own call to action is the one on screen. */}
-            <div className="grid gap-8 lg:grid-cols-[280px_1fr] xl:grid-cols-[280px_1fr_300px] lg:items-start">
+            {/* Two columns from `lg`, three from a width that can actually pay for
+                the third one.
+
+                This used to add the enrolment card at `xl` (1280px) inside a
+                max-w-6xl container - so the card appeared precisely where there
+                was no extra room, and the lesson column fell from 792px to 460px
+                the moment it showed up. That 460px is what the reader was
+                complaining about: a page of text in the middle of a mostly empty
+                screen. The card was not worth 332px of reading width at that size,
+                and the hero already carries the same control (`enrollAction` is
+                shared), so nothing was lost by waiting.
+
+                The rails also get their width per layout rather than one value for
+                both. At two columns the lesson is the whole point, so the outline
+                stays at the 280px it has always been and the reading measure is
+                exactly what it was before this change - widening it here would
+                have been a small, silent regression at laptop widths. The extra
+                20px on the outline, and the card, both arrive together at 1440px,
+                which is where the lesson still gets ~724px with all three. */}
+            <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-8 min-[1440px]:grid-cols-[300px_minmax(0,1fr)_288px] lg:items-start">
               <CourseSyllabusNav
                 modules={course.modules || []}
                 courseSlug={slug}
@@ -817,7 +877,7 @@ export default function CoursePage({
                 totalMinutes={course.stats?.total_minutes}
               />
 
-              <section id="lesson-player" className="min-w-0 scroll-mt-6">
+              <section id="lesson-player" className="min-w-0 scroll-mt-[var(--rail-top)]">
                 {selectedLesson ? (
                   <LessonPlayer
                     key={selectedLesson.id}
@@ -846,12 +906,16 @@ export default function CoursePage({
                   and FAQ further down. That is the intended behaviour - past the
                   syllabus, the page is answering questions, not selling.
 
+                  It pins at the same offset as the outline rail (`--rail-top`) so
+                  the two columns' tops line up; the rail used to pin at top-6 and
+                  sat 40px higher than the card beside it.
+
                   The price is stated only for a course that has one, and a free
                   course says Free instead of a struck-through zero. `enrollAction`
                   is the hero's own control, so this can never offer something
                   different from the offer above. */}
-              <aside className="hidden xl:block" aria-label="Enrol in this course">
-                <div className="sticky top-[calc(var(--header-h)+1.5rem)] rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
+              <aside className="hidden min-[1440px]:block" aria-label="Enrol in this course">
+                <div className="sticky top-[var(--rail-top)] rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
                   <div className="text-2xl font-extrabold leading-none text-[var(--ink)]">
                     {course.is_free ? 'Free' : formatPrice(course.price_inr)}
                   </div>
@@ -965,7 +1029,7 @@ const FeedbackBlock: React.FC<{ courseSlug: string; done: boolean; onSent: () =>
 
   if (done) {
     return (
-      <p className="mt-4 rounded-lg bg-[var(--bg-sky-soft)] px-3 py-2 text-sm font-semibold text-[var(--color-success)]">
+      <p className="rounded-lg bg-[var(--bg-sky-soft)] px-3 py-2 text-sm font-semibold text-[var(--color-success)]">
         Thanks — your feedback is recorded.
       </p>
     );
@@ -989,7 +1053,7 @@ const FeedbackBlock: React.FC<{ courseSlug: string; done: boolean; onSent: () =>
   };
 
   return (
-    <div className="mt-5 rounded-xl border border-[var(--border-subtle)] p-4">
+    <div className="rounded-xl border border-[var(--border-subtle)] p-4">
       <h3 className="text-sm font-bold text-[var(--ink)]">What did you make of it?</h3>
       <div className="mt-2 flex gap-1">
         {[1, 2, 3, 4, 5].map((n) => (
@@ -1088,7 +1152,7 @@ const CertificateBlock: React.FC<{
 
   if (!issued) {
     return (
-      <div className="mt-5">
+      <div>
         <button
           type="button"
           onClick={claim}
@@ -1098,12 +1162,29 @@ const CertificateBlock: React.FC<{
           <Award size={16} />
           {busy ? 'Issuing…' : 'Claim my certificate'}
         </button>
-        {error && <p className="mt-2 text-xs text-[var(--color-error)]">{error}</p>}
+        {/* A notice, not a red line under a button.
+
+            The failure this has to carry is "our signing key is not set up", which
+            is not the learner's mistake and does not put their completion at risk.
+            Rendering it as `text-xs` in the error colour said the opposite: that
+            something small had gone wrong with their certificate. This block also
+            re-asserts the thing the learner actually cares about, because the first
+            thing anyone wonders after a failure here is whether the 46 lessons they
+            just finished are still counted. */}
+        {error && (
+          <div
+            role="alert"
+            className="mt-3 flex max-w-prose items-start gap-2.5 rounded-lg border border-amber-300 bg-amber-50 px-3.5 py-3"
+          >
+            <AlertTriangle size={16} className="mt-0.5 shrink-0 text-amber-700" />
+            <p className="text-sm leading-relaxed text-amber-900">{error}</p>
+          </div>
+        )}
       </div>
     );
   }
   return (
-    <div className="mt-5 rounded-xl border border-[var(--brand-sky)]/30 bg-[var(--bg-sky-soft)] p-4">
+    <div className="rounded-xl border border-[var(--brand-sky)]/30 bg-[var(--bg-sky-soft)] p-4">
       <p className="text-sm font-bold text-[var(--brand-sky-strong)]">
         Certificate {issued.serial} issued.
       </p>
