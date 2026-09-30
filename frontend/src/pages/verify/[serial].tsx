@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { ShieldCheck, ShieldAlert, ShieldX } from 'lucide-react';
 import { verifyCertificate } from '@/lib/coursesApi';
@@ -55,6 +54,10 @@ export default function VerifyPage() {
               status: 'unknown',
               revoked_reason: '',
               revoked_at: null,
+              // Empty, not a key id: no signature was checked, so there is no key
+              // to name. This is the same value the API writes when a record has
+              // none — see lib/certificate.ts — so the two never disagree.
+              signing_key_id: '',
             },
             explanation: 'We could not reach the verification service, so this is unconfirmed.',
           });
@@ -89,7 +92,6 @@ export default function VerifyPage() {
         <title>{serial ? `Verify ${serial} · TieEdu` : 'Verify a certificate · TieEdu'}</title>
         <meta name="robots" content="noindex" />
       </Head>
-      <Header cartCount={0} onOpenCart={() => {}} onOpenSearch={() => {}} onOpenLeaderboard={() => {}} />
 
       <main className="mx-auto w-full max-w-2xl px-6 pb-24 pt-16">
         <h1 className="text-3xl font-extrabold tracking-tight text-[var(--ink)]">
@@ -164,6 +166,12 @@ export default function VerifyPage() {
               />
               <Row label="Issued on" value={new Date(cert.issued_at).toLocaleDateString()} />
               <Row label="XP at issue" value={String(cert.xp_at_issue)} />
+              {check?.signing_key_id && (
+                <Row
+                  label="Signing key"
+                  value={<span className="font-mono text-xs">{check.signing_key_id}</span>}
+                />
+              )}
             </dl>
           )}
         </div>
@@ -171,6 +179,14 @@ export default function VerifyPage() {
         <p className="mt-6 text-xs leading-relaxed text-[var(--text-muted)]">
           The name, course title, lesson count and issue date above are covered by the signature. The
           XP figure is shown for context; XP itself is recorded in a separate append-only ledger.
+        </p>
+
+        <p className="mt-3 text-xs leading-relaxed text-[var(--text-muted)]">
+          Certificates are signed with Ed25519, so the check does not rest on trusting this site: the
+          matching public key is published at{' '}
+          <span className="font-mono">/api/courses/verify/key</span> and anyone can verify a
+          certificate themselves against it. The key id above identifies which key was used, and
+          older certificates stay verifiable after we rotate to a new one.
         </p>
       </main>
       <Footer />

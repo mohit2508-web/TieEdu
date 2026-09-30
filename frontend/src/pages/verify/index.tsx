@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { ShieldCheck } from 'lucide-react';
 
@@ -47,7 +46,6 @@ export default function VerifyIndexPage() {
         <title>Verify a certificate · TieEdu</title>
         <meta name="robots" content="noindex" />
       </Head>
-      <Header cartCount={0} onOpenCart={() => {}} onOpenSearch={() => {}} onOpenLeaderboard={() => {}} />
 
       <main className="mx-auto w-full max-w-2xl px-6 pb-24 pt-16">
         <div className="flex items-center gap-2">

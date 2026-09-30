@@ -3,14 +3,20 @@ import Link from 'next/link';
 import { ShieldCheck, Lock, Server, Heart } from 'lucide-react';
 import { TieEduLogo } from '@/components/common/TieEduLogo';
 import { useAuth } from '@/context/AuthContext';
+import { ALL_NAV_ITEMS, type NavItem } from '@/lib/navConfig';
+
+/**
+ * Footer order, and the only two destinations it leaves out.
+ *
+ * `campus` is a B2B control plane for TPOs and is deliberately not advertised
+ * to students — an admin reaches it from the header and the drawer. `admin` is
+ * kept: the route is a login gate, so linking it is safe and it is how a
+ * platform admin signs in.
+ */
+const FOOTER_EXCLUDED = new Set(['campus']);
+const FOOTER_ITEMS: NavItem[] = ALL_NAV_ITEMS.filter((item) => !FOOTER_EXCLUDED.has(item.id));
 
 export const Footer: React.FC = () => {
-  const { user } = useAuth();
-
-  // The campus cohort dashboard is a B2B control plane for TPOs — never
-  // advertised to students, so the link only exists for an admin session.
-  const isAdmin = user?.role === 'admin';
-
   return (
     <footer className="bg-white border-t border-[#E9E7E1] mt-16 pt-12 pb-8">
       <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12">
@@ -47,22 +53,27 @@ export const Footer: React.FC = () => {
           </div>
         </div>
 
-        <div className="pt-6 flex flex-col lg:flex-row items-center justify-between gap-5 text-[13px] text-[--text-muted]">
+        <div className="pt-6 flex flex-col lg:flex-row items-center justify-between gap-5 text-[13px] text-[var(--text-muted)]">
           <div className="flex items-center gap-3">
-            <TieEduLogo size="sm" showTagline={false} />
+            <TieEduLogo size="sm" />
             <p>© 2026 TieEdu Technologies. All rights reserved.</p>
           </div>
+          {/*
+            Derived from `navConfig` instead of a hand-written list. That list had
+            already drifted from the header: it was missing Pricing and My
+            account, and it pointed "Admin" at `/admin/login` while the header
+            pointed at `/admin`. One list cannot drift.
+          */}
           <div className="flex flex-wrap items-center justify-center gap-4 text-[13px] font-bold text-[#3E4754]">
-            <Link href="/" className="hover:text-[--brand-sky] transition-colors">Vaults</Link>
-            <Link href="/compare" className="hover:text-[--brand-sky] transition-colors">Compare</Link>
-            <Link href="/interview-course" className="hover:text-[--brand-sky] transition-colors">Free Course</Link>
- <Link href="/courses" className="hover:text-[--brand-sky] transition-colors">Courses</Link>
- <Link href="/my-courses" className="hover:text-[--brand-sky] transition-colors">My Courses</Link>
-            <Link href="/study-plan" className="hover:text-[--brand-sky] transition-colors">Study Plan</Link>
-            {isAdmin && (
-              <Link href="/campus" className="hover:text-[--brand-sky] transition-colors">Campus TPO Portal</Link>
-            )}
-            <Link href="/admin/login" className="hover:text-[--brand-sky] transition-colors">Admin</Link>
+            {FOOTER_ITEMS.map((item) => (
+              <Link
+                key={item.id}
+                href={item.href}
+                className="transition-colors hover:text-[var(--brand-sky)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand-sky)]"
+              >
+                {item.label}
+              </Link>
+            ))}
           </div>
           <div className="flex items-center gap-1">
             <span>Built for placement season with</span>

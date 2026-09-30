@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import {
   fetchCompanies, generateStudyPlanApi, fetchMyStudyPlanApi, setStudyPlanPhaseApi,
@@ -245,14 +244,13 @@ export default function StudyPlanPage() {
       </Head>
 
       <div className="min-h-screen flex flex-col bg-[#FAFAF9]">
-        <Header cartCount={0} onOpenCart={() => {}} onOpenSearch={() => {}} onOpenLeaderboard={() => {}} />
 
         {/* Compact progress bar for small screens.
             The sidebar card is in normal flow on mobile, so scrolling a
             20-phase plan put progress permanently off-screen. This is the
             `lg:hidden` twin of the sidebar panel, pinned under the header. */}
         {showMobileBar && (
-          <div className="lg:hidden sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-[#EDEDEB] px-4 py-2.5">
+          <div className="lg:hidden sticky top-[var(--header-h)] z-30 bg-white/95 backdrop-blur border-b border-[#EDEDEB] px-4 py-2.5">
             <div className="flex items-center gap-3">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2 mb-1">

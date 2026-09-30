@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import type { GetServerSideProps } from 'next';
-import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { CompanyOverviewHeader } from '@/components/company/CompanyOverviewHeader';
 import { TrustBadgeBar } from '@/components/company/TrustBadgeBar';
@@ -16,6 +15,8 @@ import { PremiumModuleCard } from '@/components/company/PremiumModuleCard';
 import { CompletePackBanner } from '@/components/company/CompletePackBanner';
 import { IntelligenceTreeSidebar, MobileSidebarDrawer } from '@/components/company/IntelligenceTreeSidebar';
 import { useAuth } from '@/context/AuthContext';
+import { useCart, useCartScope, cartLineModuleIds, isCompanyCartLine } from '@/context/CartContext';
+import { useShell } from '@/context/ShellContext';
 import dynamic from 'next/dynamic';
 import { fetchCompanyBySlug, fetchCompanies, API_BASE_URL } from '@/lib/api';
 import { packPrice, SINGLE_MODULE_PRICE } from '@/lib/packPricing';
@@ -26,9 +27,13 @@ import {
   Sparkles, Bookmark, List, ShoppingBag
 } from 'lucide-react';
 
-const CartModal = dynamic(() => import('@/components/checkout/CartModal').then(m => m.CartModal), { ssr: false });
-const SearchModal = dynamic(() => import('@/components/modals/SearchModal').then(m => m.SearchModal), { ssr: false });
-const LeaderboardModal = dynamic(() => import('@/components/modals/LeaderboardModal').then(m => m.LeaderboardModal), { ssr: false });
+/*
+ * The cart, the search palette, the leaderboard and the header are all mounted
+ * once by `AppShell` now, so they are no longer `dynamic()` imports here. They
+ * were dynamic purely because each page rendered its own copy behind an
+ * `isOpen` flag; a single global instance is in the main bundle either way, and
+ * deferring it would only delay the first open.
+ */
 const SubmitReportModal = dynamic(() => import('@/components/modals/SubmitReportModal').then(m => m.SubmitReportModal), { ssr: false });
 const AuthRequiredModal = dynamic(() => import('@/components/modals/AuthRequiredModal').then(m => m.AuthRequiredModal), { ssr: false });
 const FeedbackAdModal = dynamic(() => import('@/components/modals/FeedbackAdModal').then(m => m.FeedbackAdModal), { ssr: false });
@@ -59,13 +64,14 @@ export default function CompanyVaultPage({ initialCompany, initialSlug }: { init
   const router = useRouter();
   const { slug } = router.query;
   const { user } = useAuth();
+  const { addMany, items } = useCart();
+  const { openOverlay } = useShell();
 
   const [company, setCompany] = useState<Company | null>(initialCompany);
   const [allCompanies, setAllCompanies] = useState<Company[]>([]);
   const [activeRoundTab, setActiveRoundTab] = useState<'all' | RoundType>('all');
 
-  const [isUnlocked, setIsUnlocked] = useState(false);
-  const [selectedModule, setSelectedModule] = useState<ContentModule | null>(null);
+  const [isUnlocked, setIsUnlocked] = useState(false);  const [selectedModule, setSelectedModule] = useState<ContentModule | null>(null);
   const [selectedItem, setSelectedItem] = useState<ContentItem | null>(null);
   const [activeReaderTab, setActiveReaderTab] = useState<'content' | 'discussion'>('content');
   const [discussionCount, setDiscussionCount] = useState(0);
@@ -73,10 +79,6 @@ export default function CompanyVaultPage({ initialCompany, initialSlug }: { init
   const [solvedItemIds, setSolvedItemIds] = useState<string[]>([]);
   const [bookmarkedItemIds, setBookmarkedItemIds] = useState<string[]>([]);
 
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
   const [isSubmitReportOpen, setIsSubmitReportOpen] = useState(false);
   const [loading, setLoading] = useState(!initialCompany);
   const [reportTick, setReportTick] = useState(0);
@@ -130,13 +132,22 @@ export default function CompanyVaultPage({ initialCompany, initialSlug }: { init
   }, [company, user, urlModuleId, urlItemId]);
 
   const loadedSlugRef = useRef(initialSlug);
+  /**
+   * Bumped after a purchase so the vault refetches. The effect below is
+   * deliberately guarded by `loadedSlugRef` to avoid a redundant fetch on first
+   * paint, which means a plain re-run would early-return; the explicit reload
+   * signal is what lets a completed checkout pull the new unlock state.
+   */
+  const [reloadTick, setReloadTick] = useState(0);
+  const refetchVault = useCallback(() => setReloadTick((n) => n + 1), []);
+
   useEffect(() => {
     if (!slug) return;
     const key = String(slug);
     // Anonymous + fresh SSR data already in hand — skip the redundant client fetch.
     // Signed-in users refetch so per-user unlock/ownership state (Bearer token)
     // wins over the unauthenticated SSR snapshot.
-    if (!user && loadedSlugRef.current === key && company) {
+    if (!reloadTick && !user && loadedSlugRef.current === key && company) {
       setLoading(false);
       return;
     }
@@ -148,7 +159,155 @@ export default function CompanyVaultPage({ initialCompany, initialSlug }: { init
       if (data.is_unlocked) setIsUnlocked(true);
     }).catch(() => {}).finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [slug, company, user]);
+  }, [slug, company, user, reloadTick]);
+
+  /*
+   * Everything below is hooks and hook-only derivations, and it has to sit
+   * ABOVE the `if (!company)` bail-out. `company` is null on the first render
+   * (it arrives from the fetch), so anything registered after that early return
+   * would change the hook count between renders — React tears down and rebuilds
+   * its state, and the rules-of-hooks lint is right to reject it.
+   *
+   * This is also why the line-item factories are `useCallback` and the module
+   * lists are `useMemo`. `useCartScope` re-registers whenever its argument is a
+   * new object, so an unstable `cartScope` would `setScope` -> rerender ->
+   * rebuild the object -> `setScope` again, forever.
+   */
+  const modules = useMemo(() => company?.modules || [], [company]);
+  const ownedModuleIds = useMemo(() => company?.owned_module_ids || [], [company]);
+  const premiumModules = useMemo(() => modules.filter(m => m.is_premium === true), [modules]);
+
+  // A module is "owned" if the whole vault is unlocked, or it is genuinely not
+  // premium, or it was bought on its own. Owned == readable == not re-buyable.
+  const isModuleOwned = useCallback(
+    (mod: ContentModule) => isUnlocked || mod.is_premium !== true || ownedModuleIds.includes(mod.id),
+    [isUnlocked, ownedModuleIds]
+  );
+
+  const remainingPremium = useMemo(
+    () => premiumModules.filter(m => !ownedModuleIds.includes(m.id)),
+    [premiumModules, ownedModuleIds]
+  );
+
+  const completePackItem = useCallback((): CompanyModuleItem => {
+    if (!company) throw new Error('completePackItem called before the vault loaded');
+    return {
+      kind: 'company',
+      id: company.id,
+      slug: company.slug,
+      name: company.name,
+      logo_url: company.logo_url,
+      module_ids: remainingPremium.map(m => m.id),
+      module_count: remainingPremium.length || 1,
+      price: packPrice(remainingPremium.length) || SINGLE_MODULE_PRICE,
+    };
+  }, [company, remainingPremium]);
+
+  const moduleLineItem = useCallback((mod: ContentModule): CompanyModuleItem => {
+    if (!company) throw new Error('moduleLineItem called before the vault loaded');
+    return {
+      kind: 'company',
+      id: company.id,
+      slug: company.slug,
+      name: company.name,
+      logo_url: company.logo_url,
+      module_id: mod.id,
+      module_title: mod.title,
+      round_type: mod.round_type,
+      module_count: 1,
+      price: SINGLE_MODULE_PRICE,
+    };
+  }, [company]);
+
+  /*
+   * Add lines to the shared cart and optionally reveal the drawer.
+   *
+   * The dedupe and the "a pack already covers this round" cleanup live in
+   * `CartContext.addMany`, because they are pricing rules: keeping them here
+   * meant a pack added from `/compare` and a single round added here could both
+   * survive and bill the same round twice.
+   */
+  const addToCart = useCallback((newItems: CartItem[], open = false) => {
+    addMany(newItems);
+    if (open) openOverlay('cart');
+  }, [addMany, openOverlay]);
+
+  const handleAddCompletePack = useCallback(() => {
+    if (remainingPremium.length === 0) return;
+    addToCart([completePackItem()], true);
+  }, [remainingPremium.length, addToCart, completePackItem]);
+
+  /**
+   * Module ids the shared cart already covers, whether bought singly or in a pack.
+   */
+  const cartModuleIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const item of items) for (const id of cartLineModuleIds(item)) ids.add(id);
+    return ids;
+  }, [items]);
+
+  /**
+   * How many lines belong to THIS vault.
+   *
+   * The hero used to read the page-local cart, which WAS the whole cart. Now that
+   * the cart is shared, a raw count would let a student read
+   * "Razorpay: 4 items in cart" when three of them belong to other companies —
+   * with "combo savings apply" right beside it, describing a pack that is not
+   * there.
+   */
+  const thisCompanyCartCount = useMemo(
+    () => (company ? items.filter((i) => isCompanyCartLine(i) && i.id === company.id).length : 0),
+    [items, company]
+  );
+
+  const cartScope = useMemo(
+    () => ({
+      companyName: company?.name || '',
+      // A round already in the cart must not also be offered as "you are missing
+      // this", or the drawer nags about something the student just added.
+      missingModules: premiumModules.filter(m => !isModuleOwned(m) && !cartModuleIds.has(m.id)),
+      onAddModules: (mods: ContentModule[]) =>
+        addToCart(mods.filter(m => !isModuleOwned(m)).map(moduleLineItem), true),
+      onAddCompletePack: handleAddCompletePack,
+      suggestedCompanies: allCompanies.filter(c => c.slug !== company?.slug).slice(0, 3),
+      onAddCompany: (c: Company) => {
+        const ids = (c.premium_module_ids || []).slice();
+        const count = ids.length || c.premium_module_count || 1;
+        addToCart(
+          [{
+            kind: 'company' as const,
+            id: c.id,
+            slug: c.slug,
+            name: c.name,
+            logo_url: c.logo_url,
+            module_ids: ids,
+            module_count: count,
+            price: packPrice(count),
+          }],
+          true
+        );
+      },
+      // A purchase can be completed from any route, so unlocking is refetched
+      // rather than patched — `is_unlocked` is the server's to grant.
+      onCheckoutSuccess: () => {
+        setIsUnlocked(true);
+        refetchVault();
+      },
+    }),
+    [
+      company,
+      premiumModules,
+      isModuleOwned,
+      cartModuleIds,
+      addToCart,
+      moduleLineItem,
+      handleAddCompletePack,
+      allCompanies,
+      refetchVault,
+    ]
+  );
+
+  useCartScope(cartScope);
 
   if (!company) {
     return (
@@ -156,7 +315,6 @@ export default function CompanyVaultPage({ initialCompany, initialSlug }: { init
         className="min-h-screen bg-[var(--bg-app)] text-[var(--text-body)] flex flex-col"
         style={{ fontFamily: "'Calibre', 'Calibri', 'Inter', -apple-system, sans-serif" }}
       >
-        <Header cartCount={0} onOpenCart={() => {}} onOpenSearch={() => {}} onOpenLeaderboard={() => {}} />
         <main className="flex-1 flex items-center justify-center py-24">
           <p className="text-sm text-[var(--text-muted)] animate-pulse">Loading vault...</p>
         </main>
@@ -165,14 +323,11 @@ export default function CompanyVaultPage({ initialCompany, initialSlug }: { init
     );
   }
 
-  const modules = company.modules || [];
-
   // A module is "free" only when it is genuinely not premium. Testing `price === 0`
   // here would let a zero-priced premium round hijack the free showcase slot and then
   // be filtered out of the sellable list, making it impossible to ever buy.
   const freeModules = modules.filter(m => m.is_premium !== true);
   const featuredFree = freeModules[0] || modules[0];
-  const premiumModules = modules.filter(m => m.is_premium === true);
   const filteredPremium = activeRoundTab === 'all'
     ? premiumModules
     : premiumModules.filter(m => m.round_type === activeRoundTab);
@@ -182,11 +337,6 @@ export default function CompanyVaultPage({ initialCompany, initialSlug }: { init
   const prevItem = currentIdx > 0 ? allItems[currentIdx - 1] : null;
   const nextItem = currentIdx >= 0 && currentIdx < allItems.length - 1 ? allItems[currentIdx + 1] : null;
 
-  // Per-module ownership: a user can own the whole vault (isUnlocked) or just
-  // the specific modules they bought. Owned == readable == not re-buyable.
-  const ownedModuleIds = company.owned_module_ids || [];
-  const isModuleOwned = (mod: ContentModule) => isUnlocked || mod.is_premium !== true || ownedModuleIds.includes(mod.id);
-  const remainingPremium = premiumModules.filter(m => !ownedModuleIds.includes(m.id));
   const remainingPrice = remainingPremium.length > 0 ? packPrice(remainingPremium.length) : 0;
   // Fully owned = whole vault bought, OR every premium round individually owned
   // (in which case the buy CTA must vanish instead of asking to re-buy ₹249).
@@ -241,70 +391,9 @@ export default function CompanyVaultPage({ initialCompany, initialSlug }: { init
     addToCart([completePackItem()], true);
   };
 
-  const completePackItem = (): CompanyModuleItem => ({
-    kind: 'company',
-    id: company.id,
-    slug: company.slug,
-    name: company.name,
-    logo_url: company.logo_url,
-    module_ids: remainingPremium.map(m => m.id),
-    module_count: remainingPremium.length || 1,
-    price: remainingPrice || SINGLE_MODULE_PRICE,
-  });
-
-  const moduleLineItem = (mod: ContentModule): CompanyModuleItem => ({
-    kind: 'company',
-    id: company.id,
-    slug: company.slug,
-    name: company.name,
-    logo_url: company.logo_url,
-    module_id: mod.id,
-    module_title: mod.title,
-    round_type: mod.round_type,
-    module_count: 1,
-    price: SINGLE_MODULE_PRICE,
-  });
-
-  const cartKey = (item: CartItem): string =>
-    'module_id' in item ? `m:${item.module_id}` :
-    'module_ids' in item ? `p:${item.module_ids?.join('+')}` :
-    'slug' in item ? `c:${item.slug}` :
-    `z:${(item as PricingPlan).id}`;
-
-  const addToCart = (newItems: CartItem[], open = false) => {
-    setCartItems(prev => {
-      const merged = [...prev];
-      newItems.forEach(item => {
-        const key = cartKey(item);
-        if (merged.some(p => cartKey(p) === key)) return;
-        merged.push(item);
-      });
-      // A Complete Pack already includes its member round modules — drop those
-      // redundant single lines so the cart count matches the combo pricing.
-      const packs = merged.filter((it): it is CompanyModuleItem => {
-        const ids = (it as CompanyModuleItem).module_ids;
-        return Array.isArray(ids) && ids.length > 0;
-      });
-      return merged.filter((existing) => {
-        if (!('module_id' in existing)) return true;
-        const single = existing as CompanyModuleItem;
-        const coveringPack = packs.find(p =>
-          p.id === single.id &&
-          Array.isArray(p.module_ids) &&
-          (p.module_ids as string[]).includes(single.module_id as string));
-        return !coveringPack;
-      });
-    });
-    if (open) setIsCartOpen(true);
-  };
-
   const handleAddModuleToCart = (mod: ContentModule) => {
     if (isModuleOwned(mod)) return;
     addToCart([moduleLineItem(mod)], true);
-  };
-  const handleAddCompletePack = () => {
-    if (remainingPremium.length === 0) return;
-    addToCart([completePackItem()], true);
   };
 
   const selectItem = (item: ContentItem) => {
@@ -327,12 +416,6 @@ export default function CompanyVaultPage({ initialCompany, initialSlug }: { init
         className="min-h-screen bg-[var(--bg-app)] text-[var(--text-body)] flex flex-col"
         style={{ fontFamily: "'Calibre', 'Calibri', 'Inter', -apple-system, sans-serif" }}
       >
-        <Header
-          cartCount={cartItems.length}
-          onOpenCart={() => setIsCartOpen(true)}
-          onOpenSearch={() => setIsSearchOpen(true)}
-          onOpenLeaderboard={() => setIsLeaderboardOpen(true)}
-        />
 
         {selectedModule ? (
           <CompanyModuleReader
@@ -671,25 +754,25 @@ export default function CompanyVaultPage({ initialCompany, initialSlug }: { init
                   <span className="ml-2 bg-[var(--brand-accent)] text-[#241A06] text-[11px] font-bold px-2 py-0.5 rounded">₹{remainingPrice}</span>
                 </p>
                 <p className="text-[11px] text-white/90 mt-1 truncate">
-                  {cartItems.length > 0
-                    ? `${company.name}: ${cartItems.length} item${cartItems.length === 1 ? '' : 's'} in cart · combo savings apply`
+                  {thisCompanyCartCount > 0
+                    ? `${company.name}: ${thisCompanyCartCount} item${thisCompanyCartCount === 1 ? '' : 's'} in cart · combo savings apply`
                     : ownedModuleIds.length > 0
                       ? 'Buy the remaining rounds at the combo pack price — no re-purchasing what you already own.'
                       : '45+ verified questions · code solutions · system design guides'}
                 </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                {cartItems.length > 0 && (
-                  <span className="inline-flex items-center min-w-[2rem] h-7 px-2 rounded-full bg-white/15 text-white text-[11px] font-bold border border-white/20" title="Items in cart">
-                    <ShoppingBag className="w-3.5 h-3.5 mr-1" />{cartItems.length}
+                {thisCompanyCartCount > 0 && (
+                  <span className="inline-flex items-center min-w-[2rem] h-7 px-2 rounded-full bg-white/15 text-white text-[11px] font-bold border border-white/20" title="Items in cart for this vault">
+                    <ShoppingBag className="w-3.5 h-3.5 mr-1" />{thisCompanyCartCount}
                   </span>
                 )}
                 <button
-                  onClick={() => (cartItems.length > 0 ? setIsCartOpen(true) : handleUnlockClick())}
+                  onClick={() => (thisCompanyCartCount > 0 ? openOverlay('cart') : handleUnlockClick())}
                   className="inline-flex items-center justify-center gap-2 min-h-[46px] px-5 sm:px-6 py-2.5 bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[#241A06] text-[13px] sm:text-sm font-bold rounded-xl transition-colors"
                 >
                   <Sparkles className="w-4 h-4 shrink-0" />
-                  <span>{cartItems.length > 0 ? 'Checkout →' : 'Unlock Now'}</span>
+                  <span>{thisCompanyCartCount > 0 ? 'Checkout →' : 'Unlock Now'}</span>
                 </button>
               </div>
             </div>
@@ -697,29 +780,6 @@ export default function CompanyVaultPage({ initialCompany, initialSlug }: { init
         )}
 
         {/* MODALS */}
-        <CartModal
-          isOpen={isCartOpen}
-          items={cartItems}
-          companyName={company.name}
-          missingModules={premiumModules.filter(m => !isModuleOwned(m) && !cartItems.some(i => {
-            if ('module_id' in i && i.module_id === m.id) return true;
-            const ids = (i as CompanyModuleItem).module_ids;
-            return Array.isArray(ids) && ids.includes(m.id);
-          }))}
-          onClose={() => setIsCartOpen(false)}
-          onRemoveItem={idx => setCartItems(cartItems.filter((_, i) => i !== idx))}
-          onAddModules={mods => addToCart(mods.filter(m => !isModuleOwned(m)).map(moduleLineItem), true)}
-          onAddCompletePack={handleAddCompletePack}
-          suggestedCompanies={allCompanies.filter(c => c.slug !== company.slug).slice(0, 3)}
-          onAddCompany={c => {
-            const ids = (c.premium_module_ids || []).slice();
-            const count = ids.length || c.premium_module_count || 1;
-            addToCart([{ kind: 'company', id: c.id, slug: c.slug, name: c.name, logo_url: c.logo_url, module_ids: ids, module_count: count, price: packPrice(count) }], true);
-          }}
-          onCheckoutSuccess={() => { setIsUnlocked(true); setIsCartOpen(false); }}
-        />
-        <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
-        <LeaderboardModal isOpen={isLeaderboardOpen} onClose={() => setIsLeaderboardOpen(false)} />
         <SubmitReportModal
           isOpen={isSubmitReportOpen}
           companyName={company.name}

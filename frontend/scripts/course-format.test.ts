@@ -12,6 +12,7 @@ import {
   compactCount,
   courseCta,
   courseCover,
+  courseIncludes,
   formatDuration,
   formatEnrolled,
   formatLessonCount,
@@ -334,11 +335,90 @@ check('plainText collapses newlines into single spaces', () => {
   eq(plainText('a\n\n\nb'), 'a b');
 });
 
-check('plainText on empty input is empty, not "undefined"', () => {
-  eq(plainText(null), '');
-  eq(plainText(''), '');
-  eq(plainText(undefined), '');
-});
+  check('plainText on empty input is empty, not "undefined"', () => {
+    eq(plainText(null), '');
+    eq(plainText(''), '');
+    eq(plainText(undefined), '');
+  });
 
-console.log(`\ncourseFormat: ${pass} passed, ${fail} failed`);
-if (fail > 0) process.exit(1);
+  /**
+   * The enrolment card's list is the one place on the page that makes promises
+   * in a buyer's voice, so its failure mode is the worst one available: claiming
+   * something the course does not have. These pin that it stays silent instead.
+   *
+   * Compared as JSON because `eq` is a strict `!==`, which two separate empty
+   * arrays can never satisfy - "no claims" is exactly the assertion that matters
+   * most here, so it must not be the one that cannot be written.
+   */
+  const list = (actual: unknown, expected: string[], note = '') =>
+    eq(JSON.stringify(actual), JSON.stringify(expected), note);
+
+  check('courseIncludes describes a fully populated course', () => {
+    // `formatDuration` rounds the hour up when the leftover is 40 minutes or more,
+    // so 105 minutes reads "2 hr" - the same figure the hero shows.
+    list(
+      courseIncludes({
+        stats: { module_count: 3, lesson_count: 7, total_minutes: 105 },
+        challenge_count: 5,
+        certificate_eligible: true,
+        caption_language: 'English',
+      }),
+      ['3 modules', '7 lessons', '2 hr of material', '5 graded challenges', 'Certificate on completion', 'Captions in English']
+    );
+  });
+
+  check('courseIncludes omits a certificate the course cannot issue', () => {
+    const items = courseIncludes({
+      stats: { module_count: 2, lesson_count: 4, total_minutes: 60 },
+      certificate_eligible: false,
+    });
+    eq(items.some((i) => /Certificate/i.test(i)), false);
+  });
+
+  check('courseIncludes omits captions when there are none', () => {
+    const items = courseIncludes({
+      stats: { module_count: 2, lesson_count: 4, total_minutes: 60 },
+      caption_language: null,
+    });
+    eq(items.some((i) => /Caption/i.test(i)), false);
+  });
+
+  check('courseIncludes never renders a zero count as a number', () => {
+    list(
+      courseIncludes({ stats: { module_count: 0, lesson_count: 0, total_minutes: 0 } }),
+      [],
+      'a course with nothing counted must claim nothing'
+    );
+  });
+
+  check('courseIncludes does not pluralise a single challenge', () => {
+    const items = courseIncludes({
+      stats: { module_count: 1, lesson_count: 1, total_minutes: 5 },
+      challenge_count: 1,
+    });
+    eq(items.includes('1 graded challenge'), true);
+    eq(items.includes('1 graded challenges'), false);
+  });
+
+  check('courseIncludes on a course with no stats is empty, not broken', () => {
+    list(courseIncludes({}), []);
+    list(courseIncludes(null), []);
+    list(courseIncludes(undefined), []);
+  });
+
+  check('courseIncludes ignores a challenge count of zero', () => {
+    const items = courseIncludes({
+      stats: { module_count: 2, lesson_count: 4, total_minutes: 30 },
+      challenge_count: 0,
+    });
+    eq(items.some((i) => /challenge/i.test(i)), false);
+  });
+
+  check('courseIncludes says minutes, not a rounded hour, for a short course', () => {
+    const items = courseIncludes({ stats: { module_count: 1, lesson_count: 2, total_minutes: 45 } });
+    eq(items.includes('45 min of material'), true);
+  });
+
+  console.log(`\ncourseFormat: ${pass} passed, ${fail} failed`);
+  if (fail > 0) process.exit(1);
+

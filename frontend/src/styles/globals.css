@@ -59,6 +59,30 @@
 
   --sidebar-width: 270px;
   --max-article: 100%;
+
+  /* ---------------------------------------------------------------
+     CHROME GEOMETRY
+     The header and the bottom tab bar are fixed-height, so every
+     page-level sticky bar that wants to pin *under* the header needs
+     the height rather than a hardcoded 64px. Five sub-bars (module
+     reader, study plan, both compare views) were all `sticky top-0`
+     with a lower z-index, so each one slid underneath the nav and
+     became invisible after a single scroll. They now offset by these
+     vars instead.
+     --------------------------------------------------------------- */
+  --header-h: 64px;
+  --header-h-sm: 56px;
+  --tabbar-h: 56px;
+
+  /* ---------------------------------------------------------------
+     AMBER TEXT/FILL PAIR
+     The cart badge and the leaderboard icon were both using raw
+     `#241A06` and `#B45309`. Amber is the money colour in this
+     palette, so it now has a proper text-on-fill and text-on-white
+     pair instead of literals scattered through the chrome.
+     --------------------------------------------------------------- */
+  --accent-ink: #241A06;   /* text sitting on a --brand-accent fill */
+  --amber-deep: #B45309;   /* amber text sitting on white/sky-soft */
 }
 
 /* ============================================
@@ -177,6 +201,302 @@ body {
   background: var(--bg-surface);
   color: var(--text-body);
   transition: border-color var(--motion-fast) var(--ease-out), color var(--motion-fast) var(--ease-out), background var(--motion-fast) var(--ease-out);
+}
+
+/* ============================================
+   NAVIGATION CHROME
+   Desktop command bar, mobile drawer, bottom tab bar and the overlays
+   they open. Kept as a component layer (rather than utility soup in
+   each file) so the three surfaces cannot drift apart again, and so
+   the active-state treatment is defined exactly once.
+   ============================================ */
+
+/* --- Desktop nav link ---------------------------------------------------
+   Active state is a sky-soft pill plus a 2px sky bar on the bottom edge.
+   One treatment, applied wherever `aria-current="page"` is set, so the
+   desktop bar, the drawer rows and the palette can never disagree about
+   which page the user is on. */
+.nav-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--text-body);
+  white-space: nowrap;
+  transition: background var(--motion-fast) var(--ease-out), color var(--motion-fast) var(--ease-out);
+}
+.nav-link:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-heading);
+}
+.nav-link:focus-visible {
+  outline: 2px solid var(--brand-sky);
+  outline-offset: 3px;
+}
+.nav-link[aria-current='page'] {
+  background: var(--brand-sky-soft);
+  color: var(--brand-sky);
+  font-weight: 700;
+}
+.nav-link[aria-current='page']::after {
+  content: '';
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 2px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--brand-sky);
+}
+
+/* The free-course acquisition hook. A small chip, not a louder colour —
+   amber is reserved for money in this palette. */
+.nav-link-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #E9F6EE;
+  color: #15803D;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+}
+
+/* --- Icon-only control --------------------------------------------------
+   40px on pointer, 44px on coarse pointers. A 40px hit area is the
+   floor for a mouse; anything smaller is a miss for a thumb. */
+.icon-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  color: var(--text-body);
+  transition: background var(--motion-fast) var(--ease-out), color var(--motion-fast) var(--ease-out);
+}
+.icon-btn:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-heading);
+}
+.icon-btn:focus-visible {
+  outline: 2px solid var(--brand-sky);
+  outline-offset: 3px;
+}
+@media (pointer: coarse) {
+  .icon-btn { width: 44px; height: 44px; }
+}
+
+/* --- Count badge --------------------------------------------------------
+   Was `text-[10px]` on a 16px circle, which is below the portal's
+   typography floor and below the smallest reliably-readable badge. */
+.chrome-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--brand-accent);
+  color: var(--accent-ink);
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  box-shadow: var(--shadow-xs);
+}
+.chrome-badge--info { background: var(--color-error); color: #fff; }
+
+/* Unread dot on the notification bell. The accessible count lives in the
+   trigger's aria-label, so the dot itself is decorative. */
+.chrome-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--color-error);
+  box-shadow: 0 0 0 2px var(--bg-surface);
+}
+
+/* --- Search field -------------------------------------------------------
+   Widens on focus rather than on hover alone: a hover-only expansion reads
+   as a button to keyboard users, and this has to read as a text field. */
+.nav-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  width: 224px;
+  padding: 0 10px 0 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: var(--shadow-xs);
+  color: var(--text-muted);
+  transition: width var(--motion-base) var(--ease-out), border-color var(--motion-fast) var(--ease-out), background var(--motion-fast) var(--ease-out);
+}
+.nav-search:hover { border-color: var(--border-strong); color: var(--text-body); }
+.nav-search:focus-within {
+  width: 320px;
+  border-color: var(--brand-sky);
+  background: var(--bg-surface);
+  color: var(--brand-sky);
+}
+.nav-search:focus-visible { outline: 2px solid var(--brand-sky); outline-offset: 3px; }
+.nav-search kbd {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 6px;
+  border-radius: var(--radius-xs);
+  background: rgba(16, 21, 28, 0.05);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+/* --- Mobile tab bar ----------------------------------------------------- */
+.tab-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  display: flex;
+  align-items: stretch;
+  justify-content: space-around;
+  gap: 2px;
+  height: var(--tabbar-h);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  border-top: 1px solid var(--border-subtle);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+}
+.tab-slot {
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 56px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 6px 2px;
+  color: var(--text-muted);
+  transition: color var(--motion-fast) var(--ease-out);
+}
+.tab-slot:hover { color: var(--text-heading); }
+.tab-slot:focus-visible { outline: 2px solid var(--brand-sky); outline-offset: -4px; }
+.tab-slot span {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.tab-slot[aria-current='page'],
+.tab-slot[data-active='true'] {
+  color: var(--brand-sky);
+}
+.tab-slot[aria-current='page']::before,
+.tab-slot[data-active='true']::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 26px;
+  height: 2px;
+  border-radius: 0 0 2px 2px;
+  background: var(--brand-sky);
+}
+
+/* --- Drawer row ---------------------------------------------------------
+   48px minimum, because a drawer row is a touch target first and a label
+   second. The old rows were 44px with no description line. */
+.nav-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  text-align: left;
+  color: var(--text-body);
+  transition: background var(--motion-fast) var(--ease-out), color var(--motion-fast) var(--ease-out);
+}
+.nav-row:hover { background: var(--bg-surface-hover); color: var(--text-heading); }
+.nav-row:focus-visible { outline: 2px solid var(--brand-sky); outline-offset: -2px; }
+.nav-row[aria-current='page'] {
+  background: var(--brand-sky-soft);
+  color: var(--brand-sky);
+}
+.nav-row[aria-current='page']::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--brand-sky);
+}
+.nav-row-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border-radius: var(--radius-sm);
+  background: var(--brand-sky-soft);
+  color: var(--brand-sky);
+}
+.nav-row[aria-current='page'] .nav-row-icon {
+  background: #fff;
+  color: var(--brand-sky);
+}
+.nav-row-label {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.nav-row-desc {
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+.nav-row[aria-current='page'] .nav-row-desc { color: var(--brand-sky); }
+
+/* Drawer section header. `text-xs`, not the 10px micro-caps the chrome
+   used to carry. */
+.nav-group-label {
+  padding: 0 12px;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
 }
 
 /* Hero mesh (soft gradient grain backdrop) */
@@ -642,7 +962,11 @@ code, pre, kbd, samp, .font-mono {
   .animate-marquee,
   .animate-fade-in,
   .animate-slide-in-right,
-  .sidebar-drawer {
+  .animate-slide-up-chrome,
+  .animate-fade-out-fast,
+  .nav-drawer,
+  .sidebar-drawer,
+  .tab-bar {
     animation: none !important;
   }
   .vault-card:hover,
@@ -718,6 +1042,38 @@ code, pre, kbd, samp, .font-mono {
   to { transform: translateX(0); }
 }
 .animate-slide-in-right { animation: slide-in-right 260ms cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+
+/* --- Navigation chrome -------------------------------------------------
+   The drawer opens from the right like the cart, the popovers rise from
+   their trigger, and the tab bar lifts in once on mount. All three are
+   in the reduced-motion list above, so under that preference they become
+   instant state changes rather than movement. */
+@keyframes slide-up-chrome {
+  from { opacity: 0; transform: translateY(8px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-slide-up-chrome {
+  animation: slide-up-chrome 180ms var(--ease-out);
+  transform-origin: top right;
+}
+
+@keyframes tab-bar-rise {
+  from { opacity: 0; transform: translateY(100%); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.tab-bar { animation: tab-bar-rise 240ms var(--ease-out); }
+
+@keyframes fade-out-fast {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+.animate-fade-out-fast { animation: fade-out-fast 140ms ease forwards; }
+
+@keyframes drawer-backdrop {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.nav-drawer { animation: drawer-backdrop 200ms ease; }
 
 /* ============================================
    COURSE ANIMATION KEYFRAMES

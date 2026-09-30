@@ -59,7 +59,7 @@ export interface CatalogQuery {
   q: string;
   category: string[];
   tag: string[];
-  type: ('free' | 'paid')[];
+  type: string[];
   level: string[];
   sort: CatalogSort;
   page: number;
@@ -87,9 +87,16 @@ export function parseCatalogQuery(query: Record<string, unknown>): CatalogQuery 
 
   return {
     q: String(query.q || '').trim().toLowerCase().slice(0, 120),
-    category: toList(query.category),
-    tag: toList(query.tag),
-    type: toList(query.type).filter((t): t is 'free' | 'paid' => t === 'free' || t === 'paid'),
+      category: toList(query.category),
+      tag: toList(query.tag),
+      // Raw tokens are kept rather than filtered down to the two valid ones.
+      //
+      // Dropping an unrecognised value silently turns `?type=theory` into "no
+      // type filter at all", so the page answers with the whole catalogue while
+      // the URL claims a filter is active — the exact symptom of a filter that
+      // "does not work". Keeping the token lets it match no course, the same way
+      // an unknown `level` already behaves, so all four groups answer alike.
+      type: toList(query.type),
     level: toList(query.level),
     sort: isCatalogSort(sortRaw) ? sortRaw : 'popular',
     page: Number.isFinite(pageRaw) && pageRaw >= 1 ? Math.floor(pageRaw) : 1,

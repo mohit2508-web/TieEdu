@@ -14,6 +14,7 @@
 import { Course, ContentBlockRecord } from './db';
 import { getCProgrammingCourse } from './cCourse';
 import { getPythonProgrammingCourse } from './pythonCourse';
+import { getAdvancedDataStructuresCourse } from './adsCourse';
 
 let blockSeq = 0;
 const blk = (
@@ -972,5 +973,9 @@ Pass this and the course is complete: you will be able to download your TieEdu c
     },
     getCProgrammingCourse(),
     getPythonProgrammingCourse(),
+    // The one paid course. It is seeded so the purchase path is exercised against
+    // a genuinely stored price rather than a fixture, and so the `paid` filter in
+    // the catalogue has something real to return.
+    getAdvancedDataStructuresCourse(),
   ];
 }

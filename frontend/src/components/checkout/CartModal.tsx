@@ -6,25 +6,13 @@ import {
   getCheckoutPaymentInfoApi, verifyRazorpayPaymentApi, fetchActiveCouponsApi,
 } from '@/lib/api';
 import { summarizePackItems, isCompanyItem, isModuleItem, isCourseItem, SINGLE_MODULE_PRICE, COMPLETE_PACK_PRICE, packPrice } from '@/lib/packPricing';
+import { useCart } from '@/context/CartContext';
+import { useShell } from '@/context/ShellContext';
 import {
   X, ShoppingBag, Lock, ShieldCheck, CheckCircle2, Trash2,
   Tag, ArrowRight, Sparkles, RefreshCw, PartyPopper, Layers, Zap,
   Copy, ArrowLeft, Hourglass, AlertTriangle, QrCode
 } from 'lucide-react';
-
-interface CartModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  items: CartItem[];
-  companyName?: string;
-  missingModules?: ContentModule[];
-  onRemoveItem: (index: number) => void;
-  onAddModules?: (modules: ContentModule[]) => void;
-  onAddCompletePack?: () => void;
-  suggestedCompanies?: Company[];
-  onAddCompany?: (company: Company) => void;
-  onCheckoutSuccess: () => void;
-}
 
 const inputCls = "w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-[#FAFAF9] focus:outline-none focus:ring-2 focus:ring-[#0284C7] focus:bg-white";
 
@@ -36,19 +24,31 @@ const ROUND_CHIP: Record<string, string> = {
   Managerial: 'bg-teal-100 text-teal-700',
 };
 
-export const CartModal: React.FC<CartModalProps> = ({
-  isOpen,
-  onClose,
-  items,
-  companyName = 'your',
-  missingModules = [],
-  onRemoveItem,
-  onAddModules,
-  onAddCompletePack,
-  suggestedCompanies = [],
-  onAddCompany,
-  onCheckoutSuccess
-}) => {
+/**
+ * The cart drawer is mounted once, globally, by `AppShell`.
+ *
+ * It used to be rendered by every page with its own `items` array and eight
+ * props, which meant the drawer a student opened from `/compare` knew nothing
+ * about the rounds they had added on a company page. Everything it needs now
+ * comes from `CartContext` (lines + page-registered cross-sell) and
+ * `ShellContext` (visibility), so the cart behaves the same on every route.
+ */
+export const CartModal: React.FC = () => {
+  const { items, remove, clear, scope } = useCart();
+  const { isOpen, closeOverlay } = useShell();
+  const {
+    companyName = 'your',
+    missingModules = [],
+    onAddModules,
+    onAddCompletePack,
+    suggestedCompanies = [],
+    onAddCompany,
+    onCheckoutSuccess,
+  } = scope;
+
+  const isOpenNow = isOpen('cart');
+  const onClose = () => closeOverlay('cart');
+
   const [couponCode, setCouponCode] = useState('');
   const [appliedCouponCode, setAppliedCouponCode] = useState('');
   const [discount, setDiscount] = useState(0);
@@ -80,7 +80,7 @@ export const CartModal: React.FC<CartModalProps> = ({
 
   // Load merchant UPI settings + live coupon chips when the drawer opens.
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpenNow) return;
     let cancelled = false;
     getCheckoutPaymentInfoApi().then((info) => {
       if (cancelled) return;
@@ -92,18 +92,18 @@ export const CartModal: React.FC<CartModalProps> = ({
       if (!cancelled) setActiveCoupons(data || []);
     }).catch(() => { /* no coupon chips */ });
     return () => { cancelled = true; };
-  }, [isOpen]);
+  }, [isOpenNow]);
 
   // Reset per-open state (order/step) so reopening never shows a stale order.
   useEffect(() => {
-    if (isOpen) {
+    if (isOpenNow) {
       setStep('cart');
       setOrder(null);
       setPayError(null);
       setCopied(false);
       if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
     }
-  }, [isOpen]);
+  }, [isOpenNow]);
 
   useEffect(() => () => { if (pollRef.current) clearInterval(pollRef.current); }, []);
 
@@ -191,7 +191,19 @@ export const CartModal: React.FC<CartModalProps> = ({
     stopPolling();
     setStep('cart');
     setTimeout(() => {
-      onCheckoutSuccess();
+      /*
+       * Emptied here, centrally, rather than in each page's `onCheckoutSuccess`.
+       *
+       * The cart is now shared and checkout can be started from any route, so a
+       * page-level clear was never enough: only `/compare` cleared, which meant a
+       * purchase finished from a vault or a course page left the paid lines in
+       * the cart, and the next checkout attempt re-submitted them.
+       *
+       * The page callback still runs — it refetches what it owns (unlock state,
+       * company list, course record) — but it no longer owns cart lifetime.
+       */
+      clear();
+      onCheckoutSuccess?.();
       onClose();
       setOrder(null);
       setDiscount(0);
@@ -305,7 +317,7 @@ export const CartModal: React.FC<CartModalProps> = ({
     setPayError(null);
   };
 
-  if (!isOpen) return null;
+  if (!isOpenNow) return null;
 
   return (
     <>
@@ -561,7 +573,7 @@ export const CartModal: React.FC<CartModalProps> = ({
                       </div>
                       <div className="flex items-center gap-3 shrink-0">
                         <span className="font-bold text-sm text-[#1F3A5F]">₹{price}</span>
-                        <button onClick={() => onRemoveItem(idx)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Remove item">
+                        <button onClick={() => remove(idx)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Remove item">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>

@@ -41,7 +41,7 @@ export const CompareCompanyCards: React.FC<{
   return (
     <div className="space-y-3">
       {/* Sticky company switcher */}
-      <div className="sticky top-0 z-30 -mx-4 px-4 py-2 bg-[#FAFAF9]/95 backdrop-blur border-b border-[#EDEDEB]">
+      <div className="sticky top-[var(--header-h)] z-30 -mx-4 px-4 py-2 bg-[#FAFAF9]/95 backdrop-blur border-b border-[#EDEDEB]">
         <div className="flex gap-1.5 overflow-x-auto no-scrollbar" role="tablist" aria-label="Company to compare">
           {companies.map((c) => {
             const on = c.slug === active.slug;

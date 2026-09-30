@@ -8,7 +8,6 @@ import {
   LogOut, ArrowUpRight, CheckCircle2, Clock, XCircle, GraduationCap, KeyRound,
   Camera, Pencil, Save, X,
 } from 'lucide-react';
-import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { RequireAuth } from '@/components/auth/RequireAuth';
 import { useAuth } from '@/context/AuthContext';
@@ -320,7 +319,6 @@ const AccountPageContent: React.FC = () => {
       </Head>
 
       <div className="min-h-screen flex flex-col bg-[#FAFAF8] text-[#10151C]">
-        <Header cartCount={0} onOpenCart={() => {}} onOpenSearch={() => {}} onOpenLeaderboard={() => {}} />
 
         <main className="flex-1 w-full max-w-[1280px] mx-auto px-4 sm:px-8 lg:px-12 py-10 space-y-10">
           {error && (

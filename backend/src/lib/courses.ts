@@ -223,16 +223,32 @@ export function slugify(input: string, fallback = 'course'): string {
 
 export function uniqueSlug(db: any, desired: string, ignoreCourseId?: string): string {
   const base = slugify(desired);
-  let slug = base;
+
+  const isTaken = (candidate: string) =>
+    (db.courses || []).some((c: Course) => c.slug === candidate && c.id !== ignoreCourseId);
+
+  /**
+   * The collision test has to be re-run for every candidate.
+   *
+   * It used to be hoisted out of the loop and captured in a `const taken`, so the
+   * value never changed: the first duplicate found made the `while` spin forever
+   * instead of advancing to `base-2`, `base-3`, and so on. Because Node runs this
+   * on the main thread, that busy loop did not just fail the one request - it
+   * wedged the entire API process, so every other learner and admin request
+   * stopped responding too, and the only way out was restarting the server.
+   *
+   * It is reached by entirely ordinary admin actions: creating a course whose slug
+   * is already taken, renaming a course onto another course's slug, or duplicating
+   * the same course twice.
+   */
+  if (!isTaken(base)) return base;
+
   let n = 2;
-  const taken = (db.courses || []).some(
-    (c: Course) => c.slug === slug && c.id !== ignoreCourseId
-  );
-  while (taken) {
-    slug = `${base}-${n}`;
+  for (;;) {
+    const candidate = `${base}-${n}`;
+    if (!isTaken(candidate)) return candidate;
     n += 1;
   }
-  return slug;
 }
 
 export function findLesson(db: any, lessonId: string) {
@@ -282,15 +298,42 @@ export function sanitizeQuizForLearner(quiz: NonNullable<CourseLesson['quiz']>) 
 
 export function sanitizeLesson<T extends CourseLesson>(lesson: T): Omit<T, 'quiz'> & {
   quiz?: { id: string; question_count: number; passing_percent: number } | null;
+  kind: string;
+  has_video: boolean;
+  has_quiz: boolean;
 } {
   const { quiz, ...rest } = lesson;
   // The embed src is derived here so the player does not have to reimplement
   // provider rules (privacy flags, nocookie, Vimeo path shape) and get one of
   // them subtly wrong.
   const view = { ...rest, video: lesson.video ? { ...lesson.video, embed_url: embedUrlFor(lesson.video) } : null };
-  if (!quiz) return { ...view, quiz: null };
+
+  // The lesson's MEDIUM, derived here rather than stored.
+  //
+  // `kind` is what the syllabus draws an icon from, and `has_video`/`has_quiz`
+  // are what the stats row reads, so they have to be present on EVERY lesson the
+  // API returns - open or locked. `lockedLessonStub` builds its own object for
+  // locked lessons, and when this triple lived only there, the first (always
+  // unlocked) lesson of a free course came back without them and rendered with a
+  // blank icon. These are type flags, not content, so publishing them on an open
+  // lesson discloses nothing that the locked stub already states.
+  //
+  // It used to be `video ? 'video' : quiz ? 'quiz' : 'reading'`, on the reasoning
+  // that a lesson shipping both is "played as a quiz". That conflated the medium
+  // with an attribute of it. Across all 109 seeded lessons there is not one that
+  // is a quiz and nothing else: 104 reading lessons carry a quiz *and* teaching
+  // blocks, and 3 are video. So the old expression labelled 104 reading lessons
+  // as quizzes and gave the syllabus a quiz icon for material the learner reads.
+  // Whether a lesson is assessable is `has_quiz`, which is reported separately and
+  // is what the challenge counts come from - it does not need to be a second kind.
+  const kind = lesson.video ? 'video' : 'reading';
+
+  if (!quiz) return { ...view, kind, has_video: !!lesson.video, has_quiz: false, quiz: null };
   return {
     ...view,
+    kind,
+    has_video: !!lesson.video,
+    has_quiz: true,
     quiz: {
       id: quiz.id,
       question_count: quiz.questions.length,

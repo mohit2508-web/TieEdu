@@ -163,6 +163,48 @@ export function formatPrice(priceInr: number | null | undefined): string {
   return `₹${groupIndian(String(amount))}`;
 }
 
+/** The counts the enrolment card is allowed to describe itself with. */
+export type CourseIncludesInput = {
+  stats?: Pick<CourseStats, 'module_count' | 'lesson_count' | 'total_minutes'> | null;
+  challenge_count?: number | null;
+  certificate_eligible?: boolean | null;
+  caption_language?: string | null;
+};
+
+/**
+ * What the enrolment card says the learner gets.
+ *
+ * Every entry is *omitted* when the course has no such thing, rather than
+ * rendered as zero or as a generic promise. That is the whole point: a card that
+ * lists "Certificate on completion" for a course that cannot issue one is worse
+ * than no card, because the learner finds out at the end. The same rule drives
+ * the "real numbers only" behaviour in the formatters above.
+ *
+ * Accepts the narrow `CourseIncludesInput` rather than a whole `CourseDetail` so
+ * a caller cannot quietly depend on fields this does not read.
+ */
+export function courseIncludes(course: CourseIncludesInput | null | undefined): string[] {
+  if (!course) return [];
+  const items: string[] = [];
+
+  const modules = course.stats?.module_count ?? 0;
+  const lessons = course.stats?.lesson_count ?? 0;
+  if (modules > 0) items.push(formatModuleCount(course.stats));
+  if (lessons > 0) items.push(formatLessonCount(course.stats));
+
+  const mins = formatDuration(course.stats?.total_minutes);
+  if (mins) items.push(`${mins} of material`);
+
+  const challenges = course.challenge_count ?? 0;
+  if (challenges > 0) {
+    items.push(`${challenges} graded ${challenges === 1 ? 'challenge' : 'challenges'}`);
+  }
+  if (course.certificate_eligible) items.push('Certificate on completion');
+  if (course.caption_language) items.push(`Captions in ${course.caption_language}`);
+
+  return items;
+}
+
 /**
  * The call-to-action on a catalogue card.
  *

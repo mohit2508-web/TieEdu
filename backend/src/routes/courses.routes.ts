@@ -17,7 +17,7 @@
 
 import { Request, Response } from 'express';
 import { Router } from 'express';
-import { loadDb, saveDb, Course, CourseLesson, Certificate, CourseFeedback } from '../data/db';
+import { loadDb, saveDb, Course, CourseLesson, Certificate, CourseFeedback, Instructor } from '../data/db';
 import { optionalAuth, requireAuth, rateLimit } from '../middleware/auth';
 import { awardAndCommit, levelFor, totalXpForUser, xpHistory, XP } from '../lib/xp';
 import {
@@ -53,6 +53,7 @@ import {
 } from '../lib/catalog';
 import {
   buildCertificatePdf,
+  publicKeyBundle,
   signCertificate,
   verificationUrlFor,
   verifyCertificate,
@@ -122,6 +123,11 @@ function playerLessonView(progress: any, lesson: CourseLesson) {
  * claimed the gate was holding.
  */
 function lockedLessonStub(lesson: CourseLesson, progress: any, lockReason = '') {
+  // The type flags come from `sanitizeLesson` so an open lesson and a locked one
+  // report the same `kind`/`has_video`/`has_quiz` for the same lesson. They were
+  // duplicated here once and the open branch drifted, which is how the first
+  // lesson of a free course ended up rendering without an icon.
+  const { kind, has_video, has_quiz } = sanitizeLesson(lesson);
   return {
     id: lesson.id,
     module_id: lesson.module_id,
@@ -129,9 +135,9 @@ function lockedLessonStub(lesson: CourseLesson, progress: any, lockReason = '') 
     summary: lesson.summary,
     sort_order: lesson.sort_order,
     duration_minutes: lesson.duration_minutes,
-    kind: lesson.video ? 'video' : lesson.quiz ? 'quiz' : 'reading',
-    has_video: !!lesson.video,
-    has_quiz: !!lesson.quiz,
+    kind,
+    has_video,
+    has_quiz,
     // Deliberately absent: blocks, video, quiz.
     state: lessonCompletionState(progress, lesson),
     locked: true,
@@ -156,50 +162,129 @@ function courseView(db: any, userId: string | null, course: Course, role?: strin
       )
     : undefined;
 
-  return {
-    ...sanitizeCourse(course),
-    outcomes: course.outcomes || [],
-    thumbnail_url: course.thumbnail_url,
-    created_at: course.created_at,
-    updated_at: course.updated_at,
-    modules: orderedModules(course).map((m) => ({
-      ...m,
-      lessons: (m.lessons || [])
-        .slice()
-        .sort((a, b) => a.sort_order - b.sort_order)
-        .map((l) => {
-          // Same rule as the single-lesson route: the syllabus is public, the
-          // teaching content is not, until the learner reaches it in order.
-          //
-          // `isLessonUnlocked` opens the first lesson unconditionally, so a
-          // signed-out visitor to a FREE course does receive lesson 1's blocks
-          // here. That is intentional — it is the course's public sample, and
-          // smokeCourses.ts asserts it on purpose. It is not a hole: the
-          // `access.granted` branch below short-circuits first, so on a paid
-          // course a signed-out visitor gets stubs for every lesson, sample
-          // included.
-          const gate = isLessonUnlocked(progress, course, l.id);
-          // A locked-by-purchase lesson is also a stub, and for the same reason:
-          // the blocks contain the teaching content and the video object holds
-          // the URL. Browsing the syllabus must not hand over the course.
-          if (!access.granted) return lockedLessonStub(l, progress, access.reason || 'Enrol to unlock.');
-          return gate.unlocked
-            ? lessonView(progress, l)
-            : lockedLessonStub(l, progress, gate.reason);
-        }),
-    })),
-    stats: courseStats(course),
-    // Same derived numbers the card shows, so the detail hero and the catalogue
-    // row can never disagree about how many learners or what rating.
-    signals: courseSignalsFor(db, [course]).get(course.id) || null,
-    progress: state,
-    access,
-    // Enough for the client to render the right button without a second request.
-    certificate: own ? presentCertificate(db, own) : null,
-    certificate_eligible: course.certificate_eligible,
-    lock_reason: userId ? courseLockReason(db, userId, course) : null,
-  };
+    const view: any = {
+      ...sanitizeCourse(course),
+      outcomes: course.outcomes || [],
+      thumbnail_url: course.thumbnail_url,
+      created_at: course.created_at,
+      updated_at: course.updated_at,
+
+      /**
+       * The long-form page sections.
+       *
+       * The admin form always sends these keys, including when it is clearing one,
+       * so an emptied field is stored as `''` or `[]` rather than being absent.
+       * That makes "never written" and "written and then cleared" the same stored
+       * value, which is fine, but it also means the page must be told to hide the
+       * heading: an empty "Pre-requisites" block with no bullets under it reads as
+       * a bug, and a placeholder bullet would be invented content.
+       *
+       * So they are stripped here, after the spread. Doing it with conditional
+       * spreads above would not work, because `sanitizeCourse` copies every stored
+       * field via `...course` - the empty key is already present by the time any
+       * conditional runs, and the client sees a key it should have been able to
+       * treat as absent. An earlier version of this code used exactly that
+       * approach and the keys still shipped.
+       */
+
+      /**
+       * The instructor, or `null`.
+       *
+       * Derived here rather than stored on the course so renaming or correcting
+       * a biography fixes every course at once. `null` when the course has no
+       * instructor assigned, which is the correct rendering for "unknown" and is
+       * not the same as an empty object.
+       */
+      instructor: (() => {
+        if (!course.instructor_id) return null;
+        const i = ((db.instructors || []) as Instructor[]).find((x) => x.id === course.instructor_id);
+        if (!i) return null;
+        return {
+          id: i.id,
+          name: i.name,
+          title: i.title || '',
+          bio: i.bio || '',
+          photo_url: i.photo_url || '',
+          // Counts come from the data; claims about the person come from the
+          // record. All are nullable and the page omits the ones that are null.
+          course_count: ((db.courses || []) as Course[]).filter((c) => c.instructor_id === i.id).length,
+          students_taught: typeof i.students_taught === 'number' ? i.students_taught : null,
+          hours_lectured: typeof i.hours_lectured === 'number' ? i.hours_lectured : null,
+          rating: typeof i.rating === 'number' ? i.rating : null,
+        };
+      })(),
+
+      /**
+       * How many graded challenges the course actually contains, counted from
+       * the lessons. Computed rather than stored so it cannot drift out of date
+       * when a module is added or a quiz is converted to a reading.
+       *
+       * "A quiz lesson" means the lesson carries a `quiz` object — the same
+       * rule that produces `kind: 'quiz'` above. There is no `kind` field on the
+       * stored lesson; it is derived for the response, so reading `l.kind` here
+       * would silently count zero and the page would claim a course has no
+       * challenges when it has dozens.
+       */
+      challenge_count: orderedModules(course).reduce(
+        (total, m) => total + (m.lessons || []).filter((l: any) => !!l.quiz).length,
+        0
+      ),
+
+      modules: orderedModules(course).map((m) => ({
+        ...m,
+        lessons: (m.lessons || [])
+          .slice()
+          .sort((a, b) => a.sort_order - b.sort_order)
+          .map((l) => {
+            // Same rule as the single-lesson route: the syllabus is public, the
+            // teaching content is not, until the learner reaches it in order.
+            //
+            // `isLessonUnlocked` opens the first lesson unconditionally, so a
+            // signed-out visitor to a FREE course does receive lesson 1's blocks
+            // here. That is intentional — it is the course's public sample, and
+            // smokeCourses.ts asserts it on purpose. It is not a hole: the
+            // `access.granted` branch below short-circuits first, so on a paid
+            // course a signed-out visitor gets stubs for every lesson, sample
+            // included.
+            const gate = isLessonUnlocked(progress, course, l.id);
+            // A locked-by-purchase lesson is also a stub, and for the same reason:
+            // the blocks contain the teaching content and the video object holds
+            // the URL. Browsing the syllabus must not hand over the course.
+            if (!access.granted) return lockedLessonStub(l, progress, access.reason || 'Enrol to unlock.');
+            return gate.unlocked
+              ? lessonView(progress, l)
+              : lockedLessonStub(l, progress, gate.reason);
+          }),
+      })),
+      stats: courseStats(course),
+      // Same derived numbers the card shows, so the detail hero and the catalogue
+      // row can never disagree about how many learners or what rating.
+      signals: courseSignalsFor(db, [course]).get(course.id) || null,
+      progress: state,
+      access,
+      // Enough for the client to render the right button without a second request.
+      certificate: own ? presentCertificate(db, own) : null,
+      certificate_eligible: course.certificate_eligible,
+      lock_reason: userId ? courseLockReason(db, userId, course) : null,
+    };
+
+    // Drop the long-form keys that hold nothing, so the client can decide whether
+    // to draw a heading from the key's presence alone. `''`, `[]`, null and
+    // undefined are all "nothing to show"; a whitespace-only string counts as
+    // empty too, because it renders as a blank paragraph and is never intentional.
+    for (const key of ['about_course', 'prerequisites', 'audience', 'audio_language', 'caption_language']) {
+      const value = view[key];
+      const empty =
+        value === undefined ||
+        value === null ||
+        (typeof value === 'string' && value.trim() === '') ||
+        (Array.isArray(value) && value.filter((v: unknown) => String(v ?? '').trim() !== '').length === 0);
+      if (empty) delete view[key];
+    }
+
+    return view;
 }
+
 
 /**
  * Promote a lesson to complete and, if that finishes the course, close the
@@ -422,14 +507,49 @@ coursesRouter.get('/xp', requireAuth, (req: Request, res: Response) => {
 // PUBLIC VERIFICATION — deliberately ahead of the /:slug catch-all
 // ============================================================================
 
+// GET /api/courses/verify/key — public. The active Ed25519 PUBLIC key.
+//
+// Publishing this is the point of signing asymmetrically: a verifier can check a
+// certificate itself, offline, without trusting or even reaching this server.
+// It is not a secret and deliberately carries no auth.
+coursesRouter.get('/verify/key', (_req: Request, res: Response) => {
+  const bundle = publicKeyBundle();
+  if (!bundle) {
+    // Deliberately vague for an anonymous caller: the key being unavailable is
+    // an operator problem, and the remedy is not something a stranger should
+    // be able to read off this endpoint. The authenticated claim route reports
+    // the specific missing variable.
+    return res.status(503).json({ status: 'unavailable', error: 'Certificate verification is temporarily unavailable' });
+  }
+  return res.json({ status: 'ok', ...bundle });
+});
+
 // GET /api/courses/verify/:serial — public. No auth. Proves a certificate is ours.
 coursesRouter.get('/verify/:serial', rateLimit(60), (req: Request, res: Response) => {
   const db = loadDb();
-  const result = verifyCertificate(db, req.params.serial);
+
+  let result;
+  try {
+    result = verifyCertificate(db, req.params.serial);
+  } catch (e: any) {
+    // Same reasoning as /verify/key: this endpoint is anonymous, so a signing
+    // misconfiguration must not narrate our environment to anyone who asks.
+    // The cause is logged with its request id for us; the caller gets a 503.
+    console.error(
+      `❌ [ERROR] #${(req as any).requestId || '-'} ${req.method} ${req.originalUrl} -> 503`,
+      e?.stack || e?.message || e
+    );
+    return res.status(503).json({ status: 'unavailable', error: 'Certificate verification is temporarily unavailable' });
+  }
 
   if (!result.found) {
     return res.status(404).json({
-      status: 'genuine',
+      // 'not_found', not 'genuine'. This used to report "genuine" for a serial we
+      // never issued, on the theory that the ANSWER was authentic. That reading
+      // is a trap: anyone checking `status` alone — a script, an employer, a
+      // future integration — would score a fabricated certificate as genuine.
+      // `status` now names the outcome; `record_exists` remains the verdict.
+      status: 'not_found',
       found: false,
       check: result.check,
       message:
@@ -458,7 +578,7 @@ coursesRouter.get('/verify/:serial', rateLimit(60), (req: Request, res: Response
     },
     // Exactly what a verifier needs to interpret the two checks.
     explanation: !check.signature_valid
-      ? 'The stored record does not match its own HMAC signature. This certificate was tampered with or fabricated.'
+      ? 'The stored record does not match the signature made over it. This certificate was tampered with or fabricated.'
       : check.status === 'revoked'
         ? `Issued by TieEdu but revoked on ${certificate!.revoked_at}. Reason: ${certificate!.revoked_reason || 'not stated'}.`
         : 'Issued by TieEdu, signature intact, and not revoked.',
@@ -899,7 +1019,12 @@ coursesRouter.post('/:slug/certificate', requireAuth, (req: Request, res: Respon
     xp_at_issue: fields.xp_at_issue,
     lessons_completed: fields.lessons_completed,
     lessons_required: fields.lessons_required,
-    signature: signCertificate(fields),
+    // Sign and key id come back together: the id is the fingerprint of the key
+    // that just signed, so storing it can never describe a different key.
+    ...(() => {
+      const signed = signCertificate(fields);
+      return { signature: signed.signature, signing_key_id: signed.keyId };
+    })(),
     status: 'active',
     revoked_reason: '',
     revoked_at: null,
@@ -925,6 +1050,7 @@ function presentCertificate(db: any, c: Certificate) {
     revoked_reason: c.revoked_reason,
     revoked_at: c.revoked_at,
     signature: c.signature,
+    signing_key_id: c.signing_key_id || '',
     verification_url: verificationUrlFor(c.serial),
     // API-relative, not site-relative: the download endpoint requires a Bearer
     // token, so the client must fetch it with auth rather than link to it.

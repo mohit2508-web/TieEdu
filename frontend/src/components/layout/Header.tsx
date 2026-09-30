@@ -1,168 +1,209 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { createPortal } from 'react-dom';
+'use client';
+
+import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { Search, Flame, ShoppingBag, Command, ChevronDown, LogOut, UserRound, ShieldCheck, Menu, X, LayoutGrid, GraduationCap, CalendarRange, Tag, BookOpen, Award } from 'lucide-react';
+import { Award, ChevronDown, Command, Flame, LogOut, Search, ShieldCheck, ShoppingBag, UserRound } from 'lucide-react';
 import { TieEduLogo } from '@/components/common/TieEduLogo';
 import { useAuth } from '@/context/AuthContext';
+import { useShell } from '@/context/ShellContext';
+import { useCart } from '@/context/CartContext';
+import { PRIMARY_NAV, isNavActive } from '@/lib/navConfig';
+import { formatBadgeCount } from '@/lib/notifications';
+import { NotificationBell } from '@/components/layout/NotificationBell';
+import { MobileMenuButton } from '@/components/layout/MobileTabBar';
 
-interface HeaderProps {
-  cartCount: number;
-  onOpenCart: () => void;
-  onOpenSearch: () => void;
-  onOpenLeaderboard: () => void;
-}
-
-const NAV_LINKS = [
-  { href: '/', label: 'Vaults', Icon: LayoutGrid },
-  { href: '/compare', label: 'Compare', Icon: GraduationCap },
-  { href: '/interview-course', label: 'Free Course', Icon: CalendarRange },
-  { href: '/courses', label: 'Courses', Icon: BookOpen },
-  { href: '/study-plan', label: 'Study Plan', Icon: Tag },
-  { href: '/#pricing', label: 'Pricing', Icon: Tag },
-];
-
-export const Header: React.FC<HeaderProps> = ({
-  cartCount,
-  onOpenCart,
-  onOpenSearch,
-  onOpenLeaderboard,
-}) => {
+/**
+ * The site header.
+ *
+ * No props. It used to take `cartCount`, `onOpenCart`, `onOpenSearch` and
+ * `onOpenLeaderboard`, which meant twelve pages each had to wire four callbacks
+ * correctly and eight of them simply did not — the Search, Cart and
+ * Leaderboard buttons on `/courses`, `/campus`, `/my-courses`, `/account`,
+ * `/study-plan`, `/verify` and `/interview-course` were dead. Everything now
+ * comes from context, so a button cannot be present and dead.
+ *
+ * One header for the whole app. `AppShell` mounts it, and `navConfig` is the
+ * only place the link list exists.
+ */
+export const Header: React.FC = () => {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
+  const { toggleOverlay } = useShell();
+  const { count, hydrated } = useCart();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
+  // Close the account menu on navigation — it used to stay open over the new
+  // page until a second click somewhere else.
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    const onRouteChange = () => setMenuOpen(false);
+    router.events.on('routeChangeComplete', onRouteChange);
+    return () => router.events.off('routeChangeComplete', onRouteChange);
+  }, [router.events]);
 
   useEffect(() => {
-    const onClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+    if (!menuOpen) return;
+    const onClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) setMenuOpen(false);
+    };
+    const onFocusIn = (event: FocusEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) setMenuOpen(false);
     };
     document.addEventListener('mousedown', onClickOutside);
-    return () => document.removeEventListener('mousedown', onClickOutside);
-  }, []);
+    document.addEventListener('focusin', onFocusIn);
+    return () => {
+      document.removeEventListener('mousedown', onClickOutside);
+      document.removeEventListener('focusin', onFocusIn);
+    };
+  }, [menuOpen]);
 
-  useEffect(() => {
-    document.body.style.overflow = drawerOpen ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
-  }, [drawerOpen]);
+  const isAdmin = user?.role === 'admin';
 
   const handleLogout = async () => {
     setMenuOpen(false);
-    setDrawerOpen(false);
     await logout();
     router.push('/');
   };
 
-  const isAdmin = user?.role === 'admin';
-
-  const openDrawerNav = (fn?: () => void) => {
-    setDrawerOpen(false);
-    fn?.();
-  };
-
   return (
-    <header className="sticky top-0 z-40 glass-surface">
-      <div className="w-full max-w-[1700px] mx-auto px-3 sm:px-8 lg:px-12 h-16 flex items-center justify-between">
-
-        <div className="flex items-center gap-8">
-          <Link href="/" className="flex items-center gap-2 group" aria-label="TieEdu home">
-            <TieEduLogo size="sm" showTagline={true} />
+    /*
+     * `glass-surface` sets `backdrop-filter`, which makes this element a
+     * containing block for `position: fixed` descendants. That is why the old
+     * drawer needed a portal — the drawer lived inside the header and would
+     * otherwise be clipped to the header's 64px. Overlays are now siblings of
+     * the header in `AppShell`, so no portal is needed and the DOM is flat.
+     *
+     * Height is `var(--header-h)` so the four sub-bars that pin underneath it
+     * can offset by the same number instead of hardcoding 64px.
+     */
+    <header className="glass-surface sticky top-0 z-40">
+      <div className="mx-auto flex h-[var(--header-h)] w-full max-w-[1700px] items-center justify-between gap-3 px-3 sm:px-8 lg:px-12">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-6">
+          <Link href="/" className="flex flex-none items-center" aria-label="TieEdu home">
+            <TieEduLogo size="sm" />
           </Link>
 
-          <nav className="hidden md:flex items-center gap-1 text-[13px] font-semibold text-[#3E4754]">
-            {NAV_LINKS.map(l => (
-              <Link key={l.href} href={l.href} className="px-3 py-2 rounded-lg hover:bg-black/[0.04] hover:text-[#10151C] transition-colors">{l.label}</Link>
-            ))}
+          <nav aria-label="Primary" className="hidden items-center gap-0.5 md:flex">
+            {PRIMARY_NAV.map((item) => {
+              const active = isNavActive(router.pathname, item.href);
+              return (
+                <Link
+                  key={item.id}
+                  href={item.href}
+                  aria-current={active ? 'page' : undefined}
+                  className="nav-link"
+                >
+                  {item.label}
+                  {item.badge === 'free' && <span className="nav-link-badge">Free</span>}
+                </Link>
+              );
+            })}
           </nav>
         </div>
 
-        <div className="flex items-center gap-2.5">
-          {isAdmin && (
-            <Link
-              href="/admin"
-              className="hidden sm:inline-flex items-center gap-1.5 chip hover:border-[#0E2A44] hover:text-[#0E2A44]"
-              title="Admin console"
-            >
-              <ShieldCheck className="w-4 h-4 text-[#0E2A44]" />
-              <span className="font-bold">Admin</span>
-            </Link>
-          )}
+        <div className="flex flex-none items-center gap-1.5 sm:gap-2">
+          {/* Desktop: a real field that widens on focus. The old one used
+              `text-[--text-muted]`, which is not valid Tailwind — the muted
+              colour never applied and the label rendered in body text. */}
+          <button
+            type="button"
+            onClick={() => toggleOverlay('search')}
+            aria-haspopup="dialog"
+            aria-label="Search vaults"
+            className="nav-search hidden lg:flex"
+          >
+            <Search size={16} strokeWidth={2.2} aria-hidden />
+            <span className="flex-1 text-left text-[13px] font-medium">Search vaults…</span>
+            <kbd className="inline-flex items-center gap-0.5">
+              <Command size={11} strokeWidth={2.5} aria-hidden />
+              K
+            </kbd>
+          </button>
 
           <button
-            onClick={onOpenSearch}
-            className="hidden sm:flex items-center gap-2 bg-white/70 border border-[#E9E7E1] hover:border-[#D6D2C8] text-[--text-muted] hover:text-[#3E4754] pl-3 pr-2 py-2 rounded-xl text-[13px] transition-all shadow-xs focus-ring"
+            type="button"
+            onClick={() => toggleOverlay('search')}
+            aria-label="Search vaults"
+            aria-haspopup="dialog"
+            className="icon-btn lg:hidden"
           >
-            <Search className="w-4 h-4" />
-            <span className="font-medium">Search</span>
-            <span className="hidden lg:inline-flex items-center gap-0.5 ml-1 px-1.5 py-0.5 rounded-md bg-black/[0.05] text-[11px] font-bold text-[--text-muted]">
-              <Command className="w-3 h-3" />K
+            <Search size={19} strokeWidth={2} aria-hidden />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => toggleOverlay('leaderboard')}
+            aria-label="Leaderboard"
+            title="Placement season XP rankings"
+            className="chip hidden xl:inline-flex"
+          >
+            <Flame size={15} className="text-[var(--amber-deep)]" strokeWidth={2.2} aria-hidden />
+            <span className="font-bold">Leaderboard</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => toggleOverlay('cart')}
+            aria-label={hydrated && count > 0 ? `Cart, ${count} items` : 'Cart, empty'}
+            aria-haspopup="dialog"
+            className="icon-btn"
+          >
+            <span className="relative inline-flex">
+              <ShoppingBag size={19} strokeWidth={2} aria-hidden />
+              {/* Gated on `hydrated`: before the persisted cart is read back the
+                  count is unknown, and a badge that jumps 0 -> 3 on load reads
+                  as a bug. */}
+              {hydrated && count > 0 && (
+                <span className="chrome-badge absolute -right-2 -top-1.5" aria-hidden>
+                  {formatBadgeCount(count)}
+                </span>
+              )}
             </span>
           </button>
 
-          <button
-            onClick={onOpenSearch}
-            className="sm:hidden w-10 h-10 flex items-center justify-center text-[#3E4754] hover:bg-black/[0.04] rounded-xl transition-colors focus-ring"
-            aria-label="Search"
-          >
-            <Search className="w-5 h-5" />
-          </button>
-
-          <button
-            onClick={onOpenLeaderboard}
-            className="hidden sm:inline-flex w-10 h-10 sm:w-auto sm:h-auto items-center justify-center gap-2 chip hover:border-[#E8A33D] hover:text-[#C77B12]" title="Daily streak leaderboard"
-          >
-            <Flame className="w-4 h-4 text-[#B45309] fill-[#E8A33D]" />
-            <span className="font-bold hidden sm:inline">Leaderboard</span>
-          </button>
-
-          <button
-            onClick={onOpenCart}
-            className="relative w-10 h-10 flex items-center justify-center text-[#3E4754] hover:text-[#10151C] hover:bg-black/[0.04] rounded-xl transition-colors focus-ring"
-            aria-label="Cart"
-          >
-            <ShoppingBag className="w-5 h-5" />
-            {cartCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 bg-[#E8A33D] text-[#241A06] text-[10px] font-bold min-w-4 h-4 px-0.5 rounded-full flex items-center justify-center shadow-sm stat-num">
-                {cartCount}
-              </span>
-            )}
-          </button>
+          <NotificationBell />
 
           {!loading && user && (
             <div className="relative" ref={menuRef}>
               <button
+                type="button"
                 onClick={() => setMenuOpen((o) => !o)}
-                className="flex items-center gap-1.5 sm:gap-2 pl-1 pr-1.5 sm:pr-2 py-1 rounded-xl border border-[#E9E7E1] bg-white/70 hover:border-[#D6D2C8] transition-colors focus-ring"
                 aria-haspopup="menu"
                 aria-expanded={menuOpen}
+                aria-label={`Account menu for ${user.name}`}
+                className="flex items-center gap-1.5 rounded-xl border border-[#E9E7E1] bg-white/70 py-1 pl-1 pr-1.5 transition-colors hover:border-[#D6D2C8] focus-ring sm:pr-2"
               >
                 {user.avatar ? (
-                  <img src={user.avatar} alt="" className="w-7 h-7 rounded-lg object-cover" />
+                  <img src={user.avatar} alt="" className="h-7 w-7 rounded-lg object-cover" />
                 ) : (
-                  <span className="w-7 h-7 rounded-lg bg-[#0284C7] text-white flex items-center justify-center text-[13px] font-extrabold uppercase">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#0284C7] text-[13px] font-extrabold uppercase text-white">
                     {user.name.charAt(0)}
                   </span>
                 )}
-                <span className="hidden lg:block text-[13px] font-bold text-[#10151C] max-w-[140px] truncate">
+                <span className="hidden max-w-[140px] truncate text-[13px] font-bold text-[#10151C] lg:block">
                   {user.name.split(' ')[0]}
                 </span>
-                <ChevronDown className={`hidden sm:inline w-3.5 h-3.5 text-[--text-muted] transition-transform ${menuOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown
+                  size={14}
+                  className={`hidden text-[var(--text-muted)] transition-transform sm:inline ${menuOpen ? 'rotate-180' : ''}`}
+                  aria-hidden
+                />
               </button>
 
               {menuOpen && (
-                <div className="absolute right-0 top-[calc(100%+8px)] w-64 vault-card p-2 shadow-raised animate-fade-in" role="menu">
-                  <div className="px-3 py-2.5 border-b border-[#E9E7E1]">
-                    <p className="text-[13px] font-bold text-[#10151C] truncate">{user.name}</p>
-                    <p className="text-[11px] text-[--text-muted] truncate">{user.email}</p>
-                    <span className={`inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wide ${
-                      isAdmin ? 'bg-[#0E2A44] text-[#E8A33D]' : 'bg-[#E8F4FB] text-[#0271B5]'
-                    }`}>
+                <div
+                  role="menu"
+                  className="animate-slide-up-chrome absolute right-0 top-[calc(100%+8px)] z-50 w-64 rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-white p-2 shadow-[var(--shadow-raised)]"
+                >
+                  <div className="border-b border-[#E9E7E1] px-3 py-2.5">
+                    <p className="truncate text-[13px] font-bold text-[#10151C]">{user.name}</p>
+                    <p className="truncate text-xs text-[var(--text-muted)]">{user.email}</p>
+                    <span
+                      className={`mt-1 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-extrabold uppercase tracking-wide ${
+                        isAdmin ? 'bg-[#0E2A44] text-[#E8A33D]' : 'bg-[#E8F4FB] text-[#0271B5]'
+                      }`}
+                    >
                       {isAdmin ? 'Platform Admin' : 'Student'}
                     </span>
                   </div>
@@ -172,30 +213,39 @@ export const Header: React.FC<HeaderProps> = ({
                       <Link
                         href="/admin"
                         onClick={() => setMenuOpen(false)}
-                        className="flex items-center gap-2.5 px-3 py-2 text-[13px] font-semibold text-[#3E4754] hover:bg-[#F3F2EE] rounded-lg"
+                        role="menuitem"
+                        className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-semibold text-[#3E4754] hover:bg-[#F3F2EE]"
                       >
-                        <ShieldCheck className="w-4 h-4 text-[#0E2A44]" /> Admin console
+                        <ShieldCheck size={16} className="text-[#0E2A44]" aria-hidden />
+                        Admin console
                       </Link>
                     )}
                     <Link
                       href="/my-courses"
                       onClick={() => setMenuOpen(false)}
-                      className="flex items-center gap-2.5 px-3 py-2 text-[13px] font-semibold text-[#3E4754] hover:bg-[#F3F2EE] rounded-lg"
+                      role="menuitem"
+                      className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-semibold text-[#3E4754] hover:bg-[#F3F2EE]"
                     >
-                      <Award className="w-4 h-4 text-[#0E2A44]" /> My courses
+                      <Award size={16} className="text-[#0E2A44]" aria-hidden />
+                      My courses
                     </Link>
                     <Link
                       href="/account"
                       onClick={() => setMenuOpen(false)}
-                      className="flex items-center gap-2.5 px-3 py-2 text-[13px] font-semibold text-[#3E4754] hover:bg-[#F3F2EE] rounded-lg"
+                      role="menuitem"
+                      className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-semibold text-[#3E4754] hover:bg-[#F3F2EE]"
                     >
-                      <UserRound className="w-4 h-4 text-[#0284C7]" /> My account
+                      <UserRound size={16} className="text-[#0284C7]" aria-hidden />
+                      My account
                     </Link>
                     <button
+                      type="button"
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] font-semibold text-[#C1442D] hover:bg-[#FDEDE9] rounded-lg"
+                      role="menuitem"
+                      className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-semibold text-[#C1442D] hover:bg-[#FDEDE9]"
                     >
-                      <LogOut className="w-4 h-4" /> Sign out
+                      <LogOut size={16} aria-hidden />
+                      Sign out
                     </button>
                   </div>
                 </div>
@@ -204,150 +254,14 @@ export const Header: React.FC<HeaderProps> = ({
           )}
 
           {!loading && !user && (
-            <Link
-              href="/login"
-              className="hidden md:inline-flex btn btn-primary px-4 py-2 text-[13px] focus-ring"
-            >
+            <Link href="/login" className="btn btn-primary hidden px-4 py-2 text-[13px] focus-ring md:inline-flex">
               Sign in
             </Link>
           )}
 
-          <button
-            onClick={() => setDrawerOpen(true)}
-            className="md:hidden w-10 h-10 flex items-center justify-center text-[#3E4754] hover:bg-black/[0.04] rounded-xl transition-colors focus-ring"
-            aria-label="Open menu"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
+          <MobileMenuButton />
         </div>
-
       </div>
-
-      {/* ===== Mobile Drawer (rendered via Portal to avoid backdrop-filter stacking context truncation) ===== */}
-      {drawerOpen && mounted && createPortal(
-        <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-fade-in" onClick={() => setDrawerOpen(false)} />
-          <div className="absolute right-0 top-0 bottom-0 w-[82%] max-w-[340px] bg-white shadow-2xl flex flex-col animate-slide-in-right">
-            <div className="flex items-center justify-between px-5 h-16 border-b border-[#E9E7E1]">
-              <TieEduLogo size="sm" showTagline={false} />
-              <button
-                onClick={() => setDrawerOpen(false)}
-                className="p-2 text-[#3E4754] hover:bg-black/[0.05] rounded-xl transition-colors"
-                aria-label="Close menu"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-4 space-y-6">
-              <nav className="space-y-1">
-                {NAV_LINKS.map(l => (
-                  <Link
-                    key={l.href}
-                    href={l.href}
-                    onClick={() => openDrawerNav()}
-                    className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-[15px] font-bold text-[#3E4754] hover:bg-[#F3F2EE] hover:text-[#10151C] transition-colors"
-                  >
-                    <l.Icon className="w-4 h-4 text-[#0284C7]" />
-                    {l.label}
-                  </Link>
-                ))}
-              </nav>
-
-              <div className="space-y-1 pt-3 border-t border-[#E9E7E1]">
-                <button
-                  onClick={() => openDrawerNav(() => onOpenSearch())}
-                  className="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-[15px] font-bold text-[#3E4754] hover:bg-[#F3F2EE] transition-colors text-left"
-                >
-                  <Search className="w-4 h-4 text-[#0284C7]" /> Search
-                </button>
-                <button
-                  onClick={() => openDrawerNav(() => onOpenLeaderboard())}
-                  className="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-[15px] font-bold text-[#3E4754] hover:bg-[#F3F2EE] transition-colors text-left"
-                >
-                  <Flame className="w-4 h-4 text-[#B45309]" /> Leaderboard
-                </button>
-                <button
-                  onClick={() => openDrawerNav(() => onOpenCart())}
-                  className="w-full relative flex items-center gap-3 px-3.5 py-3 rounded-xl text-[15px] font-bold text-[#3E4754] hover:bg-[#F3F2EE] transition-colors text-left"
-                >
-                  <ShoppingBag className="w-4 h-4 text-[#0284C7]" /> Cart
-                  {cartCount > 0 && (
-                    <span className="ml-auto inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-[#E8A33D] text-[#241A06] text-[11px] font-bold">
-                      {cartCount}
-                    </span>
-                  )}
-                </button>
-              </div>
-
-              <div className="pt-3 border-t border-[#E9E7E1] space-y-1">
-                {user ? (
-                  <>
-                    <div className="px-3.5 py-3">
-                      <div className="flex items-center gap-2.5">
-                        {user.avatar ? (
-                          <img src={user.avatar} alt="" className="w-9 h-9 rounded-lg object-cover" />
-                        ) : (
-                          <span className="w-9 h-9 rounded-lg bg-[#0284C7] text-white flex items-center justify-center text-[15px] font-extrabold uppercase">
-                            {user.name.charAt(0)}
-                          </span>
-                        )}
-                        <div className="min-w-0">
-                          <p className="text-[14px] font-bold text-[#10151C] truncate">{user.name}</p>
-                          <p className="text-[11px] text-[--text-muted] truncate">{user.email}</p>
-                        </div>
-                      </div>
-                      <span className={`inline-flex items-center gap-1 mt-1.5 px-1.5 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wide ${
-                        isAdmin ? 'bg-[#0E2A44] text-[#E8A33D]' : 'bg-[#E8F4FB] text-[#0271B5]'
-                      }`}>
-                        {isAdmin ? 'Platform Admin' : 'Student'}
-                      </span>
-                    </div>
-                    {isAdmin && (
-                      <Link
-                        href="/admin"
-                        onClick={() => openDrawerNav()}
-                        className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-[15px] font-bold text-[#3E4754] hover:bg-[#F3F2EE] transition-colors"
-                      >
-                        <ShieldCheck className="w-4 h-4 text-[#0E2A44]" /> Admin console
-                      </Link>
-                    )}
-                    <Link
-                      href="/my-courses"
-                      onClick={() => openDrawerNav()}
-                      className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-[15px] font-bold text-[#3E4754] hover:bg-[#F3F2EE] transition-colors"
-                    >
-                      <Award className="w-4 h-4 text-[#0E2A44]" /> My courses
-                    </Link>
-                    <Link
-                      href="/account"
-                      onClick={() => openDrawerNav()}
-                      className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-[15px] font-bold text-[#3E4754] hover:bg-[#F3F2EE] transition-colors"
-                    >
-                      <UserRound className="w-4 h-4 text-[#0284C7]" /> My account
-                    </Link>
-                    <button
-                      onClick={handleLogout}
-                      className="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-[15px] font-bold text-[#C1442D] hover:bg-[#FDEDE9] transition-colors text-left"
-                    >
-                      <LogOut className="w-4 h-4" /> Sign out
-                    </button>
-                  </>
-                ) : (
-                  <Link
-                    href="/login"
-                    onClick={() => openDrawerNav()}
-                    className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[#0284C7] hover:bg-[#0369A1] text-white text-[15px] font-bold transition-colors"
-                  >
-                    Sign in / Create account
-                  </Link>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
     </header>
   );
 };

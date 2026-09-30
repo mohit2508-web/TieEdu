@@ -3,7 +3,6 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import type { GetServerSideProps } from 'next';
 import { SlidersHorizontal, X, Search as SearchIcon, ChevronDown } from 'lucide-react';
-import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { CourseRowCard, CourseRowSkeleton, Pill } from '@/components/courses/CourseUi';
 import { CourseFilterRail } from '@/components/courses/CourseFilterRail';
@@ -258,7 +257,6 @@ export default function CoursesPage({ initialData }: { initialData: CourseCatalo
         )}
       </Head>
 
-      <Header cartCount={0} onOpenCart={() => {}} onOpenSearch={() => {}} onOpenLeaderboard={() => {}} />
 
       <main className="mx-auto w-full max-w-[1180px] px-5 pb-28 pt-10 sm:px-8 lg:pb-24">
         <header className="max-w-3xl">

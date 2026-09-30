@@ -2,12 +2,11 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
-import { SearchModal } from '@/components/modals/SearchModal';
-import { LeaderboardModal } from '@/components/modals/LeaderboardModal';
 import { SubmitReportModal } from '@/components/modals/SubmitReportModal';
 import { fetchCompanies, fetchComparisonMatrix } from '@/lib/api';
+import { useCart, useCartScope, isCompanyCartLine } from '@/context/CartContext';
+import { useShell } from '@/context/ShellContext';
 import { packPrice } from '@/lib/packPricing';
 import type { Company, CompanyModuleItem, CompareCompany, ComparisonMatrix } from '@/types';
 import { BrandTile } from '@/components/common/BrandTile';
@@ -19,7 +18,6 @@ import {
   ArrowLeft, ChevronDown, Scale, Info, RefreshCw, ShieldCheck, X,
 } from 'lucide-react';
 
-const CartModal = dynamic(() => import('@/components/checkout/CartModal').then((m) => m.CartModal), { ssr: false });
 
 const MAX_COLUMNS = 4;
 
@@ -32,6 +30,8 @@ const MAX_COLUMNS = 4;
  * a question or a verification claim.
  */
 export default function ComparePage() {
+  const { add, items, clear } = useCart();
+  const { openOverlay } = useShell();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [matrix, setMatrix] = useState<ComparisonMatrix | null>(null);
   const [loading, setLoading] = useState(true);
@@ -40,10 +40,14 @@ export default function ComparePage() {
   const [activeSlug, setActiveSlug] = useState<string>('');
   const [picking, setPicking] = useState(false);
 
-  const [cartItems, setCartItems] = useState<CompanyModuleItem[]>([]);
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
+  /*
+   * The order is placed and owned by the server from here, so the local lines
+   * are dropped — otherwise the badge keeps counting purchases that are already
+   * paid for. Registered on the shared drawer rather than owned by this page,
+   * which is why the cart can now be emptied from any route.
+   */
+  useCartScope(useMemo(() => ({ onCheckoutSuccess: clear }), [clear]));
+
   const [reportCompany, setReportCompany] = useState<{ id: string; name: string } | null>(null);
   const [showMethodology, setShowMethodology] = useState(false);
 
@@ -91,25 +95,39 @@ export default function ComparePage() {
    * user does not own. Passing a bare Company here (the previous behaviour) made
    * CartModal bill the flat Rs 249 complete-pack price even for a 1-round vault.
    */
-  const handleUnlock = useCallback((c: CompareCompany, moduleIds: string[]) => {
-    if (moduleIds.length === 0) return;
-    const line: CompanyModuleItem = {
-      kind: 'company',
-      id: c.id,
-      slug: c.slug,
-      name: c.name,
-      logo_url: c.logo_url,
-      module_ids: moduleIds,
-      module_count: moduleIds.length,
-      price: packPrice(moduleIds.length),
-    };
-    setCartItems((prev) => (prev.some((i) => i.id === c.id) ? prev : [...prev, line]));
-    setIsCartOpen(true);
-  }, []);
+  const handleUnlock = useCallback(
+    (c: CompareCompany, moduleIds: string[]) => {
+      if (moduleIds.length === 0) return;
+      const line: CompanyModuleItem = {
+        kind: 'company',
+        id: c.id,
+        slug: c.slug,
+        name: c.name,
+        logo_url: c.logo_url,
+        module_ids: moduleIds,
+        module_count: moduleIds.length,
+        price: packPrice(moduleIds.length),
+      };
+      add(line);
+      openOverlay('cart');
+    },
+    [add, openOverlay]
+  );
 
+  /**
+   * Which companies are already in the cart.
+   *
+   * This used to read a page-local array, so a company added on `/company/x`
+   * showed no cart marker here even though the student had it. Reading the
+   * shared cart means the marker and the badge can no longer disagree.
+   *
+   * The `kind` filter matters now that the cart is shared: `CourseCartItem`
+   * also carries a `slug`, so keying on slug alone let a free course from
+   * `/interview-course` light up a company's "in cart" pill on this page.
+   */
   const cartKeys = useMemo(
-    () => new Set(cartItems.filter((i) => i.kind === 'company').map((i) => i.slug)),
-    [cartItems]
+    () => new Set(items.filter(isCompanyCartLine).map((i) => i.slug)),
+    [items]
   );
 
   const roundRows = useMemo(() => (matrix ? buildRoundRows(matrix) : []), [matrix]);
@@ -136,12 +154,6 @@ export default function ComparePage() {
       </Head>
 
       <div className="min-h-screen flex flex-col bg-[#FAFAF9]">
-        <Header
-          cartCount={cartItems.length}
-          onOpenCart={() => setIsCartOpen(true)}
-          onOpenSearch={() => setIsSearchOpen(true)}
-          onOpenLeaderboard={() => setIsLeaderboardOpen(true)}
-        />
 
         <main className="flex-1 w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 py-6 sm:py-8">
           <Link
@@ -344,15 +356,6 @@ export default function ComparePage() {
 
         <Footer />
 
-        <CartModal
-          isOpen={isCartOpen}
-          onClose={() => setIsCartOpen(false)}
-          items={cartItems}
-          onRemoveItem={(idx) => setCartItems(cartItems.filter((_, i) => i !== idx))}
-          onCheckoutSuccess={() => { setIsCartOpen(false); setCartItems([]); }}
-        />
-        <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} companies={companies} />
-        <LeaderboardModal isOpen={isLeaderboardOpen} onClose={() => setIsLeaderboardOpen(false)} />
         <SubmitReportModal
           isOpen={!!reportCompany}
           companyName={reportCompany?.name || ''}

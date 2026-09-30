@@ -223,9 +223,14 @@ check('rejects a nonsense page rather than computing a negative offset', () => {
   assert.strictEqual(parseCatalogQuery({ page: '2' }).page, 2);
 });
 
-check('drops a course-type value that is neither free nor paid', () => {
-  assert.deepStrictEqual(parseCatalogQuery({ type: 'free,rented,paid' }).type, ['free', 'paid']);
-});
+  check('keeps an unrecognised course-type value so it matches nothing', () => {
+    // Previously this value was dropped, which turned `?type=rented` into "no
+    // type filter" and answered with the entire catalogue while the URL claimed
+    // a filter was active. Preserving it makes the result empty instead, which
+    // is the same answer an unknown `level` gives.
+    assert.deepStrictEqual(parseCatalogQuery({ type: 'free,rented,paid' }).type, ['free', 'rented', 'paid']);
+  });
+
 
 check('every advertised sort key is accepted', () => {
   for (const s of CATALOG_SORTS) {
@@ -249,10 +254,23 @@ check('groups are AND-ed together', () => {
   assert.strictEqual(out.length, 0);
 });
 
-check('type=paid returns only priced courses', () => {
-  const out = filterCourses([pyC, cC, paidC], q({ type: ['paid'] }));
-  assert.deepStrictEqual(out.map((c) => c.title), ['Rust']);
-});
+  check('type=paid returns only priced courses', () => {
+    const out = filterCourses([pyC, cC, paidC], q({ type: ['paid'] }));
+    assert.deepStrictEqual(out.map((c) => c.title), ['Rust']);
+  });
+
+  check('an unrecognised type value filters everything out', () => {
+    const out = filterCourses([pyC, cC, paidC], q({ type: ['rented'] }));
+    assert.deepStrictEqual(out, []);
+  });
+
+  check('an unrecognised type value is not treated as "no filter"', () => {
+    // The regression this guards: dropping the token used to return all three
+    // courses, so the URL claimed a filter and the page ignored it.
+    assert.deepStrictEqual(filterCourses([pyC, cC, paidC], q({ type: ['rented'] })).length, 0);
+    assert.deepStrictEqual(filterCourses([pyC, cC, paidC], q({ type: [] })).length, 3);
+  });
+
 
 check('a course priced 0 counts as free', () => {
   assert.ok(isFreeCourse(course({ is_free: false, price_inr: 0 })));

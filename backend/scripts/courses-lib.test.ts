@@ -13,9 +13,14 @@
  */
 
 process.env.NODE_ENV = process.env.NODE_ENV || 'test';
-// Set before importing, so the signing-secret assertion in lib/courses' import
-// chain cannot warn or throw during the run.
-process.env.CERT_SIGNING_SECRET = process.env.CERT_SIGNING_SECRET || 'unit-test-signing-secret-0001';
+// Set before importing, so the signing-key assertion in lib/courses' import
+// chain cannot warn or throw during the run. Ed25519, matching production.
+if (!process.env.CERT_SIGNING_PRIVATE_KEY) {
+  const { privateKey } = require('crypto').generateKeyPairSync('ed25519');
+  process.env.CERT_SIGNING_PRIVATE_KEY = privateKey
+    .export({ type: 'pkcs8', format: 'der' })
+    .toString('base64');
+}
 
 import {
   DURATION_TOLERANCE_HIGH,
@@ -39,6 +44,7 @@ import {
   sanitizeLesson,
   sanitizeQuizForLearner,
   slugify,
+  uniqueSlug,
 } from '../src/lib/courses';
 import { Course, CourseLesson, CourseProgress } from '../src/data/db';
 
@@ -498,6 +504,84 @@ check(
 }
 
 // ---------------------------------------------------------------------------
+// sanitizeLesson -> kind
+// ---------------------------------------------------------------------------
+//
+// `kind` is the lesson's MEDIUM and the syllabus draws its icon from it.
+// It used to be `video ? 'video' : quiz ? 'quiz' : 'reading'`, which meant a
+// reading lesson that happened to end in a challenge was published as a quiz -
+// the learner was told they were about to be tested when they were about to be
+// taught. Assessability is `has_quiz`, which is reported next to it.
+//
+// The seeded corpus has no quiz-only lessons at all, so 'quiz' described a
+// combination that does not exist in the data.
+
+check('a plain lesson is a reading', sanitizeLesson(lesson()).kind, 'reading');
+
+check(
+  'a reading lesson that carries a quiz is still a reading',
+  sanitizeLesson(quizLesson()).kind,
+  'reading'
+);
+
+check(
+  'a reading lesson that carries a quiz still reports has_quiz',
+  sanitizeLesson(quizLesson()).has_quiz,
+  true
+);
+
+check(
+  'a reading lesson that carries a quiz carries no questions in its syllabus view',
+  sanitizeLesson(quizLesson()).quiz?.question_count,
+  2
+);
+
+check('a video lesson is a video', sanitizeLesson(videoLesson()).kind, 'video');
+
+// The combination that motivated the original ordering. The video is the medium
+// the learner plays, and the quiz is an attribute of the lesson, so both flags
+// have to survive: collapsing the quiz into `kind` is what lost the challenge
+// count from the stats row.
+{
+  const both = sanitizeLesson(videoLesson({ quiz: quizLesson().quiz } as Partial<CourseLesson>));
+  check('a video lesson that also has a quiz is a video', both.kind, 'video');
+  check('...and still reports has_video', both.has_video, true);
+  check('...and still reports has_quiz', both.has_quiz, true);
+}
+
+// Whatever the combination, `kind` must be exactly one of the two media the
+// player knows how to present. This is the assertion that fails if anyone
+// reinstates a third kind.
+{
+  const combos = [
+    sanitizeLesson(lesson()),
+    sanitizeLesson(quizLesson()),
+    sanitizeLesson(videoLesson()),
+    sanitizeLesson(videoLesson({ quiz: quizLesson().quiz } as Partial<CourseLesson>)),
+  ];
+  check(
+    'kind is only ever video or reading, whatever the combination',
+    combos.every((l) => l.kind === 'video' || l.kind === 'reading'),
+    true
+  );
+  check(
+    'no combination of video, quiz and blocks is reported as a quiz',
+    combos.some((l) => l.kind === 'quiz'),
+    false
+  );
+  check(
+    'a video lesson is never reported as a reading',
+    sanitizeLesson(videoLesson()).kind === 'reading',
+    false
+  );
+  check(
+    'has_quiz and kind stay independent: a reading lesson can be assessable',
+    sanitizeLesson(quizLesson()).has_quiz && sanitizeLesson(quizLesson()).kind === 'reading',
+    true
+  );
+}
+
+// ---------------------------------------------------------------------------
 // parseVideoUrl
 // ---------------------------------------------------------------------------
 
@@ -638,6 +722,91 @@ check('a single heartbeat cannot credit more than 20s', MAX_HEARTBEAT_CREDIT_SEC
 check('the read floor is 20s', READ_MIN_SECONDS, 20);
 check('the read cap is 600s', READ_MAX_SECONDS, 600);
 checkJson('the duration tolerance band is 0.7x-1.3x', [DURATION_TOLERANCE_LOW, DURATION_TOLERANCE_HIGH], [0.7, 1.3]);
+
+// ---------------------------------------------------------------------------
+// uniqueSlug
+// ---------------------------------------------------------------------------
+// This one gets its own section because it had no coverage at all, and it was
+// hiding an infinite loop.
+//
+// The collision check used to be evaluated once into a `const taken` before the
+// loop, so the loop condition never changed. The first duplicate encountered made
+// `while (taken)` spin forever rather than moving on to the next candidate. On the
+// main thread that does not merely fail the request - it stops the whole API
+// process responding, so the blast radius was the whole site.
+//
+// It is reached by ordinary admin actions, so the duplicate cases below are the
+// important ones, not the happy path.
+
+const slugDb = (slugs: string[]): any => ({
+  courses: slugs.map((s, i) => ({ id: `c${i + 1}`, slug: s })),
+});
+
+check('an unused slug is returned as-is', uniqueSlug(slugDb(['other']), 'python-basics'), 'python-basics');
+
+check('a duplicate slug gets a -2 suffix', uniqueSlug(slugDb(['python-basics']), 'python-basics'), 'python-basics-2');
+
+check(
+  'a second collision moves on to -3 rather than repeating -2',
+  uniqueSlug(slugDb(['python-basics', 'python-basics-2']), 'python-basics'),
+  'python-basics-3'
+);
+
+check(
+  'collisions are skipped over, not just the first one',
+  uniqueSlug(slugDb(['a', 'a-2', 'a-3', 'a-4']), 'a'),
+  'a-5'
+);
+
+// The bug's real signature: with the old code this call never returned, so the
+// test process had to be killed rather than failing an assertion.
+check(
+  'ten duplicates in a row still terminate on a free slug',
+  uniqueSlug(slugDb(Array.from({ length: 10 }, (_, i) => (i === 0 ? 'x' : `x-${i + 1}`))), 'x'),
+  'x-11'
+);
+
+check(
+  'a course keeping its own slug is not treated as a collision',
+  uniqueSlug(slugDb(['python-basics']), 'python-basics', 'c1'),
+  'python-basics'
+);
+
+// The ignored id has to be honoured for the suffixed candidates too, not just
+// the first one. Here `c2` owns `python-basics-2`, so re-saving `c2` is free to
+// reclaim that exact slug rather than being pushed to `-3`.
+check(
+  'the ignored id is honoured for suffixed candidates, not just the first',
+  uniqueSlug(slugDb(['python-basics', 'python-basics-2']), 'python-basics-2', 'c2'),
+  'python-basics-2'
+);
+
+check(
+  'an empty course list leaves the slug alone',
+  uniqueSlug({ courses: [] }, 'fresh'),
+  'fresh'
+);
+
+check(
+  'a db with no courses key at all does not throw',
+  uniqueSlug({}, 'fresh'),
+  'fresh'
+);
+
+// Duplicating the same course twice is the most likely way to hit this in real
+// use: the duplicate route asks for `${slug}-copy`, so the second duplicate
+// collides with the first.
+check(
+  'duplicating the same course twice finds a free slug',
+  uniqueSlug(slugDb(['course', 'course-copy']), 'course-copy'),
+  'course-copy-2'
+);
+
+check(
+  'the desired slug is slugified before collisions are judged',
+  uniqueSlug(slugDb(['hello-world']), 'Hello World!'),
+  'hello-world-2'
+);
 
 // ---------------------------------------------------------------------------
 

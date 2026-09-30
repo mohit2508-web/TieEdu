@@ -751,6 +751,32 @@ export const fetchMyReports = async () => {
   return await res.json();
 };
 
+/**
+ * The student's own XP ledger (GET /courses/xp), trimmed to what the bell
+ * needs. The endpoint also returns totals and a level, which nothing here
+ * reads — the header shows XP from `/auth/me` so the two can never disagree
+ * about the same number.
+ *
+ * `entries` carries negative rows when an award was reversed; callers must not
+ * treat every row as a reward.
+ */
+export interface MyXpEntry {
+  id: string;
+  xp: number;
+  reason: string;
+  course_title: string | null;
+  lesson_title?: string | null;
+  note?: string;
+  created_at: string;
+}
+
+export const fetchMyXpLedgerApi = async (): Promise<{ total_xp: number; entries: MyXpEntry[] }> => {
+  const res = await apiFetch(`${API_BASE_URL}/courses/xp`);
+  if (!res.ok) throw new Error('XP history unavailable');
+  const data = await res.json();
+  return { total_xp: Number(data?.total_xp) || 0, entries: Array.isArray(data?.entries) ? data.entries : [] };
+};
+
 export const updateProfileApi = async (payload: { name?: string; college?: string; avatar?: string | null }) => {
   const res = await apiFetch(`${API_BASE_URL}/auth/profile`, {
     method: 'PUT',

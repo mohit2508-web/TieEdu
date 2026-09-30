@@ -8,13 +8,24 @@
 //     client cannot ask for a certificate it has not earned.
 //  2. It is a persisted row, not a number generated on the fly. The serial is
 //     unique and stored, so a given serial always resolves to the same record.
-//  3. It carries an HMAC-SHA256 signature over its own canonical fields,
-//     computed with a server-only secret. Anyone can recompute it: if the
-//     signature does not match the record, the certificate is a forgery,
-//     regardless of what the PDF looks like.
-//  4. The PDF is generated here, on the server, from the stored record. What
+//  3. It carries an Ed25519 signature over its own canonical fields, made with
+//     a PRIVATE key that never leaves this process. Verification needs only the
+//     matching PUBLIC key, which is not secret and is published by
+//     GET /api/courses/verify/key.
+//
+//     This is the whole reason for signing asymmetrically rather than with an
+//     HMAC. Under HMAC the same shared secret both signs and verifies, so anyone
+//     who could read it could forge a certificate AND forge the "genuine" answer
+//     to a verifier. Asymmetric signing collapses that to a single capability:
+//     reading the public key lets you check a certificate and nothing else.
+//  4. Every certificate records the id of the key that signed it, and the
+//     verifier holds a set of trusted public keys — the active one plus any
+//     retired ones. That is what makes rotation survivable: swapping the private
+//     key stops new forgeries without invalidating a single certificate a
+//     learner has already printed.
+//  5. The PDF is generated here, on the server, from the stored record. What
 //     the learner downloads is exactly what the verifier reads back.
-//  5. Revocation is a status change on the stored row, so a revoked certificate
+//  6. Revocation is a status change on the stored row, so a revoked certificate
 //     stops verifying immediately — a PDF sitting in someone's inbox cannot help
 //     them, because verification never trusts the PDF.
 // ============================================================================
@@ -25,37 +36,174 @@ import { PDFDocument, StandardFonts, rgb, degrees } from 'pdf-lib';
 import { Certificate, Course, User } from '../data/db';
 import { orderedLessons } from './courses';
 
-/**
- * Dedicated signing secret, so revoking the JWT secret does not silently
- * invalidate every certificate already in students' hands. In production this
- * MUST be set; falling back to the JWT secret keeps dev working.
- */
-export const CERT_SIGNING_SECRET =
-  process.env.CERT_SIGNING_SECRET ||
-  process.env.JWT_SECRET ||
-  (process.env.NODE_ENV === 'production'
-    ? ''
-    : 'tieedu-dev-cert-secret-change-me');
+// ---------------------------------------------------------------------------
+// Keys
+// ---------------------------------------------------------------------------
 
 /**
- * A certificate signed with an empty key is still self-consistent: anyone who
- * reads this file can recompute the HMAC and "verify" a forged record. So in
- * production an unconfigured secret is a hard failure, not a silent downgrade.
+ * Keys are Ed25519, loaded from base64 DER so a private key can live on one
+ * line of an env file. A PEM would need real newlines, which every dotenv
+ * parser and hosting dashboard mangles differently — a truncated key is a
+ * server that will not start, and the fix is not obvious from the error.
+ *
+ * `CERT_SIGNING_PRIVATE_KEY_FILE` is checked first and preferred: a secret
+ * manager that mounts a file (Docker/Kubernetes secrets, systemd
+ * LoadCredential) can then hand over the key without it ever appearing in the
+ * process environment, where it is visible to anything that can read /proc.
+ */
+
+/**
+ * A bare DER buffer is ambiguous — the same bytes could be PKCS#8, SEC1 or
+ * SPKI — so node will not guess and throws a bare "unsupported" DECODER error.
+ * The type and format are always stated explicitly.
+ */
+function privateKeyFromDer(der: Buffer): crypto.KeyObject {
+  return crypto.createPrivateKey({ key: der, format: 'der', type: 'pkcs8' });
+}
+
+function publicKeyFromDer(der: Buffer): crypto.KeyObject {
+  return crypto.createPublicKey({ key: der, format: 'der', type: 'spki' });
+}
+
+function readKeyMaterial(): { privateKeyB64: string; publicKeyB64: string } {
+  const file = (process.env.CERT_SIGNING_PRIVATE_KEY_FILE || '').trim();
+  if (file) {
+    try {
+      // Imported lazily: a deployment that only ever verifies never needs fs.
+      const fs = require('fs') as typeof import('fs');
+      // PEM is self-describing, so the file form needs no type/format hint.
+      const key = crypto.createPrivateKey(fs.readFileSync(file, 'utf8'));
+      return {
+        privateKeyB64: key.export({ type: 'pkcs8', format: 'der' }).toString('base64'),
+        publicKeyB64: crypto
+          .createPublicKey(key)
+          .export({ type: 'spki', format: 'der' })
+          .toString('base64'),
+      };
+    } catch (e: any) {
+      throw configError(
+        `Certificate signing key could not be read from CERT_SIGNING_PRIVATE_KEY_FILE: ${e?.message || e}`
+      );
+    }
+  }
+
+  const privateKeyB64 = (process.env.CERT_SIGNING_PRIVATE_KEY || '').trim();
+  if (!privateKeyB64) return { privateKeyB64: '', publicKeyB64: '' };
+
+  // The public half is always derived from the private half, never configured
+  // separately. An operator-supplied public key is a trap: if it does not match
+  // the private key, signing still succeeds and every certificate issued is
+  // silently unverifiable — the worst possible failure, because it looks fine
+  // until someone holds the PDF. There is also nothing to gain, since the
+  // public key is a pure function of the private one.
+  let publicKeyB64 = '';
+  try {
+    publicKeyB64 = crypto
+      .createPublicKey(privateKeyFromDer(Buffer.from(privateKeyB64, 'base64')))
+      .export({ type: 'spki', format: 'der' })
+      .toString('base64');
+  } catch (e: any) {
+    throw configError(
+      `CERT_SIGNING_PRIVATE_KEY is not a valid Ed25519 PKCS#8 key (base64 DER): ${e?.message || e}`
+    );
+  }
+  return { privateKeyB64, publicKeyB64 };
+}
+
+const KEYS = readKeyMaterial();
+
+/** Active signing key. Empty when unconfigured, which `assertSigningConfigured` treats as fatal. */
+export const CERT_SIGNING_PRIVATE_KEY = KEYS.privateKeyB64;
+export const CERT_SIGNING_PUBLIC_KEY = KEYS.publicKeyB64;
+
+/**
+ * Key id = fingerprint of the public key, truncated to 64 bits.
+ *
+ * Derived rather than hand-written so it can never drift out of sync with the
+ * key it names — the classic failure being a certificate pointing at key "v2"
+ * while "v2" is actually some other key, which silently breaks verification.
+ * 64 bits is far past any realistic collision count for a handful of keys.
+ */
+function fingerprintKey(publicKeyB64: string): string {
+  return crypto.createHash('sha256').update(Buffer.from(publicKeyB64, 'base64')).digest('hex').slice(0, 16);
+}
+
+export const ACTIVE_KEY_ID = KEYS.publicKeyB64 ? fingerprintKey(KEYS.publicKeyB64) : '';
+
+/**
+ * Public keys this deployment will accept signatures from: the active key plus
+ * any retired ones, so a rotation does not retroactively void old certificates.
+ *
+ * `CERT_RETIRED_PUBLIC_KEYS` is `keyid:base64spki` pairs, comma-separated.
+ */
+function trustedKeys(): Map<string, string> {
+  const map = new Map<string, string>();
+  if (KEYS.publicKeyB64 && ACTIVE_KEY_ID) map.set(ACTIVE_KEY_ID, KEYS.publicKeyB64);
+  const raw = (process.env.CERT_RETIRED_PUBLIC_KEYS || '').trim();
+  if (raw) {
+    for (const pair of raw.split(',')) {
+      const entry = pair.trim();
+      if (!entry) continue;
+      const idx = entry.indexOf(':');
+      if (idx <= 0) continue;
+      const id = entry.slice(0, idx).trim();
+      const key = entry.slice(idx + 1).trim();
+      if (!id || !key) continue;
+      // The id is recomputed rather than trusted, so a typo in the env cannot
+      // register a key under an id its fingerprint does not match.
+      map.set(fingerprintKey(key), key);
+    }
+  }
+  return map;
+}
+
+/**
+ * Operational misconfiguration: a 503 carrying the fix.
+ *
+ * `expose: true` tells the API error handler this text is safe to hand to the
+ * caller — it names a variable and a remedy, never a key. See server.ts.
+ */
+function configError(message: string): Error {
+  return Object.assign(new Error(message), { status: 503, expose: true });
+}
+
+/**
+ * Refuses to issue a certificate that nobody can ever verify.
+ *
+ * A certificate signed with a missing key is not a signed certificate, and in
+ * production an unconfigured key is a hard failure rather than a silent
+ * downgrade — otherwise the first person to find out is a graduate whose
+ * certificate does not verify.
  */
 export function assertSigningConfigured(): void {
-  if (CERT_SIGNING_SECRET && CERT_SIGNING_SECRET.trim().length >= 16) return;
+  if (ACTIVE_KEY_ID && CERT_SIGNING_PRIVATE_KEY) return;
   if (process.env.NODE_ENV === 'production') {
-    throw new Error(
-      'Certificate signing is not configured. Set CERT_SIGNING_SECRET (>= 16 chars) before issuing or verifying certificates in production.'
+    throw configError(
+      'Certificate signing is not configured. Generate an Ed25519 keypair and set ' +
+        'CERT_SIGNING_PRIVATE_KEY (base64 PKCS#8 DER) before issuing or verifying certificates in production. ' +
+        'Keep the public half too — it is what verifiers check against.'
     );
   }
   if (process.env.NODE_ENV === 'test') return;
   // eslint-disable-next-line no-console
   console.warn(
-    '[certificates] CERT_SIGNING_SECRET is unset — using the development fallback. ' +
-      'Certificates issued now will not verify once a real secret is configured.'
+    '[certificates] CERT_SIGNING_PRIVATE_KEY is unset — no keypair loaded. ' +
+      'Certificates cannot be signed or verified until it is set.'
   );
 }
+
+/**
+ * The public key half, for publication.
+ *
+ * Safe to expose unauthenticated: it is the point of asymmetric signing. A
+ * verifier that trusts this value can check certificates without trusting — or
+ * even reaching — this server.
+ */
+export function publicKeyBundle(): { key_id: string; public_key: string; algorithm: string } | null {
+  if (!ACTIVE_KEY_ID || !CERT_SIGNING_PUBLIC_KEY) return null;
+  return { key_id: ACTIVE_KEY_ID, public_key: CERT_SIGNING_PUBLIC_KEY, algorithm: 'ed25519' };
+}
+
 
 /**
  * Public base used to build the verification link printed on the PDF.
@@ -91,10 +239,14 @@ export function siteUrlIsLocalhost(): boolean {
 export function assertSiteUrlConfigured(): void {
   if (!siteUrlIsLocalhost()) return;
   if (process.env.NODE_ENV === 'production') {
-    throw new Error(
-      'Certificate verification URL is not configured. Set NEXT_PUBLIC_SITE_URL to the public ' +
-        'origin (e.g. https://tieedu.com) before issuing certificates in production — otherwise ' +
-        'every PDF printed will carry a QR code that cannot be scanned by anyone.'
+    // 503 + `expose` for the same reason as `assertSigningConfigured`.
+    throw Object.assign(
+      new Error(
+        'Certificate verification URL is not configured. Set NEXT_PUBLIC_SITE_URL to the public ' +
+          'origin (e.g. https://tieedu.com) before issuing certificates in production — otherwise ' +
+          'every PDF printed will carry a QR code that cannot be scanned by anyone.'
+      ),
+      { status: 503, expose: true }
     );
   }
   if (process.env.NODE_ENV === 'test') return;
@@ -109,8 +261,16 @@ export function verificationUrlFor(serial: string): string {
   return `${SITE_URL}/verify/${encodeURIComponent(serial)}`;
 }
 
-/** Bumped whenever the signed field set changes, so old signatures are unambiguous. */
-export const SIGNING_VERSION = 2;
+/**
+ * Bumped whenever the signed field set or the signing algorithm changes, so old
+ * signatures are never mistaken for current ones.
+ *
+ * v3 is the move from HMAC-SHA256 to Ed25519. The payload is byte-identical in
+ * shape, but the signature is a completely different construction, so a v2
+ * record could never be validated by a v3 verifier even by accident. There were
+ * no certificates in circulation at this bump, so nothing needed reissuing.
+ */
+export const SIGNING_VERSION = 3;
 
 /** The exact set of fields covered by the signature. Nothing else is protected. */
 export interface SignedCertificateFields {
@@ -152,13 +312,57 @@ function canonicalPayload(c: SignedCertificateFields): string {
   ].join('|');
 }
 
-export function signCertificate(fields: SignedCertificateFields): string {
+/**
+ * Signs the canonical payload with the active PRIVATE key.
+ *
+ * Returns the signature and the id of the key that produced it; the id is
+ * stored alongside the certificate so a later rotation knows which public key
+ * has to check it.
+ */
+export function signCertificate(fields: SignedCertificateFields): { signature: string; keyId: string } {
   assertSigningConfigured();
   assertSiteUrlConfigured();
-  return crypto
-    .createHmac('sha256', CERT_SIGNING_SECRET)
-    .update(canonicalPayload(fields))
-    .digest('hex');
+  const signature = crypto.sign(
+    null,
+    Buffer.from(canonicalPayload(fields), 'utf8'),
+    privateKeyFromDer(Buffer.from(CERT_SIGNING_PRIVATE_KEY, 'base64'))
+  );
+  return { signature: signature.toString('base64'), keyId: ACTIVE_KEY_ID };
+}
+
+/**
+ * Checks a signature against whichever trusted public key signed it.
+ *
+ * Ed25519 verification is constant-time inside node, so there is no
+ * `timingSafeEqual` here — that is the right tool for comparing two secrets you
+ * already hold, not for an asymmetric check whose comparison work node does.
+ */
+function verifySignature(fields: SignedCertificateFields, signatureB64: string, keyId: string): boolean {
+  const keys = trustedKeys();
+  const candidates: string[] = [];
+  if (keyId && keys.has(keyId)) candidates.push(keys.get(keyId)!);
+  // A certificate with no recorded key id (or one this build has never heard
+  // of) is still checked against every trusted key, so a record is never
+  // reported as forged just because it was signed under a rotated key.
+  if (candidates.length === 0) candidates.push(...keys.values());
+  if (candidates.length === 0) return false;
+
+  let sig: Buffer;
+  try {
+    sig = Buffer.from(signatureB64, 'base64');
+  } catch {
+    return false;
+  }
+  if (sig.length !== 64) return false;
+
+  const payload = Buffer.from(canonicalPayload(fields), 'utf8');
+  return candidates.some((pub) => {
+    try {
+      return crypto.verify(null, payload, publicKeyFromDer(Buffer.from(pub, 'base64')), sig);
+    } catch {
+      return false;
+    }
+  });
 }
 
 export interface SignatureCheck {
@@ -167,13 +371,15 @@ export interface SignatureCheck {
   status: 'active' | 'revoked' | 'unknown';
   revoked_reason: string;
   revoked_at: string | null;
+  /** Which public key must be used to check this certificate. */
+  signing_key_id: string;
 }
 
 /**
  * Full authenticity check for a serial. Both halves matter:
  *  - `record_exists` proves the serial was really issued by us.
  *  - `signature_valid` proves the stored record has not been edited, because
- *    editing any signed field invalidates the HMAC.
+ *    editing any signed field invalidates the signature.
  * A verifier must report BOTH; reporting only the record would let a forged
  * row pass.
  */
@@ -198,6 +404,7 @@ export function verifyCertificate(db: any, serialInput: string): {
         status: 'unknown',
         revoked_reason: '',
         revoked_at: null,
+        signing_key_id: '',
       },
       certificate: null,
       course: null,
@@ -207,18 +414,8 @@ export function verifyCertificate(db: any, serialInput: string): {
 
   assertSigningConfigured();
 
-  const expected = signCertificate({
-    serial: certificate.serial,
-    user_id: certificate.user_id,
-    recipient_email: certificate.recipient_email,
-    recipient_name: certificate.recipient_name,
-    course_id: certificate.course_id,
-    course_title: certificate.course_title,
-    issued_at: certificate.issued_at,
-    lessons_completed: certificate.lessons_completed,
-    lessons_required: certificate.lessons_required,
-    xp_at_issue: certificate.xp_at_issue,
-  });
+  const fields = signedFieldsOf(certificate);
+  const signatureValid = verifySignature(fields, certificate.signature || '', certificate.signing_key_id || '');
 
   const course = (db.courses || []).find((c: Course) => c.id === certificate.course_id) || null;
   const user: User | undefined = (db.users || []).find((u: User) => u.id === certificate.user_id);
@@ -226,11 +423,12 @@ export function verifyCertificate(db: any, serialInput: string): {
   return {
     found: true,
     check: {
-      signature_valid: expected === certificate.signature,
+      signature_valid: signatureValid,
       record_exists: true,
       status: certificate.status === 'revoked' ? 'revoked' : 'active',
       revoked_reason: certificate.revoked_reason || '',
       revoked_at: certificate.revoked_at || null,
+      signing_key_id: certificate.signing_key_id || '',
     },
     certificate,
     course,
@@ -238,6 +436,28 @@ export function verifyCertificate(db: any, serialInput: string): {
       name: certificate.recipient_name,
       college: user?.college || null,
     },
+  };
+}
+
+/**
+ * The signed projection of a stored record.
+ *
+ * One definition, used by the signer and the verifier, so the two cannot drift
+ * into disagreeing about what is covered — which would make every freshly
+ * issued certificate fail its own signature check.
+ */
+export function signedFieldsOf(c: Certificate): SignedCertificateFields {
+  return {
+    serial: c.serial,
+    user_id: c.user_id,
+    recipient_email: c.recipient_email,
+    recipient_name: c.recipient_name,
+    course_id: c.course_id,
+    course_title: c.course_title,
+    issued_at: c.issued_at,
+    lessons_completed: c.lessons_completed,
+    lessons_required: c.lessons_required,
+    xp_at_issue: c.xp_at_issue,
   };
 }
 
@@ -461,16 +681,21 @@ export async function buildCertificatePdf(
   page.drawText(ascii(`Serial: ${certificate.serial}`), {
     x: 300, y: footerY + 44, size: 9.5, font: sansBold, color: INK,
   });
-  page.drawText('HMAC-SHA256 fingerprint', {
+  page.drawText('Ed25519 signature', {
     x: 300, y: footerY + 32, size: 7.5, font: sans, color: MUTED,
   });
-  const fingerprint = `${certificate.signature.slice(0, 32)}...`;
+  const fingerprint = `${(certificate.signature || '').slice(0, 32)}...`;
   page.drawText(fingerprint, {
     x: 300, y: footerY + 19, size: 8, font: sans, color: BODY,
   });
-  page.drawText('Recomputable by anyone - see verification page', {
-    x: 300, y: footerY + 8, size: 7.5, font: sans, color: MUTED,
-  });
+  // The key id travels with the certificate so a holder can check it against
+  // the published public key without trusting this server to pick the right one.
+  page.drawText(
+    ascii(`Key: ${(certificate.signing_key_id || '').slice(0, 16) || 'n/a'} - verifiable with the public key`),
+    {
+      x: 300, y: footerY + 8, size: 7.5, font: sans, color: MUTED,
+    }
+  );
 
   // QR (right)
   const qrUrl = verificationUrlFor(certificate.serial);

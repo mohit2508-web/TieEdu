@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { ProgressBar } from '@/components/courses/CourseUi';
 import { Award, Download } from 'lucide-react';
@@ -72,7 +71,6 @@ export default function MyCoursesPage() {
       <Head>
         <title>My courses · TieEdu</title>
       </Head>
-      <Header cartCount={0} onOpenCart={() => {}} onOpenSearch={() => {}} onOpenLeaderboard={() => {}} />
 
       <main className="mx-auto w-full max-w-5xl px-6 pb-24 pt-14">
         <header className="flex flex-wrap items-end justify-between gap-4">

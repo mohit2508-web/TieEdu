@@ -131,7 +131,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
         className="min-h-screen bg-[#F8FAFC] text-[#1E293B] flex flex-col font-sans"
         style={{ fontFamily: "'Calibre', 'Calibri', 'Inter', -apple-system, sans-serif" }}
       >
-        <header className="sticky top-0 z-40 bg-white border-b border-gray-200 px-4 sm:px-8 py-4 flex items-center justify-between shadow-xs">
+        <header className="sticky top-[var(--header-h)] z-30 bg-white border-b border-gray-200 px-4 sm:px-8 py-4 flex items-center justify-between shadow-xs">
           <div className="flex items-center gap-3.5 min-w-0">
             <button
               onClick={onBack}
@@ -196,7 +196,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
       style={{ fontFamily: "'Calibre', 'Calibri', 'Inter', -apple-system, sans-serif" }}
     >
       {/* Top Header Bar */}
-      <header className="sticky top-0 z-40 bg-white border-b border-gray-200 px-4 sm:px-8 py-4 flex items-center justify-between shadow-xs">
+      <header className="sticky top-[var(--header-h)] z-30 bg-white border-b border-gray-200 px-4 sm:px-8 py-4 flex items-center justify-between shadow-xs">
         <div className="flex items-center gap-3.5 min-w-0">
           <button
             onClick={onBack}

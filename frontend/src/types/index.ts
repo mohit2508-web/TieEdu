@@ -641,6 +641,23 @@ export interface CourseLesson {
   sort_order: number;
   duration_minutes: number;
   xp_reward: number;
+  /**
+   * Derived shape flags, always present.
+   *
+   * The server computes these from the lesson's own content rather than storing
+   * them, and sends them for open *and* locked lessons alike, so the syllabus can
+   * label every row the same way. `LockedLessonStub` carries the identical three
+   * fields for exactly that reason: if the two shapes disagreed here, the
+   * syllabus would have to narrow on `locked` before it could count quizzes, and
+   * would silently under-count the modules a learner cannot open yet.
+   */
+  /**
+   * The lesson's medium, derived server-side. `has_quiz` reports assessability
+   * separately, so a reading lesson that carries a challenge is still `reading`.
+   */
+  kind: 'video' | 'reading';
+  has_video: boolean;
+  has_quiz: boolean;
   video: CourseVideo | null;
   quiz: CourseQuizMeta | null;
   blocks?: CourseLessonBlock[];
@@ -661,7 +678,8 @@ export interface LockedLessonStub {
   summary: string;
   sort_order: number;
   duration_minutes: number;
-  kind: 'video' | 'quiz' | 'reading';
+  /** The medium, not the assessment: see the note on `CourseLesson.kind`. */
+  kind: 'video' | 'reading';
   has_video: boolean;
   has_quiz: boolean;
   state: LessonCompletionState;
@@ -812,6 +830,59 @@ export interface CourseDetail extends Omit<CourseCard, 'progress'> {
    * already claimed has to click a no-op to reach the download.
    */
   certificate?: CertificateSummary | null;
+
+  // ---------------------------------------------------------------------------
+  // The long-form page sections.
+  //
+  // Every one of these is optional and the server omits the key entirely when it
+  // has no content, rather than sending an empty string or an empty array. That
+  // is deliberate: the page must be able to tell "never written" from "written
+  // as nothing", because only the first should hide the heading. Rendering
+  // `undefined` and `[]` as an empty section produces a page of headings with
+  // nothing under them, which reads as a bug rather than as missing content.
+  // ---------------------------------------------------------------------------
+
+  /** Long-form prose for "About this course". Paragraph breaks are blank lines. */
+  about_course?: string;
+  /** Bullets for "What you should know before you start". */
+  prerequisites?: string[];
+  /** Bullets for "Who this course is for". */
+  audience?: string[];
+  /** e.g. "English". Omitted when the course has no recorded audio language. */
+  audio_language?: string;
+  /** e.g. "English". Omitted rather than "None", which would be a claim. */
+  caption_language?: string;
+
+  /** The person teaching the course, or null when none is assigned. */
+  instructor?: CourseInstructor | null;
+
+  /**
+   * How many graded challenges the course contains, counted server-side from the
+   * lessons that actually carry a quiz. Always a number - zero is a real answer
+   * for a course with no challenges, which is different from "not counted yet".
+   */
+  challenge_count?: number;
+}
+
+/**
+ * A person who teaches a course.
+ *
+ * Every number is nullable on purpose. `students_taught: 0` would claim that
+ * nobody has ever taken their course, which is a different statement from "we do
+ * not have that figure", so an unknown value is absent rather than zero and the
+ * page omits the row entirely.
+ */
+export interface CourseInstructor {
+  id: string;
+  name: string;
+  title?: string;
+  bio?: string;
+  photo_url?: string;
+  /** Courses currently attributed to this instructor, counted from the data. */
+  course_count?: number;
+  students_taught?: number | null;
+  hours_lectured?: number | null;
+  rating?: number | null;
 }
 
 export type CatalogSortKey = 'popular' | 'newest' | 'rating' | 'az' | 'za';
@@ -956,6 +1027,14 @@ export interface CertificateSummary {
   revoked_reason: string;
   revoked_at: string | null;
   signature: string;
+  /**
+   * Fingerprint of the Ed25519 public key that signed this certificate.
+   *
+   * Published by `GET /api/courses/verify/key`, so a holder can check the
+   * certificate against the public key itself without trusting this server to
+   * report the right verdict. Empty only for records predating key ids.
+   */
+  signing_key_id: string;
   verification_url: string;
   /** API-relative. The download needs a Bearer token, so fetch it, don't link it. */
   download_path: string;
@@ -967,19 +1046,23 @@ export interface CertificateCheck {
   status: 'active' | 'revoked' | 'unknown';
   revoked_reason: string;
   revoked_at: string | null;
+  /** Which public key the signature was checked against. */
+  signing_key_id: string;
 }
 
 /**
  * The public verification response.
  *
- * Note the naming: `status` describes how much we trust the ANSWER
- * ('genuine' | 'revoked' | 'invalid'), while the actual verdict is
- * `valid` / `found` / `check`. A serial we have never issued comes back
- * HTTP 404 with `{ status: 'genuine', found: false, ... }` — 'genuine' here
- * means "this is a real answer from us", not "this certificate is valid".
+ * Note the naming: `status` describes the OUTCOME ('genuine' | 'revoked' |
+ * 'invalid' | 'not_found') and the actual verdict is `valid` / `found` /
+ * `check`. A serial we have never issued comes back HTTP 404 with
+ * `{ status: 'not_found', found: false, ... }`. It must never report
+ * 'genuine' here: that reads as "this certificate is valid" to anything
+ * checking `status` alone, which is exactly the mistake a forgery check
+ * cannot afford. `check.record_exists` is the field to branch on.
  */
 export interface CertificateVerifyResponse {
-  status: 'genuine' | 'revoked' | 'invalid';
+  status: 'genuine' | 'revoked' | 'invalid' | 'not_found';
   found: boolean;
   valid?: boolean;
   check: CertificateCheck;
@@ -1061,6 +1144,16 @@ export interface AdminCourseForEditor {
   updated_at: string;
   modules: AdminModule[];
   stats: CourseStats;
+
+  // The long-form page fields. Optional because a course that has never had them
+  // filled in has no value, and an empty string is a legitimate saved state that
+  // must round-trip without being mistaken for "never edited".
+  about_course?: string;
+  prerequisites?: string[];
+  audience?: string[];
+  audio_language?: string;
+  caption_language?: string;
+  instructor_id?: string | null;
 }
 
 export interface AdminModule {

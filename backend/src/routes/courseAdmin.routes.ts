@@ -17,12 +17,16 @@
 import { Request, Response } from 'express';
 import { Router } from 'express';
 import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
+import multer from 'multer';
 import {
   loadDb,
   saveDb,
   Course,
   CourseLesson,
   CourseModule,
+  Instructor,
   Certificate,
   CourseFeedback,
   ContentBlockRecord,
@@ -47,7 +51,312 @@ import { signCertificate, verificationUrlFor } from '../lib/certificate';
 
 export const courseAdminRouter = Router();
 
+// ---------------------------------------------------------------------------
+// Instructors
+// ---------------------------------------------------------------------------
+//
+// Instructors are records rather than a free-text name on each course, so the
+// "who teaches this" answer is consistent across the catalogue. Nothing is
+// seeded: an instructor is a real person, and describing one that does not exist
+// is a fabricated claim about a named human. Every numeric field is optional and
+// should be left unset unless it comes from real records.
+
+const allInstructors = (db: any): Instructor[] => (Array.isArray(db.instructors) ? db.instructors : []);
+
+/** Courses taught by an instructor, for the "N courses" figure on their block. */
+const coursesByInstructor = (db: any, instructorId: string): Course[] =>
+  ((db.courses || []) as Course[]).filter((c) => c.instructor_id === instructorId);
+
+/**
+ * Public shape of an instructor, with the course count and every number derived
+ * from the data rather than stored on the record, so none of it can drift.
+ *
+ * `students_taught` and `hours_lectured` come from the instructor record because
+ * they are claims about a person's history, not something this database can
+ * count. They are omitted, not zeroed, when unknown — "0 students" would read as
+ * a claim that nobody has ever taken their course.
+ */
+function instructorForPage(db: any, i: Instructor) {
+  const courses = coursesByInstructor(db, i.id);
+  return {
+    id: i.id,
+    name: i.name,
+    title: i.title || '',
+    bio: i.bio || '',
+    photo_url: i.photo_url || '',
+    course_count: courses.length,
+    students_taught: typeof i.students_taught === 'number' ? i.students_taught : null,
+    hours_lectured: typeof i.hours_lectured === 'number' ? i.hours_lectured : null,
+    rating: typeof i.rating === 'number' ? i.rating : null,
+  };
+}
+// The instructor ROUTES are registered after the guard, near the end of this file.
+// They used to sit here, above the admin guard, which let an unauthenticated
+// caller write instructor records. The helpers above stay here; defining a
+// function grants no access.
+
+
+// ---------------------------------------------------------------------------
+// Course thumbnail upload
+// ---------------------------------------------------------------------------
+//
+// Modelled on `posters.routes.ts`, which already stores and serves uploaded
+// images this way, so there is one convention for uploads in this codebase
+// rather than two.
+
+export const THUMBNAIL_DIR = path.join(__dirname, '../../uploads/course-thumbnails');
+export const ensureThumbnailDir = () => fs.mkdirSync(THUMBNAIL_DIR, { recursive: true });
+ensureThumbnailDir();
+
+/**
+ * Only these extensions are ever written to disk, and the name is generated
+ * server-side rather than taken from the client, so an uploaded `../../evil.png`
+ * cannot choose where the bytes land.
+ */
+const THUMB_ALLOWED_EXT = new Set(['.jpg', '.jpeg', '.png', '.webp', '.avif']);
+/** Re-anchored on the serve route, so a crafted name cannot walk out of the dir. */
+const THUMB_STORED_NAME_RE = /^thumb-[0-9]+-[a-z0-9]{4,10}\.(jpg|jpeg|png|webp|avif)$/;
+const THUMB_MIME: Record<string, string> = {
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png': 'image/png',
+  '.webp': 'image/webp',
+  '.avif': 'image/avif',
+};
+
+/** The public URL for a stored name, stored on the course as `thumbnail_url`. */
+export const thumbnailUrlFor = (storedName: string): string =>
+  `/api/course-admin/thumbnail/${encodeURIComponent(storedName)}`;
+
+/**
+ * GET /api/course-admin/thumbnail/:storedName — serve a stored cover.
+ *
+ * Declared *before* `requireAdmin` so it is genuinely public: the card, the
+ * detail hero and `og:image` all need the bytes without a session, and the
+ * generated names carry nothing sensitive. A crawler fetching `og:image` has no
+ * token, so a guarded version of this route would break social previews.
+ */
+courseAdminRouter.get('/thumbnail/:storedName', (req: Request, res: Response) => {
+  const { storedName } = req.params;
+  if (!THUMB_STORED_NAME_RE.test(storedName)) return res.status(404).json({ error: 'Invalid file' });
+
+  const filePath = path.join(THUMBNAIL_DIR, storedName);
+  if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'File missing on disk' });
+
+  const ext = path.extname(storedName).toLowerCase();
+  res.setHeader('Content-Type', THUMB_MIME[ext] || 'application/octet-stream');
+  // The name embeds a timestamp, so these bytes never change for a given name
+  // and a re-upload produces a new name. Safe to cache hard.
+  res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.sendFile(filePath);
+});
 courseAdminRouter.use(requireAdmin);
+
+// ---------------------------------------------------------------------------
+// Instructor routes
+// ---------------------------------------------------------------------------
+//
+// Registered BELOW requireAdmin on purpose. They used to be declared at the top
+// of this file, above the guard, and POST /api/course-admin/instructors then
+// accepted an unauthenticated write: anyone could create, rename or delete the
+// records the course page presents as the answer to who teaches this. On an
+// Express router, order IS the security boundary - middleware only protects the
+// routes registered after it. The public thumbnail GET above the guard is the one
+// deliberate exception, and it only reads a file whose name had to match a
+// server-generated pattern.
+
+courseAdminRouter.get('/instructors', (_req: Request, res: Response) => {
+  const db = loadDb();
+  const rows = allInstructors(db).map((i) => instructorForPage(db, i));
+  res.json({ status: 'success', instructors: rows });
+});
+
+courseAdminRouter.post('/instructors', (req: Request, res: Response) => {
+  const db = loadDb();
+  const b = req.body || {};
+  const name = str(b.name, 120);
+  if (name.length < 2) return res.status(400).json({ error: 'Instructor name is required' });
+
+  const instructor: Instructor = {
+    id: `inst-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`,
+    name,
+    title: str(b.title, 120),
+    bio: str(b.bio, 8000),
+    photo_url: str(b.photo_url, 500),
+    created_at: new Date().toISOString(),
+  };
+  // Optional claims are only stored when actually supplied, so an absent number
+  // stays absent instead of becoming a zero the page would have to hide.
+  if (b.students_taught !== undefined && b.students_taught !== null && b.students_taught !== '') {
+    instructor.students_taught = num(b.students_taught, 0, 0, 100000000);
+  }
+  if (b.hours_lectured !== undefined && b.hours_lectured !== null && b.hours_lectured !== '') {
+    instructor.hours_lectured = num(b.hours_lectured, 0, 0, 1000000);
+  }
+  if (b.rating !== undefined && b.rating !== null && b.rating !== '') {
+    instructor.rating = num(b.rating, 0, 0, 5);
+  }
+
+  if (!Array.isArray(db.instructors)) db.instructors = [];
+  db.instructors.push(instructor);
+  saveDb(db);
+  res.status(201).json({ status: 'success', instructor: instructorForPage(db, instructor) });
+});
+
+courseAdminRouter.put('/instructors/:id', (req: Request, res: Response) => {
+  const db = loadDb();
+  const instructor = allInstructors(db).find((i) => i.id === req.params.id);
+  if (!instructor) return res.status(404).json({ error: 'Instructor not found' });
+
+  const b = req.body || {};
+  if (b.name !== undefined) {
+    const n = str(b.name, 120);
+    if (n.length < 2) return res.status(400).json({ error: 'Instructor name is required' });
+    instructor.name = n;
+  }
+  if (b.title !== undefined) instructor.title = str(b.title, 120);
+  if (b.bio !== undefined) instructor.bio = str(b.bio, 8000);
+  if (b.photo_url !== undefined) instructor.photo_url = str(b.photo_url, 500);
+  if (b.students_taught !== undefined) {
+    instructor.students_taught = b.students_taught === null || b.students_taught === '' ? undefined : num(b.students_taught, 0, 0, 100000000);
+  }
+  if (b.hours_lectured !== undefined) {
+    instructor.hours_lectured = b.hours_lectured === null || b.hours_lectured === '' ? undefined : num(b.hours_lectured, 0, 0, 1000000);
+  }
+  if (b.rating !== undefined) {
+    instructor.rating = b.rating === null || b.rating === '' ? undefined : num(b.rating, 0, 0, 5);
+  }
+
+  saveDb(db);
+  res.json({ status: 'success', instructor: instructorForPage(db, instructor) });
+});
+
+courseAdminRouter.delete('/instructors/:id', (req: Request, res: Response) => {
+  const db = loadDb();
+  const before = allInstructors(db).length;
+  db.instructors = allInstructors(db).filter((i) => i.id !== req.params.id);
+  if (db.instructors.length === before) return res.status(404).json({ error: 'Instructor not found' });
+
+  // Detach rather than cascade-delete: the courses are real content and must not
+  // disappear because a person stopped teaching them.
+  for (const c of (db.courses || []) as Course[]) {
+    if (c.instructor_id === req.params.id) c.instructor_id = null;
+  }
+  saveDb(db);
+  res.json({ status: 'success' });
+});
+
+const thumbnailStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, THUMBNAIL_DIR),
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname || '').toLowerCase();
+    const safeExt = THUMB_ALLOWED_EXT.has(ext) ? ext : '.jpg';
+    const suffix = Math.random().toString(36).slice(2, 10);
+    cb(null, `thumb-${Date.now()}-${suffix}${safeExt}`);
+  },
+});
+
+const thumbnailUpload = multer({
+  storage: thumbnailStorage,
+  fileFilter: (_req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+    const ext = path.extname(file.originalname || '').toLowerCase();
+    if (file.mimetype.startsWith('image/') && THUMB_ALLOWED_EXT.has(ext)) cb(null, true);
+    else cb(new Error('ONLY_IMAGE_ALLOWED'));
+  },
+  // 4 MB. A course card cover is decorative; anything larger is a mistake or an
+  // attempt to fill the disk, and the page would look no different for it.
+  limits: { fileSize: 4 * 1024 * 1024 },
+}).single('file');
+
+/**
+ * POST /api/course-admin/courses/:id/thumbnail — upload or clear a cover.
+ *
+ * Behind `requireAdmin`. The previous file is deleted only after the new one is
+ * safely on disk, so a failed upload cannot leave a course with no cover.
+ */
+/**
+ * Read the optional long-form page fields off a request body and apply them.
+ *
+ * Shared by create and update because the two used to disagree: update accepted
+ * `about_course` / `instructor_id` and create silently ignored them. An admin who
+ * filled the long-form form in on the *new course* screen and watched it vanish
+ * would reasonably conclude the form was broken.
+ *
+ * Every field is applied only when present in the body, so an update that omits a
+ * key leaves it alone. That is what makes "clear this section" work - the client
+ * sends `''` or `[]` explicitly rather than dropping the key.
+ *
+ * Returns an error string when the body is unusable, so the caller can bail out
+ * before writing a half-built course.
+ */
+const applyLongFormFields = (
+  db: any,
+  course: Course,
+  b: any,
+): { error?: string } => {
+  if (b.about_course !== undefined) course.about_course = str(b.about_course, 20000);
+  if (b.prerequisites !== undefined) course.prerequisites = longBullets(b.prerequisites, 12);
+  if (b.audience !== undefined) course.audience = longBullets(b.audience, 12);
+  if (b.audio_language !== undefined) course.audio_language = str(b.audio_language, 40);
+  if (b.caption_language !== undefined) course.caption_language = str(b.caption_language, 40);
+  if (b.instructor_id !== undefined) {
+    const id = str(b.instructor_id, 60) || null;
+    // Rejecting a dangling id keeps the course page from silently losing its
+    // instructor block after someone deletes the instructor record.
+    if (id && !(db.instructors || []).some((i: Instructor) => i.id === id)) {
+      return { error: 'Instructor not found' };
+    }
+    course.instructor_id = id;
+  }
+  return {};
+};
+
+courseAdminRouter.post('/courses/:id/thumbnail', (req: Request, res: Response) => {
+  const db = loadDb();
+  const course = (db.courses || []).find((c: any) => c.id === req.params.id);
+  if (!course) return res.status(404).json({ error: 'Course not found' });
+
+  thumbnailUpload(req, res, (err: any) => {
+    if (err) {
+      const code = err?.code === 'LIMIT_FILE_SIZE' ? 'FILE_TOO_LARGE' : err?.message || 'UPLOAD_FAILED';
+      const status = code === 'FILE_TOO_LARGE' ? 413 : 400;
+      return res.status(status).json({ error: code });
+    }
+
+    // `?remove=1` clears the cover and goes back to the generated gradient.
+    if (String(req.query.remove || '') === '1') {
+      if (course.thumbnail_url) {
+        const old = course.thumbnail_url.split('/').pop() || '';
+        if (THUMB_STORED_NAME_RE.test(old)) {
+          fs.rm(path.join(THUMBNAIL_DIR, old), { force: true }, () => {});
+        }
+      }
+      course.thumbnail_url = '';
+      saveDb(db);
+      return res.json({ status: 'success', course: { id: course.id, thumbnail_url: '' } });
+    }
+
+    const file = req.file as Express.Multer.File | undefined;
+    if (!file) return res.status(400).json({ error: 'No file uploaded' });
+
+    const previous = String(course.thumbnail_url || '');
+    course.thumbnail_url = thumbnailUrlFor(file.filename);
+    saveDb(db);
+
+    // Only now that the record points at the new file is the old one removed.
+    const oldName = previous.split('/').pop() || '';
+    if (THUMB_STORED_NAME_RE.test(oldName)) {
+      fs.rm(path.join(THUMBNAIL_DIR, oldName), { force: true }, () => {});
+    }
+
+    return res.status(201).json({
+      status: 'success',
+      course: { id: course.id, thumbnail_url: course.thumbnail_url },
+    });
+  });
+});
+
 
 // Derived from the shared union, so a block type the editor can produce can
 // never be one the save path throws away.
@@ -61,6 +370,18 @@ function str(v: any, max = 400): string {
 function strArray(v: any, max = 20): string[] {
   if (!Array.isArray(v)) return [];
   return v.map((x) => str(x, 60)).filter(Boolean).slice(0, max);
+}
+
+/**
+ * Bullets for the long-form page sections.
+ *
+ * `strArray` caps each item at 60 characters, which suits a tag but truncates a
+ * sentence like "Anyone comfortable writing a small Python script" mid-word.
+ * These get a sentence-sized cap instead.
+ */
+function longBullets(v: any, max = 12): string[] {
+  if (!Array.isArray(v)) return [];
+  return v.map((x) => str(x, 400)).filter(Boolean).slice(0, max);
 }
 
 function num(v: any, fallback: number, min: number, max: number): number {
@@ -157,6 +478,12 @@ courseAdminRouter.post('/courses', (req: Request, res: Response) => {
 
   if (!course.is_free) course.price_inr = Math.max(1, course.price_inr);
 
+  // Long-form page sections and the instructor assignment are accepted on create
+  // as well as update. Without this an admin filling the new-course form would
+  // lose every one of them, because the body keys were only ever read by PUT.
+  const longForm = applyLongFormFields(db, course, req.body || {});
+  if (longForm.error) return res.status(400).json({ error: longForm.error });
+
   db.courses = db.courses || [];
   db.courses.push(course);
   audit(db, 'course.create', `Created course "${course.title}"`);
@@ -218,6 +545,10 @@ courseAdminRouter.put('/courses/:id', (req: Request, res: Response) => {
   if (b.thumbnail_url !== undefined) course.thumbnail_url = str(b.thumbnail_url, 500);
   if (b.tags !== undefined) course.tags = strArray(b.tags);
   if (b.outcomes !== undefined) course.outcomes = strArray(b.outcomes, 12).map((o) => o.slice(0, 240));
+  // Long-form page sections. Each is optional and an empty value clears it, so
+  // an admin can remove a section by sending `[]` / `''` rather than only adding.
+  const longForm = applyLongFormFields(db, course, b);
+  if (longForm.error) return res.status(400).json({ error: longForm.error });
   if (b.certificate_eligible !== undefined) course.certificate_eligible = !!b.certificate_eligible;
   if (b.prerequisite_course_id !== undefined) {
     const prereq = str(b.prerequisite_course_id, 60) || null;
@@ -804,6 +1135,7 @@ courseAdminRouter.post('/certificates/issue', (req: Request, res: Response) => {
     xp_at_issue: totalXpForUser(db, userId),
   };
 
+  const signed = signCertificate(fields);
   const certificate: Certificate = {
     id: `cert-${Date.now()}-${serial.slice(-6)}`,
     serial,
@@ -816,7 +1148,8 @@ courseAdminRouter.post('/certificates/issue', (req: Request, res: Response) => {
     xp_at_issue: fields.xp_at_issue,
     lessons_completed: fields.lessons_completed,
     lessons_required: fields.lessons_required,
-    signature: signCertificate(fields),
+    signature: signed.signature,
+    signing_key_id: signed.keyId,
     status: 'active',
     revoked_reason: '',
     revoked_at: null,

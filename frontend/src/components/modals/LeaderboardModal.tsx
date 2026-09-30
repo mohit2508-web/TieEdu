@@ -1,13 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { fetchLeaderboardApi } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
+import { useShell } from '@/context/ShellContext';
 import { Flame, Trophy, Award, X, Sparkles, UserRound, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
-
-interface LeaderboardModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
 
 /**
  * Mirrors GET /api/gamification/leaderboard.
@@ -28,14 +24,23 @@ interface LeaderboardEntry {
   report_contributions: number;
 }
 
-export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onClose }) => {
+/**
+ * Opened from the header and the drawer. Takes no props: visibility is owned by
+ * `ShellContext`, which is also where Escape and the body scroll lock live. It
+ * used to be rendered per page behind an `onOpenLeaderboard` handler, so the
+ * button was dead on eight of twelve pages.
+ */
+export const LeaderboardModal: React.FC = () => {
   const { user } = useAuth();
+  const { isOpen, closeOverlay } = useShell();
+  const isOpenNow = isOpen('leaderboard');
+  const onClose = () => closeOverlay('leaderboard');
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpenNow) return;
     let active = true;
     setLoading(true);
     setError(null);
@@ -50,9 +55,9 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onCl
         if (active) setLoading(false);
       });
     return () => { active = false; };
-  }, [isOpen]);
+  }, [isOpenNow]);
 
-  if (!isOpen) return null;
+  if (!isOpenNow) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3.5 sm:p-4 bg-black/40 backdrop-blur-sm animate-fade-in">

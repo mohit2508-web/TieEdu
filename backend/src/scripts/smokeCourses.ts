@@ -12,11 +12,22 @@
 // certificate must stop verifying, and XP must not be farmable.
 
 process.env.PORT = process.env.SMOKE_PORT || '5311';
-process.env.CERT_SIGNING_SECRET = process.env.CERT_SIGNING_SECRET || 'smoke-test-signing-secret-0001';
 process.env.NEXT_PUBLIC_SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://tieedu.test';
+// A real Ed25519 keypair, generated per run. Certificates are signed and
+// verified in this file, so a fixed key would only hide a bug where a stale
+// record still matched because both halves came from the same constant.
+// `require`, not the import below: this runs above the import block, where the
+// imported binding does not exist yet.
+if (!process.env.CERT_SIGNING_PRIVATE_KEY) {
+  const { privateKey } = require('crypto').generateKeyPairSync('ed25519');
+  process.env.CERT_SIGNING_PRIVATE_KEY = privateKey
+    .export({ type: 'pkcs8', format: 'der' })
+    .toString('base64');
+}
 
 import fs from 'fs';
 import path from 'path';
+import net from 'net';
 import bcrypt from 'bcryptjs';
 import { XpEvent, User } from '../data/db';
 
@@ -38,6 +49,62 @@ process.env.DB_FILE = SCRATCH_DB;
 const DB_FILE = SCRATCH_DB;
 const BASE = `http://127.0.0.1:${process.env.PORT}`;
 
+/**
+ * Close the API this run started, and wait until the port is actually free.
+ *
+ * `server.ts` binds SMOKE_PORT when it is imported, and the process used to exit
+ * with the listener still attached. Consecutive runs then failed in a way that
+ * pointed nowhere near the cause: `listen` threw EADDRINUSE, the suite carried on
+ * against the previous run's server, and the previous run's scratch store - which
+ * had already been deleted - was what answered. Closing and then confirming the
+ * port is gone means a failure to clean up is reported as such, instead of
+ * surfacing later as phantom missing rows.
+ */
+async function shutdownServer(): Promise<void> {
+  let mod: any;
+  try {
+    mod = await import('../server');
+  } catch {
+    return; // The server never came up, so there is nothing listening.
+  }
+  const server = mod?.httpServer;
+  if (!server) return;
+  await new Promise<void>((resolve) => {
+    let settled = false;
+    const done = () => {
+      if (settled) return;
+      settled = true;
+      resolve();
+    };
+    // `close` waits for open connections to drain, which a keep-alive socket from
+    // this run's own fetches can hold open. The timer is the backstop.
+    const t = setTimeout(() => {
+      server.closeAllConnections?.();
+      done();
+    }, 3000);
+    server.close(() => {
+      clearTimeout(t);
+      done();
+    });
+    server.closeAllConnections?.();
+  });
+  // Belt and braces: do not exit until the listener has actually gone.
+  for (let i = 0; i < 20; i++) {
+    const free = await new Promise<boolean>((resolve) => {
+      const probe = net.createConnection({ host: '127.0.0.1', port: Number(process.env.PORT) });
+      probe.once('connect', () => {
+        probe.destroy();
+        resolve(false);
+      });
+      probe.once('error', () => resolve(true));
+    });
+    if (free) return;
+    await new Promise((r) => setTimeout(r, 100));
+  }
+  console.log(`\n(warning: port ${process.env.PORT} is still held after shutdown)`);
+}
+
+
 let passed = 0;
 const failures: string[] = [];
 const skips: string[] = [];
@@ -57,6 +124,29 @@ function check(label: string, condition: boolean, detail?: string) {
   }
 }
 
+/**
+ * True for a failure that happened at the socket, before any HTTP response.
+ *
+ * Deliberately narrow. A 4xx or 5xx is the server's answer and must never be
+ * retried; only a transport-level fault is eligible, because there is no
+ * response to interpret and the request may simply not have been delivered.
+ */
+const isConnectionFault = (err: any): boolean => {
+  const codes = new Set([
+    'ECONNRESET',
+    'ECONNREFUSED',
+    'EPIPE',
+    'ETIMEDOUT',
+    'UND_ERR_SOCKET',
+    'UND_ERR_CONNECT_TIMEOUT',
+  ]);
+  if (err?.code && codes.has(err.code)) return true;
+  if (err?.cause?.code && codes.has(err.cause.code)) return true;
+  // `fetch failed` with no recognisable cause is still a transport failure: the
+  // request never produced a status line.
+  return err instanceof TypeError && /fetch failed/i.test(err.message);
+};
+
 async function api(
   routePath: string,
   opts: { method?: string; token?: string; body?: any; raw?: boolean } = {}
@@ -64,18 +154,45 @@ async function api(
   const headers: Record<string, string> = {};
   if (opts.token) headers.Authorization = `Bearer ${opts.token}`;
   if (opts.body) headers['Content-Type'] = 'application/json';
-  const res = await fetch(`${BASE}${routePath}`, {
-    method: opts.method || 'GET',
-    headers,
-    body: opts.body ? JSON.stringify(opts.body) : undefined,
-  });
-  if (opts.raw) return { status: res.status, body: await res.arrayBuffer() };
-  const text = await res.text();
-  try {
-    return { status: res.status, body: JSON.parse(text) };
-  } catch {
-    return { status: res.status, body: text };
+
+  /**
+   * One retry, and only for a transport fault.
+   *
+   * Node's fetch pools keep-alive sockets, and the API server will close an idle
+   * one. When the client then reuses that socket it gets `ECONNRESET` and the
+   * whole run dies with an unhelpful `TypeError: fetch failed` - at a different
+   * point each time, which reads like a product bug when it is a client
+   * artefact. That made the suite untrustworthy: a green run proved nothing
+   * because a red one might have been nothing at all.
+   *
+   * Retrying is bounded to a fault with no HTTP response, so it cannot mask a
+   * genuine failure the server meant to report, and it is attempted once so a
+   * real outage still fails the run.
+   */
+  let lastErr: any;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await fetch(`${BASE}${routePath}`, {
+        method: opts.method || 'GET',
+        headers,
+        body: opts.body ? JSON.stringify(opts.body) : undefined,
+      });
+      if (opts.raw) return { status: res.status, body: await res.arrayBuffer() };
+      const text = await res.text();
+      try {
+        return { status: res.status, body: JSON.parse(text) };
+      } catch {
+        return { status: res.status, body: text };
+      }
+    } catch (err: any) {
+      lastErr = err;
+      if (attempt === 1 || !isConnectionFault(err)) throw err;
+      // A closed idle socket is reaped immediately; no delay needed, but a short
+      // pause keeps a burst of requests from reusing the same dead pool entry.
+      await new Promise((r) => setTimeout(r, 50));
+    }
   }
+  throw lastErr;
 }
 
 function readDb(): any {
@@ -289,6 +406,55 @@ async function main() {
       JSON.stringify(afterFirst[0]?.lock_reason)
     );
 
+    // Regression: `kind`/`has_video`/`has_quiz` were only ever set on the locked
+    // stub, while the open lesson went out through `sanitizeLesson`, which did
+    // not set them. Lesson 1 of a free course is always open, so its entry in
+    // the syllabus had no type at all and the client drew a blank icon for it -
+    // and the client types declare all three as required, so the API was
+    // breaking its own contract. The type flags have to agree across both
+    // shapes, and they are content-type metadata, not content, so saying them
+    // for an open lesson discloses nothing the stub does not already say.
+    const allLessons = detailLessons;
+    const flagsPresent = (l: any) =>
+      typeof l.kind === 'string' && l.kind.length > 0 && typeof l.has_video === 'boolean' && typeof l.has_quiz === 'boolean';
+    check(
+      'every syllabus lesson states its type, open or locked',
+      allLessons.every(flagsPresent),
+      JSON.stringify({ open: Object.keys(preview || {}), locked: Object.keys(afterFirst[0] || {}) })
+    );
+    check(
+      'the open lesson and the locked stub agree on a lesson type',
+      preview?.kind === afterFirst[0]?.kind &&
+        preview?.has_video === afterFirst[0]?.has_video &&
+        preview?.has_quiz === afterFirst[0]?.has_quiz,
+      JSON.stringify({ open: preview?.kind, locked: afterFirst[0]?.kind })
+    );
+
+    // The challenge count is a public "N challenges" stat, so it is counted from
+    // the course itself rather than from what a particular visitor can see. It
+    // must be the real number of graded challenges: every lesson carrying a
+    // quiz, whether or not the viewer has unlocked it yet.
+    const gradedChallenges = (readDb().courses.find((c: any) => c.slug === slug)?.modules || []).reduce(
+      (n: number, m: any) => n + (m.lessons || []).filter((l: any) => !!l.quiz).length,
+      0
+    );
+    const reportedChallenges = detail.body?.course?.challenge_count;
+    check(
+      'the reported challenge count is the real number of graded challenges',
+      reportedChallenges === gradedChallenges && gradedChallenges > 0,
+      JSON.stringify({ reported: reportedChallenges, graded: gradedChallenges })
+    );
+
+    // The long-form sections are omitted rather than sent empty, so the page
+    // never renders a heading for prose that was never written.
+    const longForm = ['about_course', 'prerequisites', 'audience', 'audio_language', 'caption_language'];
+    const courseBody = detail.body?.course || {};
+    check(
+      'unwritten long-form sections are omitted, not sent empty',
+      longForm.every((k) => !(k in courseBody) || !!courseBody[k]),
+      JSON.stringify(longForm.filter((k) => k in courseBody))
+    );
+
     console.log('\n[4] enrolment and sequential gating');
     const enrol = await api(`/api/courses/${encodeURIComponent(slug)}/enroll`, { method: 'POST', token });
     check('enrol succeeds', enrol.status === 200 || enrol.status === 201, `got ${enrol.status}`);
@@ -363,13 +529,24 @@ async function main() {
     satisfyTimeGates(userId, listing.id, undefined, true);
     const authorSeconds = (Number(firstVideo.video.duration_minutes) || 0) * 60;
 
+    // Reading the store back by hand has to tolerate a row that is not there.
+    // The scratch store is shared with the in-process server, and the two do
+    // read-modify-write on the same file, so a read can occasionally land just
+    // before the server's own save. Written as a bare chain, that read threw a
+    // TypeError, which aborted the whole run and hid the ~190 checks after this
+    // one - so an intermittent race looked like a catastrophic regression, and the
+    // one assertion that was actually at fault never got reported. A missing row
+    // is a failed assertion, not a dead suite.
+    const storedField = (field: 'video_watch_seconds' | 'video_position_seconds' | 'video_duration_seconds', lessonId: string): number =>
+      Number(readDb()?.course_progress?.[userId]?.[listing.id]?.[field]?.[lessonId]) || 0;
+
     // The shrink attack: claim the video is a few seconds long, then watch it.
     const shrink = await api(`/api/courses/lessons/${encodeURIComponent(firstVideo.id)}/progress`, {
       method: 'POST',
       token,
       body: { delta_seconds: 20, duration_seconds: 3 },
     });
-    const storedDuration = Number(readDb().course_progress[userId][listing.id].video_duration_seconds[firstVideo.id]) || 0;
+    const storedDuration = storedField('video_duration_seconds', firstVideo.id);
     check(
       'a 3-second claim for a long video is rejected',
       storedDuration >= authorSeconds * 0.7,
@@ -379,7 +556,7 @@ async function main() {
     const shrinkPercent = shrink.body?.lesson?.video_percent ?? 0;
     check('the percentage is computed against the real length', shrinkPercent < 10, `percent=${shrinkPercent}`);
 
-    const before = Number(readDb().course_progress[userId][listing.id].video_watch_seconds[firstVideo.id]) || 0;
+    const before = storedField('video_watch_seconds', firstVideo.id);
 
     // Claim the entire video in a single request.
     const cheat = await api(`/api/courses/lessons/${encodeURIComponent(firstVideo.id)}/progress`, {
@@ -387,7 +564,7 @@ async function main() {
       token,
       body: { delta_seconds: authorSeconds, duration_seconds: authorSeconds },
     });
-    const after = Number(readDb().course_progress[userId][listing.id].video_watch_seconds[firstVideo.id]) || 0;
+    const after = storedField('video_watch_seconds', firstVideo.id);
     const credited = after - before;
     check('heartbeat accepted', cheat.status === 200, `got ${cheat.status}: ${JSON.stringify(cheat.body).slice(0, 140)}`);
     check('credited at most 20s, not the claimed amount', credited <= 20, `credited ${credited}s, claimed ${authorSeconds}s`);
@@ -399,9 +576,9 @@ async function main() {
       token,
       body: { delta_seconds: 999_999, duration_seconds: 999_999 },
     });
-    const afterAbsurd = Number(readDb().course_progress[userId][listing.id].video_watch_seconds[firstVideo.id]) || 0;
+    const afterAbsurd = storedField('video_watch_seconds', firstVideo.id);
     check('an absurd claim is also capped at 20s', afterAbsurd - after <= 20, `gained ${afterAbsurd - after}s`);
-    const durationStored = Number(readDb().course_progress[userId][listing.id].video_duration_seconds[firstVideo.id]) || 0;
+    const durationStored = storedField('video_duration_seconds', firstVideo.id);
     check('a fake 277-hour duration is not stored verbatim', durationStored <= 8 * 3600, `stored ${durationStored}s`);
     check('absurd heartbeat still succeeds structurally', absurd.status === 200, `got ${absurd.status}`);
 
@@ -410,13 +587,13 @@ async function main() {
       token,
       body: { delta_seconds: -5000, duration_seconds: 10 },
     });
-    check('a negative delta cannot subtract watch time', negative.status === 200 && (Number(readDb().course_progress[userId][listing.id].video_watch_seconds[firstVideo.id]) || 0) >= afterAbsurd);
+    check('a negative delta cannot subtract watch time', negative.status === 200 && storedField('video_watch_seconds', firstVideo.id) >= afterAbsurd);
 
     // Resume position. The player sends the playhead so reopening a lesson picks
     // up where the learner stopped. It must be stored, echoed, and bounded — and
     // critically it must not feed the watch gate, or seeking to the end would
     // complete the lesson.
-    const watchedBeforeSeek = Number(readDb().course_progress[userId][listing.id].video_watch_seconds[firstVideo.id]) || 0;
+    const watchedBeforeSeek = storedField('video_watch_seconds', firstVideo.id);
     const seek = await api(`/api/courses/lessons/${encodeURIComponent(firstVideo.id)}/progress`, {
       method: 'POST',
       token,
@@ -424,13 +601,13 @@ async function main() {
     });
     check(
       'the playhead is stored for resume',
-      Number(readDb().course_progress[userId][listing.id].video_position_seconds[firstVideo.id]) === 120,
-      `stored ${readDb().course_progress[userId][listing.id].video_position_seconds[firstVideo.id]}`
+      storedField('video_position_seconds', firstVideo.id) === 120,
+      `stored ${storedField('video_position_seconds', firstVideo.id)}`
     );
     check('the response echoes the kept playhead', seek.body?.position_seconds === 120, `position_seconds=${seek.body?.position_seconds}`);
     check(
       'seeking to the end grants no watch credit',
-      (Number(readDb().course_progress[userId][listing.id].video_watch_seconds[firstVideo.id]) || 0) === watchedBeforeSeek
+      storedField('video_watch_seconds', firstVideo.id) === watchedBeforeSeek
     );
 
     const seekPastEnd = await api(`/api/courses/lessons/${encodeURIComponent(firstVideo.id)}/progress`, {
@@ -444,9 +621,7 @@ async function main() {
       `position_seconds=${seekPastEnd.body?.position_seconds} vs ${authorSeconds}s`
     );
 
-    const beforeNegativeSeek = Number(
-      readDb().course_progress[userId][listing.id].video_position_seconds[firstVideo.id]
-    );
+    const beforeNegativeSeek = storedField('video_position_seconds', firstVideo.id);
     const negativeSeek = await api(`/api/courses/lessons/${encodeURIComponent(firstVideo.id)}/progress`, {
       method: 'POST',
       token,
@@ -714,6 +889,47 @@ async function main() {
       check('course-admin rejects anonymous', (await api('/api/course-admin/courses')).status === 401);
       check('course-admin rejects a student', (await api('/api/course-admin/courses', { token })).status === 403);
 
+      // Regression: the instructor CRUD routes were registered at the top of
+      // courseAdmin.routes.ts, ABOVE `courseAdminRouter.use(requireAdmin)`, so the
+      // guard never ran for them and POST /api/course-admin/instructors accepted
+      // an unauthenticated write - verified live, it created a record. Checking
+      // only /courses never noticed, because that route was always below the
+      // guard. Asserted on every verb and both roles, so the routes cannot drift
+      // above the middleware again without this failing.
+      // 401 is "no credentials", 403 is "credentials, but not an admin". Both are
+      // refusals; the distinction is `requireAdmin`'s job, not this test's, so
+      // each role is checked against the status it should actually get.
+      for (const [label, opts, expected] of [
+        ['anonymous', {}, 401],
+        ['a student', { token }, 403]
+      ] as [string, any, number][]) {
+        const post = await api('/api/course-admin/instructors', { ...opts, method: 'POST', body: { name: 'Unauthorised Write' } });
+        const put = await api('/api/course-admin/instructors/anything', { ...opts, method: 'PUT', body: { name: 'Unauthorised Write' } });
+        const del = await api('/api/course-admin/instructors/anything', { ...opts, method: 'DELETE' });
+        const list = await api('/api/course-admin/instructors', opts);
+        check(
+          `the instructor routes reject ${label}`,
+          post.status === expected && put.status === expected && del.status === expected && list.status === expected,
+          JSON.stringify({ post: post.status, put: put.status, del: del.status, list: list.status, expected })
+        );
+      }
+      // The write must not have happened, whatever the status code claimed.
+      check(
+        'no instructor record was created by the unauthorised attempts',
+        !(readDb().instructors || []).some((i: any) => i.name === 'Unauthorised Write'),
+        JSON.stringify((readDb().instructors || []).map((i: any) => i.name))
+      );
+
+      // The one deliberate public route on this router: a cover image, served by
+      // filename. It must stay reachable without a token, or every course card
+      // and social preview in the app breaks.
+      const publicThumb = await api('/api/course-admin/thumbnail/thumb-0000000000-deadbeef.png');
+      check(
+        'the public cover route is not blocked by the admin guard',
+        publicThumb.status !== 401,
+        `got ${publicThumb.status}`
+      );
+
       const list = await api('/api/course-admin/courses', { token: adminToken });
       check('admin lists courses', list.status === 200 && Array.isArray(list.body?.courses));
       check('admin sees enrolment counts', typeof list.body?.courses?.[0]?.enrolled === 'number', JSON.stringify(list.body?.courses?.[0]).slice(0, 160));
@@ -746,7 +962,266 @@ async function main() {
         !!firstLesson && ['title', 'summary', 'duration_minutes', 'xp_reward', 'blocks'].every((k) => k in firstLesson),
         JSON.stringify(Object.keys(firstLesson || {}))
       );
-      check('course detail returns enrollments and feedback arrays', Array.isArray(detailAdmin.body?.enrollments) && Array.isArray(detailAdmin.body?.feedback));
+        check('course detail returns enrollments and feedback arrays', Array.isArray(detailAdmin.body?.enrollments) && Array.isArray(detailAdmin.body?.feedback));
+
+        // --- the long-form page sections, end to end -------------------------
+        // The admin form writes about_course / prerequisites / audience /
+        // audio_language / caption_language, and the public page reads them. Both
+        // halves are asserted here because the failure mode is silent in each
+        // direction separately: a save that quietly drops a field still returns
+        // 200, and a public payload that omits it still renders a valid page.
+        const longForm = {
+          about_course: 'First paragraph.\n\nSecond paragraph.',
+          prerequisites: ['Comfortable with any programming language', 'A machine to run code on'],
+          audience: ['Complete beginners', 'People switching languages'],
+          audio_language: 'English',
+          caption_language: 'English',
+        };
+
+        // Create, not just update. These fields were originally only read by the
+        // PUT route, so filling in the long-form form on the *new course* screen
+        // silently discarded everything and still returned 201 - the admin had no
+        // way to tell. Publishing is skipped so the throwaway never reaches the
+        // catalogue, and it is deleted again immediately after.
+        const createdWithSections = await api('/api/course-admin/courses', {
+          method: 'POST',
+          token: adminToken,
+          body: { ...editable, ...longForm, title: 'Smoke Create Sections', published: false },
+        });
+        check('a new course can be created with its long-form sections', createdWithSections.status === 201, `got ${createdWithSections.status}`);
+
+        const createdEditor = createdWithSections.body?.course || {};
+        check(
+          'the long-form sections survive creation, not just editing',
+          createdEditor.about_course === longForm.about_course &&
+            JSON.stringify(createdEditor.prerequisites) === JSON.stringify(longForm.prerequisites) &&
+            JSON.stringify(createdEditor.audience) === JSON.stringify(longForm.audience) &&
+            createdEditor.audio_language === longForm.audio_language &&
+            createdEditor.caption_language === longForm.caption_language,
+          JSON.stringify({
+            about: createdEditor.about_course,
+            prereq: createdEditor.prerequisites,
+            aud: createdEditor.audience,
+            audio: createdEditor.audio_language,
+            cap: createdEditor.caption_language,
+          })
+        );
+        if (createdEditor.id) {
+          await api(`/api/course-admin/courses/${encodeURIComponent(createdEditor.id)}`, {
+            method: 'DELETE',
+            token: adminToken,
+          });
+        }
+
+        // A create naming an instructor that does not exist must fail loudly.
+        // On update this is rejected; if create skipped the check it would store a
+        // dangling id and the public page would quietly lose its instructor block.
+        const createdBadInstructor = await api('/api/course-admin/courses', {
+          method: 'POST',
+          token: adminToken,
+          body: { ...editable, title: 'Smoke Bad Instructor', instructor_id: 'inst-does-not-exist' },
+        });
+        check(
+          'creating a course with a non-existent instructor is rejected',
+          createdBadInstructor.status === 400,
+          `got ${createdBadInstructor.status}`
+        );
+
+        // A new course can be created as PAID, with a price and an instructor, in
+        // the one request the create form makes. This used to be impossible to
+        // express: the form hardcoded `is_free: true`, so a paid course had to be
+        // created free and then corrected in a second save, and anything published
+        // in between was free. A price of 0 on a paid course is also clamped up to
+        // 1 rather than stored, because 0 is what the backend reads as "free".
+        const createdPaid = await api('/api/course-admin/courses', {
+          method: 'POST',
+          token: adminToken,
+          body: { ...editable, title: 'Smoke Paid Create', is_free: false, price_inr: 1299, published: false },
+        });
+        check('a new course can be created as paid', createdPaid.status === 201, `got ${createdPaid.status}`);
+        check(
+          'the price is kept, not flattened to free',
+          createdPaid.body?.course?.is_free === false && createdPaid.body?.course?.price_inr === 1299,
+          JSON.stringify({ free: createdPaid.body?.course?.is_free, price: createdPaid.body?.course?.price_inr })
+        );
+        const createdPaidZero = await api('/api/course-admin/courses', {
+          method: 'POST',
+          token: adminToken,
+          body: { ...editable, title: 'Smoke Paid Zero', is_free: false, price_inr: 0, published: false },
+        });
+        check(
+          'a paid course created with no price is clamped to 1, not stored as free',
+          createdPaidZero.body?.course?.is_free === false && createdPaidZero.body?.course?.price_inr === 1,
+          JSON.stringify({ free: createdPaidZero.body?.course?.is_free, price: createdPaidZero.body?.course?.price_inr })
+        );
+        for (const id of [createdPaid.body?.course?.id, createdPaidZero.body?.course?.id]) {
+          if (id) {
+            await api(`/api/course-admin/courses/${encodeURIComponent(id)}`, { method: 'DELETE', token: adminToken });
+          }
+        }
+
+        const savedLong = await api(`/api/course-admin/courses/${encodeURIComponent(listing.id)}`, {
+          method: 'PUT',
+          token: adminToken,
+          body: { ...editable, ...longForm },
+        });
+        check('the long-form sections save', savedLong.status === 200, `got ${savedLong.status}`);
+
+        const publicAfterSave = await api(`/api/courses/${encodeURIComponent(listing.slug)}`);
+        const savedCourse = publicAfterSave.body?.course || {};
+        check(
+          'the public page receives every long-form section that was saved',
+          savedCourse.about_course === longForm.about_course &&
+            JSON.stringify(savedCourse.prerequisites) === JSON.stringify(longForm.prerequisites) &&
+            JSON.stringify(savedCourse.audience) === JSON.stringify(longForm.audience) &&
+            savedCourse.audio_language === longForm.audio_language &&
+            savedCourse.caption_language === longForm.caption_language,
+          JSON.stringify({
+            about: savedCourse.about_course,
+            prereq: savedCourse.prerequisites,
+            aud: savedCourse.audience,
+            audio: savedCourse.audio_language,
+            cap: savedCourse.caption_language,
+          }).slice(0, 220)
+        );
+        check(
+          'blank lines in the prose survive so paragraphs still split',
+          typeof savedCourse.about_course === 'string' && savedCourse.about_course.includes('\n\n'),
+          JSON.stringify(savedCourse.about_course)
+        );
+
+        // Clearing a section must actually clear it. The form always sends these
+        // keys, so the server assigns them; if it skipped empty input instead, the
+        // old prose would be stuck on the page forever with no way to remove it.
+        const clearedLong = await api(`/api/course-admin/courses/${encodeURIComponent(listing.id)}`, {
+          method: 'PUT',
+          token: adminToken,
+          body: { ...editable, about_course: '', prerequisites: [], audience: '', audio_language: '', caption_language: '' },
+        });
+        check('clearing the long-form sections saves', clearedLong.status === 200, `got ${clearedLong.status}`);
+        const publicAfterClear = await api(`/api/courses/${encodeURIComponent(listing.slug)}`);
+        const clearedCourse = publicAfterClear.body?.course || {};
+        check(
+          'a cleared section is omitted from the payload so the page hides the heading',
+          !('about_course' in clearedCourse) &&
+            !('prerequisites' in clearedCourse) &&
+            !('audience' in clearedCourse) &&
+            !('audio_language' in clearedCourse) &&
+            !('caption_language' in clearedCourse),
+          JSON.stringify(Object.keys(clearedCourse).filter((k: string) => /about_course|prerequisites|audience|_language/.test(k)))
+        );
+
+        // --- instructors, end to end ----------------------------------------
+        // Created here and deleted at the end of the block: the platform has no
+        // seeded instructor, and inventing one in the seed data would be a claim
+        // about a person who does not exist.
+        const madeInstructor = await api('/api/course-admin/instructors', {
+          method: 'POST',
+          token: adminToken,
+          body: { name: 'Smoke Test Instructor', title: 'Course author', bio: 'Writes the smoke tests.' },
+        });
+        check('an admin can create an instructor', madeInstructor.status === 201, `got ${madeInstructor.status}`);
+        const instructorId = madeInstructor.body?.instructor?.id;
+        check('the created instructor has an id', !!instructorId, JSON.stringify(madeInstructor.body));
+
+        const assigned = await api(`/api/course-admin/courses/${encodeURIComponent(listing.id)}`, {
+          method: 'PUT',
+          token: adminToken,
+          body: { ...editable, instructor_id: instructorId },
+        });
+        check('a course can be assigned to an instructor', assigned.status === 200, `got ${assigned.status}`);
+
+        const publicWithInstructor = await api(`/api/courses/${encodeURIComponent(listing.slug)}`);
+        const shownInstructor = publicWithInstructor.body?.course?.instructor;
+        check(
+          'the public page shows the assigned instructor with a derived course count',
+          shownInstructor?.id === instructorId &&
+            shownInstructor?.name === 'Smoke Test Instructor' &&
+            shownInstructor?.course_count === 1,
+          JSON.stringify(shownInstructor)
+        );
+        check(
+          'unsupplied instructor numbers are null, not zero',
+          shownInstructor?.students_taught === null && shownInstructor?.rating === null,
+          JSON.stringify({ students: shownInstructor?.students_taught, rating: shownInstructor?.rating })
+        );
+
+        // --- editing an existing instructor -------------------------------
+        //
+        // The admin picker edits a record in place, so PUT is the path a typo fix
+        // on a live page takes. It was the one instructor write with no happy-path
+        // coverage - only the unauthorised and unknown-id cases were tested - so
+        // it could have been broken without anything noticing.
+        const editedInstructor = await api(`/api/course-admin/instructors/${encodeURIComponent(instructorId)}`, {
+          method: 'PUT',
+          token: adminToken,
+          body: { name: 'Smoke Test Instructor', title: 'Senior author', bio: 'Edited by the smoke test.' },
+        });
+        check('an admin can edit an instructor', editedInstructor.status === 200, `got ${editedInstructor.status}`);
+        check(
+          'the edit persists and is not silently ignored',
+          editedInstructor.body?.instructor?.title === 'Senior author' &&
+            editedInstructor.body?.instructor?.bio === 'Edited by the smoke test.',
+          JSON.stringify(editedInstructor.body?.instructor)
+        );
+        const publicAfterEdit = await api(`/api/courses/${encodeURIComponent(listing.slug)}`);
+        check(
+          'the edit shows on the public page without changing the assignment',
+          publicAfterEdit.body?.course?.instructor?.id === instructorId &&
+            publicAfterEdit.body?.course?.instructor?.title === 'Senior author' &&
+            publicAfterEdit.body?.course?.instructor?.course_count === 1,
+          JSON.stringify(publicAfterEdit.body?.course?.instructor)
+        );
+
+        // An edit must not be able to rename someone into a second record or
+        // resurrect a deleted one; the id is the identity and stays put.
+        const renameToNothing = await api(`/api/course-admin/instructors/${encodeURIComponent(instructorId)}`, {
+          method: 'PUT',
+          token: adminToken,
+          body: { name: '   ' },
+        });
+        check('an instructor cannot be edited to a blank name', renameToNothing.status === 400, `got ${renameToNothing.status}`);
+        const stillNamed = await api(`/api/courses/${encodeURIComponent(listing.slug)}`);
+        check(
+          'the rejected edit changed nothing',
+          stillNamed.body?.course?.instructor?.name === 'Smoke Test Instructor',
+          JSON.stringify(stillNamed.body?.course?.instructor)
+        );
+        const editMissing = await api('/api/course-admin/instructors/inst-does-not-exist', {
+          method: 'PUT',
+          token: adminToken,
+          body: { name: 'Ghost' },
+        });
+        check('editing an instructor that does not exist is a 404', editMissing.status === 404, `got ${editMissing.status}`);
+
+        // Assigning an id that is not on file must fail rather than store a
+        // dangling reference: the page would then resolve it to null and show
+        // nothing, with no way for an admin to tell a typo from a deletion.
+        const bogusAssign = await api(`/api/course-admin/courses/${encodeURIComponent(listing.id)}`, {
+          method: 'PUT',
+          token: adminToken,
+          body: { ...editable, instructor_id: 'inst-does-not-exist' },
+        });
+        check('assigning an unknown instructor is rejected', bogusAssign.status === 400, `got ${bogusAssign.status}`);
+
+        // Deleting the person must detach the course, not delete it. The course
+        // is real content and has to survive its author being removed.
+        const removedInstructor = await api(`/api/course-admin/instructors/${encodeURIComponent(instructorId)}`, {
+          method: 'DELETE',
+          token: adminToken,
+        });
+        check('an admin can delete an instructor', removedInstructor.status === 200, `got ${removedInstructor.status}`);
+        const publicAfterDelete = await api(`/api/courses/${encodeURIComponent(listing.slug)}`);
+        check(
+          'deleting an instructor detaches the course and leaves the course intact',
+          publicAfterDelete.status === 200 &&
+            publicAfterDelete.body?.course?.instructor === null &&
+            publicAfterDelete.body?.course?.title === listing.title,
+          JSON.stringify({ status: publicAfterDelete.status, instructor: publicAfterDelete.body?.course?.instructor })
+        );
+        const orphanCheck = (readDb().courses as any[]).filter((c) => c.instructor_id === instructorId);
+        check('no course is left pointing at a deleted instructor', orphanCheck.length === 0, `${orphanCheck.length} orphans`);
+
 
       // The admin API accepts these block types. If one is ever added here
       // without a matching `case` in the frontend ContentBlockRenderer, an author
@@ -756,14 +1231,25 @@ async function main() {
         'markdown', 'code', 'image', 'diagram', 'animation', 'callout',
         'audio', 'table', 'video', 'checklist', 'resources', 'steps', 'video_link',
       ];
-      const usedTypes = new Set<string>();
+      // Typed `string | undefined` on purpose: `b` is untyped here, so a block
+      // written without a `block_type` really does land in this set as
+      // `undefined` despite the old `Set<string>` claim.
+      const usedTypes = new Set<string | undefined>();
       for (const c of readDb().courses as any[]) {
         for (const m of c.modules || []) for (const l of m.lessons || []) for (const b of l.blocks || []) usedTypes.add(b.block_type);
       }
+      // Computed once and reused by both the verdict and the detail, and every
+      // entry is named explicitly. `Array.join` renders null/undefined as "", so
+      // the previous inline `.join(', ') || 'none'` turned a missing block_type
+      // into "" -> "none": this check FAILED while reporting that nothing was
+      // unrenderable, which points whoever hits it at the wrong problem entirely.
+      const unrenderable = [...usedTypes].filter((t) => !RENDERABLE_BLOCKS.includes(t as string));
       check(
         'every block type in the data has a renderer',
-        [...usedTypes].every((t) => RENDERABLE_BLOCKS.includes(t)),
-        `unrenderable: ${[...usedTypes].filter((t) => !RENDERABLE_BLOCKS.includes(t)).join(', ') || 'none'}`
+        unrenderable.length === 0,
+        unrenderable.length === 0
+          ? 'all block types have a renderer'
+          : `unrenderable: ${unrenderable.map((t) => (t ? `'${t}'` : '<block with no block_type>')).join(', ')}`
       );
       check(
         'the admin API accepts no block type the renderer cannot draw',
@@ -1381,6 +1867,13 @@ async function main() {
     failures.push(`threw: ${err?.stack || err}`);
     console.error('\nEXCEPTION:', err);
   } finally {
+    // Release the port before this process goes away. Without this the listener
+    // outlives the run, the next run's `listen` throws EADDRINUSE, and its
+    // requests are silently answered by THIS run's server - attached to this
+    // run's scratch store, which has just been deleted. The failure then looks
+    // like random data loss in whatever was being tested.
+    await shutdownServer();
+
     // The real store was never touched, so cleanup is just dropping the scratch
     // copy. Deleting it on the way out keeps data/ free of smoke leftovers.
     if (fs.existsSync(SCRATCH_DB)) {

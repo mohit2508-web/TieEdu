@@ -1,7 +1,8 @@
 import React from 'react';
 import Link from 'next/link';
-import { Check, Lock, PlayCircle, FileText, ListChecks, Clock, Award, Star, Users, Layers, X } from 'lucide-react';
+import { Check, Lock, PlayCircle, FileText, Clock, Award, Star, Users, Layers, X } from 'lucide-react';
 import type { CourseAccess, CourseCard, CourseLessonView, CourseProgress, CourseStats, LessonCompletionState } from '@/types';
+import { apiAssetUrl } from '@/lib/api';
 import {
   courseCta,
   courseCover,
@@ -97,9 +98,12 @@ export const LessonRow: React.FC<{
           <Check size={15} strokeWidth={3} />
         ) : locked ? (
           <Lock size={14} />
-        ) : kind === 'quiz' ? (
-          <ListChecks size={15} />
         ) : kind === 'reading' ? (
+          /* The medium, not whether the lesson is assessable. A reading lesson
+             that ends in a challenge is still reading; `has_quiz` is what says it
+             is assessable, and the syllabus header carries that count. Iconing it
+             as a quiz told the learner they were about to be tested when they were
+             about to be taught. */
           <FileText size={15} />
         ) : (
           <PlayCircle size={15} />
@@ -304,11 +308,15 @@ export const CourseCover: React.FC<{
   title: string;
   thumbnailUrl?: string;
   className?: string;
-}> = ({ slug, title, thumbnailUrl, className }) => {
-  const [loaded, setLoaded] = React.useState(false);
-  const cover = courseCover(slug, title);
+  }> = ({ slug, title, thumbnailUrl, className }) => {
+    const [loaded, setLoaded] = React.useState(false);
+    const cover = courseCover(slug, title);
+    // Uploaded covers are stored as server-relative paths ("/api/..."), and the
+    // frontend is a different origin, so they must be resolved before use or the
+    // browser requests them against Next.js and gets a 404.
+    const src = apiAssetUrl(thumbnailUrl || '');
 
-  if (thumbnailUrl) {
+    if (src) {
     return (
       // A plain div wrapper rather than next/image: these are author-supplied
       // external URLs with no known dimensions, and next/image would need the
@@ -327,9 +335,9 @@ export const CourseCover: React.FC<{
           />
         )}
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={thumbnailUrl}
-          alt=""
+          <img
+            src={src}
+            alt=""
           loading="lazy"
           decoding="async"
           onLoad={() => setLoaded(true)}

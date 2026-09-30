@@ -3,11 +3,20 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import type { GetServerSideProps } from 'next';
-import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { LessonPlayer } from '@/components/courses/LessonPlayer';
-import { CartModal } from '@/components/checkout/CartModal';
-import { isLocked, LessonRow, ProgressBar, CourseRowCard, CtaButton } from '@/components/courses/CourseUi';
+import {
+  AboutCourseSection,
+  AudienceSection,
+  CourseFactStrip,
+  InstructorSection,
+  PrerequisitesSection,
+} from '@/components/courses/CourseDetailSections';
+import { isLocked, ProgressBar, CourseRowCard, CtaButton, CourseCover } from '@/components/courses/CourseUi';
+import { CourseSyllabusNav } from '@/components/courses/CourseSyllabusNav';
+import { CoursePreviewShell } from '@/components/courses/CoursePreviewShell';
+import { decideCoursePage } from '@/lib/courseSsr';
+import { CourseThumbnailEditor } from '@/components/courses/CourseThumbnailEditor';
 import { Award, CheckCircle2, Download, Lock, ShieldCheck, Star, Users, Layers, FileText, Clock } from 'lucide-react';
 import {
   fetchCourse,
@@ -18,19 +27,23 @@ import {
   downloadCertificatePdf,
   submitCourseFeedback,
 } from '@/lib/coursesApi';
-import { API_BASE_URL } from '@/lib/api';
+import { API_BASE_URL, apiAssetUrl } from '@/lib/api';
 import {
   courseCta,
+  courseIncludes,
   formatDuration,
   formatEnrolled,
   formatLessonCount,
   formatLevel,
   formatModuleCount,
+  formatPrice,
   formatRating,
   formatReviewCount,
   plainText,
 } from '@/lib/courseFormat';
 import { useAuth } from '@/context/AuthContext';
+import { useCart, useCartScope } from '@/context/CartContext';
+import { useShell } from '@/context/ShellContext';
 import type {
   CourseDetail,
   CourseLessonView,
@@ -46,29 +59,41 @@ const SITE_URL = 'https://tieedu.com';
 export default function CoursePage({
   initialCourse,
   initialRelated,
+  preview = null,
 }: {
   initialCourse: CourseDetail | null;
   initialRelated: CourseCard[];
+  /**
+   * The public catalogue row, set only when the API refused the detail fetch
+   * because this is a paid course and the visitor is signed out. It is what the
+   * server can honestly render in that case — see CoursePreviewShell.
+   */
+  preview?: CourseCard | null;
 }) {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
+  const { add } = useCart();
+  const { openOverlay } = useShell();
 
   const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
   const requestedLesson = typeof router.query.lesson === 'string' ? router.query.lesson : null;
   // A boolean rather than `user` itself: signing in and out is what should
   // trigger a re-fetch, not a profile update re-rendering the same person.
   const isSignedIn = !!user;
+  // Server-enforced too; this only avoids showing a control that would 403.
+  const isAdmin = user?.role === 'admin';
 
   const [course, setCourse] = useState<CourseDetail | null>(initialCourse);
   const [related, setRelated] = useState<CourseCard[]>(initialRelated);
   const [fetchedLesson, setFetchedLesson] = useState<CourseLessonView | null>(null);
-  const [loading, setLoading] = useState(!initialCourse);
+  // A preview is already something to render, so it must not read as "still
+  // loading" — otherwise the page shows a spinner over content it already has.
+  const [loading, setLoading] = useState(!initialCourse && !preview);
   const [error, setError] = useState<string | null>(null);
   const [enrolling, setEnrolling] = useState(false);
   const [certBusy, setCertBusy] = useState(false);
   const [certError, setCertError] = useState<string | null>(null);
   const [feedbackSent, setFeedbackSent] = useState(false);
-  const [cartOpen, setCartOpen] = useState(false);
 
   // Flattened, ordered lesson list. The whole gate/lock model is "finish the one
   // before you", so everything the page needs is one array plus the server's
@@ -195,10 +220,29 @@ export default function CoursePage({
     [course]
   );
 
+  /**
+   * Add this course to the shared cart and show the drawer.
+   *
+   * It used to open a drawer holding a hardcoded `items={[courseLine]}` — a
+   * single line built from the page, ignoring anything already in the cart, and
+   * whose "remove" button did nothing but close the drawer. Now the line goes
+   * through the same cart as every other purchase, so buying a course and a
+   * company vault together is possible.
+   */
   const buy = () => {
     if (!user) return router.push(`/login?next=/courses/${slug}`);
-    setCartOpen(true);
+    if (courseLine) add(courseLine);
+    openOverlay('cart');
   };
+
+  /*
+   * A paid course only becomes unlocked once the order is marked paid, so the
+   * page is reloaded from the server rather than patched locally. Registered on
+   * the shared drawer because checkout can be completed from any route.
+   */
+  useCartScope(
+    useMemo(() => ({ onCheckoutSuccess: loadCourse }), [loadCourse])
+  );
 
   const onProgress = (p: LessonProgressResponse) => {
     if (p.progress) setCourse((c) => (c ? { ...c, progress: p.progress } : c));
@@ -237,6 +281,35 @@ export default function CoursePage({
   // ineligible course renders a claim button that the API refuses with a 400.
   const existingCert = course?.certificate || null;
 
+  /**
+   * The cover as an absolute URL.
+   *
+   * Uploaded covers are stored server-relative, and `og:image` in particular is
+   * fetched by crawlers and social scrapers with no notion of the site's API
+   * origin, so it has to be absolute or the preview silently breaks. A course
+   * with no cover has none — no placeholder image is invented for it.
+   */
+  // Either view can supply the cover. Bound to a single value first so the
+  // "does it exist" test and the conversion cannot disagree.
+  const coverPath = course?.thumbnail_url || preview?.thumbnail_url || '';
+  const coverImage = coverPath ? apiAssetUrl(coverPath) : '';
+
+  /**
+   * The page's identity, resolved from whichever of the two views is live.
+   *
+   * Before this existed a paid course had no title, no canonical URL and no
+   * structured data at all when rendered without an account, because all three
+   * were read straight off `course` — which is exactly the course the API refuses
+   * to a stranger. A page with no canonical and no title is not a page a search
+   * engine can do anything with.
+   */
+  const pageSlug = course?.slug || preview?.slug || null;
+  const pageTitle = course
+    ? `${course.title} · TieEdu`
+    : preview
+      ? `${preview.title} · TieEdu`
+      : 'Course · TieEdu';
+
   // The single source of truth for "what should this button say and look like",
   // shared with the catalogue card via lib/courseFormat.ts.
   const cta = courseCta({
@@ -254,7 +327,63 @@ export default function CoursePage({
   const duration = formatDuration(course?.stats?.total_minutes);
   const metaDescription = course
     ? plainText(course.description || course.subtitle, 155)
-    : 'A structured, sequential TieEdu course with server-tracked progress and a verifiable certificate.';
+    : preview
+      ? // The catalogue row is the only public description of a paid course, so
+        // it is what a crawler gets. Falling back to the generic sentence here
+        // would index the same boilerplate on every paid course on the site.
+        plainText(preview.description || preview.subtitle, 155)
+      : 'A structured, sequential TieEdu course with server-tracked progress and a verifiable certificate.';
+
+  /**
+   * The one enrolment control for this page.
+   *
+   * The hero and the sticky card both render this, because they have to agree:
+   * a learner who scrolls past the hero to read the syllabus must not find a
+   * different offer, a different price, or a button that disagrees with the one
+   * they just walked past. Deriving it once is cheaper than auditing two copies.
+   */
+  const enrollAction = () => {
+    if (!course) return null;
+    if (locked) {
+      return (
+        <PayWall
+          priceInr={course.price_inr}
+          reason={course.access?.reason || 'This course is not part of your plan.'}
+          onBuy={buy}
+          buying={enrolling}
+        />
+      );
+    }
+    if (progress?.enrolled) {
+      /* A learner already in the course is better served by the progress bar than
+         by any button, so `courseCta`'s "Continue learning" label is not used
+         here. The card shows it, because a card has nowhere else to say it. */
+      return (
+        <div className="w-full max-w-xs">
+          <ProgressBar
+            percent={progress.percent}
+            label={`${progress.completed} of ${progress.total} lessons`}
+          />
+        </div>
+      );
+    }
+    /* Label and tone come from `courseCta` - the same helper the catalogue card
+       uses - so the same purchase state reads the same on both pages. */
+    return (
+      <CtaButton tone={cta.tone} onClick={enrol} disabled={enrolling} className="disabled:opacity-50">
+        {enrolling ? 'Starting…' : cta.label}
+      </CtaButton>
+    );
+  };
+
+  /**
+   * What the card is allowed to claim. See `courseIncludes` in
+   * lib/courseFormat.ts — it drops any entry the course has no data for, so the
+   * list can never advertise a certificate, caption track or challenge count the
+   * course does not actually have. It is derived, not typed out here, so the
+   * hero and the card can never drift apart.
+   */
+  const includes = useMemo(() => courseIncludes(course), [course]);
 
   // The FAQ answers the questions a learner actually asks before enrolling, and
   // every answer is derived from the platform's real rules and this course's own
@@ -305,14 +434,49 @@ export default function CoursePage({
   return (
     <>
       <Head>
-        <title>{course ? `${course.title} · TieEdu` : 'Course · TieEdu'}</title>
+        <title>{pageTitle}</title>
         <meta name="description" content={metaDescription} />
-        {course && <link rel="canonical" href={`${SITE_URL}/courses/${course.slug}`} />}
-        <meta property="og:title" content={course ? `${course.title} · TieEdu` : 'Course · TieEdu'} />
+        {pageSlug && <link rel="canonical" href={`${SITE_URL}/courses/${pageSlug}`} />}
+        <meta property="og:title" content={pageTitle} />
         <meta property="og:description" content={metaDescription} />
-        {course && <meta property="og:url" content={`${SITE_URL}/courses/${course.slug}`} />}
-        {course && <meta property="og:type" content="website" />}
-        {course?.thumbnail_url && <meta property="og:image" content={course.thumbnail_url} />}
+        {pageSlug && <meta property="og:url" content={`${SITE_URL}/courses/${pageSlug}`} />}
+        {pageSlug && <meta property="og:type" content="website" />}
+            {coverImage && <meta property="og:image" content={coverImage} />}
+
+        {/* Structured data for the signed-out view of a paid course.
+            Without this the only HTML a crawler got was a spinner, so a paid
+            course was effectively unlistable however good its page was. Every
+            field here comes from the public catalogue row, so this asserts
+            nothing the API has not already published — in particular it carries
+            no syllabus, no instructor and no review or rating figures, because
+            for a stranger those do not exist yet. */}
+        {!course && preview && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                '@context': 'https://schema.org',
+                '@type': 'Course',
+                name: preview.title,
+                description: metaDescription,
+                url: `${SITE_URL}/courses/${preview.slug}`,
+                ...(preview.is_free
+                  ? { isAccessibleForFree: true }
+                  : { offers: { '@type': 'Offer', price: String(preview.price_inr), priceCurrency: 'INR' } }),
+                // `hasCourseInstance` is omitted rather than derived from
+                // `certificate_eligible`. These were briefly wired together, which
+                // is wrong on its face: being eligible for a certificate says
+                // nothing about how the course is delivered, so a course that
+                // happens to award one would have had a CourseInstance asserted
+                // and every other course silently would not. Guessing a delivery
+                // mode is not worth the markup; the fields above are all facts the
+                // API actually published.
+                ...(preview.thumbnail_url ? { image: apiAssetUrl(preview.thumbnail_url) } : {}),
+                provider: { '@type': 'Organization', name: 'TieEdu', url: SITE_URL },
+              }),
+            }}
+          />
+        )}
 
         {course && (
           <script
@@ -326,12 +490,106 @@ export default function CoursePage({
                     name: course.title,
                     description: metaDescription,
                     url: `${SITE_URL}/courses/${course.slug}`,
-                    inLanguage: 'en',
-                    ...(course.thumbnail_url ? { image: course.thumbnail_url } : {}),
+                    // The language the material is actually delivered in, when we
+                    // know it. Hardcoding 'en' would be a claim about a course whose
+                    // audio has not been recorded, so it is only stated when the
+                    // author has filled the field in.
+                    ...(course.audio_language ? { inLanguage: course.audio_language } : { inLanguage: 'en' }),
+                    ...(coverImage ? { image: coverImage } : {}),
                     provider: { '@type': 'Organization', name: 'TieEdu', url: SITE_URL },
                     ...(course.category ? { educationalLevel: course.category } : {}),
+
+                    /**
+                     * `aggregateRating` is emitted only when there is a real average
+                     * AND a real count of reviews behind it.
+                     *
+                     * Google requires both, and a rating with no `ratingCount` is
+                     * treated as invalid structured data - it earns nothing and can
+                     * get the page flagged. It would also be dishonest: "4.6 stars"
+                     * with no visible review count is a rating nobody can check.
+                     * Below one review the average is not published on the page
+                     * either, so emitting it here would invent a figure the rest of
+                     * the page deliberately hides.
+                     */
+                    ...(course.signals &&
+                    typeof course.signals.rating_avg === 'number' &&
+                    course.signals.rating_count > 0
+                      ? {
+                          aggregateRating: {
+                            '@type': 'AggregateRating',
+                            ratingValue: course.signals.rating_avg,
+                            ratingCount: course.signals.rating_count,
+                            bestRating: 5,
+                            worstRating: 1,
+                          },
+                        }
+                      : {}),
+
+                    /**
+                     * The teacher, as a `Person` when one is assigned.
+                     *
+                     * This used to always be `Organization: TieEdu`, which is not
+                     * wrong so much as useless: it told a search engine that the
+                     * publisher teaches the course, when the record may name someone
+                     * else entirely. Falls back to the publisher only when no
+                     * instructor is on file, so nothing is asserted about a person
+                     * who is not recorded.
+                     */
+                    ...(course.instructor?.id
+                      ? {
+                          hasCourseInstance: {
+                            '@type': 'CourseInstance',
+                            courseMode: 'online',
+                            ...(duration ? { courseWorkload: duration } : {}),
+                            instructor: {
+                              '@type': 'Person',
+                              name: course.instructor.name,
+                              ...(course.instructor.title ? { jobTitle: course.instructor.title } : {}),
+                              ...(course.instructor.photo_url
+                                ? { image: apiAssetUrl(course.instructor.photo_url) }
+                                : {}),
+                            },
+                          },
+                        }
+                      : {
+                          hasCourseInstance: {
+                            '@type': 'CourseInstance',
+                            courseMode: 'online',
+                            ...(duration ? { courseWorkload: duration } : {}),
+                            instructor: { '@type': 'Organization', name: 'TieEdu' },
+                          },
+                        }),
+
+                    // Free courses carry this so a search engine can filter on it.
+                    ...(course.is_free ? { isAccessibleForFree: true } : {}),
+
+                    /**
+                     * Captions, when the course has them.
+                     *
+                     * `caption` is what makes the material usable without sound, so
+                     * it is worth stating - and it is only stated when recorded,
+                     * because advertising captions a course does not have is a
+                     * promise about accessibility that the player cannot keep.
+                     */
+                    ...(course.caption_language
+                      ? {
+                          hasPart: {
+                            '@type': 'WebPageElement',
+                            name: `Captions in ${course.caption_language}`,
+                            ...(coverImage ? { image: coverImage } : {}),
+                          },
+                        }
+                      : {}),
                     ...(course.is_free
-                      ? { offers: { '@type': 'Offer', price: '0', priceCurrency: 'INR', availability: 'https://schema.org/InStock', category: 'Free' } }
+                      ? {
+                          offers: {
+                            '@type': 'Offer',
+                            price: '0',
+                            priceCurrency: 'INR',
+                            availability: 'https://schema.org/InStock',
+                            category: 'Free',
+                          },
+                        }
                       : {
                           offers: {
                             '@type': 'Offer',
@@ -340,12 +598,11 @@ export default function CoursePage({
                             availability: 'https://schema.org/InStock',
                           },
                         }),
-                    hasCourseInstance: {
-                      '@type': 'CourseInstance',
-                      courseMode: 'online',
-                      courseWorkload: duration ? duration : undefined,
-                      instructor: { '@type': 'Organization', name: 'TieEdu' },
-                    },
+                    // `hasCourseInstance` is emitted above, next to the instructor it
+                    // depends on. It used to be duplicated here with the hardcoded
+                    // publisher as teacher, and a duplicate key in one JSON-LD object
+                    // silently resolves to the LAST one - so the real instructor would
+                    // have been discarded in favour of the fallback.
                   },
                   {
                     '@type': 'FAQPage',
@@ -362,36 +619,71 @@ export default function CoursePage({
           />
         )}
       </Head>
-      <Header cartCount={0} onOpenCart={() => {}} onOpenSearch={() => {}} onOpenLeaderboard={() => {}} />
 
       <main className="mx-auto w-full max-w-6xl px-6 pb-24 pt-10">
         {loading && <p className="py-20 text-center text-sm text-[var(--text-muted)]">Loading course…</p>}
 
-        {error && !loading && (
+        {error && !loading && !preview && (
           <p className="my-10 rounded-xl border border-[var(--color-error)]/30 bg-[var(--color-error)]/5 px-4 py-3 text-sm text-[var(--color-error)]">
             {error}
           </p>
         )}
 
+        {/* The paid-course, signed-out view. Rendered on the server from public
+            catalogue data, so a crawler and a visitor without an account both get
+            the real course instead of a spinner. A signed-in visitor never sees
+            this: the client effect fetches the detail and the full page replaces
+            it. */}
+        {!course && preview && <CoursePreviewShell course={preview} onSignIn={onSignInRequired} />}
+
         {course && (
           <>
             <header className="mb-8">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-[var(--brand-sky-soft)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--brand-sky-strong)]">
-                  {course.category}
-                </span>
-                {course.is_free && (
-                  <span className="rounded-full bg-[var(--bg-sky-soft)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--brand-sky)]">
-                    Free
-                  </span>
-                )}
+              {/* Scaler-style split hero: the text carries the decision, the
+                  cover gives the page an anchor. On narrow screens the cover
+                  drops below the title rather than squeezing the title into a
+                  narrow column. */}
+              <div className="grid gap-6 sm:grid-cols-[1fr_240px] sm:items-start">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-full bg-[var(--brand-sky-soft)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--brand-sky-strong)]">
+                      {course.category}
+                    </span>
+                    {course.is_free ? (
+                      <span className="rounded-full bg-[var(--bg-sky-soft)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--brand-sky)]">
+                        Free
+                      </span>
+                    ) : (
+                      <span className="rounded-full bg-[var(--brand-mint)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--brand-sky-strong)]">
+                        {formatPrice(course.price_inr)}
+                      </span>
+                    )}
+                  </div>
+                  <h1 className="mt-3 text-3xl font-extrabold leading-tight tracking-tight text-[var(--ink)] sm:text-4xl">
+                    {course.title}
+                  </h1>
+                  <p className="mt-3 max-w-2xl text-base leading-relaxed text-[var(--text-body)]">
+                    {course.subtitle}
+                  </p>
+                </div>
+
+                <CourseCover
+                  slug={course.slug}
+                  title={course.title}
+                  thumbnailUrl={course.thumbnail_url}
+                  className="hidden aspect-[4/3] w-full overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border-subtle)] sm:block"
+                />
               </div>
-              <h1 className="mt-3 text-3xl font-extrabold leading-tight tracking-tight text-[var(--ink)] sm:text-4xl">
-                {course.title}
-              </h1>
-              <p className="mt-3 max-w-2xl text-base leading-relaxed text-[var(--text-body)]">
-                {course.subtitle}
-              </p>
+
+              {/* The cover belongs above the copy on a phone, where the split
+                  layout collapses and a right-hand column would leave the title
+                  a few characters wide. */}
+              <CourseCover
+                slug={course.slug}
+                title={course.title}
+                thumbnailUrl={course.thumbnail_url}
+                className="mt-5 aspect-[16/9] w-full overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border-subtle)] sm:hidden"
+              />
 
               {/* Real, server-counted facts. Each one is omitted when it does not
                   exist rather than replaced with a placeholder, so the row below
@@ -427,34 +719,7 @@ export default function CoursePage({
                 <span className="text-[var(--text-muted)]">{formatLevel(course.level)}</span>
               </div>
 
-              <div className="mt-5 flex flex-wrap items-center gap-3">
-                {locked ? (
-                  <PayWall
-                    priceInr={course.price_inr}
-                    reason={course.access?.reason || 'This course is not part of your plan.'}
-                    onBuy={buy}
-                    buying={enrolling}
-                  />
-                ) : progress?.enrolled ? (
-                  /* A learner who is already in the course is better served by
-                     the progress bar than by any button, so `courseCta`'s
-                     "Continue learning" label is not used here. The card shows
-                     it, because a card has nowhere else to say it. */
-                  <div className="w-full max-w-xs">
-                    <ProgressBar
-                      percent={progress.percent}
-                      label={`${progress.completed} of ${progress.total} lessons`}
-                    />
-                  </div>
-                ) : (
-                  /* Label and tone come from `courseCta` — the same helper the
-                     catalogue card uses — so the same purchase state reads the
-                     same on both pages. */
-                  <CtaButton tone={cta.tone} onClick={enrol} disabled={enrolling} className="disabled:opacity-50">
-                    {enrolling ? 'Starting…' : cta.label}
-                  </CtaButton>
-                )}
-              </div>
+              <div className="mt-5 flex flex-wrap items-center gap-3">{enrollAction()}</div>
             </header>
 
             {locked && (
@@ -464,6 +729,22 @@ export default function CoursePage({
                   The syllabus below is open so you can see what this course covers, but the lessons
                   themselves are for enrolled learners. {course.access?.reason}
                 </p>
+              </div>
+            )}
+
+            {isAdmin && (
+              <div className="mb-8">
+                <CourseThumbnailEditor
+                  courseId={course.id}
+                  slug={course.slug}
+                  title={course.title}
+                  currentThumbnailUrl={course.thumbnail_url}
+                  onChanged={(thumbnail_url) =>
+                    // Re-render the hero without a full refetch, so the new cover
+                    // is visible immediately and the admin can judge it.
+                    setCourse((prev) => (prev ? { ...prev, thumbnail_url } : prev))
+                  }
+                />
               </div>
             )}
 
@@ -501,32 +782,42 @@ export default function CoursePage({
               </section>
             )}
 
-            <div className="grid gap-8 lg:grid-cols-[280px_1fr] lg:items-start">
-              {/* The syllabus is sticky and scrolls on its own. Without the max
-                  height + internal scroll, a long syllabus (15 modules) is taller
-                  than the viewport, so it travels with the page and the learner
-                  loses it the moment they scroll the lesson. `items-start` stops
-                  the grid from stretching the aside to the content height. */}
-              <aside className="lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto lg:overscroll-contain lg:pr-1">
-                {(course.modules || []).map((m) => (
-                  <div key={m.id} className="mb-5">
-                    <h3 className="mb-1.5 px-3 text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
-                      {m.title}
-                    </h3>
-                    {(m.lessons || []).map((l) => (
-                      <LessonRow
-                        key={l.id}
-                        lesson={l}
-                        courseSlug={slug}
-                        locked={isLocked(l, progress ?? null)}
-                        isNext={progress?.next_lesson_id === l.id}
-                      />
-                    ))}
-                  </div>
-                ))}
-              </aside>
+            {/* The numbers a learner checks before committing time or money,
+                placed directly under the hero so they answer "is this worth it"
+                before any scrolling. Every pip is a value the server sent; the
+                strip renders nothing at all when it has none, rather than a row
+                of placeholders. */}
+            <CourseFactStrip
+              level={course.level}
+              lessonCount={course.stats?.lesson_count ?? null}
+              moduleCount={course.stats?.module_count ?? null}
+              totalMinutes={course.stats?.total_minutes ?? null}
+              // `stats.quiz_count` is the count of quiz lessons; the server's
+              // `challenge_count` is counted from the same lessons independently.
+              // The server figure is the one shown, because it is derived next to
+              // the gating logic, and a disagreement between the two would mean
+              // one of them is lying about the course.
+              challengeCount={course.challenge_count ?? null}
+              audioLanguage={course.audio_language ?? null}
+              captionLanguage={course.caption_language ?? null}
+              certificateEligible={course.certificate_eligible}
+            />
 
-              <section className="min-w-0">
+            {/* Three columns only from `xl` up: the syllabus rail and the
+                enrolment card both need real width, and squeezing them in at
+                `lg` would leave the lesson - the thing being read - too narrow.
+                Below `xl` this collapses to the rail plus the lesson, and the
+                hero's own call to action is the one on screen. */}
+            <div className="grid gap-8 lg:grid-cols-[280px_1fr] xl:grid-cols-[280px_1fr_300px] lg:items-start">
+              <CourseSyllabusNav
+                modules={course.modules || []}
+                courseSlug={slug}
+                progress={progress ?? null}
+                selectedLessonId={selectedLesson?.id ?? null}
+                totalMinutes={course.stats?.total_minutes}
+              />
+
+              <section id="lesson-player" className="min-w-0 scroll-mt-6">
                 {selectedLesson ? (
                   <LessonPlayer
                     key={selectedLesson.id}
@@ -545,6 +836,48 @@ export default function CoursePage({
                   <p className="text-sm text-[var(--text-muted)]">This course has no lessons yet.</p>
                 )}
               </section>
+
+              {/* The sticky enrolment card.
+
+                  `position: sticky` is scoped to its containing block, so this
+                  only works because the card is a grid child of the same box that
+                  holds the lesson: it sticks for as long as the lesson is being
+                  read, and stops there rather than floating over the outcomes
+                  and FAQ further down. That is the intended behaviour - past the
+                  syllabus, the page is answering questions, not selling.
+
+                  The price is stated only for a course that has one, and a free
+                  course says Free instead of a struck-through zero. `enrollAction`
+                  is the hero's own control, so this can never offer something
+                  different from the offer above. */}
+              <aside className="hidden xl:block" aria-label="Enrol in this course">
+                <div className="sticky top-[calc(var(--header-h)+1.5rem)] rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
+                  <div className="text-2xl font-extrabold leading-none text-[var(--ink)]">
+                    {course.is_free ? 'Free' : formatPrice(course.price_inr)}
+                  </div>
+                  {!course.is_free && (
+                    <p className="mt-1 text-xs text-[var(--text-muted)]">One-time payment, lifetime access</p>
+                  )}
+
+                  <div className="mt-4 flex flex-wrap items-center gap-3">{enrollAction()}</div>
+
+                  {includes.length > 0 && (
+                    <>
+                      <h2 className="mt-5 border-t border-[var(--border-subtle)] pt-4 text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">
+                        What is included
+                      </h2>
+                      <ul className="mt-3 space-y-2">
+                        {includes.map((item) => (
+                          <li key={item} className="flex gap-2 text-sm leading-snug text-[var(--text-body)]">
+                            <CheckCircle2 size={15} className="mt-0.5 shrink-0 text-[var(--color-success)]" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
+                </div>
+              </aside>
             </div>
 
             {/* What you can do by the end. Authored per course by the person who
@@ -565,6 +898,17 @@ export default function CoursePage({
                 </ul>
               </section>
             )}
+
+            {/* About, audience and pre-requisites. Each is authored prose rather
+                than a generated list, and each disappears entirely when the
+                author has not written it — see CourseDetailSections for why a
+                heading with nothing under it is worse than no heading. Order is
+                deliberate: what the course is, then who it is for, then what it
+                assumes, then who is teaching it. */}
+            <AboutCourseSection about={course.about_course} />
+            <AudienceSection items={course.audience} />
+            <PrerequisitesSection items={course.prerequisites} />
+            <InstructorSection instructor={course.instructor} />
 
             {faq.length > 0 && (
               <section aria-labelledby="faq-heading" className="mt-14 max-w-3xl">
@@ -605,21 +949,6 @@ export default function CoursePage({
         )}
       </main>
       <Footer />
-
-      {courseLine && (
-        <CartModal
-          isOpen={cartOpen}
-          onClose={() => setCartOpen(false)}
-          items={[courseLine]}
-          onRemoveItem={() => setCartOpen(false)}
-          // A paid course only becomes unlocked once the order is marked paid,
-          // so the page is reloaded from the server rather than patched locally.
-          onCheckoutSuccess={() => {
-            setCartOpen(false);
-            loadCourse();
-          }}
-        />
-      )}
     </>
   );
 }
@@ -839,10 +1168,19 @@ const PayWall: React.FC<{
  * No token is sent. The catalogue is public and this renders the signed-out view,
  * which is the one that should be indexed; per-learner progress and access are
  * layered on after hydration.
+ *
+ * The one case that needs care is a PAID course, which the API answers 403 for an
+ * anonymous caller. That refusal is deliberate and asserted in the smoke suite
+ * ("a signed-out visitor cannot even open a paid course page"), so this does not
+ * route around it. Instead it asks the public catalogue — a genuinely public
+ * endpoint that needs no token — for the one row describing that course, and
+ * hands it over as `preview`. The page then renders real, public, indexable
+ * content instead of a spinner. Nothing here widens what the API exposes; a
+ * signed-in visitor still gets the full detail from the client effect.
  */
 export const getServerSideProps: GetServerSideProps = async ({ params }) => {
   const slug = String(params?.slug || '');
-  if (!slug) return { props: { initialCourse: null, initialRelated: [] } };
+  if (!slug) return { props: { initialCourse: null, initialRelated: [], preview: null } };
 
   let initialCourse: CourseDetail | null = null;
   let initialRelated: CourseCard[] = [];
@@ -862,6 +1200,23 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
     // Backend unreachable at SSR time — the client effect retries.
   }
 
+  // 403 is the API's deliberate answer for a paid course viewed signed-out. The
+  // public catalogue needs no token and describes the course honestly, so it is
+  // asked for the one row. A failure here is not fatal: the page falls back to the
+  // loading state and the client retries, exactly as it did before.
+  let catalogue: unknown;
+  if (!initialCourse && upstreamStatus === 403) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/courses`);
+      if (res.ok) {
+        const data = await res.json();
+        catalogue = data.courses;
+      }
+    } catch {
+      /* The preview is an improvement, never a requirement. */
+    }
+  }
+
   // Sibling courses are a nicety, not a requirement, so a failure here must not
   // take the page down with it.
   if (initialCourse) {
@@ -876,19 +1231,18 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
     }
   }
 
-  // An unknown slug is a real 404 rather than a page that says "not found" with
-  // a 200 status, so a search engine drops it instead of indexing the message.
-  //
-  // It is only a real 404 when a *reachable* API actually said so. Answering 404
-  // because the backend was down, restarting, or slow turns a temporary blip into
-  // a permanent verdict on a course that exists: the client never gets to retry
-  // because the response is already a 404, and a crawler is free to cache it.
-  if (!initialCourse && (upstreamStatus === 404 || upstreamStatus === 200)) {
+  // The decision - 404 vs preview vs retry-on-the-client - lives in courseSsr so
+  // it can be tested as a table. See the note there for why it is a whitelist and
+  // not just "return the catalogue row".
+  const decision = decideCoursePage({ upstreamStatus, course: initialCourse, catalogue, slug });
+
+  // A real 404 carries a 404 status, so a search engine drops it instead of
+  // indexing the message. Only a reachable API saying 404 qualifies: answering 404
+  // because the backend was down turns a temporary blip into a permanent verdict.
+  if (decision.kind === 'notFound') {
     return { notFound: true };
   }
 
-  // Unreachable, 5xx, or any other non-answer: hand the page a null course and let
-  // the client fetch it. The status stays 200 so nothing downstream caches the
-  // outage as a missing page.
-  return { props: { initialCourse, initialRelated } };
+  const preview = decision.preview as CourseCard | null;
+  return { props: { initialCourse, initialRelated, preview } };
 };

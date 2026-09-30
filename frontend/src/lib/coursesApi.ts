@@ -32,6 +32,7 @@ import type {
   CourseLessonView,
   CatalogFilters,
   CourseCard,
+  CourseInstructor,
 } from '@/types';
 
 const COURSES = `${API_BASE_URL}/courses`;
@@ -104,6 +105,34 @@ export const fetchLesson = async (
   const res = await apiFetch(`${COURSES}/lessons/${encodeURIComponent(lessonId)}`);
   if (!res.ok) throw await apiError(res, 'Lesson not found');
   return res.json();
+};
+
+// --- Admin: course cover ----------------------------------------------------
+
+/**
+ * Upload a course thumbnail, or clear it with `file` omitted.
+ *
+ * Uses `fetch` with a `FormData` body rather than the JSON helper: a multipart
+ * body must not carry a `Content-Type` header, and setting one (even to the
+ * boundary-less default) makes Express ignore the file entirely. The server
+ * returns the stored `thumbnail_url` rather than this function guessing a path.
+ */
+export const uploadCourseThumbnail = async (
+  courseId: string,
+  file?: File | null,
+): Promise<{ thumbnail_url: string }> => {
+  const form = new FormData();
+  if (file) form.append('file', file);
+
+  // The admin surface is mounted at its own prefix, not under `/courses`.
+  const url =
+    `${API_BASE_URL}/course-admin/courses/${encodeURIComponent(courseId)}/thumbnail` +
+    (file ? '' : '?remove=1');
+
+  const res = await apiFetch(url, { method: 'POST', body: form });
+  if (!res.ok) throw await apiError(res, 'Could not update the course cover');
+  const data = await res.json();
+  return { thumbnail_url: data?.course?.thumbnail_url ?? '' };
 };
 
 // --- Learner: enrolment and progress ---------------------------------------
@@ -256,10 +285,25 @@ export type CourseDraft = Partial<
     | 'tags'
     | 'outcomes'
     | 'prerequisite_course_id'
-    | 'certificate_eligible'
-    | 'published'
-  >
->;
+      | 'certificate_eligible'
+      | 'published'
+    >
+  > &
+    /**
+     * The long-form page fields.
+     *
+     * Optional so that every existing caller keeps compiling: a caller that only
+     * wants to retitle a course does not have to think about prose it is not
+     * editing. Each one is sent only when the admin form actually manages it, so
+     * a partial save cannot blank a section it never displayed.
+     */
+    Partial<
+      Pick<
+        AdminCourseForEditor,
+        'about_course' | 'prerequisites' | 'audience' | 'audio_language' | 'caption_language' | 'instructor_id'
+      >
+    >;
+
 
 export const createAdminCourse = async (payload: CourseDraft) => {
   const res = await apiFetch(`${COURSE_ADMIN}/courses`, { method: 'POST', body: JSON.stringify(payload) });
@@ -471,6 +515,56 @@ export const fetchCourseFeedbackFeed = async (params?: { course_id?: string }) =
   const suffix = qs.toString() ? `?${qs}` : '';
   const res = await apiFetch(`${COURSE_ADMIN}/feedback${suffix}`);
   if (!res.ok) throw await apiError(res, 'Could not load feedback');
+  return res.json();
+};
+
+// ---------------------------------------------------------------------------
+// Instructors
+//
+// These are admin-only on the server: the whole course-admin router sits behind
+// requireAdmin, so every call here is refused without an admin token. That is
+// deliberate. An instructor is a real person, and the record carries claims made
+// about them, so the list is not public even though the rendered instructor block
+// on a course page is.
+// ---------------------------------------------------------------------------
+
+/** The write shape for an instructor. Every optional claim stays absent if unset. */
+export type InstructorDraft = {
+  name: string;
+  title?: string;
+  bio?: string;
+  photo_url?: string;
+  /** Claims about the person. `null`/'' clears one; omitting it leaves it alone. */
+  students_taught?: number | null;
+  hours_lectured?: number | null;
+  rating?: number | null;
+};
+
+export const fetchInstructors = async (): Promise<CourseInstructor[]> => {
+  const res = await apiFetch(`${COURSE_ADMIN}/instructors`);
+  if (!res.ok) throw await apiError(res, 'Could not load instructors');
+  const body = await res.json();
+  return Array.isArray(body?.instructors) ? body.instructors : [];
+};
+
+export const createInstructor = async (payload: InstructorDraft) => {
+  const res = await apiFetch(`${COURSE_ADMIN}/instructors`, { method: 'POST', body: JSON.stringify(payload) });
+  if (!res.ok) throw await apiError(res, 'Could not create the instructor');
+  return res.json();
+};
+
+export const updateInstructor = async (instructorId: string, payload: Partial<InstructorDraft>) => {
+  const res = await apiFetch(`${COURSE_ADMIN}/instructors/${encodeURIComponent(instructorId)}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw await apiError(res, 'Could not update the instructor');
+  return res.json();
+};
+
+export const deleteInstructor = async (instructorId: string) => {
+  const res = await apiFetch(`${COURSE_ADMIN}/instructors/${encodeURIComponent(instructorId)}`, { method: 'DELETE' });
+  if (!res.ok) throw await apiError(res, 'Could not delete the instructor');
   return res.json();
 };
 

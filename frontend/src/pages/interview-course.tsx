@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { StarAnswerBuilder } from '@/components/interview/StarAnswerBuilder';
 import { MockInterviewModal } from '@/components/interview/MockInterviewModal';
-import { CartModal } from '@/components/checkout/CartModal';
 import {
   fetchInterviewModulesApi,
   getInterviewCourseProgressApi,
@@ -30,7 +28,6 @@ export default function InterviewCoursePage() {
   const [isMockModalOpen, setIsMockModalOpen] = useState(false);
 
   // Cart Modal State for Premium Unlocks
-  const [isCartOpen, setIsCartOpen] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -96,12 +93,6 @@ export default function InterviewCoursePage() {
       </Head>
 
       <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-brand-orange selection:text-white">
-        <Header
-          cartCount={0}
-          onOpenCart={() => setIsCartOpen(true)}
-          onOpenSearch={() => {}}
-          onOpenLeaderboard={() => {}}
-        />
 
         {/* Full-Page Canvas Container */}
         <main className="flex-1 w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 py-8 space-y-12">
@@ -536,14 +527,6 @@ export default function InterviewCoursePage() {
         }}
       />
 
-      {/* CART MODAL FOR PASS UNLOCKS */}
-      <CartModal
-        isOpen={isCartOpen}
-        onClose={() => setIsCartOpen(false)}
-        items={[]}
-        onRemoveItem={() => {}}
-        onCheckoutSuccess={() => {}}
-      />
     </>
   );
 }

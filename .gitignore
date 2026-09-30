@@ -11,6 +11,13 @@ frontend/public/pdfjs/
 # ---- backend build / runtime ----
 backend/dist/
 backend/data/db.json
+# Smoke/integration runs copy the whole store to a pid-keyed scratch file and
+# delete it on the way out. A run that dies first (ts-node compile error, Ctrl+C)
+# leaves it behind, and each one is a full copy of the store — every learner's
+# email and bcrypt hash. The rule above names db.json exactly, so it would not
+# have covered these.
+backend/data/db.smoke-*.json
+backend/data/*.bak-*
 backend/uploads/
 backend/.env
 backend/.env.*

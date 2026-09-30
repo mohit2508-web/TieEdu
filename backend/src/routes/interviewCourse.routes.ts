@@ -784,7 +784,7 @@ interviewCourseRouter.post('/progress', requireAuth, (req: Request, res: Respons
 //     existed, so the "verify" link on every certificate it produced was dead.
 //
 // It also competed with the real system (backend/src/lib/certificate.ts), which
-// is HMAC-signed, publicly verifiable at /verify/<serial>, revocable, and
+// is Ed25519-signed, publicly verifiable at /verify/<serial>, revocable, and
 // re-checked against stored progress at issue time.
 //
 // A 410 rather than a 404 is deliberate: any client still holding a cached build

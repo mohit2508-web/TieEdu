@@ -1,15 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { CompanyCard } from '@/components/company/CompanyCard';
 import { PricingSection } from '@/components/checkout/PricingSection';
-import { CartModal } from '@/components/checkout/CartModal';
-import { SearchModal } from '@/components/modals/SearchModal';
-import { LeaderboardModal } from '@/components/modals/LeaderboardModal';
 import { fetchCompanies, fetchHeroPostersApi } from '@/lib/api';
+import { useCartScope } from '@/context/CartContext';
 import { Company, HeroPoster } from '@/types';
 import {
   Search, Sparkles, ShieldCheck, CheckCircle2, ArrowRight, FileText, FileDown, Star, Layers
@@ -48,10 +45,6 @@ export default function Home() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [selectedIndustry, setSelectedIndustry] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [cartItems, setCartItems] = useState<(Company | any)[]>([]);
-  const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
-  const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
-  const [isLeaderboardOpen, setIsLeaderboardOpen] = useState<boolean>(false);
   const [dataError, setDataError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [posters, setPosters] = useState<HeroPoster[]>([]);
@@ -89,16 +82,25 @@ export default function Home() {
     return () => { active = false; };
   }, []);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        setIsSearchOpen(prev => !prev);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  /*
+   * A purchase made in the cart drawer unlocks vaults on the server, so the
+   * list has to be refetched rather than patched locally — `is_unlocked` is not
+   * a field the client is entitled to guess. The drawer's cross-sell callbacks
+   * are registered through `useCartScope` and run on a global drawer the
+   * homepage no longer owns.
+   */
+  useCartScope(
+    useMemo(
+      () => ({
+        onCheckoutSuccess: () => {
+          fetchCompanies()
+            .then((data) => { if (Array.isArray(data)) setCompanies(data); })
+            .catch(() => { /* keep showing the pre-purchase list */ });
+        },
+      }),
+      []
+    )
+  );
 
   const filteredCompanies = companies.filter(c => {
     const matchesIndustry = selectedIndustry === 'All' || (c.industry || '').includes(selectedIndustry);
@@ -115,12 +117,6 @@ export default function Home() {
       </Head>
 
       <div className="min-h-screen flex flex-col bg-[var(--bg-app)]">
-        <Header
-          cartCount={cartItems.length}
-          onOpenCart={() => setIsCartOpen(true)}
-          onOpenSearch={() => setIsSearchOpen(true)}
-          onOpenLeaderboard={() => setIsLeaderboardOpen(true)}
-        />
         <main className="flex-grow w-full overflow-x-clip">
           {/* ===== HERO — Vault OS ===== */}
           <section className="hero-mesh">
@@ -306,25 +302,6 @@ export default function Home() {
         </main>
 
         <Footer />
-
-        <CartModal
-          isOpen={isCartOpen}
-          onClose={() => setIsCartOpen(false)}
-          items={cartItems}
-          onRemoveItem={(idx) => setCartItems(cartItems.filter((_, i) => i !== idx))}
-          onCheckoutSuccess={() => setCompanies(companies.map(c => ({ ...c, is_unlocked: true })))}
-        />
-
-        <SearchModal
-          isOpen={isSearchOpen}
-          onClose={() => setIsSearchOpen(false)}
-          companies={companies}
-        />
-
-        <LeaderboardModal
-          isOpen={isLeaderboardOpen}
-          onClose={() => setIsLeaderboardOpen(false)}
-        />
       </div>
     </>
   );

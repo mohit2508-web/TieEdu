@@ -9,6 +9,9 @@ import '@fontsource/carlito/400.css';
 import '@fontsource/carlito/700.css';
 import { TieEduLoader } from '@/components/common/TieEduLoader';
 import { AuthProvider } from '@/context/AuthContext';
+import { CartProvider } from '@/context/CartContext';
+import { ShellProvider } from '@/context/ShellContext';
+import { AppShell } from '@/components/layout/AppShell';
 
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
@@ -27,8 +30,20 @@ export default function App({ Component, pageProps }: AppProps) {
 
   return (
     <AuthProvider>
-      <TieEduLoader />
-      <Component {...pageProps} />
+      {/*
+        Order matters. `CartProvider` and `ShellProvider` sit inside `AuthProvider`
+        so the shell can read the user for role-gated destinations, and outside
+        `AppShell` so a page can reach the same cart the header badge reads.
+        This is the only place the chrome is mounted — pages render content.
+      */}
+      <CartProvider>
+        <ShellProvider>
+          <TieEduLoader />
+          <AppShell>
+            <Component {...pageProps} />
+          </AppShell>
+        </ShellProvider>
+      </CartProvider>
     </AuthProvider>
   );
 }

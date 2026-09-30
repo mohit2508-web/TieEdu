@@ -56,7 +56,7 @@ export default function AdminLoginPage() {
       <div className="min-h-screen hero-mesh flex flex-col items-center justify-center px-4 py-12">
         <div className="w-full max-w-[420px]">
           <div className="flex justify-center mb-8">
-            <TieEduLogo size="sm" showTagline />
+            <TieEduLogo size="sm" />
           </div>
 
           <div className="vault-card p-8 shadow-float border-[#E8CFA7]">

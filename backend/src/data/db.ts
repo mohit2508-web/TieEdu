@@ -175,11 +175,71 @@ export interface Course {
   prerequisite_course_id: string | null;
   /** When false, completing the course still does not issue a certificate. */
   certificate_eligible: boolean;
-  published: boolean;
-  created_at: string;
-  updated_at: string;
-  modules: CourseModule[];
-}
+    published: boolean;
+    created_at: string;
+    updated_at: string;
+    /**
+     * The person who teaches this course.
+     *
+     * Optional and nullable on purpose: the course pages render an instructor
+     * block only when this resolves, so a course with no instructor assigned
+     * shows nothing rather than a placeholder portrait or an invented name.
+     */
+    instructor_id?: string | null;
+    /**
+     * The long-form "About this course" prose that sits below the outcomes.
+     *
+     * Distinct from `description`: that is the one-line summary used on cards,
+     * this is the multi-paragraph block that carries the page's search traffic.
+     * Markdown, same as `description`. Optional — absent means no section.
+     */
+    about_course?: string;
+    /** Bullets for a "What you need before you start" section. */
+    prerequisites?: string[];
+    /** Bullets for a "Who is this for" section. */
+    audience?: string[];
+    /**
+     * Spoken language of the lesson recordings, as a display string ("English").
+     *
+     * Only truthful values belong here. Leave it empty rather than filling in a
+     * language the lessons were not actually recorded in.
+     */
+    audio_language?: string;
+    /** Subtitle language, if the lessons carry captions. */
+    caption_language?: string;
+    modules: CourseModule[];
+  }
+
+  /**
+   * Someone who teaches one or more courses.
+   *
+   * Kept as its own record rather than a name typed onto each course, so a
+   * learner's question ("who is this?") has one answer across the catalogue and
+   * a course can be reassigned without rewriting a biography.
+   *
+   * Every field here is a real, checkable claim. `students_taught` and
+   * `hours_lectured` in particular must come from the platform's own records —
+   * they are the numbers a reader is most likely to check, and a placeholder
+   * like "1000+ students" on an empty platform is a lie.
+   */
+  export interface Instructor {
+    id: string;
+    name: string;
+    /** Job title, e.g. "Software Engineer & Instructor". */
+    title: string;
+    /** Long first-person or third-person biography. Markdown. */
+    bio: string;
+    /** Portrait. Optional; the block falls back to initials when absent. */
+    photo_url?: string;
+    /** Real enrolment count across their courses. Omit rather than estimate. */
+    students_taught?: number;
+    /** Real delivered lecture hours. Omit rather than estimate. */
+    hours_lectured?: number;
+    /** Mean learner rating, 1-5. Omit rather than estimate. */
+    rating?: number;
+    created_at: string;
+  }
+
 
 /** A course lesson reuses the same block vocabulary as the company reader. */
 export interface ContentBlockRecord {
@@ -367,8 +427,16 @@ export interface Certificate {
   xp_at_issue: number;
   lessons_completed: number;
   lessons_required: number;
-  /** HMAC-SHA256 over the canonical payload — see lib/certificate.ts. */
+  /** Ed25519 signature over the canonical payload — see lib/certificate.ts. */
   signature: string;
+  /**
+   * Fingerprint of the public key that produced `signature`.
+   *
+   * Recorded per certificate so the verifier knows which key to check against,
+   * which is what makes a private-key rotation survivable: old certificates keep
+   * verifying against the retired key instead of all failing at once.
+   */
+  signing_key_id: string;
   status: 'active' | 'revoked';
   revoked_reason: string;
   revoked_at: string | null;
@@ -1297,6 +1365,12 @@ const initialDbData = {
   progress: {},
   interview_progress: {},
   courses: getSeedCourses(),
+  // Instructors are real people, so this starts EMPTY rather than seeded. A
+  // placeholder "Tarun Luthra"-style profile on a course that has never been
+  // taught would be a fabricated claim about a named human being, which is worse
+  // than showing no instructor block at all. Populate from the admin API once
+  // there is someone real to describe.
+  instructors: [],
   course_progress: {},
   xp_ledger: [],
   certificates: [],
@@ -1336,6 +1410,16 @@ export function loadDb() {
       if (!data.course_progress) { data.course_progress = {}; upgraded = true; }
       if (!Array.isArray(data.xp_ledger)) { data.xp_ledger = []; upgraded = true; }
       if (!Array.isArray(data.certificates)) { data.certificates = []; upgraded = true; }
+      // Certificates predate per-record key ids. Backfilled to '' rather than
+      // the active key: guessing would attribute an old signature to a key that
+      // may never have signed it. An empty id just means "check every trusted
+      // key", which is the honest reading of a record that does not say.
+      if (Array.isArray(data.certificates) && data.certificates.some((c: any) => c && typeof c.signing_key_id !== 'string')) {
+        for (const c of data.certificates as any[]) {
+          if (c && typeof c.signing_key_id !== 'string') c.signing_key_id = '';
+        }
+        upgraded = true;
+      }
       if (!Array.isArray(data.course_feedback)) { data.course_feedback = []; upgraded = true; }
       if (!Array.isArray(data.study_plan_templates)) { data.study_plan_templates = []; upgraded = true; }
       if (!Array.isArray(data.study_plan_phases)) { data.study_plan_phases = []; upgraded = true; }
