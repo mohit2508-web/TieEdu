@@ -25,13 +25,14 @@ import { commentsRouter } from './routes/comments.routes';
 import { sandboxRouter } from './routes/sandbox.routes';
 import { unlockRouter } from './routes/unlock.routes';
 import { authRouter } from './routes/auth.routes';
-import { requireAdmin, optionalAuth } from './middleware/auth';
+import { requireAdmin, optionalAuth, assertAuthConfigured } from './middleware/auth';
 import { loadDb, saveDb, setMirrorHook } from './data/db';
 import { storage } from './store';
 
 import { runMigrations } from './db/migrate';
 
 dotenv.config();
+assertAuthConfigured();
 
 const app = express();
 const PORT = process.env.PORT || 5000;

@@ -3,10 +3,50 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { loadDb, User } from '../data/db';
 
-export const JWT_SECRET = process.env.JWT_SECRET || (process.env.NODE_ENV === 'production' ? '' : 'tieedu-dev-secret-change-me');
 export const ACCESS_TTL = process.env.ACCESS_TTL || '15m';
 export const REFRESH_TTL_DAYS = Number(process.env.REFRESH_TTL_DAYS || 30);
 export const COOKIE_NAME = 'tieedu_refresh';
+
+/**
+ * The signing secret for session tokens.
+ *
+ * There is deliberately no hardcoded fallback any more. There used to be one -
+ * `tieedu-dev-secret-change-me` - and it was the worst line in this file: a
+ * secret that ships in the repository is not a secret, and a server that picks it
+ * up silently will happily authenticate anyone who has read the source. It did
+ * exactly that on a `npm start` deployment, because NODE_ENV was unset there, so
+ * the `production` branch never ran and every token was forgeable with a string
+ * from a public repo. The literal is gone so it cannot come back.
+ *
+ * In development the secret is random per boot. That costs a re-login on every
+ * restart, which is the correct trade: a developer's session is disposable, and
+ * an unguessable secret is worth more than a session that survives a restart.
+ */
+function resolveJwtSecret(): string {
+  const configured = (process.env.JWT_SECRET || '').trim();
+  if (configured) return configured;
+  if (process.env.NODE_ENV === 'production') return '';
+  return crypto.randomBytes(32).toString('hex');
+}
+
+export const JWT_SECRET = resolveJwtSecret();
+
+/**
+ * Fails the process at boot rather than at the first login attempt.
+ *
+ * A production server with no signing secret would otherwise start, serve the
+ * public pages, and only reveal itself when someone tried to sign in. Signing
+ * every token with a guessable value is not a degraded mode, it is no auth at
+ * all, so this stops the server instead.
+ */
+export function assertAuthConfigured(): void {
+  if (JWT_SECRET) return;
+  throw new Error(
+    'JWT_SECRET is not set. Session tokens cannot be signed safely without it. ' +
+      'Generate one with: node -e "console.log(require(\'crypto\').randomBytes(48).toString(\'hex\'))" ' +
+      'and put it in the environment. Refusing to start.'
+  );
+}
 
 declare global {
   namespace Express {
