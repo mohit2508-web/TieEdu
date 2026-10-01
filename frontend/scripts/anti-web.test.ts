@@ -537,6 +537,27 @@ check('the mobile bottom bars are pinned and clear the home indicator', () => {
   }
 });
 
+check('the front-page hero search does not duplicate the mobile search', () => {
+  const home = read(path.join(ROOT, 'src/pages/index.tsx'));
+  // The tab bar's slots are data, not markup, so the config is where the mobile
+  // search affordance is actually declared.
+  const nav = read(path.join(ROOT, 'src/lib/navConfig.ts'));
+
+  ok(/MOBILE_TAB_ACTIONS[^=]*=\s*\[[^\]]*'search'/.test(nav), 'the tab bar must own a search slot');
+  ok(/<MobileTabBar/.test(read(path.join(ROOT, 'src/components/layout/AppShell.tsx'))), 'the tab bar must be mounted');
+
+  // The hero field filters the company grid and has no mobile counterpart, so it
+  // is hidden below md rather than removed: the state stays wired and the desktop
+  // layout is unchanged.
+  const hero = home.match(/<div className="[^"]*max-w-xl relative pt-2[^"]*">[\s\S]{0,2000}?<\/div>/);
+  ok(hero, 'the hero search wrapper must still exist');
+  ok(
+    /hidden md:block/.test(hero![0]),
+    'the hero search must be hidden below md so it does not double up with the tab bar'
+  );
+  ok(/value=\{searchQuery\}/.test(home), 'the grid filter must stay wired to the query');
+});
+
 check('the reader and lesson bars reserve space for themselves', () => {
   // A `fixed` bar with no matching spacer hides the last thing on the page.
   // Both arbitrary and unitless forms are in use: `h-[76px]` in the reader and

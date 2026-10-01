@@ -1007,34 +1007,47 @@ coursesRouter.post('/:slug/certificate', requireAuth, (req: Request, res: Respon
     xp_at_issue: totalXpForUser(db, userId),
   };
 
-  const certificate: Certificate = {
-    id: `cert-${Date.now()}-${serial.slice(-6)}`,
-    serial,
-    user_id: userId,
-    course_id: course.id,
-    course_title: course.title,
-    recipient_name: recipientName,
-    recipient_email: req.user!.email,
-    issued_at: issuedAt,
-    xp_at_issue: fields.xp_at_issue,
-    lessons_completed: fields.lessons_completed,
-    lessons_required: fields.lessons_required,
-    // Sign and key id come back together: the id is the fingerprint of the key
-    // that just signed, so storing it can never describe a different key.
-    ...(() => {
-      const signed = signCertificate(fields);
-      return { signature: signed.signature, signing_key_id: signed.keyId };
-    })(),
-    status: 'active',
-    revoked_reason: '',
-    revoked_at: null,
-  };
+  // Signing and the commit are guarded together. A throw used to escape as a bare
+  // 500 that no log line mentioned, so a learner saw "temporarily unavailable" and
+  // we had nothing to search for. The cause is now logged with its request id and
+  // the caller gets a 503, matching /verify and /verify/key. The push stays after
+  // the signature so a failed sign cannot leave a half-built record in memory.
+  try {
+    const certificate: Certificate = {
+      id: `cert-${Date.now()}-${serial.slice(-6)}`,
+      serial,
+      user_id: userId,
+      course_id: course.id,
+      course_title: course.title,
+      recipient_name: recipientName,
+      recipient_email: req.user!.email,
+      issued_at: issuedAt,
+      xp_at_issue: fields.xp_at_issue,
+      lessons_completed: fields.lessons_completed,
+      lessons_required: fields.lessons_required,
+      // Sign and key id come back together: the id is the fingerprint of the key
+      // that just signed, so storing it can never describe a different key.
+      ...(() => {
+        const signed = signCertificate(fields);
+        return { signature: signed.signature, signing_key_id: signed.keyId };
+      })(),
+      status: 'active',
+      revoked_reason: '',
+      revoked_at: null,
+    };
 
-  db.certificates = db.certificates || [];
-  db.certificates.push(certificate);
-  saveDb(db);
+    db.certificates = db.certificates || [];
+    db.certificates.push(certificate);
+    saveDb(db);
 
-  res.status(201).json({ status: 'success', already_issued: false, certificate: presentCertificate(db, certificate) });
+    return res.status(201).json({ status: 'success', already_issued: false, certificate: presentCertificate(db, certificate) });
+  } catch (e: any) {
+    console.error(
+      `❌ [ERROR] #${(req as any).requestId || '-'} ${req.method} ${req.originalUrl} -> 503`,
+      e?.stack || e?.message || e
+    );
+    return res.status(503).json({ status: 'unavailable', error: 'Certificates are temporarily unavailable' });
+  }
 });
 
 function presentCertificate(db: any, c: Certificate) {

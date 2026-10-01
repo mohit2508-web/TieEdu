@@ -152,7 +152,7 @@ export default function Home() {
                   </Link>
                 </div>
 
-                <div className="max-w-xl relative pt-2 mx-auto lg:mx-0 w-full">
+                <div className="hidden md:block max-w-xl relative pt-2 mx-auto lg:mx-0 w-full">
                   <Search className="w-4 h-4 text-[--text-muted] absolute left-4 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"

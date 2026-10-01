@@ -1135,7 +1135,24 @@ courseAdminRouter.post('/certificates/issue', (req: Request, res: Response) => {
     xp_at_issue: totalXpForUser(db, userId),
   };
 
-  const signed = signCertificate(fields);
+  // Guarded for the same reason as the learner claim route: an unset or
+  // unreadable signing key throws from `signCertificate`, which used to surface
+  // as a 500 carrying the operator remedy - the variable names, the key type,
+  // the base64 encoding - straight into the admin UI. The cause is logged with
+  // its request id for us and the caller gets a message that says nothing about
+  // how this machine is configured. The push stays after the signature so a
+  // failed sign cannot leave a half-built record in memory.
+  let signed: { signature: string; keyId: string };
+  try {
+    signed = signCertificate(fields);
+  } catch (e: any) {
+    console.error(
+      `❌ [ERROR] #${(req as any).requestId || '-'} ${req.method} ${req.originalUrl} -> 503`,
+      e?.stack || e?.message || e
+    );
+    return res.status(503).json({ status: 'error', error: 'Certificate signing is temporarily unavailable' });
+  }
+
   const certificate: Certificate = {
     id: `cert-${Date.now()}-${serial.slice(-6)}`,
     serial,
