@@ -416,7 +416,7 @@ check('the header cannot hide while it is the only way out', () => {
   const vetoes = [
     { re: /belowMd\s*&&\s*!anyOpen/, why: 'an open overlay must pin the header' },
     { re: /!isPushedScreen/, why: 'a pushed screen hides the tab bar, so the header is the only nav' },
-    { re: /!menuOpen/, why: 'the account menu is anchored to the header and would be dragged off with it' },
+      { re: /!accountOpen/, why: 'the account menu is anchored to the header and would be dragged off with it' },
   ];
   for (const v of vetoes) {
     ok(v.re.test(header), `canHide must include the veto: ${v.why}`);

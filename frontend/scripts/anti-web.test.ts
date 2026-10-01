@@ -537,14 +537,26 @@ check('the mobile bottom bars are pinned and clear the home indicator', () => {
   }
 });
 
-check('the front-page hero search does not duplicate the mobile search', () => {
+check('search appears once in the phone UI, not three times', () => {
   const home = read(path.join(ROOT, 'src/pages/index.tsx'));
-  // The tab bar's slots are data, not markup, so the config is where the mobile
-  // search affordance is actually declared.
+  // The tab bar's slots are data, not markup, so the config is where a mobile
+  // search affordance would be declared.
   const nav = read(path.join(ROOT, 'src/lib/navConfig.ts'));
+  const actions = nav.match(/MOBILE_TAB_ACTIONS[^=]*=\s*\[([^\]]*)\]/);
+  ok(actions, 'MOBILE_TAB_ACTIONS must be a literal this test can read');
+  ok(
+    !/'search'/.test(actions![1]),
+    'the tab bar must not offer search: it duplicated the hero field above it'
+  );
+  ok(/'cart'/.test(actions![1]), 'the cart slot must survive the removal');
 
-  ok(/MOBILE_TAB_ACTIONS[^=]*=\s*\[[^\]]*'search'/.test(nav), 'the tab bar must own a search slot');
-  ok(/<MobileTabBar/.test(read(path.join(ROOT, 'src/components/layout/AppShell.tsx'))), 'the tab bar must be mounted');
+  // Dropping the slot must not drop the feature. The hamburger drawer is where
+  // search lives on a phone now, and the header keeps its own field on desktop.
+  ok(/NAV_ACTIONS/.test(nav), 'the search action must still be defined');
+  const drawer = read(path.join(ROOT, 'src/components/layout/MobileNavDrawer.tsx'));
+  ok(/'search'/.test(drawer), 'the drawer must still reach search on mobile');
+  const header = read(path.join(ROOT, 'src/components/layout/Header.tsx'));
+  ok(/hidden lg:flex/.test(header), 'the header search field must stay desktop-only');
 
   // The hero field filters the company grid and has no mobile counterpart, so it
   // is hidden below md rather than removed: the state stays wired and the desktop
@@ -553,9 +565,30 @@ check('the front-page hero search does not duplicate the mobile search', () => {
   ok(hero, 'the hero search wrapper must still exist');
   ok(
     /hidden md:block/.test(hero![0]),
-    'the hero search must be hidden below md so it does not double up with the tab bar'
+    'the hero search must be hidden below md so it does not double up with anything'
   );
   ok(/value=\{searchQuery\}/.test(home), 'the grid filter must stay wired to the query');
+});
+
+check('the admin console shows who is signed in and their notifications', () => {
+  const admin = read(path.join(ROOT, 'src/components/admin/AdminCmsView.tsx'));
+  const account = read(path.join(ROOT, 'src/components/layout/AccountMenu.tsx'));
+
+  // `/admin/*` is excluded from the whole shell, so the CMS header is the only
+  // chrome there. Without these two it offered a breadcrumb and a sync button,
+  // which on a phone left no way to see who was signed in.
+  ok(/<NotificationBell/.test(admin), 'the admin topbar needs the notification bell');
+  ok(/<AccountMenu/.test(admin), 'the admin topbar needs the account control');
+
+  // The shared component is the point: a second copy of this dropdown would be a
+  // second thing to forget to update.
+  const header = read(path.join(ROOT, 'src/components/layout/Header.tsx'));
+  ok(/<AccountMenu/.test(header), 'the site header must use the same account control');
+  ok(!/role="menu"/.test(header), 'the account menu markup must live in the shared component only');
+  ok(/role="menu"/.test(account), 'the shared component must own the menu');
+
+  // A search field in CMS chrome is the thing that was just removed elsewhere.
+  ok(!/aria-label="Search vaults"/.test(admin), 'the admin chrome must not carry a search field');
 });
 
 check('the reader and lesson bars reserve space for themselves', () => {

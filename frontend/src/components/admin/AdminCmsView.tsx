@@ -24,6 +24,8 @@ import {
 import { AdminCoursesTab } from '@/components/admin/course/AdminCoursesTab';
 import { AdminCertificatesTab } from '@/components/admin/course/AdminCertificatesTab';
 import { AdminXpTab } from '@/components/admin/course/AdminXpTab';
+import { NotificationBell } from '@/components/layout/NotificationBell';
+import { AccountMenu } from '@/components/layout/AccountMenu';
 
 type TabId = 'overview' | 'orders' | 'payments' | 'users' | 'analytics' | 'hub' | 'content' | 'pack' | 'studyplans' | 'coupons' | 'posters' | 'courses' | 'certificates' | 'xp' | 'reports' | 'settings';
 
@@ -198,6 +200,20 @@ export const AdminCmsView: React.FC = () => {
               <h2 className="text-base font-extrabold text-[#10151C] truncate">{tabTitle}</h2>
             </div>
             <div className="flex items-center gap-2 shrink-0">
+              {/*
+                Identity and notifications, which this header had none of.
+
+                `/admin/*` is excluded from the whole shell in `AppShell` - no site
+                header, no tab bar - so before this the only thing an admin could
+                see up top was a breadcrumb and "Sync store". On a phone that
+                meant no way to tell who was signed in, and no notification bell
+                at all. Both are the shared components rather than local copies,
+                and the search field is deliberately absent: search does not
+                belong in a CMS chrome, and the shell's search overlay is not
+                mounted on this route anyway.
+              */}
+              <NotificationBell />
+              <AccountMenu />
               <a href="/" target="_blank" rel="noreferrer" className="hidden sm:inline-flex px-3 py-2 rounded-xl text-xs font-bold text-[#0284C7] border border-[#B8E3F7] bg-white hover:bg-[#E8F4FB] items-center gap-1.5">
                 <ExternalLink className="w-3.5 h-3.5" /> Student site
               </a>
