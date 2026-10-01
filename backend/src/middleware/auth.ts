@@ -1,7 +1,16 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
+import dotenv from 'dotenv';
 import { loadDb, User } from '../data/db';
+
+// Imports are evaluated before any statement in the importing module, so this
+// file used to read process.env.JWT_SECRET before server.ts had a chance to call
+// dotenv.config() - which is why a configured secret was ignored and the
+// process silently fell back to a random per-boot value. Loading here as well
+// makes the order irrelevant. dotenv never overrides a variable that is already
+// set, so the second call in server.ts stays a no-op.
+dotenv.config();
 
 export const ACCESS_TTL = process.env.ACCESS_TTL || '15m';
 export const REFRESH_TTL_DAYS = Number(process.env.REFRESH_TTL_DAYS || 30);

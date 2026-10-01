@@ -33,17 +33,30 @@ const AUTH_PATH = require.resolve('../src/middleware/auth');
 function loadAuth(env: Record<string, string | undefined>): typeof import('../src/middleware/auth') {
   const prevEnv = process.env.NODE_ENV;
   const prevSecret = process.env.JWT_SECRET;
+  const prevDotenvPath = process.env.DOTENV_CONFIG_PATH;
   delete require.cache[AUTH_PATH];
-  delete process.env.JWT_SECRET;
+  // auth.ts loads dotenv itself so that it cannot read process.env before
+  // .env is loaded (see the comment there). That means deleting the variable
+  // would let the real .env back in through the side door and every "no secret
+  // configured" case would silently test the developer's actual secret. An
+  // empty string is set instead: dotenv never overrides a variable that already
+  // exists, so it stays empty and the case is genuinely empty.
   for (const [k, v] of Object.entries(env)) {
-    if (v === undefined) delete process.env[k];
-    else process.env[k] = v;
+    if (k === 'JWT_SECRET' && v === undefined) {
+      process.env.JWT_SECRET = '';
+    } else if (v === undefined) {
+      delete process.env[k];
+    } else {
+      process.env[k] = v;
+    }
   }
   const mod = require(AUTH_PATH);
   delete require.cache[AUTH_PATH];
   process.env.NODE_ENV = prevEnv;
   if (prevSecret === undefined) delete process.env.JWT_SECRET;
   else process.env.JWT_SECRET = prevSecret;
+  if (prevDotenvPath === undefined) delete process.env.DOTENV_CONFIG_PATH;
+  else process.env.DOTENV_CONFIG_PATH = prevDotenvPath;
   return mod;
 }
 
