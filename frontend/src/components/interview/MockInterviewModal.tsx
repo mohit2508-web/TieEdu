@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Play, Clock, Sparkles, CheckCircle2, Award, ArrowRight, Eye, RefreshCw, Star } from 'lucide-react';
 import { saveInterviewCourseProgressApi } from '@/lib/api';
+import { Sheet } from '@/components/common/Sheet';
 
 interface MockInterviewModalProps {
   isOpen: boolean;
@@ -72,18 +73,38 @@ export const MockInterviewModal: React.FC<MockInterviewModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
-        {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/50">
-          <div className="flex items-center gap-2">
-            <span className="bg-brand-orange/20 text-brand-orange p-1.5 rounded-lg">
+    /*
+      Built on `Sheet`. This overlay was the fourth hand-rolled one, and the most
+      awkward to have found late: it runs a countdown timer, so anything that
+      scrolls the page behind it also made the timer look like it was ticking
+      against a moving background. It had no `role="dialog"`, no focus trap, no
+      Escape, and no scroll lock.
+
+      `title` is the room name, and the module counter moves into the header slot
+      so it is not announced as the dialog's name. The panel is dark-on-dark by
+      design (`bg-slate-900` throughout), so `bg-transparent` hands the colour
+      back to the `header`/`footer`/`contentClassName` it already carries rather
+      than forcing Sheet's light default over the top.
+    */
+    <Sheet
+      open={isOpen && !!currentModule}
+      onClose={onClose}
+      title="Mock Interview Practice Room"
+      side="bottom"
+      zIndex={50}
+      showHandle={false}
+      className="sm:max-w-3xl sm:mx-auto max-h-[92vh] bg-transparent"
+      contentClassName="p-4 sm:p-6 space-y-6"
+      header={
+        <div className="px-4 sm:px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/50 gap-3 shrink-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="bg-brand-orange/20 text-brand-orange p-1.5 rounded-lg shrink-0">
               <Sparkles className="w-5 h-5" />
             </span>
-            <div>
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+            <div className="min-w-0">
+              <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
                 Mock Interview Practice Room
-                <span className="text-xs bg-slate-800 text-slate-300 px-2.5 py-0.5 rounded-full font-mono">
+                <span className="text-xs bg-slate-800 text-slate-300 px-2.5 py-0.5 rounded-full font-mono shrink-0">
                   Module {currentIndex + 1} of {modules.length}
                 </span>
               </h3>
@@ -93,131 +114,18 @@ export const MockInterviewModal: React.FC<MockInterviewModalProps> = ({
 
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition-colors"
+            aria-label="Leave practice room"
+            className="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition-colors shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
-
-        {/* Content Body */}
-        <div className="p-6 overflow-y-auto space-y-6 flex-1">
-          {/* Question Card */}
-          <div className="bg-slate-950 border border-slate-800 rounded-xl p-5 relative">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-brand-orange uppercase tracking-wider">
-                {currentModule.category} — {currentModule.title}
-              </span>
-
-              {/* Timer Pill */}
-              <div className="flex items-center gap-2">
-                <span className={`text-xs font-mono font-bold px-3 py-1 rounded-full flex items-center gap-1.5 border ${
-                  secondsLeft < 30
-                    ? 'bg-rose-950/50 border-rose-800 text-rose-400 animate-pulse'
-                    : 'bg-slate-900 border-slate-800 text-amber-400'
-                }`}>
-                  <Clock className="w-3.5 h-3.5" /> {formatTime(secondsLeft)}
-                </span>
-
-                {!timerActive && (
-                  <button
-                    onClick={handleStartTimer}
-                    className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded-full flex items-center gap-1 transition-colors"
-                  >
-                    <Play className="w-3 h-3 text-emerald-400" /> Start Timer
-                  </button>
-                )}
-              </div>
-            </div>
-
-            <h4 className="text-lg font-bold text-white leading-snug">
-              &ldquo;{currentModule.question}&rdquo;
-            </h4>
-            <p className="text-xs text-slate-400 mt-2 italic">
-              💡 {currentModule.summary}
-            </p>
-          </div>
-
-          {/* Candidate Text Workspace */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-sm font-semibold text-slate-200">
-                Your Answer Draft / Verbal Notes:
-              </label>
-              <span className="text-xs text-slate-500">
-                {candidateResponse.split(/\s+/).filter(Boolean).length} words
-              </span>
-            </div>
-            <textarea
-              rows={4}
-              value={candidateResponse}
-              onChange={(e) => setCandidateResponse(e.target.value)}
-              placeholder="Type your response here using S.T.A.R or speak out loud..."
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-sm text-slate-100 focus:outline-none focus:border-brand-orange focus:ring-1 focus:ring-brand-orange transition-all placeholder:text-slate-600"
-            />
-          </div>
-
-          {/* Model Answer Reveal & Scoring Rubric */}
-          {showModelAnswer && (
-            <div className="space-y-4 animate-fadeIn">
-              {/* Expert Sample Answer Card */}
-              <div className="bg-emerald-950/30 border border-emerald-800/50 rounded-xl p-5">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4" /> Gold-Standard Model Answer
-                  </span>
-                  <span className="text-xs text-emerald-300 font-medium">+50 XP Earned!</span>
-                </div>
-                <p className="text-sm text-emerald-100 leading-relaxed font-sans bg-emerald-950/40 p-3.5 rounded-lg border border-emerald-900/60">
-                  {currentModule.sample_answer}
-                </p>
-              </div>
-
-              {/* Expert Tip & Red-Flag Warnings */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-slate-950 border border-amber-900/40 rounded-xl p-4">
-                  <span className="text-xs font-bold text-amber-400 uppercase tracking-wider block mb-1">
-                    💡 Expert Advice
-                  </span>
-                  <p className="text-xs text-slate-300">{currentModule.expert_tip}</p>
-                </div>
-
-                <div className="bg-slate-950 border border-rose-900/40 rounded-xl p-4">
-                  <span className="text-xs font-bold text-rose-400 uppercase tracking-wider block mb-1">
-                    ⚠️ Red-Flag Trap to Avoid
-                  </span>
-                  <p className="text-xs text-slate-300">{currentModule.red_flag_trap}</p>
-                </div>
-              </div>
-
-              {/* Self-Rating Stars */}
-              <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 text-center">
-                <span className="text-xs font-semibold text-slate-300 block mb-2">
-                  Rate your performance on this question:
-                </span>
-                <div className="flex items-center justify-center gap-2">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      onClick={() => setSelfRating(star)}
-                      className={`p-2 rounded-lg transition-all ${
-                        selfRating && selfRating >= star
-                          ? 'text-amber-400 scale-110'
-                          : 'text-slate-600 hover:text-slate-400'
-                      }`}
-                    >
-                      <Star className="w-6 h-6 fill-current" />
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Modal Footer Controls */}
-        <div className="px-6 py-4 border-t border-slate-800 bg-slate-950/60 flex items-center justify-between">
+      }
+      footer={
+        <div className="px-4 sm:px-6 py-4 border-t border-slate-800 bg-slate-950/60 flex items-center justify-between gap-3 shrink-0">
           <button
             onClick={() => setShowModelAnswer(!showModelAnswer)}
+            aria-pressed={showModelAnswer}
             className="text-xs text-slate-400 hover:text-white flex items-center gap-1.5 transition-colors"
           >
             <Eye className="w-4 h-4 text-brand-orange" />
@@ -230,7 +138,7 @@ export const MockInterviewModal: React.FC<MockInterviewModalProps> = ({
                 onClick={handleSubmitAnswer}
                 className="bg-brand-orange hover:bg-brand-orange/90 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-all shadow-lg shadow-brand-orange/20"
               >
-                Submit & Reveal Model Answer
+                Submit &amp; Reveal Model Answer
               </button>
             ) : (
               <button
@@ -242,7 +150,122 @@ export const MockInterviewModal: React.FC<MockInterviewModalProps> = ({
             )}
           </div>
         </div>
+      }
+    >
+      {/* Content Body */}
+      <div className="space-y-6">
+        {/* Question Card */}
+        <div className="bg-slate-950 border border-slate-800 rounded-xl p-5 relative">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-semibold text-brand-orange uppercase tracking-wider">
+              {currentModule.category} — {currentModule.title}
+            </span>
+
+            {/* Timer Pill */}
+            <div className="flex items-center gap-2">
+              <span className={`text-xs font-mono font-bold px-3 py-1 rounded-full flex items-center gap-1.5 border ${
+                secondsLeft < 30
+                  ? 'bg-rose-950/50 border-rose-800 text-rose-400 animate-pulse'
+                  : 'bg-slate-900 border-slate-800 text-amber-400'
+              }`}>
+                <Clock className="w-3.5 h-3.5" /> {formatTime(secondsLeft)}
+              </span>
+
+              {!timerActive && (
+                <button
+                  onClick={handleStartTimer}
+                  className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded-full flex items-center gap-1 transition-colors"
+                >
+                  <Play className="w-3 h-3 text-emerald-400" /> Start Timer
+                </button>
+              )}
+            </div>
+          </div>
+
+          <h4 className="text-lg font-bold text-white leading-snug">
+            &ldquo;{currentModule.question}&rdquo;
+          </h4>
+          <p className="text-xs text-slate-400 mt-2 italic">
+            💡 {currentModule.summary}
+          </p>
+        </div>
+
+        {/* Candidate Text Workspace */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-sm font-semibold text-slate-200">
+              Your Answer Draft / Verbal Notes:
+            </label>
+            <span className="text-xs text-slate-500">
+              {candidateResponse.split(/\s+/).filter(Boolean).length} words
+            </span>
+          </div>
+          <textarea
+            rows={4}
+            value={candidateResponse}
+            onChange={(e) => setCandidateResponse(e.target.value)}
+            placeholder="Type your response here using S.T.A.R or speak out loud..."
+            className="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-sm text-slate-100 focus:outline-none focus:border-brand-orange focus:ring-1 focus:ring-brand-orange transition-all placeholder:text-slate-600"
+          />
+        </div>
+
+        {/* Model Answer Reveal & Scoring Rubric */}
+        {showModelAnswer && (
+          <div className="space-y-4 animate-fadeIn">
+            {/* Expert Sample Answer Card */}
+            <div className="bg-emerald-950/30 border border-emerald-800/50 rounded-xl p-5">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4" /> Gold-Standard Model Answer
+                </span>
+                <span className="text-xs text-emerald-300 font-medium">+50 XP Earned!</span>
+              </div>
+              <p className="text-sm text-emerald-100 leading-relaxed font-sans bg-emerald-950/40 p-3.5 rounded-lg border border-emerald-900/60">
+                {currentModule.sample_answer}
+              </p>
+            </div>
+
+            {/* Expert Tip & Red-Flag Warnings */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-slate-950 border border-amber-900/40 rounded-xl p-4">
+                <span className="text-xs font-bold text-amber-400 uppercase tracking-wider block mb-1">
+                  💡 Expert Advice
+                </span>
+                <p className="text-xs text-slate-300">{currentModule.expert_tip}</p>
+              </div>
+
+              <div className="bg-slate-950 border border-rose-900/40 rounded-xl p-4">
+                <span className="text-xs font-bold text-rose-400 uppercase tracking-wider block mb-1">
+                  ⚠️ Red-Flag Trap to Avoid
+                </span>
+                <p className="text-xs text-slate-300">{currentModule.red_flag_trap}</p>
+              </div>
+            </div>
+
+            {/* Self-Rating Stars */}
+            <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 text-center">
+              <span className="text-xs font-semibold text-slate-300 block mb-2">
+                Rate your performance on this question:
+              </span>
+              <div className="flex items-center justify-center gap-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    onClick={() => setSelfRating(star)}
+                    className={`p-2 rounded-lg transition-all ${
+                      selfRating && selfRating >= star
+                        ? 'text-amber-400 scale-110'
+                        : 'text-slate-600 hover:text-slate-400'
+                    }`}
+                  >
+                    <Star className="w-6 h-6 fill-current" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-    </div>
+    </Sheet>
   );
 };

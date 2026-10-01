@@ -21,13 +21,19 @@ import {
   ALL_NAV_ITEMS,
   MOBILE_TABS,
   NAV_ACTIONS,
+  NAV_DETAIL_PREFIXES,
   NAV_GROUPS,
   NAV_ITEMS,
   PRIMARY_NAV,
   SHELL_EXCLUDED_ROUTES,
+  getNavigationDepth,
   isNavActive,
+  isRootDepth,
   isShellExcluded,
+  resolveBackHref,
   resolveNavGroups,
+  resolveNavItem,
+  resolveNavTitle,
 } from '../src/lib/navConfig';
 
 let pass = 0;
@@ -290,6 +296,174 @@ check('only the free course carries the free badge', () => {
   const badged = ALL_NAV_ITEMS.filter((i) => i.badge);
   eq(badged.length, 1);
   eq(badged[0].id, 'freeCourse');
+});
+
+// ---------------------------------------------------------------------------
+// Phase 1 §1.2 — navigation depth.
+//
+// The whole point of the depth resolver is that the tab bar disappears on
+// pushed screens. A wrong 'root' here is the exact web tell the phase exists to
+// remove (a tab bar sitting under a full-screen vault reader), so every real
+// route in the app is pinned below rather than spot-checked.
+// ---------------------------------------------------------------------------
+
+const ROOT_ROUTES = ['/', '/courses', '/study-plan', '/compare', '/account', '/my-courses', '/campus'];
+
+check('top-level tab routes resolve to root depth', () => {
+  for (const route of ROOT_ROUTES) {
+    eq(getNavigationDepth(route), 'root', `${route} should keep the tab bar`);
+    ok(isRootDepth(route), `${route} should keep the tab bar`);
+  }
+});
+
+check('pushed screens resolve to detail depth', () => {
+  const detail = [
+    '/company/amazon',
+    '/company/amazon/mobile',
+    '/verify/ABC-123',
+    '/courses/python',
+    '/courses/advanced-data-structures',
+    '/interview-course',
+  ];
+  for (const route of detail) {
+    eq(getNavigationDepth(route), 'detail', `${route} should hide the tab bar`);
+    ok(!isRootDepth(route), `${route} should hide the tab bar`);
+  }
+});
+
+check('depth ignores trailing slashes, query and hash', () => {
+  for (const variant of ['/courses/', '/courses?sort=free', '/courses#top', '/courses/?a=1#b']) {
+    eq(getNavigationDepth(variant), 'root', `${variant} is still the courses tab`);
+  }
+  for (const variant of ['/company/amazon/', '/company/amazon?m=3', '/company/amazon?q=7&m=2']) {
+    eq(getNavigationDepth(variant), 'detail', `${variant} is still inside a vault`);
+  }
+});
+
+check('a course lesson query does not drag a root route off the tab bar', () => {
+  // The plan writes drill-downs as `/courses/[slug]?lesson=…`. The path already
+  // decides, so the query must not be able to escalate a root route.
+  eq(getNavigationDepth('/?lesson=3'), 'root');
+  eq(getNavigationDepth('/compare?lesson=3'), 'root');
+});
+
+check('the longest matching item wins over the home route', () => {
+  // `/` is a prefix of everything. If `vaults` won the match, every route on
+  // the site would resolve as a drill-down out of the home tab.
+  eq(getNavigationDepth('/courses'), 'root');
+  eq(getNavigationDepth('/study-plan'), 'root');
+  eq(getNavigationDepth('/account'), 'root');
+});
+
+check('an unknown route falls back to root so the user is never stranded', () => {
+  eq(getNavigationDepth('/some-page-we-have-not-built'), 'root');
+  eq(getNavigationDepth('/coursesxyz'), 'root');
+});
+
+check('every detail prefix is genuinely unreachable as a tab', () => {
+  // If someone ever gave `/company` a `tab: true` item, the tab bar and the
+  // depth resolver would disagree.
+  for (const prefix of NAV_DETAIL_PREFIXES) {
+    const clashing = ALL_NAV_ITEMS.filter((i) => i.tab && i.href === prefix);
+    eq(clashing.length, 0, `${prefix} must not be a tab`);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// §1.3 — the title and back target a pushed screen shows
+// ---------------------------------------------------------------------------
+
+check('a pushed screen is titled from the nav item that owns it', () => {
+  eq(resolveNavTitle('/interview-course'), 'Free Course');
+  eq(resolveNavTitle('/courses'), 'Courses');
+  eq(resolveNavTitle('/courses/python-basics'), 'Courses', 'a nested route inherits its section title');
+  eq(resolveNavTitle('/my-courses'), 'My Courses');
+});
+
+check('an untitled pushed screen still gets a non-empty title', () => {
+  // A vault and a certificate are reached by drilling in, so they have no nav
+  // item of their own. A blank title collapses the bar to an unlabelled chevron
+  // — and on these routes that chevron is the only way out.
+  for (const route of ['/company/amazon', '/company/amazon/m/3', '/verify/ABC-123', '/verify']) {
+    ok(resolveNavTitle(route).length > 0, `${route} must not render an empty title`);
+  }
+});
+
+check('back falls back to the parent section, not the current page', () => {
+  eq(resolveBackHref('/courses/python-basics'), '/courses');
+  eq(resolveBackHref('/my-courses/python-basics'), '/my-courses');
+});
+
+check('a route that is a detail at its own href uses its declared parent', () => {
+  // `/interview-course` is a detail with nothing nested below it, so there is no
+  // parent to strip from the path — it has to be declared.
+  eq(getNavigationDepth('/interview-course'), 'detail');
+  eq(resolveBackHref('/interview-course'), '/');
+  ok(NAV_ITEMS.freeCourse.parent, 'freeCourse must declare a parent, or its chevron dead-ends');
+});
+
+check('back never targets the page it is already on', () => {
+  // The failure mode of §1.3: a chevron that renders, looks native, and
+  // navigates nowhere. Scoped to routes that actually get a chevron — the
+  // property is about the detail stack, and asserting it on `/` would only be
+  // asserting that a value nothing reads is unused.
+  const routes = [
+    '/courses/python-basics',
+    '/my-courses/c-programming/lesson-3',
+    '/company/amazon',
+    '/company/amazon/m/3',
+    '/verify/ABC-123',
+    '/interview-course',
+    '/interview-course/lesson/2',
+  ];
+  for (const route of routes) {
+    ok(!isRootDepth(route), `${route} should be a detail route in this list — if it is not, the back-chevron scoping changed`);
+    const target = resolveBackHref(route);
+    const strip = (p: string) => p.split('?')[0].split('#')[0].replace(/\/+$/, '') || '/';
+    ok(target !== strip(route), `back from ${route} resolved to itself (${target})`);
+    ok(target.startsWith('/'), `back from ${route} must be an internal path, got ${target}`);
+  }
+});
+
+check('the title and back target ignore trailing slashes, query and hash', () => {
+  for (const variant of ['/courses/python-basics/', '/courses/python-basics?lesson=2', '/courses/python-basics#q3']) {
+    eq(resolveNavTitle(variant), 'Courses', `${variant} is still a course`);
+    eq(resolveBackHref(variant), '/courses', `${variant} still backs out to the catalog`);
+  }
+  eq(resolveNavTitle('/interview-course?lesson=2'), 'Free Course');
+  eq(resolveBackHref('/interview-course/'), '/');
+});
+
+check('resolveNavItem is the shared match, so depth and title cannot disagree', () => {
+  // depth and title are both driven by the same longest-match. If a route has a
+  // `NavItem` at all, the title must be that item's label.
+  //
+  // Hash targets are excluded on purpose. `/#pricing` is a jump *within* the
+  // homepage, not a page of its own, so it must never claim to own a route — if
+  // it did, every path would resolve against the two-character href and the
+  // title would read "Pricing" site-wide.
+  const routable = ALL_NAV_ITEMS.filter((i) => !i.href.includes('#'));
+  const hashTargets = ALL_NAV_ITEMS.filter((i) => i.href.includes('#'));
+  ok(hashTargets.length > 0, 'expected at least one hash target to be excluded');
+
+  for (const item of routable) {
+    const owned = resolveNavItem(item.href);
+    ok(owned, `${item.href} must resolve to an item`);
+    eq(owned!.id, item.id, `${item.href} should resolve to itself`);
+    eq(resolveNavTitle(item.href), item.label);
+  }
+  for (const item of hashTargets) {
+    /*
+      A hash target does not own its href — `/#pricing` normalises to `/`, which
+      the homepage genuinely is, so the *page* item owns it. What must never
+      happen is the hash entry claiming the route, or winning the match by
+      virtue of its href being short.
+    */
+    const owner = resolveNavItem(item.href);
+    ok(owner, `${item.href} should still resolve to the page it lives on`);
+    ok(owner!.id !== item.id, `a hash target must not own a route: ${item.href}`);
+    eq(isNavActive('/', item.href), false, `a hash target must never be active: ${item.href}`);
+  }
 });
 
 console.log(`\nnav-config: ${pass} passed, ${fail} failed`);

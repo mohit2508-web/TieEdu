@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 import { Company, ContentModule, CartItem, CompanyModuleItem, CourseCartItem } from '@/types';
 import { BrandTile } from '@/components/common/BrandTile';
 import {
@@ -8,6 +9,7 @@ import {
 import { summarizePackItems, isCompanyItem, isModuleItem, isCourseItem, SINGLE_MODULE_PRICE, COMPLETE_PACK_PRICE, packPrice } from '@/lib/packPricing';
 import { useCart } from '@/context/CartContext';
 import { useShell } from '@/context/ShellContext';
+import { Sheet } from '@/components/common/Sheet';
 import {
   X, ShoppingBag, Lock, ShieldCheck, CheckCircle2, Trash2,
   Tag, ArrowRight, Sparkles, RefreshCw, PartyPopper, Layers, Zap,
@@ -317,24 +319,29 @@ export const CartModal: React.FC = () => {
     setPayError(null);
   };
 
-  if (!isOpenNow) return null;
-
+  /*
+   * Phase 2: this is now a `Sheet` so the cart gets the shared sheet contract —
+   * drag-to-dismiss, backdrop tap, focus moved in and restored, and a Tab trap.
+   * Escape and the body scroll lock stay with `ShellContext`, which already owns
+   * both for the `cart` overlay.
+   *
+   * `scroll={false}` and the custom `header` keep the existing checkout layout
+   * byte-for-byte: two mutually exclusive screens, each with its own pinned
+   * totals-and-pay row.
+   */
   return (
-    <>
-      {/* Backdrop */}
-      <div
-        onClick={onClose}
-        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
-      />
-
-      {/* Full-Height Slide-In Drawer */}
-      <div
-        className="fixed inset-y-0 right-0 z-50 w-full sm:w-[480px] md:w-[540px] bg-white border-l border-gray-200 shadow-2xl flex flex-col animate-slide-in-right"
-        role="dialog"
-        aria-label="Cart"
-        aria-modal="true"
-      >
-        {/* Header */}
+    <Sheet
+      open={isOpenNow}
+      onClose={onClose}
+      title="Your Vault Cart"
+      side="right"
+      zIndex={50}
+      scroll={false}
+      closeOnEscape={false}
+      blocksScroll={false}
+      className="border-l border-gray-200 md:w-[540px] sm:w-[480px]"
+      data-testid="cart"
+      header={
         <div className="flex items-center justify-between px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200 shrink-0 bg-white">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-[#1F3A5F]/5 border border-[#1F3A5F]/10 text-[#1F3A5F] flex items-center justify-center shadow-sm">
@@ -347,14 +354,16 @@ export const CartModal: React.FC = () => {
                   {items.length} {items.length === 1 ? 'item' : 'items'}
                 </span>
               </div>
-              <p className="text-[13px] text-[--text-muted]">Combo pricing · server-validated coupons</p>
+              <p className="text-[13px] text-[color:var(--text-muted)]">Combo pricing · server-validated coupons</p>
             </div>
           </div>
-          <button onClick={onClose} aria-label="Close cart" className="w-10 h-10 rounded-full bg-[#FAFAF9] hover:bg-[#F0EFEC] text-[--text-muted] flex items-center justify-center transition-colors">
+          <button onClick={onClose} aria-label="Close cart" className="w-10 h-10 rounded-full bg-[#FAFAF9] hover:bg-[#F0EFEC] text-[color:var(--text-muted)] flex items-center justify-center transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
-
+      }
+    >
+      <div className="flex min-h-0 flex-1 flex-col">
         {/* Body */}
         {step === 'pay' && (
           /* UPI PAYMENT SCREEN */
@@ -375,7 +384,24 @@ export const CartModal: React.FC = () => {
 
               {upiQr ? (
                 <div className="inline-block bg-white p-3 rounded-xl">
-                  <img src={upiQr} alt="UPI QR code" className="w-48 h-48 object-contain rounded-lg" />
+                  {/*
+                   * Deliberately a plain `<img>`, and deliberately not migrated to
+                   * `next/image`.
+                   *
+                   * This is the QR code a student scans to pay. `next/image` would
+                   * add three ways for that to fail, and no upside to trade against
+                   * them: the optimizer re-encodes the image, and a re-encoded QR
+                   * that any scanner rejects is an unpaid order; a lazy load defers
+                   * the code until someone scrolls to it, which is the wrong moment
+                   * to be waiting on a network request; and if the optimizer is
+                   * unavailable the image is simply gone, with no fallback.
+                   *
+                   * The width/height are the part that was worth taking from the
+                   * migration: they reserve the 192px box so the payment panel does
+                   * not jump when the QR arrives.
+                   */}
+                  {/* eslint-disable-next-line @next/next/no-img-element -- payment QR, see above */}
+                  <img src={upiQr} alt="UPI QR code" width={192} height={192} className="w-48 h-48 object-contain rounded-lg" />
                 </div>
               ) : upiId ? (
                 <div className="bg-white/10 border border-white/20 rounded-xl p-4">
@@ -550,7 +576,15 @@ export const CartModal: React.FC = () => {
                     <div key={idx} className="flex items-center justify-between p-3.5 bg-[#FAFAF9] rounded-xl border border-gray-200 text-sm hover:border-[#0284C7]/40 transition-all">
                       <div className="flex items-center gap-3 min-w-0">
                         {logoUrl ? (
-                          <img src={logoUrl} alt={name} className="w-10 h-10 rounded-lg object-cover border bg-white p-0.5" />
+                          <Image
+                            src={logoUrl}
+                            alt={name}
+                            width={40}
+                            height={40}
+                            sizes="40px"
+                            loading="lazy"
+                            className="w-10 h-10 rounded-lg object-cover border bg-white p-0.5"
+                          />
                         ) : (
                           <div className="w-10 h-10 rounded-lg bg-[#1F3A5F] text-white flex items-center justify-center font-bold text-xs">
                             {isModule ? 'PK' : isCourse ? 'CRS' : 'PRO'}
@@ -590,10 +624,18 @@ export const CartModal: React.FC = () => {
 
                 <div className="flex gap-2">
                   <input
-                    type="text"
-                    placeholder="Enter coupon code"
-                    value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value)}
+                type="text"
+                placeholder="Enter coupon code"
+                value={couponCode}
+                /* Coupons are minted uppercase, so the keyboard's shift lock and
+                   the autocapitalise both save the student from typing a code
+                   that the server will reject on case. `done` because there is
+                   nothing after it in the sheet - Return should try the code. */
+                autoCapitalize="characters"
+                autoComplete="off"
+                spellCheck={false}
+                enterKeyHint="done"
+                onChange={(e) => setCouponCode(e.target.value)}
                     className={inputCls}
                   />
                   <button onClick={() => applyCouponHandler(couponCode)} disabled={applyingCoupon} className="px-4 py-2 bg-[#1F3A5F] hover:bg-[#2A4D7E] disabled:opacity-60 text-white text-[13px] font-bold rounded-xl transition-all inline-flex items-center gap-1.5">
@@ -708,13 +750,13 @@ export const CartModal: React.FC = () => {
                 <div className="mt-2 text-[12px] text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{payError}</div>
               )}
 
-              <div className="flex items-center justify-center text-[12px] text-[--text-muted] pt-1">
+              <div className="flex items-center justify-center text-[12px] text-[color:var(--text-muted)] pt-1">
                 <div className="flex items-center gap-1"><ShieldCheck className="w-4 h-4 text-[#1E8E5A]" /> 256-Bit SSL Encrypted</div>
               </div>
             </div>
           </>
         )}
       </div>
-    </>
+    </Sheet>
   );
 };

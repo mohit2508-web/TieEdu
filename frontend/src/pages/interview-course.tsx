@@ -336,59 +336,74 @@ export default function InterviewCoursePage() {
                       isExpanded ? 'border-slate-700 shadow-xl' : 'border-slate-800/80 hover:border-slate-700'
                     }`}
                   >
-                    {/* Module Title Row */}
-                    <div
-                      onClick={() => setExpandedModuleId(isExpanded ? null : mod.id)}
-                      className="p-5 flex items-center justify-between cursor-pointer select-none bg-slate-900/90 hover:bg-slate-900 transition-colors"
-                    >
-                      <div className="flex items-center gap-4">
+                    {/* Module Title Row
+
+                        This was a `<div onClick>`, which no keyboard can reach and which
+                        announced no expanded state - `cursor-pointer` was only covering
+                        that up, and deleting the class would have removed the affordance
+                        without fixing the cause. The toggle is a real `<button>` with
+                        `aria-expanded`, and the "done" checkbox is a *sibling* rather
+                        than a descendant: a button inside a button is invalid HTML, and
+                        assistive tech announces only the outer one, which would have
+                        made the "done" control unreachable by name. Keeping the row a
+                        flex line of the two preserves the full-width tap target. */}
+                    <div className="bg-slate-900/90 hover:bg-slate-900 transition-colors">
+                      <div className="flex items-center">
                         {/* Done Checkbox Toggle */}
                         <button
                           type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleToggleModule(mod.id);
-                          }}
-                          className={`w-7 h-7 sm:w-6 sm:h-6 rounded-lg flex items-center justify-center transition-all ${
+                          onClick={() => handleToggleModule(mod.id)}
+                          aria-pressed={isDone}
+                          aria-label={`Mark "${mod.title}" as ${isDone ? 'not done' : 'done'}`}
+                          className="pl-5 pr-4 py-5 shrink-0"
+                        >
+                          <span className={`w-7 h-7 sm:w-6 sm:h-6 rounded-lg flex items-center justify-center transition-all ${
                             isDone
                               ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/30'
                               : 'bg-slate-800 border border-slate-700 text-transparent hover:border-slate-500'
-                          }`}
-                        >
-                          <Check className="w-4 h-4 stroke-[3]" />
+                          }`}>
+                            <Check className="w-4 h-4 stroke-[3]" />
+                          </span>
                         </button>
 
-                        <div>
-                          <div className="flex items-center gap-2 mb-0.5">
-                            <span className="text-[11px] font-mono font-bold text-slate-400 uppercase">
-                              {mod.category}
+                        <button
+                          type="button"
+                          onClick={() => setExpandedModuleId(isExpanded ? null : mod.id)}
+                          aria-expanded={isExpanded}
+                          className="py-5 pr-5 flex-1 min-w-0 flex items-center justify-between gap-4 text-left"
+                        >
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="text-[11px] font-mono font-bold text-slate-400 uppercase">
+                            {mod.category}
+                          </span>
+                          {mod.is_free ? (
+                            <span className="text-[10px] bg-emerald-950/60 text-emerald-400 border border-emerald-800/50 px-2 py-0.5 rounded-full font-bold">
+                              FREE PREVIEW
                             </span>
-                            {mod.is_free ? (
-                              <span className="text-[10px] bg-emerald-950/60 text-emerald-400 border border-emerald-800/50 px-2 py-0.5 rounded-full font-bold">
-                                FREE PREVIEW
-                              </span>
-                            ) : (
-                              <span className="text-[10px] bg-slate-800 text-amber-400 border border-amber-900/30 px-2 py-0.5 rounded-full font-bold">
-                                FULL MODULE
-                              </span>
-                            )}
-                          </div>
-
-                          <h3 className="text-base sm:text-lg font-bold text-white leading-tight">
-                            {mod.title}
-                          </h3>
+                          ) : (
+                            <span className="text-[10px] bg-slate-800 text-amber-400 border border-amber-900/30 px-2 py-0.5 rounded-full font-bold">
+                              FULL MODULE
+                            </span>
+                          )}
                         </div>
+
+                        <h3 className="text-base sm:text-lg font-bold text-white leading-tight">
+                          {mod.title}
+                        </h3>
                       </div>
 
-                      <div className="flex items-center gap-3">
-                        <span className="text-xs font-semibold text-slate-400 hidden sm:inline">
-                          {isExpanded ? 'Hide Details' : 'View Module'}
-                        </span>
-                        {isExpanded ? (
-                          <ChevronUp className="w-5 h-5 text-brand-orange" />
-                        ) : (
-                          <ChevronDown className="w-5 h-5 text-slate-500" />
-                        )}
+                    <div className="flex items-center gap-3 shrink-0">
+                      <span className="text-xs font-semibold text-slate-400 hidden sm:inline">
+                        {isExpanded ? 'Hide Details' : 'View Module'}
+                      </span>
+                      {isExpanded ? (
+                        <ChevronUp className="w-5 h-5 text-brand-orange" />
+                      ) : (
+                        <ChevronDown className="w-5 h-5 text-slate-500" />
+                      )}
+                    </div>
+                        </button>
                       </div>
                     </div>
 

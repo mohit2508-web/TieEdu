@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { ChevronRight, LogIn, LogOut, UserRound, X } from 'lucide-react';
@@ -13,6 +13,7 @@ import {
   type NavItem,
   type NavRole,
 } from '@/lib/navConfig';
+import { Sheet } from '@/components/common/Sheet';
 import { useShell } from '@/context/ShellContext';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
@@ -37,8 +38,6 @@ export const MobileNavDrawer: React.FC = () => {
   const { isOpen, closeOverlay, toggleOverlay } = useShell();
   const { user, logout } = useAuth();
   const { count, hydrated } = useCart();
-  const panelRef = useRef<HTMLDivElement>(null);
-  const closeRef = useRef<HTMLButtonElement>(null);
   const open = isOpen('drawer');
 
   const role: NavRole = user?.role ?? null;
@@ -52,14 +51,6 @@ export const MobileNavDrawer: React.FC = () => {
     router.events.on('routeChangeComplete', onRouteChange);
     return () => router.events.off('routeChangeComplete', onRouteChange);
   }, [router.events, closeOverlay]);
-
-  // Move focus into the panel on open so a keyboard or screen-reader user is
-  // actually inside the thing that just appeared, and can Escape out of it.
-  useEffect(() => {
-    if (open) closeRef.current?.focus();
-  }, [open]);
-
-  if (!open) return null;
 
   const Row: React.FC<{ item: NavItem }> = ({ item }) => {
     const active = isNavActive(router.pathname, item.href);
@@ -86,24 +77,35 @@ export const MobileNavDrawer: React.FC = () => {
     );
   };
 
+  /*
+   * Phase 2: a `Sheet` with `side="right"`. It gains drag-to-close (drag the
+   * header outward), a Tab focus trap, and focus restore — the previous version
+   * moved focus in on open but let it walk straight out of the drawer and never
+   * put it back. Escape and the body scroll lock stay with `ShellContext`,
+   * which already owns both for the `drawer` overlay.
+   *
+   * `scroll={false}` because the drawer pins an account row below its own
+   * scroller, and `hideOnDesktop` because the drawer is mobile-only by design —
+   * hiding just the panel would leave an invisible scrim eating every click.
+   */
   return (
-    <div className="nav-drawer fixed inset-0 z-[70] md:hidden" role="presentation">
-      <div
-        className="absolute inset-0 bg-[#10151C]/45"
-        onClick={() => closeOverlay('drawer')}
-        aria-hidden
-      />
-      <div
-        ref={panelRef}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Menu"
-        className="animate-slide-in-right absolute right-0 top-0 flex h-full w-[min(21rem,88vw)] flex-col border-l border-[#EDEDEB] bg-white shadow-[var(--shadow-float)]"
-      >
+    <Sheet
+      open={open}
+      onClose={() => closeOverlay('drawer')}
+      title="Menu"
+      side="right"
+      zIndex={70}
+      showHandle={false}
+      hideOnDesktop
+      scroll={false}
+      closeOnEscape={false}
+      blocksScroll={false}
+      className="w-[min(21rem,88vw)] max-w-[min(21rem,88vw)] border-l border-[#EDEDEB] shadow-none"
+      data-testid="nav-drawer"
+      header={
         <div className="flex items-center justify-between gap-2 border-b border-[#EDEDEB] px-4 py-3">
           <p className="text-sm font-bold text-[#10151C]">Menu</p>
           <button
-            ref={closeRef}
             type="button"
             onClick={() => closeOverlay('drawer')}
             aria-label="Close menu"
@@ -112,6 +114,9 @@ export const MobileNavDrawer: React.FC = () => {
             <X size={19} strokeWidth={2.2} aria-hidden />
           </button>
         </div>
+      }
+    >
+      <div className="flex min-h-0 flex-1 flex-col">
 
         <div className="flex-1 overflow-y-auto overscroll-contain px-3 py-4">
           {groups.map((group) => (
@@ -213,7 +218,7 @@ export const MobileNavDrawer: React.FC = () => {
           )}
         </div>
       </div>
-    </div>
+    </Sheet>
   );
 };
 

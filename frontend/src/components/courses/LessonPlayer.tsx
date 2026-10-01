@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ListChecks, Check, X, Lock, FileText } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ListChecks, Check, X, Lock, FileText } from 'lucide-react';
 import { ContentBlockRenderer } from '@/components/blocks/ContentBlockRenderer';
 import { TrackedVideoPlayer } from '@/components/courses/TrackedVideoPlayer';
 import { reportLessonProgress, submitLessonQuiz } from '@/lib/coursesApi';
@@ -45,7 +45,7 @@ export const LessonPlayer: React.FC<{
   courseSlug: string;
   /** True when the server will accept a progress/quiz write for this lesson. */
   canSubmit: boolean;
-  onProgress: (p: LessonProgressResponse) => void;
+  onProgress: (p: LessonProgressResponse, lessonId?: number | string) => void;
   /** Re-fetch the lesson after a state change (e.g. a graded quiz). */
   onLessonUpdated: () => void;
   onSignInRequired: () => void;
@@ -108,7 +108,13 @@ export const LessonPlayer: React.FC<{
           duration_seconds: Math.round(reportedDuration.current),
           position_seconds: Math.round(positionSeconds.current),
         });
-        onProgress(res);
+        /*
+         * The lesson id travels with the response. `LessonCompletionState` has no
+         * field identifying which lesson it describes, and the page needs that to
+         * apply the state to the right row: a heartbeat is a round-trip, so by the
+         * time it lands the student may already be reading a different lesson.
+         */
+        onProgress(res, lesson.id);
         // The server may refuse the position outright (rate limit, missing
         // duration). Trust its answer, not ours, or the next resume lands
         // somewhere the learner never actually reached.
@@ -310,6 +316,68 @@ export const LessonPlayer: React.FC<{
           )}
         </nav>
       )}
+
+      {/* The mobile bottom bar - Phase 4, §4.1.
+          Owned by the player, not the page: the page's enrolment bar returns null
+          once the learner is enrolled precisely so these two cannot both claim
+          the bottom of the screen.
+
+          On a phone the video is 16:9 and edge to edge, so the inline nav above
+          sits well below the fold by the time anyone has watched anything - the
+          one control a learner wants after a lesson was the one they had to
+          scroll for. This is the same "primary action stays in reach" fix as the
+          enrolment bar, aimed at a different action.
+
+          It is hidden from `md` up, where the inline nav is already beside the
+          video rather than under it.
+
+          While the lesson is incomplete the control is disabled and the note
+          says how much is left, so the bar is honest about the gate instead of
+          offering a button that does nothing. The percentage is only shown when
+          there is one to show: a signed-out viewer has no progress to report. */}
+      {nextLesson && (
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 pt-3 pb-[calc(0.75rem+var(--safe-bottom))] md:hidden">
+          <div className="mx-auto flex w-full max-w-[var(--reader-max)] items-center gap-3">
+            {previousLesson && (
+              <button
+                type="button"
+                onClick={() => onNavigate(previousLesson.id)}
+                aria-label="Previous lesson"
+                className="focus-ring flex h-12 w-12 flex-none items-center justify-center rounded-xl border border-[var(--border-strong)] bg-[var(--bg-surface)] text-[var(--ink)] transition-colors active:bg-[var(--bg-surface-hover)]"
+              >
+                <ChevronLeft size={20} />
+              </button>
+            )}
+
+            <div className="min-w-0 flex-1">
+              {complete && (
+                <p className="truncate text-[11px] font-semibold tracking-wide text-[var(--text-muted)] uppercase">
+                  Up next
+                </p>
+              )}
+              <button
+                type="button"
+                onClick={() => onNavigate(nextLesson.id)}
+                disabled={!complete}
+                className={`focus-ring mt-0.5 flex min-h-[48px] w-full items-center justify-between gap-2 rounded-xl px-4 text-sm font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+                  complete
+                    ? 'bg-[var(--brand-sky)] text-white active:opacity-90'
+                    : 'border border-[var(--border-strong)] bg-[var(--bg-surface)] text-[var(--ink)]'
+                }`}
+              >
+                <span className="min-w-0 truncate">
+                  {complete ? nextLesson.title : 'Finish this lesson to continue'}
+                </span>
+                {complete ? <ChevronRight size={18} className="flex-none" /> : <Lock size={16} className="flex-none" />}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reserve the bar's height so the last thing in the lesson - a transcript,
+          a quiz, a mark-complete notice - is not sitting underneath it. */}
+      {nextLesson && <div aria-hidden="true" className="h-28 md:hidden" />}
     </article>
   );
 };

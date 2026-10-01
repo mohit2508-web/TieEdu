@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { PricingCatalog, RoundType } from '@/types';
@@ -24,11 +25,33 @@ const ROUND_META: Record<RoundType, { label: string; cls: string; dot: string }>
 
 const roundMeta = (r: RoundType | null) => (r ? ROUND_META[r] : null);
 
-const CompanyMark: React.FC<{ name: string; logo_url?: string; size?: string }> = ({ name, logo_url, size = 'w-11 h-11' }) =>
-  logo_url ? (
-    <img
+/*
+ * Company logos in the pricing table.
+ *
+ * `size` is a Tailwind class, but `next/image` needs a number. The two call sites
+ * use 44px and 32px, so the class is translated rather than the markup being
+ * wrapped in a `fill` container — which would have meant adding a positioned
+ * parent and a second element per logo for no benefit at these sizes.
+ *
+ * The number is not cosmetic: without an explicit width/height `next/image`
+ * reserves no space and the row jumps as each logo arrives, which is the layout
+ * shift this migration is supposed to reduce rather than add.
+ */
+const COMPANY_MARK_PX: Record<string, number> = { 'w-8 h-8': 32, 'w-11 h-11': 44 };
+const pxFor = (size: string) => COMPANY_MARK_PX[size] ?? 44;
+
+const CompanyMark: React.FC<{ name: string; logo_url?: string; size?: string }> = ({ name, logo_url, size = 'w-11 h-11' }) => {
+  const px = pxFor(size);
+  return logo_url ? (
+    <Image
       src={logo_url}
       alt=""
+      width={px}
+      height={px}
+      // A 44px logo is never rendered wider than 44px, so telling the optimizer
+      // otherwise makes it serve a bigger file for no visible gain.
+      sizes={`${px}px`}
+      loading="lazy"
       className={`${size} rounded-xl object-contain bg-white border border-[#EDEDEB] shrink-0`}
     />
   ) : (
@@ -36,6 +59,7 @@ const CompanyMark: React.FC<{ name: string; logo_url?: string; size?: string }> 
       {name.slice(0, 2).toUpperCase()}
     </span>
   );
+};
 
 export const PricingSection: React.FC = () => {
   const router = useRouter();

@@ -345,9 +345,21 @@ const AccountPageContent: React.FC = () => {
                     <div className="flex items-end gap-5">
                       <div className="relative shrink-0">
                         {account.user.avatar ? (
+                          /*
+                           * Base64 data URL, so `next/image` has nothing to
+                           * optimize — see the note on the header avatar. The
+                           * `width`/`height` are the real win: this sits in a
+                           * `flex items-end` row under the account name, and an
+                           * unsized 96px image there shifts the whole block once it
+                           * decodes.
+                           */
+                          // eslint-disable-next-line @next/next/no-img-element -- base64 data-URL avatar, see above
                           <img
                             src={account.user.avatar}
                             alt={account.user.name}
+                            width={96}
+                            height={96}
+                            decoding="async"
                             className="w-24 h-24 rounded-2xl object-cover border-4 border-white shadow-lg"
                           />
                         ) : (
@@ -535,21 +547,30 @@ const AccountPageContent: React.FC = () => {
                       <KeyRound className="w-4 h-4 text-[#0284C7]" /> Change password
                     </h3>
                     <form onSubmit={handleChangePassword} className="mt-4 space-y-3">
+                      {/* Phase 7. Neither field declared an `autoComplete`, so this
+                          form was invisible to the password manager: it could not
+                          offer the stored credential for the current password, and
+                          could not offer to generate and save a new one. Both are
+                          the whole point of the form. */}
                       <input
                         type="password"
                         placeholder="Current password"
+                        autoComplete="current-password"
                         value={pwCurrent}
                         onChange={(e) => setPwCurrent(e.target.value)}
                         required
+                        enterKeyHint="next"
                         className="w-full px-3.5 py-2.5 rounded-xl border border-[#E9E7E1] bg-white text-[13px] text-[#10151C] placeholder:text-[#A7AEBA] focus:border-[#0284C7] focus:ring-2 focus:ring-[#0284C7]/20 outline-none"
                       />
                       <input
                         type="password"
                         placeholder="New password (min 6 chars)"
+                        autoComplete="new-password"
                         value={pwNew}
                         onChange={(e) => setPwNew(e.target.value)}
                         required
                         minLength={6}
+                        enterKeyHint="go"
                         className="w-full px-3.5 py-2.5 rounded-xl border border-[#E9E7E1] bg-white text-[13px] text-[#10151C] placeholder:text-[#A7AEBA] focus:border-[#0284C7] focus:ring-2 focus:ring-[#0284C7]/20 outline-none"
                       />
                       {pwMsg && (

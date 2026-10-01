@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import {
   Award,
   Captions,
@@ -148,9 +149,22 @@ export const InstructorSection: React.FC<{ instructor?: CourseInstructor | null 
     <Section id="instructor" title="Your instructor">
       <div className="flex flex-col gap-5 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6 sm:flex-row">
         {photo ? (
-          <img
+          /*
+           * `next/image` for the one image on the student path that is a real
+           * raster file fetched over HTTP from the API host: a full-resolution
+           * instructor photo squeezed into an 80px circle. Without the optimizer
+           * the phone downloads the whole original to paint 80 CSS pixels.
+           *
+           * `sizes` is required, not decoration. Without it `next/image` assumes
+           * `100vw` and generates srcsets far wider than the 80px actually used,
+           * which downloads a *larger* image than the plain `<img>` did.
+           */
+          <Image
             src={photo}
             alt={instructor.name}
+            width={80}
+            height={80}
+            sizes="80px"
             loading="lazy"
             className="h-20 w-20 shrink-0 rounded-full object-cover"
           />

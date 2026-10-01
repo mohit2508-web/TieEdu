@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Building2, BookOpen, Lightbulb, FileSpreadsheet, Flame, Zap, UserCheck,
   Download, ChevronRight, CheckCircle2, Copy, Sparkles, Filter, Lock, ArrowLeft,
@@ -8,6 +8,17 @@ import { ContentModule, ModuleSectionData, ModulePdf } from '@/types';
 import { API_BASE_URL, downloadPdfApi } from '@/lib/api';
 import { PdfViewerModal, preloadPdfjs } from '@/components/viewer/PdfViewerModal';
 import { MarkdownContent } from '@/components/blocks/MarkdownContent';
+import { CodeBlock } from '@/components/blocks/CodeBlock';
+import { ReaderContentsSheet } from '@/components/company/ReaderContentsSheet';
+import { ReaderActionBar } from '@/components/company/ReaderActionBar';
+import { readingProgress, progressWidth, nextSectionScrollTop, shouldRememberOffset } from '@/lib/readingProgress';
+import {
+  emptyReaderState,
+  readState,
+  toggleSolved,
+  writeState,
+  type ReaderState,
+} from '@/lib/readerState';
 
 interface CompanyModuleReaderProps {
   module: ContentModule;
@@ -48,6 +59,10 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
   const [copiedCodeIndex, setCopiedCodeIndex] = useState<number | null>(null);
   const [viewerPdf, setViewerPdf] = useState<ModulePdf | null>(null);
   const [dlNote, setDlNote] = useState<string | null>(null);
+  const [contentsOpen, setContentsOpen] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [readerState, setReaderState] = useState<ReaderState>(emptyReaderState);
+  const [activeQuestion, setActiveQuestion] = useState(0);
 
   const locked = module.is_premium === true && !isModuleUnlocked;
   const sectionData: ModuleSectionData = module.section_data || {};
@@ -56,11 +71,58 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
   // ladder price server-side, and a stale number here is a promise the portal breaks.
   const priceSuffix = typeof unlockPrice === 'number' ? ` — ₹${unlockPrice}` : '';
 
-  // Automatically scroll to the top of the reader whenever module or section changes
+  /*
+   * Scroll handling on section change (§3.3).
+   *
+   * Forward navigation starts at the top, which is what you want. Coming *back*
+   * to a section you have already read resumes at the offset you left, because
+   * being dropped at line one of a section you were halfway through is the single
+   * most annoying thing a long reader can do.
+   *
+   * A ref, not state: this is written on every scroll tick and read from an
+   * effect, and routing it through `useState` would re-render the whole guide on
+   * every frame.
+   */
+  const offsetsRef = useRef<Record<string, number>>({});
+  const previousSectionRef = useRef<string | null>(null);
+  const previousModuleRef = useRef<string | null>(null);
+
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, behavior: 'auto' });
+    if (typeof window === 'undefined') return;
+
+    /*
+     * The offsets belong to one guide, so they are dropped when the guide
+     * changes - not because a section is unread, but because the *same* id now
+     * means a different piece of text. Section ids repeat across guides
+     * (`intro`, `summary`, `checklist`), so without this, scrolling halfway
+     * through module A's `intro` and opening module B's much shorter `intro`
+     * would scroll past the end of it: the reader lands on the next section, or
+     * on blank space, and the student has no idea why.
+     *
+     * Cleared here rather than in an effect of its own, so it happens before
+     * the scroll below reads the map. Two effects would work today and break the
+     * day someone reorders them.
+     */
+    if (previousModuleRef.current !== null && previousModuleRef.current !== module.id) {
+      offsetsRef.current = {};
+      previousSectionRef.current = null;
     }
+    previousModuleRef.current = module.id;
+
+    const target = nextSectionScrollTop(offsetsRef.current, activeSection);
+    window.scrollTo({ top: target, behavior: 'auto' });
+    previousSectionRef.current = activeSection;
+
+    const onScroll = () => {
+      const y = window.scrollY;
+      if (shouldRememberOffset(y)) {
+        offsetsRef.current[activeSection] = y;
+      } else {
+        delete offsetsRef.current[activeSection];
+      }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, [module.id, activeSection]);
 
   // Warm up pdfjs (library + worker) in the background so opening the PDF
@@ -69,6 +131,83 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
     const t = window.setTimeout(() => { preloadPdfjs().catch(() => {}); }, 400);
     return () => window.clearTimeout(t);
   }, []);
+
+  // Reading progress (§3.2). One passive listener, throttled to a frame, because
+  // this recomputes on every scroll tick and the reader is the longest scroll in
+  // the app. `passive` so it cannot delay the scroll itself.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    let frame = 0;
+    const measure = () => {
+      frame = 0;
+      setProgress(
+        readingProgress(window.scrollY, document.documentElement.scrollHeight, window.innerHeight)
+      );
+    };
+    const onScroll = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(measure);
+    };
+    measure();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
+  }, [module.id, activeSection]);
+
+  const questions = sectionData.interview_questions ?? [];
+  const isQuestionSection = activeSection === 'interview_questions';
+
+  /*
+   * Track which question is in view so the bottom bar's "Mark solved" acts on the
+   * one being read rather than the first one in the list (§3.2). Without this the
+   * button is a trap: it looks like it applies to the card on screen and
+   * silently marks question 0 instead.
+   *
+   * `rootMargin` biases the band upward, so a question counts as current once its
+   * top third is in view rather than when its last line appears.
+   */
+  useEffect(() => {
+    if (!isQuestionSection || questions.length === 0) return;
+    if (typeof IntersectionObserver === 'undefined') return;
+
+    const nodes = Array.from(
+      document.querySelectorAll<HTMLElement>('[data-question-index]')
+    );
+    if (nodes.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (records) => {
+        const visible = records
+          .filter((r) => r.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+        if (!visible) return;
+        const index = Number((visible.target as HTMLElement).dataset.questionIndex);
+        if (Number.isFinite(index)) setActiveQuestion(index);
+      },
+      { rootMargin: '-15% 0px -60% 0px', threshold: 0 }
+    );
+
+    nodes.forEach((node) => observer.observe(node));
+    return () => observer.disconnect();
+  }, [isQuestionSection, questions.length, activeSection]);
+
+  // Load this module's bookmark and solved questions (§3.2). Re-read on module
+  // change so switching rounds does not show the previous round's state.
+  useEffect(() => {
+    setReaderState(readState(companySlug, module.id));
+  }, [companySlug, module.id]);
+
+  const persist = useCallback(
+    (next: ReaderState) => {
+      setReaderState(next);
+      writeState(companySlug, module.id, next);
+    },
+    [companySlug, module.id]
+  );
 
   const handleCopyCode = (code: string, index: number) => {
     navigator.clipboard.writeText(code);
@@ -108,6 +247,18 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
     { id: 'hr_round', label: '8. HR & Behavioral Round', icon: UserCheck },
   ] as const;
 
+  /*
+   * Section stepping for the bottom bar (§3.2). Derived from `navItems` rather
+   * than tracked separately, so adding a section to the list cannot leave the
+   * bar's next/prev pointing at the wrong place.
+   */
+  const sectionIds = navItems.map((item) => item.id) as string[];
+  const sectionIndex = sectionIds.indexOf(activeSection);
+  const goToSection = (index: number) => {
+    const next = sectionIds[index];
+    if (next) setActiveSection(next as typeof activeSection);
+  };
+
   /**
    * True when an admin has written nothing for this module. The old build
    * papered over this by auto-generating a pack on read, which meant a vault
@@ -131,7 +282,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
         className="min-h-screen bg-[#F8FAFC] text-[#1E293B] flex flex-col font-sans"
         style={{ fontFamily: "'Calibre', 'Calibri', 'Inter', -apple-system, sans-serif" }}
       >
-        <header className="sticky top-[var(--header-h)] z-30 bg-white border-b border-gray-200 px-4 sm:px-8 py-4 flex items-center justify-between shadow-xs">
+        <header className="sticky top-[var(--header-total)] z-30 bg-white border-b border-gray-200 px-4 sm:px-8 py-4 flex items-center justify-between shadow-xs">
           <div className="flex items-center gap-3.5 min-w-0">
             <button
               onClick={onBack}
@@ -196,7 +347,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
       style={{ fontFamily: "'Calibre', 'Calibri', 'Inter', -apple-system, sans-serif" }}
     >
       {/* Top Header Bar */}
-      <header className="sticky top-[var(--header-h)] z-30 bg-white border-b border-gray-200 px-4 sm:px-8 py-4 flex items-center justify-between shadow-xs">
+      <header className="sticky top-[var(--header-total)] z-30 bg-white border-b border-gray-200 px-4 sm:px-8 py-4 flex items-center justify-between shadow-xs">
         <div className="flex items-center gap-3.5 min-w-0">
           <button
             onClick={onBack}
@@ -217,7 +368,13 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        {/*
+          On mobile the header carries navigation only. The unlock badge, the PDF
+          shortcut and the section jump all moved to the sticky bottom bar or the
+          contents sheet — a phone header is the one row a thumb cannot reach
+          (§3.2). Desktop keeps the cluster, where there is no reach problem.
+        */}
+        <div className="hidden md:flex items-center gap-2 sm:gap-3 shrink-0">
           {module.is_premium && !isModuleUnlocked && (
             <button
               onClick={onUnlockClick}
@@ -240,11 +397,35 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
             className="inline-flex items-center justify-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 bg-[#0284C7] hover:bg-[#0369A1] text-white rounded-xl text-xs sm:text-sm font-bold shadow-xs transition-all"
           >
             <FileText className="w-4 h-4 shrink-0" />
-            <span className="sm:hidden">PDF</span>
-            <span className="hidden sm:inline">PDF Guide</span>
+            <span>PDF Guide</span>
           </button>
         </div>
+
+        <button
+          type="button"
+          onClick={() => setContentsOpen(true)}
+          aria-label="Open contents"
+          className="md:hidden flex h-11 w-11 flex-none items-center justify-center rounded-xl border border-gray-200 text-gray-700 transition-colors active:bg-gray-100"
+        >
+          <BookOpen className="w-5 h-5" />
+        </button>
       </header>
+
+      {/* Reading progress — §3.2. Sits directly under the header, not at the top
+          of the document, so it tracks the reader's own bar. */}
+      <div
+        className="sticky top-[var(--header-total)] z-30 h-0.5 bg-gray-100 md:hidden"
+        role="progressbar"
+        aria-label="Reading progress"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(progress * 100)}
+      >
+        <div
+          className="h-full bg-[#0284C7] transition-[width] duration-150 ease-out"
+          style={{ width: progressWidth(progress) }}
+        />
+      </div>
 
       {/* Reader Layout: Left Navigation + Main Content (100% Full Width) */}
       <div className="flex-1 flex flex-col md:flex-row w-full px-4 sm:px-8 py-6 gap-6">
@@ -304,27 +485,13 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
           )}
         </aside>
 
-        {/* Mobile section switcher — swipeable chips, no buried navigation */}
-        <div className="md:hidden flex gap-2 overflow-x-auto pb-1 -my-1 mx-[-16px] sm:mx-[-32px] px-4 sm:px-8 -scroll-mb-1">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeSection === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => setActiveSection(item.id)}
-                className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-bold border transition-all ${
-                  isActive
-                    ? 'bg-[#0284C7] text-white border-[#0284C7] shadow-xs'
-                    : 'bg-white text-gray-600 border-gray-200 hover:border-[#0284C7]/40'
-                }`}
-              >
-                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-gray-400'}`} />
-                {item.label.replace(/^\d+\.\s*/, '')}
-              </button>
-            );
-          })}
-        </div>
+        {/*
+          The mobile chip carousel that used to live here is gone. It was the
+          reader's only navigation on a phone: eight sections in a horizontal
+          strip, with the last four past the right edge and no scrollbar to say
+          so. It is replaced by the contents sheet (§3.1) and, for moving between
+          neighbouring sections, the sticky bottom bar.
+        */}
 
         {/* Right Main Content Pane (GFG Enlarged Reading Container) */}
         <main className="flex-1 bg-white border border-gray-200 rounded-2xl p-6 sm:p-10 shadow-xs min-w-0">
@@ -492,15 +659,44 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
 
               {sectionData.interview_questions && sectionData.interview_questions.length > 0 ? (
                 <div className="space-y-6">
-                  {sectionData.interview_questions.map((q, qIdx) => (
-                    <div key={qIdx} className="p-6 bg-gray-50/80 border border-gray-200 rounded-2xl space-y-4">
-                      <div className="flex items-center gap-2.5">
-                        <span className={`px-3 py-0.5 rounded-md text-xs font-bold uppercase tracking-wider ${
-                          q.category === 'Coding' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
-                        }`}>
-                          {q.category}
-                        </span>
-                        <h3 className="font-bold text-gray-900 text-lg sm:text-xl">{q.title}</h3>
+                  {questions.map((q, qIdx) => (
+                    <div
+                      key={qIdx}
+                      data-question-index={qIdx}
+                      className={`p-6 bg-gray-50/80 border rounded-2xl space-y-4 transition-colors ${
+                        readerState.solved.includes(qIdx)
+                          ? 'border-emerald-300 bg-emerald-50/40'
+                          : 'border-gray-200'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <span className={`shrink-0 px-3 py-0.5 rounded-md text-xs font-bold uppercase tracking-wider ${
+                            q.category === 'Coding' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                          }`}>
+                            {q.category}
+                          </span>
+                          <h3 className="font-bold text-gray-900 text-lg sm:text-xl">{q.title}</h3>
+                        </div>
+
+                        {/*
+                          Always rendered. The old row revealed its actions on
+                          hover, which on a touch screen means they are either
+                          invisible or permanently stuck on (§3.2).
+                        */}
+                        <button
+                          type="button"
+                          onClick={() => persist(toggleSolved(readerState, qIdx))}
+                          aria-pressed={readerState.solved.includes(qIdx)}
+                          className={`flex min-h-[40px] flex-none items-center gap-1.5 rounded-xl border px-2.5 text-xs font-bold transition-colors ${
+                            readerState.solved.includes(qIdx)
+                              ? 'border-emerald-300 bg-emerald-100 text-emerald-800'
+                              : 'border-gray-200 bg-white text-gray-600'
+                          }`}
+                        >
+                          <CheckCircle2 className="h-4 w-4" />
+                          {readerState.solved.includes(qIdx) ? 'Solved' : 'Mark solved'}
+                        </button>
                       </div>
 
                       <div>
@@ -516,16 +712,10 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                       </div>
 
                       {q.code && (
-                        <div className="relative bg-[#0F172A] text-gray-100 rounded-xl p-5 font-mono text-sm sm:text-base leading-relaxed overflow-x-auto">
-                          <button
-                            onClick={() => handleCopyCode(q.code!, qIdx)}
-                            className="absolute top-3.5 right-3.5 p-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-xs font-sans font-bold flex items-center gap-1.5 transition-colors"
-                          >
-                            <Copy className="w-3.5 h-3.5" />
-                            {copiedCodeIndex === qIdx ? 'Copied!' : 'Copy Code'}
-                          </button>
-                          <pre>{q.code}</pre>
-                        </div>
+                        <CodeBlock
+                          code={q.code}
+                          label={q.category ? `${q.category} solution` : 'Solution'}
+                        />
                       )}
                     </div>
                   ))}
@@ -557,9 +747,12 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                       <MarkdownContent compact className="text-base text-amber-900">{sheet.summary}</MarkdownContent>
                       {/* Deliberately NOT markdown: admins paste aligned ASCII tables and
                           complexity charts here, and font-mono + pre-line is what keeps the
-                          columns lined up. */}
-                      <div className="p-4 bg-white border border-amber-200 rounded-xl text-base font-mono text-gray-800 leading-relaxed whitespace-pre-line overflow-x-auto">
-                        {sheet.content}
+                          columns lined up. `overflow-x-auto` was already here, but with no
+                          affordance and no way out of a wide chart on a phone. */}
+                      <div className="overflow-x-auto rounded-xl border border-amber-200 bg-white text-base leading-relaxed" style={{ WebkitOverflowScrolling: 'touch' }}>
+                        <div className="whitespace-pre-line p-4 font-mono text-gray-800">
+                          {sheet.content}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -822,6 +1015,46 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
 
         </main>
       </div>
+
+      {/*
+        Bottom padding clears the fixed action bar. Without it the last paragraph
+        of a section sits permanently underneath the bar, and a "Next" that
+        reveals nothing reads as a dead button.
+      */}
+      <div className="h-[76px] md:hidden" aria-hidden />
+
+      <ReaderActionBar
+        sectionIndex={sectionIndex}
+        sectionCount={navItems.length}
+        onPrev={() => goToSection(sectionIndex - 1)}
+        onNext={() => goToSection(sectionIndex + 1)}
+        sectionLabel={navItems[sectionIndex]?.label ?? ''}
+        bookmarked={readerState.bookmark === activeSection}
+        onToggleBookmark={() =>
+          persist({ ...readerState, bookmark: readerState.bookmark === activeSection ? null : activeSection })
+        }
+        solvedCount={isQuestionSection ? readerState.solved.length : null}
+        onMarkSolved={
+          isQuestionSection
+            ? () => persist(toggleSolved(readerState, activeQuestion))
+            : undefined
+        }
+        locked={locked}
+        unlockPriceSuffix={priceSuffix}
+        onUnlockClick={onUnlockClick}
+      />
+
+      <ReaderContentsSheet
+        open={contentsOpen}
+        onClose={() => setContentsOpen(false)}
+        sections={navItems}
+        activeSection={activeSection}
+        onSelectSection={(id) => setActiveSection(id as typeof activeSection)}
+        modules={allModules}
+        activeModuleId={module.id}
+        isModuleUnlocked={(mod) => mod.is_premium !== true || isModuleUnlocked}
+        onSelectModule={onSwitchModule}
+      />
 
       {/* PDF Viewer (view-only, watermarked) */}
       <PdfViewerModal

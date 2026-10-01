@@ -302,6 +302,9 @@ export default function CoursesPage({ initialData }: { initialData: CourseCatalo
             <input
               type="search"
               value={searchText}
+              inputMode="search"
+              enterKeyHint="search"
+              autoComplete="off"
               onChange={(e) => setSearchText(e.target.value)}
               placeholder="Search by course name or topic"
               aria-label="Search courses"

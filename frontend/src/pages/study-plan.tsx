@@ -7,6 +7,7 @@ import {
   resetMyStudyPlanApi,
 } from '@/lib/api';
 import { ContentBlockRenderer } from '@/components/blocks/ContentBlockRenderer';
+import { Sheet } from '@/components/common/Sheet';
 import { useAuth } from '@/context/AuthContext';
 import { StudyPlanView } from '@/types';
 import {
@@ -33,6 +34,9 @@ export default function StudyPlanPage() {
   const [openPhases, setOpenPhases] = useState<Record<string, boolean>>({});
   const [toggling, setToggling] = useState('');
   const [busyReset, setBusyReset] = useState(false);
+  /* Whether the destructive "start over" sheet is asking. Replaces a
+     `window.confirm`, which was the last native dialog a student could hit. */
+  const [confirmReset, setConfirmReset] = useState(false);
   /**
    * Set when a stored plan was loaded, so the returning student is told what
    * they came back to instead of silently landing on a half-finished timeline.
@@ -208,7 +212,17 @@ export default function StudyPlanPage() {
   };
 
   const startOver = async () => {
-    if (!window.confirm('Clear your saved plan and progress? Your answers stay on this page.')) return;
+    /* Phase 8: the old `window.confirm` was the last native dialog on a
+       student-facing page. On a phone it is the clearest possible "this is a web
+       page" tell - a grey system dialog with an "OK/Cancel" pair in the OS font,
+       over the app, unresponsive to the sheet styling everything else uses. It
+       also cannot say what is about to be lost, which for a destructive action on
+       a student's months of progress is the part that mattered. */
+    setConfirmReset(true);
+  };
+
+  const doReset = async () => {
+    setConfirmReset(false);
     setBusyReset(true);
     setError('');
     try {
@@ -250,7 +264,7 @@ export default function StudyPlanPage() {
             20-phase plan put progress permanently off-screen. This is the
             `lg:hidden` twin of the sidebar panel, pinned under the header. */}
         {showMobileBar && (
-          <div className="lg:hidden sticky top-[var(--header-h)] z-30 bg-white/95 backdrop-blur border-b border-[#EDEDEB] px-4 py-2.5">
+          <div className="lg:hidden sticky top-[var(--header-total)] z-30 bg-white/95 backdrop-blur border-b border-[#EDEDEB] px-4 py-2.5">
             <div className="flex items-center gap-3">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2 mb-1">
@@ -660,6 +674,57 @@ export default function StudyPlanPage() {
             </div>
           </div>
         </main>
+
+        {/* The "start over" confirmation - Phase 8.
+            Stated as what is lost and what is kept, because the native dialog
+            it replaced could only fit one short line and the student was
+            deciding whether to throw away months of progress on that basis.
+
+            No `blocksScroll={false}` here. That override belongs to the four
+            overlays `ShellContext` owns - cart, search, leaderboard, drawer -
+            which it locks and unlocks itself. This sheet is standalone, so
+            overriding it would leave the page scrollable underneath the sheet
+            while the sheet is open.
+
+            Focus goes to "Keep my plan", not to the destructive action. With a
+            Bluetooth keyboard a single stray Enter on the focused button would
+            otherwise destroy months of progress, and the button that was last
+            tapped to *open* this sheet is a button - so a hardware keyboard can
+            open the sheet and confirm the deletion in two keystrokes. */}
+        <Sheet
+          open={confirmReset}
+          onClose={() => setConfirmReset(false)}
+          title="Start over?"
+          footer={
+            <div className="flex flex-col-reverse gap-2">
+              <button
+                type="button"
+                onClick={doReset}
+                className="focus-ring flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-[#C1442D] px-4 text-sm font-bold text-white transition-colors active:opacity-90"
+              >
+                <RefreshCw size={15} />
+                Clear my plan and progress
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmReset(false)}
+                data-sheet-autofocus
+                className="focus-ring flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border border-gray-200 px-4 text-sm font-bold text-gray-700 transition-colors active:bg-black/5"
+              >
+                Keep my plan
+              </button>
+            </div>
+          }
+        >
+          <p className="text-sm leading-relaxed text-[var(--text-body)]">
+            This deletes the plan saved to your account and every phase you have ticked off. It cannot
+            be undone.
+          </p>
+          <p className="mt-3 text-sm leading-relaxed text-[var(--text-muted)]">
+            The answers you have given on this page stay put, so you can adjust them and generate a
+            fresh plan straight away.
+          </p>
+        </Sheet>
 
         <Footer />
       </div>

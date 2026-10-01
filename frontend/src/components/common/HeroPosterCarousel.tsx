@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import { HeroPoster } from '@/types';
@@ -127,14 +128,36 @@ export const HeroPosterCarousel: React.FC<HeroPosterCarouselProps> = ({ posters,
 
           const creative = (
             <>
-              {/* Admin-supplied creative URL — next/image cannot optimise it */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              {/*
+               * This used to be a plain `<img>` justified as "next/image cannot
+               * optimise it". That reason was true only while `images` was nested
+               * inside `experimental` in next.config.mjs, where Next ignored it —
+               * the config is fixed, so the reason is gone and so is the excuse.
+               *
+               * It is the largest unoptimised image in the product: a full-bleed
+               * hero creative, above the fold, on the first page every visitor
+               * loads. It is safe to optimise because the source is provably ours:
+               * `POST /api/posters` accepts only `.jpg/.jpeg/.png/.webp/.avif`,
+               * the stored filename is regex-anchored to those extensions, and the
+               * serve route only ever emits raster Content-Types. So the optimizer
+               * can never be handed an SVG it would reject.
+               *
+               * `priority` replaces the old `loading={isActive ? 'eager' :
+               * 'lazy'}`: it does the same job and additionally emits a preload
+               * hint for the visible slide, which is what actually moves LCP.
+               */}
+              <Image
                 src={apiAssetUrl(poster.image_url)}
                 alt={label}
+                fill
                 draggable={false}
-                loading={isActive ? 'eager' : 'lazy'}
-                className="absolute inset-0 h-full w-full object-cover"
+                priority={isActive}
+                // The slide is `absolute inset-0`, so the rendered width is the
+                // viewport. Leaving `sizes` off would make the optimizer assume
+                // 100vw *and* skip the srcset, so a desktop user would download
+                // the phone-sized file at 3x.
+                sizes="100vw"
+                className="object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/5" />
 

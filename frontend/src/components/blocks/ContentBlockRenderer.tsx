@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { CODE_LANGS, prismName, resolveLang, type CodeLang } from '@/lib/codeLang';
 import { MarkdownContent } from '@/components/blocks/MarkdownContent';
 import { CourseAnimation } from '@/components/blocks/CourseAnimations';
+import { Sheet } from '@/components/common/Sheet';
 import SyntaxHighlighter from 'react-syntax-highlighter/dist/cjs/prism-light';
 import c from 'react-syntax-highlighter/dist/cjs/languages/prism/c';
 import cpp from 'react-syntax-highlighter/dist/cjs/languages/prism/cpp';
@@ -293,13 +294,33 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
             className="relative group cursor-zoom-in overflow-hidden rounded-xl border border-[--border-subtle] bg-gray-50"
             onClick={() => openLightbox(src)}
           >
+            {/*
+             * Both of these stay plain `<img>`.
+             *
+             * Figure sources come from authored vault and course content, so they
+             * point at whatever host the author used. `next/image` would 400 on
+             * every one of those that is not our API origin, and a broken figure in
+             * a paid vault is a much worse outcome than an unoptimised one.
+             *
+             * The lightbox is a second, independent reason: it needs the original
+             * URL to show the full-resolution image, and it opens precisely when
+             * someone has asked to see more detail — routing that through an
+             * optimizer that may re-encode or refuse the source is the wrong
+             * trade.
+             *
+             * `w-full h-auto` also means the width is genuinely unknown at render
+             * time, so there is no width/height to declare here without inventing
+             * an aspect ratio the content does not have.
+             */}
+            {/* eslint-disable-next-line @next/next/no-img-element -- authored content, arbitrary host, see above */}
             <img
               src={src}
               alt={payload.alt || 'Figure'}
               loading="lazy"
+              decoding="async"
               className="w-full h-auto max-h-[480px] object-contain transition-transform duration-300 group-hover:scale-[1.01]"
             />
-            <div className="absolute top-2 right-2 bg-black/50 text-white p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="absolute top-2 right-2 bg-black/50 text-white p-1.5 rounded-lg transition-opacity">
               <ZoomIn className="w-4 h-4" />
             </div>
           </div>
@@ -307,30 +328,41 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
             <figcaption className="text-center text-[12px] text-[--text-muted] mt-2">{payload.caption}</figcaption>
           )}
 
-          {/* Lightbox */}
-          {lightboxOpen && (
-            <div
-              className="fixed inset-0 z-[100] bg-black/85 flex items-center justify-center p-4"
-              onClick={() => setLightboxOpen(false)}
-            >
-              <div className="relative max-w-5xl w-full" onClick={e => e.stopPropagation()}>
-                <button
-                  onClick={() => setLightboxOpen(false)}
-                  className="absolute -top-10 right-0 text-white/70 hover:text-white"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-                <img
-                  src={lightboxSrc}
-                  alt="Full size"
-                  className="w-full h-auto max-h-[88vh] object-contain rounded-xl"
-                />
-                {payload.caption && (
-                  <p className="text-center text-white/60 text-sm mt-3">{payload.caption}</p>
-                )}
-              </div>
-            </div>
-          )}
+          {/* Lightbox.
+
+              Built on `Sheet` rather than a hand-rolled `fixed inset-0` overlay.
+              The hand-rolled version had no `role="dialog"`, so a screen reader
+              never announced it; no focus trap or focus restore, so Tab walked off
+              into the page behind; no Escape handler; and no scroll lock, so the
+              article underneath moved while the "zoomed" figure was open. Its close
+              button also sat at `-top-10`, which is above the top of a phone
+              viewport once the figure is tall - the one control that has to be
+              reachable was the one that was not.
+
+              `side="bottom"` with a fixed height and no handle: the content is a
+              single figure, so a drag-to-dismiss grabber would be a gesture that
+              competes with pinch-zoom. */}
+          <Sheet
+            open={lightboxOpen}
+            onClose={() => setLightboxOpen(false)}
+            title={payload.alt || 'Figure'}
+            side="bottom"
+            zIndex={100}
+            showHandle={false}
+            className="max-h-[92vh] bg-transparent"
+            contentClassName="flex flex-col items-center justify-center gap-3"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element -- lightbox needs the original URL, see above */}
+            <img
+              src={lightboxSrc}
+              alt="Full size"
+              decoding="async"
+              className="w-full h-auto max-h-[70vh] object-contain rounded-xl"
+            />
+            {payload.caption && (
+              <p className="text-center text-white/60 text-sm">{payload.caption}</p>
+            )}
+          </Sheet>
         </figure>
       );
     }
@@ -417,12 +449,16 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
       const url: string = payload.video_url || '';
       const type: string = payload.video_type || 'youtube';
       let embedUrl = url;
+      /* `playsinline=1` stops iOS Safari from taking over the screen the moment
+         play is tapped — see the note on the <video> below. It is a URL param for
+         an iframe and an attribute for a <video>, so both have to be set. */
+      const INLINE_PARAMS = '?rel=0&playsinline=1';
       if (url.includes('youtube.com/watch')) {
         const v = url.split('v=')[1]?.split('&')[0];
-        if (v) embedUrl = `https://www.youtube.com/embed/${v}`;
+        if (v) embedUrl = `https://www.youtube.com/embed/${v}${INLINE_PARAMS}`;
       } else if (url.includes('youtu.be/')) {
         const v = url.split('youtu.be/')[1]?.split('?')[0];
-        if (v) embedUrl = `https://www.youtube.com/embed/${v}`;
+        if (v) embedUrl = `https://www.youtube.com/embed/${v}${INLINE_PARAMS}`;
       }
       return (
         <div className="my-5 border border-[--border-subtle] rounded-xl overflow-hidden">
@@ -440,7 +476,20 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
                 allowFullScreen
               />
             ) : (
-              <video className="w-full h-full" controls src={url}>
+              <video
+                className="w-full h-full"
+                controls
+                // Without `playsInline`, iOS Safari takes the tap on play as a
+                // request to go fullscreen: it tears the player out of the page
+                // and covers the lesson title and the rest of the app. It has to
+                // be an attribute, not just a URL param, on a bare <video>.
+                playsInline
+                // `metadata` is enough to show a duration and a scrub bar without
+                // pulling the whole file down on a phone connection. The default,
+                // `auto`, downloads the entire video before the learner can play.
+                preload="metadata"
+                src={url}
+              >
                 Your browser does not support video playback.
               </video>
             )}

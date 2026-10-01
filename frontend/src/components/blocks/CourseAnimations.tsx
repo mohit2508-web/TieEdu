@@ -12,10 +12,14 @@
  *
  * WHY NOT A LIBRARY
  * -----------------
- * framer-motion is not a dependency of this project and the existing design
- * system is Tailwind. Everything here is CSS keyframes plus React state, which
- * keeps the whole set inside the existing reduced-motion blanket rule in
- * globals.css rather than needing per-component opt-outs.
+ * framer-motion *is* a dependency now (Sheet, Header, RouteTransition use it),
+ * so this is a deliberate choice rather than an accident of what is installed.
+ * These are teaching visualisations: each frame is a discrete state the learner
+ * can stop on and read, and the whole set is CSS keyframes plus React state.
+ * That keeps them inside the existing reduced-motion blanket rule in
+ * globals.css rather than needing per-component opt-outs, and it keeps a widget
+ * that has to stay legible under `prefers-reduced-motion` from depending on
+ * JS-driven animation to hold still at all.
  *
  * DESIGN RULE FOR ALL OF THESE
  * ----------------------------

@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { QuestionComment } from '@/types';
-import { ThumbsUp, Pin, Send } from 'lucide-react';
+import { ThumbsUp, Pin, Send, MessageSquare } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api';
 import { getAccessToken } from '@/lib/auth';
+import { EmptyState } from '@/components/common/EmptyState';
 
 interface QuestionDiscussionProps {
   itemId: string;
@@ -41,6 +42,8 @@ export const QuestionDiscussion: React.FC<QuestionDiscussionProps> = ({ itemId, 
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [postError, setPostError] = useState<string | null>(null);
+/** So the empty state's one action can put the cursor in the composer. */
+const composerRef = useRef<HTMLTextAreaElement | null>(null);
 
   const fetchComments = useCallback(async () => {
     try {
@@ -113,11 +116,12 @@ export const QuestionDiscussion: React.FC<QuestionDiscussionProps> = ({ itemId, 
         </label>
 
         <textarea
+          ref={composerRef}
           rows={3}
           value={newCommentText}
           onChange={(e) => setNewCommentText(e.target.value)}
           placeholder="Write your question, test case doubt, or candidate insight..."
-          className="w-full p-3 text-xs sm:text-sm bg-white border border-[#EDEDEB] rounded-xl focus:ring-2 focus:ring-[#E8A33D] focus:outline-none"
+          className="w-full p-3 text-base sm:text-sm bg-white border border-[#EDEDEB] rounded-xl focus:ring-2 focus:ring-[#E8A33D] focus:outline-none"
         />
 
         {postError && (
@@ -152,13 +156,17 @@ export const QuestionDiscussion: React.FC<QuestionDiscussionProps> = ({ itemId, 
         </div>
       )}
 
-      {/* Empty state (real — no seeded comments) */}
+      {/* Empty state. Icon, one line, one action — the action focuses the
+          composer above rather than scrolling to it, because on a phone the
+          composer is already on screen and "jump here" would just be a second
+          thing to aim at. */}
       {!fetchError && comments.length === 0 && (
-        <div className="p-6 rounded-2xl border border-dashed border-[#EDEDEB] bg-white text-center">
-          <p className="text-xs sm:text-sm text-gray-500">
-            No discussions yet on this question — be the first to ask a doubt or share your experience.
-          </p>
-        </div>
+        <EmptyState
+          icon={MessageSquare}
+          title="No one has asked about this question yet"
+          note="If something here was unclear to you, it is unclear to somebody else too."
+          action={{ label: 'Ask the first question', onClick: () => composerRef.current?.focus() }}
+        />
       )}
 
       {/* Comment Thread List */}
@@ -175,9 +183,26 @@ export const QuestionDiscussion: React.FC<QuestionDiscussionProps> = ({ itemId, 
             <div className="flex items-start justify-between mb-2">
               <div className="flex items-center gap-2.5">
                 {comment.user_avatar ? (
+                  /*
+                   * A long thread is a long list of these, and none is above the
+                   * fold on a phone. `w-8 h-8` already fixes the box so there is
+                   * no shift; lazy is what keeps a 40-comment thread from queueing
+                   * 40 avatar requests behind the answer.
+                   *
+                   * Stays a plain `<img>`: avatars are base64 data URLs (see
+                   * `PUT /api/auth/profile`), so there is no request to optimize
+                   * and the optimizer would refuse the source anyway. The sizing
+                   * and lazy attributes are the part that matters for perceived
+                   * speed, and they are all here.
+                   */
+                  // eslint-disable-next-line @next/next/no-img-element -- base64 data-URL avatar, see above
                   <img
                     src={comment.user_avatar}
                     alt={comment.user_name}
+                    width={32}
+                    height={32}
+                    loading="lazy"
+                    decoding="async"
                     className="w-8 h-8 rounded-full object-cover border border-[#EDEDEB]"
                   />
                 ) : (

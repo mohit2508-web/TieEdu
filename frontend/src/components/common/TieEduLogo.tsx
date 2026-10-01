@@ -52,6 +52,20 @@ export const TieEduLogo: React.FC<TieEduLogoProps> = ({ className = '', size = '
 
   return (
     <div className={`inline-flex items-center ${className}`}>
+      {/*
+       * Stays a plain `<img>`, and this is the clearest case of the lot.
+       *
+       * The source is an SVG, and `/_next/image` refuses SVG outright — it answers
+       * `"url" parameter is valid but image type is not allowed`. The only way
+       * through is `images.dangerouslyAllowSVG`, which is a real security
+       * downgrade: it lets arbitrary SVG through the optimizer, and SVG can carry
+       * script. Trading that for optimizing a vector that is already ~2KB and
+       * scales to any size without a byte is not a trade worth making.
+       *
+       * This element is already in the shape the migration wanted — explicit
+       * width/height, no layout shift, no lazy on an above-the-fold logo.
+       */}
+      {/* eslint-disable-next-line @next/next/no-img-element -- SVG, the optimizer refuses it, see above */}
       <img
         src="/logo.svg"
         alt="TieEdu — Learn, Evolve, Develop"

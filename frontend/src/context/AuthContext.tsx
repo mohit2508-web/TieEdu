@@ -2,8 +2,9 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import {
-  AuthUser, apiLogin, apiSignup, apiLogout, apiRefresh, setAuthSession, getUserId,
+  AuthUser, apiLogin, apiSignup, apiLogout, setAuthSession, getUserId,
 } from '@/lib/auth';
+import { tryRefreshSession, getSessionUser } from '@/lib/api';
 
 interface AuthContextValue {
   user: AuthUser | null;
@@ -31,15 +32,29 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     let active = true;
     (async () => {
-      const data = await apiRefresh();
+      /*
+       * Goes through `tryRefreshSession` rather than calling `apiRefresh`
+       * directly, and that indirection is load-bearing.
+       *
+       * The refresh token is single-use: every successful refresh rotates it and
+       * issues a new cookie. Two refreshes for the same session therefore race,
+       * and the loser presents an already-consumed cookie, gets a 401, and takes
+       * the `else` branch below - signing the student out. This effect can easily
+       * run twice for one page view (a remount, React's double-invoked effects in
+       * development, a second tab opening), and the network trace showed exactly
+       * that: `/auth/me` 401, `/auth/refresh` 200, `/auth/me` 401,
+       * `/auth/refresh` 401, signed out.
+       *
+       * `tryRefreshSession` collapses concurrent callers onto one request, so the
+       * second caller gets the first caller's result instead of a stale cookie.
+       */
+      const ok = await tryRefreshSession();
       if (!active) return;
-      if (data?.user?.id) {
-        const uid = data.user.id;
-        setAuthSession(data.accessToken, uid);
-        setUser(data.user);
-        try { localStorage.setItem('tieedu_cached_user', JSON.stringify(data.user)); } catch {}
+      const fresh = ok ? getSessionUser() : null;
+      if (fresh?.id) {
+        setUser(fresh);
+        try { localStorage.setItem('tieedu_cached_user', JSON.stringify(fresh)); } catch {}
       } else {
-        setAuthSession(null, null);
         setUser(null);
         try { localStorage.removeItem('tieedu_cached_user'); } catch {}
       }

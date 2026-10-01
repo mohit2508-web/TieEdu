@@ -31,6 +31,19 @@ import {
 
 export type NavRole = 'user' | 'admin' | null;
 
+/**
+ * Where a route sits in the mobile navigation stack.
+ *
+ * `root`   — a top-level tab. The bottom tab bar stays.
+ * `detail` — pushed onto the stack. The tab bar slides away and the header
+ *            collapses to a native nav bar (back chevron + title).
+ *
+ * Phase 1 — MOBILE_APP_UI_PLAN.md §1.2. Resolved by `getNavigationDepth` rather
+ * than opted into per page, so a new page cannot forget and end up with a tab
+ * bar sitting on top of a full-screen reader.
+ */
+export type NavigationDepth = 'root' | 'detail';
+
 export interface NavItem {
   /** Stable key. Used by the drawer groups, the palette and as a React key. */
   id: string;
@@ -53,6 +66,22 @@ export interface NavItem {
   primary: boolean;
   /** Renders in the bottom tab bar. */
   tab?: boolean;
+  /**
+   * Force this route to a depth regardless of nesting. Omit to let
+   * `getNavigationDepth` decide from the path — a bare item is a root, and
+   * anything nested under it is a detail.
+   */
+  depth?: NavigationDepth;
+  /**
+   * Phase 1 — §1.3. Where the mobile back chevron goes when there is no history
+   * to pop — a deep link opened in a fresh tab, or a reload.
+   *
+   * Only needed when `depth` is pinned: a route that is a detail *at its own
+   * href* has no parent implied by the path, because there is nothing below it to
+   * strip. Nesting already handles itself (`/courses/python` → `/courses`).
+   * Defaults to `/`, which is never a dead end.
+   */
+  parent?: string;
   /** Only ever shown to a signed-in platform admin. */
   adminOnly?: boolean;
   /** Extra words that should find this item in the command palette. */
@@ -95,6 +124,18 @@ export const NAV_ITEMS: Record<string, NavItem> = {
     description: 'Free interview course — earn XP as you finish it',
     badge: 'free',
     primary: true,
+    /*
+      Its own path, but it is a course *reader* — a module strip, a question
+      view and its own scroll position. Left as a root it would keep the tab
+      bar pinned under a full-screen lesson, which is tell #8.
+    */
+    depth: 'detail',
+    /*
+      A detail at its own href, so there is no parent to infer from the path —
+      `/interview-course` has nothing below it to strip. It is a primary item and
+      not a tab, so the only sensible way out is the vault list it sits beside.
+    */
+    parent: '/',
     keywords: ['interview course', 'free', 'xp', 'practice'],
   },
   courses: {
@@ -259,6 +300,127 @@ const normalizePath = (value: string): string => {
   const trimmed = withoutQuery.replace(/\/+$/, '');
   return trimmed === '' ? '/' : trimmed;
 };
+
+/**
+ * Detail routes that have no `NavItem` of their own, so they cannot be inferred
+ * from the item list. Each is a pushed screen with no tab of its own.
+ *
+ * `/company/[slug]` is a vault, `/verify/[serial]` is a certificate. Both are
+ * reached by drilling into something else, so both cover the tab bar.
+ */
+export const NAV_DETAIL_PREFIXES: string[] = ['/company', '/verify'];
+
+/**
+ * True when `path` is nested *strictly below* `prefix` — at least one more
+ * segment. Deliberately not an equality test: `resolveBackHref` uses this to
+ * find a parent, and a "parent" equal to the current page is a back button that
+ * navigates nowhere.
+ *
+ * `/` is never a parent by nesting, since everything is below it; those routes
+ * go through an explicit `parent` instead.
+ */
+const isNestedUnder = (path: string, prefix: string): boolean =>
+  prefix !== '/' && path.startsWith(`${prefix}/`);
+
+/**
+ * The `NavItem` that owns this pathname: the longest matching href.
+ *
+ * Longest-match matters because `/` is a prefix of everything — `/courses/python`
+ * has to resolve against `courses`, not against `vaults`.
+ *
+ * Split out of `getNavigationDepth` so §1.3's title and back-target resolve
+ * through the *same* match. If depth and title each had their own copy, adding
+ * a route could give a detail page a root-looking title, and nothing would fail.
+ */
+export const resolveNavItem = (pathname: string): NavItem | null => {
+  const current = normalizePath(pathname);
+  if (!current) return null;
+
+  const matches = ALL_NAV_ITEMS.filter(
+    (item) => !item.href.includes('#') && isNavActive(current, item.href)
+  );
+  if (matches.length === 0) return null;
+
+  return matches.reduce((best, candidate) =>
+    normalizePath(candidate.href).length > normalizePath(best.href).length ? candidate : best
+  );
+};
+
+/**
+ * Phase 1 — MOBILE_APP_UI_PLAN.md §1.3. The title a pushed screen shows in its
+ * native nav bar.
+ *
+ * Never empty. A blank title is worse than a generic one: it collapses the bar to
+ * an unlabelled chevron, and on a pushed screen that chevron is the only way out.
+ */
+export const resolveNavTitle = (pathname: string): string => {
+  const item = resolveNavItem(pathname);
+  return item ? item.label : 'TieEdu';
+};
+
+/**
+ * Phase 1 — §1.3. Where the back chevron goes when there is nothing to pop.
+ *
+ * Resolution order:
+ *   1. the owning item's `parent`, when the route is a detail at its own href and
+ *      there is no nesting to strip (`/interview-course` → `/`)
+ *   2. the owning item's own href, when the path is strictly nested below it
+ *      (`/courses/python` → `/courses`)
+ *   3. `/`
+ *
+ * Never returns the current page. A back chevron that targets where it already
+ * is looks functional and strands the user, which is the failure §1.3 exists to
+ * prevent.
+ */
+export const resolveBackHref = (pathname: string): string => {
+  const item = resolveNavItem(pathname);
+  if (!item) return '/';
+  const current = normalizePath(pathname);
+  if (isNestedUnder(current, normalizePath(item.href))) return normalizePath(item.href);
+  return item.parent ?? '/';
+};
+
+/**
+ * Phase 1 — MOBILE_APP_UI_PLAN.md §1.2. Which stack a pathname belongs to.
+ *
+ * Deliberately path-only. The plan also writes drill-downs as
+ * `/company/[slug]?m=…?q=…` and `/courses/[slug]?lesson=…`, but in both cases
+ * the *path* is already a detail, so the query adds nothing to the decision —
+ * and reading it would mean a `?lesson=` on a root route could silently cover
+ * the tab bar.
+ *
+ * Resolution order:
+ *   1. an explicit detail prefix (`/company`, `/verify`)
+ *   2. the longest matching `NavItem`
+ *        - item pins `depth`            -> that depth
+ *        - path has segments below href -> detail (pushed screen)
+ *        - otherwise                     -> root (top-level tab)
+ */
+export const getNavigationDepth = (pathname: string): NavigationDepth => {
+  const current = normalizePath(pathname);
+  if (!current) return 'root';
+
+  for (const prefix of NAV_DETAIL_PREFIXES) {
+    // The bare prefix is a detail too (`/verify` with no serial still leaves
+    // the tab stack), so this is a plain prefix test, not a segment test.
+    if (current === prefix || current.startsWith(`${prefix}/`)) return 'detail';
+  }
+
+  const item = resolveNavItem(current);
+
+  if (!item) {
+    // An unknown route. `root` is the safe default: a tab bar on a page we have
+    // never seen is a cosmetic miss, whereas hiding it on a new top-level page
+    // would strand the user with no way to navigate away.
+    return 'root';
+  }
+
+  if (item.depth) return item.depth;
+  return normalizePath(current) === normalizePath(item.href) ? 'root' : 'detail';
+};
+
+/** True when the bottom tab bar should be visible on this route. */
+export const isRootDepth = (pathname: string): boolean => getNavigationDepth(pathname) === 'root';
 
 /**
  * Whether `href` should render as the page the user is currently on.

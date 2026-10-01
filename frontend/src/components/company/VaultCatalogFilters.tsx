@@ -30,9 +30,12 @@ export const VaultCatalogFilters: React.FC<VaultCatalogFiltersProps> = ({
       <div className="relative max-w-2xl mx-auto">
         <Search className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
         <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
+              type="search"
+              value={searchQuery}
+              inputMode="search"
+              enterKeyHint="search"
+              autoComplete="off"
+              onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Search 10+ company recruitment vaults (e.g. Google, Zscaler, TCS, Rate Limiter)..."
           className="w-full pl-12 pr-4 py-3 text-sm sm:text-base bg-white border border-[#EDEDEB] rounded-2xl shadow-xs focus:ring-2 focus:ring-[#E8A33D] focus:outline-none transition-all"
         />

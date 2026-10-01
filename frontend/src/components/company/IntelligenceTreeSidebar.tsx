@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ContentModule, ContentItem } from '@/types';
+import { Sheet } from '@/components/common/Sheet';
 import {
   CheckCircle2, Lock, Eye, ChevronRight, ChevronDown,
   Search, X, List
@@ -55,9 +56,12 @@ function TreeContent({
         <div className="relative">
           <Search className="w-3.5 h-3.5 text-[--text-light] absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
-            type="text"
-            value={searchQuery}
-            onChange={e => onSearchChange(e.target.value)}
+              type="search"
+              value={searchQuery}
+              inputMode="search"
+              enterKeyHint="search"
+              autoComplete="off"
+              onChange={e => onSearchChange(e.target.value)}
             placeholder="Search topics..."
             className="w-full pl-8 pr-3 py-1.5 text-[13px] bg-[#F4F4F2] rounded-lg border border-[--border-subtle] focus:outline-none focus:ring-2 focus:ring-[--brand-accent]/40 placeholder-[--text-light]"
           />
@@ -198,20 +202,32 @@ interface MobileSidebarProps extends TopicTreeProps {
 export const MobileSidebarDrawer: React.FC<MobileSidebarProps> = ({ isOpen, onClose, ...props }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
-  if (!isOpen) return null;
+  /*
+    Built on `Sheet` with `side="left"` rather than a hand-rolled scrim + panel.
 
+    The hand-rolled pair had no `role="dialog"` (so the tree was never announced
+    as a dialog), no focus trap (Tab walked out into the article behind the
+    scrim), no focus restore on close, no Escape handler, and no scroll lock —
+    the reader behind it scrolled while the drawer was open, which is the
+    textbook "two scroll areas fight each other" bug. The scrim was also
+    `lg:hidden` rather than the panel-and-scrim pair hiding together, so at
+    `lg` it was an invisible click-eater if the panel's own hiding ever slipped.
+
+    `hideOnDesktop` handles both halves in one place, and `TreeContent` keeps
+    owning its own internal scrolling.
+  */
   return (
-    <>
-      {/* Overlay */}
-      <div
-        className="fixed inset-0 bg-black/40 z-40 lg:hidden"
-        onClick={onClose}
-      />
-
-      {/* Drawer */}
-      <div className="fixed left-0 top-0 bottom-0 w-[85vw] max-w-[320px] bg-white z-50 shadow-2xl sidebar-drawer lg:hidden overflow-hidden flex flex-col">
-        <TreeContent {...props} searchQuery={searchQuery} onSearchChange={setSearchQuery} />
-      </div>
-    </>
+    <Sheet
+      open={isOpen}
+      onClose={onClose}
+      title="Topic tree"
+      side="left"
+      hideOnDesktop
+      zIndex={50}
+      className="w-[85vw] max-w-[320px] p-0"
+      contentClassName="h-full overflow-hidden flex flex-col"
+    >
+      <TreeContent {...props} searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+    </Sheet>
   );
 };

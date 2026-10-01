@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import {
   Megaphone, Trash2, Loader2, CheckCircle2, ShieldAlert, Star,
@@ -324,9 +325,15 @@ export const PostersTab: React.FC = () => {
               <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={(e) => pickFile(e.target.files?.[0])} />
               {previewSrc ? (
                 <>
-                  {/* Admin-uploaded creative, not an optimisable next/image source */}
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={previewSrc} alt="Poster preview" className="w-full aspect-[4/5] object-cover" />
+                  {/*
+                   * A local preview of the file the admin has just picked, held as
+                   * a data URL from `FileReader` — it is not on any origin yet, so
+                   * there is nothing for the optimizer to fetch. The sibling row
+                   * above is a real `/api/posters` URL and *is* optimised; this one
+                   * cannot be, which is the difference rather than an inconsistency.
+                   */}
+                  {/* eslint-disable-next-line @next/next/no-img-element -- local data-URL file preview, see above */}
+                  <img src={previewSrc} alt="Poster preview" width={640} height={800} className="w-full aspect-[4/5] object-cover" />
                   <span className="absolute bottom-2 inset-x-0 flex justify-center">
                     <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/65 text-white text-[11px] font-bold backdrop-blur">
                       {pendingImage ? `${pendingImage.file.name} (${fmtSize(pendingImage.file.size)})` : form.image_file_name || 'Current image'} — click to replace
@@ -456,9 +463,38 @@ export const PostersTab: React.FC = () => {
               const st = statusOf(p);
               return (
                 <div key={p.id} className={`bg-white border rounded-3xl p-4 shadow-xs flex flex-col sm:flex-row gap-4 ${editingId === p.id ? 'border-[#0284C7] ring-2 ring-[#0284C7]/15' : 'border-gray-200'}`}>
-                  <div className="w-full sm:w-28 shrink-0 rounded-2xl overflow-hidden bg-[#0E2A44] relative">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={apiAssetUrl(p.image_url)} alt={p.alt_text || 'Poster'} className="w-full h-40 sm:h-full object-cover" />
+                  {/*
+                   * The height lives on THIS div now, and it has to.
+                   *
+                   * `h-40 sm:h-full` used to sit on the `<img>` itself, which was
+                   * the only thing giving the box a height. `fill` positions the
+                   * image absolutely, so it contributes nothing to layout, and
+                   * moving the classes here is what keeps the thumbnail from
+                   * collapsing to a 0px sliver. `relative` is what makes `fill` have
+                   * something to measure against.
+                   */}
+                  <div className="relative w-full sm:w-28 h-40 sm:h-full shrink-0 rounded-2xl overflow-hidden bg-[#0E2A44]">
+                    {/*
+                     * Optimised after all. The old comment here said "not an
+                     * optimisable next/image source", which was only true while
+                     * `images.remotePatterns` was inert. Posters are uploaded
+                     * through `POST /api/posters`, which accepts only
+                     * `.jpg/.jpeg/.png/.webp/.avif`, so the source is always a
+                     * raster on our own origin.
+                     *
+                     * Worth it here because a poster is a full-size marketing
+                     * creative — often a 1000px+ PNG — painted into a 112px admin
+                     * thumbnail. The grid was pulling the original for every row.
+                     * `fill` on the already-`relative` parent avoids a second
+                     * wrapper element just to supply dimensions.
+                     */}
+                    <Image
+                      src={apiAssetUrl(p.image_url)}
+                      alt={p.alt_text || 'Poster'}
+                      fill
+                      sizes="(min-width: 640px) 112px, 100vw"
+                      className="object-cover"
+                    />
                   </div>
 
                   <div className="flex-1 min-w-0 space-y-2">

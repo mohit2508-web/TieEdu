@@ -146,7 +146,22 @@ export const SettingsTab: React.FC = () => {
               <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">UPI QR code (image upload)</label>
               <div className="flex items-center gap-3">
                 {form.upi_qr ? (
-                  <img src={form.upi_qr} alt="UPI QR preview" className="w-20 h-20 rounded-xl border border-gray-200 object-contain bg-white" />
+                  /*
+                   * A plain `<img>` on purpose. This is a base64 data URL read
+                   * straight off the file input, so there is no request for an
+                   * optimizer to intercept, and it is the merchant's payment QR —
+                   * the same "do not re-encode this" reasoning as the student-facing
+                   * one. The width/height are the useful part: without them the
+                   * preview box collapses to zero height and the row jumps as soon
+                   * as the admin picks a file.
+                   *
+                   * These are plain JS comments rather than JSX comment braces
+                   * because this sits in the parenthesised branch of a ternary,
+                   * which is expression position — a JSX comment container there
+                   * is parsed as an object literal and fails to compile.
+                   */
+                  // eslint-disable-next-line @next/next/no-img-element -- data-URL payment QR preview, see above
+                  <img src={form.upi_qr} alt="UPI QR preview" width={80} height={80} className="w-20 h-20 rounded-xl border border-gray-200 object-contain bg-white" />
                 ) : (
                   <div className="w-20 h-20 rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center text-gray-300">
                     <QrCode className="w-7 h-7" />

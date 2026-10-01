@@ -73,6 +73,13 @@ export default function SignupPage() {
                   <input
                     value={name}
                     onChange={(e) => setName(e.target.value)}
+                    /* Phase 7. This form had no `autoComplete` on any field, so
+                       iOS and Android offered nothing: every returning student
+                       retyped their name by hand. `enterKeyHint` in field order
+                       is what makes Return walk down the form instead of
+                       submitting half of it. */
+                    autoComplete="name"
+                    enterKeyHint="next"
                     placeholder="Priya Sharma"
                     className="w-full pl-10 pr-4 py-3 bg-white/90 border border-[#E9E7E1] rounded-xl text-sm text-[#10151C] placeholder:text-[#AEB6BE] focus:outline-none focus:border-[#0284C7] focus:ring-4 focus:ring-[#0284C7]/10 transition-shadow"
                   />
@@ -85,7 +92,9 @@ export default function SignupPage() {
                   <Mail className="w-4 h-4 text-[--text-muted] absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="email"
+                    inputMode="email"
                     autoComplete="email"
+                    enterKeyHint="next"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@college.edu"
@@ -101,6 +110,8 @@ export default function SignupPage() {
                   <input
                     value={college}
                     onChange={(e) => setCollege(e.target.value)}
+                    autoComplete="organization"
+                    enterKeyHint="next"
                     placeholder="IIT Delhi, NIT Trichy…"
                     className="w-full pl-10 pr-4 py-3 bg-white/90 border border-[#E9E7E1] rounded-xl text-sm text-[#10151C] placeholder:text-[#AEB6BE] focus:outline-none focus:border-[#0284C7] focus:ring-4 focus:ring-[#0284C7]/10 transition-shadow"
                   />
@@ -114,6 +125,7 @@ export default function SignupPage() {
                   <input
                     type="password"
                     autoComplete="new-password"
+                    enterKeyHint="next"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Min 6 characters"
@@ -129,6 +141,8 @@ export default function SignupPage() {
                   <input
                     type="password"
                     autoComplete="new-password"
+                    /* Last field, so Return submits the form. */
+                    enterKeyHint="go"
                     value={confirm}
                     onChange={(e) => setConfirm(e.target.value)}
                     placeholder="Type again"
@@ -143,7 +157,7 @@ export default function SignupPage() {
                   type="checkbox"
                   checked={acceptedTerms}
                   onChange={(e) => setAcceptedTerms(e.target.checked)}
-                  className="mt-0.5 w-4 h-4 rounded border-[#E9E7E1] text-[#0284C7] focus:ring-[#0284C7] cursor-pointer shrink-0"
+                  className="mt-0.5 w-4 h-4 rounded border-[#E9E7E1] text-[#0284C7] focus:ring-[#0284C7] shrink-0"
                 />
                 <label htmlFor="tc-checkbox" className="text-[13px] text-[#3E4754] leading-snug cursor-pointer select-none">
                   I agree to the <span className="font-semibold text-[#0284C7] underline underline-offset-2">Terms &amp; Conditions</span> and <span className="font-semibold text-[#0284C7] underline underline-offset-2">Privacy Policy</span>.

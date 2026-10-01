@@ -9,6 +9,7 @@ import {
   formatModuleCount,
   formatPrice,
 } from '@/lib/courseFormat';
+import { CourseMobileActionBar } from '@/components/courses/CourseMobileActionBar';
 import type { CourseCard } from '@/types';
 
 /**
@@ -48,6 +49,7 @@ export const CoursePreviewShell: React.FC<{
   const duration = formatDuration(course.stats?.total_minutes);
 
   return (
+    <>
     <div className="grid gap-8 lg:grid-cols-[1fr_280px] lg:items-start">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
@@ -135,6 +137,9 @@ export const CoursePreviewShell: React.FC<{
             title={course.title}
             thumbnailUrl={course.thumbnail_url}
             className="mb-4 aspect-[4/3] w-full overflow-hidden rounded-[var(--radius-md)] border border-[var(--border-subtle)]"
+            /* An `lg:sticky` aside: a third of the reader column once the two-column
+               layout engages, full width below it. */
+            sizes="(min-width: 1024px) 420px, 100vw"
           />
 
           <div className="text-2xl font-extrabold leading-none text-[var(--ink)]">
@@ -164,16 +169,48 @@ export const CoursePreviewShell: React.FC<{
               always true. Tying the label to it made the server-rendered button
               read "Signing in..." and sit disabled, which is a lie in the HTML a
               crawler and a no-JS visitor both see. The click opens the auth
-              modal; that is the whole behaviour. */}
+              modal; that is the whole behaviour.
+
+              `lg:block` because below `lg` this card is inline, at the very bottom
+              of a page whose body is the sales pitch — so on a phone the one
+              action that unlocks the course was the furthest thing from the top
+              of the screen. The sticky bar at the end of the component is the
+              mobile half of the same action, not a second one. */}
           <button
             type="button"
             onClick={onSignIn}
-            className="mt-4 w-full rounded-lg bg-[var(--brand-sky)] px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[var(--brand-sky-strong)]"
+            className="mt-4 hidden w-full rounded-lg bg-[var(--brand-sky)] px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[var(--brand-sky-strong)] lg:block"
           >
             Sign in to continue
           </button>
         </div>
       </aside>
     </div>
+
+    {/* The mobile half of that same action - Phase 4, §4.1.
+
+        This view is the whole of what a signed-out visitor sees for a paid
+        course, and the inline button lives at the foot of the sales pitch. On a
+        phone the price is at the top and the only way to act on it is past the
+        testimonials. A sticky bar puts "what it costs" and "how to get it" in the
+        same thumb-reach, which is the arrangement every app store listing has.
+
+        Server-rendered, and the same button as above: no state is read here, so a
+        crawler and a no-JS visitor get an honest control rather than a spinner.
+        `py-3` clears the 44px touch minimum that `py-2.5` in the card does not. */}
+    <div className="md:hidden">
+      <CourseMobileActionBar
+        note={course.is_free ? 'Free course' : formatPrice(course.price_inr)}
+      >
+        <button
+          type="button"
+          onClick={onSignIn}
+          className="focus-ring w-full rounded-xl bg-[var(--brand-sky)] px-5 py-3 text-sm font-bold text-white transition-colors active:opacity-90"
+        >
+          Sign in to continue
+        </button>
+      </CourseMobileActionBar>
+    </div>
+    </>
   );
 };

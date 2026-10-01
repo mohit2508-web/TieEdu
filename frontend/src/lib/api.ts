@@ -1,7 +1,11 @@
 import { Company, ComparisonMatrix, HeroPoster, HeroPosterAdmin, InterviewReport, PricingPlan, PricingCatalog, StudyPlanTemplateMeta } from '@/types';
-import { getAccessToken, getUserId, apiRefresh, setAuthSession } from './auth';
+import { getAccessToken, getUserId, apiRefresh, setAuthSession, AuthUser } from './auth';
+import { API_BASE_URL, apiAssetUrl, isApiAssetUrl } from './assetUrl';
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+// Re-exported so the many existing `from '@/lib/api'` call sites keep working.
+// The definitions live in `./assetUrl` so a unit suite can import and *execute*
+// them; see the note at the top of that file.
+export { API_BASE_URL, apiAssetUrl, isApiAssetUrl };
 
 export const authHeaders = (): Record<string, string> =>
   getAccessToken() ? { Authorization: `Bearer ${getAccessToken()}` } : {};
@@ -9,16 +13,31 @@ export const authHeaders = (): Record<string, string> =>
 // Single-flight session refresh: when the 15-min access token expires, any
 // 401 triggers ONE refresh via the httpOnly cookie, then retries the request.
 // If the refresh itself fails the user is signed out and the error surfaces.
-let refreshInFlight: Promise<boolean> | null = null;
-const tryRefreshSession = (): Promise<boolean> => {
+//
+// Exported because the *boot* refresh has to share this guard, and not just the
+// 401 path. The refresh token rotates: a second refresh presents a cookie that
+// the first one already consumed, so it 401s and signs the user out. Anything
+// that can call refresh more than once for the same session - a remounted
+// effect, a second tab, a cold start - must go through here.
+export let refreshInFlight: Promise<boolean> | null = null;
+
+// The user that came back with the last successful refresh. The boot path needs
+// it, and asking for it with a second `apiRefresh()` would re-introduce exactly
+// the race this guard exists to prevent.
+let sessionUser: AuthUser | null = null;
+export const getSessionUser = (): AuthUser | null => sessionUser;
+
+export const tryRefreshSession = (): Promise<boolean> => {
   if (!refreshInFlight) {
     refreshInFlight = apiRefresh()
       .then((data) => {
         if (data?.accessToken) {
           setAuthSession(data.accessToken, data.user?.id || getUserId());
+          sessionUser = (data.user as AuthUser) || null;
           return true;
         }
         setAuthSession(null, null);
+        sessionUser = null;
         return false;
       })
       .finally(() => { refreshInFlight = null; });
@@ -48,18 +67,6 @@ export const apiFetch = async (url: string, options: RequestInit = {}): Promise<
 // ============================================================================
 
 export const pdfFileUrl = (storedName: string) => `${API_BASE_URL}/pdf/file/${encodeURIComponent(storedName)}`;
-
-/**
- * Turn a server-relative asset path ("/api/posters/file/x.jpg") into a URL the
- * browser can actually load. The frontend and the API are different origins, so
- * a bare relative path would silently 404 against Next.js.
- */
-export const apiAssetUrl = (relativePath: string): string => {
-  if (!relativePath) return '';
-  if (/^https?:\/\//i.test(relativePath)) return relativePath;
-  const origin = API_BASE_URL.replace(/\/api\/?$/, '');
-  return `${origin}${relativePath.startsWith('/') ? relativePath : `/${relativePath}`}`;
-};
 
 export const uploadModulePdfApi = async (
   moduleId: string,

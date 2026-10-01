@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { Sparkles } from 'lucide-react';
 
 export const TieEduLoader: React.FC = () => {
   const router = useRouter();
@@ -48,28 +47,34 @@ export const TieEduLoader: React.FC = () => {
   if (!loading && progress === 0) return null;
 
   return (
-    <>
-      {/* Top Gold Progress Bar */}
-      <div className="fixed top-0 left-0 right-0 z-[100] h-1 bg-[#EDEDEB]">
-        <div
-          className="h-full bg-gradient-to-r from-[#E8A33D] via-amber-400 to-[#1F3A5F] transition-all duration-150 ease-out shadow-[0_0_10px_#E8A33D]"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
-
-      {/* Instant Micro-Loader Spinner Overlay */}
-      {loading && (
-        <div className="fixed bottom-6 right-6 z-[100] bg-[#1F3A5F] text-white px-4 py-2.5 rounded-2xl shadow-xl border border-white/20 flex items-center gap-3 animate-in slide-in-from-bottom-3 duration-150">
-          <div className="relative w-5 h-5 flex items-center justify-center">
-            <div className="w-5 h-5 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin"></div>
-            <Sparkles className="w-2.5 h-2.5 text-amber-300 absolute" />
-          </div>
-          <div className="text-xs">
-            <p className="font-bold leading-none text-white">Loading Vault...</p>
-            <p className="text-[10px] text-amber-300/90 font-mono mt-0.5">TieEdu Intelligence</p>
-          </div>
-        </div>
-      )}
-    </>
+    /*
+     * A thin indeterminate bar, and nothing else.
+     *
+     * This used to render a corner card as well: a spinner next to the text
+     * "Loading Vault...". It was removed for three reasons, all of which the
+     * probe in Phase 6/8 caught rather than a reviewer.
+     *
+     * The copy was simply wrong. This loader is mounted once in `_app` and so
+     * fires on *every* client-side navigation, but it announced "Vault" while
+     * opening a course. A student who tapped a course and saw "Loading Vault..."
+     * had no way to know the app was tracking the right request.
+     *
+     * It was a spinner, which is the specific thing Phase 6 sets out to delete:
+     * it tells you that something is happening but nothing about what is about to
+     * be there. The heavy pages now carry a skeleton shaped like their final
+     * layout (`CourseDetailSkeleton`, `VaultSkeleton`), and this bar only has to
+     * answer the rest.
+     *
+     * And it sat in the bottom-right corner, which on a phone is both the
+     * thumb's resting place and directly over page content, so the least
+     * useful pixel on the screen was the one being repainted during a
+     * navigation.
+     */
+    <div className="fixed top-0 left-0 right-0 z-[100] h-1 bg-[#EDEDEB]" aria-hidden="true">
+      <div
+        className="h-full bg-gradient-to-r from-[#E8A33D] via-amber-400 to-[#1F3A5F] transition-all duration-150 ease-out shadow-[0_0_10px_#E8A33D]"
+        style={{ width: `${progress}%` }}
+      />
+    </div>
   );
 };

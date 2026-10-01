@@ -85,8 +85,18 @@ export const CourseThumbnailEditor: React.FC<CourseThumbnailEditorProps> = ({
       <div className="mt-3 flex flex-wrap items-center gap-4">
         <div className="h-[76px] w-[168px] shrink-0 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface-hover)]">
           {current ? (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img src={current} alt={`Cover for ${title}`} className="h-full w-full object-cover" />
+            /*
+             * A plain `<img>` in a 168x76 slot, which looks like a mistake, so:
+             * `current` is either a locally-chosen file preview (a data URL, with
+             * no origin for the optimizer to fetch) or the just-uploaded
+             * `/api/courses/.../thumb` path. The upload route only accepts
+             * `.jpg/.jpeg/.png/.webp/.avif`, so the raster case is safe either way
+             * — but at 168x76 in an admin-only editor the saving is negligible, and
+             * the fixed parent box already removes any layout shift, so this is
+             * left alone rather than churned.
+             */
+            /* eslint-disable-next-line @next/next/no-img-element -- data-URL preview, see above */
+            <img src={current} alt={`Cover for ${title}`} width={168} height={76} decoding="async" className="h-full w-full object-cover" />
           ) : (
             <span className="flex h-full w-full items-center justify-center text-[var(--text-light)]">
               <ImageIcon size={20} aria-hidden="true" />

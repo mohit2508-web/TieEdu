@@ -42,10 +42,27 @@ export const BrandTile: React.FC<BrandTileProps> = ({ name, src, className = 'w-
   const safeName = name || 'Company';
   if (isRealUrl(src)) {
     return (
+      /*
+       * Not migrated to `next/image`, and this one would actively break.
+       *
+       * `isRealUrl` accepts `http://`, `https://` and `data:image/`, so this
+       * renders logos from arbitrary third-party hosts as well as our own. The
+       * optimizer only fetches hosts listed in `images.remotePatterns` — which is
+       * deliberately scoped to the API origin rather than `https://**` — and
+       * answers 400 for anything else. So converting this would turn every
+       * externally hosted company logo into a broken image, in the cart and the
+       * company manager, for a component whose whole job is to degrade honestly.
+       *
+       * `next/image` with `unoptimized` would "fix" that while providing none of
+       * the benefit, so the plain element is the correct tool.
+       */
+      // eslint-disable-next-line @next/next/no-img-element -- arbitrary third-party host, see above
       <img
         src={src!}
         alt={safeName}
         title={title || safeName}
+        loading="lazy"
+        decoding="async"
         className={`object-cover border border-[#E9E7E1] bg-white ${className}`}
       />
     );

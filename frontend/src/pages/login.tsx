@@ -70,9 +70,14 @@ export default function LoginPage() {
                 <div className="relative">
                   <Mail className="w-4 h-4 text-[--text-muted] absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
-                    id="email"
-                    type="email"
-                    autoComplete="email"
+            id="email"
+            type="email"
+            inputMode="email"
+            /* Phase 7. `type="email"` alone gives iOS an email keyboard but no
+               Keychain autofill; `inputMode` gives the `@` key without forcing
+               validation the browser would word its own way. */
+            autoComplete="email"
+            enterKeyHint="next"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@college.edu"
@@ -88,9 +93,12 @@ export default function LoginPage() {
                 <div className="relative">
                   <Lock className="w-4 h-4 text-[--text-muted] absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
-                    id="password"
-                    type="password"
-                    autoComplete="current-password"
+            id="password"
+            type="password"
+            autoComplete="current-password"
+            /* Last field in the form, so Return submits rather than tabbing to
+               something invisible. */
+            enterKeyHint="go"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"

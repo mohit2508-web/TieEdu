@@ -147,7 +147,7 @@ export const CompareColumnHeader: React.FC<{ matrix: ComparisonMatrix }> = ({ ma
   if (companies.length === 0) return null;
   return (
     <div
-      className="sticky top-[var(--header-h)] z-20 hidden lg:grid gap-px bg-white border border-[#EDEDEB] rounded-2xl shadow-sm overflow-hidden"
+      className="sticky top-[var(--header-total)] z-20 hidden lg:grid gap-px bg-white border border-[#EDEDEB] rounded-2xl shadow-sm overflow-hidden"
       style={{ gridTemplateColumns: `200px repeat(${companies.length}, minmax(220px, 1fr))` }}
     >
       <div className="compare-sticky-col px-5 py-3.5 bg-[#FAFAF9]">

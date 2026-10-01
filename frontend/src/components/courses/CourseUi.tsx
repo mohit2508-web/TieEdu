@@ -1,8 +1,10 @@
 import React from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { Check, Lock, PlayCircle, FileText, Clock, Award, Star, Users, Layers, X } from 'lucide-react';
 import type { CourseAccess, CourseCard, CourseLessonView, CourseProgress, CourseStats, LessonCompletionState } from '@/types';
-import { apiAssetUrl } from '@/lib/api';
+import { apiAssetUrl, isApiAssetUrl } from '@/lib/api';
+import { Skeleton, SkeletonText } from '@/components/common/Skeleton';
 import {
   courseCta,
   courseCover,
@@ -308,7 +310,36 @@ export const CourseCover: React.FC<{
   title: string;
   thumbnailUrl?: string;
   className?: string;
-  }> = ({ slug, title, thumbnailUrl, className }) => {
+  /**
+   * The image is above the fold and should start loading immediately.
+   *
+   * `loading="lazy"` is right for a cover in a related-courses list several
+   * screens down, and wrong for the hero: the browser defers it until the image
+   * is near the viewport, which on a phone connection means the one image the
+   * visitor is guaranteed to want arrives last. Off by default, so the common
+   * case keeps its lazy behaviour and only the hero opts in.
+   */
+  priority?: boolean;
+  /**
+   * The width this cover is actually painted at, as a CSS `sizes` value.
+   *
+   * Required in practice, because it cannot be derived: the call sites are 80/168px
+   * fixed thumbnails, a 240px hero track, a 420px aside and a full-width mobile
+   * box, and the component only receives a Tailwind class string. `next/image`
+   * builds its `srcset` from `sizes`, so guessing costs real bandwidth — too large
+   * and a 168px card downloads the biggest file in the srcset, too small and the
+   * hero looks soft. The caller is the only place that knows, so it states it.
+   *
+   * Read the caller's surrounding layout to get this right rather than the
+   * container's width. The course hero once claimed 1272px because the grid is
+   * `sm:grid-cols-[1fr_240px]` inside a 1600px reader: it is the *second* child,
+   * so it gets the 240px track, and every pixel of that arithmetic was wrong.
+   *
+   * Defaults to the historical 168px box so a new call site degrades to "too
+   * small but sharp" rather than "sharp but enormous".
+   */
+  sizes?: string;
+    }> = ({ slug, title, thumbnailUrl, className, priority, sizes = '168px' }) => {
     const [loaded, setLoaded] = React.useState(false);
     const cover = courseCover(slug, title);
     // Uploaded covers are stored as server-relative paths ("/api/..."), and the
@@ -318,9 +349,6 @@ export const CourseCover: React.FC<{
 
     if (src) {
     return (
-      // A plain div wrapper rather than next/image: these are author-supplied
-      // external URLs with no known dimensions, and next/image would need the
-      // remote host allow-listed in next.config before any of them rendered.
       <div
         className={[
           'relative shrink-0 overflow-hidden bg-[var(--bg-surface-hover)]',
@@ -334,16 +362,58 @@ export const CourseCover: React.FC<{
             style={{ backgroundImage: `linear-gradient(135deg, ${cover.from}, ${cover.to})` }}
           />
         )}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {/*
+         * `next/image` when the cover is ours, a plain `<img>` when it is not.
+         *
+         * This is the LCP element on the course page, so it was previously the
+         * largest unoptimised image in the product: a full-resolution upload
+         * painted into a slot a fraction of its size. It could not be migrated
+         * while `images.remotePatterns` was inert; now it can, with one
+         * condition attached.
+         *
+         * `thumbnail_url` is a DB column rather than a typed upload. The admin
+         * route that populates it only accepts raster, but nothing in the type or
+         * the API forbids an arbitrary URL being written, and the optimizer
+         * answers 400 for a host it does not recognise — a broken hero on the
+         * page that sells the course. So `isApiAssetUrl` gates it, and anything
+         * else falls through to the plain element below. This is a runtime check
+         * on purpose: the alternative, trusting the column, is exactly the
+         * failure that is invisible until a real customer hits it.
+         *
+         * `fill` rather than width/height: the wrapper is already `relative` and
+         * already sized by `className`, and the intrinsic dimensions are unknown
+         * (nothing in the API returns them). `fill` also means the LCP tuning
+         * survives — `priority` carries the preload hint and `fetchpriority=high`
+         * that the old explicit `fetchPriority` attribute was there for, and the
+         * gradient placeholder keeps its `onLoad` transition.
+         */}
+        {isApiAssetUrl(src) ? (
+          <Image
+            src={src}
+            alt=""
+            fill
+            sizes={sizes}
+            priority={priority}
+            onLoad={() => setLoaded(true)}
+            onError={() => setLoaded(false)}
+            className="object-cover"
+          />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element -- non-API host, the optimizer would 400, see above
           <img
             src={src}
             alt=""
-          loading="lazy"
-          decoding="async"
-          onLoad={() => setLoaded(true)}
-          onError={() => setLoaded(false)}
-          className="relative h-full w-full object-cover"
-        />
+            loading={priority ? 'eager' : 'lazy'}
+            /* `fetchpriority` on a plain <img> is what a LCP element needs; a
+               lazy-loaded hero also reports a late LCP because the load is not
+               started until the browser decides the image is close enough. */
+            fetchPriority={priority ? 'high' : 'auto'}
+            decoding={priority ? 'sync' : 'async'}
+            onLoad={() => setLoaded(true)}
+            onError={() => setLoaded(false)}
+            className="relative h-full w-full object-cover"
+          />
+        )}
       </div>
     );
   }
@@ -405,6 +475,8 @@ export const CourseRowCard: React.FC<{ course: CourseCard }> = ({ course }) => {
           title={course.title}
           thumbnailUrl={course.thumbnail_url}
           className="h-20 w-20 rounded-[var(--radius-md)] sm:h-[76px] sm:w-[168px]"
+          /* Exact: `w-20` is 80px on a phone, `sm:w-[168px]` above it. */
+          sizes="(min-width: 640px) 168px, 80px"
         />
 
         <div className="min-w-0 flex-1">
@@ -502,6 +574,69 @@ export const CourseRowSkeleton: React.FC = () => (
         <div className="h-3 w-2/3 animate-pulse rounded bg-[var(--bg-surface-hover)]" />
       </div>
       <div className="h-11 w-[150px] shrink-0 animate-pulse rounded-[var(--radius-sm)] bg-[var(--bg-surface-hover)]" />
+    </div>
+  </div>
+);
+
+/**
+ * Course detail placeholder — Phase 6, MOBILE_APP_UI_PLAN.md §9.
+ *
+ * This replaces `<p>Loading course…</p>`, which was the whole loading state for
+ * the page. A single centred line told a student nothing about the two decisions
+ * they are on that page to make — is this course worth the money, and is it long
+ * enough to justify it — so the wait was dead time. The skeleton answers both
+ * before the data lands: cover first, then title, then the module and lesson
+ * count.
+ *
+ * Two covers, not one, because the real page has two: `aspect-[4/3]` beside the
+ * copy on desktop and `aspect-[16/9]` above it on mobile. A single responsive
+ * skeleton would be square-ish on one breakpoint and wrong on the other, and the
+ * correction is a visible jump at exactly the moment the page is meant to feel
+ * finished.
+ */
+export const CourseDetailSkeleton: React.FC = () => (
+  <div
+    role="status"
+    aria-live="polite"
+    aria-label="Loading this course"
+    className="mx-auto w-full max-w-[var(--reader-max)] px-4 pt-10 sm:px-6 min-[1440px]:px-8"
+  >
+    {/* Desktop: cover beside the copy. */}
+    <div className="hidden gap-8 sm:grid sm:grid-cols-[1fr_minmax(0,420px)]">
+      <div className="space-y-4">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-10 w-4/5" />
+        <SkeletonText lines={3} className="max-w-lg" />
+        <div className="flex gap-5 pt-2">
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-4 w-16" />
+        </div>
+      </div>
+      <Skeleton className="aspect-[4/3] w-full rounded-[var(--radius-lg)]" />
+    </div>
+
+    {/* Mobile: cover above the copy. */}
+    <div className="sm:hidden">
+      <Skeleton className="mb-5 aspect-[16/9] w-full rounded-[var(--radius-lg)]" />
+      <Skeleton className="mb-3 h-8 w-4/5" />
+      <SkeletonText lines={2} />
+    </div>
+
+    <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="space-y-3">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4">
+            <Skeleton className="h-8 w-8 flex-none rounded-lg" />
+            <div className="min-w-0 flex-1 space-y-2">
+              <Skeleton className="h-3.5 w-3/4" />
+              <Skeleton className="h-3 w-1/3" />
+            </div>
+            <Skeleton className="h-3 w-10 flex-none" />
+          </div>
+        ))}
+      </div>
+      <Skeleton className="hidden h-64 w-full rounded-[var(--radius-lg)] lg:block" />
     </div>
   </div>
 );

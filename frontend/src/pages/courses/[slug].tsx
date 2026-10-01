@@ -12,10 +12,12 @@ import {
   InstructorSection,
   PrerequisitesSection,
 } from '@/components/courses/CourseDetailSections';
-import { isLocked, ProgressBar, CourseRowCard, CtaButton, CourseCover } from '@/components/courses/CourseUi';
+import { isLocked, ProgressBar, CourseRowCard, CtaButton, CourseCover, CourseDetailSkeleton } from '@/components/courses/CourseUi';
 import { CourseSyllabusNav } from '@/components/courses/CourseSyllabusNav';
 import { CoursePreviewShell } from '@/components/courses/CoursePreviewShell';
+import { CourseMobileActionBar } from '@/components/courses/CourseMobileActionBar';
 import { decideCoursePage } from '@/lib/courseSsr';
+import { applyLessonState } from '@/lib/lessonProgress';
 import { CourseThumbnailEditor } from '@/components/courses/CourseThumbnailEditor';
 import { Award, AlertTriangle, CheckCircle2, Download, Lock, ShieldCheck, Star, Users, Layers, FileText, Clock } from 'lucide-react';
 import {
@@ -244,8 +246,21 @@ export default function CoursePage({
     useMemo(() => ({ onCheckoutSuccess: loadCourse }), [loadCourse])
   );
 
-  const onProgress = (p: LessonProgressResponse) => {
+  /**
+   * Apply one progress heartbeat to the page, without re-fetching the course.
+   *
+   * The response carries the authoritative lesson state, and it used to be
+   * dropped: only `progress` was applied, so the completion beat — the one
+   * heartbeat that crosses the watch threshold — was invisible. "Lesson complete"
+   * never appeared and the Next-lesson bar stayed disabled until something else
+   * happened to trigger a full refetch.
+   */
+  const onProgress = (p: LessonProgressResponse, lessonId?: number | string) => {
     if (p.progress) setCourse((c) => (c ? { ...c, progress: p.progress } : c));
+    if (!p.lesson) return;
+    const sameId = (a: unknown, b: unknown) => String(a) === String(b);
+    setFetchedLesson((l) => (l && sameId(l.id, lessonId) ? { ...l, state: p.lesson } : l));
+    setCourse((c) => applyLessonState(c, lessonId, p.lesson));
   };
 
   const onSignInRequired = () => {
@@ -273,6 +288,24 @@ export default function CoursePage({
 
   const progress = course?.progress;
   const done = progress?.is_complete;
+
+  /**
+   * Open a lesson by id, and put the player back in view.
+   *
+   * Shared by the player's own prev/next and by the mobile bar's "Continue", so
+   * both navigate the same way. `scroll` is pushed too: the bar lives at the
+   * bottom of a long page, so jumping to lesson 12 from the top would otherwise
+   * change the URL and leave the reader looking at the FAQ.
+   */
+  const goToLesson = useCallback(
+    (id: number | string) => {
+      router.push({ pathname: '/courses/[slug]', query: { slug, lesson: id } });
+      requestAnimationFrame(() => {
+        document.getElementById('lesson-player')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    },
+    [router, slug]
+  );
   // The server is the only authority on access. Defaulting to `granted: true`
   // when the field is missing keeps an older cached payload from rendering a
   // paywall over a course the learner may well already own.
@@ -373,6 +406,53 @@ export default function CoursePage({
       <CtaButton tone={cta.tone} onClick={enrol} disabled={enrolling} className="disabled:opacity-50">
         {enrolling ? 'Starting…' : cta.label}
       </CtaButton>
+    );
+  };
+
+  /**
+   * The mobile bottom bar's contents - Phase 4, §4.1.
+   *
+   * This bar only speaks for the two states where *buying* is the primary
+   * action. Once the learner is enrolled it returns null, because
+   * `LessonPlayer`'s own "Next lesson" bar takes over the same slot - and "Next
+   * lesson" is the more useful thing to be able to reach from the bottom of the
+   * screen. Having both mounted would be two bars fighting over 64px.
+   *
+   * Every branch below already exists above, in `enrollAction` or the side card.
+   * The only thing new here is the shape: a bar is one control and one short
+   * line, where a card is a price, a sentence, a button and a list.
+   *
+   * - Locked → the paywall's own button, with the price stated. The learner is
+   *   about to be charged, so the bar says so rather than leaving them to find
+   *   the hero.
+   * - Otherwise → the catalogue's label and tone, unchanged.
+   *
+   * Nothing is offered here that the page does not also offer above it, which is
+   * the failure mode the `enrollAction` comment describes.
+   */
+  const mobileAction = () => {
+    if (!course) return null;
+    /* Enrolled: `LessonPlayer` renders the bar for this route. See above. */
+    if (progress?.enrolled) return null;
+
+    if (locked) {
+      return (
+        <CourseMobileActionBar note={course.is_free ? 'Free course' : formatPrice(course.price_inr)}>
+          <CtaButton tone={cta.tone} onClick={buy} disabled={enrolling} className="w-full py-3 disabled:opacity-50">
+            {enrolling ? 'Adding…' : 'Unlock with the vault'}
+          </CtaButton>
+        </CourseMobileActionBar>
+      );
+    }
+
+    return (
+      <CourseMobileActionBar
+        note={course.is_free ? 'Free · lifetime access' : `${formatPrice(course.price_inr)} · one-time`}
+      >
+        <CtaButton tone={cta.tone} onClick={enrol} disabled={enrolling} className="w-full py-3 disabled:opacity-50">
+          {enrolling ? 'Starting…' : cta.label}
+        </CtaButton>
+      </CourseMobileActionBar>
     );
   };
 
@@ -625,9 +705,15 @@ export default function CoursePage({
         together need 644px before the lesson gets anything, and inside the
         site's usual max-w-6xl that left 460px of text - too narrow to read a code
         block in. Prose on this page keeps its own measure (the FAQ is max-w-3xl,
-        outcomes max-w-2xl), so only the reading column widens. */}
-    <main className="mx-auto w-full max-w-[var(--reader-max)] px-4 pb-24 pt-10 sm:px-6 min-[1440px]:px-8">
-        {loading && <p className="py-20 text-center text-sm text-[var(--text-muted)]">Loading course…</p>}
+        outcomes max-w-2xl), so only the reading column widens.
+
+        `pb-40` below 1440px and `pb-24` from 1440px: the mobile bottom bar
+        (Phase 4, §4.1) is `fixed`, so the page has to reserve its own height or
+        the last section - the FAQ, or a related course - ends up underneath it.
+        At 1440px the bar is gone and the side card takes over, so the original
+        96px is correct again. */}
+    <main className="mx-auto w-full max-w-[var(--reader-max)] px-4 pb-40 pt-10 sm:px-6 min-[1440px]:px-8 min-[1440px]:pb-24">
+        {loading && <CourseDetailSkeleton />}
 
         {error && !loading && !preview && (
           <p className="my-10 rounded-xl border border-[var(--color-error)]/30 bg-[var(--color-error)]/5 px-4 py-3 text-sm text-[var(--color-error)]">
@@ -673,23 +759,36 @@ export default function CoursePage({
                   </p>
                 </div>
 
+                {/* Second child of `sm:grid-cols-[1fr_240px]`, so this is the
+                    fixed 240px track, NOT the `1fr` column — the `1fr` column is
+                    the title block above. The width is therefore 240 at every
+                    viewport, and claiming the `1fr` width here (it was written
+                    up as 1272px) is a 5.3x overstatement: a 240px slot that
+                    believes it is 1272px downloads the largest file in the
+                    srcset. Nothing in the build or typecheck notices. */}
                 <CourseCover
                   slug={course.slug}
                   title={course.title}
                   thumbnailUrl={course.thumbnail_url}
+                  priority
                   className="hidden aspect-[4/3] w-full overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border-subtle)] sm:block"
+                  sizes="240px"
                 />
               </div>
 
               {/* The cover belongs above the copy on a phone, where the split
                   layout collapses and a right-hand column would leave the title
                   a few characters wide. */}
-              <CourseCover
-                slug={course.slug}
-                title={course.title}
-                thumbnailUrl={course.thumbnail_url}
-                className="mt-5 aspect-[16/9] w-full overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border-subtle)] sm:hidden"
-              />
+            <CourseCover
+              slug={course.slug}
+              title={course.title}
+              thumbnailUrl={course.thumbnail_url}
+              priority
+              className="mt-5 aspect-[16/9] w-full overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border-subtle)] sm:hidden"
+              /* Sits outside the two-column grid, and only shows below `sm`, so
+                 the width is the viewport less the page's `px-4`. */
+              sizes="calc(100vw - 32px)"
+            />
 
               {/* Real, server-counted facts. Each one is omitted when it does not
                   exist rather than replaced with a placeholder, so the row below
@@ -890,7 +989,7 @@ export default function CoursePage({
                     previousLesson={neighbours.previous}
                     nextLesson={neighbours.next}
                     complete={!!(selectedLesson.state as LessonCompletionState)?.is_complete}
-                    onNavigate={(id) => router.push({ pathname: '/courses/[slug]', query: { slug, lesson: id } })}
+                    onNavigate={goToLesson}
                   />
                 ) : (
                   <p className="text-sm text-[var(--text-muted)]">This course has no lessons yet.</p>
@@ -982,7 +1081,7 @@ export default function CoursePage({
                 <div className="mt-4 divide-y divide-[var(--border-subtle)] border-y border-[var(--border-subtle)]">
                   {faq.map((item) => (
                     <details key={item.q} className="group py-4">
-                      <summary className="cursor-pointer list-none text-sm font-bold text-[var(--ink)] marker:content-none">
+                      <summary className="list-none text-sm font-bold text-[var(--ink)] marker:content-none">
                         {item.q}
                       </summary>
                       <p className="mt-2 text-sm leading-relaxed text-[var(--text-body)]">{item.a}</p>
@@ -1012,6 +1111,32 @@ export default function CoursePage({
           </>
         )}
       </main>
+
+      {/* The mobile bottom bar - Phase 4, §4.1.
+
+          The CTA was reachable only by scrolling back to the hero, or at ≥1440px
+          by the side card, which is `hidden min-[1440px]:block`. On a phone the
+          page's most valuable control was the one you had to hunt for.
+
+          `mobileAction()` is deliberately a thin wrapper over the same decisions
+          `enrollAction()` already makes, rather than a second implementation:
+          locked → paywall, enrolled → progress, otherwise → the catalogue's own
+          label and tone. The bar never invents an offer.
+
+          Gated on `course` alone. `preview` is a `getServerSideProps` value that
+          is never cleared on the client, so testing it here would have been a
+          way of writing `false` for every paid course — which is precisely the
+          page that needs the bar. `CoursePreviewShell` already renders only when
+          `!course`, so the two views cannot both be on screen.
+
+          Hidden from `md` up, where the sticky side card and the inline hero both
+          do this job and two controls for one action would be worse than one. */}
+      {course && (
+        <div className="md:hidden">
+          {mobileAction()}
+        </div>
+      )}
+
       <Footer />
     </>
   );

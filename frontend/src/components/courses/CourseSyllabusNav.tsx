@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, ListVideo } from 'lucide-react';
-import { isLocked, LessonRow } from '@/components/courses/CourseUi';
+import { isLocked, LessonRow, ProgressBar } from '@/components/courses/CourseUi';
+import { Sheet } from '@/components/common/Sheet';
 import { formatDuration } from '@/lib/courseFormat';
 import type { CourseModule, CourseProgress } from '@/types';
 
@@ -270,40 +271,59 @@ export const CourseSyllabusNav: React.FC<SyllabusNavProps> = ({
       // than a cosmetic one.
       className="lg:sticky lg:top-[var(--rail-top)] lg:max-h-[var(--rail-max-h)] lg:overflow-y-auto lg:overscroll-contain lg:pr-1"
     >
-      {/* Small screens: a collapsed sheet, so the lesson is not pushed off-screen
-          by a full outline. Large screens: a plain always-open column. */}
+      {/* Small screens: a bottom sheet, so opening the outline does not reflow the
+          page. It used to be an inline collapse panel, which meant that expanding a
+          module pushed the video - the reason the learner opened it - downwards off
+          the screen, and collapsing it again lost their scroll position. A sheet
+          overlays, so the video stays exactly where it was.
+
+          Large screens: the plain always-open column below, unchanged. */}
       <div className="lg:hidden">
-        <div className="rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-[var(--bg-surface)]">
-          <button
-            type="button"
-            onClick={() => setSheetOpen((v) => !v)}
-            aria-expanded={sheetOpen}
-            aria-controls="syllabus-sheet"
-            className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
-          >
-            {title}
-            <ChevronDown
-              size={18}
-              aria-hidden="true"
-              className={`shrink-0 text-[var(--text-light)] transition-transform ${sheetOpen ? 'rotate-180' : ''}`}
-            />
-          </button>
-          {sheetOpen && (
-            <div id="syllabus-sheet" className="border-t border-[var(--border-subtle)] pb-2 pt-1">
-              {modules.length === 0 ? (
-                <p className="px-3 py-4 text-sm text-[var(--text-muted)]">
-                  The outline is not available for this course.
-                </p>
-              ) : (
-                <>
-                  {/* A sibling of the toggle above, not a child of it. */}
-                  <div className="flex justify-end px-3 pb-1 pt-1">{expandToggle}</div>
-                  <div className="px-2">{modules.map(renderModule)}</div>
-                </>
+        <button
+          type="button"
+          onClick={() => setSheetOpen(true)}
+          aria-expanded={sheetOpen}
+          aria-controls="syllabus-sheet"
+          className="flex w-full items-center justify-between gap-3 rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-3 text-left transition-colors active:bg-[var(--bg-surface-hover)]"
+        >
+          {title}
+          <ChevronDown
+            size={18}
+            aria-hidden="true"
+            className="shrink-0 text-[var(--text-light)]"
+          />
+        </button>
+
+        <Sheet
+          open={sheetOpen}
+          onClose={() => setSheetOpen(false)}
+          title="Course content"
+          contentClassName="px-2 pb-4"
+        >
+          {modules.length === 0 ? (
+            <p className="px-3 py-4 text-sm text-[var(--text-muted)]">
+              The outline is not available for this course.
+            </p>
+          ) : (
+            <>
+              {/* Progress sits at the top of the sheet, not only in the hero: the
+                  sheet is opened to answer "how much of this is left, and what is
+                  next", and a bare list of lessons answers neither. */}
+              {progress && progress.total > 0 && (
+                <div className="mb-2 px-1">
+                  <ProgressBar
+                    percent={progress.percent}
+                    label={`${progress.completed} of ${progress.total} lessons`}
+                  />
+                </div>
               )}
-            </div>
+              {/* A sibling of the header button above, not a child of it - see the
+                  note on `expandToggle`. */}
+              <div className="flex justify-end px-3 pb-1 pt-1">{expandToggle}</div>
+              <div id="syllabus-sheet">{modules.map(renderModule)}</div>
+            </>
           )}
-        </div>
+        </Sheet>
       </div>
 
       {/* Desktop column. `hidden` rather than conditional rendering so the markup

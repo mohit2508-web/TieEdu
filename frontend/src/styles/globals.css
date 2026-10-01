@@ -98,8 +98,8 @@
      estate; a rail pinned at top-6 (24px) slides under it and its
      max-height runs 40px off the bottom of the screen, so its last
      module could never be scrolled to. */
-  --rail-top: calc(var(--header-h) + 1.5rem);
-  --rail-max-h: calc(100vh - var(--header-h) - 3rem);
+  --rail-top: calc(var(--header-total) + 1.5rem);
+  --rail-max-h: calc(100vh - var(--header-total) - 3rem);
 
   /* ---------------------------------------------------------------
      AMBER TEXT/FILL PAIR
@@ -110,6 +110,43 @@
      --------------------------------------------------------------- */
   --accent-ink: #241A06;   /* text sitting on a --brand-accent fill */
   --amber-deep: #B45309;   /* amber text sitting on white/sky-soft */
+
+  /* ---------------------------------------------------------------
+     SAFE AREAS  (Phase 0 — MOBILE_APP_UI_PLAN.md)
+     `viewport-fit=cover` in the viewport meta makes the browser
+     paint edge to edge, which is what we want for an installed app
+     but means we own the notch, the Dynamic Island and the home
+     indicator ourselves. These four vars are read in exactly one
+     place — AppShell — so no component has to remember them.
+     --------------------------------------------------------------- */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+
+  /* Header/tab-bar geometry that already INCLUDES the inset. Every
+     `top-[var(--header-h)]` sticky bar (reader ×2, compare, study-plan)
+     reads this, so on a notched phone they must all shift down together.
+     The inset is added here rather than at each sticky offset, because
+     adding it per-component is how one of them gets missed. */
+  --header-total: calc(var(--header-h) + var(--safe-top));
+  --tabbar-total: calc(var(--tabbar-h) + var(--safe-bottom));
+
+  /* ---------------------------------------------------------------
+     MOTION  (Phase 0)
+     A website invents its durations per component. An app has one
+     vocabulary, and every value below has a single owner. Durations
+     are short on purpose: 300ms+ on a UI transition reads as slow,
+     which is precisely the "web" feeling we are removing.
+     --------------------------------------------------------------- */
+  --dur-fast: 120ms;    /* press states, colour swaps */
+  --dur-base: 220ms;    /* opacity, small moves */
+  --dur-slow: 320ms;    /* larger layout shifts */
+  --dur-sheet: 420ms;   /* bottom sheet travel */
+
+  --ease-out: cubic-bezier(0.32, 0.72, 0, 1);      /* iOS-style decelerate */
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-sheet: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 /* ============================================
@@ -133,21 +170,78 @@ html {
      outline appeared to do nothing because the lesson's own heading was hidden.
      `scroll-padding-top` fixes it for every scroll container in the document
      rather than each call site having to remember an offset. */
-  scroll-padding-top: calc(var(--header-h) + 1rem);
+  scroll-padding-top: calc(var(--header-total) + 1rem);
   /* NOTE: Do NOT add overflow-x:hidden here - it breaks position:fixed overlays on iOS */
-}
 
+  /* Phase 0 — touch behaviour.
+     - `tap-highlight-color: transparent` kills the grey/blue flash Safari and
+       Android Chrome paint over anything tappable. Left on, every single tap
+       in the app announces "this is a link on a web page".
+     - `touch-action: manipulation` removes the 300ms double-tap-zoom delay and
+       disables the pinch/double-tap gestures without disabling `pinch-zoom`
+       for accessibility, which `touch-action: none` would.
+     These belong on `html`, not `body`, so they cover the whole document. */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
 
 body {
   background-color: var(--bg-app);
   color: var(--text-body);
   font-family: 'Calibre', 'Calibri', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  line-height: 1.75;
+  /* Phase 0 — density. 1.75 is web-article leading; native apps run tighter.
+     Desktop is deliberately left at 1.75 (see MOBILE_APP_UI_PLAN.md
+     non-goals), so this only tightens the phone. */
+  line-height: 1.55;
   font-size: 16px;
   font-feature-settings: "tnum" 0, "ss01" 1;
   /* overflow-x:clip prevents horizontal scroll WITHOUT creating a scroll container,
      so position:fixed modals/drawers are NOT clipped — unlike overflow:hidden */
   overflow-x: clip;
+  /* Phase 0 — stop the whole document rubber-banding when a drag starts.
+     Native apps do not bounce the page; they either scroll a list or pull to
+     refresh. Left default, every drag at the top of the page reveals browser
+     chrome, which is one of the loudest "you are on the web" signals there is.
+
+     Deliberately NOT `contain`: that would turn the body into a scroll
+     container and break `position: sticky` for the header. */
+  overscroll-behavior-y: none;
+}
+
+@media (min-width: 768px) {
+  body { line-height: 1.75; }
+}
+
+/* Horizontal scrollers (module strips, tab rows) must not paint a track, and
+   must keep momentum scrolling on iOS. `.scroller` is opt-in; a global
+   `scrollbar-width: none` would hide the scrollbar on real content columns,
+   where it is useful. */
+.scroller {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scroller::-webkit-scrollbar { display: none; }
+
+/* Phase 0 — press feedback for anything that is not a <button>.
+   `:active` only, never `:hover`, so a tap on a phone does not leave a stuck
+   hover colour behind after the finger lifts. */
+@media (hover: hover) {
+  .hoverable:hover { /* marker for the audit in Phase 8; intentionally empty */ }
+}
+
+.pressable {
+  transition: transform var(--dur-fast) var(--ease-out),
+              background-color var(--dur-fast) var(--ease-out),
+              opacity var(--dur-fast) var(--ease-out);
+  transform: translateZ(0);
+}
+.pressable:active { transform: scale(0.97); }
+
+@media (prefers-reduced-motion: reduce) {
+  /* The scale is motion. The colour change is not, so reduced-motion users keep
+     the feedback and lose only the movement. */
+  .pressable:active { transform: none; }
 }
 
 /* ============================================
@@ -331,6 +425,44 @@ body {
   .icon-btn { width: 44px; height: 44px; }
 }
 
+/* --- Input type size, and the iOS zoom it prevents -------------------------
+   Phase 7, MOBILE_APP_UI_PLAN.md §7: "font-size: 16px minimum on all inputs —
+   below that iOS zooms the page on focus, which is itself a dead giveaway."
+
+   The zoom is the actual bug. Safari's focus zoom is a signal that a page was
+   built for a mouse; after it fires, the viewport is scaled, the fixed header
+   detaches, and the student has to pinch back out. It cannot be undone in CSS
+   except by not being under 16px.
+
+   This is a floor, applied globally, rather than ~100 hand edits — the inputs
+   are spread across the student, checkout, vault and course surfaces and most
+   carry a `text-[13px]` utility that outranks a plain element selector. A
+   `!important` is the honest mechanism here: beating a utility class is the
+   entire point, and the alternative is a silent audit that rots on the next
+   form.
+
+   Scoped to `pointer: coarse` so desktop keeps its current, tighter 13px
+   density — at a mouse, small text is fine, and this is a touch-only
+   compensation. Checkboxes and radios are excluded: they have no text box to
+   zoom, and `font-size` on them only affects the box size.
+
+   Nothing in the app sets an input above 16px, so a floor cannot shrink
+   anything. A `data-allow-small-font` escape hatch exists for the case where
+   something genuinely wants it (a font-size-constrained chip input, say), and
+   should be used rather than raising the specificity fight. */
+@media (pointer: coarse) {
+  input:not([type='checkbox']):not([type='radio']):not([type='range']),
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+  input[data-allow-small-font],
+  textarea[data-allow-small-font],
+  select[data-allow-small-font] {
+    font-size: revert !important;
+  }
+}
+
 /* --- Count badge --------------------------------------------------------
    Was `text-[10px]` on a 16px circle, which is below the portal's
    typography floor and below the smallest reliably-readable badge. */
@@ -404,6 +536,42 @@ body {
   color: var(--text-muted);
 }
 
+/* --- Page body: the fixed-chrome reservation ----------------------------- */
+/*
+ * Phase 1 — MOBILE_APP_UI_PLAN.md §1.1 (header) and §1.2 (tab bar).
+ *
+ * Both bars are `position: fixed`, so neither contributes any height to the
+ * document. The space they used to hold is reserved HERE, by the same
+ * `--header-total` / `--tabbar-total` tokens the bars size themselves with, so
+ * the reservation and the chrome cannot drift apart.
+ *
+ * This lived as `pt-[...] pb-[...] md:pb-0` utility classes on the column.
+ * §1.2 needs the bottom padding to change per route, and a Tailwind arbitrary
+ * value cannot be re-targeted from a `data-` attribute without an
+ * arbitrary-variant class that is harder to read than the rule it replaces.
+ */
+.page-body {
+  padding-top: var(--header-total);
+  padding-bottom: var(--tabbar-total);
+  transition: padding-bottom var(--dur-base) var(--ease-out);
+}
+/*
+ * Paired with `.tab-bar[data-depth='detail']` above: the reservation collapses
+ * in step with the bar sliding away, so a drill-down page is not left with a
+ * dead ~64px strip under its last row. Same duration and easing as the bar's own
+ * transition, which is what keeps the two from visibly disagreeing mid-animation.
+ */
+.page-body[data-tabbar='off'] { padding-bottom: 0; }
+@media (min-width: 768px) {
+  /* No tab bar at `md` and up, so no reservation. Declared after the base rule so
+     it wins at equal specificity, and after `[data-tabbar='off']` is irrelevant
+     because both land on the same value. */
+  .page-body { padding-bottom: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-body { transition: none; }
+}
+
 /* --- Mobile tab bar ----------------------------------------------------- */
 .tab-bar {
   position: fixed;
@@ -415,12 +583,60 @@ body {
   align-items: stretch;
   justify-content: space-around;
   gap: 2px;
-  height: var(--tabbar-h);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  /* `--tabbar-total`, not `--tabbar-h`: the global reset sets
+     `box-sizing: border-box`, so `height: var(--tabbar-h)` plus
+     `padding-bottom: <inset>` would spend the inset INSIDE the 64px of bar.
+     On a device with a 34px home indicator that left 30px of tappable icon —
+     the bar's targets silently fell below the 44px minimum. Sizing to the
+     total keeps the full bar and stacks the inset below it, which is also
+     what `AppShell` reserves for page content. */
+  height: var(--tabbar-total);
+  padding-bottom: var(--safe-bottom);
   border-top: 1px solid var(--border-subtle);
   background: rgba(255, 255, 255, 0.88);
   backdrop-filter: blur(16px) saturate(1.4);
   -webkit-backdrop-filter: blur(16px) saturate(1.4);
+}
+
+/*
+ * Phase 1 — MOBILE_APP_UI_PLAN.md §1.2.
+ *
+ * On a drill-down route the bar slides out but stays MOUNTED. Unmounting it is
+ * what produces the flash this avoids: React removes the nav, the content column
+ * reflows against a different reserved height, and on the way back the bar is
+ * inserted again from nothing.
+ *
+ * The `visibility` flip is the part that is easy to get wrong. `visibility` is
+ * discrete, so it cannot be tweened — but it is also what removes the bar from
+ * the tab order, which `opacity: 0` does not. An invisible-but-focusable bar is
+ * a keyboard trap, so on the way OUT the flip is delayed until the slide has
+ * finished, and on the way back it is immediate (0s) so the bar is focusable
+ * again the instant it starts returning.
+ */
+.tab-bar {
+  transition:
+    transform var(--dur-base) var(--ease-out),
+    opacity var(--dur-fast) var(--ease-out),
+    visibility 0s linear 0s;
+}
+.tab-bar[data-depth='detail'] {
+  transform: translateY(100%);
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  transition:
+    transform var(--dur-base) var(--ease-out),
+    opacity var(--dur-fast) var(--ease-out),
+    visibility 0s linear var(--dur-base);
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Reduced motion keeps the state change and drops the travel. Without
+     overriding the delay too, the bar would sit invisible-but-focusable for
+     the remainder of `--dur-base`. */
+  .tab-bar,
+  .tab-bar[data-depth='detail'] {
+    transition: none;
+  }
 }
 .tab-slot {
   position: relative;
@@ -810,21 +1026,81 @@ code, pre, kbd, samp, .font-mono {
   text-decoration: line-through;
 }
 
+/* md and up: a real table, scrolling sideways when it is wider than the column. */
 .prose-article table {
   display: block;
   overflow-x: auto;
   white-space: nowrap;
 }
 
-@media (max-width: 640px) {
+/*
+ * Below `md`: stop rendering a table (Phase 3, §3.2).
+ *
+ * Four columns across 390px is roughly 85px each, so every value wraps to three
+ * or four lines and there is no way to tell which number belongs to which header.
+ * `overflow-x: auto` hid the answer rather than fixing it.
+ *
+ * Each row becomes a bordered block, and every cell prints its own column header
+ * from `data-label` — which `lib/markdownTables.ts` writes onto the `<td>` at
+ * render time, because CSS cannot read a sibling `<th>`.
+ */
+@media (max-width: 767px) {
   .prose-article table {
+    display: block;
+    width: 100%;
     white-space: normal;
-    font-size: 0.8rem;
+    overflow-x: visible;
+    font-size: 0.875rem;
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    padding: 2px 0;
   }
-  .prose-article table th,
+
+  /* Redundant once each cell is labelled, and it is a row of bare words. */
+  .prose-article table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .prose-article table tbody,
+  .prose-article table tr,
   .prose-article table td {
-    padding: 0.45rem 0.6rem;
+    display: block;
+    width: 100%;
   }
+
+  .prose-article table tr + tr {
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  /* Label and value side by side, so the pair still reads as a definition. */
+  .prose-article table td {
+    display: grid;
+    grid-template-columns: minmax(6rem, 38%) 1fr;
+    gap: 0.75rem;
+    align-items: baseline;
+    padding: 0.55rem 0.9rem;
+    border-bottom: none;
+  }
+
+  .prose-article table td::before {
+    content: attr(data-label);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  /* A hover tint on a table row is a desktop affordance; on touch it sticks. */
+  .prose-article table tr:hover td { background: transparent; }
 }
 
 .prose-article pre code.hljs {
@@ -1027,8 +1303,13 @@ code, pre, kbd, samp, .font-mono {
   .animate-slide-in-right,
   .animate-slide-up-chrome,
   .animate-fade-out-fast,
+  /* Skeletons (Phase 6). An indefinitely pulsing block is the textbook case of
+     the repetitive motion this setting exists for, and Phase 6 puts skeletons on
+     the two most-visited pages, so it had to be covered here rather than
+     discovered later. The block stays put and keeps its tone - removing the
+     animation leaves a readable placeholder, not a blank space. */
+  .animate-pulse,
   .nav-drawer,
-  .sidebar-drawer,
   .tab-bar {
     animation: none !important;
   }
@@ -1073,14 +1354,6 @@ code, pre, kbd, samp, .font-mono {
     animation-duration: 0.8s !important;
     animation-iteration-count: infinite !important;
   }
-}
-
-@keyframes slide-in-left {
-  from { transform: translateX(-100%); }
-  to { transform: translateX(0); }
-}
-.sidebar-drawer {
-  animation: slide-in-left 220ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 @keyframes marquee-scroll {
@@ -1264,3 +1537,83 @@ body {
   line-height: 1.65;
 }
 
+
+/* ============================================
+   PHASE 8 — ANTI-WEB SWEEP: HOVER SCOPING
+   MOBILE_APP_UI_PLAN.md §8, "no :hover-only information"
+   ============================================
+
+   A `:hover` rule is not harmless on a touch screen. iOS Safari latches `:hover`
+   onto the last element that was tapped and keeps it there until you tap
+   somewhere else, so a card that lifted 3px on "hover" is still visibly lifted
+   after you have scrolled away from it, and a link that changed colour stays
+   changed. The result reads as a stuck selection - a bug - rather than as
+   polish, and it is one of the more obvious ways a hand-tuned mobile UI looks
+   like a page that was laid out for a mouse.
+
+   These selectors restate the *base* appearance of each element. Restating the
+   base is preferable to deleting the original rules, because it keeps the desktop
+   behaviour defined in one place next to the element it belongs to, and it
+   cannot silently un-style something if a base rule is later added.
+
+   Nothing is lost on touch. None of these are hover-only *information* - they
+   are shadows, tints and 1px borders, and every one of them has an `:active` or
+   `:focus-visible` counterpart that fires on a real tap. The Phase 0 note in
+   `.btn` (":active only, never :hover, so a tap on a phone does not leave a
+   stuck state") is the same principle applied at the source instead of undone
+   here, which is why the two layers coexist.
+
+   `hover: none` rather than `pointer: coarse`: a Surface laptop or an iPad with
+   a trackpad attached reports a fine pointer with hover, and it *should* keep
+   the hover styles. Keying on `pointer: coarse` would have stripped them from
+   those devices.
+
+   The `.hoverable` marker left in Phase 0 is the audit hook: if a new `:hover`
+   rule is added above, add the element here too, or scope the new rule with
+   `@media (hover: hover)` in the first place. */
+@media (hover: none) {
+  /* Every value below is the element's own base value, read from the rule
+     further up this file - not a guess. The two that were wrong in the first
+     draft of this block, and would have shipped as visual regressions, were
+     `.vault-card` (which has no box-shadow at rest, not `--shadow-xs`) and
+     `.nav-link` (whose base colour is `--text-body`, not `--text-muted`). */
+  .vault-card:hover {
+    border-color: var(--border-subtle);
+    box-shadow: none;
+    transform: none;
+  }
+  .card-hover:hover {
+    box-shadow: none;
+    transform: none;
+  }
+  .btn-primary:hover {
+    background: var(--brand-sky);
+    box-shadow: 0 6px 16px rgba(2, 132, 199, 0.28);
+  }
+  .btn-soft:hover { background: var(--brand-sky-soft); }
+  .btn-ghost:hover { border-color: var(--border-subtle); color: var(--text-heading); }
+  .btn-amber:hover { background: var(--brand-accent); }
+  .nav-link:hover { color: var(--text-body); }
+  .icon-btn:hover { background: transparent; color: var(--text-body); }
+  .nav-search:hover {
+    border-color: var(--border-subtle);
+    color: var(--text-muted);
+  }
+  .tab-slot:hover { color: var(--text-muted); }
+  .nav-row:hover { background: transparent; color: var(--text-body); }
+  .sidebar-item:hover { background: transparent; color: var(--text-body); }
+  .prose-article a:hover { color: var(--brand-primary); }
+  /* `transparent` rather than `inherit`: the base cells have no background of
+     their own, and `inherit` would take the row's, which is also unset. */
+  .prose-article table tr:hover td { background: transparent; }
+
+
+  /* Tailwind `hover:` utilities cannot be restated here - they are generated
+     with escaped class names, and a `group-hover:scale` on a card image is a
+     4% scale rather than a colour. Neither latches visibly at that size, so they
+     are left alone deliberately rather than fought with a wall of escaped
+     selectors. The two in the student path are `group-hover:scale-[1.04]` on a
+     company logo (`CompanyCard`) and a content image
+     (`ContentBlockRenderer`), both inside a card whose border and shadow are
+     already neutralised above. */
+}

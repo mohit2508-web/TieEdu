@@ -21,6 +21,7 @@ import dynamic from 'next/dynamic';
 import { fetchCompanyBySlug, fetchCompanies, API_BASE_URL } from '@/lib/api';
 import { packPrice, SINGLE_MODULE_PRICE } from '@/lib/packPricing';
 import { CompanyModuleReader } from '@/components/company/CompanyModuleReader';
+import { VaultSkeleton } from '@/components/company/VaultSkeleton';
 import { Company, PricingPlan, ContentItem, ContentModule, RoundType, CompanyModuleItem, CartItem } from '@/types';
 import {
   ArrowLeft, CheckCircle2, ChevronRight, ChevronLeft,
@@ -80,7 +81,6 @@ export default function CompanyVaultPage({ initialCompany, initialSlug }: { init
   const [bookmarkedItemIds, setBookmarkedItemIds] = useState<string[]>([]);
 
   const [isSubmitReportOpen, setIsSubmitReportOpen] = useState(false);
-  const [loading, setLoading] = useState(!initialCompany);
   const [reportTick, setReportTick] = useState(0);
   const [mobileTreeOpen, setMobileTreeOpen] = useState(false);
   const [readerSection, setReaderSection] = useState<'overview' | 'pdfs'>('overview');
@@ -91,7 +91,11 @@ export default function CompanyVaultPage({ initialCompany, initialSlug }: { init
   const moduleClickCountRef = useRef(0);
 
   useEffect(() => {
-    fetchCompanies().then(data => { if (data?.length > 0) setAllCompanies(data); }).catch(() => {}).finally(() => setLoading(false));
+    // Deliberately does not touch any loading flag: the company list is a
+    // different request from the vault itself, and it usually resolves first.
+    // An earlier version cleared `loading` here, which meant the skeleton could
+    // be torn down by the *list* arriving while the vault was still in flight.
+    fetchCompanies().then(data => { if (data?.length > 0) setAllCompanies(data); }).catch(() => {});
   }, []);
 
   // Scroll to top when user opens a module or a specific question item.
@@ -148,7 +152,6 @@ export default function CompanyVaultPage({ initialCompany, initialSlug }: { init
     // Signed-in users refetch so per-user unlock/ownership state (Bearer token)
     // wins over the unauthenticated SSR snapshot.
     if (!reloadTick && !user && loadedSlugRef.current === key && company) {
-      setLoading(false);
       return;
     }
     loadedSlugRef.current = key;
@@ -157,7 +160,7 @@ export default function CompanyVaultPage({ initialCompany, initialSlug }: { init
       if (cancelled) return;
       setCompany(data);
       if (data.is_unlocked) setIsUnlocked(true);
-    }).catch(() => {}).finally(() => { if (!cancelled) setLoading(false); });
+    }).catch(() => {});
     return () => { cancelled = true; };
   }, [slug, company, user, reloadTick]);
 
@@ -310,14 +313,23 @@ export default function CompanyVaultPage({ initialCompany, initialSlug }: { init
   useCartScope(cartScope);
 
   if (!company) {
+    /*
+     * The skeleton is keyed on *not having the data*, not on a `loading` flag.
+     *
+     * That is a deliberate choice over a flag, and the reason is visible in the
+     * code that used to be here. There was a `loading` state cleared by the
+     * company-*list* request, and the vault skeleton briefly flashed then
+     * vanished while the vault itself was still loading, leaving a blank page
+     * for the rest of the fetch. Absence of data has no such race: the skeleton
+     * is on screen exactly until there is something to replace it, and it also
+     * covers the case where `getServerSideProps` returned nothing.
+     */
     return (
       <div
         className="min-h-screen bg-[var(--bg-app)] text-[var(--text-body)] flex flex-col"
         style={{ fontFamily: "'Calibre', 'Calibri', 'Inter', -apple-system, sans-serif" }}
       >
-        <main className="flex-1 flex items-center justify-center py-24">
-          <p className="text-sm text-[var(--text-muted)] animate-pulse">Loading vault...</p>
-        </main>
+        <VaultSkeleton />
         <Footer />
       </div>
     );

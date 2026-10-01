@@ -355,7 +355,17 @@ export const TrackedVideoPlayer: React.FC<TrackedVideoPlayerProps> = ({
 
   return (
     <div>
-      <div className="relative aspect-video w-full overflow-hidden rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-black">
+      {/* Phase 4, §4.1 "full-bleed video".
+          On a phone the player breaks out of the page gutter and runs edge to
+          edge: rounded corners on a 16:9 box at 390px wide leave ~40px of black
+          band, and a 1px border on three sides reads as a card in a feed, which
+          is the "web page" tell this pass is removing. `md:` restores the framed
+          card, which is correct on a desktop where it sits in a column.
+
+          The negative margin cancels the `px-4` on `<main>`, and the wrapper
+          supplies the matching horizontal padding, so the video is flush while
+          the progress bar and controls below stay aligned to the text. */}
+      <div className="relative -mx-4 aspect-video w-[calc(100%+2rem)] overflow-hidden bg-black md:mx-0 md:w-full md:rounded-[var(--radius-md)] md:border md:border-[var(--border-subtle)]">
         {/* Provider iframe — the URL comes from the server and already carries
             the opt-in flag each provider's API needs. */}
         {/* eslint-disable-next-line jsx-a11y/iframe-has-title */}
@@ -377,6 +387,8 @@ export const TrackedVideoPlayer: React.FC<TrackedVideoPlayerProps> = ({
           </div>
         )}
       </div>
+      {/* Keep the UI bar inside the gutter on mobile. */}
+      <div className="px-4 md:px-0">
 
       {/* ---- watch progress ---- */}
       <div className="mt-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3">
@@ -472,6 +484,7 @@ export const TrackedVideoPlayer: React.FC<TrackedVideoPlayerProps> = ({
             {requiredPercent}% requirement.
           </p>
         )}
+      </div>
       </div>
     </div>
   );

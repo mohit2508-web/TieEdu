@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ContentItem, ContentBlock } from '@/types';
 import { ContentBlockRenderer } from '@/components/blocks/ContentBlockRenderer';
+import { Sheet } from '@/components/common/Sheet';
 import { QuestionDiscussion } from './QuestionDiscussion';
 import { X, CheckCircle, Bookmark, Lock, Sparkles, ShieldCheck, Star, Eye, MessageSquare, ArrowRight } from 'lucide-react';
 
@@ -40,20 +41,32 @@ export const ModulePreviewModal: React.FC<ModulePreviewModalProps> = ({
 
   const isFree = item.is_free_preview || isUnlocked;
 
+  /*
+    Built on `Sheet`. This was the third hand-rolled overlay, and the most
+    expensive one to get wrong: it carries the paywall CTA, so the surface where
+    a student decides to pay had no `role="dialog"` (never announced as a
+    dialog), no focus trap (Tab escaped into the locked page behind it), no
+    Escape, and no scroll lock (the vault scrolled behind the preview while the
+    footer was pinned in view).
+
+    On a phone this is now a bottom sheet rather than a `max-w-4xl` centred
+    dialog, which is the point: the unlock button lands in thumb reach instead of
+    at the top of a card the user has to scroll a 90vh panel to find. From `sm`
+    up it centres and keeps the original max width.
+  */
   return (
-    <div
-      className="fixed inset-0 z-[100] bg-black/70 frosted-glass flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200"
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-4xl max-h-[90vh] bg-white rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-[#EDEDEB] animate-in zoom-in-95 duration-200 relative"
-        onClick={e => e.stopPropagation()}
-      >
-        
-        {/* Modal Header */}
-        <div className="px-6 py-4 bg-[#FAFAF9] border-b border-[#EDEDEB] flex items-center justify-between shrink-0">
-          
-          <div className="flex items-center gap-3">
+    <Sheet
+      open={!!item}
+      onClose={onClose}
+      title={item.question_text || `${companyName} module preview`}
+      side="bottom"
+      zIndex={100}
+      showHandle={false}
+      className="sm:max-w-4xl sm:mx-auto sm:rounded-3xl max-h-[92vh]"
+      contentClassName="p-0"
+      header={
+        <div className="px-4 sm:px-6 py-4 bg-[#FAFAF9] border-b border-[#EDEDEB] flex items-center justify-between gap-3 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap min-w-0">
             <span className={`px-3 py-1 rounded-xl text-xs font-mono font-bold uppercase border ${
               item.is_free_preview
                 ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
@@ -75,13 +88,14 @@ export const ModulePreviewModal: React.FC<ModulePreviewModalProps> = ({
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             {/* Solved Toggle */}
             <button
               onClick={() => onToggleSolve(item.id)}
+              aria-pressed={isSolved}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border ${
                 isSolved
-                  ? 'bg-emerald-700 text-white border-emerald-600 shadow-2xs'
+                  ? 'bg-emerald-700 text-white border-emerald-600'
                   : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
               }`}
             >
@@ -92,6 +106,8 @@ export const ModulePreviewModal: React.FC<ModulePreviewModalProps> = ({
             {/* Bookmark Toggle */}
             <button
               onClick={() => onToggleBookmark(item.id)}
+              aria-pressed={isBookmarked}
+              aria-label={isBookmarked ? 'Remove bookmark' : 'Bookmark this item'}
               className={`p-2 rounded-xl border transition-all ${
                 isBookmarked
                   ? 'bg-amber-100 text-amber-700 border-amber-300'
@@ -101,78 +117,21 @@ export const ModulePreviewModal: React.FC<ModulePreviewModalProps> = ({
               <Bookmark className={`w-4 h-4 ${isBookmarked ? 'fill-current' : ''}`} />
             </button>
 
-            {/* Close Button */}
+            {/* The `header` slot replaces Sheet's own title+close row, so the close
+                control has to be supplied here. */}
             <button
               onClick={onClose}
+              aria-label="Close preview"
               className="p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-200/60 rounded-xl transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
         </div>
-
-        {/* Question Title & Reader Tabs */}
-        <div className="px-6 py-5 bg-white border-b border-[#EDEDEB] shrink-0">
-          <h2 className="text-xl sm:text-2xl font-extrabold text-[#1A1A1A] leading-snug mb-3">
-            {item.question_text || 'Interview Question & System Specification'}
-          </h2>
-
-          <div className="flex items-center gap-6 text-xs font-mono font-bold text-gray-500">
-            <button
-              onClick={() => setActiveTab('content')}
-              className={`pb-2 border-b-2 transition-all flex items-center gap-2 ${
-                activeTab === 'content' ? 'border-[#E8A33D] text-[#1F3A5F]' : 'border-transparent hover:text-gray-900'
-              }`}
-            >
-              <Eye className="w-4 h-4 text-[#B45309]" />
-              <span>Verified Solution & Architecture Diagram</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('discussion')}
-              className={`pb-2 border-b-2 transition-all flex items-center gap-2 ${
-                activeTab === 'discussion' ? 'border-[#E8A33D] text-[#1F3A5F]' : 'border-transparent hover:text-gray-900'
-              }`}
-            >
-              <MessageSquare className="w-4 h-4 text-[#1F3A5F]" />
-              <span>Candidate Discussion</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Content Body Reader Scroll Area */}
-        <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-6">
-          
-          {activeTab === 'content' && (
-            <div className="space-y-6">
-              {item.blocks && item.blocks.length > 0 ? (
-                item.blocks.map((block) => (
-                  <ContentBlockRenderer
-                    key={block.id}
-                    block={block}
-                    isLocked={!isFree}
-                    companyName={companyName}
-                    onUnlockClick={onUnlockClick}
-                    unlockPrice={unlockPrice}
-                  />
-                ))
-              ) : (
-                <div className="p-8 text-center text-gray-500 text-xs font-mono">
-                  No preview blocks initialized for this item yet.
-                </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'discussion' && (
-            <QuestionDiscussion itemId={item.id} />
-          )}
-
-        </div>
-
-        {/* Sticky Paywall Footer for Locked Items */}
-        {!isFree && (
-          <div className="p-4 sm:p-5 bg-gradient-to-r from-[#1F3A5F] via-slate-900 to-[#1F3A5F] text-white shrink-0 border-t border-white/10 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+      }
+      footer={
+        !isFree ? (
+          <div className="p-4 sm:p-5 bg-gradient-to-r from-[#1F3A5F] via-slate-900 to-[#1F3A5F] text-white shrink-0 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="font-bold text-amber-400 text-base">Unlock Complete {companyName} Intelligence Hub</span>
@@ -193,9 +152,69 @@ export const ModulePreviewModal: React.FC<ModulePreviewModalProps> = ({
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
+        ) : undefined
+      }
+    >
+      {/* Question Title & Reader Tabs */}
+      <div className="px-4 sm:px-6 py-5 bg-white border-b border-[#EDEDEB] shrink-0">
+        <h2 className="text-xl sm:text-2xl font-extrabold text-[#1A1A1A] leading-snug mb-3">
+          {item.question_text || 'Interview Question & System Specification'}
+        </h2>
+
+        <div className="flex items-center gap-6 text-xs font-mono font-bold text-gray-500">
+          <button
+            onClick={() => setActiveTab('content')}
+            aria-pressed={activeTab === 'content'}
+            className={`pb-2 border-b-2 transition-all flex items-center gap-2 ${
+              activeTab === 'content' ? 'border-[#E8A33D] text-[#1F3A5F]' : 'border-transparent hover:text-gray-900'
+            }`}
+          >
+            <Eye className="w-4 h-4 text-[#B45309]" />
+            <span>Verified Solution & Architecture Diagram</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('discussion')}
+            aria-pressed={activeTab === 'discussion'}
+            className={`pb-2 border-b-2 transition-all flex items-center gap-2 ${
+              activeTab === 'discussion' ? 'border-[#E8A33D] text-[#1F3A5F]' : 'border-transparent hover:text-gray-900'
+            }`}
+          >
+            <MessageSquare className="w-4 h-4 text-[#1F3A5F]" />
+            <span>Candidate Discussion</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Content Body Reader Scroll Area */}
+      <div className="p-4 sm:p-8 space-y-6">
+
+        {activeTab === 'content' && (
+          <div className="space-y-6">
+            {item.blocks && item.blocks.length > 0 ? (
+              item.blocks.map((block) => (
+                <ContentBlockRenderer
+                  key={block.id}
+                  block={block}
+                  isLocked={!isFree}
+                  companyName={companyName}
+                  onUnlockClick={onUnlockClick}
+                  unlockPrice={unlockPrice}
+                />
+              ))
+            ) : (
+              <div className="p-8 text-center text-gray-500 text-xs font-mono">
+                No preview blocks initialized for this item yet.
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'discussion' && (
+          <QuestionDiscussion itemId={item.id} />
         )}
 
       </div>
-    </div>
+    </Sheet>
   );
 };

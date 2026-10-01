@@ -6,8 +6,34 @@ export default function Document() {
       <Head>
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <link rel="shortcut icon" href="/favicon.svg" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/favicon.svg" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <meta name="theme-color" content="#1F3A5F" />
+
+        {/*
+          No viewport tag here, on purpose. It used to live in this file, which put
+          two `name="viewport"` tags on every page: Next's Pages Router seeds the
+          head with its own via `defaultHead()`, and `next/document`'s `<Head>`
+          does not dedupe the way `next/head` does. Which of the two a browser
+          honours is not specified, so `viewport-fit=cover` was effectively a coin
+          flip — and losing it silently zeroes every `env(safe-area-inset-*)`,
+          which is the notch handling the whole shell depends on.
+
+          The single tag now lives in `_app.tsx`, inside `next/head`, which
+          dedupes `<meta>` by `name` and keeps ours over the default. See the
+          comment there for the ordering that guarantees it.
+
+          `apple-mobile-web-app-*` is what makes "Add to Home Screen" open in a
+          standalone, chrome-less window with the status bar overlaid rather than a
+          Safari address bar.
+        */}
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta
+          name="apple-mobile-web-app-status-bar-style"
+          content="black-translucent"
+        />
+        <meta name="apple-mobile-web-app-title" content="TieEdu" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="format-detection" content="telephone=no" />
 
         {/* Google Fonts Preconnect & Embed */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />

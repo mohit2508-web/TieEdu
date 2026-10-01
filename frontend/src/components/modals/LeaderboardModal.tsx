@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { fetchLeaderboardApi } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { useShell } from '@/context/ShellContext';
-import { Flame, Trophy, Award, X, Sparkles, UserRound, ArrowRight } from 'lucide-react';
+import { Flame, Trophy, Award, Sparkles, UserRound, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import { Sheet } from '@/components/common/Sheet';
 
 /**
  * Mirrors GET /api/gamification/leaderboard.
@@ -29,6 +30,11 @@ interface LeaderboardEntry {
  * `ShellContext`, which is also where Escape and the body scroll lock live. It
  * used to be rendered per page behind an `onOpenLeaderboard` handler, so the
  * button was dead on eight of twelve pages.
+ *
+ * Phase 2: a bottom sheet on mobile. Escape and the scroll lock stay with
+ * `ShellContext` (`closeOnEscape`/`blocksScroll` off) so the provider remains the
+ * single owner of both — a second Escape listener here would pop the overlay
+ * beneath this one as well.
  */
 export const LeaderboardModal: React.FC = () => {
   const { user } = useAuth();
@@ -57,29 +63,26 @@ export const LeaderboardModal: React.FC = () => {
     return () => { active = false; };
   }, [isOpenNow]);
 
-  if (!isOpenNow) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3.5 sm:p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
-      <div className="vault-card bg-white rounded-2xl max-w-lg w-full p-4 sm:p-6 shadow-float border-[#E9E7E1] relative">
-
-        <div className="flex items-center justify-between pb-4 border-b border-[#E9E7E1] mb-5">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-full bg-[#FBF1E1] text-[#C77B12] flex items-center justify-center">
-              <Flame className="w-4 h-4 fill-current" />
-            </div>
-            <div>
-              <h3 className="font-serif-heading text-lg font-bold text-[#10151C]">XP Leaderboard</h3>
-              <p className="text-[11px] text-[--text-muted]">Real accounts · real XP — no seeded names</p>
-            </div>
-          </div>
-          <button onClick={onClose} className="p-1 text-[--text-muted] hover:text-[#10151C]" aria-label="Close">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+    <Sheet
+      open={isOpenNow}
+      onClose={onClose}
+      title="XP Leaderboard"
+      zIndex={50}
+      closeOnEscape={false}
+      blocksScroll={false}
+      data-testid="leaderboard"
+    >
+      <div className="px-5 pb-5">
+        <p className="flex items-center gap-2 text-[11px] text-[color:var(--text-muted)]">
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#FBF1E1] text-[#C77B12]">
+            <Flame className="h-3.5 w-3.5 fill-current" />
+          </span>
+          Real accounts · real XP — no seeded names
+        </p>
 
         {user && (
-          <div className="bg-[#E8F4FB] border border-[#bcdced] rounded-xl px-4 py-3 mb-5 flex items-center justify-between">
+          <div className="bg-[#E8F4FB] border border-[#bcdced] rounded-xl px-4 py-3 mt-4 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <span className="w-8 h-8 rounded-lg bg-[#0284C7] text-white flex items-center justify-center text-[13px] font-extrabold uppercase">
                 {user.name.charAt(0)}
@@ -101,7 +104,7 @@ export const LeaderboardModal: React.FC = () => {
         )}
 
         {user && (
-          <div className="flex flex-wrap gap-2 mb-5">
+          <div className="flex flex-wrap gap-2 mt-4">
             <Link href="/" onClick={onClose} className="chip hover:border-[#0284C7] hover:text-[#0271B5]">
               <Sparkles className="w-3.5 h-3.5 text-[#0284C7]" /> Interview course se XP kamao
             </Link>
@@ -111,8 +114,8 @@ export const LeaderboardModal: React.FC = () => {
           </div>
         )}
 
-        <div className="space-y-2 max-h-[55vh] sm:max-h-64 overflow-y-auto">
-          <h4 className="text-xs font-bold text-[#10151C] mb-3 flex items-center gap-1.5">
+        <div className="space-y-2 mt-5">
+          <h4 className="text-xs font-bold text-[#10151C] flex items-center gap-1.5">
             <Trophy className="w-3.5 h-3.5 text-[#B45309]" /> Placement season ranking
           </h4>
 
@@ -182,8 +185,7 @@ export const LeaderboardModal: React.FC = () => {
             </div>
           ))}
         </div>
-
       </div>
-    </div>
+    </Sheet>
   );
 };

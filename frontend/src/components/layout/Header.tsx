@@ -3,15 +3,33 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { Award, ChevronDown, Command, Flame, LogOut, Search, ShieldCheck, ShoppingBag, UserRound } from 'lucide-react';
+import { useReducedMotion } from 'framer-motion';
+import { Award, ChevronDown, ChevronLeft, Command, Flame, LogOut, Search, ShieldCheck, ShoppingBag, UserRound } from 'lucide-react';
 import { TieEduLogo } from '@/components/common/TieEduLogo';
 import { useAuth } from '@/context/AuthContext';
 import { useShell } from '@/context/ShellContext';
 import { useCart } from '@/context/CartContext';
-import { PRIMARY_NAV, isNavActive } from '@/lib/navConfig';
+import {
+  MOBILE_TAB_ACTIONS,
+  NAV_ACTIONS,
+  PRIMARY_NAV,
+  isNavActive,
+  isRootDepth,
+  resolveBackHref,
+  resolveNavTitle,
+} from '@/lib/navConfig';
+import {
+  initialHeaderScrollState,
+  nextHeaderScrollState,
+  seedHeaderScrollState,
+  type HeaderScrollState,
+} from '@/lib/headerScroll';
 import { formatBadgeCount } from '@/lib/notifications';
 import { NotificationBell } from '@/components/layout/NotificationBell';
 import { MobileMenuButton } from '@/components/layout/MobileTabBar';
+
+/** Tailwind's `md`, negated. `tailwind.config.js` sets no custom `screens`. */
+const BELOW_MD = '(max-width: 767.98px)';
 
 /**
  * The site header.
@@ -29,10 +47,145 @@ import { MobileMenuButton } from '@/components/layout/MobileTabBar';
 export const Header: React.FC = () => {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
-  const { toggleOverlay } = useShell();
+  const { toggleOverlay, anyOpen, isOpen } = useShell();
   const { count, hydrated } = useCart();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  // -------------------------------------------------------------------------
+  // Phase 1 §1.1 — hide-on-scroll.
+  //
+  // The decision lives in `lib/headerScroll` as a pure reducer so it is unit
+  // tested; this is only the listener and the veto. The veto is deliberately
+  // three-way, because each case is a different way the bar is the user's only
+  // way out:
+  //
+  //   overlay open   — a sheet covers the page, the bar is how you dismiss it
+  //   pushed screen  — §1.3 puts the back chevron in this bar
+  //   `md+`          — desktop keeps a conventionally pinned header
+  //
+  // An open account menu counts too: it is anchored to this bar, so sliding the
+  // bar away would drag the menu off with it.
+  // -------------------------------------------------------------------------
+  const [scroll, setScroll] = useState<HeaderScrollState>(initialHeaderScrollState);
+  const [belowMd, setBelowMd] = useState(false);
+  const reduceMotion = useReducedMotion();
+
+  const isPushedScreen = router.isReady && !isRootDepth(router.pathname);
+  const canHide = belowMd && !anyOpen && !isPushedScreen && !menuOpen;
+
+  // -------------------------------------------------------------------------
+  // Phase 1 §1.3 — the native nav bar a pushed screen gets below `md`.
+  // -------------------------------------------------------------------------
+  const drillTitle = router.isReady ? resolveNavTitle(router.pathname) : '';
+  const backHref = router.isReady ? resolveBackHref(router.pathname) : '/';
+
+  /*
+    History first, href as the safety net. `history.length` is 1 for a deep link
+    opened in a fresh tab and for a reload, which is exactly when there is
+    nothing to pop; anything above that we let the browser walk back, so the
+    chevron returns the user to the scroll position and filter they left, which
+    a `push` would throw away.
+  */
+  const goBack = () => {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      router.back();
+      return;
+    }
+    router.push(backHref);
+  };
+
+  /*
+    The 2px reading-progress line, written straight to the DOM.
+
+    It has to track the scroll position every frame, and the whole point of the
+    §1.1 listener is that scrolling does NOT re-render the header — it mutates a
+    transform on a node React does not own. Folding progress into `scroll` state
+    would put a re-render back on the scroll path and undo that, so this one
+    element is driven imperatively from the same rAF callback instead.
+  */
+  const progressRef = useRef<HTMLSpanElement>(null);
+  const pushedRef = useRef(isPushedScreen);
+  pushedRef.current = isPushedScreen;
+
+  // The scroll listener is registered once, so it cannot close over `canHide`.
+  // A ref keeps it reading the current value; re-subscribing on every overlay
+  // open would drop scroll events mid-gesture.
+  const canHideRef = useRef(canHide);
+  canHideRef.current = canHide;
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mq = window.matchMedia(BELOW_MD);
+    const sync = () => setBelowMd(mq.matches);
+    sync();
+    // Safari < 14 only has the deprecated `addListener`.
+    if (typeof mq.addEventListener === 'function') {
+      mq.addEventListener('change', sync);
+      return () => mq.removeEventListener('change', sync);
+    }
+    mq.addListener(sync);
+    return () => mq.removeListener(sync);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    // Seed from the real position. A page can mount already scrolled — browser
+    // back, a restored `#hash` — and seeding from 0 would read that offset as
+    // one huge downward flick and open with the bar off-canvas.
+    setScroll(seedHeaderScrollState(window.scrollY));
+
+    let frame = 0;
+    const onScroll = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(() => {
+        frame = 0;
+        const y = window.scrollY;
+        setScroll((prev) => nextHeaderScrollState(prev, y, canHideRef.current));
+
+        /*
+          §1.3 progress line. `scaleX` rather than `width` so this stays on the
+          compositor — a width change relayouts the line's parent every frame.
+
+          The `+ 1` on the denominator is the whole edge case: on a page shorter
+          than the viewport the scrollable range is 0, and dividing by it yields
+          `NaN`, which writes `scaleX(NaN)` and makes the bar vanish. Clamping
+          also covers the overscroll bounce on iOS, where `scrollY` can go
+          negative or past the maximum and the line would otherwise overshoot
+          0..1 and show a gap at one end.
+        */
+        const el = progressRef.current;
+        if (el && pushedRef.current) {
+          const range = document.documentElement.scrollHeight - window.innerHeight;
+          const p = range > 0 ? Math.min(1, Math.max(0, y / range)) : 0;
+          el.style.transform = `scaleX(${p})`;
+        }
+      });
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, []);
+
+  // When the veto flips off, restore the bar immediately rather than waiting for
+  // the next scroll event — which may never come, stranding a headerless page.
+  useEffect(() => {
+    if (canHide) return;
+    setScroll((prev) => (prev.hidden ? { ...prev, hidden: false } : prev));
+  }, [canHide]);
+
+  // A new page starts from the top. Resetting on `routeChangeStart` rather than
+  // `Complete` avoids inheriting the previous page's hidden state during the
+  // navigation, when `window.scrollY` is still the old value.
+  useEffect(() => {
+    const onRouteStart = () => setScroll(initialHeaderScrollState);
+    router.events.on('routeChangeStart', onRouteStart);
+    return () => router.events.off('routeChangeStart', onRouteStart);
+  }, [router.events]);
 
   // Close the account menu on navigation — it used to stay open over the new
   // page until a second click somewhere else.
@@ -68,17 +221,135 @@ export const Header: React.FC = () => {
 
   return (
     /*
+     * Phase 0 — MOBILE_APP_UI_PLAN.md §0.1, and Phase 1 — §1.1.
+     *
      * `glass-surface` sets `backdrop-filter`, which makes this element a
      * containing block for `position: fixed` descendants. That is why the old
      * drawer needed a portal — the drawer lived inside the header and would
      * otherwise be clipped to the header's 64px. Overlays are now siblings of
      * the header in `AppShell`, so no portal is needed and the DOM is flat.
      *
-     * Height is `var(--header-h)` so the four sub-bars that pin underneath it
-     * can offset by the same number instead of hardcoding 64px.
+     * `fixed`, not `sticky`. A sticky element keeps its slot in flow, so
+     * translating it away leaves the gap it was holding open — which is exactly
+     * the "web page with a permanently pinned header" tell §1.1 exists to
+     * remove. `fixed` takes it out of flow entirely; `AppShell` reserves the
+     * same height with `padding-top: var(--header-total)`, so nothing shifts.
+     *
+     * Height is `var(--header-total)` — the bar *plus* the notch — with the
+     * inset as padding, so the four sub-bars that pin underneath it can offset
+     * by the same number instead of hardcoding 64px.
+     *
+     * The transform is a compositor-only property, so scrolling does not
+     * relayout the page on every frame. `will-change` is set only while hidden
+     * for the same reason: a permanent `will-change` keeps a layer alive for
+     * the whole session and costs memory for nothing.
      */
-    <header className="glass-surface sticky top-0 z-40">
-      <div className="mx-auto flex h-[var(--header-h)] w-full max-w-[1700px] items-center justify-between gap-3 px-3 sm:px-8 lg:px-12">
+    <header
+      className="glass-surface fixed inset-x-0 top-0 z-40 flex items-center"
+      data-slide={scroll.hidden ? 'hidden' : 'shown'}
+      data-scrolled={scroll.scrolled ? 'true' : undefined}
+      style={{
+        height: 'var(--header-total)',
+        paddingTop: 'var(--safe-top)',
+        transform: scroll.hidden ? 'translate3d(0, -100%, 0)' : 'translate3d(0, 0, 0)',
+        /*
+         * The slide is suppressed under `prefers-reduced-motion` rather than
+         * shortened. §1.1 asks for "instant, not animated": a student who has
+         * told the OS that movement makes them ill should not have a bar travel
+         * across the screen, and a 0ms transition still produces a composited
+         * frame of motion on some engines. `transition: none` is the only
+         * expression of "do not move this".
+         */
+        transition: reduceMotion ? 'none' : 'transform 200ms var(--ease-out)',
+        willChange: scroll.hidden ? 'transform' : undefined,
+        boxShadow: scroll.scrolled ? 'var(--shadow-raised)' : undefined,
+      }}
+    >
+      {/*
+        Phase 1 — §1.3. The native nav bar a pushed screen gets below `md`.
+
+        A sibling of the normal row, not a variant of it. The desktop bar is
+        `md+`-scoped and must render identically to before, so the two rows never
+        coexist: this one is `md:hidden` and the other drops below `md` on a
+        pushed screen. Branching inside the shared row instead would mean the
+        desktop layout is one `isPushedScreen &&` away from changing.
+
+        The two actions are `MOBILE_TAB_ACTIONS` — the same two the tab bar
+        carries, read from the same list. That is not a coincidence: §1.2 slides
+        the tab bar away on exactly these routes, so if this bar did not take
+        them over, search and the cart would be unreachable for the whole
+        duration of the drill-down.
+      */}
+      {isPushedScreen && (
+        <div className="flex w-full items-center gap-1 px-2 md:hidden" data-drill-header="">
+          <button
+            type="button"
+            onClick={goBack}
+            aria-label="Go back"
+            className="icon-btn -ml-1 flex-none"
+          >
+            <ChevronLeft size={22} strokeWidth={2.4} aria-hidden />
+          </button>
+
+          {/*
+            `truncate` + `min-w-0` is load-bearing: a long course or company name
+            is the normal case, and without them the title pushes the two actions
+            off the right edge of a 320px screen instead of ellipsising.
+          */}
+          <span className="min-w-0 flex-1 truncate text-[15px] font-bold text-[#10151C]">
+            {drillTitle}
+          </span>
+
+          <div className="flex flex-none items-center gap-0.5">
+            {MOBILE_TAB_ACTIONS.map((id) => {
+              const action = NAV_ACTIONS[id];
+              const Icon = action.icon;
+              const active = isOpen(id);
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => toggleOverlay(id)}
+                  aria-expanded={active}
+                  aria-haspopup="dialog"
+                  aria-label={action.label}
+                  className="icon-btn relative"
+                >
+                  <Icon size={20} strokeWidth={2} aria-hidden />
+                  {id === 'cart' && hydrated && count > 0 && (
+                    <span className="chrome-badge absolute -right-0.5 -top-0.5" aria-hidden>
+                      {formatBadgeCount(count)}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/*
+        The 2px §1.3 reading-progress line, pinned to the header's bottom edge.
+        `transform` is written imperatively from the scroll handler; React only
+        ever renders the empty shell, so scrolling this bar costs no re-render.
+      */}
+      {isPushedScreen && (
+        <span
+          ref={progressRef}
+          aria-hidden
+          data-progress-line=""
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-[2px] origin-left bg-[var(--amber-deep)]"
+          style={{ transform: 'scaleX(0)' }}
+        />
+      )}
+
+      <div
+        className={
+          isPushedScreen
+            ? 'mx-auto hidden w-full max-w-[1700px] items-center justify-between gap-3 px-3 sm:px-8 lg:px-12 md:flex'
+            : 'mx-auto flex w-full max-w-[1700px] items-center justify-between gap-3 px-3 sm:px-8 lg:px-12'
+        }
+      >
         <div className="flex min-w-0 items-center gap-2 sm:gap-6">
           <Link href="/" className="flex flex-none items-center" aria-label="TieEdu home">
             <TieEduLogo size="sm" />
@@ -176,7 +447,23 @@ export const Header: React.FC = () => {
                 className="flex items-center gap-1.5 rounded-xl border border-[#E9E7E1] bg-white/70 py-1 pl-1 pr-1.5 transition-colors hover:border-[#D6D2C8] focus-ring sm:pr-2"
               >
                 {user.avatar ? (
-                  <img src={user.avatar} alt="" className="h-7 w-7 rounded-lg object-cover" />
+                  /*
+                   * A plain `<img>`, and not an oversight.
+                   *
+                   * Avatars are base64 data URLs stored in-house by
+                   * `PUT /api/auth/profile` — they are already in the document, so
+                   * there is no request for `next/image` to save, and the optimizer
+                   * refuses data URIs outright. `alt=""` is correct too: the
+                   * initial beside it already names the account, so this is
+                   * decorative.
+                   *
+                   * `width`/`height` are what this migration actually bought here.
+                   * The header is the first thing painted, and an unsized avatar in
+                   * a `flex` row reserves nothing until it decodes, which nudges
+                   * the whole header sideways on a slow phone.
+                   */
+                  // eslint-disable-next-line @next/next/no-img-element -- base64 data-URL avatar, see above
+                  <img src={user.avatar} alt="" width={28} height={28} decoding="async" className="h-7 w-7 rounded-lg object-cover" />
                 ) : (
                   <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#0284C7] text-[13px] font-extrabold uppercase text-white">
                     {user.name.charAt(0)}

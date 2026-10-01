@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { lockBodyScroll } from '@/lib/scrollLock';
 
 /**
  * Every overlay the chrome can open, and the one keyboard handler that closes
@@ -93,15 +94,18 @@ export const ShellProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // One lock for all scroll-blocking overlays, and a guaranteed restore. The
   // old drawer set `document.body.style.overflow` in its own effect, so a cart
   // drawer and a nav drawer could fight over the same property.
+  //
+  // It goes through the shared counter rather than saving/restoring the
+  // property inline, because `Sheet` locks independently for overlays that are
+  // not shell overlays. With two independent save/restore pairs, closing the
+  // drawer while a sheet was open above it would restore the pre-drawer value
+  // and leave the page scrollable behind a live sheet.
   const anyOpen = stack.length > 0;
+  const shouldBlock = anyOpen && BLOCKS_SCROLL.some((id) => stack.includes(id));
   useEffect(() => {
-    if (!anyOpen) return;
-    const previous = document.body.style.overflow;
-    if (BLOCKS_SCROLL.some((id) => stack.includes(id))) document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = previous;
-    };
-  }, [anyOpen, stack]);
+    if (!shouldBlock) return;
+    return lockBodyScroll();
+  }, [shouldBlock]);
 
   const value = useMemo<ShellContextValue>(
     () => ({
