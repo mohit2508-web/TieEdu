@@ -126,8 +126,17 @@ export function embedUrlFor(video: LessonVideo | null | undefined): string {
   // `api=1` is what lets the page read real playback state out of a Vimeo
   // player over postMessage — without it the course player has to fall back to
   // asking the learner to vouch for their own watching.
-  if (video.provider === 'vimeo') return `https://player.vimeo.com/video/${video.video_id}?api=1`;
-  return `https://www.youtube-nocookie.com/embed/${video.video_id}?enablejsapi=1&rel=0`;
+  //
+  // `playsinline=1` and `dnt=1` are the two params that make this behave like an
+  // in-app player rather than a web page. Without `playsinline`, iOS Safari
+  // hijacks the tap on play, tears the iframe out of the layout and takes over
+  // the whole screen with its own player chrome — the learner loses the lesson
+  // title, the sidebar and the next-lesson button, and on iPad the app is gone
+  // entirely. It is a URL param, not an attribute, which is why an `allow` list
+  // or a `playsInline` prop on our side cannot fix it.
+  if (video.provider === 'vimeo')
+    return `https://player.vimeo.com/video/${video.video_id}?api=1&dnt=1&playsinline=1`;
+  return `https://www.youtube-nocookie.com/embed/${video.video_id}?enablejsapi=1&rel=0&playsinline=1&dnt=1`;
 }
 
 /**

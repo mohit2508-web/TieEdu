@@ -494,11 +494,23 @@ check(
 // The Vimeo embed has to opt into the postMessage API, or the course player
 // cannot read real playback state and has to fall back to a self-declared
 // "I am watching" button.
-check(
-  'a vimeo embed opts into the postMessage api',
-  embedUrlFor({ provider: 'vimeo', video_id: '76979871' } as any),
-  'https://player.vimeo.com/video/76979871?api=1'
-);
+//
+// Asserted per-parameter rather than as a whole string. The exact-string form
+// broke the moment Phase 4 added `dnt=1` and `playsinline=1` for inline mobile
+// playback, and the fix then would have been to delete this assertion or paste
+// the new string in - neither of which notices a *dropped* param, which is the
+// failure that would actually matter here.
+{
+  const vimeo = embedUrlFor({ provider: 'vimeo', video_id: '76979871' } as any);
+  check('a vimeo embed opts into the postMessage api', vimeo.includes('api=1'), true);
+  check('a vimeo embed is told to play inline on a phone', vimeo.includes('playsinline=1'), true);
+  check('a vimeo embed is sent do-not-track', vimeo.includes('dnt=1'), true);
+  check('a vimeo embed still points at the right video', vimeo.startsWith('https://player.vimeo.com/video/76979871?'), true);
+
+  const yt = embedUrlFor({ provider: 'youtube', video_id: 'abc123' } as any);
+  check('a youtube embed is told to play inline on a phone', yt.includes('playsinline=1'), true);
+  check('a youtube embed is sent do-not-track', yt.includes('dnt=1'), true);
+}
   check('a lesson with no video reports null, not undefined', sanitizeLesson(lesson()).video, null);
   check('a lesson with no quiz reports null', sanitizeLesson(lesson()).quiz, null);
 }
