@@ -47,7 +47,16 @@ import {
   verifyVideoReachable,
   WATCH_THRESHOLD,
 } from '../lib/courses';
-import { signCertificate, verificationUrlFor } from '../lib/certificate';
+import {
+  ACTIVE_KEY_ID,
+  CERT_SIGNING_PRIVATE_KEY,
+  publicKeyBundle,
+  SIGNING_VERSION,
+  signCertificate,
+  SITE_URL,
+  siteUrlIsLocalhost,
+  verificationUrlFor,
+} from '../lib/certificate';
 
 export const courseAdminRouter = Router();
 
@@ -1075,6 +1084,61 @@ courseAdminRouter.get('/certificates', (req: Request, res: Response) => {
       active: (db.certificates || []).filter((c: Certificate) => c.status === 'active').length,
       revoked: (db.certificates || []).filter((c: Certificate) => c.status === 'revoked').length,
     },
+  });
+});
+
+/**
+ * GET /course-admin/certificates/readiness
+ *
+ * Whether this server can sign a certificate at all, and if not, what to set.
+ *
+ * This exists because that answer used to be unobtainable. A missing signing key
+ * does not stop the server booting or serving pages; it makes every issue and
+ * every verification answer 503 with a deliberately vague body, so the only
+ * symptom an operator sees is an admin console that refuses to issue and a log
+ * line they have to already know to grep for. The anonymity of that 503 is
+ * correct - it must not describe our configuration to the public - but it leaves
+ * the one person who *can* fix it with nothing to act on.
+ *
+ * So the diagnostic is served here instead, behind `requireAdmin`, where naming
+ * a variable is the point. Only the public half is ever included: the private key
+ * is not in this process's reach to begin with, and an endpoint that could echo
+ * it would be one refactor away from leaking it.
+ *
+ * `ready` is what the admin console reads; the rest is for the operator reading
+ * a log or a support ticket.
+ */
+courseAdminRouter.get('/certificates/readiness', (_req: Request, res: Response) => {
+  const keyFile = (process.env.CERT_SIGNING_PRIVATE_KEY_FILE || '').trim();
+  const siteUrl = SITE_URL;
+  const siteUrlOk = !siteUrlIsLocalhost();
+  const keyLoaded = Boolean(ACTIVE_KEY_ID && CERT_SIGNING_PRIVATE_KEY);
+
+  const problems: string[] = [];
+  if (!keyLoaded) {
+    problems.push(
+      keyFile
+        ? 'CERT_SIGNING_PRIVATE_KEY_FILE is set but no keypair loaded from it - check the path is readable by this process.'
+        : 'CERT_SIGNING_PRIVATE_KEY is not set, so no certificate can be signed or verified on this server.'
+    );
+  }
+  if (!siteUrlOk) {
+    problems.push(
+      `NEXT_PUBLIC_SITE_URL is ${siteUrl}, a local address. Every certificate PDF would carry a QR code nobody outside this machine can scan. Set it to the public origin.`
+    );
+  }
+
+  res.json({
+    status: 'success',
+    ready: problems.length === 0,
+    signing_configured: keyLoaded,
+    key_id: ACTIVE_KEY_ID,
+    key_source: keyLoaded ? (keyFile ? 'file' : 'env') : keyFile ? 'file_unreadable' : 'unset',
+    public_key_published: Boolean(publicKeyBundle()),
+    site_url: siteUrl,
+    site_url_ok: siteUrlOk,
+    signing_version: SIGNING_VERSION,
+    problems,
   });
 });
 

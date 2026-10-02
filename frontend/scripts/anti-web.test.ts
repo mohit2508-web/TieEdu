@@ -537,26 +537,27 @@ check('the mobile bottom bars are pinned and clear the home indicator', () => {
   }
 });
 
-check('search appears once in the phone UI, not three times', () => {
+check('search appears once in the phone UI, not twice', () => {
   const home = read(path.join(ROOT, 'src/pages/index.tsx'));
-  // The tab bar's slots are data, not markup, so the config is where a mobile
-  // search affordance would be declared.
+  // The tab bar's slots are data, not markup, so the config is where the mobile
+  // search affordance is declared.
   const nav = read(path.join(ROOT, 'src/lib/navConfig.ts'));
   const actions = nav.match(/MOBILE_TAB_ACTIONS[^=]*=\s*\[([^\]]*)\]/);
   ok(actions, 'MOBILE_TAB_ACTIONS must be a literal this test can read');
-  ok(
-    !/'search'/.test(actions![1]),
-    'the tab bar must not offer search: it duplicated the hero field above it'
-  );
-  ok(/'cart'/.test(actions![1]), 'the cart slot must survive the removal');
+  ok(/'search'/.test(actions![1]), 'the tab bar must offer search on a phone');
+  ok(/'cart'/.test(actions![1]), 'the tab bar must offer cart on a phone');
 
-  // Dropping the slot must not drop the feature. The hamburger drawer is where
-  // search lives on a phone now, and the header keeps its own field on desktop.
-  ok(/NAV_ACTIONS/.test(nav), 'the search action must still be defined');
+  // The top bar must not also offer search below `lg`, or the phone has two.
+  // The `!` is required for this to actually work - see the cascade check below.
+  const header = read(path.join(ROOT, 'src/components/layout/Header.tsx'));
+  ok(
+    /className="nav-search !hidden lg:flex"/.test(header),
+    'the header search field must be hidden below lg'
+  );
+
+  // The drawer is the nav below md, so search has to be reachable there too.
   const drawer = read(path.join(ROOT, 'src/components/layout/MobileNavDrawer.tsx'));
   ok(/'search'/.test(drawer), 'the drawer must still reach search on mobile');
-  const header = read(path.join(ROOT, 'src/components/layout/Header.tsx'));
-  ok(/hidden lg:flex/.test(header), 'the header search field must stay desktop-only');
 
   // The hero field filters the company grid and has no mobile counterpart, so it
   // is hidden below md rather than removed: the state stays wired and the desktop
@@ -570,14 +571,113 @@ check('search appears once in the phone UI, not three times', () => {
   ok(/value=\{searchQuery\}/.test(home), 'the grid filter must stay wired to the query');
 });
 
+check('a signed-out phone can reach both auth routes', () => {
+  /*
+   * Regression guard. Sign in and Sign up were once `md:inline-flex` on the
+   * theory that the drawer covered small screens - but the drawer only offered
+   * "Sign in", so the effect was that `/signup` had no link at all below `md`.
+   * The routes exist (`src/pages/login.tsx`, `src/pages/signup.tsx`), they were
+   * simply unreachable.
+   */
+  ok(fs.existsSync(path.join(ROOT, 'src/pages/signup.tsx')), '/signup page must exist');
+  ok(fs.existsSync(path.join(ROOT, 'src/pages/login.tsx')), '/login page must exist');
+
+  const menu = read(path.join(ROOT, 'src/components/layout/AccountMenu.tsx'));
+  ok(/href="\/login"/.test(menu), 'the header must offer a sign-in link');
+  ok(/href="\/signup"/.test(menu), 'the header must offer a sign-up link');
+  // Not `md:`-gated, or phones lose them again.
+  ok(
+    !/href="\/signup"[^}]*md:inline-flex/.test(menu) && !/!hidden[^"]*href="\/signup"/.test(menu),
+    'the sign-up link must not be hidden below md'
+  );
+
+  const drawer = read(path.join(ROOT, 'src/components/layout/MobileNavDrawer.tsx'));
+  ok(/href="\/login"/.test(drawer), 'the drawer must still offer sign in');
+  ok(/href="\/signup"/.test(drawer), 'the drawer must offer sign up as well');
+
+  // And the header row has to actually fit a narrow phone. The signed-out bell
+  // is what buys the room; without it the row is ~350px against 336px.
+  const header = read(path.join(ROOT, 'src/components/layout/Header.tsx'));
+  ok(
+    /\{user && <NotificationBell \/>\}/.test(header),
+    'the bell must not render for a signed-out visitor - it frees the width the auth buttons need'
+  );
+});
+
+check('a custom chrome class cannot silently beat `hidden`', () => {
+  /*
+   * The regression: `.icon-btn` and `.nav-search` are unlayered rules that set
+   * `display`, and this stylesheet has no `@layer`, so they sit later in the
+   * built CSS than Tailwind's `.hidden` and win at equal specificity. Every
+   * `className="icon-btn hidden lg:inline-flex"` in the app was therefore
+   * permanently visible on a phone - the search field and the cart icon both sat
+   * next to the logo, which is exactly what they were written to avoid.
+   *
+   * Class-name order in the markup changes nothing, because CSS source order is
+   * what decides. So this checks the rule, not the intent: any custom class that
+   * sets `display` must be paired with `!hidden`, never a bare `hidden`.
+   *
+   * The proper fix is to move these chrome classes into `@layer components` and
+   * let the cascade order do it. That is a whole-file change to `globals.css`
+   * with a blast radius far larger than the two call sites broken here, so the
+   * call sites carry `!` for now and this test stops it spreading.
+   */
+  // Comments are stripped first: this file's own prose about the cascade names
+  // `@layer components` and `!hidden` by string, and a raw match would read the
+  // explanation of the rule as a violation of it.
+  const css = stripComments(read(path.join(ROOT, 'src/styles/globals.css')));
+  ok(
+    !/@layer\s+(components|utilities)/.test(css),
+    'globals.css is assumed to be unlayered here; if it gains @layer, revisit this test'
+  );
+
+  // Custom classes that set `display`, from the stylesheet's own definitions.
+  const displaySetters = new Set<string>();
+  for (const m of css.matchAll(/\.([a-z][\w-]*)\s*\{[^}]*\bdisplay\s*:/g)) {
+    displaySetters.add(m[1]);
+  }
+  ok(displaySetters.size > 0, 'the stylesheet should define some display-setting classes');
+
+  const files: string[] = [];
+  const walk = (dir: string) => {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      const p = path.join(dir, e.name);
+      if (e.isDirectory()) walk(p);
+      else if (/\.tsx$/.test(e.name)) files.push(p);
+    }
+  };
+  walk(path.join(ROOT, 'src'));
+
+  const offenders: string[] = [];
+  for (const f of files) {
+    const src = read(f);
+    for (const m of src.matchAll(/className="([^"]*)"/g)) {
+      const tokens = m[1].split(/\s+/).filter(Boolean);
+      // A bare `hidden` token, i.e. not a responsive variant like `md:hidden`.
+      if (!tokens.includes('hidden')) continue;
+      const clashing = tokens.filter((t) => displaySetters.has(t));
+      if (clashing.length) offenders.push(`${path.relative(ROOT, f)}: ${m[1]}`);
+    }
+  }
+  ok(
+    offenders.length === 0,
+    `these classNames pair a display-setting custom class with a bare \`hidden\`, which the cascade ignores - use !hidden:\n        ${offenders.join('\n        ')}`
+  );
+
+  // And the two call sites that were broken, pinned explicitly.
+  const header = read(path.join(ROOT, 'src/components/layout/Header.tsx'));
+  ok(/nav-search !hidden lg:flex/.test(header), 'the header search field needs !hidden');
+  ok(/icon-btn !hidden lg:inline-flex/.test(header), 'the header cart needs !hidden');
+});
+
 check('the phone header carries the logo, bell, account and a bare leaderboard icon', () => {
   const header = read(path.join(ROOT, 'src/components/layout/Header.tsx'));
   const nav = read(path.join(ROOT, 'src/lib/navConfig.ts'));
 
-  // No search field and no cart in a phone header. Both were already moved off
-  // mobile; this pins that they cannot creep back in beside the tab bar.
-  ok(/nav-search hidden lg:flex/.test(header), 'the search field must stay desktop-only');
-  ok(/icon-btn hidden lg:inline-flex/.test(header), 'the cart must stay desktop-only');
+  // No search field and no cart in a phone header. Both are desktop-only, and
+  // both need `!` to stay that way - see the cascade check below.
+  ok(/nav-search !hidden lg:flex/.test(header), 'the search field must stay desktop-only');
+  ok(/icon-btn !hidden lg:inline-flex/.test(header), 'the cart must stay desktop-only');
 
   // The leaderboard was `hidden xl:inline-flex`, i.e. absent from every phone.
   // It is now an icon everywhere and only grows its label at `xl`.

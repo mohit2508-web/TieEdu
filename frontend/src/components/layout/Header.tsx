@@ -350,7 +350,7 @@ export const Header: React.FC = () => {
             onClick={() => toggleOverlay('search')}
             aria-haspopup="dialog"
             aria-label="Search vaults"
-            className="nav-search hidden lg:flex"
+            className="nav-search !hidden lg:flex"
           >
             <Search size={16} strokeWidth={2.2} aria-hidden />
             <span className="flex-1 text-left text-[13px] font-medium">Search vaults…</span>
@@ -380,22 +380,27 @@ export const Header: React.FC = () => {
           </button>
 
           {/*
-            The cart and search buttons are `lg:inline-flex` — above `lg` the
-            top bar and the bottom tab bar were both offering them.
+            The cart and search buttons are desktop-only: below `lg` the bottom
+            tab bar has a Search slot and a Cart slot (with the badge), so these
+            two were duplication. On a 360px phone the row needed ~374px: logo +
+            search + cart + bell + account + hamburger, and that overflow is what
+            made the page scale down and the logo look like it was spilling out.
 
-            Below `lg` the bottom bar already has a Search slot and a Cart slot
-            (with the badge), so the two icons here were pure duplication. On a
-            360px phone the row needed ~374px: logo + search + cart + bell +
-            account + hamburger. That overflow is what made the page scale down
-            and the logo look like it was spilling out of the header. One
-            surface per action is also the point of the bottom bar.
+            The `!` is load-bearing and was added after both of them turned up in
+            the phone header anyway. `.icon-btn` and `.nav-search` are unlayered
+            rules in `globals.css` (this file uses no `@layer`), so their `display`
+            beats Tailwind's `.hidden` regardless of what order the class names
+            are written in - `hidden lg:inline-flex` alone left both permanently
+            visible. `!hidden` states the intent and wins. The long-term fix is to
+            move these chrome classes into `@layer components` so utilities beat
+            them by cascade order rather than by `!`.
           */}
           <button
             type="button"
             onClick={() => toggleOverlay('cart')}
             aria-label={hydrated && count > 0 ? `Cart, ${count} items` : 'Cart, empty'}
             aria-haspopup="dialog"
-            className="icon-btn hidden lg:inline-flex"
+            className="icon-btn !hidden lg:inline-flex"
           >
             <span className="relative inline-flex">
               <ShoppingBag size={19} strokeWidth={2} aria-hidden />
@@ -410,7 +415,15 @@ export const Header: React.FC = () => {
             </span>
           </button>
 
-          <NotificationBell />
+          {/*
+            Only when signed in. A signed-out visitor has no notifications, so
+            the bell was rendering as a permanently empty 40px control in the one
+            row that has no room to spare: at 360px, logo + Sign in + Sign up +
+            bell + hamburger is ~350px against 336px of usable width, and at 320px
+            it overflowed. Dropping it when there is nobody to notify frees
+            exactly the space the two auth buttons need.
+          */}
+          {user && <NotificationBell />}
 
           <AccountMenu onOpenChange={setAccountOpen} />
 

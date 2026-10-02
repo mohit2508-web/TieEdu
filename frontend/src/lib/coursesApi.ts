@@ -26,6 +26,7 @@ import type {
   AdminCourseDetail,
   AdminCourseForEditor,
   AdminCertificatesResponse,
+  CertificateReadiness,
   AdminLessonQuiz,
   AdminXpResponse,
   VideoResolveResponse,
@@ -472,6 +473,20 @@ export const fetchAdminCertificates = async (
   const suffix = qs.toString() ? `?${qs}` : '';
   const res = await apiFetch(`${COURSE_ADMIN}/certificates${suffix}`);
   if (!res.ok) throw await apiError(res, 'Could not load certificates');
+  return res.json();
+};
+
+/**
+ * Whether this server can sign a certificate yet.
+ *
+ * Not fatal when it fails: an unconfigured server answering 503 on every issue
+ * is exactly the situation this call exists to explain, so refusing to load the
+ * rest of the tab would hide the diagnosis behind a second failure. The issue
+ * button stays live either way — the server is the authority on what it can sign.
+ */
+export const fetchCertificateReadiness = async (): Promise<CertificateReadiness | null> => {
+  const res = await apiFetch(`${COURSE_ADMIN}/certificates/readiness`);
+  if (!res.ok) return null;
   return res.json();
 };
 

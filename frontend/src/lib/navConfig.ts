@@ -278,20 +278,15 @@ export const NAV_ACTIONS: Record<NavActionItem['id'], NavActionItem> = {
 export const MOBILE_TABS: NavItem[] = ALL_NAV_ITEMS.filter((i) => i.tab);
 
 /**
- * Cart only. `search` used to sit here too, which put a search field at the top
- * of the page *and* a search slot at the bottom of the phone - the same action
- * twice, in two of the three places the eye lands first.
+ * Search and cart. Both belong here on a phone, and neither belongs in the top
+ * bar below `lg` - that is the whole reason the header's own field and cart icon
+ * are desktop-only.
  *
- * Dropping it from the bar loses nothing: the hamburger drawer still carries a
- * Search entry (`MobileNavDrawer` renders `NAV_ACTIONS.search` and
- * `DrawerSearchHint`), and the desktop header keeps its own field. The icon
- * definition in `NAV_ACTIONS` is deliberately left in place, because the header
- * and the drawer both still need it - only the tab bar stopped asking for it.
- *
- * `.tab-slot` is `flex: 1 1 0` and `.tab-bar` is `space-around`, so dropping a
- * slot re-spaces the rest. No width to recompute.
+ * `.tab-slot` is `flex: 1 1 0` and `.tab-bar` is `space-around`, so the count is
+ * derived rather than hard-coded: grow `MOBILE_TABS` or this list and the bar
+ * re-spaces itself. No width to recompute.
  */
-export const MOBILE_TAB_ACTIONS: NavActionItem['id'][] = ['cart'];
+export const MOBILE_TAB_ACTIONS: NavActionItem['id'][] = ['search', 'cart'];
 
 /**
  * Routes that render their own chrome and must NOT receive the site shell.

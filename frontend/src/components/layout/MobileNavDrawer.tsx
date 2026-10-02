@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { ChevronRight, LogIn, LogOut, UserRound, X } from 'lucide-react';
+import { ChevronRight, LogIn, LogOut, UserPlus, UserRound, X } from 'lucide-react';
 import {
   ALL_NAV_ITEMS,
   NAV_ACTIONS,
@@ -215,14 +215,24 @@ export const MobileNavDrawer: React.FC = () => {
               </button>
             </div>
           ) : (
-            <Link
-              href="/login"
-              onClick={() => closeOverlay('drawer')}
-              className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-[#0284C7] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0369A1]"
-            >
-              <LogIn size={17} strokeWidth={2.4} aria-hidden />
-              Sign in
-            </Link>
+            <div className="flex w-full flex-col gap-2">
+              <Link
+                href="/login"
+                onClick={() => closeOverlay('drawer')}
+                className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-[#0284C7] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0369A1]"
+              >
+                <LogIn size={17} strokeWidth={2.4} aria-hidden />
+                Sign in
+              </Link>
+              <Link
+                href="/signup"
+                onClick={() => closeOverlay('drawer')}
+                className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border border-[#0284C7] bg-transparent px-4 text-sm font-bold text-[#0284C7] transition-colors hover:bg-[#E0F2FE]"
+              >
+                <UserPlus size={17} strokeWidth={2.4} aria-hidden />
+                Sign up
+              </Link>
+            </div>
           )}
         </div>
       </div>

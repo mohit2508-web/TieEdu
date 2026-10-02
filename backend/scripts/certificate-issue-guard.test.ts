@@ -218,5 +218,47 @@ check('the key is loaded from .env even though the module reads it before server
   }
 });
 
+// --- the readiness diagnostic -------------------------------------------------
+//
+// The 503 the anonymous endpoints return has to stay vague, because it reaches
+// anyone who asks. That leaves the admin console with a button that fails and no
+// way to find out why, so the diagnostic moved behind `requireAdmin`. Two things
+// must hold for it to be safe to point operators at: it lives behind the admin
+// guard, and it cannot echo the private key even though it sits next to it.
+check('the readiness diagnostic sits behind the admin guard', () => {
+  const code = stripComments(fs.readFileSync(ADMIN_ROUTES, 'utf8'));
+  const at = code.indexOf("'/certificates/readiness'");
+  assert.ok(at > -1, 'the readiness route should exist');
+  const guard = code.indexOf('courseAdminRouter.use(requireAdmin)');
+  assert.ok(guard > -1, 'the router should apply requireAdmin at all');
+  assert.ok(
+    guard < at,
+    'readiness must be registered after requireAdmin, or it is a public config dump'
+  );
+});
+
+check('the readiness diagnostic reports the key state without echoing the key', () => {
+  const code = stripComments(fs.readFileSync(ADMIN_ROUTES, 'utf8'));
+  const start = code.indexOf("'/certificates/readiness'");
+  const respondAt = code.indexOf('res.json(', start);
+  assert.ok(respondAt > -1, 'it should answer with json');
+  // Only the response payload is asserted, not the handler around it: reading
+  // the environment to decide *whether* a key exists is the whole point, and
+  // reading is not the same as handing it back.
+  const body = code.slice(respondAt, code.indexOf('});', respondAt));
+  assert.ok(/signing_configured/.test(body), 'it must say whether signing works');
+  assert.ok(/problems/.test(body), 'it must carry the remedy');
+  // The public half is publishable by design; the private half is not, whatever
+  // the route is called or how the response is later reshaped.
+  assert.ok(
+    !/PRIVATE_KEY/i.test(body),
+    `the response must not include the private key material - got: ${body.replace(/\s+/g, ' ').slice(0, 160)}`
+  );
+  assert.ok(
+    /key_id/.test(body),
+    'the fingerprint is the safe way to show which key is loaded'
+  );
+});
+
 console.log(`\ncertificate-issue-guard: ${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

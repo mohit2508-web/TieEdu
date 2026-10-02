@@ -1225,6 +1225,25 @@ export interface AdminCertificatesResponse {
   counts: { total: number; active: number; revoked: number };
 }
 
+/**
+ * What the server needs before it can sign anything, and what is missing if it
+ * cannot. Admin-only, and the one place a variable name is worth showing: the
+ * 503 an unconfigured server returns is deliberately vague, because the same
+ * body reaches the public verification endpoints.
+ */
+export interface CertificateReadiness {
+  status: 'success';
+  ready: boolean;
+  signing_configured: boolean;
+  key_id: string;
+  key_source: 'unset' | 'env' | 'file' | 'file_unreadable';
+  public_key_published: boolean;
+  site_url: string;
+  site_url_ok: boolean;
+  signing_version: number;
+  problems: string[];
+}
+
 export interface AdminXpEntry {
   id: string;
   user_id: string;

@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Search, ShieldCheck, ShieldOff, RotateCcw, ExternalLink, Copy, Award } from 'lucide-react';
-import type { AdminCertificate, AdminCourseListItem } from '@/types';
+import type { AdminCertificate, AdminCourseListItem, CertificateReadiness } from '@/types';
 import {
   fetchAdminCertificates,
   revokeCertificateAsAdmin,
   restoreCertificateAsAdmin,
   issueCertificateAsAdmin,
+  fetchCertificateReadiness,
   fetchAdminCourses,
   fetchAdminCourse,
 } from '@/lib/coursesApi';
@@ -110,6 +111,25 @@ export const AdminCertificatesTab: React.FC = () => {
   const [issueError, setIssueError] = useState<string | null>(null);
   const [issued, setIssued] = useState<{ serial: string; name: string } | null>(null);
 
+  // ---- server readiness -----------------------------------------------------
+  // A missing signing key does not break the page: the server answers 503 on
+  // every issue, and the message it sends is deliberately vague because the same
+  // body reaches the public verification endpoints. Without this, the operator
+  // sees a button that fails and nothing about the machine that is at fault.
+  const [readiness, setReadiness] = useState<CertificateReadiness | null>(null);
+
+  const loadReadiness = async () => {
+    try {
+      setReadiness(await fetchCertificateReadiness());
+    } catch {
+      setReadiness(null);
+    }
+  };
+
+  useEffect(() => {
+    loadReadiness();
+  }, []);
+
   useEffect(() => {
     let live = true;
     fetchAdminCourses()
@@ -156,8 +176,12 @@ export const AdminCertificatesTab: React.FC = () => {
       const res = await issueCertificateAsAdmin({ user_id: userId, course_id: courseId });
       setIssued({ serial: res.certificate?.serial, name });
       await load();
+      await loadReadiness();
     } catch (e) {
       setIssueError(e instanceof Error ? e.message : 'Could not issue the certificate');
+      // A 503 here means the server, not the learner. Re-read readiness so the
+      // note below turns into the actual remedy instead of leaving them guessing.
+      await loadReadiness();
     } finally {
       setIssuing(null);
     }
@@ -169,6 +193,27 @@ export const AdminCertificatesTab: React.FC = () => {
         title="Issue a certificate"
         subtitle="For learners who completed the work but never claimed it themselves."
       >
+        {readiness && !readiness.ready && (
+          <div className="mb-4 rounded-lg border border-[#F0C9A6] bg-[#FDF4EC] px-3.5 py-3 text-[12.5px] leading-relaxed text-[#7A3E12]">
+            <div className="font-bold">This server cannot sign certificates yet</div>
+            <ul className="mt-1 list-disc pl-4 space-y-0.5">
+              {readiness.problems.map((p) => (
+                <li key={p}>{p}</li>
+              ))}
+            </ul>
+            <div className="mt-1.5 text-[11.5px] text-[#8A5A2B]">
+              Set it in the server environment and restart it. Every issue attempt — here and from a learner&apos;s
+              course page — fails until then.
+            </div>
+          </div>
+        )}
+        {readiness?.ready && (
+          <div className="mb-4 text-[11.5px] text-[#6B7280]">
+            Signing key <span className="font-mono">{readiness.key_id}</span> loaded from{' '}
+            {readiness.key_source === 'file' ? 'a mounted secret file' : 'the environment'} · verification links
+            point at <span className="font-mono">{readiness.site_url}</span>
+          </div>
+        )}
         {!courses.length ? (
           <Empty>No courses yet. Create a course before issuing certificates.</Empty>
         ) : (
