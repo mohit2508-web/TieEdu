@@ -6,6 +6,7 @@ import { useRouter } from 'next/router';
 import { useReducedMotion } from 'framer-motion';
 import { Award, ChevronDown, ChevronLeft, Command, Flame, LogOut, Search, ShieldCheck, ShoppingBag, UserRound } from 'lucide-react';
 import { TieEduLogo } from '@/components/common/TieEduLogo';
+import { PWAInstallButton } from '@/components/common/PWAInstallButton';
 import { useAuth } from '@/context/AuthContext';
 import { useShell } from '@/context/ShellContext';
 import { useCart } from '@/context/CartContext';
@@ -378,6 +379,7 @@ export const Header: React.FC = () => {
             <Flame size={15} className="shrink-0 text-[var(--amber-deep)]" strokeWidth={2.2} aria-hidden />
             <span className="hidden font-bold xl:inline">Leaderboard</span>
           </button>
+          <PWAInstallButton className="hidden sm:inline-flex" />
 
           {/*
             The cart and search buttons are desktop-only: below `lg` the bottom

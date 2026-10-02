@@ -17,6 +17,7 @@ import { Sheet } from '@/components/common/Sheet';
 import { useShell } from '@/context/ShellContext';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
+import { PWAInstallButton } from '@/components/common/PWAInstallButton';
 import { formatBadgeCount } from '@/lib/notifications';
 import { cn } from '@/lib/cn';
 
@@ -216,6 +217,9 @@ export const MobileNavDrawer: React.FC = () => {
             </div>
           ) : (
             <div className="flex w-full flex-col gap-2">
+              <div className="mb-1">
+                <PWAInstallButton className="w-full justify-center" />
+              </div>
               <Link
                 href="/login"
                 onClick={() => closeOverlay('drawer')}

@@ -1,5 +1,5 @@
-{
-  "name": "TieEdu — Company Vaults & Courses",
+﻿{
+  "name": "TieEdu - Company Vaults & Courses",
   "short_name": "TieEdu",
   "description": "Company interview vaults, courses and placement-season XP rankings.",
   "id": "/",
@@ -31,9 +31,9 @@
       "purpose": "maskable"
     },
     {
-      "src": "/logo.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
       "purpose": "any"
     }
   ],

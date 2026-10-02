@@ -14,6 +14,7 @@ import { CartProvider } from '@/context/CartContext';
 import { ShellProvider } from '@/context/ShellContext';
 import { AppShell } from '@/components/layout/AppShell';
 import { RouteTransition } from '@/components/layout/RouteTransition';
+import { PWAInstallPrompt } from '@/components/common/PWAInstallPrompt';
 
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
@@ -109,6 +110,7 @@ export default function App({ Component, pageProps }: AppProps) {
             <RouteTransition>
               <Component {...pageProps} />
             </RouteTransition>
+            <PWAInstallPrompt />
           </AppShell>
         </ShellProvider>
       </CartProvider>
