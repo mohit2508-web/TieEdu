@@ -3,6 +3,7 @@ import { loadDb, saveDb } from '../data/db';
 import { completePaidOrder, pushAudit } from '../payments/orders';
 import { studyPlanAdminRouter } from './studyPlan.routes';
 import { validateSectionData } from '../lib/sectionData';
+import { requirePermission } from '../middleware/auth';
 
 export const adminRouter = Router();
 
@@ -178,13 +179,13 @@ function sanitizeRoundsPipeline(input: any) {
 // ============================================================
 
 // GET /api/admin/companies — List all companies for admin
-adminRouter.get('/companies', (req: Request, res: Response) => {
+adminRouter.get('/companies', requirePermission('companies.read'), (req: Request, res: Response) => {
   const db = loadDb();
   res.json(db.companies || []);
 });
 
 // GET /api/admin/companies/:id — Full company with modules for editing
-adminRouter.get('/companies/:id', (req: Request, res: Response) => {
+adminRouter.get('/companies/:id', requirePermission('companies.read'), (req: Request, res: Response) => {
   const db = loadDb();
   const company = findCompany(db, req.params.id);
   if (!company) return res.status(404).json({ error: 'Company not found' });
@@ -198,7 +199,7 @@ adminRouter.get('/companies/:id', (req: Request, res: Response) => {
 // carry an SEO description promising "verified round-by-round intelligence", and
 // must not ship a pre-filled trust_stats shape. Every field below is either the
 // admin's own input or null, and the public UI renders the nulls honestly.
-adminRouter.post('/companies', (req: Request, res: Response) => {
+adminRouter.post('/companies', requirePermission('companies.write'), (req: Request, res: Response) => {
   const db = loadDb();
   const { name } = req.body;
   if (!name) return res.status(400).json({ error: 'Company name is required' });
@@ -262,7 +263,7 @@ adminRouter.post('/companies', (req: Request, res: Response) => {
 // A blanket `...req.body` spread used to let a request overwrite derived fields
 // (unlock_count, accuracy_score, trust_stats) or the id/slug chain. Now only
 // EDITORIAL_FIELDS are accepted and each is validated by type.
-adminRouter.put('/companies/:id', (req: Request, res: Response) => {
+adminRouter.put('/companies/:id', requirePermission('companies.write'), (req: Request, res: Response) => {
   const db = loadDb();
   const compIndex = db.companies.findIndex((c: any) => c.id === req.params.id);
   if (compIndex === -1) return res.status(404).json({ error: 'Company not found' });
@@ -345,7 +346,7 @@ adminRouter.put('/companies/:id', (req: Request, res: Response) => {
 });
 
 // DELETE /api/admin/companies/:id — Delete company
-adminRouter.delete('/companies/:id', (req: Request, res: Response) => {
+adminRouter.delete('/companies/:id', requirePermission('companies.delete'), (req: Request, res: Response) => {
   const db = loadDb();
   db.companies = db.companies.filter((c: any) => c.id !== req.params.id);
   saveDb(db);
@@ -363,7 +364,7 @@ adminRouter.delete('/companies/:id', (req: Request, res: Response) => {
 // the comparison matrix as if the company actually ran an online assessment. The
 // UI sends both explicitly; when absent we store null and the module is simply
 // unclassified until an admin says what it is.
-adminRouter.post('/companies/:id/modules', (req: Request, res: Response) => {
+adminRouter.post('/companies/:id/modules', requirePermission('modules.write'), (req: Request, res: Response) => {
   const db = loadDb();
   const company = findCompany(db, req.params.id);
   if (!company) return res.status(404).json({ error: 'Company not found' });
@@ -403,7 +404,7 @@ adminRouter.post('/companies/:id/modules', (req: Request, res: Response) => {
 });
 
 // PUT /api/admin/modules/:id — Update module (title, type, round, price, premium, sort)
-adminRouter.put('/modules/:id', (req: Request, res: Response) => {
+adminRouter.put('/modules/:id', requirePermission('modules.write'), (req: Request, res: Response) => {
   const db = loadDb();
   const found = findModuleAndCompany(db, req.params.id);
   if (!found) return res.status(404).json({ error: 'Module not found' });
@@ -447,7 +448,7 @@ adminRouter.put('/modules/:id', (req: Request, res: Response) => {
 });
 
 // DELETE /api/admin/modules/:id — Delete module
-adminRouter.delete('/modules/:id', (req: Request, res: Response) => {
+adminRouter.delete('/modules/:id', requirePermission('modules.write'), (req: Request, res: Response) => {
   const db = loadDb();
   const found = findModuleAndCompany(db, req.params.id);
   if (!found) return res.status(404).json({ error: 'Module not found' });
@@ -459,7 +460,7 @@ adminRouter.delete('/modules/:id', (req: Request, res: Response) => {
 });
 
 // POST /api/admin/companies/:id/modules/reorder — Reorder modules by id list
-adminRouter.post('/companies/:id/modules/reorder', (req: Request, res: Response) => {
+adminRouter.post('/companies/:id/modules/reorder', requirePermission('modules.write'), (req: Request, res: Response) => {
   const db = loadDb();
   const company = findCompany(db, req.params.id);
   if (!company) return res.status(404).json({ error: 'Company not found' });
@@ -480,7 +481,7 @@ adminRouter.post('/companies/:id/modules/reorder', (req: Request, res: Response)
 });
 
 // PUT /api/admin/modules/:id/section — Save full 7-section pack (section_data)
-adminRouter.put('/modules/:id/section', (req: Request, res: Response) => {
+adminRouter.put('/modules/:id/section', requirePermission('modules.write'), (req: Request, res: Response) => {
   const db = loadDb();
   const found = findModuleAndCompany(db, req.params.id);
   if (!found) return res.status(404).json({ error: 'Module not found' });
@@ -515,7 +516,7 @@ adminRouter.put('/modules/:id/section', (req: Request, res: Response) => {
 // ============================================================
 
 // POST /api/admin/modules/:id/items — Add question item to module
-adminRouter.post('/modules/:id/items', (req: Request, res: Response) => {
+adminRouter.post('/modules/:id/items', requirePermission('modules.write'), (req: Request, res: Response) => {
   const db = loadDb();
   const found = findModuleAndCompany(db, req.params.id);
   if (!found) return res.status(404).json({ error: 'Module not found' });
@@ -544,7 +545,7 @@ adminRouter.post('/modules/:id/items', (req: Request, res: Response) => {
 });
 
 // PUT /api/admin/modules/:id/items/:itemId — Update item
-adminRouter.put('/modules/:id/items/:itemId', (req: Request, res: Response) => {
+adminRouter.put('/modules/:id/items/:itemId', requirePermission('modules.write'), (req: Request, res: Response) => {
   const db = loadDb();
   const item = findItem(db, req.params.id, req.params.itemId);
   if (!item) return res.status(404).json({ error: 'Item not found' });
@@ -564,7 +565,7 @@ adminRouter.put('/modules/:id/items/:itemId', (req: Request, res: Response) => {
 });
 
 // DELETE /api/admin/modules/:id/items/:itemId — Delete item
-adminRouter.delete('/modules/:id/items/:itemId', (req: Request, res: Response) => {
+adminRouter.delete('/modules/:id/items/:itemId', requirePermission('modules.write'), (req: Request, res: Response) => {
   const db = loadDb();
   const found = findModuleAndCompany(db, req.params.id);
   if (!found) return res.status(404).json({ error: 'Module not found' });
@@ -576,7 +577,7 @@ adminRouter.delete('/modules/:id/items/:itemId', (req: Request, res: Response) =
 });
 
 // POST /api/admin/items/:itemId/blocks — Add block to item
-adminRouter.post('/items/:itemId/blocks', (req: Request, res: Response) => {
+adminRouter.post('/items/:itemId/blocks', requirePermission('modules.write'), (req: Request, res: Response) => {
   const db = loadDb();
   const found = findItemAnywhere(db, req.params.itemId);
   if (!found) return res.status(404).json({ error: 'Item not found' });
@@ -603,7 +604,7 @@ adminRouter.post('/items/:itemId/blocks', (req: Request, res: Response) => {
 });
 
 // PUT /api/admin/items/:itemId/blocks/:blockId — Update block
-adminRouter.put('/items/:itemId/blocks/:blockId', (req: Request, res: Response) => {
+adminRouter.put('/items/:itemId/blocks/:blockId', requirePermission('modules.write'), (req: Request, res: Response) => {
   const db = loadDb();
   const found = findItemAnywhere(db, req.params.itemId);
   if (!found) return res.status(404).json({ error: 'Item not found' });
@@ -622,7 +623,7 @@ adminRouter.put('/items/:itemId/blocks/:blockId', (req: Request, res: Response) 
 });
 
 // DELETE /api/admin/items/:itemId/blocks/:blockId — Delete block
-adminRouter.delete('/items/:itemId/blocks/:blockId', (req: Request, res: Response) => {
+adminRouter.delete('/items/:itemId/blocks/:blockId', requirePermission('modules.write'), (req: Request, res: Response) => {
   const db = loadDb();
   const found = findItemAnywhere(db, req.params.itemId);
   if (!found) return res.status(404).json({ error: 'Item not found' });
@@ -635,7 +636,7 @@ adminRouter.delete('/items/:itemId/blocks/:blockId', (req: Request, res: Respons
 });
 
 // POST /api/admin/items/:itemId/blocks/reorder — Reorder blocks by id list
-adminRouter.post('/items/:itemId/blocks/reorder', (req: Request, res: Response) => {
+adminRouter.post('/items/:itemId/blocks/reorder', requirePermission('modules.write'), (req: Request, res: Response) => {
   const db = loadDb();
   const found = findItemAnywhere(db, req.params.itemId);
   if (!found) return res.status(404).json({ error: 'Item not found' });
@@ -662,13 +663,13 @@ adminRouter.post('/items/:itemId/blocks/reorder', (req: Request, res: Response) 
 // ============================================================
 
 // GET /api/admin/coupons — List all coupons
-adminRouter.get('/coupons', (req: Request, res: Response) => {
+adminRouter.get('/coupons', requirePermission('coupons.read'), (req: Request, res: Response) => {
   const db = loadDb();
   res.json(db.coupons || []);
 });
 
 // POST /api/admin/coupons — Create coupon
-adminRouter.post('/coupons', (req: Request, res: Response) => {
+adminRouter.post('/coupons', requirePermission('coupons.write'), (req: Request, res: Response) => {
   const db = loadDb();
   const code = (req.body.code || '').trim().toUpperCase();
   if (!code) return res.status(400).json({ error: 'Coupon code is required' });
@@ -694,7 +695,7 @@ adminRouter.post('/coupons', (req: Request, res: Response) => {
 });
 
 // PUT /api/admin/coupons/:id — Update coupon
-adminRouter.put('/coupons/:id', (req: Request, res: Response) => {
+adminRouter.put('/coupons/:id', requirePermission('coupons.write'), (req: Request, res: Response) => {
   const db = loadDb();
   const coupon = (db.coupons || []).find((c: any) => c.id === req.params.id);
   if (!coupon) return res.status(404).json({ error: 'Coupon not found' });
@@ -711,7 +712,7 @@ adminRouter.put('/coupons/:id', (req: Request, res: Response) => {
 });
 
 // DELETE /api/admin/coupons/:id — Delete coupon
-adminRouter.delete('/coupons/:id', (req: Request, res: Response) => {
+adminRouter.delete('/coupons/:id', requirePermission('coupons.write'), (req: Request, res: Response) => {
   const db = loadDb();
   db.coupons = (db.coupons || []).filter((c: any) => c.id !== req.params.id);
   saveDb(db);
@@ -723,7 +724,7 @@ adminRouter.delete('/coupons/:id', (req: Request, res: Response) => {
 // ============================================================
 
 // GET /api/admin/orders — All orders with buyer email/name (joined live)
-adminRouter.get('/orders', (req: Request, res: Response) => {
+adminRouter.get('/orders', requirePermission('orders.read'), (req: Request, res: Response) => {
   const db = loadDb();
   const q = (req.query.q as string || '').trim().toLowerCase();
   const status = (req.query.status as string || '').trim();
@@ -781,7 +782,7 @@ adminRouter.get('/orders', (req: Request, res: Response) => {
 });
 
 // GET /api/admin/payments/pending — UPI orders awaiting manual verification (real money → real unlock)
-adminRouter.get('/payments/pending', (req: Request, res: Response) => {
+adminRouter.get('/payments/pending', requirePermission('orders.verify'), (req: Request, res: Response) => {
   const db = loadDb();
   const userById = new Map<string, any>((db.users || []).map((u: any) => [u.id, u]));
   const pending = (db.orders || [])
@@ -806,7 +807,7 @@ adminRouter.get('/payments/pending', (req: Request, res: Response) => {
 });
 
 // POST /api/admin/payments/:id/verify — Admin confirms the UPI transfer → real unlock
-adminRouter.post('/payments/:id/verify', (req: Request, res: Response) => {
+adminRouter.post('/payments/:id/verify', requirePermission('orders.verify'), (req: Request, res: Response) => {
   const db = loadDb();
   const order = (db.orders || []).find((o: any) => o.id === req.params.id);
   if (!order) return res.status(404).json({ error: 'Order not found' });
@@ -832,7 +833,7 @@ adminRouter.post('/payments/:id/verify', (req: Request, res: Response) => {
 });
 
 // POST /api/admin/payments/:id/reject — Admin couldn't verify the transfer → honest rejection
-adminRouter.post('/payments/:id/reject', (req: Request, res: Response) => {
+adminRouter.post('/payments/:id/reject', requirePermission('orders.verify'), (req: Request, res: Response) => {
   const db = loadDb();
   const order = (db.orders || []).find((o: any) => o.id === req.params.id);
   if (!order) return res.status(404).json({ error: 'Order not found' });
@@ -858,7 +859,7 @@ adminRouter.post('/payments/:id/reject', (req: Request, res: Response) => {
 });
 
 // GET /api/admin/users — All users with live usage counts
-adminRouter.get('/users', (req: Request, res: Response) => {
+adminRouter.get('/users', requirePermission('users.read'), (req: Request, res: Response) => {
   const db = loadDb();
   const q = (req.query.q as string || '').trim().toLowerCase();
 
@@ -908,7 +909,7 @@ adminRouter.get('/users', (req: Request, res: Response) => {
 });
 
 // PUT /api/admin/users/:id/status — Enable/disable a user account
-adminRouter.put('/users/:id/status', (req: Request, res: Response) => {
+adminRouter.put('/users/:id/status', requirePermission('users.status'), (req: Request, res: Response) => {
   const db = loadDb();
   const user = (db.users || []).find((u: any) => u.id === req.params.id);
   if (!user) return res.status(404).json({ error: 'User not found' });
@@ -924,7 +925,7 @@ adminRouter.put('/users/:id/status', (req: Request, res: Response) => {
 });
 
 // GET /api/admin/settings — Platform settings (read)
-adminRouter.get('/settings', (req: Request, res: Response) => {
+adminRouter.get('/settings', requirePermission('settings.read'), (req: Request, res: Response) => {
   const db = loadDb();
   const defaults = {
     platform_name: 'TieEdu',
@@ -938,7 +939,7 @@ adminRouter.get('/settings', (req: Request, res: Response) => {
 });
 
 // PUT /api/admin/settings — Update platform settings (persist to db.settings)
-adminRouter.put('/settings', (req: Request, res: Response) => {
+adminRouter.put('/settings', requirePermission('settings.write'), (req: Request, res: Response) => {
   const db = loadDb();
   const next = { ...(db.settings || {}) };
   if (typeof req.body.platform_name === 'string' && req.body.platform_name.trim()) next.platform_name = req.body.platform_name.trim().slice(0, 60);
@@ -953,7 +954,7 @@ adminRouter.put('/settings', (req: Request, res: Response) => {
 });
 
 // GET /api/admin/audit — Recent platform audit events (order lifecycle transparency)
-adminRouter.get('/audit', (req: Request, res: Response) => {
+adminRouter.get('/audit', requirePermission('audit.read'), (req: Request, res: Response) => {
   const db = loadDb();
   const q = (req.query.q as string || '').trim().toLowerCase();
   let entries = (db.audit || []).slice();
@@ -966,7 +967,7 @@ adminRouter.get('/audit', (req: Request, res: Response) => {
 // LEGACY — POST /api/admin/blocks (kept for BlockEditorModal)
 // ============================================================
 
-adminRouter.post('/blocks', (req: Request, res: Response) => {
+adminRouter.post('/blocks', requirePermission('modules.write'), (req: Request, res: Response) => {
   const { company_name, round_title, question_text, block_type, payload_content } = req.body;
   const db = loadDb();
 

@@ -24,15 +24,18 @@ import { progressRouter } from './routes/progress.routes';
 import { commentsRouter } from './routes/comments.routes';
 import { sandboxRouter } from './routes/sandbox.routes';
 import { unlockRouter } from './routes/unlock.routes';
+import { notificationsRouter } from './routes/notifications.routes';
 import { authRouter } from './routes/auth.routes';
-import { requireAdmin, optionalAuth, assertAuthConfigured } from './middleware/auth';
+import { requireAdmin, requireAuth, optionalAuth, assertAuthConfigured } from './middleware/auth';
 import { loadDb, saveDb, setMirrorHook } from './data/db';
+import { devicesRouter, adminDevicesRouter } from './routes/devices.routes';
 import { storage } from './store';
 
 import { runMigrations } from './db/migrate';
 
 dotenv.config();
 assertAuthConfigured();
+assertAdminSeedConfigured();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -89,6 +92,13 @@ app.use('/api/webhooks', webhooksRouter);
 app.use('/api/reports', reportsRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/admin', requireAdmin, adminRouter);
+// Mounted after the catch-all above so its own requirePermission guards apply.
+// It also inherits requireAdmin from that mount, which is intentional and
+// harmless: the coarse gate runs twice rather than depending on mount order.
+app.use('/api/admin/devices', adminDevicesRouter);
+// Public beacon + self-service endpoints. Not behind requireAdmin: the install
+// beacon must work before anyone has an account.
+app.use('/api/devices', devicesRouter);
 app.use('/api/gamification', gamificationRouter);
 // optionalAuth so guests can preview a plan; enrolment/progress routes add requireAuth themselves.
 app.use('/api/study-plan', optionalAuth, studyPlanRouter);
@@ -99,8 +109,12 @@ app.use('/api/courses', coursesRouter);
 app.use('/api/course-admin', courseAdminRouter);
 app.use('/api/progress', progressRouter);
 app.use('/api/comments', commentsRouter);
-app.use('/api/sandbox', sandboxRouter);
+// requireAuth: the handler compiles and executes nothing (it returns a fixed
+// honest-preview string), but it is still an unauthenticated POST that reflects
+// request bodies, so it requires a session like any other student action.
+app.use('/api/sandbox', requireAuth, sandboxRouter);
 app.use('/api/unlocks', unlockRouter);
+app.use('/api/notifications', notificationsRouter);
 
 // Health Check — honest
 app.get('/api/health', (req, res) => {
@@ -168,19 +182,54 @@ app.use((err: any, req: any, res: any, next: any) => {
   });
 });
 
+/**
+ * Seeds the bootstrap admin on first boot.
+ *
+ * Same fail-closed rule as `resolveJwtSecret()` in `middleware/auth.ts`: a
+ * password literal in source is not a password. This function used to carry one,
+ * and only *warn* about it under `NODE_ENV=production` — but the warning fires
+ * after the account already exists, and on any deployment where NODE_ENV was
+ * unset the warning never fired at all. A credential predictable from a public
+ * repo is not a degraded mode, it is no access control, so the fallback is gone
+ * rather than escalated.
+ *
+ * The literal is deliberately not even named in a comment here: a known-password
+ * string sitting in source is greppable, quotable, and one careless copy-paste
+ * away from being reused. `scripts/security-unblock.test.ts` asserts against the
+ * behaviour instead, so no copy of it needs to live in this repository.
+ *
+ * In development the password is generated per boot and printed once. That costs
+ * a re-login on restart, which is the correct trade: a throwaway local admin is
+ * worth less than an admin password nobody can read off GitHub.
+ */
+function resolveBootstrapAdminPassword(): string {
+  const configured = (process.env.ADMIN_PASSWORD || '').trim();
+  if (configured) return configured;
+  if (process.env.NODE_ENV === 'production') return '';
+  return crypto.randomBytes(12).toString('base64url');
+}
+
+export function assertAdminSeedConfigured(): void {
+  if (resolveBootstrapAdminPassword()) return;
+  throw new Error(
+    'ADMIN_PASSWORD is not set. The bootstrap admin account cannot be created with a ' +
+      'predictable password. Generate one with: node -e "console.log(require(\'crypto\')' +
+      '.randomBytes(12).toString(\'base64url\'))" and put it in the environment. ' +
+      'Refusing to start.'
+  );
+}
+
 function ensureSeedData() {
   const db = loadDb();
   let changed = false;
 
-  // Seed admin from env (or dev default) — ephemeral convenience only
   const email = (process.env.ADMIN_EMAIL || 'admin@tieedu.in').toLowerCase().trim();
-  if (!(db.users || []).some((u: any) => u.role === 'admin' && u.email === email)) {
-    const password = process.env.ADMIN_PASSWORD || 'TieEduAdmin@2026';
-    if (!process.env.ADMIN_PASSWORD && process.env.NODE_ENV === 'production') {
-      console.warn('⚠️  [Auth] ADMIN_PASSWORD env missing — default admin password in use. Set it in production!');
-    }
+  let bootstrapAdmin = (db.users || []).find((u: any) => u.role === 'admin' && u.email === email);
+  if (!bootstrapAdmin) {
+    const password = resolveBootstrapAdminPassword();
+    const fromEnv = Boolean((process.env.ADMIN_PASSWORD || '').trim());
     db.users = db.users || [];
-    db.users.push({
+    bootstrapAdmin = {
       id: `user-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`,
       name: 'TieEdu Admin',
       email,
@@ -189,10 +238,42 @@ function ensureSeedData() {
       xp: 0,
       streak: 0,
       created_at: new Date().toISOString(),
-    });
-    console.log(`👑 [Auth] Admin account seeded: ${email} (${password.length > 12 ? 'custom password' : 'default password'})`);
+    };
+    db.users.push(bootstrapAdmin);
+    // Printed only when generated, and only in development — `assertAdminSeedConfigured`
+    // has already guaranteed this branch is unreachable under NODE_ENV=production.
+    console.log(
+      fromEnv
+        ? `👑 [Auth] Admin account seeded from ADMIN_PASSWORD: ${email}`
+        : `👑 [Auth] Admin account seeded with a generated dev password for ${email}: ${password}`
+    );
     changed = true;
   }
+
+  // The bootstrap admin keeps full access across this milestone by holding an
+  // explicit grant, not by holding the role bit.
+  //
+  // `resolveAuthority` deliberately gives an admin with no staff row *no*
+  // permissions, so without this line an existing deployment would lock its own
+  // admin out on upgrade. It runs on every boot rather than only when the user is
+  // first created, which is what makes that safe: the user-already-exists case is
+  // the common one on a live database, and it is exactly the case that would
+  // otherwise have nothing to run.
+  db.staff = db.staff || [];
+  if (!db.staff.some((s: any) => s.user_id === bootstrapAdmin.id)) {
+    db.staff.push({
+      id: `staff-${crypto.randomBytes(6).toString('hex')}`,
+      user_id: bootstrapAdmin.id,
+      role: 'super_admin',
+      permissions: [],
+      status: 'active',
+      created_by: null,
+      created_at: new Date().toISOString(),
+    });
+    console.log(`👑 [RBAC] super_admin grant seeded for bootstrap admin: ${email}`);
+    changed = true;
+  }
+
   if (changed) saveDb(db);
 }
 

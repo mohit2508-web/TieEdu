@@ -7,13 +7,17 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test": "npm run test:unit && npm run test:courses && npm run test:certs && npm run test:certhttp && npm run test:certadmin && npm run test:jwt && npm run test:catalog && npm run test:ccontent && npm run test:pack && npm run test:repair && npm run test:api && npm run test:posters && npm run test:data && npm run test:smoke",
+    "test": "npm run test:unit && npm run test:courses && npm run test:certs && npm run test:certhttp && npm run test:certadmin && npm run test:jwt && npm run test:security && npm run test:rbac && npm run test:guards && npm run test:catalog && npm run test:ccontent && npm run test:pack && npm run test:repair && npm run test:api && npm run test:posters && npm run test:data && npm run test:smoke",
+    "test:m1": "tsx --test scripts/verify-m1-guards.live.ts",
     "test:unit": "ts-node --transpile-only scripts/study-plan.test.ts",
     "test:courses": "ts-node --transpile-only scripts/courses-lib.test.ts",
     "test:certs": "ts-node --transpile-only scripts/certificate-keys.test.ts",
     "test:certhttp": "ts-node --transpile-only scripts/certificate-http.test.ts",
     "test:certadmin": "ts-node --transpile-only scripts/certificate-issue-guard.test.ts",
     "test:jwt": "ts-node --transpile-only scripts/jwt-secret.test.ts",
+    "test:security": "ts-node --transpile-only scripts/security-unblock.test.ts",
+    "test:rbac": "ts-node --transpile-only scripts/rbac-devices.test.ts",
+    "test:guards": "ts-node --transpile-only scripts/verify-guards.live.ts",
     "test:catalog": "ts-node --transpile-only scripts/catalog.test.ts",
     "test:ccontent": "ts-node --transpile-only scripts/c-course.test.ts && ts-node --transpile-only scripts/python-course.test.ts",
     "test:pack": "ts-node --transpile-only scripts/pack-content.test.ts",
@@ -36,7 +40,8 @@
     "pdf-lib": "^1.17.1",
     "pg": "^8.12.0",
     "qrcode": "^1.5.4",
-    "razorpay": "^2.9.4"
+    "razorpay": "^2.9.4",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
@@ -48,6 +53,7 @@
     "@types/node": "^20.16.5",
     "@types/pg": "^8.11.8",
     "@types/qrcode": "^1.5.5",
+    "@types/web-push": "^3.6.4",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.6.2"
   }

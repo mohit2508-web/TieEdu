@@ -15,6 +15,11 @@
  */
 process.env.NODE_ENV = 'production';
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'certificate-http-test-jwt-secret';
+// Required because this harness sets NODE_ENV=production, and the server refuses
+// to boot without one — the bootstrap admin has no predictable fallback any more.
+// Nothing signs in with it here; the assertion just has to be satisfied to import
+// `server.ts` at all.
+process.env.ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'certificate-http-test-admin-pw';
 // An empty string rather than a delete: dotenv only fills variables that are
 // absent, so this survives the .env sitting in this directory.
 process.env.CERT_SIGNING_PRIVATE_KEY = '';

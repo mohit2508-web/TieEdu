@@ -95,6 +95,178 @@ export interface User {
 }
 
 // ============================================================================
+// INSTALL REGISTRY
+// One row per *install*, not per user, and never per browser tab.
+//
+// A visitor can install the PWA long before they sign in, so this cannot be keyed
+// on `user_id`: `user_id` is null until the install is claimed at login, and only
+// then is it attached. Counting installs is therefore possible for anonymous
+// traffic, which is the number that actually matters for a PWA — nobody is
+// signed in when they decide to install.
+//
+// `install_surface` is what keeps the counts honest. A browser tab is recorded as
+// `'browser_tab'` and is never an install; only a row that has transitioned to
+// `'pwa'` counts towards "installed". Mixing the two is how a dashboard ends up
+// reporting 40,000 installs when 400 people tapped the button.
+// ============================================================================
+
+/** Derived from the UA plus `display-mode: standalone`. */
+export type DevicePlatform = 'android' | 'ios' | 'windows' | 'macos' | 'linux' | 'other';
+
+export type InstallSurface = 'pwa' | 'browser_tab';
+
+/**
+ * How the install happened.
+ *
+ * `auto_prompt` is the only one with a trustworthy funnel denominator, because
+ * only Chromium fires `beforeinstallprompt`. iOS and desktop installs are always
+ * manual, which is why the admin console reports them as counts and never as a
+ * conversion rate.
+ */
+export type InstallKind =
+  | 'auto_prompt'
+  | 'manual_home_screen'
+  | 'ios_home_screen'
+  | 'manual_desktop';
+
+/** Captured once, on the first hit that carried the params, and never rewritten. */
+export interface FirstTouch {
+  source: string | null;
+  medium: string | null;
+  campaign: string | null;
+  ts: string;
+}
+
+export interface Device {
+  /** Stable client-generated install id. The identity of a row. */
+  id: string;
+  user_id: string | null;
+  platform: DevicePlatform;
+  install_surface: InstallSurface;
+  /** From `manifest.json`'s version. One release channel: PWA-only. */
+  app_version: string;
+  install_kind: InstallKind | null;
+  os: string | null;
+  os_version: string | null;
+  browser: string | null;
+  user_agent: string | null;
+  locale: string | null;
+  timezone: string | null;
+  screen: string | null;
+  /**
+   * Salted hash, never the raw address. Enough to bucket a user for abuse
+   * mitigation without turning the install table into a location log.
+   */
+  ip_hash: string | null;
+  first_seen_at: string;
+  last_seen_at: string;
+  last_active_at: string;
+  /** An admin killed this install: no push, no sessions. */
+  is_blocked: boolean;
+  pwa_prompt_shown: number;
+  pwa_prompt_dismissed: number;
+  pwa_prompt_accepted: number;
+  first_touch: FirstTouch | null;
+  telemetry_enabled: boolean;
+}
+
+/**
+ * One row per push endpoint, not per user: three installs means three
+ * subscriptions, and a user who removes the app from one phone must not lose
+ * notifications on another.
+ */
+export interface PushSubscription {
+  id: string;
+  user_id: string | null;
+  device_id: string;
+  provider: 'vapid';
+  endpoint: string;
+  keys_json: { p256dh: string; auth: string };
+  created_at: string;
+  last_success_at: string | null;
+  failure_count: number;
+  disabled_at: string | null;
+  disable_reason: string | null;
+}
+
+export type NotificationChannel = 'inapp' | 'push';
+
+/**
+ * The server is authoritative. The client only renders the opt-in UI — a
+ * preference honoured from local state is a preference the user can lose by
+ * clearing site data.
+ */
+export interface NotificationPreference {
+  user_id: string;
+  channels: Record<NotificationChannel, boolean>;
+  /** Local wall-clock, e.g. { start: '22:00', end: '07:00', tz: 'Asia/Kolkata' }. */
+  quiet_hours: { start: string; end: string; tz: string } | null;
+  topics: Record<string, boolean>;
+  /** Caps *non-critical* pushes only. Critical safety notices are exempt. */
+  daily_push_cap: number;
+  updated_at: string;
+}
+
+export type ReleaseStatus =
+  | 'draft'
+  | 'scheduled'
+  | 'rolling'
+  | 'live'
+  | 'paused'
+  | 'rolled_back';
+
+/**
+ * What is deployed, and the floor everyone must be on.
+ *
+ * There is no artefact here: a PWA-only release *is* a deploy plus a manifest
+ * version bump plus a service-worker cache-version bump. The record exists
+ * because "which build is live" and "who is still below minimum" need an
+ * answer, and neither can be derived from a git tag.
+ */
+export interface Release {
+  id: string;
+  version: string;
+  /** Bumped to evict stale service workers. Mandatory with every release. */
+  sw_cache_version: number;
+  notes: string;
+  /** Blocking update for installs below `min_supported_version`. */
+  min_supported_version: string | null;
+  status: ReleaseStatus;
+  created_by: string | null;
+  created_at: string;
+  published_at: string | null;
+}
+
+/**
+ * A staff grant: which admin surfaces this account may touch.
+ *
+ * `user.role === 'admin'` stays the coarse gate that the existing
+ * `requireAdmin` checks. This is the fine-grained authority underneath it, so
+ * "full admin access" stops being all-or-nothing against one seeded account.
+ */
+export interface Staff {
+  id: string;
+  user_id: string;
+  role: StaffRole;
+  /** Explicit list. `'*'` means every permission, used only by super_admin. */
+  permissions: string[];
+  status: 'active' | 'suspended';
+  created_by: string | null;
+  created_at: string;
+}
+
+export type StaffRole =
+  | 'super_admin'
+  | 'admin'
+  | 'finance'
+  | 'content_editor'
+  | 'moderator'
+  | 'instructor'
+  | 'support'
+  | 'analyst'
+  | 'viewer';
+
+// ============================================================================
 // COURSES ENGINE
 // A real, admin-authored learning path: Course -> Module -> Lesson.
 // Every lesson carries its own content blocks, an optional video and an
@@ -1380,6 +1552,15 @@ const initialDbData = {
   study_plan_enrollments: [],
   study_plan_progress: [],
   audit: [],
+  // Install registry. Seeded EMPTY like every other admin-authored collection:
+  // an install is a real person's real browser, so a placeholder row would be a
+  // fabricated claim about a device that does not exist. The bootstrap admin is
+  // the one exception and it is a `staff` row, not a device row.
+  devices: [],
+  push_subscriptions: [],
+  notification_preferences: [],
+  releases: [],
+  staff: [],
   settings: {
     platform_name: 'TieEdu',
     support_email: 'support@tieedu.in',
@@ -1426,6 +1607,28 @@ export function loadDb() {
       if (!Array.isArray(data.study_plan_enrollments)) { data.study_plan_enrollments = []; upgraded = true; }
       if (!Array.isArray(data.study_plan_progress)) { data.study_plan_progress = []; upgraded = true; }
       if (!Array.isArray(data.posters)) { data.posters = []; upgraded = true; }
+      // Install registry + RBAC. Auto-created rather than left undefined so that
+      // every existing install picks them up on its next boot without a migration
+      // step — and so a deployment that predates this code cannot crash on
+      // `db.devices.length`.
+      if (!Array.isArray(data.devices)) { data.devices = []; upgraded = true; }
+      if (!Array.isArray(data.push_subscriptions)) { data.push_subscriptions = []; upgraded = true; }
+      if (!Array.isArray(data.notification_preferences)) { data.notification_preferences = []; upgraded = true; }
+      if (!Array.isArray(data.releases)) { data.releases = []; upgraded = true; }
+      if (!Array.isArray(data.staff)) { data.staff = []; upgraded = true; }
+      // Per-record defaults for rows written before these fields existed. An old
+      // device row with no `is_blocked` is `undefined`, which is falsy and would
+      // silently read as "not blocked" — correct by accident, but only by
+      // accident. Same reasoning as the `signing_key_id` backfill above: normalise
+      // to the explicit value so later code can rely on the field being present.
+      if (Array.isArray(data.devices) && data.devices.some((d: any) => d && typeof d.is_blocked !== 'boolean')) {
+        for (const d of data.devices as any[]) {
+          if (d && typeof d.is_blocked !== 'boolean') d.is_blocked = false;
+          if (d && typeof d.telemetry_enabled !== 'boolean') d.telemetry_enabled = true;
+          if (d && typeof d.install_surface !== 'string') d.install_surface = 'pwa';
+        }
+        upgraded = true;
+      }
       // Starter roadmap, installed once. The seeded_at stamp is what keeps this
       // from resurrecting a template an admin deliberately deleted: without it,
       // an emptied collection would be re-seeded on every restart, exactly the

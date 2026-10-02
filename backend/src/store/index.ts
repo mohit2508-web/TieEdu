@@ -121,12 +121,15 @@ export const storage = {
       mirrorHealthy = false;
       return;
     }
-    const { pool } = await import('../db/client');
-    pgStore.bindPool(pool);
+    // Probe BEFORE binding. The pool is constructed lazily in `db/client.ts`, so
+    // binding first would hand `pgStore` a null pool and then wire up a real one
+    // behind it — the store would hold a dead client for the life of the process.
     if (!(await isDbReachable(5000))) {
       mirrorHealthy = false;
       return;
     }
+    const { getPool } = await import('../db/client');
+    pgStore.bindPool(getPool());
     try {
       await ensureAppStateTable();
       mirrorHealthy = true;

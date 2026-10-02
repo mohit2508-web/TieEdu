@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
 import { loadDb, User } from '../data/db';
+import { ResolvedAuthority, resolveAuthority, can, isPermission, PERMISSION_GROUPS } from '../lib/rbac';
 
 // Imports are evaluated before any statement in the importing module, so this
 // file used to read process.env.JWT_SECRET before server.ts had a chance to call
@@ -62,6 +63,8 @@ declare global {
     interface Request {
       user?: User;
       userId?: string;
+      /** Present once `requirePermission`/`requireAdmin` has resolved authority. */
+      authority?: ResolvedAuthority;
     }
   }
 }
@@ -115,7 +118,118 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
 export function requireAdmin(req: Request, res: Response, next: NextFunction) {
   requireAuth(req, res, () => {
     if (req.user?.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
+    // Resolve the fine-grained authority while the user is already loaded. Every
+    // permission check needs it, and `requireAuth` reads the whole ledger on each
+    // request anyway, so this costs nothing extra.
+    req.authority = resolveAuthority(req.user, loadDb().staff || []);
     next();
+  });
+}
+
+/**
+ * Requires one exact permission, on top of the admin gate.
+ *
+ * The permission is validated at module load rather than per request: a typo in a
+ * route mount is a programming error, and failing at boot names it. A permission
+ * check that silently returns 403 forever because of a misspelling is the worst
+ * version of this feature — it looks like a permissions problem and gets debugged
+ * as one.
+ */
+export function requirePermission(permission: string) {
+  assertKnownPermission(permission);
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!req.authority) return res.status(403).json({ error: 'Admin access required' });
+    if (!can(req.authority, permission)) return denied(res, permission);
+    next();
+  };
+}
+
+/** Requires any one of several permissions — "may publish OR may send". */
+export function requireAnyPermission(permissions: string[]) {
+  for (const p of permissions) assertKnownPermission(p);
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!req.authority) return res.status(403).json({ error: 'Admin access required' });
+    if (permissions.some((p) => can(req.authority as ResolvedAuthority, p))) return next();
+    return denied(res, permissions.join(' | '));
+  };
+}
+
+/**
+ * Allows the owner of the resource, or anyone holding the permission.
+ *
+ * The self-check is on `req.userId` matching the route param, never on a
+ * user-supplied body field — otherwise a caller names the victim in the payload
+ * and passes the ownership test.
+ */
+export function requireSelfOrPermission(permission: string, param = 'id') {
+  assertKnownPermission(permission);
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!req.authority) return res.status(403).json({ error: 'Admin access required' });
+    if (req.userId && req.params[param] && req.params[param] === req.userId) return next();
+    if (!can(req.authority, permission)) return denied(res, permission);
+    next();
+  };
+}
+
+/**
+ * Gates the actions whose blast radius is every user at once.
+ *
+ * Beyond the permission, this enforces a cooldown keyed on the action, so an
+ * operator who sends a broadcast to everyone by accident cannot immediately send a
+ * second one while working out what happened. It is deliberately *not* a two-person
+ * approval: that needs a pending-approval queue and a second identity to be worth
+ * anything, and until there is more than one admin it is ceremony. The typed
+ * confirmation belongs in the UI, where the human actually is.
+ */
+const DANGER_COOLDOWN_MS = 60_000;
+const lastDangerUse: Record<string, number> = {};
+
+export function requireDanger(permission: string, action: string) {
+  assertKnownPermission(permission);
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!req.authority) return res.status(403).json({ error: 'Admin access required' });
+    if (!can(req.authority, permission)) return denied(res, permission);
+
+    const now = Date.now();
+    const last = lastDangerUse[action] || 0;
+    if (now - last < DANGER_COOLDOWN_MS) {
+      const waitS = Math.ceil((DANGER_COOLDOWN_MS - (now - last)) / 1000);
+      return res.status(429).json({
+        error: `Too soon after the last "${action}". Wait ${waitS}s and confirm again.`,
+        cooldown_seconds: waitS,
+      });
+    }
+    lastDangerUse[action] = now;
+    next();
+  };
+}
+
+/** Exposed for the cooldown reset in tests, which would otherwise be order-dependent. */
+export function __resetDangerCooldown(): void {
+  for (const k of Object.keys(lastDangerUse)) delete lastDangerUse[k];
+}
+
+function assertKnownPermission(permission: string): void {
+  if (isPermission(permission)) return;
+  const known = Object.values(PERMISSION_GROUPS).flat().join(', ');
+  throw new Error(
+    `Unknown permission "${permission}" used in a route guard. It would deny every request ` +
+      `forever and look like a permissions problem. Known permissions: ${known}`
+  );
+}
+
+/**
+ * The 403 body names the missing permission.
+ *
+ * An admin hitting a locked surface needs to know *which* grant to ask for, and
+ * the permission catalogue is not a secret — it is a list of buttons in the app
+ * they are already logged into. Returning a bare "forbidden" turns a five-second
+ * fix into a support ticket.
+ */
+function denied(res: Response, permission: string) {
+  return res.status(403).json({
+    error: 'You do not have permission to do that',
+    required_permission: permission,
   });
 }
 

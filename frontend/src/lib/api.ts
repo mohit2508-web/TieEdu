@@ -920,14 +920,19 @@ export const verifyPaymentApi = async (orderId: string) =>
 export const rejectPaymentApi = async (orderId: string, reason?: string) =>
   adminFetch(`/admin/payments/${orderId}/reject`, { method: 'POST', body: JSON.stringify({ reason: reason || '' }) });
 
+// Both analytics endpoints are admin-only on the server (`analytics.routes.ts`
+// mounts `requireAdmin` router-wide), so they must go through `apiFetch` rather
+// than bare `fetch`: it attaches the bearer token and performs the single-flight
+// 401 -> refresh -> retry. A bare fetch sent no token at all, which is how these
+// two stayed reachable by anonymous callers in the first place.
 export const fetchAnalyticsApi = async (): Promise<AnalyticsSnapshot> => {
-  const res = await fetch(`${API_BASE_URL}/analytics`);
+  const res = await apiFetch(`${API_BASE_URL}/analytics`);
   if (!res.ok) throw new Error('Analytics feed unavailable');
   return await res.json();
 };
 
 export const fetchRevenueSeriesApi = async (): Promise<{ status: string; series: RevenuePoint[] }> => {
-  const res = await fetch(`${API_BASE_URL}/analytics/revenue`);
+  const res = await apiFetch(`${API_BASE_URL}/analytics/revenue`);
   if (!res.ok) throw new Error('Revenue feed unavailable');
   return await res.json();
 };
@@ -954,3 +959,6 @@ export const fetchCampusCohortApi = async (): Promise<any> => {
   }
   return await res.json();
 };
+
+const apiClient = { get: (url:any,config?:any)=>apiFetch(url,{...config,method:'GET'}), post:(url:any,body?:any,config?:any)=>apiFetch(url,{...config,method:'POST',body:typeof body==='string'?body:body?JSON.stringify(body):undefined}), put:(url:any,body?:any,config?:any)=>apiFetch(url,{...config,method:'PUT',body:typeof body==='string'?body:body?JSON.stringify(body):undefined}), delete:(url:any,config?:any)=>apiFetch(url,{...config,method:'DELETE'}) };
+export default apiClient;
