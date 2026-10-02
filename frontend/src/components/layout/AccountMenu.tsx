@@ -75,29 +75,15 @@ export const AccountMenu: React.FC<{ onOpenChange?: (open: boolean) => void }> =
      * logo out of a 360px row, and the drawer carries both routes for that width.
      */
     return (
-      <>
-        {/* Always visible, not `md:`-only. They are the only way to reach
-            `/signup` from a phone - the drawer offers "Sign in" alone - and the
-            signed-out bell is gone, so the row has room: ~262px against ~336px
-            of usable width at 360px.
-            Padding and size step up at `sm`; the compact pair is what makes the
-            320px case fit too (~242px against ~296px).
-            `!hidden` is not needed here - nothing hides these - but `.btn` does
-            set `display: inline-flex` unlayered, which is why the
-            `hidden` + `.btn` pairing is worth the cascade test in anti-web. */}
-        <Link
-          href="/login"
-          className="btn btn-primary px-2.5 text-[12px] focus-ring sm:px-4 sm:text-[13px]"
-        >
-          Sign in
-        </Link>
-        <Link
-          href="/signup"
-          className="btn btn-ghost px-2.5 text-[12px] focus-ring sm:px-3 sm:text-[13px]"
-        >
-          Sign up
-        </Link>
-      </>
+      /*
+       * One button, not a pair. The phone header row has a fixed budget - logo,
+       * bell, leaderboard, this and the hamburger is ~280px against ~296px of
+       * usable width at 320px - and "Sign in" is the affordance that matters.
+       * "Sign up" is one tap further, in the drawer.
+       */
+      <Link href="/login" className="btn btn-primary px-3 text-[12.5px] focus-ring sm:px-4 sm:text-[13px]">
+        Sign in
+      </Link>
     );
   }
 

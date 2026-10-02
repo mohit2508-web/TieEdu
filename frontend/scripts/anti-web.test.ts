@@ -576,31 +576,76 @@ check('a signed-out phone can reach both auth routes', () => {
    * Regression guard. Sign in and Sign up were once `md:inline-flex` on the
    * theory that the drawer covered small screens - but the drawer only offered
    * "Sign in", so the effect was that `/signup` had no link at all below `md`.
-   * The routes exist (`src/pages/login.tsx`, `src/pages/signup.tsx`), they were
-   * simply unreachable.
+   *
+   * The header now carries a single "Sign in" button; "Sign up" lives in the
+   * drawer, which is reachable from every phone width via the hamburger.
    */
   ok(fs.existsSync(path.join(ROOT, 'src/pages/signup.tsx')), '/signup page must exist');
   ok(fs.existsSync(path.join(ROOT, 'src/pages/login.tsx')), '/login page must exist');
 
   const menu = read(path.join(ROOT, 'src/components/layout/AccountMenu.tsx'));
   ok(/href="\/login"/.test(menu), 'the header must offer a sign-in link');
-  ok(/href="\/signup"/.test(menu), 'the header must offer a sign-up link');
-  // Not `md:`-gated, or phones lose them again.
+  // One button only: the phone header row has no room for a pair.
   ok(
-    !/href="\/signup"[^}]*md:inline-flex/.test(menu) && !/!hidden[^"]*href="\/signup"/.test(menu),
-    'the sign-up link must not be hidden below md'
+    !/href="\/signup"/.test(menu),
+    'the header must not carry a sign-up link as well - the phone row cannot fit both'
   );
 
   const drawer = read(path.join(ROOT, 'src/components/layout/MobileNavDrawer.tsx'));
-  ok(/href="\/login"/.test(drawer), 'the drawer must still offer sign in');
-  ok(/href="\/signup"/.test(drawer), 'the drawer must offer sign up as well');
+  ok(/href="\/login"/.test(drawer), 'the drawer must offer sign in');
+  ok(/href="\/signup"/.test(drawer), 'the drawer must offer sign up');
 
-  // And the header row has to actually fit a narrow phone. The signed-out bell
-  // is what buys the room; without it the row is ~350px against 336px.
+  // The bell is part of the agreed header inventory (logo, bell, leaderboard,
+  // profile/sign-in), so it must not be gated behind auth.
   const header = read(path.join(ROOT, 'src/components/layout/Header.tsx'));
   ok(
-    /\{user && <NotificationBell \/>\}/.test(header),
-    'the bell must not render for a signed-out visitor - it frees the width the auth buttons need'
+    /<NotificationBell \/>/.test(header) && !/user && <NotificationBell/.test(header),
+    'the notification bell belongs in the header whether or not anyone is signed in'
+  );
+});
+
+check('the phone header carries exactly the agreed inventory', () => {
+  /*
+   * Top bar: logo, bell, leaderboard, profile (or Sign in).
+   * Bottom bar: vault, courses, study plan, cart, search.
+   *
+   * Search and cart belong to the bottom bar on a phone, so they must be absent
+   * from the top bar there - and `!` is load-bearing, because `.nav-search` and
+   * `.icon-btn` are unlayered and beat a bare `hidden`. See the cascade check.
+   */
+  const header = read(path.join(ROOT, 'src/components/layout/Header.tsx'));
+  ok(/nav-search !hidden lg:flex/.test(header), 'top-bar search must be mobile-hidden');
+  ok(/icon-btn !hidden lg:inline-flex/.test(header), 'top-bar cart must be mobile-hidden');
+  ok(/<NotificationBell \/>/.test(header), 'the bell belongs in the top bar');
+  ok(/chip chip--icon/.test(header), 'the leaderboard icon belongs in the top bar');
+
+  /*
+   * Bottom bar: three standing slots plus the action slots.
+   *
+   * `MOBILE_TABS` is derived (`ALL_NAV_ITEMS.filter(i => i.tab)`), so the ids
+   * cannot be read off it as a literal. What matters is what the bar actually
+   * renders, which is `MOBILE_TABS.slice(0, 3)` then every `MOBILE_TAB_ACTIONS`
+   * entry - so the count is checked by counting, and the action list by parsing
+   * the one literal in the file.
+   */
+  const nav = read(path.join(ROOT, 'src/lib/navConfig.ts'));
+  const actions = nav.match(/MOBILE_TAB_ACTIONS[^=]*=\s*\[([^\]]*)\]/);
+  ok(actions, 'MOBILE_TAB_ACTIONS must be a literal this test can read');
+  for (const id of ['search', 'cart']) {
+    ok(new RegExp(`'${id}'`).test(actions![1]), `the tab bar must offer ${id} on a phone`);
+  }
+  ok(
+    (actions![1].match(/'/g) ?? []).length === 4,
+    'the action list must be exactly search + cart - nothing else fits five slots in 320px'
+  );
+
+  // The three standing slots, in order, come from the derived tab list.
+  const bar = read(path.join(ROOT, 'src/components/layout/MobileTabBar.tsx'));
+  ok(/MOBILE_TABS\.slice\(0,\s*3\)/.test(bar), 'the bar must render the first three tab slots');
+  ok(/MOBILE_TAB_ACTIONS\.map/.test(bar), 'the bar must render every action slot');
+  ok(
+    /slots\.map/.test(bar) && /MOBILE_TAB_ACTIONS\.map/.test(bar),
+    'both slot kinds must be rendered, or one of them is invisible'
   );
 });
 

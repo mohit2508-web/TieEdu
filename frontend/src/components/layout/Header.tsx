@@ -415,15 +415,7 @@ export const Header: React.FC = () => {
             </span>
           </button>
 
-          {/*
-            Only when signed in. A signed-out visitor has no notifications, so
-            the bell was rendering as a permanently empty 40px control in the one
-            row that has no room to spare: at 360px, logo + Sign in + Sign up +
-            bell + hamburger is ~350px against 336px of usable width, and at 320px
-            it overflowed. Dropping it when there is nobody to notify frees
-            exactly the space the two auth buttons need.
-          */}
-          {user && <NotificationBell />}
+          <NotificationBell />
 
           <AccountMenu onOpenChange={setAccountOpen} />
 
