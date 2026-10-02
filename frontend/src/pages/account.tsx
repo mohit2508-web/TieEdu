@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
 import { RequireAuth } from '@/components/auth/RequireAuth';
+import NotificationSettings from '@/components/account/NotificationSettings';
 import { useAuth } from '@/context/AuthContext';
 import {
   fetchMyAccount, fetchMyReports, fetchCompanies, getInterviewCourseProgressApi,
@@ -541,6 +542,9 @@ const AccountPageContent: React.FC = () => {
               {/* 06 — Settings */}
               <section>
                 <p className="eyebrow">#06 — Settings</p>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+                  <NotificationSettings />
+                </div>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   <div className="vault-card p-6">
                     <h3 className="text-[15px] font-extrabold text-[#10151C] flex items-center gap-2">

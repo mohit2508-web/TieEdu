@@ -182,3 +182,8 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(cacheFirstStatic(request));
   }
 });
+
+
+// Push handlers live in a separate file so a push change does not
+// invalidate the caching service worker cache.
+importScripts('/sw-push.js');
