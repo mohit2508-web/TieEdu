@@ -333,6 +333,34 @@ body {
   transition: border-color var(--motion-fast) var(--ease-out), color var(--motion-fast) var(--ease-out), background var(--motion-fast) var(--ease-out);
 }
 
+/*
+ * Icon-only chip.
+ *
+ * A `.chip` holding nothing but a glyph is `4px 12px` around a 15px icon, so it
+ * comes out ~25px tall while the `.icon-btn` beside it is 40px — the row would
+ * visibly disagree with itself. This pins the square to 40px while the label is
+ * hidden, then hands the pill shape back at `xl` where the label returns.
+ *
+ * A modifier rather than utilities on the element: `.chip` is unlayered (this
+ * file uses no `@layer components`), and unlayered rules beat Tailwind's
+ * `utilities` layer, so a `className="chip p-0 h-10"` override would silently
+ * do nothing.
+ */
+.chip--icon {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  justify-content: center;
+}
+@media (min-width: 1280px) {
+  .chip--icon {
+    width: auto;
+    height: auto;
+    padding: 4px 12px;
+    justify-content: flex-start;
+  }
+}
+
 /* ============================================
    NAVIGATION CHROME
    Desktop command bar, mobile drawer, bottom tab bar and the overlays

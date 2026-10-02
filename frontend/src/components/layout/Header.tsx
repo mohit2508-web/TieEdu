@@ -360,15 +360,23 @@ export const Header: React.FC = () => {
             </kbd>
           </button>
 
+          {/*
+            The leaderboard used to be `hidden xl:inline-flex`, which meant a phone
+            had no way to reach it at all — the one thing in the header that was
+            missing by being *too* hidden rather than by overflowing. It is now an
+            icon in every phone header and grows its label back at `xl`; the
+            square 40px box comes from `.chip--icon` so it lines up with the bell
+            and the account button.
+          */}
           <button
             type="button"
             onClick={() => toggleOverlay('leaderboard')}
             aria-label="Leaderboard"
             title="Placement season XP rankings"
-            className="chip hidden xl:inline-flex"
+            className="chip chip--icon"
           >
-            <Flame size={15} className="text-[var(--amber-deep)]" strokeWidth={2.2} aria-hidden />
-            <span className="font-bold">Leaderboard</span>
+            <Flame size={15} className="shrink-0 text-[var(--amber-deep)]" strokeWidth={2.2} aria-hidden />
+            <span className="hidden font-bold xl:inline">Leaderboard</span>
           </button>
 
           {/*

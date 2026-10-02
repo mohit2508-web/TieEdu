@@ -133,7 +133,15 @@ export const MobileNavDrawer: React.FC = () => {
           <section className="mb-5">
             <h2 className="nav-group-label">Quick actions</h2>
             <div className="flex flex-col gap-0.5">
-              {(['search', 'cart', 'leaderboard'] as const).map((id) => {
+              {/*
+                `leaderboard` was dropped from this list when it became an icon in
+                every phone header: the drawer is only reachable below `md`, where
+                the header icon already is, so keeping it here put one action in
+                both places. Same one-surface-per-action rule that took search out
+                of the tab bar. The overlay itself is untouched, so the header icon
+                and the desktop chip open the same thing.
+              */}
+              {(['search', 'cart'] as const).map((id) => {
                 const action = NAV_ACTIONS[id];
                 const Icon = action.icon;
                 return (

@@ -386,8 +386,9 @@ export const AdminCertificatesTab: React.FC = () => {
         <p className="text-[12.5px] text-[#6B7280] leading-relaxed flex gap-2.5">
           <ShieldCheck className="w-4 h-4 text-[#0284C7] shrink-0 mt-0.5" />
           <span>
-            Each certificate carries an HMAC-SHA256 signature computed over its claims at the moment it is issued.
-            Revoking flips the stored status; it does not and cannot re-sign the document. Anyone holding the PDF can
+            Each certificate carries an Ed25519 signature computed over its claims at the moment it is issued,
+            with a private key that never leaves the server — verifiers check it against the published public key
+            only. Revoking flips the stored status; it does not and cannot re-sign the document. Anyone holding the PDF can
             still run the signature check, and the verification page will show the certificate as revoked with your
             reason attached — which is the honest outcome. Restoring puts it back to <em>genuine</em>.
           </span>

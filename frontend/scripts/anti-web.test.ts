@@ -570,6 +570,53 @@ check('search appears once in the phone UI, not three times', () => {
   ok(/value=\{searchQuery\}/.test(home), 'the grid filter must stay wired to the query');
 });
 
+check('the phone header carries the logo, bell, account and a bare leaderboard icon', () => {
+  const header = read(path.join(ROOT, 'src/components/layout/Header.tsx'));
+  const nav = read(path.join(ROOT, 'src/lib/navConfig.ts'));
+
+  // No search field and no cart in a phone header. Both were already moved off
+  // mobile; this pins that they cannot creep back in beside the tab bar.
+  ok(/nav-search hidden lg:flex/.test(header), 'the search field must stay desktop-only');
+  ok(/icon-btn hidden lg:inline-flex/.test(header), 'the cart must stay desktop-only');
+
+  // The leaderboard was `hidden xl:inline-flex`, i.e. absent from every phone.
+  // It is now an icon everywhere and only grows its label at `xl`.
+  // Scoped to `className="..."` on purpose: the prose above the button explains
+  // the old class by name, and a bare substring match would read that comment as
+  // the code and pass forever.
+  ok(
+    !/className="[^"]*\bhidden xl:inline-flex/.test(header),
+    'no header control may be hidden until xl any more'
+  );
+  ok(/chip chip--icon/.test(header), 'the leaderboard must use the icon-sized chip');
+  const lb = header.match(/<button[\s\S]{0,300}?aria-label="Leaderboard"[\s\S]{0,300}?<\/button>/);
+  ok(lb, 'the leaderboard button must exist');
+  ok(
+    /<span className="hidden font-bold xl:inline">Leaderboard<\/span>/.test(lb![0]),
+    'the leaderboard label must only appear at xl, so a phone shows the icon alone'
+  );
+  ok(
+    /\.chip--icon/.test(read(path.join(ROOT, 'src/styles/globals.css'))),
+    '.chip--icon must exist, or the icon-only pill sits 25px tall next to 40px buttons'
+  );
+
+  // Identity and notifications stay, and the hamburger stays: it is the only way
+  // to the primary nav below `md`, where `<nav>` is hidden.
+  ok(/<NotificationBell/.test(header), 'the bell must be in the header');
+  ok(/<AccountMenu/.test(header), 'the account control must be in the header');
+  ok(/<MobileMenuButton/.test(header), 'the drawer button must survive - it is the mobile nav');
+  ok(/hidden items-center gap-0\.5 md:flex/.test(header), 'primary nav links stay desktop-only');
+
+  // One surface per action: the leaderboard moved into the header, so it must not
+  // also be in the drawer the header's hamburger opens.
+  const drawer = read(path.join(ROOT, 'src/components/layout/MobileNavDrawer.tsx'));
+  const quick = drawer.match(/\(\[([^\]]*)\] as const\)\.map/);
+  ok(quick, 'the drawer quick-action list must be readable');
+  ok(!/leaderboard/.test(quick![1]), 'the leaderboard must not be in the drawer as well');
+  ok(/'search'/.test(quick![1]), 'search must still be reachable from the drawer');
+  ok(!/^export const MOBILE_TAB_ACTIONS[^\n]*'leaderboard'/m.test(nav), 'the tab bar must not duplicate the icon');
+});
+
 check('the admin console shows who is signed in and their notifications', () => {
   const admin = read(path.join(ROOT, 'src/components/admin/AdminCmsView.tsx'));
   const account = read(path.join(ROOT, 'src/components/layout/AccountMenu.tsx'));

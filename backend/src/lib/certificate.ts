@@ -33,8 +33,27 @@
 import crypto from 'crypto';
 import QRCode from 'qrcode';
 import { PDFDocument, StandardFonts, rgb, degrees } from 'pdf-lib';
+import dotenv from 'dotenv';
 import { Certificate, Course, User } from '../data/db';
 import { orderedLessons } from './courses';
+
+// This module reads its key material and the public site URL at import time, and
+// it has to do that *after* the .env is loaded. `server.ts` cannot arrange it:
+// ES imports are evaluated before the importing module's body runs, so the
+// `dotenv.config()` on the next line of server.ts happens strictly later than
+// this file's top-level `readKeyMaterial()`. It used to work only by luck -
+// `middleware/auth.ts` also calls dotenv.config(), and the route files happen to
+// import auth before they import this module, so the environment happened to be
+// populated in time. Reorder one import, or require this module from a script
+// that has not loaded .env, and the key silently reads as empty: signing then
+// throws a bare "Failed to read private key" and every issue endpoint answers
+// 503 "Certificates are temporarily unavailable" on an install whose .env is
+// perfectly correct. The same applies to NEXT_PUBLIC_SITE_URL below.
+//
+// Loading here makes the order irrelevant, which is the same fix auth.ts needed
+// for JWT_SECRET. dotenv never overrides a variable that is already set, so this
+// cannot override a real environment - it only fills in what is absent.
+dotenv.config();
 
 // ---------------------------------------------------------------------------
 // Keys
@@ -177,18 +196,25 @@ function configError(message: string): Error {
  */
 export function assertSigningConfigured(): void {
   if (ACTIVE_KEY_ID && CERT_SIGNING_PRIVATE_KEY) return;
-  if (process.env.NODE_ENV === 'production') {
-    throw configError(
-      'Certificate signing is not configured. Generate an Ed25519 keypair and set ' +
-        'CERT_SIGNING_PRIVATE_KEY (base64 PKCS#8 DER) before issuing or verifying certificates in production. ' +
-        'Keep the public half too — it is what verifiers check against.'
+  // `test` keeps the old lenient behaviour: suites run without a key to assert
+  // that a signature check fails closed, which needs no key rather than a throw.
+  if (process.env.NODE_ENV === 'test') return;
+  if (process.env.NODE_ENV !== 'production') {
+    // eslint-disable-next-line no-console
+    console.warn(
+      '[certificates] CERT_SIGNING_PRIVATE_KEY is unset - no keypair loaded. ' +
+        'Certificates cannot be signed or verified until it is set.'
     );
   }
-  if (process.env.NODE_ENV === 'test') return;
-  // eslint-disable-next-line no-console
-  console.warn(
-    '[certificates] CERT_SIGNING_PRIVATE_KEY is unset — no keypair loaded. ' +
-      'Certificates cannot be signed or verified until it is set.'
+  // Thrown in every environment, not just production. Previously a missing key in
+  // development only warned and then fell through to `crypto.sign`, which threw
+  // a bare "Failed to read private key" with no mention of the variable to set -
+  // so an operator staring at a 503 had nothing to act on. Signing without a key
+  // is wrong everywhere; how loudly we refuse is a separate question.
+  throw configError(
+    'Certificate signing is not configured. Generate an Ed25519 keypair and set ' +
+      'CERT_SIGNING_PRIVATE_KEY (base64 PKCS#8 DER) before issuing or verifying certificates. ' +
+      'Keep the public half too - it is what verifiers check against.'
   );
 }
 

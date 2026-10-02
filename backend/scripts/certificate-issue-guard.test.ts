@@ -19,11 +19,15 @@
  *   - the throw really does carry 503/expose (the leak vector itself), so the
  *     guards below are load-bearing rather than decorative;
  *   - both issue routes guard the call, log with the request id, and return a
- *     body that does not narrate how the machine is configured.
+ *     body that does not narrate how the machine is configured;
+ *   - the signing key survives the module load order, which is what decides
+ *     whether any of the above is ever reached - see the last check.
  */
 import assert from 'assert';
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
+import { stubDotenv } from './dotenvStub';
 
 let pass = 0;
 let fail = 0;
@@ -48,15 +52,17 @@ function stripComments(src: string): string {
 
 /**
  * `certificate.ts` reads the key once at module load, so the "no key" case needs
- * a fresh copy of the module. It does not load dotenv itself, so deleting the
- * variable is enough - there is no side door for the real .env to sneak back in
- * through the way there is in `auth.ts`.
+ * a fresh copy of the module. It loads dotenv itself - it must, since `server.ts`
+ * cannot load .env before an imported module's body runs - so dotenv is stubbed
+ * out here: without it, deleting the variable would be undone by the developer's
+ * real `backend/.env` and the "unconfigured" phases would assert nothing.
  *
  * `assertSigningConfigured` reads NODE_ENV when it is *called*, not when the
  * module loads, so the callback runs while the environment is still overridden
  * and the restore cannot race the assertion.
  */
 function withCertificate<T>(env: Record<string, string | undefined>, fn: (mod: typeof import('../src/lib/certificate')) => T): T {
+  stubDotenv();
   const prev = {
     NODE_ENV: process.env.NODE_ENV,
     KEY: process.env.CERT_SIGNING_PRIVATE_KEY,
@@ -148,6 +154,69 @@ for (const [label, file] of [
     }
   });
 }
+
+// --- the key has to survive being read at import time -------------------------
+//
+// The failure this guards is silent and total: `certificate.ts` reads its key
+// while it is being imported, and `server.ts` calls `dotenv.config()` in its own
+// body - which ES import hoisting puts *after* every imported module has run. So
+// the module used to depend on some other module loading .env first, which
+// `middleware/auth.ts` happened to do. Reorder an import, or require this module
+// from a script, and CERT_SIGNING_PRIVATE_KEY reads as empty on an install whose
+// .env is perfectly correct: every issue then answers 503 "Certificates are
+// temporarily unavailable" and nothing in the response says why.
+//
+// Asserted the way it actually happens - .env on disk, nothing preloaded - by
+// running dotenv for real from a scratch directory. The stub installed by
+// `withCertificate` is lifted for the duration and put back afterwards.
+check('the key is loaded from .env even though the module reads it before server.ts can', () => {
+  const dotenvPath = require.resolve('dotenv');
+  const live = require.cache[dotenvPath];
+  delete require.cache[dotenvPath];
+  delete require.cache[CERT_PATH];
+
+  const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'tieedu-cert-env-'));
+  const key = require('crypto').generateKeyPairSync('ed25519').privateKey;
+  const priv = key.export({ type: 'pkcs8', format: 'der' }).toString('base64');
+  fs.writeFileSync(path.join(scratch, '.env'), `CERT_SIGNING_PRIVATE_KEY=${priv}\nNEXT_PUBLIC_SITE_URL=https://tieedu.test\n`);
+
+  const prevCwd = process.cwd();
+  const prevKey = process.env.CERT_SIGNING_PRIVATE_KEY;
+  const prevSite = process.env.NEXT_PUBLIC_SITE_URL;
+  delete process.env.CERT_SIGNING_PRIVATE_KEY;
+  delete process.env.NEXT_PUBLIC_SITE_URL;
+  try {
+    process.chdir(scratch);
+    const mod = require(CERT_PATH);
+    assert.strictEqual(mod.CERT_SIGNING_PRIVATE_KEY, priv, 'the .env key must be read at import');
+    assert.strictEqual(mod.SITE_URL, 'https://tieedu.test', 'the verification origin must come from .env too');
+    // And it must be a usable key, not merely a non-empty string.
+    const signed = mod.signCertificate({
+      serial: 'TIEEDU-2026-ENVLOAD1',
+      user_id: 'u-1',
+      recipient_email: 'learner@example.com',
+      recipient_name: 'Test Learner',
+      course_id: 'c-1',
+      course_title: 'Fundamentals',
+      issued_at: '2026-01-02T03:04:05.000Z',
+      lessons_completed: 10,
+      lessons_required: 10,
+      xp_at_issue: 500,
+    });
+    assert.ok(mod.ACTIVE_KEY_ID, 'a loaded key must publish a key id');
+    assert.strictEqual(signed.keyId, mod.ACTIVE_KEY_ID);
+  } finally {
+    process.chdir(prevCwd);
+    fs.rmSync(scratch, { recursive: true, force: true });
+    if (prevKey === undefined) delete process.env.CERT_SIGNING_PRIVATE_KEY;
+    else process.env.CERT_SIGNING_PRIVATE_KEY = prevKey;
+    if (prevSite === undefined) delete process.env.NEXT_PUBLIC_SITE_URL;
+    else process.env.NEXT_PUBLIC_SITE_URL = prevSite;
+    delete require.cache[CERT_PATH];
+    if (live) require.cache[dotenvPath] = live;
+    else stubDotenv();
+  }
+});
 
 console.log(`\ncertificate-issue-guard: ${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

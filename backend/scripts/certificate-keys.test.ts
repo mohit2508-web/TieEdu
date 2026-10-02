@@ -26,6 +26,7 @@ import crypto from 'crypto';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import { stubDotenv } from './dotenvStub';
 
 process.env.NODE_ENV = process.env.NODE_ENV || 'test';
 process.env.NEXT_PUBLIC_SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://tieedu.test';
@@ -54,8 +55,19 @@ function newKey(): { priv: string; pub: string; id: string } {
   };
 }
 
-/** Point the process at a key (plus optional retired keys) and re-import the module. */
+/**
+ * Point the process at a key (plus optional retired keys) and re-import the module.
+ *
+ * `certificate.ts` calls `dotenv.config()` itself - it has to, because it reads
+ * its key at import time and `server.ts` cannot load .env before that (see the
+ * note there). That makes this helper responsible for the whole environment:
+ * dotenv is stubbed out below so the developer's real `backend/.env` cannot
+ * refill the variables these phases are deliberately deleting. Without the stub,
+ * every "no key configured" phase on a machine that has a working .env would
+ * quietly load the real key and assert nothing.
+ */
 function loadWith(env: Record<string, string>): typeof import('../src/lib/certificate') {
+  stubDotenv();
   delete process.env.CERT_SIGNING_PRIVATE_KEY;
   delete process.env.CERT_SIGNING_PUBLIC_KEY;
   delete process.env.CERT_SIGNING_PRIVATE_KEY_FILE;
