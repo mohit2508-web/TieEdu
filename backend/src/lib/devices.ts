@@ -14,7 +14,8 @@
  */
 
 import crypto from 'crypto';
-import { loadDb, saveDb, Device, DevicePlatform, InstallSurface, InstallKind, FirstTouch } from '../data/db';
+import { Device, DevicePlatform, InstallSurface, InstallKind, FirstTouch } from '../data/db';
+import { readDevice, saveDevice } from '../store/devices';
 
 /** Refreshing `last_seen_at` more often than this buys nothing measurable. */
 export const SEEN_WRITE_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6h
@@ -115,10 +116,7 @@ export interface TrackResult {
  * pre-login beacon, and requiring a session here would mean an install that
  * happens before the user ever signs in is invisible.
  */
-export function trackDevice(input: TrackInput, ip: string | null, userAgent: string | null): TrackResult {
-  const db = loadDb();
-  db.devices = db.devices || [];
-
+export async function trackDevice(input: TrackInput, ip: string | null, userAgent: string | null): Promise<TrackResult> {
   const id = typeof input.install_id === 'string' && ID_RE.test(input.install_id) ? input.install_id : null;
   if (!id) {
     // A malformed id is rejected rather than coerced. Coercing it would let one
@@ -129,7 +127,9 @@ export function trackDevice(input: TrackInput, ip: string | null, userAgent: str
 
   const now = new Date();
   const nowIso = now.toISOString();
-  const existing = db.devices.find((d: Device) => d.id === id);
+  // M2: read the one row we care about instead of the whole multi-megabyte
+  // document. Falls back to the JSON ledger inside readDevice().
+  const existing = (await readDevice(id))?.device ?? null;
 
   const claimedVersion = clamp(input.app_version, 32);
   const claimedSurface = oneOf(input.install_surface, SURFACES);
@@ -137,7 +137,17 @@ export function trackDevice(input: TrackInput, ip: string | null, userAgent: str
   const claimedPlatform = oneOf(input.platform, PLATFORMS);
 
   if (!existing) {
-    db.devices.push({
+    // A brand-new install may already be carrying prompt state: some clients
+    // batch the very first beacon and report `beforeinstallprompt` on it. The
+    // original code zeroed these and returned, so that first event was silently
+    // dropped and the admin funnel undercounted every install that arrived with
+    // its prompt already resolved.
+    const prompt = input.pwa_prompt && typeof input.pwa_prompt === 'object' ? (input.pwa_prompt as any) : null;
+    const shown = prompt?.shown === true ? 1 : 0;
+    const dismissed = prompt?.dismissed === true ? 1 : 0;
+    const accepted = prompt?.accepted === true ? 1 : 0;
+
+    const device: Device = {
       id,
       user_id: null,
       platform: claimedPlatform || derivePlatformFromUA(userAgent),
@@ -158,13 +168,22 @@ export function trackDevice(input: TrackInput, ip: string | null, userAgent: str
       last_seen_at: nowIso,
       last_active_at: nowIso,
       is_blocked: false,
-      pwa_prompt_shown: 0,
-      pwa_prompt_dismissed: 0,
-      pwa_prompt_accepted: 0,
+      pwa_prompt_shown: shown,
+      pwa_prompt_dismissed: dismissed,
+      pwa_prompt_accepted: accepted,
       first_touch: firstTouchFrom(input),
       telemetry_enabled: input.telemetry_enabled === false ? false : true,
-    });
-    saveDb(db);
+    };
+
+    // An accepted prompt IS the install. Mirror the mutation branch so a device
+    // recorded on the same beacon it was accepted in is already standalone,
+    // instead of waiting one more round trip to report an install it already is.
+    if (accepted) {
+      device.install_surface = 'pwa';
+      if (!device.install_kind) device.install_kind = 'auto_prompt';
+    }
+
+    await saveDevice(device);
     return { id, ok: true, changed: true };
   }
 
@@ -241,7 +260,7 @@ export function trackDevice(input: TrackInput, ip: string | null, userAgent: str
     changed = true;
   }
 
-  if (changed) saveDb(db);
+  if (changed) await saveDevice(existing);
   return { id, ok: true, changed };
 }
 
@@ -258,17 +277,15 @@ export function trackDevice(input: TrackInput, ip: string | null, userAgent: str
  * an "unlink" flow is a real feature with real ambiguity (whose history is it?)
  * and guessing at it would quietly move install counts between accounts.
  */
-export function claimDevices(userId: string, installIds: unknown[]): { claimed: number } {
-  const db = loadDb();
-  db.devices = db.devices || [];
-
+export async function claimDevices(userId: string, installIds: unknown[]): Promise<{ claimed: number }> {
   const ids = Array.isArray(installIds)
     ? installIds.filter((v): v is string => typeof v === 'string' && ID_RE.test(v))
     : [];
 
   let claimed = 0;
   for (const id of ids) {
-    const device = db.devices.find((d: Device) => d.id === id);
+    const found = await readDevice(id);
+    const device = found?.device;
     if (!device) continue;
     if (device.user_id === userId) continue;
     if (device.is_blocked) continue;
@@ -277,10 +294,10 @@ export function claimDevices(userId: string, installIds: unknown[]): { claimed: 
     // a shared browser take over another user's install record.
     if (device.user_id && device.user_id !== userId) continue;
     device.user_id = userId;
+    await saveDevice(device);
     claimed += 1;
   }
 
-  if (claimed > 0) saveDb(db);
   return { claimed };
 }
 

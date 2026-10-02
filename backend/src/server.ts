@@ -32,6 +32,7 @@ import { devicesRouter, adminDevicesRouter } from './routes/devices.routes';
 import { storage } from './store';
 
 import { runMigrations } from './db/migrate';
+import { backfillDevicesFromJson } from './store/devices';
 
 dotenv.config();
 assertAuthConfigured();
@@ -305,5 +306,18 @@ export const httpServer = app.listen(PORT, async () => {
   const pgReached = await runMigrations();
   await storage.init({ enabled: pgReplicaEnabled, seedDoc: loadDb() });
   setMirrorHook((data: any) => storage.mirror(data));
+
+  // M2: installs are read from PostgreSQL first. Anything recorded while the
+  // cluster was unreachable — or before this feature existed — exists only in the
+  // JSON ledger, so without this copy the install count would read as having
+  // silently dropped to zero the moment the relational path went live.
+  if (pgReached) {
+    try {
+      await backfillDevicesFromJson();
+    } catch (e: any) {
+      console.warn('💡 [Storage] Device backfill skipped: ' + (e?.message || e));
+    }
+  }
+
   console.log(`📦 [Storage] ${storage.status().storage_label}`);
 });

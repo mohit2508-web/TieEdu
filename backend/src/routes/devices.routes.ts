@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { loadDb, saveDb, Device, Release } from '../data/db';
 import { requireAuth, requireAdmin, requirePermission, requireDanger, rateLimit } from '../middleware/auth';
+import { readDevice, saveDevice, listDevices, deleteDevice } from '../store/devices';
 import { trackDevice, claimDevices, compareVersions } from '../lib/devices';
 
 export const devicesRouter = Router();
@@ -30,8 +31,8 @@ const beaconLimiter = rateLimit(30);
  * Echoes back the id the server stored so the client can detect that its own
  * localStorage value was rejected (malformed or from an older app) and re-mint.
  */
-devicesRouter.post('/track', beaconLimiter, (req: Request, res: Response) => {
-  const result = trackDevice(req.body || {}, req.ip || null, req.get('user-agent') || null);
+devicesRouter.post('/track', beaconLimiter, async (req: Request, res: Response) => {
+  const result = await trackDevice(req.body || {}, req.ip || null, req.get('user-agent') || null);
   if (!result.ok) {
     // 400 for a bad id (the caller can fix it), 403 for a blocked install. The
     // blocked case must not be a 404: a client that silently stops reporting
@@ -52,10 +53,10 @@ devicesRouter.post('/track', beaconLimiter, (req: Request, res: Response) => {
  * a larger number means a forged list, and unbounded input to a mutating endpoint
  * is a free amplification primitive even when every entry is a no-op.
  */
-devicesRouter.post('/claim', requireAuth, (req: Request, res: Response) => {
+devicesRouter.post('/claim', requireAuth, async (req: Request, res: Response) => {
   const raw = (req.body || {}).install_ids;
   const ids = Array.isArray(raw) ? raw.slice(0, 5) : [];
-  const { claimed } = claimDevices(req.userId as string, ids);
+  const { claimed } = await claimDevices(req.userId as string, ids);
   res.json({ ok: true, claimed });
 });
 
@@ -68,9 +69,9 @@ devicesRouter.post('/claim', requireAuth, (req: Request, res: Response) => {
  * is not an admin capability, so making it one would mean granting admins rights
  * over students' own data to show students their own data.
  */
-devicesRouter.get('/me', requireAuth, (req: Request, res: Response) => {
-  const db = loadDb();
-  const mine = (db.devices || []).filter((d: Device) => d.user_id === req.userId);
+devicesRouter.get('/me', requireAuth, async (req: Request, res: Response) => {
+  const { devices } = await listDevices();
+  const mine = devices.filter((d: Device) => d.user_id === req.userId);
   res.json({ devices: mine.map((d: Device) => ({ id: d.id, platform: d.platform, install_surface: d.install_surface, app_version: d.app_version, last_seen_at: d.last_seen_at })) });
 });
 
@@ -112,9 +113,8 @@ adminDevicesRouter.use(requireAdmin);
  * under one default is how a dashboard ends up reporting 40,000 installs when 400
  * people tapped the button — the row exists, the number is fiction.
  */
-adminDevicesRouter.get('/', requirePermission('devices.read'), (req: Request, res: Response) => {
-  const db = loadDb();
-  const all = db.devices || [];
+adminDevicesRouter.get('/', requirePermission('devices.read'), async (req: Request, res: Response) => {
+  const { devices: all } = await listDevices();
   const surface = req.query.surface === 'browser_tab' ? 'browser_tab' : 'pwa';
   const rows = all.filter((d: Device) => d.install_surface === surface);
 
@@ -136,13 +136,16 @@ adminDevicesRouter.get('/', requirePermission('devices.read'), (req: Request, re
 });
 
 /** POST /api/admin/devices/:id/block — cut an install off from pushes and sessions. */
-adminDevicesRouter.post('/:id/block', requirePermission('devices.block'), (req: Request, res: Response) => {
-  const db = loadDb();
-  const device = (db.devices || []).find((d: Device) => d.id === req.params.id);
+adminDevicesRouter.post('/:id/block', requirePermission('devices.block'), async (req: Request, res: Response) => {
+  const found = await readDevice(req.params.id);
+  const device = found?.device;
   if (!device) return res.status(404).json({ error: 'Not found' });
 
   const blocked = req.body?.blocked !== false;
   device.is_blocked = blocked;
+  await saveDevice(device);
+
+  const db = loadDb();
   db.audit = db.audit || [];
   db.audit.push({
     id: `audit-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -174,13 +177,12 @@ adminDevicesRouter.post('/:id/block', requirePermission('devices.block'), (req: 
  * can make the headline install number smaller, and someone fixing a bad batch of
  * rows should have to do it deliberately, not twice in a row by reflex.
  */
-adminDevicesRouter.delete('/:id', requireDanger('danger.maintenance', 'device.delete'), (req: Request, res: Response) => {
-  const db = loadDb();
-  const before = (db.devices || []).length;
-  db.devices = (db.devices || []).filter((d: Device) => d.id !== req.params.id);
-  db.push_subscriptions = (db.push_subscriptions || []).filter((s: any) => s.device_id !== req.params.id);
-  if (db.devices.length === before) return res.status(404).json({ error: 'Not found' });
+adminDevicesRouter.delete('/:id', requireDanger('danger.maintenance', 'device.delete'), async (req: Request, res: Response) => {
+  const removed = await deleteDevice(req.params.id);
+  if (!removed) return res.status(404).json({ error: 'Not found' });
 
+  const db = loadDb();
+  db.push_subscriptions = (db.push_subscriptions || []).filter((s: any) => s.device_id !== req.params.id);
   db.audit = db.audit || [];
   db.audit.push({
     id: `audit-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -190,7 +192,7 @@ adminDevicesRouter.delete('/:id', requireDanger('danger.maintenance', 'device.de
     at: new Date().toISOString(),
   });
   saveDb(db);
-  res.json({ ok: true, deleted: before - db.devices.length });
+  res.json({ ok: true, deleted: 1 });
 });
 
 export { adminDevicesRouter };
