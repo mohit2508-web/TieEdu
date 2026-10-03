@@ -4,6 +4,7 @@ import { can } from './rbac';
 import {
   saveSubscription,
   listSubscriptionsForUser,
+  listSubscriptionsForUsers,
   retireSubscription,
   recordSendOutcome,
 } from '../store/push';
@@ -85,6 +86,59 @@ export async function sendPushToUser(userId: string, payload: { title: string; b
     }
   }
   return { sent, failed };
+}
+
+/**
+ * Deliver one payload to many users' live endpoints.
+ *
+ * This is the broadcast primitive, and it is a separate function rather than a
+ * loop over `sendPushToUser` for two reasons. A loop would re-read each user's
+ * subscriptions one at a time, which is the N+1 the bulk store query exists to
+ * avoid. More importantly it would interleave a per-user count with the send, so
+ * "0 sent" would again be ambiguous between "nobody subscribes" and "everything
+ * failed" - the exact ambiguity that made the self-test button report success
+ * for a send that delivered nothing.
+ *
+ * `recipients` is counted from the distinct users behind the endpoints we
+ * actually found, so the caller can report reach without pretending every
+ * account in the platform is subscribed.
+ */
+export async function sendPushToUsers(
+  userIds: string[],
+  payload: { title: string; body: string; url?: string; badge?: string; icon?: string }
+): Promise<{ sent: number; failed: number; recipients: number; endpoints: number }> {
+  const subs = await listSubscriptionsForUsers(userIds);
+  const recipients = new Set(subs.map((s) => s.user_id)).size;
+  if (!subs.length) return { sent: 0, failed: 0, recipients: 0, endpoints: 0 };
+
+  const data = JSON.stringify({
+    title: payload.title,
+    body: payload.body,
+    url: payload.url || '/',
+    icon: payload.icon || '/icon-192.png',
+    badge: payload.badge || '/icon-192.png',
+  });
+
+  let sent = 0;
+  let failed = 0;
+  for (const s of subs) {
+    try {
+      await webpush.sendNotification(
+        { endpoint: s.endpoint, keys: s.keys_json } as any,
+        data
+      );
+      sent++;
+      await recordSendOutcome(s.endpoint, true);
+    } catch (e: any) {
+      failed++;
+      if (e?.statusCode === 410 || e?.statusCode === 404) {
+        await retireSubscription(s.endpoint, 'push_gone');
+      } else {
+        await recordSendOutcome(s.endpoint, false);
+      }
+    }
+  }
+  return { sent, failed, recipients, endpoints: subs.length };
 }
 
 /**

@@ -238,6 +238,40 @@ export async function listSubscriptionsForUser(userId: string): Promise<PushSubs
   return readJson().filter((s) => s.user_id === userId && !s.disabled_at);
 }
 
+/**
+ * Live subscriptions for many users in one round trip.
+ *
+ * A broadcast needs this rather than a loop over `listSubscriptionsForUser`. That
+ * loop is not merely slow, it is a denial-of-service on ourselves: each call
+ * re-runs `isDbReachable(3000)`, and when PostgreSQL cannot answer it falls
+ * through to `readJson()`, which is a `JSON.parse` of the whole `db.json` - 3.2 MB
+ * today. A blast to a few hundred students would re-parse it a few hundred times,
+ * which is slow enough to look like a hung request and grows with the ledger.
+ *
+ * `ANY($1)` keeps it to one statement. The JSON path is read once and filtered
+ * with a Set, so the fallback costs a single parse.
+ */
+export async function listSubscriptionsForUsers(userIds: string[]): Promise<PushSubscription[]> {
+  const ids = (userIds || []).filter((id): id is string => typeof id === 'string' && id.length > 0);
+  if (!ids.length) return [];
+  if (await isDbReachable(3000)) {
+    try {
+      const res = await getPool().query(
+        `SELECT * FROM push_subscriptions
+         WHERE user_id = ANY($1::text[]) AND disabled_at IS NULL
+         ORDER BY created_at DESC`,
+        [ids]
+      );
+      const rows = (res.rows || []).map(rowFromPg).filter((s): s is PushSubscription => !!s);
+      if (rows.length) return rows;
+    } catch (e: any) {
+      console.warn('[PushStore] bulk relational read failed:', e?.message);
+    }
+  }
+  const wanted = new Set(ids);
+  return readJson().filter((s) => !!s.user_id && wanted.has(s.user_id) && !s.disabled_at);
+}
+
 /** Retire one endpoint in both stores. */
 export async function retireSubscription(endpoint: string, reason: string): Promise<PushSource | false> {
   try {
