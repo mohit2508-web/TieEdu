@@ -35,6 +35,7 @@ import {
   XpEvent,
 } from '../data/db';
 import { requireAdmin } from '../middleware/auth';
+import { pushAudit } from '../lib/audit';
 import { syncUserXp, totalXpForUser, LEVELS, XP } from '../lib/xp';
 import {
   courseStats,
@@ -403,12 +404,6 @@ function nextSort(list: { sort_order: number }[]): number {
   return list.length ? Math.max(...list.map((l) => l.sort_order || 0)) + 1 : 1;
 }
 
-function audit(db: any, action: string, detail: string) {
-  db.audit = db.audit || [];
-  db.audit.push({ id: `aud-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`, action, detail, at: new Date().toISOString() });
-  if (db.audit.length > 500) db.audit = db.audit.slice(-500);
-}
-
 /** Course with answer keys, for the editor only. Never used on the student API. */
 function courseForEditor(db: any, course: Course) {
   return {
@@ -495,7 +490,7 @@ courseAdminRouter.post('/courses', (req: Request, res: Response) => {
 
   db.courses = db.courses || [];
   db.courses.push(course);
-  audit(db, 'course.create', `Created course "${course.title}"`);
+  pushAudit(db, { actor: req.user?.email, action: 'course.create', detail: `Created course "${course.title}"` });
   saveDb(db);
 
   res.status(201).json({ status: 'success', course: courseForEditor(db, course) });
@@ -582,7 +577,7 @@ courseAdminRouter.put('/courses/:id', (req: Request, res: Response) => {
       }
     }
     course.published = publishing;
-    audit(db, publishing ? 'course.publish' : 'course.unpublish', `${publishing ? 'Published' : 'Unpublished'} "${course.title}"`);
+    pushAudit(db, { actor: req.user?.email, action: publishing ? 'course.publish' : 'course.unpublish', detail: `${publishing ? 'Published' : 'Unpublished'} "${course.title}"` });
   }
 
   course.updated_at = new Date().toISOString();
@@ -623,7 +618,7 @@ courseAdminRouter.post('/courses/:id/duplicate', (req: Request, res: Response) =
   }
 
   db.courses.push(clone);
-  audit(db, 'course.duplicate', `Duplicated "${source.title}" into "${clone.title}"`);
+  pushAudit(db, { actor: req.user?.email, action: 'course.duplicate', detail: `Duplicated "${source.title}" into "${clone.title}"` });
   saveDb(db);
   res.status(201).json({ status: 'success', course: courseForEditor(db, clone) });
 });
@@ -646,7 +641,7 @@ courseAdminRouter.delete('/courses/:id', (req: Request, res: Response) => {
   for (const c of db.courses || []) {
     if (c.prerequisite_course_id === course.id) c.prerequisite_course_id = null;
   }
-  audit(db, 'course.delete', `Deleted course "${course.title}"`);
+  pushAudit(db, { actor: req.user?.email, action: 'course.delete', detail: `Deleted course "${course.title}"` });
   saveDb(db);
   res.json({ status: 'success', deleted: course.id });
 });
@@ -1002,7 +997,7 @@ courseAdminRouter.put('/lessons/:lessonId/video', async (req: Request, res: Resp
     added_at: new Date().toISOString(),
   };
   found.course.updated_at = new Date().toISOString();
-  audit(db, 'lesson.video', `Attached ${parsed.provider} video to "${found.lesson.title}"`);
+  pushAudit(db, { actor: req.user?.email, action: 'lesson.video', detail: `Attached ${parsed.provider} video to "${found.lesson.title}"` });
   saveDb(db);
 
   res.json({ status: 'success', lesson: found.lesson });
@@ -1238,7 +1233,7 @@ courseAdminRouter.post('/certificates/issue', (req: Request, res: Response) => {
 
   db.certificates = db.certificates || [];
   db.certificates.push(certificate);
-  audit(db, 'certificate.issue', `Manually issued ${serial} to ${user.email} for "${course.title}"`);
+  pushAudit(db, { actor: req.user?.email, action: 'certificate.issue', detail: `Manually issued ${serial} to ${user.email} for "${course.title}"` });
   saveDb(db);
 
   res.status(201).json({ status: 'success', certificate, verification_url: verificationUrlFor(serial) });
@@ -1256,7 +1251,7 @@ courseAdminRouter.post('/certificates/:serial/revoke', (req: Request, res: Respo
   certificate.status = 'revoked';
   certificate.revoked_reason = str(req.body?.reason, 300) || 'Revoked by TieEdu administrator';
   certificate.revoked_at = new Date().toISOString();
-  audit(db, 'certificate.revoke', `Revoked ${serial}: ${certificate.revoked_reason}`);
+  pushAudit(db, { actor: req.user?.email, action: 'certificate.revoke', detail: `Revoked ${serial}: ${certificate.revoked_reason}` });
   saveDb(db);
 
   res.json({ status: 'success', certificate });
@@ -1273,7 +1268,7 @@ courseAdminRouter.post('/certificates/:serial/restore', (req: Request, res: Resp
   certificate.status = 'active';
   certificate.revoked_reason = '';
   certificate.revoked_at = null;
-  audit(db, 'certificate.restore', `Restored ${serial}`);
+  pushAudit(db, { actor: req.user?.email, action: 'certificate.restore', detail: `Restored ${serial}` });
   saveDb(db);
   res.json({ status: 'success', certificate });
 });
@@ -1376,7 +1371,7 @@ courseAdminRouter.post('/xp/reconcile', (req: Request, res: Response) => {
     const after = syncUserXp(db, user.id);
     if (before !== after) changed.push({ user_id: user.id, before, after });
   }
-  if (changed.length) audit(db, 'xp.reconcile', `Reconciled ${changed.length} user XP totals from the ledger`);
+  if (changed.length) pushAudit(db, { actor: req.user?.email, action: 'xp.reconcile', detail: `Reconciled ${changed.length} user XP totals from the ledger` });
   saveDb(db);
   res.json({ status: 'success', reconciled: changed.length, changed });
 });

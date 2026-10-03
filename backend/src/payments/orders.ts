@@ -1,30 +1,10 @@
-// Shared payment-completion + audit helpers (checkout AND webhook paths use these).
+// Shared payment-completion helpers (checkout AND webhook paths use these).
+// The audit ledger moved to lib/audit.ts: it was never payment-specific — checkout,
+// webhooks, admin, study-plan, the course editor and the device routes all wrote
+// to it — and keeping the only writer of a shared ledger inside payments/orders
+// is what let three other shapes grow alongside it.
 
-let auditSeq = 0;
-
-export function pushAudit(db: any, entry: {
-  actor?: string;
-  action: string;
-  detail?: string;
-  order_id?: string;
-  gateway?: string;
-  meta?: any;
-}) {
-  if (!db.audit) db.audit = [];
-  auditSeq += 1;
-  db.audit.push({
-    id: `${entry.order_id ? `${entry.order_id}-` : ''}a${Date.now()}-${auditSeq}`,
-    at: new Date().toISOString(),
-    actor: entry.actor || 'system',
-    action: entry.action,
-    detail: entry.detail || '',
-    order_id: entry.order_id || null,
-    gateway: entry.gateway || null,
-    meta: entry.meta || null,
-  });
-  // bounded ledger — keep last 1000 events
-  if (db.audit.length > 1000) db.audit = db.audit.slice(-1000);
-}
+import { pushAudit } from '../lib/audit';
 
 export function completePaidOrder(db: any, order: any, user_id: string) {
   order.status = 'paid';

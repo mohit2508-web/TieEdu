@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { loadDb, saveDb } from '../data/db';
-import { completePaidOrder, pushAudit } from '../payments/orders';
+import { completePaidOrder } from '../payments/orders';
+import { pushAudit } from '../lib/audit';
 import { studyPlanAdminRouter } from './studyPlan.routes';
 import { validateSectionData } from '../lib/sectionData';
 import { requirePermission } from '../middleware/auth';

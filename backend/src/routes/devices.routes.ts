@@ -3,6 +3,7 @@ import { loadDb, saveDb, Device, Release } from '../data/db';
 import { requireAuth, requireAdmin, requirePermission, requireDanger, rateLimit } from '../middleware/auth';
 import { readDevice, saveDevice, listDevices, deleteDevice } from '../store/devices';
 import { trackDevice, claimDevices, compareVersions } from '../lib/devices';
+import { pushAudit } from '../lib/audit';
 
 export const devicesRouter = Router();
 
@@ -146,13 +147,15 @@ adminDevicesRouter.post('/:id/block', requirePermission('devices.block'), async 
   await saveDevice(device);
 
   const db = loadDb();
-  db.audit = db.audit || [];
-  db.audit.push({
-    id: `audit-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+  // Through the shared writer: this route used to push rows by hand, which meant
+  // a third id format, no actor fallback, no target on other platforms' events,
+  // and — because the retention cap lived inside the payments helper — no
+  // retention at all on a deployment whose only audit traffic was device actions.
+  pushAudit(db, {
     action: blocked ? 'device.block' : 'device.unblock',
-    actor: req.user?.email || 'unknown',
+    actor: req.user?.email || 'system',
     target: device.id,
-    at: new Date().toISOString(),
+    detail: `${blocked ? 'Blocked' : 'Unblocked'} install ${device.id}`,
   });
   saveDb(db);
 
@@ -183,13 +186,11 @@ adminDevicesRouter.delete('/:id', requireDanger('danger.maintenance', 'device.de
 
   const db = loadDb();
   db.push_subscriptions = (db.push_subscriptions || []).filter((s: any) => s.device_id !== req.params.id);
-  db.audit = db.audit || [];
-  db.audit.push({
-    id: `audit-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+  pushAudit(db, {
     action: 'device.delete',
-    actor: req.user?.email || 'unknown',
+    actor: req.user?.email || 'system',
     target: req.params.id,
-    at: new Date().toISOString(),
+    detail: `Deleted install ${req.params.id}`,
   });
   saveDb(db);
   res.json({ ok: true, deleted: 1 });

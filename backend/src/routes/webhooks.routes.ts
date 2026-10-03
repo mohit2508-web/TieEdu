@@ -1,7 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { loadDb, saveDb } from '../data/db';
 import { verifyWebhookSignature } from '../payments/gateway';
-import { completePaidOrder, pushAudit } from '../payments/orders';
+import { completePaidOrder } from '../payments/orders';
+import { pushAudit } from '../lib/audit';
 
 export const webhooksRouter = Router();
 

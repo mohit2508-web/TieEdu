@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { loadDb, saveDb } from '../data/db';
-import { pushAudit } from '../payments/orders';
+import { pushAudit } from '../lib/audit';
 import { requireAuth, rateLimit } from '../middleware/auth';
 import {
   makeId, str, sanitizeBlocks, normalizePhase, reindexPhases, reindexBlocks,

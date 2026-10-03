@@ -3,7 +3,8 @@ import { loadDb, saveDb } from '../data/db';
 import { requireAuth } from '../middleware/auth';
 import { getGateway, verifyRazorpaySignature, CreatedOrder } from '../payments/gateway';
 import { effectivePaymentMode } from '../config';
-import { completePaidOrder, pushAudit, unlockedCompanyIds, ownedModuleIdsFor, ownedCourseIdsFor } from '../payments/orders';
+import { completePaidOrder, unlockedCompanyIds, ownedModuleIdsFor, ownedCourseIdsFor } from '../payments/orders';
+import { pushAudit } from '../lib/audit';
 import { SINGLE_MODULE_PRICE, COMPLETE_PACK_COUNT, packPrice, listPriceFor } from '../lib/pricing';
 
 export const checkoutRouter = Router();
