@@ -68,6 +68,37 @@ export const apiFetch = async (url: string, options: RequestInit = {}): Promise<
 
 export const pdfFileUrl = (storedName: string) => `${API_BASE_URL}/pdf/file/${encodeURIComponent(storedName)}`;
 
+export type NotificationConfig = { vapidPublicKey: string | null };
+
+/**
+ * The server's public VAPID key, asked for at runtime.
+ *
+ * The build-time `NEXT_PUBLIC_VAPID_PUBLIC_KEY` is only a fallback now. Inlining
+ * it meant a client cached from an earlier deploy could never enable push — it
+ * reported "push keys are not configured on the server" against a server that was
+ * configured correctly, and nothing short of clearing site data fixed it. Key
+ * rotation would have broken every installed client the same way.
+ *
+ * Memoised per page load: `subscribe` and the load-time sync both need it, and the
+ * key cannot change within a session. A failed fetch falls back to the constant so
+ * a client that was built correctly still works if this endpoint is unreachable.
+ */
+let vapidPublicKeyPromise: Promise<string | null> | null = null;
+
+export const fetchVapidPublicKey = (): Promise<string | null> => {
+  if (!vapidPublicKeyPromise) {
+    vapidPublicKeyPromise = apiFetch(`${API_BASE_URL}/notifications/config`)
+      .then((res: any) => {
+        const key = res?.vapidPublicKey;
+        return typeof key === 'string' && key.length > 0
+          ? key
+          : process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || null;
+      })
+      .catch(() => process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || null);
+  }
+  return vapidPublicKeyPromise;
+};
+
 export const uploadModulePdfApi = async (
   moduleId: string,
   file: File,

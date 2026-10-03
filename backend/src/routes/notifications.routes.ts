@@ -1,8 +1,26 @@
 import { Router } from 'express';
 import { requireAuth, requireAdmin, requirePermission } from '../middleware/auth';
-import { subscribePush, unsubscribePush, testPush, mySubscriptions } from '../lib/push';
+import { subscribePush, unsubscribePush, testPush, mySubscriptions, VAPID_PUBLIC_KEY } from '../lib/push';
 
 export const notificationsRouter = Router();
+
+/*
+ * The client's public VAPID key, fetched at runtime instead of read from a
+ * build-time constant.
+ *
+ * Deliberately unauthenticated: this key is handed to every browser that
+ * subscribes, so there is nothing secret to protect. It exists because inlining
+ * it at build time made a stale bundle permanently unable to enable push — a
+ * client cached from an earlier deploy kept reporting "push keys are not
+ * configured" against a server that was configured correctly, and the only cure
+ * was for every user to clear site data.
+ *
+ * Returns `{ vapidPublicKey: null }` rather than 404 when unconfigured, so the
+ * client can tell "not set up" apart from "wrong address".
+ */
+notificationsRouter.get('/config', (_req, res) => {
+  res.json({ vapidPublicKey: VAPID_PUBLIC_KEY || null });
+});
 
 notificationsRouter.post('/subscribe', requireAuth, subscribePush);
 notificationsRouter.post('/unsubscribe', requireAuth, unsubscribePush);

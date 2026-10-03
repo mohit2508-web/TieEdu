@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-import api from '@/lib/api';
-import { sendTestPushApi } from '@/lib/api';
+import api, { fetchVapidPublicKey, sendTestPushApi } from '@/lib/api';
 import { getInstallId, trackInstall } from '@/lib/install';
 
 const urlBase64ToUint8Array = (base64String: string) => {
@@ -156,7 +155,10 @@ export const useWebPush = () => {
       if (!reg) return { ok: false, reason: 'no_service_worker' };
       let sub = await reg.pushManager.getSubscription();
       if (!sub) {
-        const vapid = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+        // Read from the server, not from this bundle. A build-time constant cannot
+        // be corrected by a server restart, which is what left stale clients stuck
+        // on "push keys are not configured" while the server was fine.
+        const vapid = await fetchVapidPublicKey();
         if (!vapid) return { ok: false, reason: 'no_vapid' };
         sub = await reg.pushManager.subscribe({
           userVisibleOnly: true,

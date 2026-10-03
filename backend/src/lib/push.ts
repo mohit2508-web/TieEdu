@@ -9,7 +9,15 @@ import {
 } from '../store/push';
 import type { Request, Response } from 'express';
 
-const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '';
+/**
+ * The VAPID public key, exported for `GET /api/notifications/config`.
+ *
+ * It is public by design — it is handed to every browser that subscribes — so
+ * serving it needs no auth and no permission check. The client used to read it
+ * from a build-time constant instead, which meant a stale bundle could never
+ * enable push no matter how many times the server was fixed.
+ */
+export const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '';
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '';
 const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:admin@tieedu.app';
 
