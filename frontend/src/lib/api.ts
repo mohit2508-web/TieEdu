@@ -962,3 +962,55 @@ export const fetchCampusCohortApi = async (): Promise<any> => {
 
 const apiClient = { get: (url:any,config?:any)=>apiFetch(url,{...config,method:'GET'}), post:(url:any,body?:any,config?:any)=>apiFetch(url,{...config,method:'POST',body:typeof body==='string'?body:body?JSON.stringify(body):undefined}), put:(url:any,body?:any,config?:any)=>apiFetch(url,{...config,method:'PUT',body:typeof body==='string'?body:body?JSON.stringify(body):undefined}), delete:(url:any,config?:any)=>apiFetch(url,{...config,method:'DELETE'}) };
 export default apiClient;
+
+/**
+ * Push notification helpers for the admin panel's Notifications tab.
+ *
+ * These parse the body, unlike `apiClient` above, which hands back the raw
+ * `Response`. That difference matters here: the whole point of the send-test
+ * button is reading `sent`/`failed` off the reply, and against a raw `Response`
+ * those properties do not exist — the count silently reads as undefined and the
+ * UI reports success for a send that delivered nothing.
+ */
+export interface MySubscription {
+  id: string;
+  device_id: string;
+  provider: string;
+  endpoint_hint: string;
+  created_at: string;
+  last_success_at: string | null;
+  last_seen_at: string | null;
+  failure_count: number;
+  blocked: boolean;
+  disable_reason: string | null;
+  user_agent: string | null;
+  platform: string | null;
+}
+
+const jsonFetch = async <T,>(path: string, options?: RequestInit): Promise<T> => {
+  const res = await apiFetch(`${API_BASE_URL}${path}`, options);
+  if (!res.ok) {
+    let message = `API error ${res.status}`;
+    try {
+      const body: any = await res.json();
+      message = body?.error || message;
+    } catch { /* ignore */ }
+    throw new Error(message);
+  }
+  return (await res.json()) as T;
+};
+
+export const fetchMySubscriptionsApi = async (): Promise<MySubscription[]> => {
+  const r = await jsonFetch<{ subscriptions?: MySubscription[] }>('/notifications/mine');
+  return Array.isArray(r?.subscriptions) ? r.subscriptions : [];
+};
+
+/**
+ * Defaults to 0 rather than `undefined` when the server omits a count, because
+ * the caller branches on `sent > 0` and `undefined > 0` is false either way —
+ * but `Number(undefined)` becoming NaN would render as a blank in the UI.
+ */
+export const sendTestPushApi = async (): Promise<{ sent: number; failed: number }> => {
+  const r = await jsonFetch<{ sent?: number; failed?: number }>('/notifications/test', { method: 'POST' });
+  return { sent: Number(r?.sent ?? 0), failed: Number(r?.failed ?? 0) };
+};

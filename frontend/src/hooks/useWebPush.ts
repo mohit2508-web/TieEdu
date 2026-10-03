@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '@/lib/api';
+import { sendTestPushApi } from '@/lib/api';
 import { getInstallId, trackInstall } from '@/lib/install';
 
 const urlBase64ToUint8Array = (base64String: string) => {
@@ -145,10 +146,28 @@ export const useWebPush = () => {
     } catch (e) {}
   };
 
-  const test = async () => {
+  /**
+   * Sends a real test push to this browser.
+   *
+   * Returns the server's verdict rather than swallowing it. An admin pressing
+   * "send test" needs to know whether a notification actually went out: the
+   * common failure is having no subscription registered at all, and `sent: 0` is
+   * the only honest way to say so. A rejected promise would render identically to
+   * success on a button with no other feedback.
+   *
+   * Uses `sendTestPushApi` rather than `api.post`, because the client helper
+   * returns the raw `Response` — reading `.sent` off that is `undefined`, which
+   * would report a successful send for a message that never left.
+   */
+  const test = async (): Promise<{ ok: boolean; sent?: number; failed?: number; reason?: string }> => {
     try {
-      await api.post('/notifications/test');
-    } catch (e) {}
+      const r = await sendTestPushApi();
+      const sent = Number(r?.sent ?? 0);
+      const failed = Number(r?.failed ?? 0);
+      return { ok: sent > 0 || failed === 0, sent, failed };
+    } catch (e: any) {
+      return { ok: false, reason: e?.message || 'request_failed' };
+    }
   };
 
   return { supported, permission, subscribed, loading, subscribe, unsubscribe, test };

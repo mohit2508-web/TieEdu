@@ -171,6 +171,42 @@ export const unsubscribePush = async (req: Request, res: Response) => {
 };
 
 /**
+ * The caller's own subscriptions, for the admin panel's notification tab.
+ *
+ * Scoped to `req.user.id` and no id parameter, deliberately: there is no way to
+ * ask this route about somebody else's endpoints, so it cannot be turned into a
+ * "does this admin have a device registered" oracle for other users. `keys_json`
+ * is dropped before the response — the p256dh/auth pair is a delivery credential
+ * and an admin UI has no use for it, so there is no reason to send it.
+ */
+export const mySubscriptions = async (req: Request, res: Response) => {
+  if (!req.user?.id) return res.status(401).json({ error: 'Unauthorized' });
+  const rows = await listSubscriptionsForUser(req.user.id);
+
+  res.json({
+    count: rows.length,
+    source: 'subscribed',
+    subscriptions: rows.map((s) => ({
+      id: s.id,
+      device_id: s.device_id,
+      provider: s.provider,
+      // The endpoint encodes a per-browser secret in its path, so it is shown
+      // truncated. Enough to recognise which browser a row belongs to, not enough
+      // to push to it.
+      endpoint_hint: `${s.endpoint.slice(0, 44)}...`,
+      created_at: s.created_at,
+      last_success_at: s.last_success_at,
+      last_seen_at: s.last_seen_at || null,
+      failure_count: s.failure_count,
+      blocked: !!s.disabled_at,
+      disable_reason: s.disable_reason || null,
+      user_agent: s.user_agent || null,
+      platform: s.platform || null,
+    })),
+  });
+};
+
+/**
  * Sends a test push to the caller.
  *
  * `requirePermission('broadcasts.send')` rather than a plain session check: this
