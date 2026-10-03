@@ -211,7 +211,8 @@ export const useWebPush = () => {
          * entirely, and those need different fixes. Guessing from the number
          * alone is what turns a five-minute bug into an afternoon.
          */
-        const target = `${API_BASE_URL}/notifications/subscribe`;
+        const origin = typeof window !== 'undefined' ? window.location.origin : 'unknown origin';
+        const target = `${origin}${API_BASE_URL}/notifications/subscribe`;
         if (typeof console !== 'undefined') {
           console.warn('[Push] subscribe store failed', { url: target, status: r?.status });
         }

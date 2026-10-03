@@ -110,8 +110,9 @@ export const NotificationsTab: React.FC = () => {
       // this account would silently receive nothing. The status code decides what
       // the user should do, so name it rather than showing a bare failure.
       const status = /\((\d{3}|no response)\)/.exec(r.reason)?.[1];
-      // The resolved URL is part of the reason; show it, because which API
-      // answered decides what the user has to do next.
+      // The absolute URL is part of the reason. Which origin answered decides
+      // everything, and a relative path hides exactly the detail that matters
+      // when a cached shell is running somewhere the API does not live.
       const where = /\s(at\s+\S+)\)/.exec(r.reason)?.[1];
       if (status === '401') {
         setResult({
