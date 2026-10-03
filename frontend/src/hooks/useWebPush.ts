@@ -21,6 +21,32 @@ const SUPPORTED =
   'Notification' in window;
 
 /**
+ * Await a promise, but not forever.
+ *
+ * `navigator.serviceWorker.ready` is the correct way to wait for a worker, and it
+ * resolves promptly when one is registered — but it stays pending indefinitely
+ * when one never is, so every caller that awaited it raw hung with no error and no
+ * way for the UI to explain why. On timeout it resolves to null, which callers
+ * treat as "no worker" and report as a real reason.
+ *
+ * Resolves to null rather than rejecting: a timeout here is an expected outcome
+ * that callers map to a message, not an exception for them to catch.
+ */
+const withTimeout = async <T,>(p: Promise<T>, ms: number): Promise<T | null> => {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      p,
+      new Promise<null>((resolve) => {
+        timer = setTimeout(() => resolve(null), ms);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+};
+
+/**
  * Tell the server about the subscription the browser currently holds.
  *
  * This is the fix for endpoint rotation. A push service may replace a
@@ -38,8 +64,8 @@ const syncSubscriptionToServer = async (): Promise<boolean> => {
   if (!SUPPORTED) return false;
   if (Notification.permission !== 'granted') return false;
   try {
-    // `ready` hangs when nothing is registered for the scope; see subscribe().
-    const reg = await navigator.serviceWorker.getRegistration('/');
+    // Bounded `ready`; see subscribe() for why the wait is capped.
+    const reg = await withTimeout(navigator.serviceWorker.ready, 3000);
     if (!reg) return false;
     const sub = await reg.pushManager.getSubscription();
     if (!sub) return false;
@@ -69,11 +95,17 @@ export const useWebPush = () => {
     let cancelled = false;
     (async () => {
       try {
-        // `ready` is not used here either: it hangs forever with no worker
-        // registered, which left `subscribed` permanently false and looked
-        // identical to "the user never enabled it".
-        const reg = await navigator.serviceWorker.getRegistration('/');
-        if (!reg) return;
+        // `ready` — but bounded. Registration is kicked off by `_app.tsx` on the
+        // `load` event, which is a separate effect with no coordination, so
+        // `getRegistration()` alone raced it and usually returned null on a cold
+        // load. `ready` waits for the registration instead of giving up on it.
+        //
+        // It also never settles when nothing is ever registered, which is the
+        // other half of the problem: a button that spins forever with no message
+        // is the worst failure mode. So the wait is capped, and the timeout
+        // becomes a reason the UI can actually explain.
+        const reg = await withTimeout(navigator.serviceWorker.ready, 3000);
+        if (cancelled || !reg) return;
         const existing = await reg.pushManager.getSubscription();
         if (cancelled) return;
         setSubscribed(!!existing);
@@ -111,14 +143,16 @@ export const useWebPush = () => {
         setPermission('denied');
         return { ok: false, reason: 'denied' };
       }
-      // `navigator.serviceWorker.ready` never settles when no worker is registered for
-      // this scope — it waits forever rather than rejecting. Since registration is
-      // production-only, awaiting it on a non-registered origin left the button
-      // spinning on "loading" with no error and no way out. So ask for the
-      // registration directly and give up with a reason the UI can explain.
-      const reg = await navigator.serviceWorker
-        .getRegistration('/')
-        .catch(() => undefined);
+      // Bounded `ready`, then an explicit registration as a fallback. `_app.tsx`
+      // starts the registration on the `load` event and nothing coordinates the
+      // two, so on a cold load the worker is often still being installed at this
+      // point. Registering here as well is idempotent and removes the race.
+      let reg = await withTimeout(navigator.serviceWorker.ready, 3000);
+      if (!reg) {
+        reg = await navigator.serviceWorker
+          .register('/sw.js', { scope: '/' })
+          .catch(() => null);
+      }
       if (!reg) return { ok: false, reason: 'no_service_worker' };
       let sub = await reg.pushManager.getSubscription();
       if (!sub) {
@@ -149,8 +183,8 @@ export const useWebPush = () => {
 
   const unsubscribe = async () => {
     try {
-      // `ready` hangs when nothing is registered for the scope; see subscribe().
-      const reg = await navigator.serviceWorker.getRegistration('/');
+      // Bounded `ready`; see subscribe() for why the wait is capped.
+      const reg = await withTimeout(navigator.serviceWorker.ready, 3000);
       const sub = (await reg?.pushManager.getSubscription()) || null;
       if (sub) {
         const json = sub.toJSON();
