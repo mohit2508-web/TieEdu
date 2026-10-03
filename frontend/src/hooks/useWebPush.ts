@@ -173,7 +173,18 @@ export const useWebPush = () => {
         subscription: sub.toJSON(),
         install_id: installId || getInstallId(),
       });
-      if (!r?.ok) return { ok: false, reason: 'not_stored' };
+      /*
+       * The browser has a working subscription at this point; if it does not
+       * reach the database the account silently stops receiving notifications, so
+       * this must not read as success.
+       *
+       * The status is carried into the reason because the three failures need
+       * completely different responses and `not_stored` alone told the user none
+       * of it: 401 means the session on this device is not authenticated, 400
+       * means the payload was rejected, 503 means the database write failed and
+       * retrying is the right move.
+       */
+      if (!r?.ok) return { ok: false, reason: `not_stored (HTTP ${r?.status ?? 'no response'})` };
       setSubscribed(true);
       return { ok: true };
     } catch (e: any) {

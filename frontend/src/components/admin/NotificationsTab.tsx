@@ -94,6 +94,23 @@ export const NotificationsTab: React.FC = () => {
         tone: 'error',
         text: 'No service worker is registered for this origin, so push cannot work here. Serve the production build over http://localhost or https.',
       });
+    } else if (r.reason?.startsWith('not_stored')) {
+      // The browser produced a subscription but the server did not store it, so
+      // this account would silently receive nothing. The status code decides what
+      // the user should do, so name it rather than showing a bare failure.
+      const status = /\((\d{3}|no response)\)/.exec(r.reason)?.[1];
+      if (status === '401') {
+        setResult({
+          tone: 'error',
+          text: 'This device is not signed in, so the server rejected the subscription. Sign in again on this device and retry.',
+        });
+      } else if (status === '400') {
+        setResult({ tone: 'error', text: 'The server rejected the subscription payload. Please retry.' });
+      } else if (status === '503') {
+        setResult({ tone: 'error', text: 'The server could not write the subscription to the database. Please retry in a moment.' });
+      } else {
+        setResult({ tone: 'error', text: `Could not store the subscription on the server (${r.reason}).` });
+      }
     } else {
       setResult({ tone: 'error', text: `Could not enable notifications (${r.reason}).` });
     }
