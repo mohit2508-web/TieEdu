@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import api, { fetchVapidPublicKey, sendTestPushApi } from '@/lib/api';
+import api, { API_BASE_URL, fetchVapidPublicKey, sendTestPushApi } from '@/lib/api';
 import { getInstallId, trackInstall } from '@/lib/install';
 
 const urlBase64ToUint8Array = (base64String: string) => {
@@ -195,7 +195,20 @@ export const useWebPush = () => {
        * means the payload was rejected, 503 means the database write failed and
        * retrying is the right move.
        */
-      if (!r?.ok) return { ok: false, reason: `not_stored (HTTP ${r?.status ?? 'no response'})` };
+      if (!r?.ok) {
+        /*
+         * The resolved URL travels with the failure on purpose. A bare status is
+         * not enough to act on: a 404 can come from this app, from the API behind
+         * the rewrite, or from a deployment whose API is a different build
+         * entirely, and those need different fixes. Guessing from the number
+         * alone is what turns a five-minute bug into an afternoon.
+         */
+        const target = `${API_BASE_URL}/notifications/subscribe`;
+        if (typeof console !== 'undefined') {
+          console.warn('[Push] subscribe store failed', { url: target, status: r?.status });
+        }
+        return { ok: false, reason: `not_stored (HTTP ${r?.status ?? 'no response'} at ${target})` };
+      }
       setSubscribed(true);
       return { ok: true };
     } catch (e: any) {

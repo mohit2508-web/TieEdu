@@ -99,15 +99,25 @@ export const NotificationsTab: React.FC = () => {
       // this account would silently receive nothing. The status code decides what
       // the user should do, so name it rather than showing a bare failure.
       const status = /\((\d{3}|no response)\)/.exec(r.reason)?.[1];
+      // The resolved URL is part of the reason; show it, because which API
+      // answered decides what the user has to do next.
+      const where = /\s(at\s+\S+)\)/.exec(r.reason)?.[1];
       if (status === '401') {
         setResult({
           tone: 'error',
-          text: 'This device is not signed in, so the server rejected the subscription. Sign in again on this device and retry.',
+          text: `This device is not signed in, so the server rejected the subscription. Sign in again on this device and retry.${where ? ` (${where})` : ''}`,
         });
       } else if (status === '400') {
-        setResult({ tone: 'error', text: 'The server rejected the subscription payload. Please retry.' });
+        setResult({ tone: 'error', text: `The server rejected the subscription payload. Please retry.${where ? ` (${where})` : ''}` });
       } else if (status === '503') {
-        setResult({ tone: 'error', text: 'The server could not write the subscription to the database. Please retry in a moment.' });
+        setResult({ tone: 'error', text: `The server could not write the subscription to the database. Please retry in a moment.${where ? ` (${where})` : ''}` });
+      } else if (status === '404') {
+        // 404 means the request never reached this API's route, so retrying is
+        // pointless until the origin serving the app is identified.
+        setResult({
+          tone: 'error',
+          text: `The app could not find the subscribe route${where ? ` at ${where}` : ''}. This build is talking to a different API than the local server - reopen the app from the current tunnel URL and retry.`,
+        });
       } else {
         setResult({ tone: 'error', text: `Could not store the subscription on the server (${r.reason}).` });
       }
