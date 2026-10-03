@@ -143,6 +143,13 @@ before(async () => {
   process.env.ADMIN_EMAIL = BOOTSTRAP_EMAIL;
   process.env.ADMIN_PASSWORD = PASSWORD;
   process.env.IP_HASH_SALT = 'm1-guard-salt';
+  // M2 gave trackDevice a PostgreSQL write path, so this suite would otherwise
+  // create `anon_install_*` rows in whatever cluster DATABASE_URL points at —
+  // test fixtures left in a shared database. This suite asserts guard behaviour
+  // against a scratch ledger and was never meant to write anywhere shared; the
+  // relational path is covered by scripts/m2-verify-devices.ts, which cleans up
+  // after itself. Clearing it also keeps db/client fail-closed by construction.
+  process.env.DATABASE_URL = '';
 
 // server.ts listens on PORT itself and exports the handle; it does not export a
   // bare express app. Match verify-guards.live.ts rather than guessing.
@@ -380,4 +387,33 @@ test('a repeated beacon inside the throttle window reports no write', async () =
   });
   assert.equal(second.status, 200);
   assert.equal(fs.statSync(SCRATCH).size, sizeBefore, 'a no-op beacon must not rewrite the ledger');
+});
+
+test('the push test route needs broadcasts.send, and a staff grant supplies it', async () => {
+  // Regression guard. /test used to mount only requireAuth, which never sets
+  // req.authority, so the guard inside testPush refused everyone — including
+  // super_admin. That surfaces as "permission denied" and gets debugged as a
+  // permissions problem when the route is the thing that is wrong.
+  const anon = await call('POST', '/api/notifications/test', {});
+  assert.equal(anon.status, 401, 'an anonymous caller must not reach the push provider');
+
+  const boot = await login(BOOTSTRAP_EMAIL);
+  const support = await login(SUPPORT_EMAIL);
+  const student = await login(STUDENT_EMAIL);
+
+  const asStudent = await call('POST', '/api/notifications/test', {}, student);
+  assert.equal(asStudent.status, 403, 'a student must not send broadcasts');
+
+  const asSupport = await call('POST', '/api/notifications/test', {}, support);
+  assert.equal(asSupport.status, 403, 'staff without broadcasts.send must be refused');
+
+  // super_admin resolves '*', so it gets past the guard. With no subscriptions the
+  // handler is a no-op reporting zero sends; what matters is that the answer is
+  // not the guard's own refusal.
+  const asBoot = await call('POST', '/api/notifications/test', {}, boot);
+  assert.notEqual(
+    asBoot.json?.required_permission,
+    'broadcasts.send',
+    'super_admin must be able to send a test push'
+  );
 });

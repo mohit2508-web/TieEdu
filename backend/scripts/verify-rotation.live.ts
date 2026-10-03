@@ -46,6 +46,10 @@ if (!OLD_PASSWORD || !NEW_PASSWORD) {
 
 fs.copyFileSync(DB_FILE, SCRATCH);
 process.env.DB_FILE = SCRATCH;
+// Same reason as the other server-booting harnesses: since M2 a boot writes grants
+// to PostgreSQL, and this one copied the real ledger, so it would have seeded a
+// live super_admin row from it.
+process.env.DATABASE_URL = '';
 
 let pass = 0;
 let fail = 0;

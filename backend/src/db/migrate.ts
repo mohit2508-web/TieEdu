@@ -130,6 +130,36 @@ export async function ensureDevicesTable(): Promise<void> {
   await getPool().query(`CREATE INDEX IF NOT EXISTS devices_surface_idx ON devices(install_surface);`);
 }
 
+/**
+ * M2: the authority table moves off the JSON ledger.
+ *
+ * `staff` is tiny — a handful of rows — but it is read on EVERY authenticated
+ * admin request, because `resolveAuthority` needs it to answer "may this user do
+ * X". Tied to the JSON ledger that meant parsing the whole 3MB document to reach
+ * two records, on the hottest path in the application.
+ *
+ * `permissions` is JSONB because it is a `string[]` that is only ever read whole
+ * and expanded in memory. Flattening it into rows would require a join on a path
+ * that runs per request, to store a value that is never queried piecewise.
+ */
+export async function ensureStaffTable(): Promise<void> {
+  await getPool().query(`
+    CREATE TABLE IF NOT EXISTS staff (
+      id          TEXT PRIMARY KEY,
+      user_id     TEXT NOT NULL,
+      role        TEXT NOT NULL,
+      permissions JSONB NOT NULL DEFAULT '[]',
+      status      TEXT NOT NULL DEFAULT 'active',
+      created_by  TEXT,
+      created_at  TIMESTAMPTZ NOT NULL,
+      updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `);
+  // The auth path looks a grant up by user, then filters on status.
+  await getPool().query(`CREATE INDEX IF NOT EXISTS staff_user_id_idx ON staff(user_id);`);
+  await getPool().query(`CREATE INDEX IF NOT EXISTS staff_status_idx ON staff(status);`);
+}
+
 export async function runMigrations(): Promise<boolean> {
   if (!(await isDbReachable(6000))) {
     console.log('💡 [PostgreSQL] Replica unreachable or not configured — staying on local-json-repository. (Replica requires ENABLE_PG_REPLICA=1 + DATABASE_URL + network allowlist).');
@@ -140,7 +170,8 @@ export async function runMigrations(): Promise<boolean> {
     await ensureAppStateTable();
     await ensurePushSubscriptionsTable();
     await ensureDevicesTable();
-    console.log('✅ [PostgreSQL] app_state, push_subscriptions and devices tables ready.');
+    await ensureStaffTable();
+    console.log('✅ [PostgreSQL] app_state, push_subscriptions, devices and staff tables ready.');
     return true;
   } catch (err: any) {
     console.log('💡 [PostgreSQL] Migration failed: ' + err.message);

@@ -45,6 +45,11 @@ const REAL_DB_FILE = path.join(DATA_DIR, 'db.json');
 // the run was interrupted. db.ts already honours DB_FILE for exactly this.
 const SCRATCH_DB = path.join(DATA_DIR, `db.smoke-${process.pid}.json`);
 process.env.DB_FILE = SCRATCH_DB;
+// A scratch ledger is only half the isolation. Since M2 the server also writes
+// grants to PostgreSQL on boot, and without this the suite created a super_admin
+// row in whatever cluster DATABASE_URL points at — once per run, because the
+// seeded grant's id is random. The relational paths have their own scripts.
+process.env.DATABASE_URL = '';
 
 const DB_FILE = SCRATCH_DB;
 const BASE = `http://127.0.0.1:${process.env.PORT}`;

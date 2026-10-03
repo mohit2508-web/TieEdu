@@ -85,6 +85,9 @@ async function main() {
   fs.copyFileSync(path.join(__dirname, '../data/db.json'), dbFile);
   seedCertificate(dbFile, 'TIEEDU-2026-HTTPTEST1');
   process.env.DB_FILE = dbFile;
+  // Since M2 a boot writes grants to PostgreSQL; this suite copies the real ledger,
+  // so without this it would seed a live super_admin row on every run.
+  process.env.DATABASE_URL = '';
 
   await import('../src/server');
   await new Promise((r) => setTimeout(r, 1000));

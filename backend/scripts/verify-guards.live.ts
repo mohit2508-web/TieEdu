@@ -57,6 +57,11 @@ process.env.ADMIN_PASSWORD = ADMIN_PASSWORD;
 process.env.ADMIN_EMAIL = ADMIN_EMAIL;
 process.env.PORT = process.env.GUARD_PORT || '5477';
 process.env.DB_FILE = SCRATCH;
+// Since M2 the server also writes grants to PostgreSQL on boot, so a scratch
+// ledger alone no longer keeps this suite out of a live cluster — it left a
+// super_admin row behind on every run. The relational paths have their own
+// scripts; see smokeCourses.ts for the same note.
+process.env.DATABASE_URL = '';
 
 let pass = 0;
 let fail = 0;

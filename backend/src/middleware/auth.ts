@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import dotenv from 'dotenv';
 import { loadDb, User } from '../data/db';
 import { ResolvedAuthority, resolveAuthority, can, isPermission, PERMISSION_GROUPS } from '../lib/rbac';
+import { getStaffSync } from '../store/staff';
 
 // Imports are evaluated before any statement in the importing module, so this
 // file used to read process.env.JWT_SECRET before server.ts had a chance to call
@@ -119,9 +120,11 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction) {
   requireAuth(req, res, () => {
     if (req.user?.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
     // Resolve the fine-grained authority while the user is already loaded. Every
-    // permission check needs it, and `requireAuth` reads the whole ledger on each
-    // request anyway, so this costs nothing extra.
-    req.authority = resolveAuthority(req.user, loadDb().staff || []);
+    // permission check needs it, and reading the cached grant here is free — the
+    // previous version took `loadDb().staff`, which is a 3MB read plus JSON.parse
+    // (~24ms) to reach two rows, on every admin request. The cache is warmed at
+    // boot and refreshed on write, so this is a plain array lookup.
+    req.authority = resolveAuthority(req.user, getStaffSync());
     next();
   });
 }

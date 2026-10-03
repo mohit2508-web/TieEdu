@@ -33,6 +33,7 @@ import { storage } from './store';
 
 import { runMigrations } from './db/migrate';
 import { backfillDevicesFromJson } from './store/devices';
+import { warmStaffCache } from './store/staff';
 
 dotenv.config();
 assertAuthConfigured();
@@ -315,8 +316,22 @@ export const httpServer = app.listen(PORT, async () => {
     try {
       await backfillDevicesFromJson();
     } catch (e: any) {
-      console.warn('💡 [Storage] Device backfill skipped: ' + (e?.message || e));
+      console.log('💡 [Storage] Device backfill skipped: ' + (e?.message || e));
     }
+  }
+
+  // M2: warm the authority cache so the first request after a restart does not
+  // pay a 3MB parse to read two rows. Merges PostgreSQL with JSON, so a grant
+  // that exists in only one store is still honoured — see warmStaffCache for
+  // why taking PostgreSQL alone would lock an existing deployment out.
+  try {
+    const warm = await warmStaffCache();
+    console.log(
+      `🔑 [RBAC] authority cache warm: ${warm.count} grant(s) from ${warm.source}` +
+        (warm.backfilled ? `, ${warm.backfilled} copied to PostgreSQL` : '')
+    );
+  } catch (e: any) {
+    console.log('💡 [RBAC] authority cache warm skipped (will hydrate on first request): ' + (e?.message || e));
   }
 
   console.log(`📦 [Storage] ${storage.status().storage_label}`);
