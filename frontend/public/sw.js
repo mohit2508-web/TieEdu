@@ -75,13 +75,37 @@ const CACHEABLE_API = [
 
 const OFFLINE_DOCUMENT = '/offline.html';
 
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches
-      .open(SHELL_CACHE)
-      .then((cache) => cache.addAll([OFFLINE_DOCUMENT, '/logo.svg', '/favicon.svg']))
-      .then(() => self.skipWaiting())
+/**
+ * Precache shell.
+ *
+ * Cached one at a time and individually tolerated rather than via a single
+ * `cache.addAll`. `addAll` is atomic: one rejected request discards the whole
+ * batch, which fails the `install` event, which means the worker never activates
+ * and `navigator.serviceWorker.ready` stays pending forever. That presented as a
+ * "Enable notifications" button spinning with no error — the browser logs a
+ * `Failed to execute 'addAll' on 'Cache'` in the console and otherwise says
+ * nothing.
+ *
+ * That is exactly what happened: the list referenced `/favicon.svg`, which has
+ * never existed (the favicons here are `.ico` and PNG), so the worker could not
+ * install at all. Treating each entry as best-effort means a missing or renamed
+ * asset degrades offline support instead of taking push down with it.
+ */
+const PRECACHE_URLS = [OFFLINE_DOCUMENT, '/logo.svg'];
+
+const precacheShell = async () => {
+  const cache = await caches.open(SHELL_CACHE);
+  await Promise.all(
+    PRECACHE_URLS.map((url) =>
+      cache.add(new Request(url, { cache: 'reload' })).catch((err) => {
+        console.warn('[sw] precache skipped', url, err);
+      })
+    )
   );
+};
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(precacheShell().then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (event) => {
