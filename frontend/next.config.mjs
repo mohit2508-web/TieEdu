@@ -26,9 +26,6 @@ const nextConfig = {
   // Windows. Setting NEXT_DIST_DIR lets the build write somewhere else instead of
   // fighting over the directory (or requiring the dev server to be stopped).
   ...(process.env.NEXT_DIST_DIR ? { distDir: process.env.NEXT_DIST_DIR } : {}),
-  experimental: {
-    cpus: 4,
-  },
 
   /*
    * Both of these used to be nested inside `experimental`, where Next.js does not
