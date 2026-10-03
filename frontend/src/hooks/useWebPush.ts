@@ -107,11 +107,22 @@ export const useWebPush = () => {
         if (cancelled || !reg) return;
         const existing = await reg.pushManager.getSubscription();
         if (cancelled) return;
-        setSubscribed(!!existing);
-        // Repair a rotated endpoint, and register an install that was never
-        // tracked because the user never pressed the button.
-        if (existing) await syncSubscriptionToServer();
-        else await trackInstall();
+        if (existing) {
+          // The label must reflect the server's copy, not the browser's.
+          // `pushManager` keeps a subscription even when the store request fails,
+          // so trusting it alone left a device reading "Subscribed" with an empty
+          // server - and a toggle already in the on position gives the user no
+          // button left to press. The server's row is what actually delivers.
+          const stored = await syncSubscriptionToServer();
+          if (cancelled) return;
+          setSubscribed(stored);
+        } else {
+          // Register an install that was never tracked because the user never
+          // pressed the button.
+          await trackInstall();
+          if (cancelled) return;
+          setSubscribed(false);
+        }
       } catch {
         /* no service worker yet; nothing to repair */
       }

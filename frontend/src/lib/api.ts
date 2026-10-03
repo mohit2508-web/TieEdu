@@ -27,18 +27,35 @@ export let refreshInFlight: Promise<boolean> | null = null;
 let sessionUser: AuthUser | null = null;
 export const getSessionUser = (): AuthUser | null => sessionUser;
 
+/*
+ * Whether this browser is known to have no session, set only once a refresh has
+ * actually failed. It exists because `getAccessToken()` cannot answer that
+ * question: the access token is held in memory only, so on a cold start it is
+ * empty even when the refresh cookie is completely valid.
+ *
+ * Gating 401 recovery on an in-memory token therefore skipped the recovery for
+ * precisely the case that needed it - a privileged call made before the boot
+ * refresh hydrated the token. On a freshly installed PWA that was the difference
+ * between a stored push subscription and a silent 401, since the browser keeps
+ * its own subscription and the server ends up with nothing.
+ */
+let sessionSignedOut = false;
+export const isSessionSignedOut = (): boolean => sessionSignedOut;
+
 export const tryRefreshSession = (): Promise<boolean> => {
   if (!refreshInFlight) {
     refreshInFlight = apiRefresh()
       .then((data) => {
         if (data?.accessToken) {
-          setAuthSession(data.accessToken, data.user?.id || getUserId());
-          sessionUser = (data.user as AuthUser) || null;
-          return true;
-        }
-        setAuthSession(null, null);
-        sessionUser = null;
-        return false;
+setAuthSession(data.accessToken, data.user?.id || getUserId());
+        sessionUser = (data.user as AuthUser) || null;
+        sessionSignedOut = false;
+        return true;
+      }
+      setAuthSession(null, null);
+      sessionUser = null;
+      sessionSignedOut = true;
+      return false;
       })
       .finally(() => { refreshInFlight = null; });
   }
@@ -54,7 +71,10 @@ export const apiFetch = async (url: string, options: RequestInit = {}): Promise<
       headers: { 'Content-Type': 'application/json', ...authHeaders(), ...(options.headers || {}) },
     });
   const res = await doRequest();
-  if (res.status === 401 && getAccessToken() &&
+  // Recover on 401 unless this browser is *known* to be signed out. The old guard
+  // required an in-memory access token to be present, so a cold start skipped the
+  // refresh and handed the 401 straight to the caller.
+  if (res.status === 401 && !sessionSignedOut &&
       !url.includes('/auth/refresh') && !url.includes('/auth/login') && !url.includes('/auth/signup') && !url.includes('/auth/logout')) {
     const refreshed = await tryRefreshSession();
     if (refreshed) return doRequest();
