@@ -1107,3 +1107,34 @@ export const sendTestPushApi = async (): Promise<{ sent: number; failed: number 
   const r = await jsonFetch<{ sent?: number; failed?: number }>('/notifications/test', { method: 'POST' });
   return { sent: Number(r?.sent ?? 0), failed: Number(r?.failed ?? 0) };
 };
+
+/**
+ * Staff-initiated broadcast. `confirm: true` is required by the server, not just
+ * by this form — see the route, where a confirmation that only existed in the
+ * client would not stop a retried request from reaching every student.
+ */
+export type BroadcastAudience =
+  | { kind: 'all_students' }
+  | { kind: 'users'; userIds: string[] };
+
+export interface BroadcastResult {
+  ok: boolean;
+  resolved_users: number;
+  endpoints: number;
+  recipients: number;
+  sent: number;
+  failed: number;
+  skipped: number;
+}
+
+export const sendBroadcastApi = async (input: {
+  audience: BroadcastAudience;
+  title: string;
+  body: string;
+  url?: string;
+  confirm: boolean;
+}): Promise<BroadcastResult> =>
+  adminFetch('/notifications/broadcast', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
