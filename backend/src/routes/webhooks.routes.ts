@@ -2,14 +2,14 @@ import { Router, Request, Response } from 'express';
 import { loadDb, saveDb } from '../data/db';
 import { verifyWebhookSignature } from '../payments/gateway';
 import { completePaidOrder } from '../payments/orders';
-import { pushAudit } from '../lib/audit';
+import { appendAudit } from '../store/audit';
 
 export const webhooksRouter = Router();
 
 // POST /api/webhooks/razorpay
 // Raw body is captured into req.rawBody by the global json `verify` hook (server.ts)
 // so signature verification stays byte-exact. Idempotent by order status.
-webhooksRouter.post('/razorpay', (req: Request, res: Response) => {
+webhooksRouter.post('/razorpay', async (req: Request, res: Response) => {
   const db = loadDb();
   const signature = (req.headers['x-razorpay-signature'] as string) || '';
   const rawBody = (req as any).rawBody || '';
@@ -36,8 +36,8 @@ webhooksRouter.post('/razorpay', (req: Request, res: Response) => {
     }
     const createdBy = order.user_id;
     try {
-      completePaidOrder(db, order, createdBy);
-      pushAudit(db, {
+      await completePaidOrder(db, order, createdBy);
+      await appendAudit(db, {
         actor: 'razorpay-webhook',
         action: 'order.paid.webhook',
         detail: `payment.captured webhook (${rzpOrderId})`,
@@ -55,7 +55,7 @@ webhooksRouter.post('/razorpay', (req: Request, res: Response) => {
     if (order && order.status === 'created') {
       order.status = 'failed';
       order.failure_at = new Date().toISOString();
-      pushAudit(db, {
+      await appendAudit(db, {
         actor: 'razorpay-webhook',
         action: 'order.failed',
         detail: `payment.failed webhook (${rzpOrderId})`,

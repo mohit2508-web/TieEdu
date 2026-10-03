@@ -4,7 +4,7 @@ import { requireAuth } from '../middleware/auth';
 import { getGateway, verifyRazorpaySignature, CreatedOrder } from '../payments/gateway';
 import { effectivePaymentMode } from '../config';
 import { completePaidOrder, unlockedCompanyIds, ownedModuleIdsFor, ownedCourseIdsFor } from '../payments/orders';
-import { pushAudit } from '../lib/audit';
+import { appendAudit } from '../store/audit';
 import { SINGLE_MODULE_PRICE, COMPLETE_PACK_COUNT, packPrice, listPriceFor } from '../lib/pricing';
 
 export const checkoutRouter = Router();
@@ -352,7 +352,7 @@ checkoutRouter.post('/create-order', async (req: Request, res: Response) => {
 
   if (!db.orders) db.orders = [];
   db.orders.push(order);
-  pushAudit(db, {
+  await appendAudit(db, {
     actor: user_id,
     action: 'order.created',
     detail: `${total} INR via ${created.gateway}`,
@@ -378,7 +378,7 @@ checkoutRouter.post('/create-order', async (req: Request, res: Response) => {
 
 // POST /api/checkout/confirm-payment — UPI flow: user says they completed the transfer.
 // Order moves to 'awaiting_verification'; it unlocks ONLY after an admin verifies it.
-checkoutRouter.post('/confirm-payment', (req: Request, res: Response) => {
+checkoutRouter.post('/confirm-payment', async (req: Request, res: Response) => {
   const db = loadDb();
   const { order_id } = req.body;
   const user_id = req.user!.id;
@@ -397,7 +397,7 @@ checkoutRouter.post('/confirm-payment', (req: Request, res: Response) => {
 
   order.status = 'awaiting_verification';
   order.payment_confirmed_at = new Date().toISOString();
-  pushAudit(db, {
+  await appendAudit(db, {
     actor: user_id,
     action: 'order.payment_confirmed',
     detail: `UPI payment confirmed for ${order.id} — awaiting admin verification`,
@@ -444,7 +444,7 @@ checkoutRouter.post('/complete', (req: Request, res: Response) => {
 });
 
 // POST /api/checkout/verify — Real gateway verification (Razorpay signature check; UPI never reaches this)
-checkoutRouter.post('/verify', (req: Request, res: Response) => {
+checkoutRouter.post('/verify', async (req: Request, res: Response) => {
   const db = loadDb();
   const { order_id, razorpay_payment_id, razorpay_signature } = req.body;
   const user_id = req.user!.id;
@@ -461,7 +461,7 @@ checkoutRouter.post('/verify', (req: Request, res: Response) => {
   }
 
   order.razorpay_payment_id = razorpay_payment_id;
-  completePaidOrder(db, order, user_id);
+  await completePaidOrder(db, order, user_id);
   saveDb(db);
   res.json({ status: 'success', message: 'Payment verified & vault unlocked', order, unlocked_company_ids: unlockedCompanyIds(db, user_id) });
 });

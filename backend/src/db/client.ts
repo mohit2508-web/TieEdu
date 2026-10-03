@@ -96,3 +96,22 @@ export async function isDbReachable(timeoutMs: number = 4000): Promise<boolean> 
 
 /** Why the last probe failed, for logging. Never contains a credential. */
 export const lastPoolError = (): string | null => poolError;
+
+/**
+ * Coerce a count column to a real number.
+ *
+ * This is not defensive padding, it is a required fix. CockroachDB's `INT` is
+ * `bigint`, and node-postgres returns `int8` as a *string* rather than a number so
+ * that large values cannot lose precision in JavaScript. Passing that straight
+ * through makes arithmetic corrupt itself: `"3" + 1` is `"31"`, so the second
+ * install that declined the prompt reported 31 declines, and the accept rate the
+ * dashboard showed was nonsense that still looked like a plausible number.
+ *
+ * It lives here, next to the pool, because it is a fact about the driver rather
+ * than about any one table. It has now been needed by two migrations and would
+ * have been a third silent corruption waiting to happen.
+ */
+export function toCount(v: unknown): number {
+  const n = typeof v === 'string' ? Number(v) : v;
+  return typeof n === 'number' && Number.isFinite(n) ? n : 0;
+}

@@ -187,6 +187,19 @@ export interface PushSubscription {
   failure_count: number;
   disabled_at: string | null;
   disable_reason: string | null;
+  /**
+   * Optional client context. These are the columns the push store actually writes
+   * and the table actually has, so they belong here rather than being reached
+   * through `as any` at every call site — a type that omits fields the store
+   * persists is a type that cannot be used to catch a field being dropped.
+   *
+   * Optional because rows recorded before the store existed have no value for
+   * them, and because nothing reads them on a delivery path where they would be
+   * noise.
+   */
+  user_agent?: string | null;
+  platform?: string | null;
+  last_seen_at?: string | null;
 }
 
 export type NotificationChannel = 'inapp' | 'push';

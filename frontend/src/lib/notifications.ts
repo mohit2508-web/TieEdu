@@ -63,6 +63,9 @@ export interface NotificationSources {
   orders?: NotificationOrder[] | null;
   reports?: NotificationReport[] | null;
   xp?: NotificationXpEntry[] | null;
+  myCourses?: any[] | null;
+  inProgress?: any[] | null;
+  completed?: any[] | null;
 }
 
 export const READ_CURSOR_KEY = 'tieedu_notifications_v1';
@@ -207,6 +210,54 @@ export const deriveNotifications = (sources: NotificationSources): AppNotificati
   // timestamp for orders, so lexical order is only correct within a format.
   // Sorting by the string is therefore only a display nicety — the read cursor
   // compares exact strings, never `<`/`>`, so ordering cannot affect it.
+  // Progress-based motivational notifications
+  const inProgress = sources.inProgress || [];
+  const completed = sources.completed || [];
+  for (const course of inProgress.slice(0, 2)) {
+    const title = course.title || 'Your course';
+    const progressPct = course.progress_percent || course.progress || 0;
+    if (progressPct < 25 && progressPct > 0) {
+      out.push({
+        id: `progress:${course.id}:start`,
+        tone: 'info',
+        title: 'Just getting started!',
+        body: `You're ${Math.round(progressPct)}% through "${title}". Keep the momentum going!`,
+        href: `/courses/${course.slug || course.id}`,
+        created_at: new Date(Date.now() - 1000*60*5).toISOString(),
+      });
+    } else if (progressPct > 70 && progressPct < 95) {
+      out.push({
+        id: `progress:${course.id}:almost`,
+        tone: 'success',
+        title: 'Almost there!',
+        body: `You're ${Math.round(progressPct)}% done with "${title}". Just a few more lessons to complete!`,
+        href: `/courses/${course.slug || course.id}`,
+        created_at: new Date(Date.now() - 1000*60*10).toISOString(),
+      });
+    } else if (progressPct >= 95 && progressPct < 100) {
+      out.push({
+        id: `progress:${course.id}:finish`,
+        tone: 'success',
+        title: 'So close to completion!',
+        body: `Finish "${title}" to get your certificate. You're almost done!`,
+        href: `/courses/${course.slug || course.id}`,
+        created_at: new Date(Date.now() - 1000*60*15).toISOString(),
+      });
+    }
+  }
+  if (inProgress.length === 0 && completed.length === 0 && (sources.myCourses || []).length > 0) {
+    const course = (sources.myCourses || [])[0];
+    out.push({
+      id: `nudge:start:${course.id}`,
+      tone: 'info',
+      title: 'Start your learning journey',
+      body: `Begin "${course.title || 'your course'}" today - your first certificate is just around the corner!`,
+      href: `/courses/${course.slug || course.id}`,
+      created_at: new Date(Date.now() - 1000*60*30).toISOString(),
+    });
+  }
+
+
   return out.sort((a, b) => (a.created_at < b.created_at ? 1 : a.created_at > b.created_at ? -1 : 0));
 };
 

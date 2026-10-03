@@ -4,9 +4,17 @@
 // to it — and keeping the only writer of a shared ledger inside payments/orders
 // is what let three other shapes grow alongside it.
 
-import { pushAudit } from '../lib/audit';
+import { appendAudit } from '../store/audit';
 
-export function completePaidOrder(db: any, order: any, user_id: string) {
+/**
+ * Async because it records an audit event, which mirrors into PostgreSQL.
+ *
+ * The call is awaited at every site rather than floated: if the process exits
+ * between the payment being marked paid and the ledger write, the payment is
+ * recorded and the audit of it is not — which is the one gap an audit trail
+ * cannot have.
+ */
+export async function completePaidOrder(db: any, order: any, user_id: string) {
   order.status = 'paid';
   order.paid_at = order.paid_at || new Date().toISOString();
 
@@ -33,7 +41,7 @@ export function completePaidOrder(db: any, order: any, user_id: string) {
       if (company) company.unlock_count = (company.unlock_count || 0) + 1;
     });
 
-  pushAudit(db, {
+  await appendAudit(db, {
     actor: user_id,
     action: 'order.paid',
     detail: `Order ${order.id} marked paid via ${order.gateway || 'upi'}`,

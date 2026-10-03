@@ -55,31 +55,29 @@ self.addEventListener('notificationclick', function (event) {
 
 // The browser can drop a push endpoint (endpoint rotation, storage pressure).
 // Without this, the subscription sitting in our database is dead and every
-// broadcast after that silently fails for this device forever. Re-subscribing
-// here is what makes the endpoint self-healing instead of a one-way door.
+// broadcast after that silently fails for this device forever.
+//
+// This handler deliberately does NOT call the API. It used to, and it could
+// never have worked: a service worker has no access token, `/api/notifications/
+// subscribe` is bearer-only, and `credentials: 'include'` rides on cookies that
+// do not exist here. So the fetch was guaranteed to 401 while looking like a
+// repair — the most expensive kind of bug, because it reads as handled.
+//
+// What the worker *can* do is tell the page. The page has a token and can read
+// the browser's current subscription, which is the new endpoint after a
+// rotation. It re-registers on load regardless, so a rotation that happens while
+// no tab is open is repaired on the next visit rather than never.
 self.addEventListener('pushsubscriptionchange', function (event) {
-  // A service worker cannot read the app's access token out of React state or
-  // localStorage reliably, and `/api/auth` accepts a bearer header only — there
-  // is no cookie to ride along on. So this re-registers the endpoint with the
-  // backend but does NOT re-point it at a user: the row stays keyed to whoever
-  // subscribed originally, and the next sign-in on the app claims it. The
-  // endpoint is kept valid, which is the part that actually breaks silently.
-  //
-  // If this ever needs to be user-attributed, the fix is a short-lived,
-  // single-use claim token issued by the app — not a wider auth surface here.
   event.waitUntil(
-    self.registration.pushManager
-      .subscribe(event.oldSubscription
-        ? { userVisibleOnly: true, applicationServerKey: event.oldSubscription.options && event.oldSubscription.options.applicationServerKey }
-        : { userVisibleOnly: true })
-      .then(function (sub) {
-        return fetch('/api/notifications/subscribe', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ subscription: sub.toJSON() })
-        });
+    self.clients
+      .matchAll({ type: 'window', includeUncontrolled: true })
+      .then(function (clients) {
+        for (var i = 0; i < clients.length; i++) {
+          clients[i].postMessage({ type: 'RESUBSCRIBE' });
+        }
       })
-      .catch(function () { /* the app will re-subscribe on next enable */ })
+      .catch(function () {
+        /* no open tab: the next page load re-registers the current endpoint */
+      })
   );
 });

@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { loadDb, saveDb } from '../data/db';
-import { pushAudit } from '../lib/audit';
+import { appendAudit } from '../store/audit';
 import { requireAuth, rateLimit } from '../middleware/auth';
 import {
   makeId, str, sanitizeBlocks, normalizePhase, reindexPhases, reindexBlocks,
@@ -141,7 +141,7 @@ studyPlanAdminRouter.get('/:id', (req: Request, res: Response) => {
   res.json({ status: 'success', template, phases: phasesFor(db, template.id) });
 });
 
-studyPlanAdminRouter.post('/', (req: Request, res: Response) => {
+studyPlanAdminRouter.post('/', async (req: Request, res: Response) => {
   const db = loadDb();
   ensureCollections(db);
   const now = new Date().toISOString();
@@ -172,7 +172,7 @@ studyPlanAdminRouter.post('/', (req: Request, res: Response) => {
     db.study_plan_phases.push(...phases);
   }
 
-  pushAudit(db, {
+  await appendAudit(db, {
     action: 'study_plan.create',
     actor: actorOf(req),
     detail: `Created study plan template "${template.title}"`,
@@ -182,7 +182,7 @@ studyPlanAdminRouter.post('/', (req: Request, res: Response) => {
   res.status(201).json({ status: 'success', template, phases: phasesFor(db, template.id) });
 });
 
-studyPlanAdminRouter.put('/:id', (req: Request, res: Response) => {
+studyPlanAdminRouter.put('/:id', async (req: Request, res: Response) => {
   const db = loadDb();
   const template = templatesOf(db).find((t) => t.id === req.params.id);
   if (!template) return res.status(404).json({ error: 'Study plan template not found' });
@@ -225,7 +225,7 @@ studyPlanAdminRouter.put('/:id', (req: Request, res: Response) => {
   }
 
   touch(template, req);
-  pushAudit(db, {
+  await appendAudit(db, {
     action: 'study_plan.update',
     actor: actorOf(req),
     detail: `Updated study plan "${template.title}"`,
@@ -235,7 +235,7 @@ studyPlanAdminRouter.put('/:id', (req: Request, res: Response) => {
   res.json({ status: 'success', template, phases: phasesFor(db, template.id) });
 });
 
-studyPlanAdminRouter.delete('/:id', (req: Request, res: Response) => {
+studyPlanAdminRouter.delete('/:id', async (req: Request, res: Response) => {
   const db = loadDb();
   const template = templatesOf(db).find((t) => t.id === req.params.id);
   if (!template) return res.status(404).json({ error: 'Study plan template not found' });
@@ -249,7 +249,7 @@ studyPlanAdminRouter.delete('/:id', (req: Request, res: Response) => {
     touch(template, req);
   }
 
-  pushAudit(db, {
+  await appendAudit(db, {
     action: hard ? 'study_plan.delete' : 'study_plan.archive',
     actor: actorOf(req),
     detail: `${hard ? 'Deleted' : 'Archived'} study plan "${template.title}"`,
@@ -263,7 +263,7 @@ studyPlanAdminRouter.delete('/:id', (req: Request, res: Response) => {
 // ADMIN — PHASE CRUD
 // ============================================================
 
-studyPlanAdminRouter.post('/:id/phases', (req: Request, res: Response) => {
+studyPlanAdminRouter.post('/:id/phases', async (req: Request, res: Response) => {
   const db = loadDb();
   ensureCollections(db);
   const template = templatesOf(db).find((t) => t.id === req.params.id);
@@ -286,7 +286,7 @@ studyPlanAdminRouter.post('/:id/phases', (req: Request, res: Response) => {
     ...reindexed,
   ];
   touch(template, req);
-  pushAudit(db, {
+  await appendAudit(db, {
     actor: actorOf(req),
     action: 'study_plan.phase.create',
     detail: `Added phase "${phase.title}" to "${template.title}"`,
@@ -296,7 +296,7 @@ studyPlanAdminRouter.post('/:id/phases', (req: Request, res: Response) => {
   res.status(201).json({ status: 'success', phase, phases: phasesFor(db, template.id) });
 });
 
-studyPlanAdminRouter.put('/:id/phases/:phaseId', (req: Request, res: Response) => {
+studyPlanAdminRouter.put('/:id/phases/:phaseId', async (req: Request, res: Response) => {
   const db = loadDb();
   const template = templatesOf(db).find((t) => t.id === req.params.id);
   if (!template) return res.status(404).json({ error: 'Study plan template not found' });
@@ -326,7 +326,7 @@ studyPlanAdminRouter.put('/:id/phases/:phaseId', (req: Request, res: Response) =
   }
 
   touch(template, req);
-  pushAudit(db, {
+  await appendAudit(db, {
     actor: actorOf(req),
     action: 'study_plan.phase.update',
     detail: `Updated phase "${phase.title}" in "${template.title}"`,
@@ -336,7 +336,7 @@ studyPlanAdminRouter.put('/:id/phases/:phaseId', (req: Request, res: Response) =
   res.json({ status: 'success', phase, phases: phasesFor(db, template.id) });
 });
 
-studyPlanAdminRouter.delete('/:id/phases/:phaseId', (req: Request, res: Response) => {
+studyPlanAdminRouter.delete('/:id/phases/:phaseId', async (req: Request, res: Response) => {
   const db = loadDb();
   const template = templatesOf(db).find((t) => t.id === req.params.id);
   if (!template) return res.status(404).json({ error: 'Study plan template not found' });
@@ -346,7 +346,7 @@ studyPlanAdminRouter.delete('/:id/phases/:phaseId', (req: Request, res: Response
   );
   db.study_plan_phases = [...phasesOf(db).filter((p) => p.template_id !== template.id), ...remaining];
   touch(template, req);
-  pushAudit(db, {
+  await appendAudit(db, {
     actor: actorOf(req),
     action: 'study_plan.phase.delete',
     detail: `Removed a phase from "${template.title}"`,
@@ -356,7 +356,7 @@ studyPlanAdminRouter.delete('/:id/phases/:phaseId', (req: Request, res: Response
   res.json({ status: 'success', message: 'Phase removed', phases: phasesFor(db, template.id) });
 });
 
-studyPlanAdminRouter.post('/:id/phases/reorder', (req: Request, res: Response) => {
+studyPlanAdminRouter.post('/:id/phases/reorder', async (req: Request, res: Response) => {
   const db = loadDb();
   const template = templatesOf(db).find((t) => t.id === req.params.id);
   if (!template) return res.status(404).json({ error: 'Study plan template not found' });
@@ -379,7 +379,7 @@ studyPlanAdminRouter.post('/:id/phases/reorder', (req: Request, res: Response) =
     ...missing,
   ];
   touch(template, req);
-  pushAudit(db, {
+  await appendAudit(db, {
     actor: actorOf(req),
     action: 'study_plan.phase.reorder',
     detail: `Reordered the phases of "${template.title}"`,
@@ -393,7 +393,7 @@ studyPlanAdminRouter.post('/:id/phases/reorder', (req: Request, res: Response) =
 // ADMIN — BLOCK CRUD (mirrors /api/admin/items/:itemId/blocks)
 // ============================================================
 
-studyPlanAdminRouter.post('/:id/phases/:phaseId/blocks', (req: Request, res: Response) => {
+studyPlanAdminRouter.post('/:id/phases/:phaseId/blocks', async (req: Request, res: Response) => {
   const db = loadDb();
   const template = templatesOf(db).find((t) => t.id === req.params.id);
   if (!template) return res.status(404).json({ error: 'Study plan template not found' });
@@ -409,7 +409,7 @@ studyPlanAdminRouter.post('/:id/phases/:phaseId/blocks', (req: Request, res: Res
   phase.blocks.push(block);
   phase.blocks = reindexBlocks(phase).blocks;
   touch(template, req);
-  pushAudit(db, {
+  await appendAudit(db, {
     actor: actorOf(req),
     action: 'study_plan.block.create',
     detail: `Added a ${block.block_type} block to "${phase.title}"`,
@@ -419,7 +419,7 @@ studyPlanAdminRouter.post('/:id/phases/:phaseId/blocks', (req: Request, res: Res
   res.status(201).json({ status: 'success', block, phases: phasesFor(db, template.id) });
 });
 
-studyPlanAdminRouter.put('/:id/phases/:phaseId/blocks/:blockId', (req: Request, res: Response) => {
+studyPlanAdminRouter.put('/:id/phases/:phaseId/blocks/:blockId', async (req: Request, res: Response) => {
   const db = loadDb();
   const template = templatesOf(db).find((t) => t.id === req.params.id);
   if (!template) return res.status(404).json({ error: 'Study plan template not found' });
@@ -435,7 +435,7 @@ studyPlanAdminRouter.put('/:id/phases/:phaseId/blocks/:blockId', (req: Request, 
 
   Object.assign(block, replacement, { id: block.id, block_order: block.block_order });
   touch(template, req);
-  pushAudit(db, {
+  await appendAudit(db, {
     actor: actorOf(req),
     action: 'study_plan.block.update',
     detail: `Updated a ${block.block_type} block in "${phase.title}"`,
@@ -445,7 +445,7 @@ studyPlanAdminRouter.put('/:id/phases/:phaseId/blocks/:blockId', (req: Request, 
   res.json({ status: 'success', block, phases: phasesFor(db, template.id) });
 });
 
-studyPlanAdminRouter.delete('/:id/phases/:phaseId/blocks/:blockId', (req: Request, res: Response) => {
+studyPlanAdminRouter.delete('/:id/phases/:phaseId/blocks/:blockId', async (req: Request, res: Response) => {
   const db = loadDb();
   const template = templatesOf(db).find((t) => t.id === req.params.id);
   if (!template) return res.status(404).json({ error: 'Study plan template not found' });
@@ -457,7 +457,7 @@ studyPlanAdminRouter.delete('/:id/phases/:phaseId/blocks/:blockId', (req: Reques
     blocks: phase.blocks.filter((b) => b.id !== req.params.blockId),
   }).blocks;
   touch(template, req);
-  pushAudit(db, {
+  await appendAudit(db, {
     actor: actorOf(req),
     action: 'study_plan.block.delete',
     detail: `Removed a block from "${phase.title}"`,
@@ -467,7 +467,7 @@ studyPlanAdminRouter.delete('/:id/phases/:phaseId/blocks/:blockId', (req: Reques
   res.json({ status: 'success', message: 'Block removed', phases: phasesFor(db, template.id) });
 });
 
-studyPlanAdminRouter.post('/:id/phases/:phaseId/blocks/reorder', (req: Request, res: Response) => {
+studyPlanAdminRouter.post('/:id/phases/:phaseId/blocks/reorder', async (req: Request, res: Response) => {
   const db = loadDb();
   const template = templatesOf(db).find((t) => t.id === req.params.id);
   if (!template) return res.status(404).json({ error: 'Study plan template not found' });
@@ -488,7 +488,7 @@ studyPlanAdminRouter.post('/:id/phases/:phaseId/blocks/reorder', (req: Request, 
   const missing = phase.blocks.filter((b) => !orderedIds.includes(b.id));
   phase.blocks = [...reordered, ...missing].map((b, i) => ({ ...b, block_order: i + 1 }));
   touch(template, req);
-  pushAudit(db, {
+  await appendAudit(db, {
     actor: actorOf(req),
     action: 'study_plan.block.reorder',
     detail: `Reordered the blocks of "${phase.title}"`,

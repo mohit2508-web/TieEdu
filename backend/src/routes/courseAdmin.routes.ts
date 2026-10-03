@@ -35,7 +35,7 @@ import {
   XpEvent,
 } from '../data/db';
 import { requireAdmin } from '../middleware/auth';
-import { pushAudit } from '../lib/audit';
+import { appendAudit } from '../store/audit';
 import { syncUserXp, totalXpForUser, LEVELS, XP } from '../lib/xp';
 import {
   courseStats,
@@ -451,7 +451,7 @@ courseAdminRouter.get('/courses', (req: Request, res: Response) => {
   });
 });
 
-courseAdminRouter.post('/courses', (req: Request, res: Response) => {
+courseAdminRouter.post('/courses', async (req: Request, res: Response) => {
   const db = loadDb();
   const title = str(req.body?.title, 160);
   if (title.length < 3) return res.status(400).json({ error: 'Course title is required (min 3 characters)' });
@@ -490,7 +490,7 @@ courseAdminRouter.post('/courses', (req: Request, res: Response) => {
 
   db.courses = db.courses || [];
   db.courses.push(course);
-  pushAudit(db, { actor: req.user?.email, action: 'course.create', detail: `Created course "${course.title}"` });
+  await appendAudit(db, { actor: req.user?.email, action: 'course.create', detail: `Created course "${course.title}"` });
   saveDb(db);
 
   res.status(201).json({ status: 'success', course: courseForEditor(db, course) });
@@ -524,7 +524,7 @@ courseAdminRouter.get('/courses/:id', (req: Request, res: Response) => {
   });
 });
 
-courseAdminRouter.put('/courses/:id', (req: Request, res: Response) => {
+courseAdminRouter.put('/courses/:id', async (req: Request, res: Response) => {
   const db = loadDb();
   const course = (db.courses || []).find((c: Course) => c.id === req.params.id);
   if (!course) return res.status(404).json({ error: 'Course not found' });
@@ -577,7 +577,7 @@ courseAdminRouter.put('/courses/:id', (req: Request, res: Response) => {
       }
     }
     course.published = publishing;
-    pushAudit(db, { actor: req.user?.email, action: publishing ? 'course.publish' : 'course.unpublish', detail: `${publishing ? 'Published' : 'Unpublished'} "${course.title}"` });
+    await appendAudit(db, { actor: req.user?.email, action: publishing ? 'course.publish' : 'course.unpublish', detail: `${publishing ? 'Published' : 'Unpublished'} "${course.title}"` });
   }
 
   course.updated_at = new Date().toISOString();
@@ -586,7 +586,7 @@ courseAdminRouter.put('/courses/:id', (req: Request, res: Response) => {
 });
 
 /** Duplicate a course as a draft. Answers copy too — reuse is the point. */
-courseAdminRouter.post('/courses/:id/duplicate', (req: Request, res: Response) => {
+courseAdminRouter.post('/courses/:id/duplicate', async (req: Request, res: Response) => {
   const db = loadDb();
   const source = (db.courses || []).find((c: Course) => c.id === req.params.id);
   if (!source) return res.status(404).json({ error: 'Course not found' });
@@ -618,13 +618,13 @@ courseAdminRouter.post('/courses/:id/duplicate', (req: Request, res: Response) =
   }
 
   db.courses.push(clone);
-  pushAudit(db, { actor: req.user?.email, action: 'course.duplicate', detail: `Duplicated "${source.title}" into "${clone.title}"` });
+  await appendAudit(db, { actor: req.user?.email, action: 'course.duplicate', detail: `Duplicated "${source.title}" into "${clone.title}"` });
   saveDb(db);
   res.status(201).json({ status: 'success', course: courseForEditor(db, clone) });
 });
 
 /** Refuses to delete a course that learners have already started. */
-courseAdminRouter.delete('/courses/:id', (req: Request, res: Response) => {
+courseAdminRouter.delete('/courses/:id', async (req: Request, res: Response) => {
   const db = loadDb();
   const course = (db.courses || []).find((c: Course) => c.id === req.params.id);
   if (!course) return res.status(404).json({ error: 'Course not found' });
@@ -641,7 +641,7 @@ courseAdminRouter.delete('/courses/:id', (req: Request, res: Response) => {
   for (const c of db.courses || []) {
     if (c.prerequisite_course_id === course.id) c.prerequisite_course_id = null;
   }
-  pushAudit(db, { actor: req.user?.email, action: 'course.delete', detail: `Deleted course "${course.title}"` });
+  await appendAudit(db, { actor: req.user?.email, action: 'course.delete', detail: `Deleted course "${course.title}"` });
   saveDb(db);
   res.json({ status: 'success', deleted: course.id });
 });
@@ -997,7 +997,7 @@ courseAdminRouter.put('/lessons/:lessonId/video', async (req: Request, res: Resp
     added_at: new Date().toISOString(),
   };
   found.course.updated_at = new Date().toISOString();
-  pushAudit(db, { actor: req.user?.email, action: 'lesson.video', detail: `Attached ${parsed.provider} video to "${found.lesson.title}"` });
+  await appendAudit(db, { actor: req.user?.email, action: 'lesson.video', detail: `Attached ${parsed.provider} video to "${found.lesson.title}"` });
   saveDb(db);
 
   res.json({ status: 'success', lesson: found.lesson });
@@ -1142,7 +1142,7 @@ courseAdminRouter.get('/certificates/readiness', (_req: Request, res: Response) 
  * same completion check as the self-service route, so an admin cannot mint a
  * certificate for unfinished work either.
  */
-courseAdminRouter.post('/certificates/issue', (req: Request, res: Response) => {
+courseAdminRouter.post('/certificates/issue', async (req: Request, res: Response) => {
   const db = loadDb();
   const course = findCourse(db, str(req.body?.course_id, 60));
   if (!course) return res.status(404).json({ error: 'Course not found' });
@@ -1233,13 +1233,13 @@ courseAdminRouter.post('/certificates/issue', (req: Request, res: Response) => {
 
   db.certificates = db.certificates || [];
   db.certificates.push(certificate);
-  pushAudit(db, { actor: req.user?.email, action: 'certificate.issue', detail: `Manually issued ${serial} to ${user.email} for "${course.title}"` });
+  await appendAudit(db, { actor: req.user?.email, action: 'certificate.issue', detail: `Manually issued ${serial} to ${user.email} for "${course.title}"` });
   saveDb(db);
 
   res.status(201).json({ status: 'success', certificate, verification_url: verificationUrlFor(serial) });
 });
 
-courseAdminRouter.post('/certificates/:serial/revoke', (req: Request, res: Response) => {
+courseAdminRouter.post('/certificates/:serial/revoke', async (req: Request, res: Response) => {
   const db = loadDb();
   const serial = (req.params.serial || '').trim().toUpperCase();
   const certificate: Certificate | undefined = (db.certificates || []).find((c: Certificate) => c.serial === serial);
@@ -1251,14 +1251,14 @@ courseAdminRouter.post('/certificates/:serial/revoke', (req: Request, res: Respo
   certificate.status = 'revoked';
   certificate.revoked_reason = str(req.body?.reason, 300) || 'Revoked by TieEdu administrator';
   certificate.revoked_at = new Date().toISOString();
-  pushAudit(db, { actor: req.user?.email, action: 'certificate.revoke', detail: `Revoked ${serial}: ${certificate.revoked_reason}` });
+  await appendAudit(db, { actor: req.user?.email, action: 'certificate.revoke', detail: `Revoked ${serial}: ${certificate.revoked_reason}` });
   saveDb(db);
 
   res.json({ status: 'success', certificate });
 });
 
 /** Un-revoke. Kept because a mistaken revocation is a real support scenario. */
-courseAdminRouter.post('/certificates/:serial/restore', (req: Request, res: Response) => {
+courseAdminRouter.post('/certificates/:serial/restore', async (req: Request, res: Response) => {
   const db = loadDb();
   const serial = (req.params.serial || '').trim().toUpperCase();
   const certificate: Certificate | undefined = (db.certificates || []).find((c: Certificate) => c.serial === serial);
@@ -1268,7 +1268,7 @@ courseAdminRouter.post('/certificates/:serial/restore', (req: Request, res: Resp
   certificate.status = 'active';
   certificate.revoked_reason = '';
   certificate.revoked_at = null;
-  pushAudit(db, { actor: req.user?.email, action: 'certificate.restore', detail: `Restored ${serial}` });
+  await appendAudit(db, { actor: req.user?.email, action: 'certificate.restore', detail: `Restored ${serial}` });
   saveDb(db);
   res.json({ status: 'success', certificate });
 });
@@ -1363,7 +1363,7 @@ courseAdminRouter.get('/xp', (req: Request, res: Response) => {
 });
 
 /** POST /course-admin/xp/reconcile — rewrite user.xp from the ledger. */
-courseAdminRouter.post('/xp/reconcile', (req: Request, res: Response) => {
+courseAdminRouter.post('/xp/reconcile', async (req: Request, res: Response) => {
   const db = loadDb();
   const changed: { user_id: string; before: number; after: number }[] = [];
   for (const user of db.users || []) {
@@ -1371,7 +1371,7 @@ courseAdminRouter.post('/xp/reconcile', (req: Request, res: Response) => {
     const after = syncUserXp(db, user.id);
     if (before !== after) changed.push({ user_id: user.id, before, after });
   }
-  if (changed.length) pushAudit(db, { actor: req.user?.email, action: 'xp.reconcile', detail: `Reconciled ${changed.length} user XP totals from the ledger` });
+  if (changed.length) await appendAudit(db, { actor: req.user?.email, action: 'xp.reconcile', detail: `Reconciled ${changed.length} user XP totals from the ledger` });
   saveDb(db);
   res.json({ status: 'success', reconciled: changed.length, changed });
 });

@@ -1,7 +1,12 @@
 import webpush from 'web-push';
 import { loadDb, saveDb } from '../data/db';
-import { getPool, isDbReachable } from '../db/client';
 import { can } from './rbac';
+import {
+  saveSubscription,
+  listSubscriptionsForUser,
+  retireSubscription,
+  recordSendOutcome,
+} from '../store/push';
 import type { Request, Response } from 'express';
 
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '';
@@ -26,65 +31,19 @@ export interface PushSubscriptionPayload {
   platform?: string;
 }
 
-async function saveSubscriptionToPg(userId: string, sub: PushSubscriptionPayload) {
-  const reached = await isDbReachable(3000);
-  if (!reached) return false;
-  try {
-    await getPool().query(
-      `INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth, user_agent, platform, active, last_seen_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, TRUE, NOW(), NOW())
-       ON CONFLICT (endpoint)
-       DO UPDATE SET
-         user_id = EXCLUDED.user_id,
-         p256dh = EXCLUDED.p256dh,
-         auth = EXCLUDED.auth,
-         user_agent = COALESCE(EXCLUDED.user_agent, push_subscriptions.user_agent),
-         platform = COALESCE(EXCLUDED.platform, push_subscriptions.platform),
-         active = TRUE,
-         last_seen_at = NOW(),
-         updated_at = NOW()`,
-      [userId, sub.endpoint, sub.keys.p256dh, sub.keys.auth, sub.userAgent || null, sub.platform || null]
-    );
-    return true;
-  } catch (e) {
-    console.warn('[Push] PG save subscription failed', e);
-    return false;
-  }
-}
+/**
+ * Same rule the install registry uses. A subscription that names an install is
+ * only linked when that install actually exists, so a client cannot claim
+ * ownership of someone else's device by sending a guessed id.
+ */
+const INSTALL_ID_RE = /^[A-Za-z0-9_-]{8,64}$/;
 
-async function deactivateSubscription(endpoint: string) {
-  const reached = await isDbReachable(3000);
-  if (!reached) return false;
-  try {
-    await getPool().query(
-      `UPDATE push_subscriptions SET active = FALSE, updated_at = NOW(), last_seen_at = NOW() WHERE endpoint = $1`,
-      [endpoint]
-    );
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
-
-async function getActiveSubscriptionsForUser(userId: string): Promise<PushSubscriptionPayload[]> {
-  const reached = await isDbReachable(3000);
-  if (!reached) return [];
-  try {
-    const res = await getPool().query(
-      `SELECT endpoint, p256dh, auth FROM push_subscriptions WHERE user_id = $1 AND active = TRUE`,
-      [userId]
-    );
-    return (res.rows || []).map((r: any) => ({
-      endpoint: r.endpoint,
-      keys: { p256dh: r.p256dh, auth: r.auth },
-    }));
-  } catch (e) {
-    return [];
-  }
+function newSubscriptionId(): string {
+  return `push-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
 export async function sendPushToUser(userId: string, payload: { title: string; body: string; url?: string; badge?: string; icon?: string }) {
-  const subs = await getActiveSubscriptionsForUser(userId);
+  const subs = await listSubscriptionsForUser(userId);
   if (!subs.length) return { sent: 0, failed: 0 };
   const data = JSON.stringify({
     title: payload.title,
@@ -93,15 +52,27 @@ export async function sendPushToUser(userId: string, payload: { title: string; b
     icon: payload.icon || '/icon-192.png',
     badge: payload.badge || '/icon-192.png',
   });
-  let sent = 0, failed = 0;
+  let sent = 0;
+  let failed = 0;
   for (const s of subs) {
     try {
-      await webpush.sendNotification(s as any, data);
+      await webpush.sendNotification(
+        { endpoint: s.endpoint, keys: s.keys_json } as any,
+        data
+      );
       sent++;
+      await recordSendOutcome(s.endpoint, true);
     } catch (e: any) {
       failed++;
+      // The provider telling us the endpoint is gone is conclusive: retire it now
+      // rather than making every future broadcast retry it.
       if (e?.statusCode === 410 || e?.statusCode === 404) {
-        await deactivateSubscription(s.endpoint);
+        await retireSubscription(s.endpoint, 'push_gone');
+      } else {
+        // Otherwise count it. A DNS failure or a provider 500 can mean the
+        // endpoint is already dead without anything saying so, and without the
+        // count it would be retried on every broadcast forever.
+        await recordSendOutcome(s.endpoint, false);
       }
     }
   }
@@ -109,50 +80,41 @@ export async function sendPushToUser(userId: string, payload: { title: string; b
 }
 
 /**
- * Store one subscription, preferring PostgreSQL and falling back to the JSON
- * ledger. Returns where it landed, or false if neither store took it.
+ * Store one subscription in both stores.
  *
- * The fallback is the important part. `DATABASE_URL` fails closed by design (M0),
- * so the common dev setup has no cluster — and a push feature that only works
- * when Postgres happens to be up is a feature nobody can test locally. It is
- * also how a cluster outage during a broadcast turns into "nobody got told"
- * instead of "delivery retried when the database came back".
+ * The JSON ledger is written first and unconditionally. That ordering is the
+ * contract from `store/devices.ts` and `store/staff.ts`: the ledger is the store
+ * that has never failed, so it is the one that must never be skipped when the
+ * cluster happens to be up.
  *
- * Reads still prefer the database and fall back to JSON, so a subscription
- * created without Postgres keeps working after one is added.
+ * Returns where the row also reached the database, or false when neither store
+ * took it — which is what lets the route answer honestly instead of replying
+ * `{ ok: true }` to a save that went nowhere.
  */
-async function saveSubscription(userId: string, sub: PushSubscriptionPayload): Promise<'postgres' | 'json' | false> {
-  if (await saveSubscriptionToPg(userId, sub)) return 'postgres';
+async function storeSubscription(
+  userId: string,
+  sub: PushSubscriptionPayload,
+  deviceId: string
+): Promise<'postgres' | 'json' | false> {
+  const now = new Date().toISOString();
   try {
-    const db = loadDb();
-    db.push_subscriptions = db.push_subscriptions || [];
-    const now = new Date().toISOString();
-    const existing = db.push_subscriptions.find((s: any) => s.endpoint === sub.endpoint);
-    if (existing) {
-      existing.user_id = userId;
-      existing.keys_json = { p256dh: sub.keys.p256dh, auth: sub.keys.auth };
-      existing.disabled_at = null;
-      existing.disable_reason = null;
-      existing.failure_count = 0;
-    } else {
-      db.push_subscriptions.push({
-        id: `push-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-        user_id: userId,
-        // No device_id: the client subscribe call has no install id, and it does
-        // not need one — a push endpoint is already a per-device identifier.
-        device_id: '',
-        provider: 'vapid',
-        endpoint: sub.endpoint,
-        keys_json: { p256dh: sub.keys.p256dh, auth: sub.keys.auth },
-        created_at: now,
-        last_success_at: null,
-        failure_count: 0,
-        disabled_at: null,
-        disable_reason: null,
-      });
-    }
-    saveDb(db);
-    return 'json';
+    const source = await saveSubscription({
+      id: newSubscriptionId(),
+      user_id: userId,
+      device_id: deviceId,
+      provider: 'vapid',
+      endpoint: sub.endpoint,
+      keys_json: { p256dh: sub.keys.p256dh, auth: sub.keys.auth },
+      created_at: now,
+      last_success_at: null,
+      failure_count: 0,
+      disabled_at: null,
+      disable_reason: null,
+      user_agent: sub.userAgent || null,
+      platform: sub.platform || null,
+      last_seen_at: now,
+    } as any);
+    return source;
   } catch (e: any) {
     console.warn('[Push] could not store subscription in either store', e?.message);
     return false;
@@ -166,7 +128,22 @@ export const subscribePush = async (req: any, res: Response) => {
     return res.status(400).json({ error: 'Invalid subscription' });
   }
 
-  const stored = await saveSubscription(req.user.id, sub);
+  // The client sends its install id so a subscription belongs to a device. This
+  // used to be left empty with the reasoning that "a push endpoint is already a
+  // per-device identifier" — true of the endpoint, but the device admin screen
+  // works in install ids, and blocking an install matches on `device_id`. With
+  // no id stored, blocking a device disabled none of its endpoints.
+  const rawDeviceId = req.body?.install_id;
+  let deviceId = '';
+  if (typeof rawDeviceId === 'string' && INSTALL_ID_RE.test(rawDeviceId)) {
+    const { readDevice } = await import('../store/devices');
+    const found = await readDevice(rawDeviceId);
+    // Only link an install that exists. Trusting the client's id would let any
+    // caller attach endpoints to another device's row.
+    deviceId = found?.device ? rawDeviceId : '';
+  }
+
+  const stored = await storeSubscription(req.user.id, sub, deviceId);
 
   // Previously this replied `{ ok: true }` unconditionally, even when the save
   // went nowhere because PostgreSQL was unreachable. The client then flipped its
@@ -182,30 +159,15 @@ export const subscribePush = async (req: any, res: Response) => {
     });
   }
 
-  res.json({ ok: true, stored_in: stored });
+  res.json({ ok: true, stored_in: stored, device_linked: !!deviceId });
 };
 
 export const unsubscribePush = async (req: Request, res: Response) => {
   const endpoint = (req.body as any)?.endpoint;
   if (!endpoint) return res.status(400).json({ error: 'endpoint required' });
-  const disabled = await deactivateSubscription(endpoint);
+  const retired = await retireSubscription(endpoint, 'user_opted_out');
 
-  // Also retire it in the JSON ledger, or a subscription created while Postgres
-  // was down stays live after the user opted out.
-  try {
-    const db = loadDb();
-    let changed = false;
-    for (const s of db.push_subscriptions || []) {
-      if ((s as any).endpoint === endpoint && !s.disabled_at) {
-        s.disabled_at = new Date().toISOString();
-        s.disable_reason = 'user_opted_out';
-        changed = true;
-      }
-    }
-    if (changed) saveDb(db);
-  } catch { /* best effort; the database is the authority when present */ }
-
-  res.json({ ok: true, disabled_in_db: disabled });
+  res.json({ ok: true, stored_in: retired });
 };
 
 /**

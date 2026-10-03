@@ -1,7 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { loadDb, saveDb } from '../data/db';
 import { completePaidOrder } from '../payments/orders';
-import { pushAudit } from '../lib/audit';
+import { appendAudit, listAudit } from '../store/audit';
+import { AUDIT_CAP } from '../lib/audit';
 import { studyPlanAdminRouter } from './studyPlan.routes';
 import { validateSectionData } from '../lib/sectionData';
 import { requirePermission } from '../middleware/auth';
@@ -200,7 +201,7 @@ adminRouter.get('/companies/:id', requirePermission('companies.read'), (req: Req
 // carry an SEO description promising "verified round-by-round intelligence", and
 // must not ship a pre-filled trust_stats shape. Every field below is either the
 // admin's own input or null, and the public UI renders the nulls honestly.
-adminRouter.post('/companies', requirePermission('companies.write'), (req: Request, res: Response) => {
+adminRouter.post('/companies', requirePermission('companies.write'), async (req: Request, res: Response) => {
   const db = loadDb();
   const { name } = req.body;
   if (!name) return res.status(400).json({ error: 'Company name is required' });
@@ -247,9 +248,9 @@ adminRouter.post('/companies', requirePermission('companies.write'), (req: Reque
   };
 
   db.companies.unshift(newCompany);
-  // Audit BEFORE save: pushAudit only mutates the in-memory object graph, so a
+  // Audit BEFORE save: appendAudit only mutates the in-memory object graph, so a
   // saveDb() first would drop the entry and the vault would change with no trail.
-  pushAudit(db, {
+  await appendAudit(db, {
     action: 'company.create',
     actor: req.userId || 'admin',
     detail: `Created company vault "${name}" as ${newCompany.status}`,
@@ -264,7 +265,7 @@ adminRouter.post('/companies', requirePermission('companies.write'), (req: Reque
 // A blanket `...req.body` spread used to let a request overwrite derived fields
 // (unlock_count, accuracy_score, trust_stats) or the id/slug chain. Now only
 // EDITORIAL_FIELDS are accepted and each is validated by type.
-adminRouter.put('/companies/:id', requirePermission('companies.write'), (req: Request, res: Response) => {
+adminRouter.put('/companies/:id', requirePermission('companies.write'), async (req: Request, res: Response) => {
   const db = loadDb();
   const compIndex = db.companies.findIndex((c: any) => c.id === req.params.id);
   if (compIndex === -1) return res.status(404).json({ error: 'Company not found' });
@@ -335,7 +336,7 @@ adminRouter.put('/companies/:id', requirePermission('companies.write'), (req: Re
 
   const changed = Object.keys(body).filter((k) => (EDITORIAL_FIELDS as readonly string[]).includes(k));
   // Audit before save — see the create handler above for why order matters.
-  pushAudit(db, {
+  await appendAudit(db, {
     action: 'company.update',
     actor: req.userId || 'admin',
     detail: `Updated ${changed.join(', ') || 'no fields'}`,
@@ -365,7 +366,7 @@ adminRouter.delete('/companies/:id', requirePermission('companies.delete'), (req
 // the comparison matrix as if the company actually ran an online assessment. The
 // UI sends both explicitly; when absent we store null and the module is simply
 // unclassified until an admin says what it is.
-adminRouter.post('/companies/:id/modules', requirePermission('modules.write'), (req: Request, res: Response) => {
+adminRouter.post('/companies/:id/modules', requirePermission('modules.write'), async (req: Request, res: Response) => {
   const db = loadDb();
   const company = findCompany(db, req.params.id);
   if (!company) return res.status(404).json({ error: 'Company not found' });
@@ -396,7 +397,7 @@ adminRouter.post('/companies/:id/modules', requirePermission('modules.write'), (
   company.modules.push(newModule);
   company.last_updated_days_ago = 0;
   saveDb(db);
-  pushAudit(db, {
+  await appendAudit(db, {
     action: 'module.create',
     detail: `Created module "${newModule.title}" (${newModule.id}) on company ${company.id}`,
     meta: { company_id: company.id, module_id: newModule.id },
@@ -405,7 +406,7 @@ adminRouter.post('/companies/:id/modules', requirePermission('modules.write'), (
 });
 
 // PUT /api/admin/modules/:id — Update module (title, type, round, price, premium, sort)
-adminRouter.put('/modules/:id', requirePermission('modules.write'), (req: Request, res: Response) => {
+adminRouter.put('/modules/:id', requirePermission('modules.write'), async (req: Request, res: Response) => {
   const db = loadDb();
   const found = findModuleAndCompany(db, req.params.id);
   if (!found) return res.status(404).json({ error: 'Module not found' });
@@ -440,7 +441,7 @@ adminRouter.put('/modules/:id', requirePermission('modules.write'), (req: Reques
 
   company.last_updated_days_ago = 0;
   saveDb(db);
-  pushAudit(db, {
+  await appendAudit(db, {
     action: 'module.update',
     detail: `Updated module "${module.title}" (${module.id})${normalizedSection !== undefined ? ' including section_data' : ''}`,
     meta: { company_id: company.id, module_id: module.id, section_data_updated: normalizedSection !== undefined },
@@ -482,7 +483,7 @@ adminRouter.post('/companies/:id/modules/reorder', requirePermission('modules.wr
 });
 
 // PUT /api/admin/modules/:id/section — Save full 7-section pack (section_data)
-adminRouter.put('/modules/:id/section', requirePermission('modules.write'), (req: Request, res: Response) => {
+adminRouter.put('/modules/:id/section', requirePermission('modules.write'), async (req: Request, res: Response) => {
   const db = loadDb();
   const found = findModuleAndCompany(db, req.params.id);
   if (!found) return res.status(404).json({ error: 'Module not found' });
@@ -504,7 +505,7 @@ adminRouter.put('/modules/:id/section', requirePermission('modules.write'), (req
   saveDb(db);
   // Consistent with the study-plan routes: a pack is the whole point of a module,
   // so overwriting it should leave a trace of who did it and what was rejected.
-  pushAudit(db, {
+  await appendAudit(db, {
     action: 'module.section_save',
     detail: `Saved pack for module "${module.title}" (${module.id}) on company ${company.id}`,
     meta: { company_id: company.id, module_id: module.id, warnings },
@@ -808,7 +809,7 @@ adminRouter.get('/payments/pending', requirePermission('orders.verify'), (req: R
 });
 
 // POST /api/admin/payments/:id/verify — Admin confirms the UPI transfer → real unlock
-adminRouter.post('/payments/:id/verify', requirePermission('orders.verify'), (req: Request, res: Response) => {
+adminRouter.post('/payments/:id/verify', requirePermission('orders.verify'), async (req: Request, res: Response) => {
   const db = loadDb();
   const order = (db.orders || []).find((o: any) => o.id === req.params.id);
   if (!order) return res.status(404).json({ error: 'Order not found' });
@@ -821,8 +822,8 @@ adminRouter.post('/payments/:id/verify', requirePermission('orders.verify'), (re
 
   order.verified_by = req.user!.id;
   order.verified_at = new Date().toISOString();
-  completePaidOrder(db, order, order.user_id);
-  pushAudit(db, {
+  await completePaidOrder(db, order, order.user_id);
+  await appendAudit(db, {
     actor: req.user!.id,
     action: 'payment.verified.manual',
     detail: `Admin verified UPI payment for ${order.id} (₹${(order.amount_paisa || 0) / 100})`,
@@ -834,7 +835,7 @@ adminRouter.post('/payments/:id/verify', requirePermission('orders.verify'), (re
 });
 
 // POST /api/admin/payments/:id/reject — Admin couldn't verify the transfer → honest rejection
-adminRouter.post('/payments/:id/reject', requirePermission('orders.verify'), (req: Request, res: Response) => {
+adminRouter.post('/payments/:id/reject', requirePermission('orders.verify'), async (req: Request, res: Response) => {
   const db = loadDb();
   const order = (db.orders || []).find((o: any) => o.id === req.params.id);
   if (!order) return res.status(404).json({ error: 'Order not found' });
@@ -848,7 +849,7 @@ adminRouter.post('/payments/:id/reject', requirePermission('orders.verify'), (re
   order.status = 'rejected';
   order.rejected_at = new Date().toISOString();
   order.reject_reason = (req.body.reason || '').toString().trim() || null;
-  pushAudit(db, {
+  await appendAudit(db, {
     actor: req.user!.id,
     action: 'payment.rejected.manual',
     detail: `Admin could not verify UPI payment for ${order.id}${order.reject_reason ? ` — ${order.reject_reason}` : ''}`,
@@ -955,13 +956,27 @@ adminRouter.put('/settings', requirePermission('settings.write'), (req: Request,
 });
 
 // GET /api/admin/audit — Recent platform audit events (order lifecycle transparency)
-adminRouter.get('/audit', requirePermission('audit.read'), (req: Request, res: Response) => {
-  const db = loadDb();
+//
+// Reads through the store so the window comes from PostgreSQL when the cluster is
+// up. It used to read `db.audit` straight off the JSON file, which meant the
+// ledger an admin was shown was whatever one process happened to have in memory —
+// a different answer per process, and an empty one for any request that did not
+// go through the process that recorded the event.
+adminRouter.get('/audit', requirePermission('audit.read'), async (req: Request, res: Response) => {
   const q = (req.query.q as string || '').trim().toLowerCase();
-  let entries = (db.audit || []).slice();
-  if (q) entries = entries.filter((a: any) => (a.order_id || '').toLowerCase().includes(q) || (a.action || '').toLowerCase().includes(q) || (a.detail || '').toLowerCase().includes(q));
-  entries.sort((a: any, b: any) => (b.at || '').localeCompare(a.at || ''));
-  res.json({ status: 'success', entries: entries.slice(0, 60), total: entries.length });
+  const limit = Math.min(parseInt((req.query.limit as string) || '60', 10) || 60, AUDIT_CAP);
+
+  const { entries, source, total } = await listAudit(limit);
+  const filtered = q
+    ? entries.filter(
+        (a) =>
+          (a.order_id || '').toLowerCase().includes(q) ||
+          a.action.toLowerCase().includes(q) ||
+          (a.detail || '').toLowerCase().includes(q)
+      )
+    : entries;
+
+  res.json({ status: 'success', entries: filtered, total: q ? filtered.length : total, source });
 });
 
 // ============================================================

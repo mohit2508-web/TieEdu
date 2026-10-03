@@ -19,7 +19,7 @@
  * record is not recoverable.
  */
 
-import { getPool, isDbReachable } from '../db/client';
+import { getPool, isDbReachable, toCount } from '../db/client';
 import { loadDb, saveDb, Device } from '../data/db';
 
 export type DeviceSource = 'postgres' | 'json';
@@ -47,22 +47,6 @@ const toIso = (v: unknown): string => {
   if (v instanceof Date) return v.toISOString();
   if (typeof v === 'string' && v) return v;
   return new Date().toISOString();
-};
-
-/**
- * Coerce a count column to a real number.
- *
- * This is not defensive padding, it is a required fix. The counters are declared
- * `INT`, which CockroachDB stores as `bigint`, and node-postgres returns `int8` as
- * a *string* rather than a number so that large values cannot lose precision in
- * JavaScript. Passing that straight through would make the prompt funnel corrupt
- * itself: `"3" + 1` is `"31"`, so the second install that declined the prompt
- * would report 31 declines, and the accept-rate the dashboard shows would be
- * nonsense that still looks like a plausible number.
- */
-const toCount = (v: unknown): number => {
-  const n = typeof v === 'string' ? Number(v) : v;
-  return typeof n === 'number' && Number.isFinite(n) ? n : 0;
 };
 
 /**

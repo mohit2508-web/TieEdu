@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { fetchMyAccount, fetchMyReports, fetchMyXpLedgerApi } from '@/lib/api';
+import { fetchMyCourses } from '@/lib/coursesApi';
 import { useAuth } from '@/context/AuthContext';
 import {
   deriveNotifications,
@@ -75,18 +76,23 @@ export const useNotifications = (): UseNotificationsResult => {
   const load = useCallback(async () => {
     if (!userId) return;
     setLoading(true);
-    const [account, reports, xp] = await Promise.all([
+    const [account, reports, xp, myCourses] = await Promise.all([
       fetchMyAccount().catch(() => null),
       fetchMyReports().catch(() => null),
       fetchMyXpLedgerApi().catch(() => null),
+      fetchMyCourses().catch(() => null),
     ]);
 
+    const coursesData: any = myCourses;
     const next: NotificationSources = {
       orders: (account?.orders as NotificationOrder[] | undefined) ?? null,
       reports: (Array.isArray(reports) ? (reports as NotificationReport[]) : (reports?.reports ?? null)) as
         | NotificationReport[]
         | null,
       xp: xp?.entries as NotificationXpEntry[] | null,
+      myCourses: coursesData?.courses ?? null,
+      inProgress: coursesData?.in_progress ?? null,
+      completed: coursesData?.completed ?? null,
     };
     setSources(next);
     setLoading(false);

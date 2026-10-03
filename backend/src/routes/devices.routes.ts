@@ -3,7 +3,8 @@ import { loadDb, saveDb, Device, Release } from '../data/db';
 import { requireAuth, requireAdmin, requirePermission, requireDanger, rateLimit } from '../middleware/auth';
 import { readDevice, saveDevice, listDevices, deleteDevice } from '../store/devices';
 import { trackDevice, claimDevices, compareVersions } from '../lib/devices';
-import { pushAudit } from '../lib/audit';
+import { appendAudit } from '../store/audit';
+import { setDeviceSubscriptionsBlocked } from '../store/push';
 
 export const devicesRouter = Router();
 
@@ -151,7 +152,7 @@ adminDevicesRouter.post('/:id/block', requirePermission('devices.block'), async 
   // a third id format, no actor fallback, no target on other platforms' events,
   // and — because the retention cap lived inside the payments helper — no
   // retention at all on a deployment whose only audit traffic was device actions.
-  pushAudit(db, {
+  await appendAudit(db, {
     action: blocked ? 'device.block' : 'device.unblock',
     actor: req.user?.email || 'system',
     target: device.id,
@@ -161,14 +162,11 @@ adminDevicesRouter.post('/:id/block', requirePermission('devices.block'), async 
 
   // Blocking an install is meaningless while its push endpoints stay live: the
   // device keeps receiving broadcasts an admin has just decided it must not get.
-  db.push_subscriptions = db.push_subscriptions || [];
-  for (const sub of db.push_subscriptions) {
-    if (sub.device_id === device.id && !sub.disabled_at) {
-      sub.disabled_at = new Date().toISOString();
-      sub.disable_reason = blocked ? 'device_blocked' : null;
-    }
-  }
-  saveDb(db);
+  //
+  // This used to edit only the JSON ledger while delivery read only from
+  // PostgreSQL, so with the cluster up it disabled nothing at all. It now goes
+  // through the store, which writes both.
+  const affected = await setDeviceSubscriptionsBlocked(device.id, blocked);
 
   res.json({ ok: true, id: device.id, is_blocked: device.is_blocked });
 });
@@ -186,7 +184,7 @@ adminDevicesRouter.delete('/:id', requireDanger('danger.maintenance', 'device.de
 
   const db = loadDb();
   db.push_subscriptions = (db.push_subscriptions || []).filter((s: any) => s.device_id !== req.params.id);
-  pushAudit(db, {
+  await appendAudit(db, {
     action: 'device.delete',
     actor: req.user?.email || 'system',
     target: req.params.id,

@@ -15,8 +15,10 @@
  *
  * So this is the single entry point. It mutates the in-memory `db` object and
  * nothing else; callers are expected to call it BEFORE `saveDb()`, which is why
- * it is not async and does not touch the database itself. Moving the ledger into
- * PostgreSQL is a later step and this signature is the seam for it.
+ * it is not async and does not touch the database itself. The ledger is now also
+ * mirrored to PostgreSQL, but the shape and the cap still live here and nowhere
+ * else — `store/audit.ts` persists the row this returns rather than re-deriving
+ * it, so the two stores cannot disagree about what a row looks like.
  */
 
 export const AUDIT_CAP = 1000;
@@ -40,10 +42,33 @@ export type AuditEntry = {
   meta?: any;
 };
 
-export function pushAudit(db: any, entry: AuditEntry) {
+/** The single row shape the ledger stores, in both stores. */
+export type AuditRow = {
+  id: string;
+  at: string;
+  actor: string;
+  action: string;
+  detail: string;
+  order_id: string | null;
+  gateway: string | null;
+  target: string | null;
+  meta: any;
+};
+
+/**
+ * Append one canonical row to the in-memory ledger and return it.
+ *
+ * Returns the row so a caller can persist exactly what was recorded. That is the
+ * whole seam for the relational move: the shape and the cap are decided here and
+ * nowhere else, so the store cannot drift from it by re-deriving the fields.
+ *
+ * The caller is still expected to `saveDb()` afterwards — this mutates only the
+ * in-memory object graph, never the file.
+ */
+export function pushAudit(db: any, entry: AuditEntry): AuditRow {
   if (!db.audit) db.audit = [];
   auditSeq += 1;
-  db.audit.push({
+  const row: AuditRow = {
     id: `${entry.order_id ? `${entry.order_id}-` : ''}a${Date.now()}-${auditSeq}`,
     at: new Date().toISOString(),
     actor: entry.actor || 'system',
@@ -53,8 +78,10 @@ export function pushAudit(db: any, entry: AuditEntry) {
     gateway: entry.gateway || null,
     target: entry.target || null,
     meta: entry.meta || null,
-  });
+  };
+  db.audit.push(row);
   if (db.audit.length > AUDIT_CAP) db.audit = db.audit.slice(-AUDIT_CAP);
+  return row;
 }
 
 /** Test hook: reset the id sequence so ids are predictable within a run. */

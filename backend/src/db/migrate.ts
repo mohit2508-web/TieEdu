@@ -160,6 +160,35 @@ export async function ensureStaffTable(): Promise<void> {
   await getPool().query(`CREATE INDEX IF NOT EXISTS staff_status_idx ON staff(status);`);
 }
 
+/**
+ * The audit ledger, relationally.
+ *
+ * Named `audit` and not `AuditLog`. The cluster is shared with other projects and
+ * already has a capitalised `AuditLog` belonging to one of them; this is a
+ * different table with a different shape that happens to share a name. Creating
+ * ours as `AuditLog` would have been read as a schema change to theirs.
+ */
+export async function ensureAuditTable(): Promise<void> {
+  await getPool().query(`
+    CREATE TABLE IF NOT EXISTS audit (
+      id       TEXT PRIMARY KEY,
+      at       TIMESTAMPTZ NOT NULL,
+      actor    TEXT NOT NULL DEFAULT 'system',
+      action   TEXT NOT NULL,
+      detail   TEXT NOT NULL DEFAULT '',
+      order_id TEXT,
+      gateway  TEXT,
+      target   TEXT,
+      meta     JSONB
+    );
+  `);
+  // The admin screen reads newest-first and filters on action, so both of those
+  // have to be indexable rather than a scan over the retained window.
+  await getPool().query(`CREATE INDEX IF NOT EXISTS audit_at_idx ON audit(at DESC);`);
+  await getPool().query(`CREATE INDEX IF NOT EXISTS audit_action_idx ON audit(action);`);
+  await getPool().query(`CREATE INDEX IF NOT EXISTS audit_order_id_idx ON audit(order_id);`);
+}
+
 export async function runMigrations(): Promise<boolean> {
   if (!(await isDbReachable(6000))) {
     console.log('💡 [PostgreSQL] Replica unreachable or not configured — staying on local-json-repository. (Replica requires ENABLE_PG_REPLICA=1 + DATABASE_URL + network allowlist).');
@@ -171,7 +200,8 @@ export async function runMigrations(): Promise<boolean> {
     await ensurePushSubscriptionsTable();
     await ensureDevicesTable();
     await ensureStaffTable();
-    console.log('✅ [PostgreSQL] app_state, push_subscriptions, devices and staff tables ready.');
+    await ensureAuditTable();
+    console.log('✅ [PostgreSQL] app_state, push_subscriptions, devices, staff and audit tables ready.');
     return true;
   } catch (err: any) {
     console.log('💡 [PostgreSQL] Migration failed: ' + err.message);

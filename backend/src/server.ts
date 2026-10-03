@@ -33,6 +33,8 @@ import { storage } from './store';
 
 import { runMigrations } from './db/migrate';
 import { backfillDevicesFromJson } from './store/devices';
+import { backfillSubscriptionsFromJson } from './store/push';
+import { backfillAuditFromJson } from './store/audit';
 import { warmStaffCache } from './store/staff';
 
 dotenv.config();
@@ -317,6 +319,34 @@ export const httpServer = app.listen(PORT, async () => {
       await backfillDevicesFromJson();
     } catch (e: any) {
       console.log('💡 [Storage] Device backfill skipped: ' + (e?.message || e));
+    }
+
+    // Same reasoning for push subscriptions, and it matters more here. Delivery
+    // reads PostgreSQL first, so an endpoint registered during an outage would
+    // sit in the ledger where nothing reads it and the user's notifications would
+    // simply stop, with no error anywhere to explain why.
+    try {
+      const subs = await backfillSubscriptionsFromJson();
+      if (subs.copied || subs.skipped) {
+        console.log(
+          `📨 [Push] subscription backfill: ${subs.copied} copied to PostgreSQL` +
+            (subs.skipped ? `, ${subs.skipped} skipped` : '')
+        );
+      }
+    } catch (e: any) {
+      console.log('💡 [Push] Subscription backfill skipped: ' + (e?.message || e));
+    }
+
+    // Audit is the one ledger where a lost event is unrecoverable rather than
+    // merely inconvenient, so anything recorded while the cluster was down is
+    // copied in before the first admin asks what happened.
+    try {
+      const audit = await backfillAuditFromJson();
+      if (audit.copied) {
+        console.log(`🧾 [Audit] ${audit.copied} JSON-only entries copied to PostgreSQL`);
+      }
+    } catch (e: any) {
+      console.log('💡 [Audit] Backfill skipped: ' + (e?.message || e));
     }
   }
 
