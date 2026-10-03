@@ -12,6 +12,8 @@
  * the alternative (a fingerprint) is both worse privacy and less reliable.
  */
 
+import { API_BASE_URL } from './assetUrl';
+
 const ID_KEY = 'tieedu.install_id';
 const TRACKED_KEY = 'tieedu.last_tracked_at';
 
@@ -80,7 +82,14 @@ export async function trackInstall(payload: TrackPayload = {}): Promise<string> 
     const last = Number(window.localStorage.getItem(TRACKED_KEY) || '0');
     const insideWindow = Date.now() - last < TRACK_INTERVAL_MS;
     if (!insideWindow) {
-      await fetch('/api/devices/track', {
+      // Absolute, not the relative `/api/...` this used to send. There is no
+      // Next rewrite proxying /api to the backend, so a relative path resolves
+      // against the frontend origin and 404s — on the default ports that is
+      // :3000 rather than the API's :5000. The `.catch()` below swallowed the
+      // failure, so the install was never registered and nothing said why: the
+      // install count stayed at zero and a push subscription arrived with no
+      // `device_id` to attach to.
+      await fetch(`${API_BASE_URL}/devices/track`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ install_id: installId, ...payload }),

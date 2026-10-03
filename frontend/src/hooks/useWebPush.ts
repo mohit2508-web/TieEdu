@@ -38,7 +38,9 @@ const syncSubscriptionToServer = async (): Promise<boolean> => {
   if (!SUPPORTED) return false;
   if (Notification.permission !== 'granted') return false;
   try {
-    const reg = await navigator.serviceWorker.ready;
+    // `ready` hangs when nothing is registered for the scope; see subscribe().
+    const reg = await navigator.serviceWorker.getRegistration('/');
+    if (!reg) return false;
     const sub = await reg.pushManager.getSubscription();
     if (!sub) return false;
     // Track first: the server only links device_id to an install that exists.
@@ -67,7 +69,11 @@ export const useWebPush = () => {
     let cancelled = false;
     (async () => {
       try {
-        const reg = await navigator.serviceWorker.ready;
+        // `ready` is not used here either: it hangs forever with no worker
+        // registered, which left `subscribed` permanently false and looked
+        // identical to "the user never enabled it".
+        const reg = await navigator.serviceWorker.getRegistration('/');
+        if (!reg) return;
         const existing = await reg.pushManager.getSubscription();
         if (cancelled) return;
         setSubscribed(!!existing);
@@ -105,7 +111,15 @@ export const useWebPush = () => {
         setPermission('denied');
         return { ok: false, reason: 'denied' };
       }
-      const reg = await navigator.serviceWorker.ready;
+      // `navigator.serviceWorker.ready` never settles when no worker is registered for
+      // this scope — it waits forever rather than rejecting. Since registration is
+      // production-only, awaiting it on a non-registered origin left the button
+      // spinning on "loading" with no error and no way out. So ask for the
+      // registration directly and give up with a reason the UI can explain.
+      const reg = await navigator.serviceWorker
+        .getRegistration('/')
+        .catch(() => undefined);
+      if (!reg) return { ok: false, reason: 'no_service_worker' };
       let sub = await reg.pushManager.getSubscription();
       if (!sub) {
         const vapid = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
@@ -135,8 +149,9 @@ export const useWebPush = () => {
 
   const unsubscribe = async () => {
     try {
-      const reg = await navigator.serviceWorker.ready;
-      const sub = await reg.pushManager.getSubscription();
+      // `ready` hangs when nothing is registered for the scope; see subscribe().
+      const reg = await navigator.serviceWorker.getRegistration('/');
+      const sub = (await reg?.pushManager.getSubscription()) || null;
       if (sub) {
         const json = sub.toJSON();
         await api.post('/notifications/unsubscribe', { endpoint: json.endpoint });

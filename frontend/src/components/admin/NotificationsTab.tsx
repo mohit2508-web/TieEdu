@@ -86,6 +86,14 @@ export const NotificationsTab: React.FC = () => {
       });
     } else if (r.reason === 'no_vapid') {
       setResult({ tone: 'error', text: 'Push keys are not configured on the server.' });
+    } else if (r.reason === 'no_service_worker') {
+      // Registration is production-only (`_app.tsx`), so this is what a dev
+      // origin or an unregistered scope looks like. Saying so beats a button
+      // that spins forever with no explanation.
+      setResult({
+        tone: 'error',
+        text: 'No service worker is registered for this origin, so push cannot work here. Serve the production build over http://localhost or https.',
+      });
     } else {
       setResult({ tone: 'error', text: `Could not enable notifications (${r.reason}).` });
     }
