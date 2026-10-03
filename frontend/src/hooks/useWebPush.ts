@@ -211,12 +211,17 @@ export const useWebPush = () => {
          * entirely, and those need different fixes. Guessing from the number
          * alone is what turns a five-minute bug into an afternoon.
          */
+        /*
+         * `api.post` resolves the path internally, so naming a URL here would only
+         * describe what this file assumed - which is how a wrong path looked
+         * correct for an hour. The status plus the origin is enough to place it.
+         */
         const origin = typeof window !== 'undefined' ? window.location.origin : 'unknown origin';
         const target = `${origin}${API_BASE_URL}/notifications/subscribe`;
         if (typeof console !== 'undefined') {
           console.warn('[Push] subscribe store failed', { url: target, status: r?.status });
         }
-        return { ok: false, reason: `not_stored (HTTP ${r?.status ?? 'no response'} at ${target})` };
+        return { ok: false, reason: `not_stored (HTTP ${r?.status ?? 'no response'} at ${origin})` };
       }
       setSubscribed(true);
       return { ok: true };

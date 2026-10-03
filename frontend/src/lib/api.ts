@@ -1034,7 +1034,26 @@ export const fetchCampusCohortApi = async (): Promise<any> => {
   return await res.json();
 };
 
-const apiClient = { get: (url:any,config?:any)=>apiFetch(url,{...config,method:'GET'}), post:(url:any,body?:any,config?:any)=>apiFetch(url,{...config,method:'POST',body:typeof body==='string'?body:body?JSON.stringify(body):undefined}), put:(url:any,body?:any,config?:any)=>apiFetch(url,{...config,method:'PUT',body:typeof body==='string'?body:body?JSON.stringify(body):undefined}), delete:(url:any,config?:any)=>apiFetch(url,{...config,method:'DELETE'}) };
+/*
+ * Resolve a caller's path against the configured API base.
+ *
+ * Callers pass bare paths like `/notifications/subscribe`. Those were handed to
+ * `fetch` untouched, which only worked while the base was an absolute URL. Once
+ * the app went same-origin the bare path became a request to the Next server
+ * itself, which is not an API route, so it 404'd. Probing `/api/...` by hand
+ * confirmed the endpoint was healthy the whole time and sent the investigation
+ * in the wrong direction, so the prefix belongs here rather than at each call
+ * site.
+ *
+ * An absolute URL is left alone: it is already resolved, and re-prefixing it
+ * would break deployments that deliberately point at a different host.
+ */
+const apiUrl = (url: string): string => {
+  if (/^https?:\/\//i.test(url)) return url;
+  return `${API_BASE_URL}${url.startsWith('/') ? url : `/${url}`}`;
+};
+
+const apiClient = { get: (url:any,config?:any)=>apiFetch(apiUrl(url),{...config,method:'GET'}), post:(url:any,body?:any,config?:any)=>apiFetch(apiUrl(url),{...config,method:'POST',body:typeof body==='string'?body:body?JSON.stringify(body):undefined}), put:(url:any,body?:any,config?:any)=>apiFetch(apiUrl(url),{...config,method:'PUT',body:typeof body==='string'?body:body?JSON.stringify(body):undefined}), delete:(url:any,config?:any)=>apiFetch(apiUrl(url),{...config,method:'DELETE'}) };
 export default apiClient;
 
 /**
