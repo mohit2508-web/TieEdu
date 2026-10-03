@@ -36,6 +36,7 @@ import {
 } from '../data/db';
 import { requireAdmin } from '../middleware/auth';
 import { appendAudit } from '../store/audit';
+import { notifyEvent } from '../lib/notify';
 import { syncUserXp, totalXpForUser, LEVELS, XP } from '../lib/xp';
 import {
   courseStats,
@@ -578,6 +579,23 @@ courseAdminRouter.put('/courses/:id', async (req: Request, res: Response) => {
     }
     course.published = publishing;
     await appendAudit(db, { actor: req.user?.email, action: publishing ? 'course.publish' : 'course.unpublish', detail: `${publishing ? 'Published' : 'Unpublished'} "${course.title}"` });
+    if (publishing) {
+      /*
+       * Students cannot see a course until it is published, so publishing is the
+       * moment a launch becomes news — creating the draft is not.
+       *
+       * Fired after the ledger save below and not awaited against the response:
+       * the push provider being down must not turn a successful publish into an
+       * error the admin has to retry, and a re-publish would re-notify. Notifying
+       * is best effort by design; `notifyEvent` never throws.
+       */
+      setImmediate(() => {
+        void notifyEvent(
+          { type: 'course.published', title: course.title, courseId: course.id, slug: course.slug },
+          { kind: 'all_students' }
+        );
+      });
+    }
   }
 
   course.updated_at = new Date().toISOString();

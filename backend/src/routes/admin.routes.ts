@@ -5,6 +5,7 @@ import { appendAudit, listAudit } from '../store/audit';
 import { AUDIT_CAP } from '../lib/audit';
 import { studyPlanAdminRouter } from './studyPlan.routes';
 import { validateSectionData } from '../lib/sectionData';
+import { notifyEvent } from '../lib/notify';
 import { requirePermission } from '../middleware/auth';
 
 export const adminRouter = Router();
@@ -343,6 +344,29 @@ adminRouter.put('/companies/:id', requirePermission('companies.write'), async (r
     meta: { company_id: next.id, fields: changed },
   });
   saveDb(db);
+
+  /*
+   * New material in a company vault is one of the reasons a student opens the
+   * portal at all, so an editorial update is worth telling them about.
+   *
+   * Only fires when editorial content actually changed — this handler also
+   * receives bookkeeping fields like `last_updated_days_ago`, and notifying on
+   * those would teach students to ignore the channel.
+   */
+  if (changed.length) {
+    const companyName = next.name || next.title || 'A company';
+    setImmediate(() => {
+      void notifyEvent(
+        {
+          type: 'vault.updated',
+          title: `${companyName} vault updated`,
+          detail: `New material added: ${changed.slice(0, 4).join(', ')}${changed.length > 4 ? `, +${changed.length - 4} more` : ''}`,
+          slug: next.slug,
+        },
+        { kind: 'all_students' }
+      );
+    });
+  }
 
   res.json({ status: 'success', company: next });
 });
