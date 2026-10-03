@@ -1,11 +1,17 @@
 /** @type {import('next').NextConfig} */
 
-// The API origin that serves posters, company logos, course covers and avatars.
+// Where the Node server proxies `/api/*` to. Deliberately NOT `NEXT_PUBLIC_*`:
+// that namespace is inlined into the client bundle, and the proxy target is a
+// server-side detail that must not be shipped to browsers.
+const API_PROXY_TARGET = process.env.API_PROXY_TARGET || 'http://localhost:5000';
+
+// The origin that serves posters, company logos, course covers and avatars.
 //
-// This has to agree with `API_BASE_URL` in `src/lib/api.ts`. It is read at config
-// load time, so it is also inlined into the server bundle — which is exactly what
-// `images.remotePatterns` needs to allow the optimizer to fetch from.
-const API_ORIGIN = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+// Default is empty, meaning "the origin the page itself was served from". The
+// `remotePatterns` allowlist below is therefore only needed when the API is
+// genuinely a different host; in the default same-origin setup the optimizer
+// already treats these as local paths.
+const API_ORIGIN = process.env.NEXT_PUBLIC_API_URL || '';
 
 const remotePatternFor = (origin) => {
   const { protocol, hostname, port } = new URL(origin);
@@ -46,7 +52,10 @@ const nextConfig = {
    *   both keys at the top level.
    */
   images: {
-    remotePatterns: [remotePatternFor(API_ORIGIN)],
+    // Empty unless the API lives on another host, in which case the optimizer has
+    // to be told it may fetch from there. Adding a pattern for the same-origin
+    // case would be a no-op that reads as if a remote host were trusted.
+    remotePatterns: API_ORIGIN ? [remotePatternFor(API_ORIGIN)] : [],
     // Never upscale past the source, and keep AVIF/WebP. A phone on a slow link is
     // the whole point of this migration.
     formats: ['image/avif', 'image/webp'],
@@ -80,6 +89,38 @@ const nextConfig = {
    * the whole origin. Without it a worker served from `/sw.js` is capped at that
    * path and offline fallbacks for navigations never engage.
    */
+  /*
+   * Same-origin `/api` proxy — the reason this file needs to exist at all.
+   *
+   * The frontend used to bake `http://localhost:5000/api` into the bundle as the
+   * API base. That is correct for exactly one client: a browser on the same
+   * machine as the server. Everywhere else `localhost` means *the client itself*,
+   * so every API call failed — and because `trackInstall` swallows its fetch
+   * error, a phone on the LAN failed completely silently.
+   *
+   * Hardcoding a LAN IP instead would only move the problem: the value is baked
+   * at build time, so it cannot be right for localhost, LAN and production at
+   * once, and it silently rots when DHCP hands out a new address.
+   *
+   * So the bundle now addresses the API *relatively* (`/api/...`) and this rewrite
+   * forwards it to the real backend. The browser therefore always calls the origin
+   * it was served from, which is correct for every client without configuration —
+   * and it makes the request same-origin, which removes the CORS preflight
+   * entirely.
+   *
+   * `API_PROXY_TARGET` is server-side only. Deployments that run the API somewhere
+   * else set it (or set `NEXT_PUBLIC_API_URL`, which additionally keeps the client
+   * talking to it directly instead of through here).
+   */
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: `${API_PROXY_TARGET}/api/:path*`,
+      },
+    ];
+  },
+
   async headers() {
     return [
       {

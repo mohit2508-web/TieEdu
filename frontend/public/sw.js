@@ -15,7 +15,18 @@
  * optimisation; this is a correctness boundary.
  */
 
-const VERSION = 'tieedu-v1';
+/**
+ * Bump this whenever a deployed bundle must not be reachable through a cache.
+ *
+ * `activate` deletes every cache that does not start with this string, so a bump
+ * is what retires the previous generation wholesale. Leaving it at `v1` meant old
+ * caches were never purged: the cached HTML document kept naming the old
+ * fingerprinted chunks, `cacheFirstStatic` happily served those from the retained
+ * static cache, and a client could run an arbitrarily old bundle indefinitely —
+ * which is how a build missing `NEXT_PUBLIC_VAPID_PUBLIC_KEY` kept reporting "push
+ * keys are not configured" long after the server had been fixed.
+ */
+const VERSION = 'tieedu-v2';
 const SHELL_CACHE = `${VERSION}-shell`;
 const DATA_CACHE = `${VERSION}-data`;
 const STATIC_CACHE = `${VERSION}-static`;

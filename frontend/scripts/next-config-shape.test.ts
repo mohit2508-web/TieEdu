@@ -92,9 +92,17 @@ const main = async () => {
     '`experimental` no longer carries `images` or `headers`'
   );
 
-  // Optimizer policy.
+  /*
+   * Optimizer policy.
+   *
+   * `remotePatterns` has to be an *array*; whether it has to be *non-empty* depends
+   * on the deployment, and asserting non-empty unconditionally is what pinned the
+   * old hardcoded `http://localhost:5000/api` in place. Same-origin is the default
+   * and correctly trusts no remote host at all; the cross-origin case requires
+   * exactly one entry, and that is asserted further down against `API_BASE_URL`.
+   */
   const images = cfg.images || {};
-  ok(Array.isArray(images.remotePatterns) && images.remotePatterns.length > 0, '`remotePatterns` is a non-empty array');
+  ok(Array.isArray(images.remotePatterns), '`remotePatterns` is an array');
   ok(
     (images.remotePatterns || []).every((p: any) => p.hostname && p.hostname !== '**'),
     'no `**` hostname wildcard — only the exact API host may be re-served by the optimizer'
@@ -119,6 +127,12 @@ const main = async () => {
    * the runner compiles with no DOM lib and `api.ts` pulls in `fetch` and
    * `XMLHttpRequest`. This assertion is what caught the move, which is the point
    * of having it.
+   *
+   * The default is now the *relative* `/api`, because a hardcoded
+   * `http://localhost:5000/api` only works for a browser on the server's own
+   * machine — on a phone `localhost` is the phone, which is what broke push. So
+   * the allowlist is only required in the cross-origin case; the same-origin case
+   * depends on the rewrite asserted below instead.
    */
   const apiSource = fs.readFileSync(path.join(ROOT, 'src', 'lib', 'assetUrl.ts'), 'utf8');
   const apiBase = /API_BASE_URL\s*=\s*process\.env\.NEXT_PUBLIC_API_URL\s*\|\|\s*'([^']+)'/.exec(apiSource);
@@ -127,15 +141,57 @@ const main = async () => {
     /API_ORIGIN\s*=\s*API_BASE_URL\.replace/.test(apiSource),
     'API_ORIGIN is derived from API_BASE_URL rather than hardcoded a second time'
   );
-  if (apiBase) {
-    const apiUrl = new URL(apiBase[1]);
-    const pattern = (images.remotePatterns || [])[0] || {};
+  const apiDefault = apiBase ? apiBase[1] : '';
+  const apiIsAbsolute = /^https?:\/\//i.test(apiDefault);
+  ok(
+    !apiIsAbsolute || apiDefault !== 'http://localhost:5000/api',
+    'API_BASE_URL does not default to a localhost origin that only works on one machine'
+  );
+
+  const patterns = (images.remotePatterns || []) as { hostname?: string; port?: string }[];
+  if (apiIsAbsolute) {
+    const apiUrl = new URL(apiDefault);
+    const pattern = patterns[0] || {};
     ok(pattern.hostname === apiUrl.hostname, `remotePatterns host matches API_BASE_URL host (${apiUrl.hostname})`);
     ok(
       (pattern.port || '') === (apiUrl.port || ''),
       `remotePatterns port matches API_BASE_URL port (${apiUrl.port || 'default'})`
     );
+  } else {
+    ok(
+      patterns.length === 0,
+      'no remotePatterns are trusted in the same-origin default (an API image is a local path)'
+    );
   }
+
+  /*
+   * The rewrite is what makes a relative API base work at all. Without it every
+   * `/api/*` request from a browser hits Next.js itself and 404s, which is the
+   * same class of silent total failure the hardcoded localhost used to cause —
+   * just moved to the other side of the proxy.
+   */
+  const rewriteRules = await (cfg.rewrites ? cfg.rewrites() : []);
+  const apiRewrite = rewriteRules.find(
+    (r: { source?: string }) => typeof r?.source === 'string' && r.source.startsWith('/api/')
+  );
+  ok(apiRewrite !== undefined, 'a rewrites() rule proxies /api/* to the backend');
+  if (apiRewrite) {
+    const dest = (apiRewrite as { destination?: string }).destination || '';
+    ok(
+      /\/(api\/)?:path\*$/.test(dest) && /\/api\//.test(dest),
+      `the /api rewrite preserves the API prefix through :path* (got ${dest})`
+    );
+  }
+  const configText = fs.readFileSync(path.join(ROOT, 'next.config.mjs'), 'utf8');
+  ok(
+    /API_PROXY_TARGET\s*=\s*process\.env\.API_PROXY_TARGET/.test(configText),
+    'the proxy target reads API_PROXY_TARGET, not NEXT_PUBLIC_API_URL, so it is never shipped to the browser'
+  );
+  ok(
+    /process\.env\.API_PROXY_TARGET/.test(configText) &&
+      !/NEXT_PUBLIC_API_PROXY/.test(configText),
+    'no NEXT_PUBLIC_ proxy variable leaks the backend address into the client bundle'
+  );
 
   // PWA headers — the reason this config was wrong in the first place.
   const sw = await headerRule(cfg, '/sw.js');

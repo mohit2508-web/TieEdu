@@ -9,7 +9,7 @@
  *    it only shows up for the courses that happen to have an external URL, so
  *    the seeded set looks perfectly healthy. The predicate compares parsed
  *    `URL.origin` values rather than doing a prefix test, precisely because the
- *    prefix version accepts `http://localhost:5000.evil.test`. That case is
+ *    prefix version accepts `http://<api-host>.evil.test`. That case is
  *    asserted here.
  *
  * 2. A `@next/next/no-img-element` disable with no stated reason. Several
@@ -50,26 +50,46 @@ const ok = (cond: boolean, msg: string) => {
 
 // --- isApiAssetUrl -----------------------------------------------------------
 
-ok(isApiAssetUrl('http://localhost:5000/api/posters/file/x.png'), 'an API asset is optimizable');
-ok(isApiAssetUrl('http://localhost:5000/anything/at/all.png'), 'the path is irrelevant - only the origin decides');
+/*
+ * The API is same-origin by default (`API_BASE_URL === '/api'`), proxied by the
+ * rewrite in `next.config.mjs`. The interesting cases therefore split in two:
+ * relative paths that are ours by construction, and absolute URLs that must be
+ * matched against *this page's* origin rather than a hardcoded one.
+ *
+ * `selfOrigin` is stubbed because the runner compiles with no DOM lib. Without a
+ * stub every absolute-URL case would collapse to the same "no document" false and
+ * the host-confusion tests below would pass for the wrong reason.
+ */
+const SELF_ORIGIN = 'http://192.168.31.12:3000';
+(globalThis as unknown as { location: { origin: string } }).location = {
+  origin: SELF_ORIGIN,
+};
+
+ok(isApiAssetUrl('/api/posters/file/x.png'), 'a server-relative API path is optimizable');
+ok(isApiAssetUrl('/api/courses/abc/thumb/thumb-1-abcd1234.jpg'), 'a relative course cover is optimizable');
+ok(isApiAssetUrl(`${SELF_ORIGIN}/api/posters/file/x.png`), 'an absolute URL on our own origin is optimizable');
+ok(isApiAssetUrl(`${SELF_ORIGIN}/anything/at/all.png`), 'the path is irrelevant - only the origin decides');
 
 ok(!isApiAssetUrl(''), 'empty string is not optimizable');
-ok(!isApiAssetUrl('/api/posters/file/x.png'), 'a server-relative path is not optimizable (resolve it first)');
 ok(!isApiAssetUrl('data:image/png;base64,AAAA'), 'a data URL is not optimizable');
-ok(!isApiAssetUrl('blob:http://localhost:5000/abc'), 'a blob URL is not optimizable');
+ok(!isApiAssetUrl('blob:http://192.168.31.12:3000/abc'), 'a blob URL is not optimizable');
+ok(!isApiAssetUrl('/apiary/logo.png'), 'a path that merely starts with the letters "api" is not ours');
+ok(!isApiAssetUrl('/assets/logo.png'), 'an unrelated same-origin path is not an API asset');
 
-// The prefix-test trap. `startsWith(API_ORIGIN)` is true for all three of these.
-ok(!isApiAssetUrl('http://localhost:5000.evil.test/x.png'), 'a suffix-attack host is rejected (not localhost:5000)');
-ok(!isApiAssetUrl('http://localhost:50000/x.png'), 'a longer port is rejected');
-ok(!isApiAssetUrl('http://localhost:5001/x.png'), 'a different port is rejected');
-ok(!isApiAssetUrl('https://localhost:5000/x.png'), 'a different scheme is rejected');
+// The prefix-test trap, in same-origin form. A `startsWith` against the configured
+// origin would accept the suffix-attack host and the longer port.
+ok(!isApiAssetUrl('http://192.168.31.120:3000/x.png'), 'a suffix-attack host is rejected');
+ok(!isApiAssetUrl('http://192.168.31.12:30000/x.png'), 'a longer port is rejected');
+ok(!isApiAssetUrl('http://192.168.31.12:3001/x.png'), 'a different port is rejected');
+ok(!isApiAssetUrl('https://192.168.31.12:3000/x.png'), 'a different scheme is rejected');
 ok(!isApiAssetUrl('https://cdn.example.com/x.png'), 'an unrelated host is rejected');
 
-// A resolved relative path must be recognised, or every cover would silently
-// take the plain-`img` branch and the migration would do nothing.
+// A relative path must survive the resolve step and still be recognised, or every
+// cover would silently take the plain-`img` branch and the migration would do
+// nothing.
 const resolved = apiAssetUrl('/api/courses/abc/thumb/thumb-1-abcd1234.jpg');
-ok(resolved.startsWith('http://localhost:5000/'), 'apiAssetUrl resolves a relative path to the API origin');
-ok(isApiAssetUrl(resolved), 'a resolved API asset passes the optimizable check');
+ok(resolved === '/api/courses/abc/thumb/thumb-1-abcd1234.jpg', 'apiAssetUrl leaves a same-origin path relative');
+ok(isApiAssetUrl(resolved), 'the resolved API asset passes the optimizable check');
 ok(!isApiAssetUrl(apiAssetUrl('https://cdn.example.com/x.png')), 'an already-absolute external URL stays external');
 
 // --- suppressions must carry a reason ---------------------------------------

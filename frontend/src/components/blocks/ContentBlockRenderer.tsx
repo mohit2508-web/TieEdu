@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { CODE_LANGS, prismName, resolveLang, type CodeLang } from '@/lib/codeLang';
+import { API_BASE_URL } from '@/lib/api';
 import { MarkdownContent } from '@/components/blocks/MarkdownContent';
 import { CourseAnimation } from '@/components/blocks/CourseAnimations';
 import { Sheet } from '@/components/common/Sheet';
@@ -95,8 +96,11 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
     setIsRunning(true);
     setRunOutput(null);
     try {
-      const url = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000') + '/api/sandbox/execute';
-      const res = await fetch(url, {
+      // Same-origin via the `/api` rewrite in `next.config.mjs`. This used to be
+      // `NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000'`, which pointed every
+      // client that was not on the server's own machine — a phone, any deployed
+      // host — at *its own* loopback, so "Run" could never work there.
+      const res = await fetch(`${API_BASE_URL}/sandbox/execute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code: payload.code || '', language: selectedLang })
