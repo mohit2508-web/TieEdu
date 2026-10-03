@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import api, { API_BASE_URL, fetchVapidPublicKey, sendTestPushApi } from '@/lib/api';
+import api, { API_BASE_URL, fetchVapidPublicKey, isVapidConfigReachable, sendTestPushApi } from '@/lib/api';
 import { getInstallId, trackInstall } from '@/lib/install';
 
 const urlBase64ToUint8Array = (base64String: string) => {
@@ -171,6 +171,14 @@ export const useWebPush = () => {
         // on "push keys are not configured" while the server was fine.
         const vapid = await fetchVapidPublicKey();
         if (!vapid) return { ok: false, reason: 'no_vapid' };
+        /*
+         * A key that came from the build-time constant while the API was
+         * unreachable means this app is running against an origin that is not
+         * serving the API - a stale tunnel host, a cached shell on a dead deploy.
+         * The subscribe call would then 404 and the failure would look like a
+         * server problem, so it is named up front instead.
+         */
+        if (!isVapidConfigReachable()) return { ok: false, reason: 'api_unreachable' };
         sub = await reg.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: urlBase64ToUint8Array(vapid),

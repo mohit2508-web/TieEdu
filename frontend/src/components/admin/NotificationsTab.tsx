@@ -94,6 +94,17 @@ export const NotificationsTab: React.FC = () => {
         tone: 'error',
         text: 'No service worker is registered for this origin, so push cannot work here. Serve the production build over http://localhost or https.',
       });
+    } else if (r.reason === 'api_unreachable') {
+      /*
+       * The app rendered from cache but its API is not answering, which means this
+       * origin is not the one serving the backend. Retrying is pointless until the
+       * user is on the current URL, so say that instead of letting them press the
+       * button again into another 404.
+       */
+      setResult({
+        tone: 'error',
+        text: 'This app could not reach its notification server. It is running from a cached copy on an address that no longer serves the API. Open the app again from the current site URL, then reload and retry.',
+      });
     } else if (r.reason?.startsWith('not_stored')) {
       // The browser produced a subscription but the server did not store it, so
       // this account would silently receive nothing. The status code decides what

@@ -100,21 +100,44 @@ export type NotificationConfig = { vapidPublicKey: string | null };
  * rotation would have broken every installed client the same way.
  *
  * Memoised per page load: `subscribe` and the load-time sync both need it, and the
- * key cannot change within a session. A failed fetch falls back to the constant so
- * a client that was built correctly still works if this endpoint is unreachable.
+ * key cannot change within a session.
+ *
+ * The response body has to be parsed. `apiFetch` resolves to a raw `Response`, so
+ * reading a property straight off it is always `undefined` - which silently sent
+ * every client back to the build-time constant and made the runtime lookup look
+ * like it worked while doing nothing.
  */
 let vapidPublicKeyPromise: Promise<string | null> | null = null;
 
-export const fetchVapidPublicKey = (): Promise<string | null> => {
+/*
+ * Whether the key came from the API rather than the baked constant. It is the
+ * signal that this build is actually talking to its own server: a cached app
+ * shell on a dead origin still renders, and the fallback key then lets the user
+ * reach a subscribe request that can only 404. Surfacing that difference is what
+ * turns a silent dead end into an answerable question.
+ */
+let vapidConfigReachable = false;
+export const isVapidConfigReachable = (): boolean => vapidConfigReachable;
+
+export const fetchVapidPublicKey = async (): Promise<string | null> => {
   if (!vapidPublicKeyPromise) {
-    vapidPublicKeyPromise = apiFetch(`${API_BASE_URL}/notifications/config`)
-      .then((res: any) => {
-        const key = res?.vapidPublicKey;
-        return typeof key === 'string' && key.length > 0
-          ? key
-          : process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || null;
-      })
-      .catch(() => process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || null);
+    vapidPublicKeyPromise = (async () => {
+      const baked = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || null;
+      try {
+        const res = await apiFetch(`${API_BASE_URL}/notifications/config`);
+        if (res.ok) {
+          const data = await res.json();
+          const key = data?.vapidPublicKey;
+          if (typeof key === 'string' && key.length > 0) {
+            vapidConfigReachable = true;
+            return key;
+          }
+        }
+      } catch {
+        /* Unreachable: offline, or an origin that no longer serves this API. */
+      }
+      return baked;
+    })();
   }
   return vapidPublicKeyPromise;
 };
