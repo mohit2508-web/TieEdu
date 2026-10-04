@@ -1115,7 +1115,8 @@ export const sendTestPushApi = async (): Promise<{ sent: number; failed: number 
  */
 export type BroadcastAudience =
   | { kind: 'all_students' }
-  | { kind: 'users'; userIds: string[] };
+  | { kind: 'users'; userIds: string[] }
+  | { kind: 'course'; courseId: string };
 
 export interface BroadcastResult {
   ok: boolean;

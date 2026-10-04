@@ -8,6 +8,11 @@ import {
   type AdminUserRow,
   type BroadcastResult,
 } from '@/lib/api';
+import { fetchAdminCourses } from '@/lib/coursesApi';
+
+type Audience = 'all' | 'selected' | 'course';
+
+type CourseOption = { id: string; title: string; enrolled: number; published: boolean };
 
 /**
  * Staff-initiated broadcast to students.
@@ -21,7 +26,9 @@ import {
 export default function BroadcastTab() {
   const [students, setStudents] = useState<AdminUserRow[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [audience, setAudience] = useState<'all' | 'selected'>('all');
+  const [audience, setAudience] = useState<Audience>('all');
+  const [courses, setCourses] = useState<CourseOption[]>([]);
+  const [courseId, setCourseId] = useState('');
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [link, setLink] = useState('');
@@ -36,11 +43,28 @@ export default function BroadcastTab() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await fetchAdminUsersApi();
-      const rows = (data?.users || []) as AdminUserRow[];
-      setStudents(rows.filter((u) => u.role === 'user' && !u.disabled));
-    } catch (e: any) {
-      setNotice({ tone: 'err', text: e?.message || 'Could not load students' });
+      // Independent failures are independent. A missing courses.read should not
+      // stop an admin messaging students by name, so each is settled on its own.
+      const [usersResult, coursesResult] = await Promise.allSettled([
+        fetchAdminUsersApi(),
+        fetchAdminCourses(),
+      ]);
+      if (usersResult.status === 'fulfilled') {
+        const rows = (usersResult.value?.users || []) as AdminUserRow[];
+        setStudents(rows.filter((u) => u.role === 'user' && !u.disabled));
+      } else {
+        setNotice({ tone: 'err', text: usersResult.reason?.message || 'Could not load students' });
+      }
+      if (coursesResult.status === 'fulfilled') {
+        setCourses(
+          (coursesResult.value?.courses || []).map((c: any) => ({
+            id: c.id,
+            title: c.title,
+            enrolled: c.enrolled ?? 0,
+            published: c.published !== false,
+          }))
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -58,7 +82,22 @@ export default function BroadcastTab() {
     );
   }, [students, query]);
 
-  const targetCount = audience === 'all' ? students.length : selected.size;
+  const chosenCourse = useMemo(
+    () => courses.find((c) => c.id === courseId) || null,
+    [courses, courseId]
+  );
+
+  // The count the admin is agreeing to. Shown before the send, so it must be the
+  // same population the server resolves — enrolment for a course, not a guess.
+  const targetCount =
+    audience === 'all' ? students.length : audience === 'course' ? chosenCourse?.enrolled ?? 0 : selected.size;
+
+  const audiencePayload =
+    audience === 'all'
+      ? ({ kind: 'all_students' } as const)
+      : audience === 'course'
+        ? ({ kind: 'course', courseId } as const)
+        : ({ kind: 'users', userIds: Array.from(selected) } as const);
 
   const toggle = (id: string) => {
     setSelected((prev) => {
@@ -75,6 +114,7 @@ export default function BroadcastTab() {
     title.trim().length > 0 &&
     body.trim().length > 0 &&
     targetCount > 0 &&
+    (audience !== 'course' || Boolean(courseId)) &&
     acknowledged &&
     // The typed title has to match exactly, not merely be present.
     typedTitle.trim() === title.trim();
@@ -84,7 +124,7 @@ export default function BroadcastTab() {
     setNotice(null);
     try {
       const r = await sendBroadcastApi({
-        audience: audience === 'all' ? { kind: 'all_students' } : { kind: 'users', userIds: Array.from(selected) },
+        audience: audiencePayload,
         title: title.trim(),
         body: body.trim(),
         url: link.trim() || '/',
@@ -200,12 +240,41 @@ export default function BroadcastTab() {
             >
               Selected ({selected.size})
             </button>
+            <button
+              onClick={() => { setAudience('course'); setAcknowledged(false); }}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition ${
+                audience === 'course'
+                  ? 'bg-[#1F3A5F] text-white'
+                  : 'border border-gray-200 hover:bg-gray-50 text-[#10151C]'
+              }`}
+            >
+              One course
+            </button>
           </div>
           {audience === 'all' && (
             <p className="mt-2 text-xs text-[#B45309] font-semibold">
               Sending to every student needs the super-admin permission. Without it the server
               refuses, whatever this screen shows.
             </p>
+          )}
+          {audience === 'course' && (
+            <div className="mt-3">
+              <select
+                value={courseId}
+                onChange={(e) => { setCourseId(e.target.value); setAcknowledged(false); }}
+                className={`${input} w-full`}
+              >
+                <option value="">Choose a course…</option>
+                {courses.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.title} ({c.enrolled} enrolled){c.published ? '' : ' — draft'}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1.5 text-xs text-gray-500">
+                Reaches students enrolled in this course only. A draft course has nobody to reach.
+              </p>
+            </div>
           )}
         </div>
 

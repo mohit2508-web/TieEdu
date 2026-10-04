@@ -99,9 +99,15 @@ export default function NotificationSettings({ compact = false }: { compact?: bo
           <p className="text-[13px] font-extrabold text-[#10151C]">Announcements &amp; notifications</p>
           <p className="text-[12px] text-[--text-muted] mt-1 leading-relaxed">
             {on
-              ? 'On. You will get install updates, new course releases and account alerts on this device.'
-              : 'Turn on to get install updates, new course releases and account alerts even when the app is closed.'}
+              ? 'On. You will get new courses, new lessons in courses you are taking, new company material, and a weekly reminder if you have lessons left.'
+              : 'Turn on to hear about new courses, new lessons in courses you are taking, new company material and announcements from TieEdu — even when the app is closed.'}
           </p>
+          {on && (
+            <p className="text-[11px] text-[--text-muted] mt-1.5 leading-relaxed">
+              At most one reminder a week, and only if a course is genuinely unfinished. Nothing else
+              repeats.
+            </p>
+          )}
         </div>
         <button
           type="button"
