@@ -19,6 +19,7 @@ import {
   BrainCircuit,
   Building2,
   CalendarCheck,
+  Droplets,
   Flame,
   GraduationCap,
   LayoutGrid,
@@ -128,6 +129,28 @@ export const NAV_ITEMS: Record<string, NavItem> = {
     tab: true,
     keywords: ['skill test', 'assessment', 'mcq', 'quiz', 'certificate', 'test', 'skills'],
   },
+  drops: {
+    id: 'drops',
+    href: '/drops',
+    label: 'Drops',
+    icon: Droplets,
+    match: 'prefix',
+    description: 'Swipe the career feed — jobs, vaults, contests and deadlines',
+    primary: true,
+    tab: true,
+    /*
+      A full-screen vertical feed, not a document page: the tab bar slides away
+      and the header collapses to a back chevron + title, exactly like a vault
+      reader. It keeps its `tab` slot so the bar can *open* it.
+    */
+    depth: 'detail',
+    /*
+      A detail at its own href — `/drops` has nothing below it to strip — so the
+      back target has to be declared, or the chevron dead-ends.
+    */
+    parent: '/',
+    keywords: ['drops', 'feed', 'reels', 'jobs', 'deadlines', 'news', 'updates'],
+  },
   freeCourse: {
     id: 'freeCourse',
     href: '/interview-course',
@@ -170,7 +193,11 @@ export const NAV_ITEMS: Record<string, NavItem> = {
     match: 'prefix',
     description: 'Your phased preparation plan and progress',
     primary: true,
-    tab: true,
+    /*
+      Drawer-only. The five tab slots are spoken for (vaults, skill test, drops,
+      search, courses), and a plan a student opens once a week does not outrank
+      a feed they open daily. Still on the desktop bar.
+    */
     keywords: ['plan', 'schedule', 'phases', 'progress', 'timeline'],
   },
   myCourses: {
@@ -238,7 +265,7 @@ export const PRIMARY_NAV: NavItem[] = ALL_NAV_ITEMS.filter((i) => i.primary);
  * plane does not belong next to "Compare".
  */
 export const NAV_GROUPS: { id: string; label: string; itemIds: string[] }[] = [
-  { id: 'explore', label: 'Explore', itemIds: ['vaults', 'compare', 'skillTest', 'courses', 'freeCourse'] },
+  { id: 'explore', label: 'Explore', itemIds: ['vaults', 'compare', 'skillTest', 'drops', 'courses', 'freeCourse'] },
   { id: 'plan', label: 'Plan & learn', itemIds: ['studyPlan', 'myCourses'] },
 ];
 
@@ -291,13 +318,26 @@ export const NAV_ACTIONS: Record<NavActionItem['id'], NavActionItem> = {
 export const MOBILE_TABS: NavItem[] = ALL_NAV_ITEMS.filter((i) => i.tab);
 
 /**
- * Search and cart. Both belong here on a phone, and neither belongs in the top
- * bar below `lg` - that is the whole reason the header's own field and cart icon
- * are desktop-only.
+ * The five slots, in render order: four routes and the search action.
+ *
+ * The list is explicit rather than derived because the bar's order is a
+ * product decision (and mixes routes with actions), while `MOBILE_TABS` stays
+ * derived so a new `tab: true` item cannot silently fall off the bar — it shows
+ * up in `MOBILE_TABS` and fails the ordering test until it is placed here.
+ */
+export const MOBILE_TAB_SLOTS: string[] = ['vaults', 'skillTest', 'drops', 'search', 'courses'];
+
+/**
+ * The action set the mobile chrome offers: the tab bar renders `search` (via
+ * `MOBILE_TAB_SLOTS`) and the drill-down header renders both.
+ *
+ * `cart` left the tab bar when Drops claimed the fifth slot — the cart stays
+ * reachable in the drill header (the bar itself slides away on those routes,
+ * so nothing is stranded there), in the drawer, and on the desktop bar.
  *
  * `.tab-slot` is `flex: 1 1 0` and `.tab-bar` is `space-around`, so the count is
- * derived rather than hard-coded: grow `MOBILE_TABS` or this list and the bar
- * re-spaces itself. No width to recompute.
+ * derived rather than hard-coded: grow `MOBILE_TAB_SLOTS` and the bar re-spaces
+ * itself. No width to recompute.
  */
 export const MOBILE_TAB_ACTIONS: NavActionItem['id'][] = ['search', 'cart'];
 

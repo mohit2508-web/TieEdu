@@ -14,6 +14,11 @@ export const TEST_JWT_SECRET = 'test-secret-for-study-plan-api';
 
 process.env.DB_FILE = scratch;
 process.env.JWT_SECRET = TEST_JWT_SECRET;
+// These suites are JSON-only. Left set, `db/client` would probe the real cluster
+// from a test — and `warmStaffCache` would backfill this run's scratch staff
+// rows into it. Set (not deleted) so dotenv.config() cannot repopulate it:
+// dotenv skips keys that already exist, even empty ones.
+process.env.DATABASE_URL = '';
 
 export const removeScratchDb = () => {
   try { fs.rmSync(scratch, { force: true }); } catch { /* ignore */ }

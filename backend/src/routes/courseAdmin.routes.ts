@@ -37,6 +37,8 @@ import {
 import { requireAdmin } from '../middleware/auth';
 import { appendAudit } from '../store/audit';
 import { notifyEvent } from '../lib/notify';
+import { createAutoDrop } from '../lib/autoDrops';
+import { autoDropTemplate } from '../lib/drops';
 import { syncUserXp, totalXpForUser, LEVELS, XP } from '../lib/xp';
 import {
   courseStats,
@@ -594,6 +596,28 @@ courseAdminRouter.put('/courses/:id', async (req: Request, res: Response) => {
           { type: 'course.published', title: course.title, courseId: course.id, slug: course.slug },
           { kind: 'all_students' }
         );
+        /*
+         * The feed card for the same news. Draft, not published: the push above
+         * expires, a card sits in the feed until its window ends and counts
+         * against the 30-live budget — that spend stays a human decision. The
+         * request has already succeeded by the time this runs (saveDb below is
+         * synchronous and this callback is a macrotask after it), so a refusal
+         * here degrades the card, never the publish.
+         */
+        const copy = autoDropTemplate('course', {
+          title: course.title,
+          count: courseStats(course).lesson_count,
+        });
+        createAutoDrop({
+          event: 'course.published',
+          entityId: course.id,
+          type: 'course',
+          headline: copy.headline,
+          bullets: copy.bullets,
+          ctaRoute: `/courses/${course.slug}`,
+          targetSlug: course.slug,
+          actorId: req.userId,
+        });
       });
     }
   }
@@ -839,6 +863,27 @@ courseAdminRouter.post('/modules/:moduleId/lessons', (req: Request, res: Respons
         },
         { kind: 'course', courseId: found.course.id }
       );
+    });
+    /*
+     * The feed card for the new lesson — and the key is the course *plus the
+     * UTC day*, not the lesson id. Curriculum is built in bursts: keying per
+     * lesson would drop one draft per lesson (thirty drafts for a module
+     * imported in an afternoon), keying per course forever would silence every
+     * future lesson. One card per course per day is the digest shape the feed
+     * can actually carry, and `hasAutoDrop` makes a retried handler a no-op.
+     */
+    createAutoDrop({
+      event: 'lesson.added',
+      entityId: `${found.course.id}:${new Date().toISOString().slice(0, 10)}`,
+      type: 'course',
+      headline: `New lesson in ${found.course.title || 'your course'}`.slice(0, 100),
+      bullets: [
+        (lesson.title || 'Fresh material').slice(0, 120),
+        `Added to ${courseTitle}`.slice(0, 120),
+      ],
+      ctaRoute: `/courses/${found.course.slug}`,
+      targetSlug: found.course.slug,
+      actorId: req.userId,
     });
   }
 

@@ -544,8 +544,11 @@ check('search appears once in the phone UI, not twice', () => {
   const nav = read(path.join(ROOT, 'src/lib/navConfig.ts'));
   const actions = nav.match(/MOBILE_TAB_ACTIONS[^=]*=\s*\[([^\]]*)\]/);
   ok(actions, 'MOBILE_TAB_ACTIONS must be a literal this test can read');
-  ok(/'search'/.test(actions![1]), 'the tab bar must offer search on a phone');
-  ok(/'cart'/.test(actions![1]), 'the tab bar must offer cart on a phone');
+  ok(/'search'/.test(actions![1]), 'the phone chrome must offer search');
+  ok(
+    /'cart'/.test(actions![1]),
+    'cart left the tab bar for drops, so the drill header must keep offering it'
+  );
 
   // The top bar must not also offer search below `lg`, or the phone has two.
   // The `!` is required for this to actually work - see the cascade check below.
@@ -607,11 +610,12 @@ check('a signed-out phone can reach both auth routes', () => {
 check('the phone header carries exactly the agreed inventory', () => {
   /*
    * Top bar: logo, bell, leaderboard, profile (or Sign in).
-   * Bottom bar: vault, courses, study plan, cart, search.
+   * Bottom bar: vaults, skill test, drops, search, courses.
    *
-   * Search and cart belong to the bottom bar on a phone, so they must be absent
-   * from the top bar there - and `!` is load-bearing, because `.nav-search` and
-   * `.icon-btn` are unlayered and beat a bare `hidden`. See the cascade check.
+   * Search belongs to the bottom bar on a phone and cart to the drill header
+   * (it gave up its tab slot to drops), so both must be absent from the top bar
+   * there - and `!` is load-bearing, because `.nav-search` and `.icon-btn` are
+   * unlayered and beat a bare `hidden`. See the cascade check.
    */
   const header = read(path.join(ROOT, 'src/components/layout/Header.tsx'));
   ok(/nav-search !hidden lg:flex/.test(header), 'top-bar search must be mobile-hidden');
@@ -620,32 +624,41 @@ check('the phone header carries exactly the agreed inventory', () => {
   ok(/chip chip--icon/.test(header), 'the leaderboard icon belongs in the top bar');
 
   /*
-   * Bottom bar: three standing slots plus the action slots.
+   * Bottom bar: five slots, routes and one action interleaved in a chosen
+   * order, so both lists are parsed as literals.
    *
-   * `MOBILE_TABS` is derived (`ALL_NAV_ITEMS.filter(i => i.tab)`), so the ids
-   * cannot be read off it as a literal. What matters is what the bar actually
-   * renders, which is `MOBILE_TABS.slice(0, 3)` then every `MOBILE_TAB_ACTIONS`
-   * entry - so the count is checked by counting, and the action list by parsing
-   * the one literal in the file.
+   * `MOBILE_TAB_SLOTS` is the bar's render list. `MOBILE_TAB_ACTIONS` is the
+   * mobile chrome's action set — the drill header renders all of it, the tab
+   * bar the subset it has a slot for (search; cart moved to the drill header).
    */
   const nav = read(path.join(ROOT, 'src/lib/navConfig.ts'));
+  const slots = nav.match(/MOBILE_TAB_SLOTS[^=]*=\s*\[([^\]]*)\]/);
+  ok(slots, 'MOBILE_TAB_SLOTS must be a literal this test can read');
+  const slotIds = (slots![1].match(/'[^']+'/g) ?? []).map((s) => s.slice(1, -1));
+  eq(slotIds.length, 5, 'five slots - nothing else fits in 320px');
+  eq(slotIds.join(','), 'vaults,skillTest,drops,search,courses', 'the agreed slot order');
+  ok(slotIds.includes('search'), 'the tab bar must offer search on a phone');
+  ok(!slotIds.includes('cart'), 'cart moved to the drill header and the drawer');
+
   const actions = nav.match(/MOBILE_TAB_ACTIONS[^=]*=\s*\[([^\]]*)\]/);
   ok(actions, 'MOBILE_TAB_ACTIONS must be a literal this test can read');
   for (const id of ['search', 'cart']) {
-    ok(new RegExp(`'${id}'`).test(actions![1]), `the tab bar must offer ${id} on a phone`);
+    ok(new RegExp(`'${id}'`).test(actions![1]), `the drill header must offer ${id} on a phone`);
   }
   ok(
     (actions![1].match(/'/g) ?? []).length === 4,
     'the action list must be exactly search + cart - nothing else fits five slots in 320px'
   );
 
-  // The three standing slots, in order, come from the derived tab list.
+  // The bar renders the slot list itself; the count comes from the list, never
+  // from a silent `slice` that would hide a sixth destination.
   const bar = read(path.join(ROOT, 'src/components/layout/MobileTabBar.tsx'));
-  ok(/MOBILE_TABS\.slice\(0,\s*3\)/.test(bar), 'the bar must render the first three tab slots');
-  ok(/MOBILE_TAB_ACTIONS\.map/.test(bar), 'the bar must render every action slot');
+  ok(/MOBILE_TAB_SLOTS\.map/.test(bar), 'the bar must render MOBILE_TAB_SLOTS');
+  ok(/NAV_ITEMS\[id\]/.test(bar), 'route slots must resolve through NAV_ITEMS');
+  ok(/NAV_ACTIONS/.test(bar), 'action slots must resolve through NAV_ACTIONS');
   ok(
-    /slots\.map/.test(bar) && /MOBILE_TAB_ACTIONS\.map/.test(bar),
-    'both slot kinds must be rendered, or one of them is invisible'
+    !/MOBILE_TABS\.slice\(0,/.test(bar),
+    'the bar must not silently truncate the tab list'
   );
 });
 

@@ -19,6 +19,7 @@ import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import {
   ALL_NAV_ITEMS,
+  MOBILE_TAB_SLOTS,
   MOBILE_TABS,
   NAV_ACTIONS,
   NAV_DETAIL_PREFIXES,
@@ -260,14 +261,32 @@ check('the desktop bar hides admin-only items from its rendered order', () => {
 });
 
 check('the tab bar stays at five slots', () => {
-  eq(MOBILE_TABS.length, 3, 'expected three route tabs');
+  eq(MOBILE_TAB_SLOTS.length, 5, 'five slots is the touch-target ceiling on 320px');
+  // Every slot must resolve, or it renders as a blank target on the bar.
+  for (const id of MOBILE_TAB_SLOTS) {
+    const isRoute = Object.prototype.hasOwnProperty.call(NAV_ITEMS, id);
+    const isAction = Object.prototype.hasOwnProperty.call(NAV_ACTIONS, id);
+    ok(isRoute || isAction, `slot ${id} resolves to neither a route nor an action`);
+  }
   eq(NAV_ACTIONS.search.id, 'search');
   eq(NAV_ACTIONS.cart.id, 'cart');
   eq(NAV_ACTIONS.leaderboard.id, 'leaderboard');
+  ok(!MOBILE_TAB_SLOTS.includes('cart'), 'cart gave up its slot to drops');
 });
 
-check('tab bar routes are ordered vaults, courses, study plan', () => {
-  eq(MOBILE_TABS.map((i) => i.id).join(','), 'vaults,courses,studyPlan');
+check('tab bar routes are ordered vaults, skill test, drops, search, courses', () => {
+  eq(MOBILE_TAB_SLOTS.join(','), 'vaults,skillTest,drops,search,courses');
+  // `MOBILE_TABS` stays derived so a new `tab: true` item cannot fall off the
+  // bar unnoticed — it lands here and fails until it is placed in the slots.
+  eq(MOBILE_TABS.map((i) => i.id).join(','), 'vaults,skillTest,drops,courses');
+  ok(
+    MOBILE_TABS.every((i) => MOBILE_TAB_SLOTS.includes(i.id)),
+    'a tab item is not placed in the slot list'
+  );
+  ok(
+    !MOBILE_TABS.some((i) => i.id === 'studyPlan'),
+    'study plan is drawer-only now — it kept its desktop bar slot'
+  );
 });
 
 check('nav icons are unique where the surfaces show them side by side', () => {
@@ -292,10 +311,10 @@ check('every nav item carries a description for the drawer and palette', () => {
   }
 });
 
-check('only the free course carries the free badge', () => {
+check('only the free course and the skill test carry the free badge', () => {
+  // The chip budget is deliberately tiny: two acquisitions hooks, no third.
   const badged = ALL_NAV_ITEMS.filter((i) => i.badge);
-  eq(badged.length, 1);
-  eq(badged[0].id, 'freeCourse');
+  eq(badged.map((i) => i.id).join(','), 'skillTest,freeCourse');
 });
 
 // ---------------------------------------------------------------------------
@@ -400,6 +419,18 @@ check('a route that is a detail at its own href uses its declared parent', () =>
   eq(getNavigationDepth('/interview-course'), 'detail');
   eq(resolveBackHref('/interview-course'), '/');
   ok(NAV_ITEMS.freeCourse.parent, 'freeCourse must declare a parent, or its chevron dead-ends');
+});
+
+check('drops opens as a full-screen detail feed with a way back', () => {
+  // The tab bar *opens* /drops, but the feed itself is a pushed screen: the bar
+  // slides away and the header collapses to a chevron + title. A wrong 'root'
+  // here puts a tab bar under a full-screen swipe feed.
+  eq(getNavigationDepth('/drops'), 'detail');
+  eq(getNavigationDepth('/drops/drop-123'), 'detail');
+  eq(resolveBackHref('/drops'), '/');
+  eq(resolveNavTitle('/drops'), 'Drops');
+  ok(NAV_ITEMS.drops.parent, 'drops must declare a parent, or its chevron dead-ends');
+  eq(isNavActive('/drops/drop-123', '/drops'), true, 'a drop detail still lights up the tab');
 });
 
 check('back never targets the page it is already on', () => {

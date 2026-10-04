@@ -243,11 +243,11 @@ export const Header: React.FC = () => {
         pushed screen. Branching inside the shared row instead would mean the
         desktop layout is one `isPushedScreen &&` away from changing.
 
-        The two actions are `MOBILE_TAB_ACTIONS` — the same two the tab bar
-        carries, read from the same list. That is not a coincidence: §1.2 slides
-        the tab bar away on exactly these routes, so if this bar did not take
-        them over, search and the cart would be unreachable for the whole
-        duration of the drill-down.
+        The two actions are `MOBILE_TAB_ACTIONS`. Search is the same slot the tab
+        bar carries; cart left the tab bar for Drops, so this bar is where a
+        drill-down keeps it. §1.2 slides the tab bar away on exactly these
+        routes — if this bar did not take both over, search and the cart would be
+        unreachable for the whole duration of the drill-down.
       */}
       {isPushedScreen && (
         <div className="flex w-full items-center gap-1 px-2 md:hidden" data-drill-header="">

@@ -6,6 +6,8 @@ import { AUDIT_CAP } from '../lib/audit';
 import { studyPlanAdminRouter } from './studyPlan.routes';
 import { validateSectionData } from '../lib/sectionData';
 import { notifyEvent } from '../lib/notify';
+import { createAutoDrop } from '../lib/autoDrops';
+import { autoDropTemplate } from '../lib/drops';
 import { requirePermission } from '../middleware/auth';
 
 export const adminRouter = Router();
@@ -419,6 +421,28 @@ adminRouter.put('/companies/:id', requirePermission('companies.write'), async (r
         },
         { kind: 'all_students' }
       );
+      /*
+       * The feed card, deduped on company + the exact set of fields that were
+       * filled. Keying on the company alone would make this a one-ever card —
+       * the second batch of new material would be silenced forever; keying on
+       * nothing would re-card a no-op resave. The field set is the event: new
+       * interviews then new PDFs are two pieces of news, the same two fields
+       * arriving again are none (and `added` above is already empty for those).
+       */
+      const copy = autoDropTemplate('vault', {
+        title: companyName,
+        detail: `New: ${added.slice(0, 3).map(fieldLabel).join(', ')}`,
+      });
+      createAutoDrop({
+        event: 'vault.updated',
+        entityId: `${next.id}:${added.join('+')}`,
+        type: 'vault',
+        headline: copy.headline,
+        bullets: copy.bullets,
+        ctaRoute: `/company/${next.slug}`,
+        targetSlug: next.slug,
+        actorId: req.userId,
+      });
     });
   }
 

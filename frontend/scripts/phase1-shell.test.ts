@@ -327,13 +327,18 @@ check('back prefers history and falls back to a resolved href', () => {
 
 check('the drill bar inherits the search and cart the tab bar gave up', () => {
   // This is the §1.2 -> §1.3 hand-off, and it is easy to miss: the tab bar slides
-  // away on exactly these routes, so if the drill bar does not take its two
+  // away on exactly these routes, so if the drill bar does not take the mobile
   // actions over, search and the cart are unreachable for the whole drill-down.
+  // Cart is drill-bar-only now (drops took its tab slot), so its presence here
+  // is the only thing keeping it on a pushed screen.
   ok(/MOBILE_TAB_ACTIONS\.map/.test(header), 'the drill bar must render MOBILE_TAB_ACTIONS');
-  ok(
-    /MOBILE_TAB_ACTIONS/.test(tabBar),
-    'MOBILE_TAB_ACTIONS must be the same list the tab bar uses, not a second pair'
-  );
+  const actions = /MOBILE_TAB_ACTIONS[^=]*=\s*\[([^\]]*)\]/.exec(navConfig)?.[1] ?? '';
+  ok(/'search'/.test(actions), 'the drill bar must keep the tab bar\'s search');
+  ok(/'cart'/.test(actions), 'the drill bar must keep cart, which the tab bar no longer renders');
+  const slots = /MOBILE_TAB_SLOTS[^=]*=\s*\[([^\]]*)\]/.exec(navConfig)?.[1] ?? '';
+  ok(/'search'/.test(slots), 'the tab bar still renders search as a slot');
+  ok(!/'cart'/.test(slots), 'the tab bar no longer renders cart');
+  ok(/MOBILE_TAB_SLOTS/.test(tabBar), 'the tab bar must render MOBILE_TAB_SLOTS');
   ok(/NAV_ACTIONS\[id\]/.test(header), 'the actions must resolve through NAV_ACTIONS');
 });
 

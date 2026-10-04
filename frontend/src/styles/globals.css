@@ -112,6 +112,28 @@
   --amber-deep: #B45309;   /* amber text sitting on white/sky-soft */
 
   /* ---------------------------------------------------------------
+     DROPS CHIP PALETTE
+     One hue per drop type, read by the filter chips, the card's type
+     badge and the admin list's pill. They are vars rather than twelve
+     Tailwind classes because the mapping also ships to the server
+     (backend/src/lib/drops.ts DROP_TYPE_META mirrors these names) and
+     a missing var should read as "unset" in devtools, not as an
+     unstyled element.
+     --------------------------------------------------------------- */
+  --drop-company: #0369A1;
+  --drop-job: #0E7C66;
+  --drop-deadline: #C1442D;
+  --drop-vault: #4F46E5;
+  --drop-skilltest: #7C3AED;
+  --drop-course: #B45309;
+  --drop-contest: #BE185D;
+  --drop-selected: #15803D;
+  --drop-scholarship: #0284C7;
+  --drop-college: #6D28D9;
+  --drop-tip: #C77B12;
+  --drop-tieedu: #0E2A44;
+
+  /* ---------------------------------------------------------------
      SAFE AREAS  (Phase 0 — MOBILE_APP_UI_PLAN.md)
      `viewport-fit=cover` in the viewport meta makes the browser
      paint edge to edge, which is what we want for an installed app
@@ -1545,6 +1567,234 @@ code, pre, kbd, samp, .font-mono {
 @keyframes anim-overflow-in {
   0%   { opacity: 0; transform: translateY(100%) rotateX(-75deg); }
   100% { opacity: 1; transform: translateY(0) rotateX(0deg); }
+}
+
+/* ============================================
+   DROPS — VERTICAL CAREER FEED
+   ============================================
+
+   `/drops` is a `depth: 'detail'` route, so the tab bar is gone and
+   `.page-body`'s bottom reservation collapses to zero. What is left under the
+   fixed header is the whole screen, and the feed claims all of it: the page
+   itself never scrolls, the snap scroller does. That is what stops the header
+   from rubber-banding mid-swipe and what keeps the card heights equal to the
+   visible area by construction rather than by a JS resize observer.
+   ============================================ */
+.drops-shell {
+  display: flex;
+  height: calc(100dvh - var(--header-total));
+}
+.drops-rail {
+  flex: none;
+  width: 250px;
+  overflow-y: auto;
+  border-right: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  padding: 18px 16px;
+}
+.drops-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+/* The column the filters + scroller live in; fills the shell on every width. */
+.drops-page {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Filter row: fixed, horizontally scrollable, never wraps to a second line. */
+.drops-filters {
+  flex: none;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+}
+.drops-filters::-webkit-scrollbar { display: none; }
+
+.drops-filter-chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  color: var(--text-body);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+.drops-filter-chip[aria-pressed='true'] {
+  background: var(--brand-ink);
+  border-color: var(--brand-ink);
+  color: #fff;
+}
+.drops-filter-chip[aria-pressed='true'] .drops-filter-dot { box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85); }
+.drops-filter-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--drop-chip, var(--brand-sky));
+}
+
+/* Desktop rail: the same chips, stacked, no horizontal scroll. */
+.drops-filters--rail {
+  flex-direction: column;
+  align-items: stretch;
+  overflow: visible;
+  border-bottom: 0;
+  padding: 0;
+  gap: 6px;
+}
+.drops-filters--rail .drops-filter-chip {
+  width: 100%;
+  justify-content: flex-start;
+}
+/*
+ * The under-header chip strip is the mobile control; the desktop rail replaces
+ * it. Written as a media query on the modifier (not a `md:hidden` utility)
+ * because this file is unlayered and would otherwise beat Tailwind's utility
+ * layer at equal specificity — the same trap `.icon-btn` documents.
+ */
+@media (min-width: 768px) {
+  .drops-filters--bar {
+    display: none;
+  }
+}
+
+/* The snap scroller. Its own scroll container — the document stays put. */
+.drops-viewport {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-snap-type: y mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  background: var(--bg-app);
+}
+.drops-viewport::-webkit-scrollbar { display: none; }
+
+/*
+ * One screen per slide. The wrapper is the snap target and the observer's unit
+ * (so re-renders of the card do not retrigger geometry), and the card fills it.
+ * `height: 100%` of the scroller (not `100vh`), so the last card still snaps
+ * when the URL bar is open and the visual viewport is shorter than the layout
+ * viewport.
+ */
+.drop-slide {
+  height: 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+.drop-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-surface);
+}
+/* Long headlines clamp to three lines so the bullets and CTA stay on screen. */
+.drop-headline {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Media region: the image fills whatever the text block leaves. */
+.drop-media {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--brand-ink);
+}
+.drop-media > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+/* Bottom scrim so white copy over a bright creative stays legible. */
+.drop-media::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 55%;
+  background: linear-gradient(to top, rgba(8, 12, 18, 0.88), rgba(8, 12, 18, 0));
+  pointer-events: none;
+}
+.drop-media--empty {
+  background:
+    radial-gradient(120% 90% at 15% 0%, color-mix(in srgb, var(--drop-chip, var(--brand-sky)) 26%, #0B111A), #0B111A);
+}
+
+/* Type badge — the only colour on an otherwise monochrome card. */
+.drop-type-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: var(--drop-chip, var(--brand-sky));
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* The vertical action rail (save / share / not interested). */
+.drop-rail-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 48px;
+  min-height: 48px;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+}
+.drop-rail-btn[data-on='true'] { color: var(--drop-chip, var(--brand-accent)); }
+
+/* Skeleton card: same geometry as a real one, so the first paint does not jump. */
+.drop-skeleton {
+  height: 100%;
+  scroll-snap-align: start;
+  background: linear-gradient(110deg, #141B25 30%, #1D2733 45%, #141B25 60%);
+  background-size: 220% 100%;
+  animation: drop-skeleton-sweep 1.6s linear infinite;
+}
+@keyframes drop-skeleton-sweep {
+  0% { background-position: 130% 0; }
+  100% { background-position: -30% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .drop-skeleton { animation: none; }
+}
+
+/* Desktop: the feed sits in a centred column with a filter rail beside it. */
+@media (max-width: 767px) {
+  .drops-rail { display: none; }
 }
 
 /* ============================================

@@ -32,6 +32,7 @@ import { devicesRouter, adminDevicesRouter } from './routes/devices.routes';
 import { storage } from './store';
 import { skillTestRouter } from './routes/skill-test.routes';
 import { adminSkillTestRouter } from './routes/admin-skill-test.routes';
+import { dropsRouter } from './routes/drops.routes';
 import { seedSkillTest } from './data/seedSkillTest';
 
 import { runMigrations } from './db/migrate';
@@ -124,6 +125,9 @@ app.use('/api/unlocks', unlockRouter);
 app.use('/api/notifications', notificationsRouter);
 app.use('/api/skill-test', optionalAuth, skillTestRouter);
 app.use('/api/admin/skill-test', requireAdmin, adminSkillTestRouter);
+// Feed is public (optionalAuth per-route inside), admin subtree carries its own
+// requireAdmin + drops.write/read guards — nothing extra to layer at the mount.
+app.use('/api/drops', dropsRouter);
 
 // Health Check — honest
 app.get('/api/health', (req, res) => {

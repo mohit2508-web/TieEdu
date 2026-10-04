@@ -2,6 +2,8 @@ import { Router, Request, Response } from 'express';
 import { loadDb, saveDb, ReportItem } from '../data/db';
 import { requireAdmin, requireAuth, optionalAuth } from '../middleware/auth';
 import { awardAndCommit } from '../lib/xp';
+import { createAutoDrop } from '../lib/autoDrops';
+import { autoDropTemplate } from '../lib/drops';
 
 export const reportsRouter = Router();
 
@@ -108,6 +110,36 @@ reportsRouter.patch('/:id', requireAdmin, (req: Request, res: Response) => {
   }
 
   saveDb(db);
+
+  /*
+   * The selection story becomes a feed card, deduped on the report id — the
+   * same one-key rule as the XP award above, so unpublish → publish cannot
+   * re-card it. The company slug is resolved from the vault the report points
+   * at; with no vault to link to the drop still validates via a minimal
+   * article, because a card with nowhere to go is worse than no card.
+   */
+  if (status === 'published') {
+    const company = (db.companies || []).find((c: any) => c.id === report.company_id);
+    const copy = autoDropTemplate('selected', {
+      title: report.company_name || company?.name || company?.title || 'a company',
+      detail: (report.rounds || [])
+        .map((r: { round_name: string }) => r.round_name)
+        .filter(Boolean)
+        .slice(0, 2)
+        .join(' vs '),
+    });
+    createAutoDrop({
+      event: 'report.published',
+      entityId: report.id,
+      type: 'selected',
+      headline: copy.headline,
+      bullets: copy.bullets,
+      ctaRoute: company?.slug ? `/company/${company.slug}` : undefined,
+      targetSlug: company?.slug,
+      bodyMd: company ? undefined : `An interview experience shared by ${report.user_name} on TieEdu.`,
+      actorId: req.userId,
+    });
+  }
 
   res.json({ status: 'success', message: `Report status updated to ${status}`, report });
 });

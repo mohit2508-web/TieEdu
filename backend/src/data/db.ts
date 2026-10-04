@@ -648,6 +648,151 @@ export interface Session {
   expires_at: string;
 }
 
+// ============================================================================
+// DROPS
+//
+// The vertical career feed. One drop is one swipe-sized update — a hiring
+// drive, a new vault, a deadline, a placement — that routes the student back
+// into a real product surface (company vault, course, skill test, application).
+//
+// Admin-authored end to end, like HeroPoster: type, copy, image, CTA and run
+// window are all set from the control plane. The one difference is that a drop
+// is also an event source — `source` records which platform action generated it
+// so an auto-created draft can be traced back (and never double-created).
+// ============================================================================
+
+/** The twelve categories. Each maps to a chip colour and a default CTA label. */
+export type DropType =
+  | 'company'
+  | 'job'
+  | 'vault'
+  | 'skilltest'
+  | 'course'
+  | 'contest'
+  | 'deadline'
+  | 'selected'
+  | 'tip'
+  | 'scholarship'
+  | 'college'
+  | 'tieedu';
+
+export const ALL_DROP_TYPES: DropType[] = [
+  'company', 'job', 'vault', 'skilltest', 'course', 'contest',
+  'deadline', 'selected', 'tip', 'scholarship', 'college', 'tieedu',
+];
+
+/**
+ * Lifecycle. `scheduled` is a real status, not just a future publish_at, so an
+ * admin can see in the list what is waiting — a timestamp alone makes "why is
+ * this not live" a query instead of a glance.
+ */
+export type DropStatus = 'draft' | 'scheduled' | 'published' | 'archived';
+
+/**
+ * Who sees the drop. An empty audience (every field absent) means everyone.
+ * `user_id` is for personal drops — "your certificate is ready" — which are
+ * written against one account and never appear in anyone else's feed.
+ */
+export interface DropAudience {
+  /** College names, matched case-insensitively against user.college. */
+  colleges?: string[];
+  /** Graduation years, e.g. [2027]. Matched against user.grad_year. */
+  batches?: number[];
+  /** Branch/major, e.g. "CSE". Matched against user.branch. */
+  branches?: string[];
+  /** Interest skills, e.g. ["java"]. Overlap with user.skills counts. */
+  skills?: string[];
+  /** A drop only this account can see. */
+  user_id?: string;
+}
+
+export interface DropStats {
+  views: number;
+  unique_viewers: number;
+  cta_clicks: number;
+  shares: number;
+  saves: number;
+  dwell_ms_total: number;
+}
+
+export interface Drop {
+  id: string;
+  type: DropType;
+  /** 40–100 chars. The one line that decides whether the swipe stops. */
+  headline: string;
+  /** 1–3 bullets, each ≤120 chars, one new fact apiece. */
+  bullets: string[];
+  image_stored_name?: string;
+  image_file_name?: string;
+  image_alt?: string;
+  /** Defaults to the type's CTA label when empty. */
+  cta_label?: string;
+  /** In-app target, e.g. "/company/tcs". Preferred over cta_url. */
+  cta_route?: string;
+  /** External target (apply links, scholarships). Opened new-tab. */
+  cta_url?: string;
+  /** The entity this drop points at — company/course/skill slug. */
+  target_slug?: string;
+  /** Read More full article, rendered as markdown. */
+  body_md?: string;
+  /** Countdown source for deadline-type drops. ISO datetime. */
+  deadline_at?: string;
+  sponsored?: boolean;
+  sponsor_name?: string;
+  pinned: boolean;
+  /** 0 normal, 1 important, 2 urgent. Higher sorts first within status. */
+  priority: 0 | 1 | 2;
+  status: DropStatus;
+  publish_at?: string;
+  expires_at?: string;
+  audience: DropAudience;
+  tags: string[];
+  author_id?: string;
+  /** Set when a platform event auto-created this drop, for dedupe + traceability. */
+  source?: { kind: 'manual' | 'auto'; event?: string; entity_id?: string };
+  stats: DropStats;
+  created_at: string;
+  updated_at: string;
+}
+
+/** A user's read state for one drop. Feeds unseen-first and counts unique viewers. */
+export interface DropView {
+  user_id: string;
+  drop_id: string;
+  seen_at: string;
+  dwell_ms: number;
+}
+
+export interface DropBookmark {
+  user_id: string;
+  drop_id: string;
+  created_at: string;
+}
+
+export type DropEventKind = 'view' | 'cta_click' | 'share' | 'bookmark' | 'read_more';
+
+export interface DropEvent {
+  id: string;
+  drop_id: string;
+  /** Null for anonymous views. */
+  user_id: string | null;
+  event: DropEventKind;
+  created_at: string;
+}
+
+/**
+ * A user's "don't show me this" signal. Separate from the drop itself because
+ * it is per-user state — one student muting a category must not hide it for
+ * everyone, which is exactly the bug a boolean on the drop would ship.
+ */
+export interface DropMute {
+  id: string;
+  user_id: string;
+  kind: 'drop' | 'type' | 'company';
+  value: string;
+  created_at: string;
+}
+
 const DATA_DIR = path.join(__dirname, '../../data');
 // DB_FILE lets an integration test point the store at a scratch file instead of
 // the install's real db.json. Unset in normal operation.
@@ -1574,6 +1719,14 @@ const initialDbData = {
   notification_preferences: [],
   releases: [],
   staff: [],
+  // Drops. Seeded EMPTY like every other admin-authored collection: the feed
+  // falls back to an honest empty state, and a fake "TCS is hiring" placeholder
+  // would put an invented drive in front of every student on first boot.
+  drops: [],
+  drop_views: [],
+  drop_bookmarks: [],
+  drop_events: [],
+  drop_mutes: [],
   settings: {
     platform_name: 'TieEdu',
     support_email: 'support@tieedu.in',
@@ -1668,6 +1821,38 @@ export function loadDb() {
       if (!Array.isArray(data.recommendations)) { data.recommendations = []; upgraded = true; }
       if (!Array.isArray(data.skillBadges)) { data.skillBadges = []; upgraded = true; }
       if (!Array.isArray(data.skillUserBadges)) { data.skillUserBadges = []; upgraded = true; }
+      // Drops collections. Auto-created like devices/staff above so an install
+      // that predates the feature boots into an empty feed rather than crashing
+      // on `db.drops.length`.
+      if (!Array.isArray(data.drops)) { data.drops = []; upgraded = true; }
+      if (!Array.isArray(data.drop_views)) { data.drop_views = []; upgraded = true; }
+      if (!Array.isArray(data.drop_bookmarks)) { data.drop_bookmarks = []; upgraded = true; }
+      if (!Array.isArray(data.drop_events)) { data.drop_events = []; upgraded = true; }
+      if (!Array.isArray(data.drop_mutes)) { data.drop_mutes = []; upgraded = true; }
+      // Per-record defaults for rows written before these fields existed, same
+      // reasoning as the device `is_blocked` backfill: normalise to the explicit
+      // value so later code can rely on the field being present.
+      if (Array.isArray(data.drops) && data.drops.some((d: any) => d && (!d.stats || typeof d.pinned !== 'boolean'))) {
+        for (const d of data.drops as any[]) {
+          if (!d || typeof d !== 'object') continue;
+          if (typeof d.pinned !== 'boolean') d.pinned = false;
+          if (!d.stats || typeof d.stats !== 'object') {
+            d.stats = { views: 0, unique_viewers: 0, cta_clicks: 0, shares: 0, saves: 0, dwell_ms_total: 0 };
+          } else {
+            d.stats.views = Number(d.stats.views) || 0;
+            d.stats.unique_viewers = Number(d.stats.unique_viewers) || 0;
+            d.stats.cta_clicks = Number(d.stats.cta_clicks) || 0;
+            d.stats.shares = Number(d.stats.shares) || 0;
+            d.stats.saves = Number(d.stats.saves) || 0;
+            d.stats.dwell_ms_total = Number(d.stats.dwell_ms_total) || 0;
+          }
+          if (!Array.isArray(d.bullets)) d.bullets = [];
+          if (!d.audience || typeof d.audience !== 'object') d.audience = {};
+          if (!Array.isArray(d.tags)) d.tags = [];
+          if (typeof d.priority !== 'number') d.priority = 0;
+        }
+        upgraded = true;
+      }
       // The bundled courses are the launch catalogue for an install that
       // predates the course engine. Without this, loadDb() would happily return
       // an empty course list forever: initialDbData is only consulted when

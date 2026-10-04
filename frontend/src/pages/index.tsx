@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { Footer } from '@/components/layout/Footer';
 import { CompanyCard } from '@/components/company/CompanyCard';
 import { PricingSection } from '@/components/checkout/PricingSection';
+import { DropsStrip } from '@/components/drops/DropsStrip';
 import { fetchCompanies, fetchHeroPostersApi } from '@/lib/api';
 import { useCartScope } from '@/context/CartContext';
 import { Company, HeroPoster } from '@/types';
@@ -204,6 +205,9 @@ export default function Home() {
               ))}
             </div>
           </section>
+
+          {/* ===== DROPS STRIP (renders nothing when the feed is empty) ===== */}
+          <DropsStrip />
 
           {/* ===== FEATURE STRIP ===== */}
           {dataError && (

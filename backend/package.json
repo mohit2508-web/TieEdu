@@ -7,7 +7,7 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test": "npm run test:unit && npm run test:courses && npm run test:certs && npm run test:certhttp && npm run test:certadmin && npm run test:jwt && npm run test:security && npm run test:rbac && npm run test:notifications && npm run test:audit && npm run test:guards && npm run test:catalog && npm run test:ccontent && npm run test:pack && npm run test:repair && npm run test:api && npm run test:posters && npm run test:data && npm run test:smoke",
+    "test": "npm run test:unit && npm run test:courses && npm run test:certs && npm run test:certhttp && npm run test:certadmin && npm run test:jwt && npm run test:security && npm run test:rbac && npm run test:notifications && npm run test:audit && npm run test:guards && npm run test:catalog && npm run test:ccontent && npm run test:pack && npm run test:repair && npm run test:api && npm run test:posters && npm run test:drops && npm run test:data && npm run test:smoke",
     "test:m1": "tsx --test scripts/verify-m1-guards.live.ts",
     "test:unit": "ts-node --transpile-only scripts/study-plan.test.ts",
     "test:courses": "ts-node --transpile-only scripts/courses-lib.test.ts",
@@ -27,6 +27,7 @@
     "repair:packs": "ts-node --transpile-only scripts/repair-pack-content.ts",
     "test:api": "ts-node --transpile-only scripts/study-plan-api.test.ts",
     "test:posters": "ts-node --transpile-only scripts/posters-api.test.ts",
+    "test:drops": "ts-node --transpile-only scripts/drops-api.test.ts",
     "test:data": "ts-node --transpile-only scripts/section-data.test.ts",
     "test:smoke": "ts-node --transpile-only src/scripts/smokeCourses.ts"
   },
