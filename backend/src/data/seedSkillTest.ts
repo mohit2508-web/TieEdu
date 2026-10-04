@@ -1,34 +1,15 @@
 import { loadDb, saveDb } from './db';
-import type { Skill, Topic, Question, Assessment } from './skillTestTypes';
+import type { Skill, Topic, Question, Assessment, TopicBlueprintItem } from './skillTestTypes';
+import { SKILL_CATALOG, CatalogSkill } from './skillTestData/catalog';
+import { ALL_QUESTIONS } from './skillTestData/index';
+import type { SeedQ } from './skillTestData/types';
 import crypto from 'crypto';
 
 function id(prefix: string): string {
   return `${prefix}-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`;
 }
 
-const SKILLS: Array<Omit<Skill, 'id' | 'created_at' | 'updated_at'>> = [
-  { name: 'Java Programming', slug: 'java', category: 'Programming', description: 'Test your Java fundamentals, OOP, Collections, Multithreading, JVM and more.', shortDescription: 'Java assessment', status: 'active', isPopular: true, certificateAvailable: true, displayOrder: 1, tags: ['java', 'oop', 'programming'], totalQuestions: 30, avgCompletionTime: 30 },
-  { name: 'Python Programming', slug: 'python', category: 'Programming', description: 'Assess your Python skills across core concepts, data structures and best practices.', shortDescription: 'Python assessment', status: 'active', isPopular: true, certificateAvailable: true, displayOrder: 2, tags: ['python', 'programming'], totalQuestions: 30, avgCompletionTime: 30 },
-  { name: 'C++ Programming', slug: 'cpp', category: 'Programming', description: 'Evaluate C++ concepts including STL, pointers, memory management and OOP.', shortDescription: 'C++ assessment', status: 'active', isPopular: false, certificateAvailable: true, displayOrder: 3, tags: ['cpp', 'programming'], totalQuestions: 30, avgCompletionTime: 30 },
-  { name: 'JavaScript', slug: 'javascript', category: 'Web Development', description: 'Evaluate JavaScript fundamentals, ES6+, async patterns and DOM concepts.', shortDescription: 'JS assessment', status: 'active', isPopular: true, certificateAvailable: true, displayOrder: 4, tags: ['javascript', 'web'], totalQuestions: 30, avgCompletionTime: 30 },
-  { name: 'SQL', slug: 'sql', category: 'Databases', description: 'Test your SQL querying skills from basics to advanced joins and subqueries.', shortDescription: 'SQL assessment', status: 'active', isPopular: true, certificateAvailable: true, displayOrder: 5, tags: ['sql', 'database'], totalQuestions: 30, avgCompletionTime: 30 },
-  { name: 'DBMS', slug: 'dbms', category: 'Core CS', description: 'Database Management System concepts — normalization, transactions, indexing.', shortDescription: 'DBMS assessment', status: 'active', isPopular: false, certificateAvailable: true, displayOrder: 6, tags: ['dbms', 'database'], totalQuestions: 30, avgCompletionTime: 30 },
-  { name: 'DSA', slug: 'dsa', category: 'Core CS', description: 'DSA fundamentals — arrays, trees, graphs, sorting and problem-solving concepts.', shortDescription: 'DSA assessment', status: 'active', isPopular: true, certificateAvailable: true, displayOrder: 7, tags: ['dsa', 'algorithms'], totalQuestions: 30, avgCompletionTime: 30 },
-  { name: 'Operating Systems', slug: 'os', category: 'Core CS', description: 'OS concepts — processes, threads, memory management, scheduling and deadlocks.', shortDescription: 'OS assessment', status: 'active', isPopular: false, certificateAvailable: true, displayOrder: 8, tags: ['os', 'systems'], totalQuestions: 30, avgCompletionTime: 30 },
-];
-
-const TOPICS_BY_SKILL: Record<string, string[]> = {
-  java: ['Java Basics', 'OOP', 'Collections', 'Exception Handling', 'Multithreading', 'JVM', 'Java 8+'],
-  python: ['Python Basics', 'Data Types', 'Functions', 'OOP', 'Modules & Imports', 'Error Handling', 'File Handling'],
-  cpp: ['C++ Basics', 'Pointers', 'OOP', 'STL', 'Templates', 'Memory Management'],
-  javascript: ['JS Basics', 'ES6+', 'Async/Await', 'DOM', 'Closures', 'Events'],
-  sql: ['SELECT & Filters', 'JOINs', 'GROUP BY & Aggregation', 'Subqueries', 'Indexes', 'Normalization'],
-  dbms: ['ER Model', 'Normalization', 'Transactions', 'Indexing', 'Concurrency', 'File Organization'],
-  dsa: ['Arrays', 'Linked Lists', 'Stacks & Queues', 'Trees', 'Graphs', 'Sorting & Searching'],
-  os: ['Processes', 'Threads', 'Memory Management', 'Scheduling', 'Deadlocks', 'File Systems'],
-};
-
-// Java questions — 30 questions across 7 topics
+// Java questions — 35 questions across 7 topics (assessment draws 30)
 const JAVA_QUESTIONS: Array<{
   topic: string; difficulty: Question['difficulty']; type: Question['type'];
   question: string; options: string[]; correctIdx: number[]; explanation: string;
@@ -83,32 +64,73 @@ const JAVA_QUESTIONS: Array<{
   { topic: 'Java 8+', difficulty: 'advanced', type: 'true_false', question: 'A Java interface can have default methods with implementations (Java 8+).', options: ['True', 'False'], correctIdx: [0], explanation: 'Java 8 introduced default methods allowing interfaces to have method implementations.' },
 ];
 
+type SeedRow = {
+  topic: string; difficulty: Question['difficulty']; type: Question['type'];
+  question: string; options: string[]; correctIdx: number[]; explanation: string;
+};
+
+function rowsFor(slug: string): SeedRow[] {
+  if (slug === 'java') return JAVA_QUESTIONS;
+  const bank: SeedQ[] = ALL_QUESTIONS[slug] || [];
+  return bank.map(([topic, difficulty, type, question, options, correctIdx, explanation]) => ({
+    topic, difficulty, type, question, options, correctIdx, explanation,
+  }));
+}
+
+function proportionalDifficulty(total: number) {
+  const beginner = Math.round(total * 0.4);
+  const intermediate = Math.round(total * 0.4);
+  const advanced = Math.max(0, total - beginner - intermediate);
+  return { beginner, intermediate, advanced, expert: 0 };
+}
+
 export function seedSkillTest() {
   const db = loadDb();
   let changed = false;
+  const now = new Date().toISOString();
 
-  // Seed skills
   db.skills = db.skills || [];
-  for (const s of SKILLS) {
-    if (!db.skills.some((x: Skill) => x.slug === s.slug)) {
-      db.skills.push({
-        ...s,
+  db.topics = db.topics || [];
+  db.questions = db.questions || [];
+  db.assessments = db.assessments || [];
+
+  let nextOrder = db.skills.reduce((max: number, s: Skill) => Math.max(max, s.displayOrder || 0), 0);
+
+  for (const c of SKILL_CATALOG as CatalogSkill[]) {
+    // ── 1. Skill upsert (existing metadata kept; only counts repaired) ───────
+    let skill = db.skills.find((s: Skill) => s.slug === c.slug);
+    if (!skill) {
+      nextOrder += 1;
+      skill = {
         id: id('skl'),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      });
+        name: c.name,
+        slug: c.slug,
+        category: c.category as Skill['category'],
+        description: c.description,
+        shortDescription: c.shortDescription,
+        status: 'active',
+        isPopular: c.isPopular,
+        certificateAvailable: true,
+        displayOrder: nextOrder,
+        tags: c.tags,
+        totalQuestions: c.totalQuestions,
+        avgCompletionTime: c.avgCompletionTime,
+        created_at: now,
+        updated_at: now,
+      };
+      db.skills.push(skill);
+      changed = true;
+    } else if (skill.totalQuestions !== c.totalQuestions || skill.avgCompletionTime !== c.avgCompletionTime) {
+      skill.totalQuestions = c.totalQuestions;
+      skill.avgCompletionTime = c.avgCompletionTime;
+      skill.updated_at = now;
       changed = true;
     }
-  }
 
-  // Seed topics
-  db.topics = db.topics || [];
-  for (const skill of db.skills) {
-    const names = TOPICS_BY_SKILL[skill.slug];
-    if (!names) continue;
-    for (let i = 0; i < names.length; i++) {
-      const name = names[i];
-      if (!db.topics.some((t: Topic) => t.skillId === skill.id && t.name === name)) {
+    // ── 2. Topics (additive) ─────────────────────────────────────────────────
+    for (let i = 0; i < c.topics.length; i++) {
+      const name = c.topics[i];
+      if (!db.topics.some((t: Topic) => t.skillId === skill!.id && t.name === name)) {
         db.topics.push({
           id: id('top'),
           skillId: skill.id,
@@ -116,90 +138,116 @@ export function seedSkillTest() {
           slug: name.toLowerCase().replace(/\s+/g, '-'),
           displayOrder: i + 1,
           isActive: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+          created_at: now,
+          updated_at: now,
         });
         changed = true;
       }
     }
-  }
 
-  // Seed Java questions (30)
-  const javaSkill = db.skills.find((s: Skill) => s.slug === 'java');
-  if (javaSkill) {
-    const javaTopics = db.topics.filter((t: Topic) => t.skillId === javaSkill.id);
-    db.questions = db.questions || [];
-    const hasJavaQs = db.questions.some((q: Question) => q.skillId === javaSkill.id);
-
-    if (!hasJavaQs) {
-      for (const q of JAVA_QUESTIONS) {
-        const topic = javaTopics.find((t: Topic) => t.name === q.topic);
-        if (!topic) continue;
-
+    // ── 3. Questions (only when the skill has none yet) ──────────────────────
+    const hasQuestions = db.questions.some((q: Question) => q.skillId === skill!.id);
+    if (!hasQuestions) {
+      const rows = rowsFor(c.slug);
+      for (const r of rows) {
+        if (!r.correctIdx.length || !r.correctIdx.every((i) => i >= 0 && i < r.options.length)) continue;
+        let topic = db.topics.find((t: Topic) => t.skillId === skill!.id && t.name === r.topic);
+        if (!topic) {
+          topic = {
+            id: id('top'),
+            skillId: skill.id,
+            name: r.topic,
+            slug: r.topic.toLowerCase().replace(/\s+/g, '-'),
+            displayOrder: db.topics.filter((t: Topic) => t.skillId === skill!.id).length + 1,
+            isActive: true,
+            created_at: now,
+            updated_at: now,
+          };
+          db.topics.push(topic);
+        }
         db.questions.push({
           id: id('qst'),
-          skillId: javaSkill.id,
+          skillId: skill.id,
           topicId: topic.id,
-          type: q.type,
-          difficulty: q.difficulty,
-          question: q.question,
-          options: q.options.map((text, i) => ({ text, isCorrect: q.correctIdx.includes(i) })),
-          explanation: q.explanation,
-          tags: [q.topic.toLowerCase()],
+          type: r.type,
+          difficulty: r.difficulty,
+          question: r.question,
+          options: r.options.map((text, i) => ({ text, isCorrect: r.correctIdx.includes(i) })),
+          explanation: r.explanation,
+          tags: [r.topic.toLowerCase()],
           status: 'approved',
           version: 1,
           usageCount: 0,
           correctCount: 0,
           difficultyScore: 0,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+          created_at: now,
+          updated_at: now,
         });
       }
       changed = true;
     }
-  }
 
-  // Seed assessment for each skill
-  db.assessments = db.assessments || [];
-  for (const skill of db.skills) {
-    if (db.assessments.some((a: Assessment) => a.skillId === skill.id)) continue;
-    const topics = db.topics.filter((t: Topic) => t.skillId === skill.id);
-    const skillQuestions = (db.questions || []).filter((q: Question) => q.skillId === skill.id);
+    // ── 4. Assessment: create missing, repair inconsistent ───────────────────
+    const skillQuestions = db.questions.filter((q: Question) => q.skillId === skill!.id && q.status === 'approved');
+    const targetTotal = skillQuestions.length > 0
+      ? Math.min(c.totalQuestions, skillQuestions.length)
+      : c.totalQuestions;
 
-    const topicBlueprint = topics.map((t: Topic) => ({
-      topicId: t.id,
-      questionCount: skillQuestions.filter((q: Question) => q.topicId === t.id).length,
-    }));
+    const topicBlueprint: TopicBlueprintItem[] = db.topics
+      .filter((t: Topic) => t.skillId === skill!.id)
+      .map((t: Topic) => ({
+        topicId: t.id,
+        questionCount: skillQuestions.filter((q: Question) => q.topicId === t.id).length,
+      }))
+      .filter((bp: TopicBlueprintItem) => bp.questionCount > 0);
 
-    db.assessments.push({
-      id: id('asm'),
-      skillId: skill.id,
-      title: `${skill.name} Skill Assessment`,
-      description: `Test your ${skill.name} skills`,
-      durationMinutes: 30,
-      totalQuestions: Math.min(30, skillQuestions.length) || 30,
-      passingScore: 60,
-      topicBlueprint,
-      difficultyBlueprint: { beginner: 8, intermediate: 14, advanced: 6, expert: 2 },
-      certificateThresholds: { pass: 60, proficient: 75, advanced: 85, expert: 90 },
-      isActive: true,
-      isDefault: true,
-      allowRetake: true,
-      maxRetakes: 10,
-      shuffleQuestions: true,
-      shuffleOptions: true,
-      showExplanationAfterSubmit: true,
-      requireFullScreen: false,
-      tabSwitchLimit: 0,
-      instructions: ['Do not refresh during assessment', 'Ensure stable internet connection', 'Submit only when ready'],
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    });
-    changed = true;
+    const existing = db.assessments.find((a: Assessment) => a.skillId === skill!.id);
+    if (!existing) {
+      db.assessments.push({
+        id: id('asm'),
+        skillId: skill.id,
+        title: `${skill.name} Skill Assessment`,
+        description: `Test your ${skill.name} skills`,
+        durationMinutes: c.avgCompletionTime,
+        totalQuestions: targetTotal,
+        passingScore: 60,
+        topicBlueprint,
+        difficultyBlueprint: proportionalDifficulty(targetTotal),
+        certificateThresholds: { pass: 60, proficient: 75, advanced: 85, expert: 90 },
+        isActive: true,
+        isDefault: true,
+        allowRetake: true,
+        maxRetakes: 10,
+        shuffleQuestions: true,
+        shuffleOptions: true,
+        showExplanationAfterSubmit: true,
+        requireFullScreen: false,
+        tabSwitchLimit: 0,
+        instructions: ['Do not refresh during assessment', 'Ensure stable internet connection', 'Submit only when ready'],
+        created_at: now,
+        updated_at: now,
+      });
+      changed = true;
+    } else if (
+      existing.totalQuestions !== targetTotal ||
+      existing.durationMinutes !== c.avgCompletionTime ||
+      existing.topicBlueprint.length === 0 ||
+      existing.topicBlueprint.reduce((sum: number, bp: TopicBlueprintItem) => sum + bp.questionCount, 0) < targetTotal
+    ) {
+      existing.totalQuestions = targetTotal;
+      existing.durationMinutes = c.avgCompletionTime;
+      existing.topicBlueprint = topicBlueprint;
+      existing.difficultyBlueprint = proportionalDifficulty(targetTotal);
+      existing.updated_at = now;
+      changed = true;
+    }
   }
 
   if (changed) {
     saveDb(db);
-    console.log('[SkillTest] Seed data installed');
+    console.log(
+      `[SkillTest] Seed complete — skills=${db.skills.length} topics=${db.topics.length} ` +
+      `questions=${db.questions.length} assessments=${db.assessments.length}`
+    );
   }
 }

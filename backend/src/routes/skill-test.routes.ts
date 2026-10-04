@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import { loadDb, saveDb } from '../data/db';
 import type { Skill, Topic, Question, Assessment, Attempt, AttemptAnswer, SkillCertificate, Recommendation } from '../data/skillTestTypes';
 import { requireAuth } from '../middleware/auth';
+import { buildSkillCertPdf } from '../lib/skillCertPdf';
 
 export const skillTestRouter = Router();
 
@@ -435,6 +436,30 @@ skillTestRouter.get('/certificates/:certificateId/verify', (req: Request, res: R
     revokedAt: cert.revokedAt,
     revokeReason: cert.revokeReason,
   });
+});
+
+// ─── GET /certificates/:certificateId/pdf (PUBLIC) ─────────────────────────────
+skillTestRouter.get('/certificates/:certificateId/pdf', async (req: Request, res: Response) => {
+  const db = loadDb();
+  const cert = (db.skillCertificates || []).find(
+    (c: SkillCertificate) => c.certificateId === req.params.certificateId.toUpperCase()
+  );
+  if (!cert) return res.status(404).json({ error: 'Certificate not found' });
+
+  try {
+    const pdf = await buildSkillCertPdf(cert);
+    const filename = `TieEdu-Skill-Certificate-${cert.certificateId}.pdf`;
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="${filename}"`,
+      'Content-Length': String(pdf.length),
+      'Cache-Control': 'private, max-age=60',
+    });
+    res.send(pdf);
+  } catch (err: any) {
+    console.error('[SkillTest] Certificate PDF generation failed:', err?.message);
+    res.status(500).json({ error: 'Could not generate certificate PDF' });
+  }
 });
 
 // ─── GET /passport ──────────────────────────────────────────────────────────────

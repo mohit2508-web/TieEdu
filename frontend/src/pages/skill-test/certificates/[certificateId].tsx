@@ -6,6 +6,7 @@ import {
   ArrowLeft, QrCode, Calendar, User, XCircle, Loader2,
 } from 'lucide-react';
 import { verifyCertificateApi } from '@/lib/skillTestApi';
+import { API_BASE_URL } from '@/lib/api';
 
 interface VerifyResult {
   verified: boolean;
@@ -212,9 +213,13 @@ export default function CertificatePage() {
           >
             <Linkedin className="h-4 w-4" /> Share on LinkedIn
           </button>
-          <button className="flex items-center justify-center gap-2 rounded-full border border-gray-300 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors min-h-[48px] opacity-60" disabled>
+          <a
+            href={`${API_BASE_URL}/skill-test/certificates/${cert.certificateId}/pdf`}
+            download
+            className="flex items-center justify-center gap-2 rounded-full border border-gray-300 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors min-h-[48px]"
+          >
             <Download className="h-4 w-4" /> Download PDF
-          </button>
+          </a>
           <button
             onClick={copyLink}
             className="flex items-center justify-center gap-2 rounded-full border border-gray-300 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors min-h-[48px]"

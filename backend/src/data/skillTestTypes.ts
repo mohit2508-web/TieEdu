@@ -9,7 +9,19 @@ export interface Skill {
   id: string;
   name: string;
   slug: string;
-  category: 'Programming' | 'Core CS' | 'Web Development' | 'DevOps & Cloud' | 'Databases' | 'Others';
+  category:
+    | 'Programming'
+    | 'Core CS'
+    | 'Web Development'
+    | 'DevOps & Cloud'
+    | 'Databases'
+    | 'Others'
+    | 'Data Science & AI'
+    | 'Cloud & DevOps'
+    | 'Mobile & Game Dev'
+    | 'Design & Creative'
+    | 'Career & Aptitude'
+    | 'Business & Marketing';
   description: string;
   shortDescription: string;
   icon?: string;
