@@ -6,7 +6,7 @@ import { BrandTile } from '@/components/common/BrandTile';
 import {
   UserRound, Flame, Trophy, Package, FolderOpen, FileText, LockKeyhole,
   LogOut, ArrowUpRight, CheckCircle2, Clock, XCircle, GraduationCap, KeyRound,
-  Camera, Pencil, Save, X,
+  Camera, Pencil, Save, X, BrainCircuit,
 } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
 import { RequireAuth } from '@/components/auth/RequireAuth';
@@ -16,6 +16,10 @@ import {
   fetchMyAccount, fetchMyReports, fetchCompanies, getInterviewCourseProgressApi,
   changePasswordApi, updateProfileApi, MyAccount,
 } from '@/lib/api';
+import {
+  fetchMyAttemptsApi, fetchSkillsApi, fetchMyCertificatesApi,
+  SkillTestAttempt, SkillTestSkill, SkillTestCertificate,
+} from '@/lib/skillTestApi';
 import { formatDate, formatDateLong } from '@/lib/date';
 
 interface VaultCompany {
@@ -160,6 +164,128 @@ function ReportsView({ reports }: { reports: MyReportRow[] }) {
   );
 }
 
+function SkillTestsView({
+  attempts, skills, certs, loading,
+}: {
+  attempts: SkillTestAttempt[];
+  skills: SkillTestSkill[];
+  certs: SkillTestCertificate[];
+  loading: boolean;
+}) {
+  const skillById = new Map(skills.map((s) => [s.id, s]));
+  const validCerts = certs.filter((c) => c.status === 'valid');
+  const certByAttempt = new Map(validCerts.map((c) => [c.attemptId, c]));
+
+  if (loading) {
+    return (
+      <div className="vault-card p-6 text-center">
+        <div className="w-8 h-8 border-[3px] border-[#E8F4FB] border-t-[#0284C7] rounded-full animate-spin mx-auto" />
+        <p className="text-[13px] text-[--text-muted] mt-3">Loading your skill tests…</p>
+      </div>
+    );
+  }
+
+  if (attempts.length === 0) {
+    return (
+      <div className="vault-card p-6 text-center">
+        <BrainCircuit className="w-8 h-8 text-[--text-muted] mx-auto mb-2" />
+        <p className="text-[14px] font-bold text-[#10151C]">No skill tests yet</p>
+        <p className="text-[13px] text-[--text-muted] mt-1 mb-4">
+          Take a free skill assessment — your scores, levels and certificates will appear here.
+        </p>
+        <Link href="/skill-test" className="btn btn-primary px-4 py-2 text-[13px]">Explore skill tests</Link>
+      </div>
+    );
+  }
+
+  const avg = Math.round(attempts.reduce((s, a) => s + (a.score || 0), 0) / attempts.length);
+  const best = Math.max(...attempts.map((a) => a.score || 0));
+  const passed = attempts.filter((a) => a.passFail === 'pass').length;
+
+  const stats = [
+    { label: 'Tests taken', value: attempts.length },
+    { label: 'Average score', value: `${avg}%` },
+    { label: 'Best score', value: `${best}%` },
+    { label: 'Certificates', value: validCerts.length },
+  ];
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+        {stats.map((s) => (
+          <div key={s.label} className="vault-card p-4">
+            <p className="font-mono font-extrabold text-[#10151C] text-[15px] stat-num">{s.value}</p>
+            <p className="text-[11px] text-[--text-muted]">{s.label}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="space-y-2.5">
+        {attempts.map((a) => {
+          const skill = skillById.get(a.skillId);
+          const slug = skill?.slug || '';
+          const cert = certByAttempt.get(a.id);
+          const score = a.score || 0;
+          const isPass = a.passFail === 'pass';
+          return (
+            <div key={a.id} className="vault-card p-4 flex flex-wrap items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[13px] font-extrabold text-[#10151C] truncate">
+                  {skill?.name || a.skillId}
+                </p>
+                <p className="text-[11px] text-[--text-muted] mt-0.5">
+                  {a.submittedAt ? formatDate(a.submittedAt) : '—'}
+                  {' · '}{a.correctAnswers}/{a.totalQuestions} correct
+                </p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wide border ${
+                  isPass
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    : 'bg-red-50 text-[#C1442D] border-[#F2C9BC]'
+                }`}>
+                  {isPass ? <CheckCircle2 className="w-3 h-3 mr-0.5" /> : <XCircle className="w-3 h-3 mr-0.5" />}
+                  {isPass ? 'Passed' : 'Failed'}
+                </span>
+                <span className="px-2 py-0.5 rounded-md bg-[#EEF1F4] text-[--text-muted] text-[10px] font-extrabold uppercase tracking-wide">
+                  {a.skillLevel}
+                </span>
+                <span className="font-mono font-extrabold text-[#0E2A44] text-[14px] stat-num w-10 text-right">{score}</span>
+                {slug && (
+                  <Link
+                    href={`/skill-test/${slug}/result/${a.id}`}
+                    className="text-[11px] font-bold text-[#0271B5] hover:underline whitespace-nowrap"
+                  >
+                    Result →
+                  </Link>
+                )}
+                {cert && (
+                  <Link
+                    href={`/skill-test/certificates/${cert.certificateId}`}
+                    className="text-[11px] font-bold text-[#C77B12] hover:underline whitespace-nowrap"
+                  >
+                    Certificate →
+                  </Link>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3 text-[12px]">
+        <span className="text-[--text-muted]">{passed} of {attempts.length} passed</span>
+        <Link href="/skill-test/my-certificates" className="font-bold text-[#0271B5] hover:underline">
+          My certificates →
+        </Link>
+        <Link href="/skill-test/skill-passport" className="font-bold text-[#0271B5] hover:underline">
+          Skill passport →
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 const AccountPageContent: React.FC = () => {
   const { user, logout, setUser } = useAuth();
   const router = useRouter();
@@ -167,6 +293,10 @@ const AccountPageContent: React.FC = () => {
   const [companies, setCompanies] = useState<VaultCompany[]>([]);
   const [reports, setReports] = useState<MyReportRow[]>([]);
   const [modules, setModules] = useState({ completed: 0, xp: 0 });
+  const [skillAttempts, setSkillAttempts] = useState<SkillTestAttempt[]>([]);
+  const [skillSkills, setSkillSkills] = useState<SkillTestSkill[]>([]);
+  const [skillCerts, setSkillCerts] = useState<SkillTestCertificate[]>([]);
+  const [skillLoading, setSkillLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pwCurrent, setPwCurrent] = useState('');
   const [pwNew, setPwNew] = useState('');
@@ -202,6 +332,30 @@ const AccountPageContent: React.FC = () => {
       });
     return () => { active = false; };
   }, [setUser]);
+
+  // Skill test history — separate fetch so a skill-test API hiccup never
+  // blocks the rest of the account dashboard from loading.
+  useEffect(() => {
+    let active = true;
+    Promise.all([
+      fetchMyAttemptsApi(),
+      fetchSkillsApi(),
+      fetchMyCertificatesApi(),
+    ])
+      .then(([att, sk, cr]) => {
+        if (!active) return;
+        setSkillAttempts(att || []);
+        setSkillSkills(sk || []);
+        setSkillCerts(cr || []);
+      })
+      .catch(() => {
+        // Keep whatever we have; the section just shows the empty state.
+      })
+      .finally(() => {
+        if (active) setSkillLoading(false);
+      });
+    return () => { active = false; };
+  }, []);
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -539,9 +693,26 @@ const AccountPageContent: React.FC = () => {
                 <ReportsView reports={reports} />
               </section>
 
-              {/* 06 — Settings */}
+              {/* 06 — Skill Tests */}
               <section>
-                <p className="eyebrow">#06 — Settings</p>
+                <p className="eyebrow">#06 — Skill Tests</p>
+                <div className="flex flex-wrap items-end justify-between gap-2 mb-4">
+                  <h2 className="font-serif-heading text-2xl font-bold">Skill test history</h2>
+                  <Link href="/skill-test" className="text-[13px] font-bold text-[#0271B5] hover:underline">
+                    Take a new test →
+                  </Link>
+                </div>
+                <SkillTestsView
+                  attempts={skillAttempts}
+                  skills={skillSkills}
+                  certs={skillCerts}
+                  loading={skillLoading}
+                />
+              </section>
+
+              {/* 07 — Settings */}
+              <section>
+                <p className="eyebrow">#07 — Settings</p>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
                   <NotificationSettings />
                 </div>
