@@ -166,19 +166,23 @@ export const useWebPush = () => {
       if (!reg) return { ok: false, reason: 'no_service_worker' };
       let sub = await reg.pushManager.getSubscription();
       if (!sub) {
+        /*
+         * Reachability first, then the key. The order matters and was wrong
+         * before: `fetchVapidPublicKey` returns null when the API is unreachable,
+         * so checking the key first reported "the server has no push keys
+         * configured" for what was actually a dead backend, and told the user to
+         * try again later. Nothing would have changed by trying again.
+         *
+         * A key that came from the build-time constant while the API was
+         * unreachable means this app is running against an origin that is not
+         * serving the API - a stale tunnel host, a cached shell on a dead deploy.
+         */
+        if (!isVapidConfigReachable()) return { ok: false, reason: 'api_unreachable' };
         // Read from the server, not from this bundle. A build-time constant cannot
         // be corrected by a server restart, which is what left stale clients stuck
         // on "push keys are not configured" while the server was fine.
         const vapid = await fetchVapidPublicKey();
         if (!vapid) return { ok: false, reason: 'no_vapid' };
-        /*
-         * A key that came from the build-time constant while the API was
-         * unreachable means this app is running against an origin that is not
-         * serving the API - a stale tunnel host, a cached shell on a dead deploy.
-         * The subscribe call would then 404 and the failure would look like a
-         * server problem, so it is named up front instead.
-         */
-        if (!isVapidConfigReachable()) return { ok: false, reason: 'api_unreachable' };
         sub = await reg.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: urlBase64ToUint8Array(vapid),

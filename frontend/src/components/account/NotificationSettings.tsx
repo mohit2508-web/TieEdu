@@ -67,6 +67,15 @@ export default function NotificationSettings({ compact = false }: { compact?: bo
         });
       } else if (res.reason === 'no_vapid') {
         setMessage({ tone: 'error', text: 'Push is not configured on the server yet. Please try again later.' });
+      } else if (res.reason === 'api_unreachable') {
+        // Deliberately worded differently from "not configured". Saying
+        // "not configured yet, try again later" when the real problem is that the
+        // app cannot reach the server sends the user off to wait for something
+        // that is not going to change on its own.
+        setMessage({
+          tone: 'error',
+          text: 'This app cannot reach the TieEdu server, so notifications cannot be set up. Check your connection and try again.',
+        });
       } else {
         setMessage({ tone: 'error', text: `Could not enable notifications (${res.reason}). Please try again.` });
       }
