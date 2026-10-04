@@ -189,6 +189,35 @@ export async function ensureAuditTable(): Promise<void> {
   await getPool().query(`CREATE INDEX IF NOT EXISTS audit_order_id_idx ON audit(order_id);`);
 }
 
+/**
+ * What a scheduled reminder has already been sent, so it is sent once.
+ *
+ * The dedupe lives in a table rather than in a process variable or a JSON blob
+ * for one reason: this has to be correct with more than one backend running. Two
+ * replicas both waking on the hour and both deciding "this student has not been
+ * reminded yet" is exactly how a student gets the same nudge four times. The
+ * primary key makes the claim a single atomic statement, so the loser of the race
+ * is refused by the database rather than by a hopeful read a moment earlier.
+ *
+ * `window_key` is the cadence bucket, not a timestamp. Reminder state is a
+ * question about a period ("has this been nudged in the current window?"), and
+ * storing the bucket instead of the send time keeps old rows meaningful and
+ * prunable without a second query.
+ */
+export async function ensureNotificationRemindersTable(): Promise<void> {
+  await getPool().query(`
+CREATE TABLE IF NOT EXISTS notification_reminders (
+  user_id    TEXT        NOT NULL,
+  course_id  TEXT        NOT NULL,
+  window_key TEXT        NOT NULL,
+  sent_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (user_id, course_id, window_key)
+);`);
+  await getPool().query(`
+CREATE INDEX IF NOT EXISTS notification_reminders_sent_at_idx
+  ON notification_reminders(sent_at DESC);`);
+}
+
 export async function runMigrations(): Promise<boolean> {
   if (!(await isDbReachable(6000))) {
     console.log('💡 [PostgreSQL] Replica unreachable or not configured — staying on local-json-repository. (Replica requires ENABLE_PG_REPLICA=1 + DATABASE_URL + network allowlist).');
@@ -201,7 +230,8 @@ export async function runMigrations(): Promise<boolean> {
     await ensureDevicesTable();
     await ensureStaffTable();
     await ensureAuditTable();
-    console.log('✅ [PostgreSQL] app_state, push_subscriptions, devices, staff and audit tables ready.');
+    await ensureNotificationRemindersTable();
+    console.log('✅ [PostgreSQL] app_state, push_subscriptions, devices, staff, audit and notification_reminders tables ready.');
     return true;
   } catch (err: any) {
     console.log('💡 [PostgreSQL] Migration failed: ' + err.message);

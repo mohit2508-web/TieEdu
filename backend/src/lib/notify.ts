@@ -31,7 +31,8 @@ export type NotifyAudience =
 export type NotifyEvent =
   | { type: 'course.published'; title: string; courseId: string; slug?: string }
   | { type: 'vault.updated'; title: string; detail?: string; slug?: string }
-  | { type: 'module.added'; title: string; detail?: string; slug?: string };
+  | { type: 'module.added'; title: string; detail?: string; slug?: string }
+  | { type: 'course.incomplete'; courseTitle: string; remaining: number; total: number; slug?: string };
 
 type Copy = { title: string; body: string; url: string };
 
@@ -68,8 +69,18 @@ const TEMPLATES: Record<NotifyEvent['type'], (e: any) => Copy> = {
     url: slugPath('/companies', e.slug),
   }),
   'module.added': (e) => ({
-    title: 'New material added',
-    body: e.detail || e.title,
+    title: e.title,
+    body: e.detail || 'New material has been added.',
+    url: slugPath('/courses', e.slug),
+  }),
+  'course.incomplete': (e) => ({
+    // The course name, not "new course", so the student can tell at a glance
+    // which one this is about.
+    title: e.courseTitle,
+    body:
+      e.remaining === 1
+        ? 'You have 1 lesson left to finish this.'
+        : `You have ${e.remaining} lessons left to finish this.`,
     url: slugPath('/courses', e.slug),
   }),
 };

@@ -4,10 +4,21 @@ import { requireAuth, requireAdmin, requirePermission } from '../middleware/auth
 import { can } from '../lib/rbac';
 import { subscribePush, unsubscribePush, testPush, mySubscriptions, VAPID_PUBLIC_KEY, sendPushToUsers } from '../lib/push';
 import { buildCopy, resolveAudience, type NotifyAudience } from '../lib/notify';
+import { startReminderScheduler } from '../lib/reminders';
 import { loadDb, saveDb } from '../data/db';
 import { appendAudit } from '../store/audit';
 
 export const notificationsRouter = Router();
+
+/*
+ * Armed here rather than in server.ts because this router *is* the notification
+ * subsystem's entry point, and it is mounted unconditionally. A background loop
+ * is part of that subsystem, so it belongs with it; putting the call in server.ts
+ * would only move one line somewhere with no better reason. `startReminderScheduler`
+ * is idempotent and unrefs its timers, so importing this module in a test or a
+ * script does not start a loop or hold the process open.
+ */
+startReminderScheduler();
 
 /*
  * The client's public VAPID key, fetched at runtime instead of read from a

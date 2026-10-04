@@ -17,7 +17,7 @@
     "test:jwt": "ts-node --transpile-only scripts/jwt-secret.test.ts",
     "test:security": "ts-node --transpile-only scripts/security-unblock.test.ts",
     "test:rbac": "ts-node --transpile-only scripts/rbac-devices.test.ts",
-    "test:notifications": "ts-node --transpile-only scripts/notifications-admin.test.ts && ts-node --transpile-only scripts/notifications-broadcast.test.ts",
+    "test:notifications": "ts-node --transpile-only scripts/notifications-admin.test.ts && ts-node --transpile-only scripts/notifications-broadcast.test.ts && ts-node --transpile-only scripts/notifications-reminders.test.ts",
     "test:audit": "ts-node --transpile-only scripts/audit-ledger.test.ts",
     "test:guards": "ts-node --transpile-only scripts/verify-guards.live.ts",
     "test:catalog": "ts-node --transpile-only scripts/catalog.test.ts",
