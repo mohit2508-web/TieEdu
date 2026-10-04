@@ -84,6 +84,51 @@ const numOrNull = (v: any): number | null => {
   return Number.isFinite(n) ? n : null;
 };
 
+/** "has no content here" — the test a field must fail to count as newly added. */
+const isBlank = (v: any): boolean => {
+  if (v === null || v === undefined) return true;
+  if (typeof v === 'string') return v.trim() === '';
+  if (Array.isArray(v)) return v.length === 0;
+  return false;
+};
+
+/** Structural compare, because these fields include arrays and nested objects. */
+const sameValue = (a: any, b: any): boolean => {
+  if (a === b) return true;
+  if (a === null || a === undefined || b === null || b === undefined) return false;
+  if (typeof a !== 'object' || typeof b !== 'object') return false;
+  return JSON.stringify(a) === JSON.stringify(b);
+};
+
+/** Student-readable field name. A notification saying "rounds_pipeline" helps nobody. */
+const FIELD_LABELS: Record<string, string> = {
+  rounds_pipeline: 'interview rounds',
+  comparison_metrics: 'salary comparisons',
+  metric_sources: 'data sources',
+  fact_checked_at: 'verification date',
+  ctc_min: 'salary range',
+  ctc_max: 'salary range',
+  avg_process_days: 'process timeline',
+  avg_rounds: 'round count',
+  difficulty_rating: 'difficulty rating',
+  careers_link: 'careers link',
+  seo_title: 'page title',
+  seo_description: 'page summary',
+  employee_band: 'company size',
+  founded_year: 'founding year',
+  logo_url: 'logo',
+  hq: 'location',
+  about: 'company profile',
+  tagline: 'tagline',
+  slug: 'page address',
+  name: 'name',
+  tags: 'tags',
+  industry: 'industry',
+  status: 'status',
+};
+const fieldLabel = (field: string): string =>
+  FIELD_LABELS[field] || field.split('_').join(' ');
+
 /**
  * Coerce to a real boolean, or `fallback` when the value is not a boolean.
  *
@@ -335,7 +380,10 @@ adminRouter.put('/companies/:id', requirePermission('companies.write'), async (r
   next.last_updated_days_ago = 0;
   db.companies[compIndex] = next;
 
-  const changed = Object.keys(body).filter((k) => (EDITORIAL_FIELDS as readonly string[]).includes(k));
+  const submitted = Object.keys(body).filter((k) => (EDITORIAL_FIELDS as readonly string[]).includes(k));
+  const changed = submitted.filter((k) => !sameValue(current[k], next[k]));
+  // Content that was absent before and present now — the only kind worth sending.
+  const added = changed.filter((k) => isBlank(current[k]) && !isBlank(next[k]));
   // Audit before save — see the create handler above for why order matters.
   await appendAudit(db, {
     action: 'company.update',
@@ -347,20 +395,26 @@ adminRouter.put('/companies/:id', requirePermission('companies.write'), async (r
 
   /*
    * New material in a company vault is one of the reasons a student opens the
-   * portal at all, so an editorial update is worth telling them about.
+   * portal at all.
    *
-   * Only fires when editorial content actually changed — this handler also
-   * receives bookkeeping fields like `last_updated_days_ago`, and notifying on
-   * those would teach students to ignore the channel.
+   * The gate is `added`, not `changed`, and the distinction matters. A vault is
+   * edited constantly: a typo fixed, a CTC corrected, a logo swapped. Pinging
+   * every student for each of those trains them to dismiss the channel, and one
+   * ignored channel is worse than none. What is worth announcing is content that
+   * did not exist before, so that is the only case that sends.
+   *
+   * Comparing values also stops the no-op resave: the admin form PUTs every
+   * editorial field on each save, so keying off "which keys arrived" would notify
+   * on every single save regardless of whether anything moved.
    */
-  if (changed.length) {
+  if (added.length) {
     const companyName = next.name || next.title || 'A company';
     setImmediate(() => {
       void notifyEvent(
         {
           type: 'vault.updated',
-          title: `${companyName} vault updated`,
-          detail: `New material added: ${changed.slice(0, 4).join(', ')}${changed.length > 4 ? `, +${changed.length - 4} more` : ''}`,
+          title: `${companyName} added new material`,
+          detail: `New in this vault: ${added.slice(0, 3).map(fieldLabel).join(', ')}${added.length > 3 ? `, +${added.length - 3} more` : ''}`,
           slug: next.slug,
         },
         { kind: 'all_students' }

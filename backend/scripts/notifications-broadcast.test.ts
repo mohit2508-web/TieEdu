@@ -194,9 +194,13 @@ test('publishing a course notifies students, creating the draft does not', () =>
   assert.ok(!createBlock.includes('notifyEvent'), 'creating a draft course must not notify students');
 });
 
-test('a company vault update notifies only when editorial fields changed', () => {
+test('a company vault update notifies only when material was actually added', () => {
+  // Gates on `added` (blank -> filled), not `changed`. The admin form PUTs every
+  // editorial field on each save, so keying off "a field arrived" would notify on
+  // every save, and keying off "a value differs" would still notify for a typo fix.
+  // The reminders suite covers these rules in detail; this pins the wiring.
   assert.ok(adminRoutes.includes("type: 'vault.updated'"));
-  assert.ok(adminRoutes.includes('if (changed.length)'), 'bookkeeping-only edits must not notify');
+  assert.ok(adminRoutes.includes('if (added.length)'), 'an edit is not an addition');
 });
 
 test('a notification can never fail the admin action that caused it', () => {

@@ -812,6 +812,36 @@ courseAdminRouter.post('/modules/:moduleId/lessons', (req: Request, res: Respons
   found.module.lessons.push(lesson);
   found.course.updated_at = new Date().toISOString();
   saveDb(db);
+
+  /*
+   * A new lesson in a live course is new material somebody can act on today, so
+   * it is worth a notification. Two deliberate limits:
+   *
+   *   - Course audience, not every student. A student who never enrolled does not
+   *     need to be told a lesson appeared; `course.published` is the event that
+   *     introduces the course itself, and it goes to everyone.
+   *   - Published courses only. Editing a draft is preparation work, and the
+   *     draft is invisible to students until it is published.
+   *
+   * Firing on every lesson *edit* was rejected for the same reason the company
+   * vault does not fire on every edit: a typo fix is not news, and a channel that
+   * cries wolf is one students learn to swipe away.
+   */
+  if (found.course.published) {
+    const courseTitle = found.course.title || 'A course you are taking';
+    setImmediate(() => {
+      void notifyEvent(
+        {
+          type: 'module.added',
+          title: `New lesson in ${courseTitle}`,
+          detail: lesson.title,
+          slug: found.course.slug,
+        },
+        { kind: 'course', courseId: found.course.id }
+      );
+    });
+  }
+
   res.status(201).json({ status: 'success', lesson, warnings: blockWarnings(incoming.dropped) });
 });
 
