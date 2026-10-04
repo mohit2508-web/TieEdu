@@ -16,6 +16,7 @@ import type { LucideIcon } from 'lucide-react';
 import {
   Award,
   BookOpen,
+  BrainCircuit,
   Building2,
   CalendarCheck,
   Flame,
@@ -114,6 +115,18 @@ export const NAV_ITEMS: Record<string, NavItem> = {
     description: 'Side-by-side rounds, pay and process data',
     primary: true,
     keywords: ['versus', 'vs', 'side by side', 'matrix', 'difference'],
+  },
+  skillTest: {
+    id: 'skillTest',
+    href: '/skill-test',
+    label: 'Skill Test',
+    icon: BrainCircuit,
+    match: 'prefix',
+    description: 'Test your skills, know your level & earn verified certificates',
+    badge: 'free',
+    primary: true,
+    tab: true,
+    keywords: ['skill test', 'assessment', 'mcq', 'quiz', 'certificate', 'test', 'skills'],
   },
   freeCourse: {
     id: 'freeCourse',
@@ -225,7 +238,7 @@ export const PRIMARY_NAV: NavItem[] = ALL_NAV_ITEMS.filter((i) => i.primary);
  * plane does not belong next to "Compare".
  */
 export const NAV_GROUPS: { id: string; label: string; itemIds: string[] }[] = [
-  { id: 'explore', label: 'Explore', itemIds: ['vaults', 'compare', 'courses', 'freeCourse'] },
+  { id: 'explore', label: 'Explore', itemIds: ['vaults', 'compare', 'skillTest', 'courses', 'freeCourse'] },
   { id: 'plan', label: 'Plan & learn', itemIds: ['studyPlan', 'myCourses'] },
 ];
 

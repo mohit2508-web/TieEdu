@@ -1658,6 +1658,16 @@ export function loadDb() {
         data.coupons = initialDbData.coupons;
         upgraded = true;
       }
+      // Skill Test collections
+      if (!Array.isArray(data.skills)) { data.skills = []; upgraded = true; }
+      if (!Array.isArray(data.topics)) { data.topics = []; upgraded = true; }
+      if (!Array.isArray(data.questions)) { data.questions = []; upgraded = true; }
+      if (!Array.isArray(data.assessments)) { data.assessments = []; upgraded = true; }
+      if (!Array.isArray(data.attempts)) { data.attempts = []; upgraded = true; }
+      if (!Array.isArray(data.skillCertificates)) { data.skillCertificates = []; upgraded = true; }
+      if (!Array.isArray(data.recommendations)) { data.recommendations = []; upgraded = true; }
+      if (!Array.isArray(data.skillBadges)) { data.skillBadges = []; upgraded = true; }
+      if (!Array.isArray(data.skillUserBadges)) { data.skillUserBadges = []; upgraded = true; }
       // The bundled courses are the launch catalogue for an install that
       // predates the course engine. Without this, loadDb() would happily return
       // an empty course list forever: initialDbData is only consulted when

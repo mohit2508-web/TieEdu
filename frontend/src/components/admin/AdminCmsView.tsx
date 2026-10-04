@@ -18,10 +18,11 @@ import { StudyPlansTab } from '@/components/admin/StudyPlansTab';
 import { PostersTab } from '@/components/admin/PostersTab';
 import { NotificationsTab } from '@/components/admin/NotificationsTab';
 import BroadcastTab from '@/components/admin/BroadcastTab';
+import { SkillTestTab } from '@/components/admin/SkillTestTab';
 import {
   BookOpen, Building2, BarChart3, FileText, Layers, LayoutDashboard,
   LogOut, RefreshCw, Settings2, ShoppingBag, Ticket, Users, ExternalLink, Wallet, CalendarRange,
-GraduationCap, Award, Zap, Megaphone, BellRing, Send
+GraduationCap, Award, Zap, Megaphone, BellRing, Send, BrainCircuit
     } from 'lucide-react';
 import { AdminCoursesTab } from '@/components/admin/course/AdminCoursesTab';
 import { AdminCertificatesTab } from '@/components/admin/course/AdminCertificatesTab';
@@ -29,7 +30,7 @@ import { AdminXpTab } from '@/components/admin/course/AdminXpTab';
 import { NotificationBell } from '@/components/layout/NotificationBell';
 import { AccountMenu } from '@/components/layout/AccountMenu';
 
-type TabId = 'overview' | 'orders' | 'payments' | 'users' | 'analytics' | 'hub' | 'content' | 'pack' | 'studyplans' | 'coupons' | 'posters' | 'courses' | 'certificates' | 'xp' | 'reports' | 'notifications' | 'broadcast' | 'settings';
+type TabId = 'overview' | 'orders' | 'payments' | 'users' | 'analytics' | 'hub' | 'content' | 'pack' | 'studyplans' | 'coupons' | 'posters' | 'courses' | 'certificates' | 'xp' | 'skilltest' | 'reports' | 'notifications' | 'broadcast' | 'settings';
 
 const NAV: { id: TabId; label: string; icon: any; group: string }[] = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard, group: 'Commerce & Health' },
@@ -46,6 +47,7 @@ const NAV: { id: TabId; label: string; icon: any; group: string }[] = [
   { id: 'courses', label: 'Courses', icon: GraduationCap, group: 'Learning' },
   { id: 'certificates', label: 'Certificates', icon: Award, group: 'Learning' },
   { id: 'xp', label: 'XP Ledger', icon: Zap, group: 'Learning' },
+  { id: 'skilltest', label: 'Skill Test', icon: BrainCircuit, group: 'Learning' },
   { id: 'reports', label: 'Candidate Reports', icon: FileText, group: 'Engagement' },
   { id: 'notifications', label: 'Notifications', icon: BellRing, group: 'System' },
   { id: 'broadcast', label: 'Broadcast', icon: Send, group: 'System' },
@@ -331,6 +333,8 @@ export const AdminCmsView: React.FC = () => {
         {activeTab === 'certificates' && <AdminCertificatesTab />}
 
         {activeTab === 'xp' && <AdminXpTab />}
+
+        {activeTab === 'skilltest' && <SkillTestTab />}
 
       {activeTab === 'coupons' && <CouponsManager />}
 

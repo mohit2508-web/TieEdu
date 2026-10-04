@@ -30,6 +30,9 @@ import { requireAdmin, requireAuth, optionalAuth, assertAuthConfigured } from '.
 import { loadDb, saveDb, setMirrorHook } from './data/db';
 import { devicesRouter, adminDevicesRouter } from './routes/devices.routes';
 import { storage } from './store';
+import { skillTestRouter } from './routes/skill-test.routes';
+import { adminSkillTestRouter } from './routes/admin-skill-test.routes';
+import { seedSkillTest } from './data/seedSkillTest';
 
 import { runMigrations } from './db/migrate';
 import { backfillDevicesFromJson } from './store/devices';
@@ -119,6 +122,8 @@ app.use('/api/comments', commentsRouter);
 app.use('/api/sandbox', requireAuth, sandboxRouter);
 app.use('/api/unlocks', unlockRouter);
 app.use('/api/notifications', notificationsRouter);
+app.use('/api/skill-test', optionalAuth, skillTestRouter);
+app.use('/api/admin/skill-test', requireAdmin, adminSkillTestRouter);
 
 // Health Check — honest
 app.get('/api/health', (req, res) => {
@@ -296,6 +301,7 @@ function ensureSeedData() {
  */
 export const httpServer = app.listen(PORT, async () => {
   ensureSeedData();
+  try { seedSkillTest(); } catch (e: any) { console.error('[SkillTest] Seed failed:', e?.message); }
   console.log(`⚡ [TieEdu Backend API] Server running on http://localhost:${PORT}`);
   if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
     console.warn('🔐 [Auth] JWT_SECRET env missing in production — auth is FAIL-CLOSED. Set JWT_SECRET (32+ chars) now.');
