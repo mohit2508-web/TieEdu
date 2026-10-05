@@ -21,10 +21,16 @@
  * Idempotent: replaces only the rows it owns (`drop-seed-*`), leaving any
  * real drops alone. Timestamps are derived from "now", so re-running refreshes
  * the windows instead of letting them drift.
+ *
+ * Every card also gets a painted PNG creative (scripts/lib/drop-creative.ts),
+ * written into uploads/drops under the same name-mask the file route enforces.
+ * Images are uploaded files here, not URLs, so a seed that skipped them would
+ * leave the whole feed on the imageless fallback.
  */
 import { Drop, DropStatus, DropType, loadDb, saveDb } from '../src/data/db';
 import { validateDropInput } from '../src/lib/drops';
 import { pushAudit } from '../src/lib/audit';
+import { writeDropCreative } from './lib/drop-creative';
 
 interface Spec {
   /** Drop type - one of the twelve the feed filters on. */
@@ -296,6 +302,8 @@ const main = () => {
         priority: spec.pri ?? 0,
         audience: spec.college ? { colleges: [spec.college] } : {},
         tags: [],
+        image_stored_name: writeDropCreative({ seedId: id, type: spec.t }),
+        image_alt: spec.h,
       };
 
       const check = validateDropInput(input as any);
