@@ -98,7 +98,7 @@ const main = async () => {
 
   const upload = async (as?: string, name = 'drop.png', bytes: Buffer = PNG, type = 'image/png') => {
     const form = new FormData();
-    form.append('file', new Blob([bytes], { type }), name);
+    form.append('file', new Blob([new Uint8Array(bytes)], { type }), name);
     const res = await fetch(`${base}/api/drops/admin/upload`, {
       method: 'POST',
       headers: as ? { Authorization: `Bearer ${token(as)}` } : {},
@@ -484,7 +484,7 @@ const main = async () => {
   // able to break.
   // ========================================================================
   const autoSpec = {
-    event: 'course.published', entityId: 'course-auto-1', type: 'course',
+    event: 'course.published', entityId: 'course-auto-1', type: 'course' as const,
     headline: 'A live course just opened to everyone',
     bullets: ['Thirty lessons now unlocked'],
     ctaRoute: '/courses/auto-course', targetSlug: 'auto-course',

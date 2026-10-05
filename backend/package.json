@@ -6,7 +6,7 @@
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p scripts/tsconfig.json",
     "test": "npm run test:unit && npm run test:courses && npm run test:certs && npm run test:certhttp && npm run test:certadmin && npm run test:jwt && npm run test:security && npm run test:rbac && npm run test:notifications && npm run test:audit && npm run test:guards && npm run test:catalog && npm run test:ccontent && npm run test:pack && npm run test:repair && npm run test:api && npm run test:posters && npm run test:drops && npm run test:data && npm run test:smoke",
     "test:m1": "tsx --test scripts/verify-m1-guards.live.ts",
     "test:unit": "ts-node --transpile-only scripts/study-plan.test.ts",

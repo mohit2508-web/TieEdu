@@ -1,0 +1,10 @@
+{
+  "//": "Project for the maintained backend scripts. The main tsconfig covers src/** only (rootDir ./src for the dist build), so scripts would otherwise land in TypeScript's inferred project with no Node types - the source of 'Cannot find name process' in the editor. Only maintained entries are listed in files; pre-existing errors in other scripts are not surfaced by this config.",
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "..",
+    "noEmit": true,
+    "types": ["node"]
+  },
+  "files": ["./seed-drops.ts", "./drops-api.test.ts"]
+}
