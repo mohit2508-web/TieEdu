@@ -18,7 +18,7 @@ export interface DropsFeedProps {
   onRetry: () => void;
   /** The reader scrolled past a card: flush its view beacon with the dwell. */
   onLeave: (item: DropFeedItem, dwellMs: number) => void;
-  /** The card the reader is on — the page uses it for position and prefretch. */
+  /** The card the reader is on — the page uses it for position and prefetch. */
   onActiveChange: (item: DropFeedItem | null) => void;
   /** The last card is on screen — page fetches the next cursor. */
   onReachEnd: () => void;
@@ -52,6 +52,10 @@ const SkeletonCard: React.FC = () => (
  * you were on whenever you move off it or unmount the feed. One observer for
  * all cards, re-observed when the item list changes (filter switch, cursor
  * append).
+ *
+ * The active card is also marked on the DOM (`data-active`) so CSS can dim the
+ * cards sliding past without a React re-render — the scroll path stays free of
+ * component work.
  *
  * The page's callbacks are held in refs on purpose: `onLeave` is a network
  * write, and if the effect re-ran because a parent re-rendered with a fresh
@@ -95,6 +99,16 @@ export const DropsFeed: React.FC<DropsFeedProps> = ({
     dwellRef.current.delete(id);
   }, []);
 
+  /** Flip `data-active` on the slides — imperative, never a re-render. */
+  const markActiveDom = useCallback((id: string | null) => {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+    for (const card of Array.from(viewport.querySelectorAll<HTMLElement>('[data-drop-id]'))) {
+      if (id && card.dataset.dropId === id) card.setAttribute('data-active', 'true');
+      else card.removeAttribute('data-active');
+    }
+  }, []);
+
   useEffect(() => {
     const viewport = viewportRef.current;
     if (!viewport) return;
@@ -117,6 +131,7 @@ export const DropsFeed: React.FC<DropsFeedProps> = ({
       if (nextId !== activeIdRef.current) {
         flushActive(activeIdRef.current);
         activeIdRef.current = nextId;
+        markActiveDom(nextId);
         if (nextId) {
           const item = items.find((i) => i.id === nextId) || null;
           if (item && !dwellRef.current.has(nextId)) {
@@ -158,9 +173,10 @@ export const DropsFeed: React.FC<DropsFeedProps> = ({
       // the card the reader was on — that is the only place it is recorded.
       flushActive(activeIdRef.current);
       activeIdRef.current = null;
+      markActiveDom(null);
       ratios.clear();
     };
-  }, [items, flushActive]);
+  }, [items, flushActive, markActiveDom]);
 
   if (loading && items.length === 0) {
     return (
@@ -196,6 +212,7 @@ export const DropsFeed: React.FC<DropsFeedProps> = ({
         <div key={item.id} className="drop-slide" data-drop-id={item.id}>
           <DropCard
             item={item}
+            index={index}
             position={index + 1}
             total={items.length}
             saved={savedIds.has(item.id)}

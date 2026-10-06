@@ -136,7 +136,7 @@ export default function DropPage({ initialDrop, initialId }: { initialDrop: Drop
       <main className="mx-auto w-full max-w-[720px] px-5 pb-16 pt-6" style={chipStyle} data-test="drop-detail">
           <Link
             href="/drops"
-            className="inline-flex items-center gap-1 text-sm font-bold text-[var(--brand-sky)] hover:underline"
+            className="inline-flex min-h-[44px] items-center gap-1 text-sm font-bold text-[var(--brand-sky)] hover:underline"
           >
             <ChevronLeft size={17} strokeWidth={2.6} aria-hidden />
             Back to the feed
@@ -174,12 +174,22 @@ export default function DropPage({ initialDrop, initialId }: { initialDrop: Drop
           )}
 
           {drop.image_url && (
-            // eslint-disable-next-line @next/next/no-img-element -- server-rendered article creative from the CMS, width unknown until it loads
-            <img
-              src={apiAssetUrl(drop.image_url)}
-              alt={drop.image_alt || drop.headline}
-              className="mt-5 w-full rounded-[var(--radius-lg)] border border-[var(--border-subtle)]"
-            />
+            /*
+             * Fixed aspect box + object-cover: the CMS creative has no declared
+             * dimensions, and a bare <img> that resizes on load is a layout
+             * jump under the reader's thumb. The box reserves the space first;
+             * the image fills it.
+             */
+            <div className="relative mt-5 aspect-[16/10] w-full overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border-subtle)]">
+              {/* eslint-disable-next-line @next/next/no-img-element -- server-rendered article creative from the CMS, width unknown until it loads */}
+              <img
+                src={apiAssetUrl(drop.image_url)}
+                alt={drop.image_alt || drop.headline}
+                loading="lazy"
+                decoding="async"
+                className="h-full w-full object-cover"
+              />
+            </div>
           )}
 
           <div className="prose-article mt-6 text-[15px] leading-relaxed text-[var(--text-body)]">
@@ -196,10 +206,10 @@ export default function DropPage({ initialDrop, initialId }: { initialDrop: Drop
             </div>
           )}
 
-          <div className="mt-8 flex flex-wrap gap-2">
+          <div className="mt-8 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
             <button
               type="button"
-              className="btn btn-primary h-12 px-6"
+              className="btn btn-primary h-12 w-full px-6 sm:w-auto"
               onClick={() => {
                 postDropEventApi(drop.id, 'cta_click').catch(() => {});
                 if (drop.cta_url) window.open(drop.cta_url, '_blank', 'noopener,noreferrer');
@@ -210,7 +220,7 @@ export default function DropPage({ initialDrop, initialId }: { initialDrop: Drop
               {drop.cta_label}
               <ArrowUpRight size={17} strokeWidth={2.6} aria-hidden />
             </button>
-            <Link href="/drops" className="btn btn-ghost h-12 px-5">
+            <Link href="/drops" className="btn btn-ghost h-12 w-full px-5 sm:w-auto">
               Keep swiping
             </Link>
           </div>

@@ -2,12 +2,13 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
-import { WifiOff, X } from 'lucide-react';
+import { RefreshCw, WifiOff, X } from 'lucide-react';
 import { DropsFeed } from '@/components/drops/DropsFeed';
 import { DropsFilterBar, type DropsFilter } from '@/components/drops/DropsFilterBar';
 import { DropDetailSheet } from '@/components/drops/DropDetailSheet';
 import { DropNotInterestedSheet } from '@/components/drops/DropNotInterestedSheet';
 import { useAuth } from '@/context/AuthContext';
+import { apiAssetUrl } from '@/lib/assetUrl';
 import {
   fetchDropDetailApi,
   fetchDropFeedApi,
@@ -80,6 +81,11 @@ export default function DropsPage() {
 
   const cursorRef = useRef<string | null>(null);
   const busyRef = useRef(false);
+  const itemsRef = useRef<DropFeedItem[]>([]);
+  itemsRef.current = items;
+  /** Creatives already kicked into the browser cache for this feed session. */
+  const prefetchedRef = useRef<Set<string>>(new Set());
+  const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
     if (!notice) return;
@@ -93,6 +99,8 @@ export default function DropsPage() {
     setLoading(true);
     setError(undefined);
     setStale(false);
+    setActiveIndex(0);
+    prefetchedRef.current.clear();
 
     const savedPromise =
       user && filter !== 'saved'
@@ -174,8 +182,26 @@ export default function DropsPage() {
     postDropEventApi(item.id, 'view', Math.min(dwellMs, 600000)).catch(() => {});
   }, []);
 
-  const handleActiveChange = useCallback((_item: DropFeedItem | null) => {
-    // Reserved for prefetch; the dwell accounting lives in DropsFeed.
+  /**
+   * Prefetch the next card's creative the moment one becomes active.
+   *
+   * The feed is a snap scroller: by the time the reader has finished with card
+   * N, card N+1's image is already in the HTTP cache, so the swipe paints
+   * instead of flashing an empty frame. Budget is deliberately +1 card —
+   * prefetching the whole page would fight the phone's memory for no gain.
+   */
+  const handleActiveChange = useCallback((item: DropFeedItem | null) => {
+    if (!item) return;
+    const list = itemsRef.current;
+    const i = list.findIndex((x) => x.id === item.id);
+    if (i < 0) return;
+    setActiveIndex(i);
+    const next = list[i + 1];
+    if (next?.image_url && !prefetchedRef.current.has(next.id)) {
+      prefetchedRef.current.add(next.id);
+      const img = new Image();
+      img.src = apiAssetUrl(next.image_url);
+    }
   }, []);
 
   const handleSave = useCallback(
@@ -279,6 +305,9 @@ export default function DropsPage() {
 
   const detailSaved = detail ? savedIds.has(detail.id) : false;
 
+  /** Progress fill for the 2px bar under the filters — transform only. */
+  const progressScale = items.length > 0 ? Math.min(1, (activeIndex + 1) / items.length) : 0;
+
   const toggleDetailSave = useCallback(async () => {
     if (!detail) return;
     setSavingDetail(true);
@@ -317,6 +346,11 @@ export default function DropsPage() {
           <div className="drops-page">
             <DropsFilterBar variant="bar" value={filter} onChange={setFilter} />
 
+            {/* 2px position fill under the filters — no layout work on swipe. */}
+            <div className="drops-progress" aria-hidden="true">
+              <span style={{ transform: `scaleX(${progressScale})` }} />
+            </div>
+
             {stale && (
               <div
                 role="status"
@@ -330,7 +364,7 @@ export default function DropsPage() {
               </div>
             )}
 
-            {notice && (
+            {!stale && notice && (
               <div
                 role="status"
                 className="flex items-center gap-2 bg-[var(--brand-sky-soft)] px-4 py-2 text-xs font-semibold text-[var(--brand-sky-strong)]"
@@ -343,6 +377,26 @@ export default function DropsPage() {
                   className="flex h-6 w-6 items-center justify-center rounded-full hover:bg-black/5"
                 >
                   <X size={13} aria-hidden />
+                </button>
+              </div>
+            )}
+
+            {/*
+              Online refresh. The feed is per-viewer and never SW-cached, so
+              "pull the current ordering again" is a real action — and on a snap
+              scroller a pull-to-refresh gesture would fight the card snap, so
+              the affordance is a button instead.
+            */}
+            {!stale && items.length > 0 && (
+              <div className="flex justify-end px-3 pb-1">
+                <button
+                  type="button"
+                  className="btn btn-ghost h-8 gap-1.5 px-2.5 text-xs"
+                  onClick={resetAndLoad}
+                  aria-label="Refresh the drops feed"
+                >
+                  <RefreshCw size={13} strokeWidth={2.4} aria-hidden />
+                  Refresh
                 </button>
               </div>
             )}

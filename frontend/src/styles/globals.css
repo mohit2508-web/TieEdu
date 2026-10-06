@@ -1591,15 +1591,24 @@ code, pre, kbd, samp, .font-mono {
  * the last ~56px of every card — the bottom of the creative and the CTA row —
  * sits under the bar with no way to scroll to it: `.drops-viewport` is the
  * scroller, and the document does not scroll at all.
+ *
+ * `/drops` is a `depth: 'detail'` route, so the bar is always slid away there
+ * and `data-tabbar` is 'off'. Without reserving `--safe-bottom` in that branch
+ * the card footer (the CTA row) lands under the home indicator on a notched
+ * iPhone — the one surface this feed exists for.
  */
 .page-body[data-tabbar='on'] .drops-shell {
   height: calc(100dvh - var(--header-total) - var(--tabbar-total));
+}
+.page-body[data-tabbar='off'] .drops-shell {
+  height: calc(100dvh - var(--header-total) - var(--safe-bottom));
 }
 @media (min-width: 768px) {
   /* No tab bar at md and up, so nothing to give back. Repeated with the same
      selectors as above so it wins on source order, not on specificity luck. */
   .page-body .drops-shell,
-  .page-body[data-tabbar='on'] .drops-shell {
+  .page-body[data-tabbar='on'] .drops-shell,
+  .page-body[data-tabbar='off'] .drops-shell {
     height: calc(100dvh - var(--header-total));
   }
 }
@@ -1636,6 +1645,12 @@ code, pre, kbd, samp, .font-mono {
   padding: 10px 14px;
   border-bottom: 1px solid var(--border-subtle);
   background: var(--bg-surface);
+  /* Snap the strip so a flick parks a chip on the padding edge rather than
+     mid-gap. `proximity`, not `mandatory`: the user must still be able to
+     park the strip between chips while hunting for a type. */
+  scroll-snap-type: x proximity;
+  scroll-padding-inline: 14px;
+  overscroll-behavior-x: contain;
 }
 .drops-filters::-webkit-scrollbar { display: none; }
 
@@ -1653,10 +1668,21 @@ code, pre, kbd, samp, .font-mono {
   font-size: 13px;
   font-weight: 700;
   white-space: nowrap;
+  scroll-snap-align: start;
   transition:
     background var(--dur-fast) var(--ease-out),
     border-color var(--dur-fast) var(--ease-out),
     color var(--dur-fast) var(--ease-out);
+}
+/* A finger is not a mouse: the 34px desktop chip is under the 44px tap floor
+   and is the control students hit most often on this page. Coarse pointers get
+   a taller chip without inflating the desktop rail. */
+@media (pointer: coarse) {
+  .drops-filter-chip {
+    height: 40px;
+    padding: 0 16px;
+    font-size: 13.5px;
+  }
 }
 .drops-filter-chip[aria-pressed='true'] {
   background: var(--brand-ink);
@@ -1720,6 +1746,17 @@ code, pre, kbd, samp, .font-mono {
   height: 100%;
   scroll-snap-align: start;
   scroll-snap-stop: always;
+  /*
+   * Offscreen slides stop painting once they leave the snap region. The
+   * intrinsic size matches the slide's own geometry (`100%` of the scroller)
+   * so the scrollbar does not jump when a slide is skipped. If a browser's
+   * snap + content-visibility combination ever fights (older Android), drop
+   * this line and keep `contain: layout paint` below — the img attrs and
+   * +1 prefetch carry most of the win on their own.
+   */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 100%;
+  contain: layout paint;
 }
 .drop-card {
   position: relative;
@@ -1727,6 +1764,20 @@ code, pre, kbd, samp, .font-mono {
   flex-direction: column;
   height: 100%;
   background: var(--bg-surface);
+  transition: filter var(--dur-base) var(--ease-out);
+}
+/*
+ * The card the reader is sitting on stays full strength; the ones sliding past
+ * dim a touch so the "you are here" is visible without a layout change.
+ * Written on the slide (not the card) so the observer can flip it
+ * imperatively and never re-render the card.
+ */
+.drop-slide:not([data-active='true']) .drop-card {
+  filter: brightness(0.96);
+}
+@media (prefers-reduced-motion: reduce) {
+  .drop-slide:not([data-active='true']) .drop-card { filter: none; }
+  .drop-card { transition: none; }
 }
 /* Long headlines clamp to three lines so the bullets and CTA stay on screen. */
 .drop-headline {
@@ -1734,6 +1785,13 @@ code, pre, kbd, samp, .font-mono {
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+/* Short phones (SE-class, landscape) get a tighter headline so the creative
+   and the CTA stay in the thumb zone instead of the copy claiming the frame. */
+@media (max-height: 700px) {
+  .drop-headline { -webkit-line-clamp: 2; }
+  .drop-media::after { height: 65%; }
+  .drop-bullets li:nth-child(n + 3) { display: none; }
 }
 
 /* Media region: the image fills whatever the text block leaves. */
@@ -1743,6 +1801,13 @@ code, pre, kbd, samp, .font-mono {
   min-height: 0;
   overflow: hidden;
   background: var(--brand-ink);
+  /*
+   * Side-swipe gestures (save / not-interested) live on this box. `pan-y`
+   * tells the browser we only claim horizontal pans — vertical still belongs
+   * to the snap scroller, which is what keeps a flick reading as a swipe and
+   * not as a hijacked scroll.
+   */
+  touch-action: pan-y;
 }
 .drop-media > img {
   /*
@@ -1803,8 +1868,66 @@ code, pre, kbd, samp, .font-mono {
   font-size: 11px;
   font-weight: 700;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+  /*
+   * Labels are the affordance on a wide phone; on a 320px handset they eat
+   * vertical space in the middle of the creative. Icons carry the meaning
+   * (aria-label is always present), so the labels step aside.
+   */
+  transition: transform var(--dur-fast) var(--ease-out);
 }
 .drop-rail-btn[data-on='true'] { color: var(--drop-chip, var(--brand-accent)); }
+@media (max-width: 360px) {
+  .drop-rail-btn { min-width: 44px; }
+  .drop-rail-btn span { display: none; }
+}
+
+/*
+ * Position progress under the filter strip: a 2px track with a transform-only
+ * fill, so the feed's scroll path never triggers a layout on the card.
+ */
+.drops-progress {
+  flex: none;
+  height: 2px;
+  background: var(--border-subtle);
+  overflow: hidden;
+}
+.drops-progress > span {
+  display: block;
+  height: 100%;
+  background: var(--brand-sky);
+  transform-origin: left center;
+  transform: scaleX(0);
+  transition: transform 180ms var(--ease-out);
+}
+@media (prefers-reduced-motion: reduce) {
+  .drops-progress > span { transition: none; }
+}
+
+/*
+ * Double-tap burst behind the bookmark icon when a save fires from a gesture.
+ * Scale + fade on a compositor-only property; removed from the tree after the
+ * animation so it cannot pile up across a long session.
+ */
+.drop-save-burst {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  color: var(--drop-chip, var(--brand-accent));
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.45));
+}
+.drop-save-burst svg {
+  animation: drop-save-burst 420ms var(--ease-out) forwards;
+}
+@keyframes drop-save-burst {
+  0% { transform: scale(0.4); opacity: 0; }
+  40% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1.35); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .drop-save-burst svg { animation-duration: 1ms; }
+}
 
 /* Skeleton card: same geometry as a real one, so the first paint does not jump. */
 .drop-skeleton {

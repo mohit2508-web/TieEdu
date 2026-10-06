@@ -68,7 +68,11 @@ export interface PressableProps {
   'aria-expanded'?: boolean;
   'aria-haspopup'?: boolean;
   'aria-current'?: 'page' | undefined;
+  /** Toggle state for controls that style themselves from it (drops rail). */
+  'aria-pressed'?: boolean;
   'data-active'?: boolean;
+  /** Extra data attribute the consumer styles from, e.g. the drops save rail. */
+  'data-on'?: boolean | undefined;
   'data-testid'?: string;
   style?: React.CSSProperties;
 }

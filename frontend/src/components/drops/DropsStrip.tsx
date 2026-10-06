@@ -55,14 +55,14 @@ export const DropsStrip: React.FC = () => {
           </Link>
         </div>
 
-        <div className="mt-6 flex gap-4 overflow-x-auto pb-2 -mx-1 px-1">
+        <div className="mt-6 flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain pb-2 -mx-1 px-1">
           {drops.map((d) => {
             const meta = DROP_TYPE_META[d.type];
             return (
               <Link
                 key={d.id}
                 href={`/drops/${d.id}`}
-                className="vault-card group flex w-[260px] flex-none flex-col gap-2.5 p-4 transition-colors hover:border-[#0284C7]"
+                className="vault-card group flex w-[260px] flex-none snap-start flex-col gap-2.5 p-4 transition-colors hover:border-[#0284C7]"
               >
                 <span className="inline-flex items-center gap-1.5 self-start rounded-full bg-[#F1F3F5] px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-[#3E4754]">
                   <span

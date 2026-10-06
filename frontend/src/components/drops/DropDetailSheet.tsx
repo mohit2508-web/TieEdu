@@ -4,6 +4,7 @@ import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Bookmark, BookmarkCheck } from 'lucide-react';
 import { Sheet } from '@/components/common/Sheet';
+import { Pressable } from '@/components/common/Pressable';
 import { DROP_TYPE_META, type DropDetail } from '@/lib/dropsApi';
 import { formatDay } from '@/lib/date';
 
@@ -25,7 +26,8 @@ export interface DropDetailSheetProps {
  *
  * The CTA lives in the pinned `footer` slot rather than at the end of the
  * prose — an article's action button below 800 words is a button nobody
- * reaches.
+ * reaches. "Back to feed" sits beside it so a phone reader can dismiss the
+ * article without hunting for the sheet's close control.
  */
 export const DropDetailSheet: React.FC<DropDetailSheetProps> = ({
   drop,
@@ -46,19 +48,23 @@ export const DropDetailSheet: React.FC<DropDetailSheetProps> = ({
       footer={
         drop ? (
           <div className="flex items-center gap-2">
-            <button type="button" className="btn btn-primary h-11 flex-1" onClick={onCta}>
+            <Pressable as="button" hapticWeight="medium" className="btn btn-primary h-11 flex-1" onPress={onCta}>
               {drop.cta_label}
-            </button>
-            <button
-              type="button"
+            </Pressable>
+            <Pressable
+              as="button"
+              hapticWeight="light"
               className="btn btn-ghost h-11"
               disabled={saving}
               aria-pressed={saved}
-              onClick={onSave}
+              onPress={onSave}
             >
               {saved ? <BookmarkCheck size={17} aria-hidden /> : <Bookmark size={17} aria-hidden />}
               {saved ? 'Saved' : 'Save'}
-            </button>
+            </Pressable>
+            <Pressable as="button" hapticWeight="light" className="btn btn-ghost h-11" onPress={onClose}>
+              Feed
+            </Pressable>
           </div>
         ) : null
       }
@@ -94,6 +100,12 @@ export const DropDetailSheet: React.FC<DropDetailSheetProps> = ({
                 </li>
               ))}
             </ul>
+          )}
+
+          {drop.deadline_at && (
+            <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[var(--brand-sky-soft)] px-2.5 py-1 text-xs font-bold text-[var(--brand-sky-strong)]">
+              {formatDay(drop.deadline_at)}
+            </p>
           )}
 
           <div className="prose-article mt-4 text-sm text-[var(--text-body)]">

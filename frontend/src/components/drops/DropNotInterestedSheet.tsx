@@ -3,6 +3,7 @@
 import React from 'react';
 import { Ban, Building2, Layers } from 'lucide-react';
 import { Sheet } from '@/components/common/Sheet';
+import { Pressable } from '@/components/common/Pressable';
 import { DROP_TYPE_META, type DropFeedItem, type DropMuteKind } from '@/lib/dropsApi';
 
 export interface DropNotInterestedSheetProps {
@@ -36,18 +37,19 @@ export const DropNotInterestedSheet: React.FC<DropNotInterestedSheetProps> = ({
     title: string,
     description: string
   ) => (
-    <button
-      type="button"
-      className="flex w-full items-start gap-3 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-white px-4 py-3 text-left transition-colors hover:border-[var(--border-strong)]"
+    <Pressable
+      as="button"
+      hapticWeight="warning"
+      className="flex w-full items-start gap-3 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-white px-4 py-3 text-left"
       disabled={busy}
-      onClick={() => onMute(kind)}
+      onPress={() => onMute(kind)}
     >
       <Icon size={19} strokeWidth={2.2} className="mt-0.5 flex-none text-[var(--brand-sky)]" aria-hidden />
       <span className="min-w-0">
         <span className="block text-sm font-bold text-[var(--text-heading)]">{title}</span>
         <span className="mt-0.5 block text-xs text-[var(--text-muted)]">{description}</span>
       </span>
-    </button>
+    </Pressable>
   );
 
   return (
@@ -80,9 +82,9 @@ export const DropNotInterestedSheet: React.FC<DropNotInterestedSheetProps> = ({
             </p>
           )}
 
-          <button type="button" className="btn btn-ghost h-11 w-full" onClick={onClose} disabled={busy}>
+          <Pressable as="button" hapticWeight="light" className="btn btn-ghost h-11 w-full" onPress={onClose} disabled={busy}>
             Cancel
-          </button>
+          </Pressable>
         </div>
       )}
     </Sheet>
