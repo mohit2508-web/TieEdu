@@ -100,6 +100,14 @@ console.log('\n--- action rail: feedback + small-screen density ---');
 ok(card.includes('drop-rail-btn'), 'the rail still uses its own button class');
 ok(card.includes('Pressable'), 'rail buttons go through Pressable for press feedback');
 ok(
+  /\.drop-rail-btn\s*\{[^}]*background:/.test(css),
+  'rail buttons carry their own dark disc (white glyphs vanish on bright photos)'
+);
+ok(
+  /\.drop-rail-btn svg\s*\{[^}]*filter:\s*drop-shadow/.test(css),
+  'rail icons get a drop-shadow — text-shadow never paints an SVG stroke'
+);
+ok(
   /@media \(max-width: 360px\)\s*\{[^}]*drop-rail-btn[\s\S]*?span\s*\{\s*display:\s*none/.test(css),
   'rail labels step aside below 360px (icons + aria-label remain)'
 );

@@ -1881,7 +1881,18 @@ code, pre, kbd, samp, .font-mono {
   min-width: 48px;
   min-height: 48px;
   justify-content: center;
-  border-radius: var(--radius-sm);
+  padding: 7px 6px;
+  border-radius: 16px;
+  /*
+   * A bare white glyph on a bright creative is invisible — `text-shadow` only
+   * paints text, never an SVG stroke, so the icons need their own ground. The
+   * disc is what makes Save/Share/Not-me readable on every photo the CMS can
+   * throw at the feed, not just the dark ones.
+   */
+  background: rgba(6, 10, 16, 0.48);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
   color: #fff;
   font-size: 11px;
   font-weight: 700;
@@ -1892,6 +1903,9 @@ code, pre, kbd, samp, .font-mono {
    * (aria-label is always present), so the labels step aside.
    */
   transition: transform var(--dur-fast) var(--ease-out);
+}
+.drop-rail-btn svg {
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
 }
 .drop-rail-btn[data-on='true'] { color: var(--drop-chip, var(--brand-accent)); }
 @media (max-width: 360px) {
