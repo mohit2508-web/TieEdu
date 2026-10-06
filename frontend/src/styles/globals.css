@@ -355,6 +355,19 @@ body {
   transition: border-color var(--motion-fast) var(--ease-out), color var(--motion-fast) var(--ease-out), background var(--motion-fast) var(--ease-out);
 }
 
+/* The same thumb rule the icon-btn gets. Only *interactive* chips are
+   bumped: tag pills inside cards are `<span>`s and would just inflate the
+   card by 20px each. `.chip--icon` is excluded — it is already a 40/44px
+   square and the padding would fight its fixed box. */
+@media (pointer: coarse) {
+  button.chip:not(.chip--icon),
+  a.chip:not(.chip--icon) {
+    min-height: 44px;
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+}
+
 /*
  * Icon-only chip.
  *
@@ -381,6 +394,51 @@ body {
     padding: 4px 12px;
     justify-content: flex-start;
   }
+}
+
+/*
+ * Directory filter chips. `.chip`'s bordered-pill look reads as a form control,
+ * and its conditional `bg-…` utilities are silently beaten by its own
+ * unlayered background anyway — so the active state had almost no visual. This
+ * is the same iOS control the drops feed uses: flat secondary fill at rest,
+ * a lifted dark pill when pressed, state driven by `aria-pressed` rather than
+ * per-instance colour classes.
+ */
+.dir-chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 15px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(120, 120, 128, 0.13);
+  color: var(--text-body);
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+@media (pointer: coarse) {
+  .dir-chip {
+    height: 44px;
+    padding: 0 16px;
+    font-size: 14px;
+  }
+}
+.dir-chip[aria-pressed='true'] {
+  background: var(--brand-ink);
+  color: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.16), 0 6px 18px rgba(0, 0, 0, 0.14);
+}
+.dir-chip:active {
+  transform: scale(0.97);
 }
 
 /* ============================================
@@ -830,8 +888,10 @@ body {
 }
 @media (max-width: 480px) {
   .display-1 {
-    font-size: 1.75rem;
-    line-height: 1.12;
+    /* Was 1.75rem — smaller than the clamp's own floor, so the hero read as
+       a section heading rather than the loudest thing on the screen. */
+    font-size: 2.05rem;
+    line-height: 1.1;
     letter-spacing: -0.02em;
   }
 }

@@ -235,7 +235,7 @@ export const HeroPosterCarousel: React.FC<HeroPosterCarouselProps> = ({ posters,
               type="button"
               onClick={() => goTo(index - 1)}
               aria-label="Previous offer"
-              className="absolute left-3 top-1/2 -translate-y-1/2 z-20 grid h-9 w-9 place-items-center rounded-full bg-white/85 text-[#10151C] shadow-soft backdrop-blur hover:bg-white focus-ring opacity-0 sm:opacity-100 transition-opacity group-hover/carousel:opacity-100"
+              className="absolute left-3 top-1/2 -translate-y-1/2 z-20 grid h-11 w-11 place-items-center rounded-full bg-white/85 text-[#10151C] shadow-soft backdrop-blur hover:bg-white focus-ring opacity-0 sm:opacity-100 transition-opacity group-hover/carousel:opacity-100"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
@@ -243,12 +243,12 @@ export const HeroPosterCarousel: React.FC<HeroPosterCarouselProps> = ({ posters,
               type="button"
               onClick={() => goTo(index + 1)}
               aria-label="Next offer"
-              className="absolute right-3 top-1/2 -translate-y-1/2 z-20 grid h-9 w-9 place-items-center rounded-full bg-white/85 text-[#10151C] shadow-soft backdrop-blur hover:bg-white focus-ring opacity-0 sm:opacity-100 transition-opacity group-hover/carousel:opacity-100"
+              className="absolute right-3 top-1/2 -translate-y-1/2 z-20 grid h-11 w-11 place-items-center rounded-full bg-white/85 text-[#10151C] shadow-soft backdrop-blur hover:bg-white focus-ring opacity-0 sm:opacity-100 transition-opacity group-hover/carousel:opacity-100"
             >
               <ChevronRight className="w-5 h-5" />
             </button>
 
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 rounded-full bg-black/35 px-2.5 py-1.5 backdrop-blur">
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 rounded-full bg-black/35 px-2 py-1 backdrop-blur">
               {posters.map((p, i) => (
                 <button
                   key={p.id}
@@ -256,8 +256,12 @@ export const HeroPosterCarousel: React.FC<HeroPosterCarouselProps> = ({ posters,
                   onClick={() => goTo(i)}
                   aria-label={`Go to offer ${i + 1}`}
                   aria-current={i === index}
-                  className={`h-1.5 rounded-full transition-all duration-300 focus-ring ${i === index ? 'w-5 bg-white' : 'w-1.5 bg-white/55 hover:bg-white/80'}`}
-                />
+                  className="grid h-8 w-8 -m-1 place-items-center rounded-full focus-ring"
+                >
+                  <span
+                    className={`block h-1.5 rounded-full transition-all duration-300 ${i === index ? 'w-5 bg-white' : 'w-1.5 bg-white/55 hover:bg-white/80'}`}
+                  />
+                </button>
               ))}
             </div>
           </>

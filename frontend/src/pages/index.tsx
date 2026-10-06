@@ -6,11 +6,15 @@ import { Footer } from '@/components/layout/Footer';
 import { CompanyCard } from '@/components/company/CompanyCard';
 import { PricingSection } from '@/components/checkout/PricingSection';
 import { DropsStrip } from '@/components/drops/DropsStrip';
+import { HeroVaultMock } from '@/components/home/HeroVaultMock';
+import { HowItWorks } from '@/components/home/HowItWorks';
+import { FinalCta } from '@/components/home/FinalCta';
+import { Reveal } from '@/components/home/Reveal';
 import { fetchCompanies, fetchHeroPostersApi } from '@/lib/api';
 import { useCartScope } from '@/context/CartContext';
 import { Company, HeroPoster } from '@/types';
 import {
-  Search, Sparkles, ShieldCheck, CheckCircle2, ArrowRight, FileText, FileDown, Star, Layers
+  Search, Sparkles, ShieldCheck, CheckCircle2, ArrowRight, FileText, FileDown, Star, Layers, BadgeCheck
 } from 'lucide-react';
 
 const HeroPosterCarousel = dynamic(
@@ -34,12 +38,17 @@ const FT_ITEMS = [
   { icon: Layers, title: 'Complete Pack Ladder', body: 'Buy a single round or the whole pack — the more rounds you add, the more you save. Every price is computed by the server.', tint: 'text-[#0E2A44] bg-[#E8EEF4]' },
 ];
 
-const OFFERS = [
-  { icon: ShieldCheck, text: 'Verified round-by-round intelligence — no fake question dumps', cls: 'text-[#0284C7]' },
-  { icon: FileText, text: 'Official PDF guides in every premium module — view or download after unlock', cls: 'text-[#15803D]' },
-  { icon: Layers, text: 'A Complete Pack always costs less than buying its rounds separately — see each company’s real price below', cls: 'text-[#B45309]' },
-  { icon: Sparkles, text: 'Free 7-section pack open in every vault — no signup needed to read', cls: 'text-[#0E2A44]' },
-  { icon: ShieldCheck, text: '2026 drive prep — new company vaults added every month', cls: 'text-[#C77B12]' },
+/*
+ * Glanceable product facts, rendered as one static row. This used to be an
+ * infinite marquee — a banner-site tell that cost battery for copy nobody
+ * could stop and read. Shortened to fit a wrapped row on a 390px screen.
+ */
+const TRUST_FACTS = [
+  { icon: ShieldCheck, text: 'Verified round-by-round intelligence', cls: 'text-[#0284C7]' },
+  { icon: FileText, text: 'Official PDF guides in every module', cls: 'text-[#15803D]' },
+  { icon: Layers, text: 'Complete Pack always costs less', cls: 'text-[#B45309]' },
+  { icon: Sparkles, text: 'Free 7-section pack in every vault', cls: 'text-[#0E2A44]' },
+  { icon: BadgeCheck, text: 'New company vaults every month', cls: 'text-[#C77B12]' },
 ];
 
 export default function Home() {
@@ -144,17 +153,17 @@ export default function Home() {
                   STAR answers — plus official <strong className="text-[#10151C]">PDF study guides</strong> in every premium module.
                 </p>
 
-                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-1">
-                  <Link href="/compare" className="btn btn-primary px-6 py-3 text-sm focus-ring">
+                <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center justify-center lg:justify-start gap-3 pt-1">
+                  <Link href="/compare" className="btn btn-primary w-full sm:w-auto min-h-[48px] justify-center px-6 py-3.5 text-[15px] focus-ring">
                     Compare Companies <ArrowRight className="w-4 h-4" />
                   </Link>
-                  <Link href="/study-plan" className="btn btn-ghost px-6 py-3 text-sm focus-ring">
+                  <Link href="/study-plan" className="btn btn-ghost w-full sm:w-auto min-h-[48px] justify-center px-6 py-3.5 text-[15px] focus-ring">
                     <span className="text-[#B45309]">★</span> Generate Auto Study Plan
                   </Link>
                 </div>
 
                 <div className="hidden md:block max-w-xl relative pt-2 mx-auto lg:mx-0 w-full">
-                  <Search className="w-4 h-4 text-[--text-muted] absolute left-4 top-1/2 -translate-y-1/2" />
+                  <Search className="w-4 h-4 text-[var(--text-muted)] absolute left-4 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     placeholder="Search company — Google, TCS, Zscaler…"
@@ -162,7 +171,7 @@ export default function Home() {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full pl-11 pr-4 sm:pr-24 py-3.5 bg-white/90 border border-[#E9E7E1] shadow-soft rounded-2xl text-sm text-[#10151C] placeholder:text-[#AEB6BE] focus:outline-none focus:border-[#0284C7] focus:ring-4 focus:ring-[#0284C7]/10 transition-shadow"
                   />
-                  <span className="absolute right-3.5 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-black/[0.05] text-[11px] font-bold text-[--text-muted]">⌘K</span>
+                  <span className="absolute right-3.5 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-black/[0.05] text-[11px] font-bold text-[var(--text-muted)]">⌘K</span>
                 </div>
 
                 <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2.5 pt-1">
@@ -174,74 +183,80 @@ export default function Home() {
               </div>
 
               {/* ===== HERO CREATIVE SLOT =====
-                  Admin-uploaded posters own this slot. The 3D orbit is only a
-                  fallback for when no creative is live (or the API is down). */}
-              <div className="lg:col-span-5 flex items-center justify-center">
+                  Admin-uploaded posters own this slot. The 3D orbit is the
+                  desktop fallback for when no creative is live; phones get a
+                  static vault illustration so the column is never a dead gap. */}
+              <div className="lg:col-span-5 flex items-center justify-center pt-2 lg:pt-0">
                 {posters.length > 0 ? (
                   <HeroPosterCarousel posters={posters} />
+                ) : showOrbit ? (
+                  <CompanyOrbitHero3D companies={(companies || []).map(c => ({ name: c?.name || 'Company' }))} />
                 ) : (
-                  showOrbit && (
-                    <CompanyOrbitHero3D companies={(companies || []).map(c => ({ name: c?.name || 'Company' }))} />
-                  )
+                  <HeroVaultMock />
                 )}
               </div>
 
             </div>
           </section>
 
-          {/* ===== HONEST FACTS MARQUEE (in-house, real product facts — no coupons) ===== */}
-          <section className="border-y border-[#E9E7E1] bg-white/60 backdrop-blur py-3.5 overflow-hidden relative">
-            <div className="flex whitespace-nowrap animate-marquee will-change-transform">
-              {[0, 1].map((dup) => (
-                <div key={dup} className="flex shrink-0 items-center">
-                  {OFFERS.map((ad, i) => (
-                    <span key={i} className="inline-flex items-center gap-2.5 px-8 text-[13px] font-bold tracking-wide text-[#3E4754]">
-                      <ad.icon className={`w-4 h-4 ${ad.cls}`} />
-                      <span>{ad.text}</span>
-                      <span className="text-[#E9E7E1] ml-6">|</span>
-                    </span>
-                  ))}
-                </div>
+          {/* ===== TRUST FACTS — static, one wrapped row, no marquee ===== */}
+          <section className="border-y border-[#E9E7E1] bg-white/70 backdrop-blur py-3.5">
+            <ul className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 flex flex-wrap items-center justify-center gap-x-7 gap-y-2.5">
+              {TRUST_FACTS.map((f, i) => (
+                <li key={i} className="inline-flex items-center gap-2 text-[13px] font-bold text-[#3E4754]">
+                  <f.icon className={`w-4 h-4 shrink-0 ${f.cls}`} aria-hidden />
+                  {f.text}
+                </li>
               ))}
-            </div>
+            </ul>
           </section>
 
-          {/* ===== DROPS STRIP (renders nothing when the feed is empty) ===== */}
-          <DropsStrip />
+          {/* ===== HOW IT WORKS ===== */}
+          <HowItWorks />
 
-          {/* ===== FEATURE STRIP ===== */}
           {dataError && (
             <div className="w-full border-b border-[#F2C9BC] bg-[#FDEDE9] px-4 py-2.5 text-center">
               <p className="text-[13px] font-bold text-[#A63D28]">{dataError}</p>
             </div>
           )}
 
-          <section className="bg-white border-b border-[#E9E7E1] py-10">
-            <h2 className="sr-only">Why TieEdu</h2>
-            <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              {FT_ITEMS.map((f, i) => (
-                <div key={i} className="vault-card p-5 flex items-start gap-4">
-                  <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${f.tint}`}>
-                    <f.icon className="w-5 h-5" />
+          {/* ===== FEATURE STRIP ===== */}
+          <section className="bg-white border-b border-[#E9E7E1] py-12">
+            <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12">
+              <div className="max-w-2xl mb-7">
+                <span className="eyebrow">Why TieEdu</span>
+                <h2 className="font-serif-heading text-3xl sm:text-4xl font-extrabold text-[#10151C] leading-tight mt-2">
+                  Four things a PDF folder cannot do
+                </h2>
+              </div>
+              <Reveal className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {FT_ITEMS.map((f, i) => (
+                  <div key={i} className="vault-card p-5 flex items-start gap-4">
+                    <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${f.tint}`}>
+                      <f.icon className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-[14px] font-bold text-[#10151C]">{f.title}</h3>
+                      <p className="text-[14px] text-[var(--text-muted)] mt-1 leading-relaxed">{f.body}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-[14px] font-bold text-[#10151C]">{f.title}</h3>
-                    <p className="text-[13px] text-[--text-muted] mt-1 leading-relaxed">{f.body}</p>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </Reveal>
             </div>
           </section>
 
+          {/* ===== DROPS STRIP (renders nothing when the feed is empty) ===== */}
+          <DropsStrip />
+
           {/* ===== DIRECTORY ===== */}
-          <section className="py-14 w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12">
+          <section id="companies" className="py-14 w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 scroll-mt-24">
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-5 mb-9">
               <div className="space-y-2">
                 <span className="eyebrow">The Vault Directory</span>
                 <h2 className="font-serif-heading text-3xl sm:text-4xl font-extrabold text-[#10151C] leading-tight">
                   Company Recruitment Vaults
                 </h2>
-                <p className="text-[15px] text-[--text-muted]">
+                <p className="text-[15px] text-[var(--text-muted)]">
                   Select a company to open its complete recruitment intelligence portal.
                 </p>
                 {!dataError && companies.length > 0 && (
@@ -250,16 +265,14 @@ export default function Home() {
                   </p>
                 )}
               </div>
-              <div className="flex gap-2 overflow-x-auto sm:overflow-visible sm:flex-wrap whitespace-nowrap pb-1 sm:pb-0 -mx-1 px-1">
+              <div className="flex gap-2 overflow-x-auto sm:overflow-visible sm:flex-wrap whitespace-nowrap pb-1 sm:pb-0 -mx-1 px-1 snap-x snap-mandatory">
                 {INDUSTRIES.map((ind) => (
                   <button
                     key={ind}
+                    type="button"
                     onClick={() => setSelectedIndustry(ind)}
-                    className={`chip shrink-0 focus-ring ${
-                      selectedIndustry === ind
-                        ? 'bg-[#0284C7] text-white border-[#0284C7] shadow-soft'
-                        : 'hover:border-[#0284C7]/50 hover:text-[#0271B5]'
-                    }`}
+                    aria-pressed={selectedIndustry === ind}
+                    className="dir-chip focus-ring snap-start"
                   >
                     {ind}
                   </button>
@@ -296,13 +309,16 @@ export default function Home() {
               ) : (
                 <div className="py-16 text-center space-y-2 col-span-full">
                   <p className="text-3xl">🔍</p>
-                  <p className="text-[15px] text-[--text-muted]">No company matched your search — try another keyword.</p>
+                  <p className="text-[15px] text-[var(--text-muted)]">No company matched your search — try another keyword.</p>
                 </div>
               )}
             </div>
           </section>
 
           <PricingSection />
+
+          {/* ===== CLOSING CTA ===== */}
+          <FinalCta />
         </main>
 
         <Footer />

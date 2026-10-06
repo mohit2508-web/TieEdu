@@ -46,11 +46,11 @@ export const DropsStrip: React.FC = () => {
             <h2 className="font-serif-heading text-2xl sm:text-3xl font-extrabold text-[#10151C] leading-tight">
               Fresh off the career feed
             </h2>
-            <p className="text-[14px] text-[--text-muted] max-w-xl">
+            <p className="text-[14px] text-[var(--text-muted)] max-w-xl">
               Hiring drives, deadlines, contests and tips — one swipe each.
             </p>
           </div>
-          <Link href="/drops" className="btn btn-ghost px-4 py-2.5 text-sm">
+          <Link href="/drops" className="btn btn-ghost px-4 py-3 min-h-[44px] text-sm">
             Open the feed <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
@@ -77,7 +77,7 @@ export const DropsStrip: React.FC = () => {
                   {d.headline}
                 </h3>
                 {d.bullets[0] && (
-                  <p className="text-[13px] leading-relaxed text-[--text-muted] line-clamp-2">
+                  <p className="text-[13px] leading-relaxed text-[var(--text-muted)] line-clamp-2">
                     {d.bullets[0]}
                   </p>
                 )}

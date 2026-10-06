@@ -29,7 +29,7 @@ export const CompanyCard: React.FC<CompanyCardProps> = ({ company }) => {
               {company.difficulty_rating}/5
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[--text-muted] bg-[#F7F6F3] border border-[#ECEAE4] px-2.5 py-1 rounded-full">
+            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[var(--text-muted)] bg-[#F7F6F3] border border-[#ECEAE4] px-2.5 py-1 rounded-full">
               <Star className="w-3.5 h-3.5 text-[#C9C7C1]" />
               Not rated
             </span>
@@ -46,13 +46,13 @@ export const CompanyCard: React.FC<CompanyCardProps> = ({ company }) => {
             <h3 className="font-serif-heading text-lg font-extrabold text-[#10151C] group-hover:text-[#0271B5] transition-colors leading-snug">
               {company.name}
             </h3>
-            <p className="text-[13px] text-[--text-muted] font-medium mt-0.5">{company.industry || 'General'}</p>
+            <p className="text-[13px] text-[var(--text-muted)] font-medium mt-0.5">{company.industry || 'General'}</p>
           </div>
         </div>
 
         <div className="flex flex-wrap gap-1.5 mb-5">
           {(company.tags || []).map((tag, idx) => (
-            <span key={idx} className="chip !text-[11px] !py-1 bg-[var(--bg-surface-hover)] border-[#ECEAE4]">
+            <span key={idx} className="chip !text-[12px] !py-1 bg-[var(--bg-surface-hover)] border-[#ECEAE4]">
               {tag}
             </span>
           ))}
@@ -60,17 +60,17 @@ export const CompanyCard: React.FC<CompanyCardProps> = ({ company }) => {
 
         <div className="grid grid-cols-3 gap-2 py-3 border-y border-[#E9E7E1] my-4 text-center bg-[#F7F6F3] rounded-xl">
           <div>
-            <span className="text-[10px] text-[--text-muted] block uppercase font-bold tracking-wider">Duration</span>
+            <span className="text-[12px] text-[var(--text-muted)] block uppercase font-bold tracking-wider">Duration</span>
             <span className="text-[13px] font-extrabold text-[#10151C] stat-num">
               {company.avg_process_days != null ? `${company.avg_process_days} days` : '—'}
             </span>
           </div>
           <div>
-            <span className="text-[10px] text-[--text-muted] block uppercase font-bold tracking-wider">Modules</span>
+            <span className="text-[12px] text-[var(--text-muted)] block uppercase font-bold tracking-wider">Modules</span>
             <span className="text-[13px] font-extrabold text-[#0271B5] stat-num">{company.module_count ?? company.modules?.length ?? 0}</span>
           </div>
           <div>
-            <span className="text-[10px] text-[--text-muted] block uppercase font-bold tracking-wider">CTC</span>
+            <span className="text-[12px] text-[var(--text-muted)] block uppercase font-bold tracking-wider">CTC</span>
             <span className="text-[13px] font-extrabold text-emerald-700 stat-num">
               {company.ctc_min != null && company.ctc_max != null ? `₹${company.ctc_min}–${company.ctc_max}L` : '—'}
             </span>
