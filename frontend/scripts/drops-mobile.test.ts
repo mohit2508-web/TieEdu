@@ -249,5 +249,17 @@ console.log('\n--- press feedback vocabulary ---');
 ok(card.includes('hapticWeight="medium"'), 'save/CTA fire a medium haptic');
 ok(feed.includes('IntersectionObserver'), 'dwell accounting still uses the observer');
 
+console.log('\n--- Pressable must actually render its children ---');
+const pressable = read('src/components/common/Pressable.tsx');
+ok(
+  />\s*\{\s*children\s*\}\s*<\/Tag>/.test(pressable),
+  'Pressable renders {children} — a self-closing Tag blanks every button in the app'
+);
+const installPrompt = read('src/components/common/PWAInstallPrompt.tsx');
+ok(
+  installPrompt.includes("'/drops'") && installPrompt.includes('pathname'),
+  'the install prompt stays off the drops feed — it covers the card copy block'
+);
+
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

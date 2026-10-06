@@ -131,7 +131,9 @@ export const Pressable: React.FC<PressableProps> = ({
         className
       )}
       style={rest.style}
-    />
+    >
+      {children}
+    </Tag>
   );
 };
 

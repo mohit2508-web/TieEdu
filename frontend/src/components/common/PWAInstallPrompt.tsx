@@ -1,10 +1,12 @@
 ﻿import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
 import { Download, X } from 'lucide-react';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
 
 export const PWAInstallPrompt: React.FC = () => {
   const { isInstallable, isInstalled, promptInstall } = usePWAInstall();
   const [dismissed, setDismissed] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const dismissedAt = localStorage.getItem('pwa-install-dismissed');
@@ -18,6 +20,15 @@ export const PWAInstallPrompt: React.FC = () => {
       }
     }
   }, []);
+
+  /*
+   * The drops feed and its share landing are full-screen surfaces: the card's
+   * copy block, deadline and CTA all live in the bottom band this prompt
+   * occupies — so the prompt would cover the exact content it is asking the
+   * reader to leave. It also breaks the snap feed's "one screen, no chrome"
+   * contract. Off both; every other route can carry it.
+   */
+  if (router.pathname === '/drops' || router.pathname === '/drops/[id]') return null;
 
   if (isInstalled || !isInstallable || dismissed) {
     return null;
