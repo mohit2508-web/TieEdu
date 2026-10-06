@@ -112,6 +112,10 @@ export interface AdminDrop extends DropFeedItem {
   author_id: string;
   is_live: boolean;
   list_status: string;
+  /* The stored file name behind `image_url`. Carried so the console can show
+     the creative a card already has instead of an empty well. */
+  image_stored_name: string | null;
+  image_file_name?: string;
 }
 
 export interface DropAudience {

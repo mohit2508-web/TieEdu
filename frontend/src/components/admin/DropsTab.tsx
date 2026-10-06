@@ -150,8 +150,8 @@ export const DropsTab: React.FC = () => {
       bullet2: d.bullets[1] || '',
       bullet3: d.bullets[2] || '',
       body_md: d.body_md || '',
-      image_stored_name: '',
-      image_file_name: '',
+      image_stored_name: d.image_stored_name || '',
+      image_file_name: d.image_file_name || '',
       image_alt: d.image_alt || '',
       cta_label: d.cta_label,
       cta_route: d.cta_route || '',
@@ -186,6 +186,10 @@ export const DropsTab: React.FC = () => {
         // Upload first so the row can reference the stored name; a failure
         // must not create a drop that points at a file that never landed.
         const res = await uploadDropImageApi(pendingImage.file);
+        // A 2xx with no stored_name would otherwise sail straight through and
+        // save a card with no creative at all — the one failure mode that looks
+        // like success in the console and only shows up as a blank well later.
+        if (!res?.stored_name) throw new Error('Image upload did not return a stored name — save aborted, try again');
         setPending(null);
         image_stored_name = res.stored_name;
         image_file_name = res.file_name;
