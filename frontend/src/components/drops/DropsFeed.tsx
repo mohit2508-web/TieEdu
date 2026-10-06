@@ -197,8 +197,6 @@ export const DropsFeed: React.FC<DropsFeedProps> = ({
           <DropCard
             item={item}
             index={index}
-            position={index + 1}
-            total={items.length}
             saved={savedIds.has(item.id)}
             onCta={onCta}
             onReadMore={onReadMore}

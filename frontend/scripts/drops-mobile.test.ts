@@ -90,6 +90,18 @@ ok(
 ok(css.includes('scroll-snap-type: x proximity'), 'the chip strip snaps horizontally');
 ok(css.includes('scroll-padding-inline'), 'the chip strip carries scroll-padding');
 ok(
+  /\.drops-filter-chip\s*\{[^}]*border:\s*0/.test(css),
+  'chips are flat — an outlined pill reads as a web form control, not an app chip'
+);
+ok(
+  /\.drops-filter-chip\[aria-pressed='true'\][\s\S]{0,200}box-shadow/.test(css),
+  'the selected chip lifts with a shadow (the only depth on the row)'
+);
+ok(
+  /\.drops-filter-chip\s*\{[^}]*font-weight:\s*600/.test(css),
+  'chips use the app weight (600), not web-bold (700)'
+);
+ok(
   filterBar.includes('scrollIntoView') && filterBar.includes("inline: 'center'"),
   'the active chip is scrolled into view'
 );
@@ -108,10 +120,10 @@ ok(
   'rail icons get a drop-shadow — text-shadow never paints an SVG stroke'
 );
 ok(
-  /@media \(max-width: 360px\)\s*\{[^}]*drop-rail-btn[\s\S]*?span\s*\{\s*display:\s*none/.test(css),
-  'rail labels step aside below 360px (icons + aria-label remain)'
+  !/drop-rail-btn\s*span\s*\{\s*display:\s*none/.test(css),
+  'rail labels stay visible on every phone — the disc carries Save/Share/Not-me'
 );
-ok(card.includes('aria-label={saved ?'), 'save keeps an aria-label when the label text hides');
+ok(card.includes('aria-label={saved ?'), 'save keeps its aria-label for screen readers');
 ok(
   card.includes('aria-label="Share this drop"') && card.includes('aria-label="Not interested"'),
   'share and mute keep aria-labels'
@@ -130,6 +142,16 @@ ok(
 ok(
   /@media \(max-height: 700px\)[\s\S]*?height:\s*72%/.test(css),
   'the scrim deepens on short phones'
+);
+
+console.log('\n--- card chrome ---');
+ok(
+  !card.includes('{position}') && !card.includes('{total}'),
+  'the 3/12 position counter is gone — a swipe feed does not number its cards'
+);
+ok(
+  !/position=\{index/.test(feed) && !/total=\{items/.test(feed),
+  'the feed no longer passes position/total to the card'
 );
 
 console.log('\n--- image delivery ---');

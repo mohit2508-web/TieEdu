@@ -47,9 +47,6 @@ export interface DropCardProps {
   onSave: (item: DropFeedItem) => void;
   onShare: (item: DropFeedItem) => void;
   onNotInterested: (item: DropFeedItem) => void;
-  /** 1-based position, shown as "3 / 12" so a swipe has a sense of length. */
-  position?: number;
-  total?: number;
   /** Feed index — drives eager vs lazy image loading on the first paint. */
   index?: number;
 }
@@ -74,8 +71,6 @@ export const DropCard: React.FC<DropCardProps> = ({
   onSave,
   onShare,
   onNotInterested,
-  position,
-  total,
   index = 0,
 }) => {
   const meta = DROP_TYPE_META[item.type] || { label: item.type, chip: 'var(--brand-sky)' };
@@ -191,15 +186,10 @@ export const DropCard: React.FC<DropCardProps> = ({
           />
         )}
 
-        {/* Top row: type chip, position counter, sponsor note. */}
+        {/* Top row: type chip, sponsor note. */}
         <div className="absolute inset-x-0 top-0 z-[2] flex items-start justify-between gap-2 p-3">
           <span className="drop-type-chip">{meta.label}</span>
           <div className="flex flex-col items-end gap-1.5">
-            {typeof position === 'number' && typeof total === 'number' && total > 0 && (
-              <span className="rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur-sm">
-                {position} / {total}
-              </span>
-            )}
             {item.sponsored && (
               <span className="rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-[#10151C]">
                 {item.sponsor_name || 'Sponsored'}

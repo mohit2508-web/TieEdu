@@ -1654,25 +1654,34 @@ code, pre, kbd, samp, .font-mono {
 }
 .drops-filters::-webkit-scrollbar { display: none; }
 
+/*
+ * App chips, not web checkboxes. The outline was the tell — a bordered pill
+ * reads as a form control, so the resting state is a flat iOS
+ * secondary-system fill with no border at all. Selection is the only thing on
+ * this row with depth: a lifted dark pill with a soft shadow, which is what
+ * makes "which filter am I on" legible in a half-second glance.
+ */
 .drops-filter-chip {
   flex: none;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   height: 34px;
-  padding: 0 14px;
+  padding: 0 15px;
+  border: 0;
   border-radius: 999px;
-  border: 1px solid var(--border-subtle);
-  background: var(--bg-surface);
+  background: rgba(120, 120, 128, 0.13);
   color: var(--text-body);
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   white-space: nowrap;
   scroll-snap-align: start;
   transition:
     background var(--dur-fast) var(--ease-out),
-    border-color var(--dur-fast) var(--ease-out),
-    color var(--dur-fast) var(--ease-out);
+    color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 /* A finger is not a mouse: the 34px desktop chip is under the 44px tap floor
    and is the control students hit most often on this page. Coarse pointers get
@@ -1686,8 +1695,9 @@ code, pre, kbd, samp, .font-mono {
 }
 .drops-filter-chip[aria-pressed='true'] {
   background: var(--brand-ink);
-  border-color: var(--brand-ink);
+  border-color: transparent;
   color: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.16), 0 6px 18px rgba(0, 0, 0, 0.14);
 }
 .drops-filter-chip[aria-pressed='true'] .drops-filter-dot { box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85); }
 .drops-filter-dot {
@@ -1776,6 +1786,7 @@ code, pre, kbd, samp, .font-mono {
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  letter-spacing: -0.015em;
   /*
    * White copy over a bright CMS creative needs a shadow as well as a scrim:
    * the scrim covers the bottom of the frame, but a headline can climb into
@@ -1877,11 +1888,11 @@ code, pre, kbd, samp, .font-mono {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   min-width: 48px;
   min-height: 48px;
   justify-content: center;
-  padding: 7px 6px;
+  padding: 7px 7px;
   border-radius: 16px;
   /*
    * A bare white glyph on a bright creative is invisible — `text-shadow` only
@@ -1894,23 +1905,18 @@ code, pre, kbd, samp, .font-mono {
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   color: #fff;
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
-  /*
-   * Labels are the affordance on a wide phone; on a 320px handset they eat
-   * vertical space in the middle of the creative. Icons carry the meaning
-   * (aria-label is always present), so the labels step aside.
-   */
   transition: transform var(--dur-fast) var(--ease-out);
 }
 .drop-rail-btn svg {
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
 }
-.drop-rail-btn[data-on='true'] { color: var(--drop-chip, var(--brand-accent)); }
-@media (max-width: 360px) {
-  .drop-rail-btn { min-width: 44px; }
-  .drop-rail-btn span { display: none; }
+.drop-rail-btn[data-on='true'] {
+  color: var(--drop-chip, var(--brand-accent));
+  background: rgba(6, 10, 16, 0.72);
 }
 
 /*
