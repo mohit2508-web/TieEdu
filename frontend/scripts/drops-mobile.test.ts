@@ -48,7 +48,9 @@ const rule = (src: string, selector: string): string => {
   return end < 0 ? '' : src.slice(i, end + 1);
 };
 
-const css = read('src/styles/globals.css');
+const cssRaw = read('src/styles/globals.css');
+/** Declarations only — the file's comments argue *against* content-visibility. */
+const css = cssRaw.replace(/\/\*[\s\S]*?\*\//g, '');
 const card = read('src/components/drops/DropCard.tsx');
 const feed = read('src/components/drops/DropsFeed.tsx');
 const filterBar = read('src/components/drops/DropsFilterBar.tsx');
@@ -118,7 +120,7 @@ ok(
   'the third bullet steps aside on short phones'
 );
 ok(
-  /@media \(max-height: 700px\)[\s\S]*?height:\s*65%/.test(css),
+  /@media \(max-height: 700px\)[\s\S]*?height:\s*72%/.test(css),
   'the scrim deepens on short phones'
 );
 
@@ -132,19 +134,34 @@ ok(page.includes('prefetchedRef'), 'prefetch is deduped per session');
 ok(page.includes('apiAssetUrl'), 'prefetch goes through the shared asset URL helper');
 
 console.log('\n--- offscreen paint containment ---');
-ok(css.includes('content-visibility: auto'), 'offscreen slides stop painting');
-ok(css.includes('contain-intrinsic-size'), 'the skipped slide keeps a stable intrinsic size');
-ok(css.includes('contain: layout paint'), 'containment has a fallback that still constrains layout');
+ok(
+  !css.includes('content-visibility'),
+  'content-visibility is NOT used (it blanks text on mobile snap scrollers)'
+);
+ok(css.includes('contain: layout paint'), 'slides keep layout/paint containment');
+ok(
+  !/drop-slide[\s\S]{0,400}brightness\(/.test(css) || !css.includes('brightness(0.96)'),
+  'non-active cards are not brightness-dimmed (readability first)'
+);
 
-console.log('\n--- smoothness: active card + progress ---');
+console.log('\n--- text readability (scrim + stacking) ---');
 ok(
-  feed.includes('markActiveDom') || feed.includes("setAttribute('data-active'"),
-  'the feed marks the active slide on the DOM'
+  /drop-media::after[\s\S]{0,200}z-index:\s*1/.test(css),
+  'the scrim is explicitly z-indexed below the copy'
 );
 ok(
-  css.includes("drop-slide:not([data-active='true']) .drop-card"),
-  'non-active cards dim without a React re-render'
+  css.includes('.drop-media > .absolute') && css.includes('z-index: 2'),
+  'media overlays clear the scrim'
 );
+ok(
+  (card.match(/z-\[2\]/g) || []).length >= 3,
+  'chip row, rail and copy block all sit above the scrim'
+);
+ok(css.includes('text-shadow'), 'the headline carries a text-shadow for bright creatives');
+ok(css.includes('rgba(6, 10, 16, 0.94)') || css.includes('0.94'),
+  'the scrim base is dark enough for white copy');
+ok(card.includes('text-white') && !card.includes('text-white/90'),
+  'bullets are full white, not washed-out white/90');
 ok(css.includes('.drops-progress'), 'a progress track exists under the filters');
 ok(css.includes('scaleX('), 'the progress fill is transform-only');
 ok(page.includes('progressScale'), 'the page drives the progress fill from the active index');

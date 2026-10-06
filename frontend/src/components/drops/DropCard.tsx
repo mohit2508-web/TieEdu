@@ -192,16 +192,16 @@ export const DropCard: React.FC<DropCardProps> = ({
         )}
 
         {/* Top row: type chip, position counter, sponsor note. */}
-        <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-3">
+        <div className="absolute inset-x-0 top-0 z-[2] flex items-start justify-between gap-2 p-3">
           <span className="drop-type-chip">{meta.label}</span>
           <div className="flex flex-col items-end gap-1.5">
             {typeof position === 'number' && typeof total === 'number' && total > 0 && (
-              <span className="rounded-full bg-black/45 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur-sm">
+              <span className="rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur-sm">
                 {position} / {total}
               </span>
             )}
             {item.sponsored && (
-              <span className="rounded-full bg-white/85 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-[#10151C]">
+              <span className="rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-[#10151C]">
                 {item.sponsor_name || 'Sponsored'}
               </span>
             )}
@@ -209,7 +209,7 @@ export const DropCard: React.FC<DropCardProps> = ({
         </div>
 
         {/* Action rail: save / share / not interested. */}
-        <div className="absolute right-1.5 top-1/2 flex -translate-y-1/2 flex-col gap-1">
+        <div className="absolute right-1.5 top-1/2 z-[2] flex -translate-y-1/2 flex-col gap-1">
           <Pressable
             as="button"
             hapticWeight="medium"
@@ -249,28 +249,40 @@ export const DropCard: React.FC<DropCardProps> = ({
 
         {/* Gesture burst: a short-lived bookmark ping in the frame centre. */}
         {burst && (
-          <div className="drop-save-burst" aria-hidden="true">
+          <div className="drop-save-burst z-[3]" aria-hidden="true">
             <BookmarkCheck size={72} strokeWidth={2.2} />
           </div>
         )}
 
-        {/* Copy block. `pr-16` keeps it clear of the rail. */}
-        <div className="absolute inset-x-0 bottom-0 p-4 pr-[68px]">
+        {/*
+          Copy block. `pr-16` keeps it clear of the rail.
+          `z-[2]` is required: `.drop-media::after` (the scrim) is generated as
+          the last child and paints above every non-z-indexed overlay — without
+          this the headline sits UNDER the gradient and washes out.
+        */}
+        <div className="absolute inset-x-0 bottom-0 z-[2] p-4 pr-[68px]">
           <h2 className="drop-headline text-[19px] font-extrabold leading-snug text-white">
             {item.headline}
           </h2>
           {item.bullets.length > 0 && (
             <ul className="drop-bullets mt-2 space-y-1">
               {item.bullets.slice(0, 3).map((b) => (
-                <li key={b} className="flex items-start gap-1.5 text-[13px] font-medium leading-snug text-white/90">
-                  <Check size={14} strokeWidth={3} className="mt-1 flex-none text-white/70" aria-hidden />
+                <li
+                  key={b}
+                  className="flex items-start gap-1.5 text-[13px] font-semibold leading-snug text-white"
+                  style={{ textShadow: '0 1px 3px rgba(0, 0, 0, 0.75), 0 1px 8px rgba(0, 0, 0, 0.4)' }}
+                >
+                  <Check size={14} strokeWidth={3} className="mt-1 flex-none text-white/85" aria-hidden />
                   <span>{b}</span>
                 </li>
               ))}
             </ul>
           )}
           {item.deadline_at && (
-            <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-[12px] font-bold text-white backdrop-blur-sm">
+            <p
+              className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-black/45 px-2.5 py-1 text-[12px] font-bold text-white backdrop-blur-sm"
+              style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.55)' }}
+            >
               <CalendarClock size={14} strokeWidth={2.4} aria-hidden />
               {deadlineLine(item.deadline_at)}
             </p>

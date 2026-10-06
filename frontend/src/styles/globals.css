@@ -1747,15 +1747,14 @@ code, pre, kbd, samp, .font-mono {
   scroll-snap-align: start;
   scroll-snap-stop: always;
   /*
-   * Offscreen slides stop painting once they leave the snap region. The
-   * intrinsic size matches the slide's own geometry (`100%` of the scroller)
-   * so the scrollbar does not jump when a slide is skipped. If a browser's
-   * snap + content-visibility combination ever fights (older Android), drop
-   * this line and keep `contain: layout paint` below — the img attrs and
-   * +1 prefetch carry most of the win on their own.
+   * `contain: layout paint` only — NOT `content-visibility: auto`.
+   *
+   * content-visibility skips painting for offscreen slides, which sounds free
+   * until a snap scroller lands on one: on several mobile browsers the card's
+   * text (and sometimes the creative) simply does not paint until a forced
+   * reflow, so the student sees a blank frame mid-swipe. The img attrs and
+   * +1 prefetch carry the performance win without gambling on text rendering.
    */
-  content-visibility: auto;
-  contain-intrinsic-size: auto 100%;
   contain: layout paint;
 }
 .drop-card {
@@ -1764,33 +1763,32 @@ code, pre, kbd, samp, .font-mono {
   flex-direction: column;
   height: 100%;
   background: var(--bg-surface);
-  transition: filter var(--dur-base) var(--ease-out);
 }
 /*
- * The card the reader is sitting on stays full strength; the ones sliding past
- * dim a touch so the "you are here" is visible without a layout change.
- * Written on the slide (not the card) so the observer can flip it
- * imperatively and never re-render the card.
+ * The card the reader is sitting on stays full strength. Offscreen cards are
+ * kept at full strength too — a brightness dim is not worth the readability
+ * cost when the feed is already a one-card-at-a-time snap scroller.
  */
-.drop-slide:not([data-active='true']) .drop-card {
-  filter: brightness(0.96);
-}
-@media (prefers-reduced-motion: reduce) {
-  .drop-slide:not([data-active='true']) .drop-card { filter: none; }
-  .drop-card { transition: none; }
-}
+
 /* Long headlines clamp to three lines so the bullets and CTA stay on screen. */
 .drop-headline {
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  /*
+   * White copy over a bright CMS creative needs a shadow as well as a scrim:
+   * the scrim covers the bottom of the frame, but a headline can climb into
+   * the bright half on a tall phone. The shadow is what keeps it readable
+   * there.
+   */
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.75), 0 2px 12px rgba(0, 0, 0, 0.45);
 }
 /* Short phones (SE-class, landscape) get a tighter headline so the creative
    and the CTA stay in the thumb zone instead of the copy claiming the frame. */
 @media (max-height: 700px) {
   .drop-headline { -webkit-line-clamp: 2; }
-  .drop-media::after { height: 65%; }
+  .drop-media::after { height: 72%; }
   .drop-bullets li:nth-child(n + 3) { display: none; }
 }
 
@@ -1820,19 +1818,38 @@ code, pre, kbd, samp, .font-mono {
    */
   position: absolute;
   inset: 0;
+  z-index: 0;
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-/* Bottom scrim so white copy over a bright creative stays legible. */
+/*
+ * Bottom scrim so white copy over a bright creative stays legible.
+ *
+ * Stacking is load-bearing: `::after` is generated as the last child, so
+ * without an explicit z-index it paints ON TOP of the absolutely positioned
+ * copy block and washes the headline out. The scrim sits at z-index 1; every
+ * overlay (chip row, rail, copy) sits at z-index 2 or higher.
+ */
 .drop-media::after {
   content: '';
   position: absolute;
   inset: auto 0 0 0;
-  height: 55%;
-  background: linear-gradient(to top, rgba(8, 12, 18, 0.88), rgba(8, 12, 18, 0));
+  z-index: 1;
+  height: 62%;
+  background: linear-gradient(
+    to top,
+    rgba(6, 10, 16, 0.94) 0%,
+    rgba(6, 10, 16, 0.78) 28%,
+    rgba(6, 10, 16, 0.35) 58%,
+    rgba(6, 10, 16, 0) 100%
+  );
   pointer-events: none;
+}
+/* Every absolutely positioned overlay on the media box clears the scrim. */
+.drop-media > .absolute {
+  z-index: 2;
 }
 .drop-media--empty {
   background:
@@ -1852,6 +1869,7 @@ code, pre, kbd, samp, .font-mono {
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 
 /* The vertical action rail (save / share / not interested). */

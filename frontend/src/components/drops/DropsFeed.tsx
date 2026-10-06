@@ -53,10 +53,6 @@ const SkeletonCard: React.FC = () => (
  * all cards, re-observed when the item list changes (filter switch, cursor
  * append).
  *
- * The active card is also marked on the DOM (`data-active`) so CSS can dim the
- * cards sliding past without a React re-render — the scroll path stays free of
- * component work.
- *
  * The page's callbacks are held in refs on purpose: `onLeave` is a network
  * write, and if the effect re-ran because a parent re-rendered with a fresh
  * inline closure, the cleanup would flush — and bill — on every render.
@@ -99,16 +95,6 @@ export const DropsFeed: React.FC<DropsFeedProps> = ({
     dwellRef.current.delete(id);
   }, []);
 
-  /** Flip `data-active` on the slides — imperative, never a re-render. */
-  const markActiveDom = useCallback((id: string | null) => {
-    const viewport = viewportRef.current;
-    if (!viewport) return;
-    for (const card of Array.from(viewport.querySelectorAll<HTMLElement>('[data-drop-id]'))) {
-      if (id && card.dataset.dropId === id) card.setAttribute('data-active', 'true');
-      else card.removeAttribute('data-active');
-    }
-  }, []);
-
   useEffect(() => {
     const viewport = viewportRef.current;
     if (!viewport) return;
@@ -131,7 +117,6 @@ export const DropsFeed: React.FC<DropsFeedProps> = ({
       if (nextId !== activeIdRef.current) {
         flushActive(activeIdRef.current);
         activeIdRef.current = nextId;
-        markActiveDom(nextId);
         if (nextId) {
           const item = items.find((i) => i.id === nextId) || null;
           if (item && !dwellRef.current.has(nextId)) {
@@ -173,10 +158,9 @@ export const DropsFeed: React.FC<DropsFeedProps> = ({
       // the card the reader was on — that is the only place it is recorded.
       flushActive(activeIdRef.current);
       activeIdRef.current = null;
-      markActiveDom(null);
       ratios.clear();
     };
-  }, [items, flushActive, markActiveDom]);
+  }, [items, flushActive]);
 
   if (loading && items.length === 0) {
     return (
