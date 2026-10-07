@@ -193,6 +193,9 @@ html {
      `scroll-padding-top` fixes it for every scroll container in the document
      rather than each call site having to remember an offset. */
   scroll-padding-top: calc(var(--header-total) + 1rem);
+  /* In-page anchors (`#companies`, `#pricing`) glide instead of jumping. The
+     reduced-motion block below turns this back to `auto !important`. */
+  scroll-behavior: smooth;
   /* NOTE: Do NOT add overflow-x:hidden here - it breaks position:fixed overlays on iOS */
 
   /* Phase 0 — touch behaviour.
@@ -1329,6 +1332,32 @@ code, pre, kbd, samp, .font-mono {
 /* scrollbar-none — hide scrollbar visually but keep scroll behavior */
 .scrollbar-none::-webkit-scrollbar { display: none; }
 .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+
+/*
+ * The homepage's horizontal rails. Native scroll-snap carries touch momentum
+ * and trackpad swipes; the scrollbar is hidden because every rail shows a
+ * peeking next card instead. Cards inside define their own width and must set
+ * `flex-none snap-start` — the track only owns the scrolling.
+ */
+.rail-track {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  padding-bottom: 0.5rem;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.rail-track::-webkit-scrollbar {
+  display: none;
+}
+.rail-track > * {
+  /* Cards set their own width; without this flex would SHRINK them all to fit
+     the viewport and the rail would silently become a squashed grid. */
+  flex: none;
+  scroll-snap-align: start;
+}
 
 /* ============================================
    TAILWIND animate-in PLUGIN FALLBACK

@@ -9,17 +9,18 @@ const ROUNDS = [
 ];
 
 /*
- * The hero's right column has two live occupants — admin posters and the 3D
- * orbit — and both can be absent at once: no creatives uploaded, or a phone
- * where the orbit is gated to >=1024px. A text-only hero on a phone reads as
- * a broken layout with a dead grid column, so this static CSS illustration
- * stands in. It is decorative (aria-hidden), carries no data, no prices and
- * no company names — it only shows the shape of what a vault contains.
+ * The hero's right column has two live occupants — admin posters and (used
+ * to be) the 3D orbit — and the posters can be absent: no creatives uploaded.
+ * A text-only hero with an empty grid column reads as a broken layout, so this
+ * static CSS illustration stands in on `md` and up (the caller hides it on
+ * phones, where Quick Actions sit right below instead). It is decorative
+ * (aria-hidden), carries no data, no prices and no company names — it only
+ * shows the shape of what a vault contains.
  */
 export const HeroVaultMock: React.FC = () => (
   <div
     aria-hidden="true"
-    className="w-full max-w-[350px] lg:hidden rounded-3xl border border-white/70 bg-white/85 p-5 shadow-float backdrop-blur-md"
+    className="w-full max-w-[350px] rounded-3xl border border-white/70 bg-white/85 p-5 shadow-float backdrop-blur-md"
   >
     <div className="flex items-center gap-3 pb-4 border-b border-[#E9E7E1]">
       <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#0E2A44] text-white text-sm font-black">

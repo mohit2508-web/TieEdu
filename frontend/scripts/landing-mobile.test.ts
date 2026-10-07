@@ -1,12 +1,11 @@
 /**
- * Landing page — mobile / Apple-feel regression net.
+ * Landing page — mobile / PW-style feed regression net.
  *
- * The redesign traded an infinite marquee for a static trust row, added a
- * hero visual fallback so a phone never gets a text-only first screen, and
- * moved every landing tap target over the 44px thumb floor. Each of those
- * decisions decays silently: the marquee "looks lively, put it back", the
- * chip shrinks to save a row, the muted class regresses to the invalid
- * `text-[--text-muted]` form that renders at body colour.
+ * The redesign traded a long marketing stack for a feed: quick actions,
+ * horizontal snap rails for courses/tests/vaults, one free-course billboard,
+ * and prose sections cut down to chips. Each decision decays silently: a rail
+ * "simplifies" back to a grid, the hero grows its paragraphs again, the orbit
+ * sneaks back and doubles the first paint, a card drops below the 44px floor.
  *
  * Source-level on purpose — the runner has no DOM — asserting the decisions
  * still live in the files that ship.
@@ -45,21 +44,34 @@ const card = read('src/components/company/CompanyCard.tsx');
 const install = read('src/components/common/PWAInstallPrompt.tsx');
 const carousel = read('src/components/common/HeroPosterCarousel.tsx');
 
-console.log('\n--- story, not a directory dump ---');
-ok(!/animate-marquee/.test(home), 'the hero-to-next-section marquee is gone');
-ok(/HowItWorks/.test(home), 'the landing renders the How-it-works section');
-ok(/FinalCta/.test(home), 'the landing closes on the free-entry CTA, not pricing tables');
-ok(/id="companies"/.test(home), 'the directory carries id="companies" so the pricing CTA anchor resolves');
-ok(/eyebrow">Why TieEdu</.test(home) && !/sr-only">Why TieEdu</.test(home), 'Why TieEdu has a visible heading');
+console.log('\n--- the feed, not a document page ---');
+ok(!/animate-marquee/.test(home), 'no marquee');
+ok(/<QuickActions/.test(home), 'quick actions (Courses, Skill Tests, Free Course…) render above the fold');
+ok(/<CourseRail/.test(home), 'the homepage has the courses rail');
+ok(/<SkillRail/.test(home), 'the homepage has the skill-tests rail');
+ok(/<VaultRail/.test(home), 'the vault directory is a feed rail, not a grid');
+ok(/<FreeCourseBanner/.test(home), 'the free course gets its billboard');
+ok(/<FinalCta/.test(home), 'the landing closes on the free-entry CTA');
+const vaultRail = read('src/components/home/VaultRail.tsx');
+ok(/id="companies"/.test(vaultRail) && /href="#companies"/.test(home), 'the vault rail resolves the #companies anchor');
+ok(!/HowItWorks/.test(home), 'the How-it-works section stays cut');
+ok(!/CompanyOrbitHero3D/.test(home), 'the 3D orbit stays retired from the homepage');
 
-console.log('\n--- hero never renders text-only on a phone ---');
+console.log('\n--- rails are native snap scrollers ---');
+const rail = read('src/components/home/Rail.tsx');
+ok(/rail-track/.test(rail), 'rails share one track class');
+ok(/scroll-snap-type: x mandatory/.test(css), 'the rail track snaps natively');
+ok(/ChevronLeft/.test(rail) && /hidden lg:/.test(rail), 'desktop gets arrows; phones rely on peek + swipe');
+ok(/scroll-snap-align: start/.test(css), 'rail cards snap to the track edge');
+
+console.log('\n--- hero stays compact and never text-only on desktop ---');
 ok(/HeroVaultMock/.test(home), 'the hero falls back to the static vault illustration');
-ok(/showOrbit \?/.test(home), 'the orbit stays the desktop fallback behind the mock');
+ok(/hidden md:flex/.test(home), 'the mock stands aside on phones — Quick Actions follow the hero instead');
 ok(/min-h-\[48px\]/.test(home), 'the hero CTAs clear the 44px thumb floor at 48px');
 
 console.log('\n--- the pinned search contract (mirrors anti-web) ---');
 ok(/hidden md:block/.test(home), 'the hero search wrapper still hides below md');
-ok(/value=\{searchQuery\}/.test(home), 'the hero search still drives the directory filter');
+ok(/value=\{searchQuery\}/.test(home), 'the hero search still drives the vault rail filter');
 
 console.log('\n--- thumb floor in globals ---');
 ok(
@@ -114,6 +126,12 @@ console.log('\n--- entrance motion is reduced-motion safe ---');
 const reveal = read('src/components/home/Reveal.tsx');
 ok(/useReducedMotion/.test(reveal), 'Reveal opts out under prefers-reduced-motion');
 ok(/whileInView/.test(reveal), 'Reveal animates on scroll into view');
+
+console.log('\n--- rails fail closed, not loudly ---');
+const courseRail = read('src/components/home/CourseRail.tsx');
+const skillRail = read('src/components/home/SkillRail.tsx');
+ok(/catch/.test(courseRail) && /setCourses\(\[\]\)/.test(courseRail), 'the course rail hides itself on failure');
+ok(/catch/.test(skillRail) && /setSkills\(\[\]\)/.test(skillRail), 'the skill rail hides itself on failure');
 
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);
