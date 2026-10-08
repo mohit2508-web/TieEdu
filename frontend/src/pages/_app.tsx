@@ -15,9 +15,14 @@ import { ShellProvider } from '@/context/ShellContext';
 import { AppShell } from '@/components/layout/AppShell';
 import { RouteTransition } from '@/components/layout/RouteTransition';
 import { PWAInstallPrompt } from '@/components/common/PWAInstallPrompt';
+import { useLeadTracking } from '@/hooks/useLeadTracking';
 
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
+
+  // Email identity + page-view beacons (EMAIL_MARKETING_PLAN.md Phase 3).
+  // Server decides what is actually recorded — no cookie, no tracking.
+  useLeadTracking(router);
 
   // Every full page navigation must land at the TOP — not at the middle/bottom
   // of the previous scroll. Shallow route changes (?m/?q in-page syncs) are

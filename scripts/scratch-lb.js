@@ -1,0 +1,13 @@
+const fs = require('fs');
+const path = require('path');
+const ROOT = path.join(__dirname, '..', 'frontend');
+const h = fs.readFileSync(path.join(ROOT, 'src/components/layout/Header.tsx'), 'utf8');
+const re = /<button[\s\S]{0,300}?aria-label="Leaderboard"[\s\S]{0,300}?<\/button>/;
+const m = h.match(re);
+console.log('match:', !!m);
+const i = h.indexOf('aria-label="Leaderboard"');
+const before = h.lastIndexOf('<button', i);
+console.log('aria idx:', i, 'prev button idx:', before, 'gap:', i - before);
+if (m) console.log('span ok:', /<span className="hidden font-bold xl:inline">Leaderboard<\/span>/.test(m[0]));
+const end = h.indexOf('</button>', i);
+console.log('gap aria->close:', end - i);

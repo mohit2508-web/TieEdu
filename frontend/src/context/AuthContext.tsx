@@ -5,6 +5,7 @@ import {
   AuthUser, apiLogin, apiSignup, apiLogout, setAuthSession, getUserId,
 } from '@/lib/auth';
 import { tryRefreshSession, getSessionUser } from '@/lib/api';
+import { clearPlacementAccess } from '@/lib/placementApi';
 
 interface AuthContextValue {
   user: AuthUser | null;
@@ -83,6 +84,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     await apiLogout();
     setAuthSession(null, null);
     setUser(null);
+    // The Campus TPO nav flag describes whoever was signed in — it must not
+    // outlive them (see clearPlacementAccess in lib/placementApi).
+    clearPlacementAccess();
     try { localStorage.removeItem('tieedu_cached_user'); } catch {}
   };
 

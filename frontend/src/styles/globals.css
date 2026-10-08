@@ -2175,3 +2175,36 @@ body {
      (`ContentBlockRenderer`), both inside a card whose border and shadow are
      already neutralised above. */
 }
+
+/* ============================================
+   DAILY BRIEFING — chat-style card dock
+   ============================================
+   Anchored above the tab bar (below md) and clear of it (at md+, where the bar
+   is hidden). `pointer-events: none` on the dock itself is the non-blocking
+   contract: the empty space between cards lets clicks and scrolls through to
+   the page; the cards and the collapsed pill opt back in with
+   `pointer-events: auto`. z-index 50 sits over the chrome (40) and under any
+   Sheet (60), so opening the cart still paints over the briefing. */
+.briefing-dock {
+  position: fixed;
+  z-index: 50;
+  right: max(16px, calc(var(--safe-right) + 12px));
+  bottom: calc(var(--tabbar-total) + 12px);
+  width: min(360px, calc(100vw - 32px));
+  max-height: calc(100dvh - var(--header-total) - var(--tabbar-total) - 40px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  overscroll-behavior: auto;
+  scrollbar-width: none;
+  pointer-events: none;
+  transform-origin: bottom right;
+}
+.briefing-dock::-webkit-scrollbar { display: none; }
+@media (min-width: 768px) {
+  .briefing-dock {
+    bottom: 24px;
+    max-height: calc(100dvh - var(--header-total) - 48px);
+  }
+}

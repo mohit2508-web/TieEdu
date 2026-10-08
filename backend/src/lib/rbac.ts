@@ -68,9 +68,31 @@ export const PERMISSION_GROUPS = {
 
   messaging: ['broadcasts.read', 'broadcasts.write', 'broadcasts.send'],
 
+  /**
+   * Email marketing (the admin console's "Emails" tab). Separate from push
+   * `broadcasts.*` on purpose: importing leads and sending commercial email is
+   * a different blast radius from a push notification — it touches addresses
+   * that belong to people who never created an account — so it can be granted
+   * or revoked on its own.
+   */
+  email: ['email.read', 'email.write', 'email.send'],
+
   releases: ['releases.read', 'releases.publish'],
 
   platform: ['settings.read', 'settings.write', 'config.write', 'audit.read', 'campus.read'],
+
+  /**
+   * College registry (the admin console's "Colleges & Placement" tab).
+   *
+   * Additive by design: `admin` picks these up automatically (it is built from
+   * ALL_PERMISSIONS) and `viewer` picks up `colleges.read` (it is built from
+   * the `.read` suffix). No existing grant changes meaning — `colleges.*` is a
+   * name nothing else in this codebase uses. TPO-portal users never read this
+   * catalogue: their authority is `placement/permissions.ts`, so a T&P officer
+   * can be given `placement.companies.write` without ever gaining
+   * `companies.write` in the admin console.
+   */
+  colleges: ['colleges.read', 'colleges.write'],
 
   /**
    * Everything that changes the experience of every user at once, in one blast

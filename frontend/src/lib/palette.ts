@@ -16,6 +16,7 @@
 import {
   ALL_NAV_ITEMS,
   NAV_ACTIONS,
+  hasPlacementPortalAccess,
   isAdminRole,
   type NavActionItem,
   type NavItem,
@@ -69,6 +70,10 @@ export const buildCommands = (role: NavRole): Command[] => {
 
   for (const item of ALL_NAV_ITEMS) {
     if (item.adminOnly && !isAdminRole(role)) continue;
+    // Placement destinations: admins, or a confirmed placement grant (the
+    // localStorage flag /api/placement/me maintains — false on bare node, so
+    // the student and signed-out lists stay identical in the unit suites).
+    if (item.placementOnly && !isAdminRole(role) && !hasPlacementPortalAccess()) continue;
     commands.push({
       id: `page:${item.id}`,
       group: 'page',

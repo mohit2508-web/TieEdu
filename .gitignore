@@ -23,6 +23,11 @@ backend/.env
 backend/.env.*
 backend/*.log
 
+# ---- GLA placement import source files (real student PII) ----
+# The drive-log and student-masterfile CSVs a T&P office exports carry names,
+# emails, phones and addresses. They are import input only — never committed.
+backend/seed-data/
+
 # ---- env / secrets ----
 .env
 .env.*
@@ -36,3 +41,5 @@ backend/*.log
 Thumbs.db
 .vscode/
 .idea/
+gla-drives.csv
+gla-students.csv

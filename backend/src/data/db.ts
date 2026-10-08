@@ -793,6 +793,119 @@ export interface DropMute {
   created_at: string;
 }
 
+// ---------------------------------------------------------------------------
+// Email marketing subsystem. Leads are imported (CSV) cold addresses — they are
+// NOT User rows and never become one; a lead that later signs up links to a
+// user only through the identity cookie. Seeded empty like every other
+// admin-authored collection: a placeholder subscriber would be a fabricated
+// consent record.
+// ---------------------------------------------------------------------------
+
+export type EmailLeadStatus = 'active' | 'unsubscribed' | 'bounced' | 'complained' | 'converted';
+
+export interface EmailLead {
+  id: string;
+  email: string;
+  name?: string;
+  college?: string;
+  /** '2' for second-year students — segment filter, free-form string on purpose. */
+  year?: string;
+  status: EmailLeadStatus;
+  /** Where this address entered the list — 'csv:<filename>' or 'manual'. */
+  source: string;
+  tags: string[];
+  /** DPDP/CAN-SPAM: when consent for this address was recorded. */
+  consent_at: string;
+  last_activity_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export type EmailTemplateId =
+  | 'welcome'
+  | 'course-buy'
+  | 'course-buy-later'
+  | 'vault'
+  | 'skill-test'
+  | 'proof'
+  | 'offer'
+  | 'reengage';
+
+export interface EmailCampaign {
+  id: string;
+  name: string;
+  kind: 'blast' | 'drip';
+  template_id: EmailTemplateId;
+  segment: { tags?: string[]; year?: string; statuses?: EmailLeadStatus[] };
+  status: 'draft' | 'scheduled' | 'sending' | 'paused' | 'sent';
+  scheduled_at?: string;
+  /** kind='drip' only: materialised into sends by day offsets from campaign start. */
+  drip_steps?: { day: number; template_id: EmailTemplateId }[];
+  stats: {
+    queued: number;
+    sent: number;
+    delivered: number;
+    opened: number;
+    clicked: number;
+    bounced: number;
+    unsubscribed: number;
+  };
+  created_at: string;
+}
+
+export interface EmailMessage {
+  id: string;
+  campaign_id?: string;
+  /** Set for automated (behaviour-triggered) sends. */
+  automation_id?: string;
+  /** Empty string for admin test sends, which have no lead. */
+  lead_id: string;
+  email: string;
+  template_id: EmailTemplateId;
+  subject: string;
+  /** Resend's message id — absent until the provider accepted the send. */
+  provider_id?: string;
+  status: 'queued' | 'sent' | 'delivered' | 'opened' | 'clicked' | 'bounced' | 'failed' | 'skipped';
+  skip_reason?: string;
+  /** Queue time — present on rows created from here on; older rows may lack it. */
+  created_at?: string;
+  opened_at?: string;
+  clicked_at?: string;
+  sent_at?: string;
+  error?: string;
+  /** Extra render props frozen at queue time (automation nudges personalise here). */
+  vars?: Record<string, string>;
+}
+
+export type EmailActivityKind = 'identify' | 'email_click' | 'page_view';
+
+export interface EmailActivity {
+  id: string;
+  lead_id: string;
+  type: EmailActivityKind;
+  path?: string;
+  /** 'course' | 'vault' | 'skill_test' | 'other' — what kind of page was viewed. */
+  category?: string;
+  ts: string;
+}
+
+/**
+ * One automation email that has been queued for a lead. The pair
+ * (rule_id, lead_id) is unique per rule semantics: `a1:<slug>` fires at most
+ * once per course view per lead, `a5:<campaign>:<day>` at most once per drip
+ * step per lead. Rows are the dedupe ledger — losing one means a re-send, so
+ * they are written in the same save as the message they guard.
+ */
+export interface EmailAutomationFire {
+  id: string;
+  /** `a1:<slug>` | 'a2' | 'a3' | `a4:<campaignId>` | `a5:<campaignId>:<day>` */
+  rule_id: string;
+  lead_id: string;
+  /** The queued message this fire produced. */
+  message_id: string;
+  ts: string;
+}
+
 const DATA_DIR = path.join(__dirname, '../../data');
 // DB_FILE lets an integration test point the store at a scratch file instead of
 // the install's real db.json. Unset in normal operation.
@@ -1727,6 +1840,13 @@ const initialDbData = {
   drop_bookmarks: [],
   drop_events: [],
   drop_mutes: [],
+  // Email marketing — EMPTY until a real CSV import or automation writes rows.
+  // No synthetic subscribers: consent records must be true.
+  email_leads: [],
+  email_campaigns: [],
+  email_messages: [],
+  email_activities: [],
+  email_automation_fires: [],
   settings: {
     platform_name: 'TieEdu',
     support_email: 'support@tieedu.in',
@@ -1829,6 +1949,14 @@ export function loadDb() {
       if (!Array.isArray(data.drop_bookmarks)) { data.drop_bookmarks = []; upgraded = true; }
       if (!Array.isArray(data.drop_events)) { data.drop_events = []; upgraded = true; }
       if (!Array.isArray(data.drop_mutes)) { data.drop_mutes = []; upgraded = true; }
+      // Email subsystem collections. Auto-created like the rest so an install
+      // that predates email marketing boots with empty lists instead of
+      // crashing on `db.email_leads.length`.
+      if (!Array.isArray(data.email_leads)) { data.email_leads = []; upgraded = true; }
+      if (!Array.isArray(data.email_campaigns)) { data.email_campaigns = []; upgraded = true; }
+      if (!Array.isArray(data.email_messages)) { data.email_messages = []; upgraded = true; }
+      if (!Array.isArray(data.email_activities)) { data.email_activities = []; upgraded = true; }
+      if (!Array.isArray(data.email_automation_fires)) { data.email_automation_fires = []; upgraded = true; }
       // Per-record defaults for rows written before these fields existed, same
       // reasoning as the device `is_blocked` backfill: normalise to the explicit
       // value so later code can rely on the field being present.

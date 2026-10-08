@@ -82,6 +82,19 @@ export const Footer: React.FC = () => {
           </div>
         </div>
 
+        {/*
+          Privacy note for the email identity cookie (EMAIL_MARKETING_PLAN.md
+          Phase 3, item 4): only visitors who arrived from an email are ever
+          observed, auth pages never are, and one click of the unsubscribe
+          link in any email stops both the mail and the tracking.
+        */}
+        <p className="pt-4 text-[11px] text-gray-400 leading-relaxed">
+          Visitors who arrive through an email link are remembered with a first-party cookie so we can
+          see which pages that mail led them to — never the other way round, never on login or admin
+          pages, and never for anonymous visitors. Every email carries a one-click unsubscribe that
+          stops both mailings and tracking.
+        </p>
+
       </div>
     </footer>
   );

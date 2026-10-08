@@ -20,9 +20,10 @@ import { DropsTab } from '@/components/admin/DropsTab';
 import { NotificationsTab } from '@/components/admin/NotificationsTab';
 import BroadcastTab from '@/components/admin/BroadcastTab';
 import { SkillTestTab } from '@/components/admin/SkillTestTab';
+import { EmailTab } from '@/components/admin/EmailTab';
 import {
   BookOpen, Building2, BarChart3, FileText, Layers, LayoutDashboard,
-  LogOut, RefreshCw, Settings2, ShoppingBag, Ticket, Users, ExternalLink, Wallet, CalendarRange,
+  LogOut, Mail, RefreshCw, Settings2, ShoppingBag, Ticket, Users, ExternalLink, Wallet, CalendarRange,
 GraduationCap, Award, Zap, Megaphone, BellRing, Send, BrainCircuit, Sparkles
     } from 'lucide-react';
 import { AdminCoursesTab } from '@/components/admin/course/AdminCoursesTab';
@@ -31,7 +32,7 @@ import { AdminXpTab } from '@/components/admin/course/AdminXpTab';
 import { NotificationBell } from '@/components/layout/NotificationBell';
 import { AccountMenu } from '@/components/layout/AccountMenu';
 
-type TabId = 'overview' | 'orders' | 'payments' | 'users' | 'analytics' | 'hub' | 'content' | 'pack' | 'studyplans' | 'drops' | 'coupons' | 'posters' | 'courses' | 'certificates' | 'xp' | 'skilltest' | 'reports' | 'notifications' | 'broadcast' | 'settings';
+type TabId = 'overview' | 'orders' | 'payments' | 'users' | 'analytics' | 'hub' | 'content' | 'pack' | 'studyplans' | 'drops' | 'coupons' | 'posters' | 'courses' | 'certificates' | 'xp' | 'skilltest' | 'reports' | 'emails' | 'notifications' | 'broadcast' | 'settings';
 
 const NAV: { id: TabId; label: string; icon: any; group: string }[] = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard, group: 'Commerce & Health' },
@@ -51,6 +52,7 @@ const NAV: { id: TabId; label: string; icon: any; group: string }[] = [
   { id: 'xp', label: 'XP Ledger', icon: Zap, group: 'Learning' },
   { id: 'skilltest', label: 'Skill Test', icon: BrainCircuit, group: 'Learning' },
   { id: 'reports', label: 'Candidate Reports', icon: FileText, group: 'Engagement' },
+  { id: 'emails', label: 'Email Marketing', icon: Mail, group: 'Engagement' },
   { id: 'notifications', label: 'Notifications', icon: BellRing, group: 'System' },
   { id: 'broadcast', label: 'Broadcast', icon: Send, group: 'System' },
   { id: 'settings', label: 'Settings', icon: Settings2, group: 'System' },
@@ -345,6 +347,9 @@ export const AdminCmsView: React.FC = () => {
 
             {/* TAB: CANDIDATE REPORTS */}
             {activeTab === 'reports' && <ReportsTab companies={companiesList} onChanged={loadData} />}
+
+            {/* TAB: EMAIL MARKETING — leads, campaigns, templates */}
+            {activeTab === 'emails' && <EmailTab />}
 
 {/* TAB: NOTIFICATIONS */}
       {activeTab === 'notifications' && <NotificationsTab />}

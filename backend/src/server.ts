@@ -33,9 +33,15 @@ import { storage } from './store';
 import { skillTestRouter } from './routes/skill-test.routes';
 import { adminSkillTestRouter } from './routes/admin-skill-test.routes';
 import { dropsRouter } from './routes/drops.routes';
+import { placementRouter } from './routes/placement.routes';
+import { placementAdminRouter } from './routes/placementAdmin.routes';
+import { emailLeadsRouter } from './routes/emailLeads.routes';
+import { emailCampaignsRouter } from './routes/emailCampaigns.routes';
+import { emailPublicRouter } from './routes/emailPublic.routes';
 import { seedSkillTest } from './data/seedSkillTest';
 
 import { runMigrations } from './db/migrate';
+import { runPlacementBoot } from './placement/seed';
 import { backfillDevicesFromJson } from './store/devices';
 import { backfillSubscriptionsFromJson } from './store/push';
 import { backfillAuditFromJson } from './store/audit';
@@ -104,6 +110,13 @@ app.use('/api/admin', requireAdmin, adminRouter);
 // It also inherits requireAdmin from that mount, which is intentional and
 // harmless: the coarse gate runs twice rather than depending on mount order.
 app.use('/api/admin/devices', adminDevicesRouter);
+// Campus TPO Portal (additive module). The admin subtree repeats the coarse
+// gate at the mount for the same reason devices does: a route file that can
+// be mounted without its guard is a route file that eventually is. The
+// TPO-facing router applies requirePlacementAuth itself — session + an active
+// placement grant, which is neither requireAuth nor requireAdmin.
+app.use('/api/admin/placement', requireAdmin, placementAdminRouter);
+app.use('/api/placement', placementRouter);
 // Public beacon + self-service endpoints. Not behind requireAdmin: the install
 // beacon must work before anyone has an account.
 app.use('/api/devices', devicesRouter);
@@ -128,6 +141,14 @@ app.use('/api/admin/skill-test', requireAdmin, adminSkillTestRouter);
 // Feed is public (optionalAuth per-route inside), admin subtree carries its own
 // requireAdmin + drops.write/read guards — nothing extra to layer at the mount.
 app.use('/api/drops', dropsRouter);
+// Email marketing. Admin subtrees repeat the coarse requireAdmin gate at the
+// mount for the same reason admin/devices does; per-route requirePermission
+// then splits read/write/send inside. The public subtree (click redirects,
+// unsubscribe) must stay reachable without a session — that is the whole point
+// of it, and a cold lead's first visit is unauthenticated by definition.
+app.use('/api/email/admin', emailLeadsRouter);
+app.use('/api/email/admin', emailCampaignsRouter);
+app.use('/api/email', emailPublicRouter);
 
 // Health Check — honest
 app.get('/api/health', (req, res) => {
@@ -358,6 +379,17 @@ export const httpServer = app.listen(PORT, async () => {
     } catch (e: any) {
       console.log('💡 [Audit] Backfill skipped: ' + (e?.message || e));
     }
+  }
+
+  // Campus TPO Portal — schema, platform-admin grant, optional demo seed.
+  // Runs after the main migrations so a shared-cluster schema error cannot be
+  // blamed on placement, and reports its own failures: placement has no JSON
+  // fallback, so a server that starts while its tables are missing would only
+  // surface as 503s on the first TPO request.
+  try {
+    await runPlacementBoot();
+  } catch (e: any) {
+    console.log('💡 [Placement] Boot skipped: ' + (e?.message || e));
   }
 
   // M2: warm the authority cache so the first request after a restart does not

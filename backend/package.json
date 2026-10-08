@@ -7,7 +7,7 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p scripts/tsconfig.json",
-    "test": "npm run test:unit && npm run test:courses && npm run test:certs && npm run test:certhttp && npm run test:certadmin && npm run test:jwt && npm run test:security && npm run test:rbac && npm run test:notifications && npm run test:audit && npm run test:guards && npm run test:catalog && npm run test:ccontent && npm run test:pack && npm run test:repair && npm run test:api && npm run test:posters && npm run test:drops && npm run test:data && npm run test:smoke",
+    "test": "npm run test:unit && npm run test:courses && npm run test:certs && npm run test:certhttp && npm run test:certadmin && npm run test:jwt && npm run test:security && npm run test:rbac && npm run test:placement && npm run test:notifications && npm run test:email && npm run test:audit && npm run test:guards && npm run test:catalog && npm run test:ccontent && npm run test:pack && npm run test:repair && npm run test:api && npm run test:posters && npm run test:drops && npm run test:data && npm run test:smoke",
     "test:m1": "tsx --test scripts/verify-m1-guards.live.ts",
     "test:unit": "ts-node --transpile-only scripts/study-plan.test.ts",
     "test:courses": "ts-node --transpile-only scripts/courses-lib.test.ts",
@@ -17,6 +17,8 @@
     "test:jwt": "ts-node --transpile-only scripts/jwt-secret.test.ts",
     "test:security": "ts-node --transpile-only scripts/security-unblock.test.ts",
     "test:rbac": "ts-node --transpile-only scripts/rbac-devices.test.ts",
+    "test:placement": "ts-node --transpile-only scripts/placement-auth.test.ts && ts-node --transpile-only scripts/gla-import.test.ts",
+    "import:gla": "ts-node --transpile-only scripts/glaImportCli.ts",
     "test:notifications": "ts-node --transpile-only scripts/notifications-admin.test.ts && ts-node --transpile-only scripts/notifications-broadcast.test.ts && ts-node --transpile-only scripts/notifications-reminders.test.ts",
     "test:audit": "ts-node --transpile-only scripts/audit-ledger.test.ts",
     "test:guards": "ts-node --transpile-only scripts/verify-guards.live.ts",
@@ -29,9 +31,11 @@
     "test:posters": "ts-node --transpile-only scripts/posters-api.test.ts",
     "test:drops": "ts-node --transpile-only scripts/drops-api.test.ts",
     "test:data": "ts-node --transpile-only scripts/section-data.test.ts",
-    "test:smoke": "ts-node --transpile-only src/scripts/smokeCourses.ts"
+    "test:smoke": "ts-node --transpile-only src/scripts/smokeCourses.ts",
+    "test:email": "ts-node --transpile-only scripts/email.test.ts"
   },
   "dependencies": {
+    "@react-email/components": "^1.0.12",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -44,6 +48,7 @@
     "pg": "^8.12.0",
     "qrcode": "^1.5.4",
     "razorpay": "^2.9.4",
+    "resend": "^6.32.1",
     "web-push": "^3.6.7"
   },
   "devDependencies": {
@@ -56,6 +61,8 @@
     "@types/node": "^20.16.5",
     "@types/pg": "^8.11.8",
     "@types/qrcode": "^1.5.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "@types/web-push": "^3.6.4",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.6.2"

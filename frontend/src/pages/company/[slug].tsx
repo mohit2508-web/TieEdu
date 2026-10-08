@@ -20,6 +20,7 @@ import { useShell } from '@/context/ShellContext';
 import dynamic from 'next/dynamic';
 import { fetchCompanyBySlug, fetchCompanies, API_BASE_URL } from '@/lib/api';
 import { packPrice, SINGLE_MODULE_PRICE } from '@/lib/packPricing';
+import { markVaultSeen } from '@/lib/briefingStore';
 import { CompanyModuleReader } from '@/components/company/CompanyModuleReader';
 import { VaultSkeleton } from '@/components/company/VaultSkeleton';
 import { Company, PricingPlan, ContentItem, ContentModule, RoundType, CompanyModuleItem, CartItem } from '@/types';
@@ -163,6 +164,11 @@ export default function CompanyVaultPage({ initialCompany, initialSlug }: { init
     }).catch(() => {});
     return () => { cancelled = true; };
   }, [slug, company, user, reloadTick]);
+
+  const vaultUnlocked = isUnlocked || !!company?.is_unlocked;
+  useEffect(() => {
+    if (user?.id && company?.id && vaultUnlocked) markVaultSeen(company.id, user.id);
+  }, [company?.id, vaultUnlocked, user?.id]);
 
   /*
    * Everything below is hooks and hook-only derivations, and it has to sit

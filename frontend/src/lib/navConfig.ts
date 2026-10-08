@@ -31,6 +31,64 @@ import {
   UserRound,
 } from 'lucide-react';
 
+// ---------------------------------------------------------------------------
+// PLACEMENT ACCESS FLAG (visibility of the Campus TPO entry only)
+//
+// `GET /api/placement/me` maintains this localStorage flag; `resolveNavGroups`
+// and the command palette read it synchronously — the pure nav functions run
+// on bare node in the unit suites, where there is no window and the flag
+// reads as false, exactly like a signed-out visitor.
+//
+// A heuristic, deliberately. It decides visibility of a LINK, never access to
+// data: every `/tpo/*` screen still boots through `/api/placement/me`, and the
+// server is the only authority. Its job is to keep a student from seeing a
+// destination that would only ever tell them "no".
+//
+// Storage is reached through `globalThis` rather than the bare `window` /
+// `localStorage` identifiers: the test runner compiles this file with
+// `lib: ['ES2020']` (no DOM), where those names do not typecheck.
+// ---------------------------------------------------------------------------
+
+const PLACEMENT_ACCESS_KEY = 'tpo_portal_access';
+
+type StorageLike = { getItem(k: string): string | null; setItem(k: string, v: string): void; removeItem(k: string): void };
+
+const placementStorage = (): StorageLike | null => {
+  const g = globalThis as { window?: { localStorage?: StorageLike }; localStorage?: StorageLike };
+  return g.window?.localStorage ?? g.localStorage ?? null;
+};
+
+export const hasPlacementPortalAccess = (): boolean => {
+  try {
+    return placementStorage()?.getItem(PLACEMENT_ACCESS_KEY) === '1';
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Writer — owned by the placement API client (`placementMe` on success/403,
+ * `clearPlacementAccess` on sign-out). Exported here so the key and the read
+ * side live in one dependency-free file.
+ */
+export const markPlacementAccess = (granted: boolean): void => {
+  try {
+    const storage = placementStorage();
+    if (!storage) return;
+    if (granted) storage.setItem(PLACEMENT_ACCESS_KEY, '1');
+    else storage.removeItem(PLACEMENT_ACCESS_KEY);
+  } catch {
+    /* private mode — visibility falls back to "hidden", the safe side */
+  }
+};
+
+/**
+ * Called on sign-out: the flag belongs to whoever was signed in when `/me`
+ * last succeeded. Leaving it behind would hand the next person (or a
+ * signed-out visitor) a Campus TPO drawer entry that is not theirs.
+ */
+export const clearPlacementAccess = (): void => markPlacementAccess(false);
+
 export type NavRole = 'user' | 'admin' | null;
 
 /**
@@ -86,6 +144,17 @@ export interface NavItem {
   parent?: string;
   /** Only ever shown to a signed-in platform admin. */
   adminOnly?: boolean;
+  /**
+   * Shown to platform admins AND to accounts holding a Campus TPO placement
+   * grant (detected via the flag `/api/placement/me` leaves in localStorage).
+   *
+   * Separate from `adminOnly` on purpose: TPO staff are ordinary `user`
+   * accounts — folding them into `adminOnly` would either hide the portal
+   * entry from exactly the people it exists for, or (by loosening
+   * `adminOnly`) hand every student a link to a surface whose denial screen
+   * they have no business seeing.
+   */
+  placementOnly?: boolean;
   /** Extra words that should find this item in the command palette. */
   keywords?: string[];
 }
@@ -222,14 +291,18 @@ export const NAV_ITEMS: Record<string, NavItem> = {
   },
   campus: {
     id: 'campus',
-    href: '/campus',
+    href: '/tpo',
     label: 'Campus TPO Portal',
     icon: Building2,
     match: 'prefix',
-    description: 'Cohort dashboard for campus placement officers',
+    description: 'Placement intelligence for campus placement officers',
     primary: false,
-    adminOnly: true,
-    keywords: ['tpo', 'cohort', 'college', 'campus'],
+    // Not `adminOnly`: TPO staff are ordinary accounts with a placement GRANT.
+    // Visible to platform admins and to accounts the placement backend has
+    // confirmed (`/api/placement/me` leaves a flag in localStorage) — never to
+    // a student whose worst outcome should be a denial screen they never see.
+    placementOnly: true,
+    keywords: ['tpo', 'cohort', 'college', 'campus', 'placement'],
   },
   admin: {
     id: 'admin',
@@ -347,7 +420,7 @@ export const MOBILE_TAB_ACTIONS: NavActionItem['id'][] = ['search', 'cart'];
  *
  * Prefix-matched, so `/admin` also covers `/admin/login`.
  */
-export const SHELL_EXCLUDED_ROUTES: string[] = ['/login', '/signup', '/admin'];
+export const SHELL_EXCLUDED_ROUTES: string[] = ['/login', '/signup', '/admin', '/tpo'];
 
 /** True when this pathname opts out of the site shell entirely. */
 export const isShellExcluded = (pathname: string): boolean =>
@@ -526,9 +599,18 @@ export interface ResolvedNav {
  * The drawer's item list for a given role. Filtering by role here rather than
  * with a hand-rolled `isAdmin &&` at each call site is what stops the Campus
  * link from appearing for students on one surface and not another.
+ *
+ * Two independent gates, evaluated in order of blast radius:
+ *  - `adminOnly`   → platform admins, full stop.
+ *  - `placementOnly` → platform admins OR a confirmed placement grant. The
+ *    grant check reads the localStorage flag `/api/placement/me` maintains;
+ *    on the server (and in the bare-node unit suites) it is false, so SSR
+ *    renders exactly what a signed-out visitor sees.
  */
 export const resolveNavGroups = (role: NavRole): ResolvedNav => {
-  const visible = (item: NavItem) => !item.adminOnly || isAdminRole(role);
+  const visible = (item: NavItem) =>
+    (!item.adminOnly || isAdminRole(role)) &&
+    (!item.placementOnly || isAdminRole(role) || hasPlacementPortalAccess());
 
   const groups: NavGroup[] = NAV_GROUPS.map((group) => ({
     id: group.id,
@@ -539,7 +621,7 @@ export const resolveNavGroups = (role: NavRole): ResolvedNav => {
   })).filter((group) => group.items.length > 0);
 
   const accountItems = ALL_NAV_ITEMS.filter(
-    (item) => item.adminOnly && visible(item)
+    (item) => (item.adminOnly || item.placementOnly) && visible(item)
   );
 
   return { groups, accountItems };

@@ -9,6 +9,7 @@ import { MobileNavDrawer } from '@/components/layout/MobileNavDrawer';
 import { CartModal } from '@/components/checkout/CartModal';
 import { SearchModal } from '@/components/modals/SearchModal';
 import { LeaderboardModal } from '@/components/modals/LeaderboardModal';
+import { DailyBriefing } from '@/components/briefing/DailyBriefing';
 
 /**
  * The site chrome, mounted once.
@@ -124,6 +125,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
       <SearchModal />
       <CartModal />
       <LeaderboardModal />
+      <DailyBriefing />
     </div>
   );
 };
