@@ -1,5 +1,5 @@
-import React from 'react';
-import { SchoolProvider } from '@/context/SchoolContext';
+import React, { useEffect } from 'react';
+import { SchoolProvider, useSchool } from '@/context/SchoolContext';
 import { SchoolShell } from '@/components/school/SchoolShell';
 import { SchoolTabBar } from '@/components/school/SchoolTabBar';
 import HomeScreen from '@/components/school/screens/HomeScreen';
@@ -11,6 +11,41 @@ import ProfileScreen from '@/components/school/screens/ProfileScreen';
 import CourseDetailScreen from '@/components/school/screens/CourseDetailScreen';
 import { useRouter } from 'next/router';
 import '@/styles/school/school.module.css';
+
+/**
+ * Auth gate for the school PWA. Without it, a signed-out visit to `/school`
+ * rendered the empty Home shell ("Hi there", XP 0, no programmes) because the
+ * screens read `SchoolContext` before it had a session, and nothing redirected.
+ * While the boot call is in flight we show a loader; once it fails (or returns
+ * no school) we replace the route with the login screen.
+ */
+const SchoolGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const router = useRouter();
+  const { loading, school } = useSchool();
+
+  useEffect(() => {
+    if (!loading && !school) router.replace('/school/login');
+  }, [loading, school, router]);
+
+  if (loading || !school) {
+    return (
+      <div
+        style={{
+          minHeight: '100dvh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'var(--text-muted)',
+          fontSize: 14,
+        }}
+      >
+        Loading…
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+};
 
 const SchoolApp: React.FC = () => {
   const router = useRouter();
@@ -39,10 +74,12 @@ const SchoolApp: React.FC = () => {
 
   return (
     <SchoolProvider>
-      <SchoolShell>
-        <Screen />
-      </SchoolShell>
-      <SchoolTabBar />
+      <SchoolGate>
+        <SchoolShell>
+          <Screen />
+        </SchoolShell>
+        <SchoolTabBar />
+      </SchoolGate>
     </SchoolProvider>
   );
 };
