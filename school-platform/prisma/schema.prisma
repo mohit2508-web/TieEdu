@@ -1,0 +1,650 @@
+// ============================================================================
+// TieEdu School of Technology — database schema
+//
+// Phase 1 (Foundation): tenancy, identity, RBAC, sessions, OTP, audit.
+//
+// TENANCY CONTRACT (spec §2):
+//   - Every school-scoped model carries a non-null `schoolId`.
+//   - Isolation is enforced in ONE place: `src/lib/tenant.ts` wraps Prisma in a
+//     client extension that injects/validates `schoolId`. No route may query a
+//     tenant model without going through `forSchool(schoolId)`.
+//   - `User` is a global identity (one login can belong to a school via
+//     `Membership`); it is deliberately NOT school-scoped so a person can hold
+//     memberships in more than one school (and platform staff hold none).
+// ============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "cockroachdb"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+/// Platform-staff roles (TieEdu employees). Ordinary users have `role = null`.
+enum PlatformRole {
+  SUPER_ADMIN
+  OPS
+  CONTENT_ADMIN
+}
+
+/// Roles a user can hold *within* a school (spec §3).
+enum MemberRole {
+  SCHOOL_ADMIN // principal / school staff
+  TEACHER
+  STUDENT
+  PARENT
+}
+
+/// Commercial plan (spec §8.1). Feature flags derive from this.
+enum Plan {
+  STARTER
+  BASIC
+  PRO
+  PREMIUM
+}
+
+enum SchoolStatus {
+  ACTIVE
+  SUSPENDED
+  ARCHIVED
+}
+
+enum MemberStatus {
+  ACTIVE
+  INACTIVE
+  GRADUATED
+  ARCHIVED
+}
+
+enum OtpPurpose {
+  LOGIN
+  PARENT_CONSENT
+  PAYMENT
+}
+
+/// Catalog lifecycle (spec §5). Only PUBLISHED courses are visible to schools.
+enum CourseStatus {
+  DRAFT
+  REVIEW
+  PUBLISHED
+  ARCHIVED
+}
+
+enum CourseLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum LessonKind {
+  VIDEO
+  TEXT
+  QUIZ
+  ACTIVITY
+  PROJECT
+}
+
+/// Whether a school has switched a catalog course on for its students.
+enum SchoolCourseStatus {
+  ENABLED
+  DISABLED
+}
+
+// --- Phase 3: learning -----------------------------------------------------
+
+enum EnrollmentStatus {
+  ACTIVE
+  COMPLETED
+  DROPPED
+}
+
+enum LessonProgressStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum AttemptStatus {
+  IN_PROGRESS
+  SUBMITTED
+}
+
+// --- Phase 5–7: commerce, bookings, certificates ---------------------------
+
+enum InvoiceStatus {
+  DRAFT
+  OPEN
+  PAID
+  VOID
+}
+
+enum BookingType {
+  AI_SEMINAR
+  WORKSHOP
+  TRAINER_VISIT
+}
+
+enum BookingStatus {
+  REQUESTED
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+// ---------------------------------------------------------------------------
+// Tenants
+// ---------------------------------------------------------------------------
+
+model School {
+  id         String       @id @default(cuid())
+  /// Human sign-up code, e.g. "GVTA-4821". Unique, used by students to join.
+  code       String       @unique
+  name       String
+  shortName  String?
+  board      String? // CBSE | ICSE | State
+  city       String?
+  state      String?
+  plan       Plan         @default(STARTER)
+  status     SchoolStatus @default(ACTIVE)
+
+  // White-label (Premium only — gated in the data layer, spec §2).
+  logoUrl    String?
+  brandColor String?
+
+  /// Referral code + who referred this school (spec §8.3).
+  referralCode   String  @unique @default(cuid())
+  referredByCode String?
+
+  trialEndsAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  memberships   Membership[]
+  notices       Notice[]
+  auditLogs     AuditLog[]
+  consents      ParentConsent[]
+  schoolCourses SchoolCourse[]
+  enrollments   Enrollment[]
+  assignments   TeacherCourseAssignment[]
+  invoices      Invoice[]
+  bookings      Booking[]
+  certificates  Certificate[]
+}
+
+// ---------------------------------------------------------------------------
+// Identity
+// ---------------------------------------------------------------------------
+
+model User {
+  id           String        @id @default(cuid())
+  email        String?       @unique
+  phone        String?       @unique
+  name         String
+  passwordHash String?
+  role         PlatformRole?
+  disabled     Boolean       @default(false)
+  locale       String        @default("en")
+  lastLoginAt  DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  memberships     Membership[]
+  sessions        Session[]
+  auditLogs       AuditLog[]      @relation("ActorAudit")
+  childConsents   ParentConsent[] @relation("ParentConsent")
+  subjectConsents ParentConsent[] @relation("SubjectConsent")
+  authoredCourses Course[]        @relation("CourseAuthor")
+  enrollments     Enrollment[]    @relation("StudentEnrollment")
+  teaching        TeacherCourseAssignment[] @relation("TeacherAssignments")
+  certificates    Certificate[]   @relation("StudentCertificates")
+
+  @@index([role])
+}
+
+/// A user's role inside one school. This is the tenant membership row.
+model Membership {
+  id         String       @id @default(cuid())
+  schoolId   String
+  userId     String
+  role       MemberRole
+  classLevel String? // "3".."12" for students
+  section    String?
+  rollNo     String?
+  /// PIN hash for young-student login (null for roles that use password/OTP).
+  pinHash    String?
+  status     MemberStatus @default(ACTIVE)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([schoolId, userId])
+  @@unique([schoolId, rollNo])
+  @@index([schoolId, classLevel, section])
+}
+
+// ---------------------------------------------------------------------------
+// Sessions (rotating refresh token; access token is a short-lived JWT)
+// ---------------------------------------------------------------------------
+
+model Session {
+  id        String    @id @default(cuid())
+  userId    String
+  /// SHA-256 of the opaque refresh token. The raw token only ever lives in
+  /// the httpOnly cookie.
+  tokenHash String    @unique
+  userAgent String?
+  ip        String?
+  createdAt DateTime  @default(now())
+  expiresAt DateTime
+  revokedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ---------------------------------------------------------------------------
+// OTP (phone login + parent consent + payment confirmation)
+// ---------------------------------------------------------------------------
+
+model OtpCode {
+  id         String     @id @default(cuid())
+  phone      String
+  codeHash   String
+  purpose    OtpPurpose @default(LOGIN)
+  attempts   Int        @default(0)
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime   @default(now())
+
+  @@index([phone, purpose])
+}
+
+// ---------------------------------------------------------------------------
+// DPDP parental consent (spec §14, §18)
+// ---------------------------------------------------------------------------
+
+model ParentConsent {
+  id           String    @id @default(cuid())
+  schoolId     String
+  subjectUserId String // the minor whose data is processed
+  parentUserId  String // the guardian granting consent
+  grantedAt    DateTime  @default(now())
+  revokedAt    DateTime?
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  subject User  @relation("SubjectConsent", fields: [subjectUserId], references: [id], onDelete: Cascade)
+  parent  User  @relation("ParentConsent", fields: [parentUserId], references: [id], onDelete: Cascade)
+
+  @@unique([schoolId, subjectUserId, parentUserId])
+  @@index([schoolId])
+}
+
+// ---------------------------------------------------------------------------
+// Minimal tenant-scoped domain model (Phase 1 isolation proof).
+// The full catalog/learning/commerce models arrive in later phases.
+// ---------------------------------------------------------------------------
+
+model Notice {
+  id          String   @id @default(cuid())
+  schoolId    String
+  title       String
+  body        String
+  kind        String   @default("general")
+  pinned      Boolean  @default(false)
+  publishedAt DateTime @default(now())
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId, pinned, publishedAt])
+}
+
+// ---------------------------------------------------------------------------
+// Catalog (Phase 2, spec §5) — PLATFORM content, deliberately NOT tenant-scoped.
+//
+// Courses are owned by TieEdu content staff and shared by every school. A
+// school opts in to a course through the tenant-scoped `SchoolCourse` row, so
+// enabling a course can never leak across schools.
+// ---------------------------------------------------------------------------
+
+model SkillTrack {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  description String?
+  icon        String?
+  color       String?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  courses Course[]
+}
+
+model Course {
+  id           String       @id @default(cuid())
+  slug         String       @unique
+  title        String
+  summary      String?
+  description  String?
+  skillTrackId String
+  level        CourseLevel  @default(BEGINNER)
+  /// Inclusive grade band, e.g. gradeMin 6, gradeMax 8.
+  gradeMin     Int          @default(3)
+  gradeMax     Int          @default(12)
+  durationMins Int          @default(0)
+  status       CourseStatus @default(DRAFT)
+  heroImageUrl String?
+  outcomes     String[]
+  tags         String[]
+  version      Int          @default(1)
+  publishedAt  DateTime?
+  createdById  String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  skillTrack    SkillTrack     @relation(fields: [skillTrackId], references: [id])
+  createdBy     User?          @relation("CourseAuthor", fields: [createdById], references: [id], onDelete: SetNull)
+  modules       Module[]
+  schoolCourses SchoolCourse[]
+  enrollments   Enrollment[]
+  assignments   TeacherCourseAssignment[]
+  certificates  Certificate[]
+
+  @@index([status, skillTrackId])
+  @@index([gradeMin, gradeMax])
+}
+
+model Module {
+  id        String   @id @default(cuid())
+  courseId  String
+  title     String
+  summary   String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  course  Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons Lesson[]
+
+  @@index([courseId, sortOrder])
+}
+
+model Lesson {
+  id           String     @id @default(cuid())
+  moduleId     String
+  title        String
+  summary      String?
+  kind         LessonKind @default(TEXT)
+  durationMins Int        @default(0)
+  sortOrder    Int        @default(0)
+  contentUrl   String?
+  contentBody  String?
+  isPreview    Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  module   Module           @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  progress LessonProgress[]
+  quiz     Quiz?
+
+  @@index([moduleId, sortOrder])
+}
+
+/// Tenant-scoped: a school's opt-in to a catalog course (spec §5, §2).
+model SchoolCourse {
+  id        String             @id @default(cuid())
+  schoolId  String
+  courseId  String
+  status    SchoolCourseStatus @default(ENABLED)
+  note      String?
+  addedById String?
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([schoolId, courseId])
+  @@index([schoolId, status])
+}
+
+// ---------------------------------------------------------------------------
+// Learning (Phase 3, spec §6)
+//
+// Quiz/Question/Option are course content (platform-owned, not tenant-scoped).
+// Enrollment / LessonProgress / QuizAttempt belong to a school and are
+// tenant-scoped.
+// ---------------------------------------------------------------------------
+
+model Enrollment {
+  id          String           @id @default(cuid())
+  schoolId    String
+  courseId    String
+  userId      String
+  status      EnrollmentStatus @default(ACTIVE)
+  /// Cached 0–100 progress, recomputed whenever a lesson completes.
+  progressPct Int              @default(0)
+  startedAt   DateTime         @default(now())
+  completedAt DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  school         School           @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  course         Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user           User             @relation("StudentEnrollment", fields: [userId], references: [id], onDelete: Cascade)
+  lessonProgress LessonProgress[]
+  attempts       QuizAttempt[]
+
+  @@unique([schoolId, courseId, userId])
+  @@index([schoolId, userId, status])
+}
+
+model LessonProgress {
+  id           String               @id @default(cuid())
+  schoolId     String
+  enrollmentId String
+  lessonId     String
+  status       LessonProgressStatus @default(COMPLETED)
+  completedAt  DateTime?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  enrollment Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  lesson     Lesson     @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([enrollmentId, lessonId])
+  @@index([schoolId, enrollmentId])
+}
+
+/// A quiz attached to one QUIZ lesson.
+model Quiz {
+  id           String @id @default(cuid())
+  lessonId     String @unique
+  passingScore Int    @default(60)
+
+  lesson    Lesson         @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  questions QuizQuestion[]
+  attempts  QuizAttempt[]
+}
+
+model QuizQuestion {
+  id        String @id @default(cuid())
+  quizId    String
+  prompt    String
+  sortOrder Int    @default(0)
+
+  quiz    Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  options QuizOption[]
+
+  @@index([quizId, sortOrder])
+}
+
+model QuizOption {
+  id         String  @id @default(cuid())
+  questionId String
+  text       String
+  isCorrect  Boolean @default(false)
+  sortOrder  Int     @default(0)
+
+  question QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId, sortOrder])
+}
+
+model QuizAttempt {
+  id           String        @id @default(cuid())
+  schoolId     String
+  enrollmentId String
+  quizId       String
+  status       AttemptStatus @default(SUBMITTED)
+  score        Int           @default(0)
+  passed       Boolean       @default(false)
+  submittedAt  DateTime?
+  createdAt    DateTime      @default(now())
+
+  enrollment Enrollment   @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  quiz       Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  answers    QuizAnswer[]
+
+  @@index([schoolId, enrollmentId, quizId])
+}
+
+model QuizAnswer {
+  id         String  @id @default(cuid())
+  attemptId  String
+  questionId String
+  optionId   String
+  isCorrect  Boolean
+
+  attempt QuizAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  @@index([attemptId])
+}
+
+// ---------------------------------------------------------------------------
+// Teaching (Phase 4, spec §6–§7)
+//
+// A school admin links a teacher to a catalog course they teach. Tenant-scoped.
+// ---------------------------------------------------------------------------
+
+model TeacherCourseAssignment {
+  id        String   @id @default(cuid())
+  schoolId  String
+  courseId  String
+  /// The teacher's User id (their Membership role must be TEACHER).
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user   User   @relation("TeacherAssignments", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([schoolId, courseId, userId])
+  @@index([schoolId, userId])
+  @@index([schoolId, courseId])
+}
+
+// ---------------------------------------------------------------------------
+// Commerce (Phase 5, spec §8) — tenant-scoped school invoices.
+// ---------------------------------------------------------------------------
+
+model Invoice {
+  id           String        @id @default(cuid())
+  schoolId     String
+  /// Human-readable invoice number, unique within the school.
+  number       String
+  amountPaise  Int
+  currency     String        @default("INR")
+  status       InvoiceStatus @default(OPEN)
+  periodStart  DateTime?
+  periodEnd    DateTime?
+  issuedAt     DateTime      @default(now())
+  paidAt       DateTime?
+  notes        String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@unique([schoolId, number])
+  @@index([schoolId, status])
+}
+
+// ---------------------------------------------------------------------------
+// Bookings & seminars (Phase 6, spec §9) — tenant-scoped requests.
+// ---------------------------------------------------------------------------
+
+model Booking {
+  id            String        @id @default(cuid())
+  schoolId      String
+  type          BookingType   @default(AI_SEMINAR)
+  title         String
+  preferredAt   DateTime
+  mode          String        @default("ONLINE")
+  participants  Int           @default(0)
+  status        BookingStatus @default(REQUESTED)
+  notes         String?
+  requestedById String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId, status])
+  @@index([preferredAt])
+}
+
+// ---------------------------------------------------------------------------
+// Certificates (Phase 7, spec §6) — issued on course completion.
+//
+// Tenant-scoped for listing; public verification happens by opaque serial via
+// the dedicated `certificate-service.verifyBySerial` (documented exception).
+// ---------------------------------------------------------------------------
+
+model Certificate {
+  id        String    @id @default(cuid())
+  schoolId  String
+  courseId  String
+  userId    String
+  serial    String    @unique
+  issuedAt  DateTime  @default(now())
+  revokedAt DateTime?
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user   User   @relation("StudentCertificates", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([schoolId, courseId, userId])
+  @@index([schoolId, userId])
+}
+
+// ---------------------------------------------------------------------------
+// Audit log (spec §16, §18)
+// ---------------------------------------------------------------------------
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  actorUserId String?
+  schoolId    String?
+  action      String
+  targetType  String?
+  targetId    String?
+  meta        Json?
+  createdAt   DateTime @default(now())
+
+  actor  User?   @relation("ActorAudit", fields: [actorUserId], references: [id], onDelete: SetNull)
+  school School? @relation(fields: [schoolId], references: [id], onDelete: SetNull)
+
+  @@index([schoolId, createdAt])
+  @@index([actorUserId])
+}

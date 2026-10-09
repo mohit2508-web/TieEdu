@@ -1,0 +1,56 @@
+{
+  "name": "tieedu-school-platform",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TieEdu School of Technology — multi-tenant K-12 school platform",
+  "scripts": {
+    "dev": "next dev -p 3300",
+    "build": "prisma generate && next build",
+    "start": "next start -p 3300",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:deploy": "prisma migrate deploy",
+    "prisma:studio": "prisma studio",
+    "db:seed": "tsx prisma/seed.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "bcryptjs": "^2.4.3",
+    "bullmq": "^5.34.0",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.1",
+    "ioredis": "^5.4.1",
+    "jose": "^5.9.6",
+    "lucide-react": "^0.439.0",
+    "next": "^14.2.11",
+    "next-intl": "^3.26.0",
+    "nanoid": "^5.0.9",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "server-only": "^0.0.1",
+    "tailwind-merge": "^2.5.2",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20.16.5",
+    "@types/react": "^18.3.5",
+    "@types/react-dom": "^18.3.7",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "14.2.11",
+    "postcss": "^8.5.1",
+    "prisma": "^5.22.0",
+    "tailwindcss": "^3.4.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.2",
+    "vitest": "^2.1.8"
+  }
+}
