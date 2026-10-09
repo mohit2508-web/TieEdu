@@ -1,11 +1,11 @@
+.school-shell {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', 'Segoe UI', system-ui, sans-serif;
+}
+
 :root {
   --brand-sky: #0369A1;
   --brand-sky-strong: #075985;
   --brand-sky-soft: #E8F4FB;
-}
-
-.school-shell {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', 'Segoe UI', system-ui, sans-serif;
 }
 
 .school-header,
