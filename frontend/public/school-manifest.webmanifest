@@ -1,0 +1,54 @@
+{
+  "name": "TieEdu School of Technology",
+  "short_name": "TieEdu School",
+  "description": "Your school's own tech programmes, lessons and notices — made for classes 3 to 12.",
+  "id": "/school",
+  "start_url": "/school",
+  "scope": "/school",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#FAFAF9",
+  "theme_color": "#0369A1",
+  "categories": ["education", "kids", "productivity"],
+  "icons": [
+    {
+      "src": "/school-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/school-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/school-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/school-apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "My Lessons",
+      "short_name": "Lessons",
+      "description": "Continue where you left off",
+      "url": "/school/progress"
+    },
+    {
+      "name": "School Notices",
+      "short_name": "Notices",
+      "description": "Updates from your school",
+      "url": "/school/notices"
+    }
+  ]
+}

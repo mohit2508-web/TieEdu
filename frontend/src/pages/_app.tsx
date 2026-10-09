@@ -20,6 +20,15 @@ import { useLeadTracking } from '@/hooks/useLeadTracking';
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
 
+  // The school segment is a separate PWA identity (its own manifest, icon and
+  // "app" on the home screen). There is exactly one manifest <link> on the
+  // page at a time; on /school the school manifest wins, everywhere else the
+  // platform manifest does. The `$`-prefixed key makes next/head treat these
+  // as one slot (see unique() in next/dist/shared/lib/head.js) instead of
+  // letting both links coexist — browsers only honour the first.
+  const isSchoolRoute =
+    router.pathname === '/school' || router.pathname.startsWith('/school/');
+
   // Email identity + page-view beacons (EMAIL_MARKETING_PLAN.md Phase 3).
   // Server decides what is actually recorded — no cookie, no tracking.
   useLeadTracking(router);
@@ -64,8 +73,12 @@ export default function App({ Component, pageProps }: AppProps) {
 
   return (
     <AuthProvider>
-      <Head>
-        <link rel="manifest" href="/manifest.json" />
+<Head>
+        <link
+          key="m$manifest"
+          rel="manifest"
+          href={isSchoolRoute ? '/school-manifest.webmanifest' : '/manifest.json'}
+        />
         {/*
           The single viewport tag (Phase 0 — MOBILE_APP_UI_PLAN.md §0.1 / §0.5).
 

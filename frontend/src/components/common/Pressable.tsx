@@ -124,13 +124,25 @@ export const Pressable: React.FC<PressableProps> = ({
       onPointerDown={handlePointerDown}
       onClick={handleClick}
       className={cn(
-        'pressable relative',
+        'pressable relative inline-flex items-center justify-center',
         disabled && 'pointer-events-none opacity-50',
-        expandHitArea && 'before:absolute before:content-[""]',
-        expandHitArea && `before:-inset-[${bleed}px]`,
         className
       )}
-      style={rest.style}
+      style={{
+        ...rest.style,
+        ...(expandHitArea
+          ? {
+              marginTop: -bleed,
+              marginBottom: -bleed,
+              marginLeft: -bleed,
+              marginRight: -bleed,
+              paddingTop: bleed,
+              paddingBottom: bleed,
+              paddingLeft: bleed,
+              paddingRight: bleed,
+            }
+          : {}),
+      }}
     >
       {children}
     </Tag>

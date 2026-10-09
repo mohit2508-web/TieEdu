@@ -166,6 +166,8 @@ export const RouteTransition: React.FC<{ children: React.ReactNode }> = ({ child
     their own full-bleed layouts — a cross-fade between a centred login card and
     a CMS header is a visible smear, and neither has a chrome to slide.
   */
+  // Early return for shell-excluded routes: they own their own chrome, and animating them
+  // would slide a full-page PWA frame unnecessarily (a "web page" tell §1.4).
   if (isShellExcluded(router.pathname)) return <>{children}</>;
 
   // Desktop renders the page unwrapped, exactly as it did before §1.4.

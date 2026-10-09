@@ -1,0 +1,70 @@
+:root {
+  --brand-sky: #0369A1;
+  --brand-sky-strong: #075985;
+  --brand-sky-soft: #E8F4FB;
+}
+
+.school-shell {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', 'Segoe UI', system-ui, sans-serif;
+}
+
+.school-header,
+.school-tabbar {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.school-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.school-section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-heading);
+}
+
+.school-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: var(--brand-sky-soft);
+  color: var(--brand-sky);
+}
+
+.school-tab {
+  transition: color 140ms var(--ease-out);
+}
+
+.school-tab-active {
+  color: var(--brand-sky) !important;
+}
+
+.school-lesson-row {
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  background: var(--bg-surface);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.school-lesson-done {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}

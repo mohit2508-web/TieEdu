@@ -42,6 +42,8 @@ import { seedSkillTest } from './data/seedSkillTest';
 
 import { runMigrations } from './db/migrate';
 import { runPlacementBoot } from './placement/seed';
+import { schoolRouter } from './routes/school.routes';
+import { runSchoolBoot } from './school/seed';
 import { backfillDevicesFromJson } from './store/devices';
 import { backfillSubscriptionsFromJson } from './store/push';
 import { backfillAuditFromJson } from './store/audit';
@@ -117,6 +119,9 @@ app.use('/api/admin/devices', adminDevicesRouter);
 // placement grant, which is neither requireAuth nor requireAdmin.
 app.use('/api/admin/placement', requireAdmin, placementAdminRouter);
 app.use('/api/placement', placementRouter);
+// TieEdu Schools router applies requireSchoolAuth itself — session + a school
+// membership, which is neither requireAuth nor requireAdmin.
+app.use('/api/school', schoolRouter);
 // Public beacon + self-service endpoints. Not behind requireAdmin: the install
 // beacon must work before anyone has an account.
 app.use('/api/devices', devicesRouter);
@@ -390,6 +395,16 @@ export const httpServer = app.listen(PORT, async () => {
     await runPlacementBoot();
   } catch (e: any) {
     console.log('💡 [Placement] Boot skipped: ' + (e?.message || e));
+  }
+
+  // TieEdu Schools — same isolation contract as placement: PostgreSQL-only,
+  // its own schema, optional demo seed (SCHOOL_SEED=1). A failure here must
+  // never take down the college portal or be blamed on it, so it reports its
+  // own failures and the server continues.
+  try {
+    await runSchoolBoot();
+  } catch (e: any) {
+    console.log('💡 [School] Boot skipped: ' + (e?.message || e));
   }
 
   // M2: warm the authority cache so the first request after a restart does not

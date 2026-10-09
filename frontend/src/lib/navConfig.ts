@@ -420,7 +420,7 @@ export const MOBILE_TAB_ACTIONS: NavActionItem['id'][] = ['search', 'cart'];
  *
  * Prefix-matched, so `/admin` also covers `/admin/login`.
  */
-export const SHELL_EXCLUDED_ROUTES: string[] = ['/login', '/signup', '/admin', '/tpo'];
+export const SHELL_EXCLUDED_ROUTES: string[] = ['/login', '/signup', '/admin', '/tpo', '/school'];
 
 /** True when this pathname opts out of the site shell entirely. */
 export const isShellExcluded = (pathname: string): boolean =>
