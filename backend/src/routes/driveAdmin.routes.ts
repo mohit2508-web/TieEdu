@@ -24,6 +24,19 @@ function str(v: any): string | null {
   const s = v === null || v === undefined ? '' : String(v).trim();
   return s ? s : null;
 }
+/** Sanitizes a JSONB body field so an arbitrary string can never reach Postgres as a JSON type. */
+function json(v: any, fallback: Record<string, any> | any[]): Record<string, any> | any[] | null {
+  if (v === undefined) return null;
+  if (v === null) return fallback;
+  if (typeof v === 'object') return v;
+  if (typeof v === 'string') {
+    try {
+      const p = JSON.parse(v);
+      if (p && typeof p === 'object') return p;
+    } catch { /* fall through */ }
+  }
+  return fallback;
+}
 function slug(v: string): string {
   return v.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
 }
@@ -179,8 +192,12 @@ driveAdminRouter.post('/', async (req: Request, res: Response) => {
   try {
     const r = await getPool().query(
       `INSERT INTO mock_drive (college_id, company_id, company_name, title, description, drive_type, season_id,
-                               starts_at, ends_at, eligibility, registration_mode, results_visibility, status, created_by)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING *`,
+                               starts_at, ends_at, eligibility, registration_mode, results_visibility, status, created_by,
+                               company_logo_url, location, job_type, category, job_function, ctc_min, ctc_max,
+                               description_md, additional_info_md, other_info, documents, tpo_contact,
+                               registration_opens_at, registration_closes_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,
+               $15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28) RETURNING *`,
       [
         str(b.college_id) || scope, str(b.company_id), str(b.company_name) || '', title, str(b.description) || '',
         ['mock', 'assessment', 'quiz'].includes(b.drive_type) ? b.drive_type : 'mock', str(b.season_id),
@@ -188,6 +205,12 @@ driveAdminRouter.post('/', async (req: Request, res: Response) => {
         ['open', 'roster', 'invite'].includes(b.registration_mode) ? b.registration_mode : 'open',
         ['immediate', 'after_close', 'manual'].includes(b.results_visibility) ? b.results_visibility : 'after_close',
         'draft', req.userId!,
+        // Section 15 enrichment fields (mirrors driveBridgeMigrate.ensureMockDriveExtColumns).
+        str(b.company_logo_url), str(b.location), str(b.job_type), str(b.category), str(b.job_function),
+        num(b.ctc_min), num(b.ctc_max),
+        str(b.description_md), str(b.additional_info_md),
+        json(b.other_info, {}) || {}, json(b.documents, []) || [], json(b.tpo_contact, {}) || {},
+        b.registration_opens_at || null, b.registration_closes_at || null,
       ]
     );
     return res.status(201).json({ drive: r.rows[0] });
@@ -210,7 +233,8 @@ driveAdminRouter.get('/:driveId', async (req: Request, res: Response) => {
     const drive = await loadScopedDrive(req);
     if (!drive) return res.status(404).json({ error: 'drive_not_found' });
     const tests = await getPool().query(
-      `SELECT t.*, mdt.sort_order, mdt.mandatory, mdt.weight, mdt.max_attempts, mdt.opens_at, mdt.closes_at, mdt.window_hard_close, mdt.unlock_rule
+      `SELECT t.*, mdt.sort_order, mdt.mandatory, mdt.weight, mdt.max_attempts, mdt.opens_at, mdt.closes_at, mdt.window_hard_close, mdt.unlock_rule,
+              mdt.round_name, mdt.kind
          FROM mock_drive_test mdt JOIN drive_test t ON t.test_id = mdt.test_id
         WHERE mdt.drive_id=$1 ORDER BY mdt.sort_order`,
       [drive.drive_id]
@@ -231,12 +255,27 @@ driveAdminRouter.patch('/:driveId', async (req: Request, res: Response) => {
          title=COALESCE($2,title), description=COALESCE($3,description), company_name=COALESCE($4,company_name),
          starts_at=COALESCE($5,starts_at), ends_at=COALESCE($6,ends_at), eligibility=COALESCE($7,eligibility),
          registration_mode=COALESCE($8,registration_mode), results_visibility=COALESCE($9,results_visibility),
-         status=COALESCE($10,status), updated_at=NOW()
+         status=COALESCE($10,status),
+         company_logo_url=COALESCE($11,company_logo_url), location=COALESCE($12,location),
+         job_type=COALESCE($13,job_type), category=COALESCE($14,category), job_function=COALESCE($15,job_function),
+         ctc_min=COALESCE($16,ctc_min), ctc_max=COALESCE($17,ctc_max),
+         description_md=COALESCE($18,description_md), additional_info_md=COALESCE($19,additional_info_md),
+         other_info=COALESCE($20,other_info), documents=COALESCE($21,documents), tpo_contact=COALESCE($22,tpo_contact),
+         registration_opens_at=COALESCE($23,registration_opens_at),
+         registration_closes_at=COALESCE($24,registration_closes_at),
+         updated_at=NOW()
        WHERE drive_id=$1 RETURNING *`,
       [
         drive.drive_id, str(b.title), b.description !== undefined ? String(b.description) : null, str(b.company_name),
         b.starts_at !== undefined ? b.starts_at : null, b.ends_at !== undefined ? b.ends_at : null, b.eligibility || null,
         str(b.registration_mode), str(b.results_visibility), str(b.status),
+        str(b.company_logo_url), str(b.location), str(b.job_type), str(b.category), str(b.job_function),
+        b.ctc_min !== undefined ? num(b.ctc_min) : null, b.ctc_max !== undefined ? num(b.ctc_max) : null,
+        b.description_md !== undefined ? str(b.description_md) : null,
+        b.additional_info_md !== undefined ? str(b.additional_info_md) : null,
+        json(b.other_info, {}), json(b.documents, []), json(b.tpo_contact, {}),
+        b.registration_opens_at !== undefined ? b.registration_opens_at : null,
+        b.registration_closes_at !== undefined ? b.registration_closes_at : null,
       ]
     );
     return res.json({ drive: r.rows[0] });
@@ -269,14 +308,16 @@ driveAdminRouter.post('/:driveId/tests', async (req: Request, res: Response) => 
     const drive = await loadScopedDrive(req);
     if (!drive) return res.status(404).json({ error: 'drive_not_found' });
     await getPool().query(
-      `INSERT INTO mock_drive_test (drive_id, test_id, sort_order, mandatory, weight, max_attempts, opens_at, closes_at, window_hard_close, unlock_rule)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+      `INSERT INTO mock_drive_test (drive_id, test_id, sort_order, mandatory, weight, max_attempts, opens_at, closes_at, window_hard_close, unlock_rule, round_name, kind)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
        ON CONFLICT (drive_id, test_id) DO UPDATE SET sort_order=EXCLUDED.sort_order, mandatory=EXCLUDED.mandatory,
          weight=EXCLUDED.weight, max_attempts=EXCLUDED.max_attempts, opens_at=EXCLUDED.opens_at,
-         closes_at=EXCLUDED.closes_at, window_hard_close=EXCLUDED.window_hard_close, unlock_rule=EXCLUDED.unlock_rule`,
+         closes_at=EXCLUDED.closes_at, window_hard_close=EXCLUDED.window_hard_close, unlock_rule=EXCLUDED.unlock_rule,
+         round_name=EXCLUDED.round_name, kind=EXCLUDED.kind`,
       [
         drive.drive_id, testId, num(b.sort_order) ?? 1, b.mandatory !== false, num(b.weight) ?? 1, num(b.max_attempts) ?? 1,
         b.opens_at || null, b.closes_at || null, b.window_hard_close !== false, b.unlock_rule || { kind: 'open' },
+        str(b.round_name), str(b.kind),
       ]
     );
     return res.status(201).json({ ok: true });

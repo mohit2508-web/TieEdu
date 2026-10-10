@@ -250,6 +250,8 @@ function DrivesPanel(props: {
   const { drives, tests, selected, registrations, results, onSelect, onDone, setError, setNotice } = props;
   const [form, setForm] = useState({ title: '', company_name: '', starts_at: '', ends_at: '', registration_mode: 'open', results_visibility: 'after_close' });
   const [attachTestId, setAttachTestId] = useState('');
+  const [attachRoundName, setAttachRoundName] = useState('');
+  const [attachKind, setAttachKind] = useState('');
   const [importText, setImportText] = useState('');
   const [busy, setBusy] = useState(false);
   // Local mirror so an import's result shows without a full page reload.
@@ -295,8 +297,16 @@ function DrivesPanel(props: {
     if (!selected || !attachTestId) return;
     setBusy(true);
     try {
-      await adminAttachTestApi(selected.drive_id, { test_id: attachTestId, max_attempts: 1, unlock_rule: { kind: 'open' } });
+      await adminAttachTestApi(selected.drive_id, {
+        test_id: attachTestId,
+        max_attempts: 1,
+        unlock_rule: { kind: 'open' },
+        round_name: attachRoundName.trim() || null,
+        kind: attachKind.trim() || null,
+      });
       setAttachTestId('');
+      setAttachRoundName('');
+      setAttachKind('');
       onDone();
     } catch (e) {
       setError((e as Error).message);
@@ -424,10 +434,27 @@ function DrivesPanel(props: {
                   <option value="">Select test…</option>
                   {tests.map((t) => <option key={t.test_id} value={t.test_id}>{t.name}</option>)}
                 </select>
-                <button className={btn} disabled={busy || !attachTestId} onClick={attach}>
-                  <Plus className="h-3.5 w-3.5" /> Attach
-                </button>
               </div>
+              <div className="mt-2 flex gap-2">
+                <input
+                  className={input}
+                  placeholder="Round name (e.g. Round 1 — Aptitude)"
+                  value={attachRoundName}
+                  onChange={(e) => setAttachRoundName(e.target.value)}
+                />
+                <select className={input} value={attachKind} onChange={(e) => setAttachKind(e.target.value)}>
+                  <option value="">Kind (optional)</option>
+                  <option value="aptitude">Aptitude</option>
+                  <option value="technical">Technical</option>
+                  <option value="coding">Coding</option>
+                  <option value="hr">HR</option>
+                  <option value="gd">Group discussion</option>
+                  <option value="interview">Interview</option>
+                </select>
+              </div>
+              <button className={btn + ' mt-2'} disabled={busy || !attachTestId} onClick={attach}>
+                <Plus className="h-3.5 w-3.5" /> Attach
+              </button>
             </div>
 
             <div className="rounded-2xl border border-gray-200 bg-white p-5">

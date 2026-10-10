@@ -298,6 +298,21 @@ export interface AdminDrive {
   results_visibility: string;
   results_published: boolean;
   eligibility: Record<string, any>;
+  /** Section 15 enrichment — mirrors the mock_drive ext columns. */
+  company_logo_url: string | null;
+  location: string | null;
+  job_type: string | null;
+  category: string | null;
+  job_function: string | null;
+  ctc_min: number | null;
+  ctc_max: number | null;
+  description_md: string | null;
+  additional_info_md: string | null;
+  other_info: Record<string, any>;
+  documents: { title: string; url: string }[];
+  tpo_contact: { name?: string; email?: string; phone?: string };
+  registration_opens_at: string | null;
+  registration_closes_at: string | null;
   test_count?: number;
   registration_count?: number;
 }
