@@ -139,11 +139,11 @@ export const fetchMyDriveResultsApi = async (driveId: string) =>
 const meBase = `${API_BASE_URL}/me`;
 
 export const fetchMyProfilesApi = async (): Promise<StudentProfile[]> =>
-  json<{ profiles: StudentProfile[] }>(await apiFetch(`${meBase}/student-profile`)).then((r) => r.profiles);
+  json<{ profiles: StudentProfile[] }>(await apiFetch(`${meBase}`)).then((r) => r.profiles);
 
 export const saveMyProfileApi = async (data: Partial<StudentProfile>) =>
   json<{ profile: StudentProfile }>(
-    await apiFetch(`${meBase}/student-profile`, {
+    await apiFetch(`${meBase}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),

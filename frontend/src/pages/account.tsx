@@ -11,6 +11,7 @@ import {
 import { Footer } from '@/components/layout/Footer';
 import { RequireAuth } from '@/components/auth/RequireAuth';
 import NotificationSettings from '@/components/account/NotificationSettings';
+import StudentProfileCard from '@/components/account/StudentProfileCard';
 import { useAuth } from '@/context/AuthContext';
 import {
   fetchMyAccount, fetchMyReports, fetchCompanies, getInterviewCourseProgressApi,
@@ -649,6 +650,12 @@ const AccountPageContent: React.FC = () => {
                     </div>
                   ))}
                 </div>
+              </section>
+
+              {/* 01b — Placement / student profile */}
+              <section>
+                <p className="eyebrow">#01b — Student profile</p>
+                <StudentProfileCard initialCollege={account.user.college} />
               </section>
 
               {/* 02 — My Vault */}
