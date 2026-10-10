@@ -87,6 +87,11 @@ const ERROR_MESSAGES: Record<string, string> = {
   resume_not_found: 'That resume is no longer available.',
   provider_unavailable: 'The test platform is unavailable right now. Try again shortly.',
   internal_mode_not_enabled: 'Direct test launch is not enabled on this server.',
+  drive_has_attempts: 'This drive has student attempts — close it instead of deleting it.',
+  round_not_found: 'That round is no longer attached to this drive.',
+  no_audience: 'No registered students to notify yet.',
+  attach_at_least_one_test: 'Attach at least one test (round) before publishing.',
+  title_required: 'A title is required.',
 };
 
 const humanError = (raw: any): string =>
@@ -135,6 +140,19 @@ export const saveMyProfileApi = async (data: Partial<StudentProfile>) =>
   );
 
 // ─── Section 15 — richer student surfaces ───────────────────────────────────
+
+export interface DriveConfig {
+  support_phone: string;
+  support_email: string;
+  platform_name: string;
+  upi_id: string;
+  upi_qr: string;
+  merchant_name: string;
+  upi_instructions: string;
+}
+
+export const fetchDriveConfigApi = async (): Promise<DriveConfig> =>
+  json<DriveConfig>(await apiFetch(`${base}/config`));
 
 export const fetchDriveHomeApi = async (): Promise<DriveHome> =>
   json<DriveHome>(await apiFetch(`${base}/home`));
@@ -234,6 +252,9 @@ export const fetchNotificationsApi = async (): Promise<DriveNotification[]> =>
 
 export const markNotificationsReadApi = async (): Promise<{ ok: boolean }> =>
   json(await apiFetch(`${meBase}/notifications/read-all`, { method: 'POST' }));
+
+export const fetchUnreadCountApi = async (): Promise<number> =>
+  json<{ unread: number }>(await apiFetch(`${meBase}/notifications/unread`)).then((r) => r.unread);
 
 // ─── Settings ───────────────────────────────────────────────────────────────
 
@@ -376,6 +397,24 @@ export const adminAttachTestApi = (driveId: string, data: Record<string, any>) =
 
 export const adminDetachTestApi = (driveId: string, testId: string) =>
   adminJson<{ ok: boolean }>(`/${encodeURIComponent(driveId)}/tests/${encodeURIComponent(testId)}`, { method: 'DELETE' });
+
+export const adminUpdateRoundApi = (driveId: string, testId: string, data: Record<string, any>) =>
+  adminJson<{ round: any }>(
+    `/${encodeURIComponent(driveId)}/tests/${encodeURIComponent(testId)}`,
+    { method: 'PATCH', body: JSON.stringify(data) }
+  ).then((r) => r.round);
+
+export const adminUnpublishDriveApi = (driveId: string) =>
+  adminJson<{ drive: AdminDrive }>(`/${encodeURIComponent(driveId)}/unpublish`, { method: 'POST' }).then((r) => r.drive);
+
+export const adminDeleteDriveApi = (driveId: string) =>
+  adminJson<{ ok: boolean }>(`/${encodeURIComponent(driveId)}`, { method: 'DELETE' });
+
+export const adminNotifyDriveApi = (driveId: string, data: { title: string; body?: string }) =>
+  adminJson<{ ok: boolean; notified: number }>(`/${encodeURIComponent(driveId)}/notify`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
 
 export const adminFetchRegistrationsApi = (driveId: string) =>
   adminJson<{ registrations: any[] }>(`/${encodeURIComponent(driveId)}/registrations`).then((r) => r.registrations);

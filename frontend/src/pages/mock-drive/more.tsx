@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { UserRound, Bell, Settings, FileText, ChevronRight, LogOut } from 'lucide-react';
+import { UserRound, Bell, Settings, FileText, ChevronRight, LogOut, Phone, Mail, LifeBuoy } from 'lucide-react';
 import { DriveShell } from '@/components/drives/DriveShell';
 import { useAuth } from '@/context/AuthContext';
+import { fetchDriveConfigApi, DriveConfig } from '@/lib/drivesApi';
 
 const ITEMS = [
   { href: '/mock-drive/profile', icon: UserRound, label: 'My profile', sub: 'Academic details used for eligibility' },
@@ -13,6 +14,15 @@ const ITEMS = [
 
 export default function MoreTab() {
   const { user, logout } = useAuth();
+  const [config, setConfig] = useState<DriveConfig | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    fetchDriveConfigApi().then((c) => { if (alive) setConfig(c); }).catch(() => { /* card stays hidden */ });
+    return () => { alive = false; };
+  }, []);
+
+  const telHref = config?.support_phone ? `tel:${config.support_phone.replace(/[^\d+]/g, '')}` : null;
 
   return (
     <DriveShell title="More">
@@ -54,6 +64,54 @@ export default function MoreTab() {
             );
           })}
         </div>
+
+        {/* Support & Help — phone first: one tap to call. */}
+        {config && (config.support_phone || config.support_email) && (
+          <div className="mt-4 overflow-hidden rounded-[14px] border" style={{ background: 'var(--apple-surface)', borderColor: 'var(--apple-separator)' }}>
+            <div className="flex items-center gap-2 px-4 pb-1 pt-3.5">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px]" style={{ background: 'var(--apple-green-soft)', color: 'var(--apple-green)' }}>
+                <LifeBuoy size={16} strokeWidth={1.9} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-[14px] font-medium" style={{ color: 'var(--apple-label)' }}>Support &amp; Help</p>
+                <p className="truncate text-[12px]" style={{ color: 'var(--apple-label-2)' }}>Stuck on payment, slot or test? Reach us.</p>
+              </div>
+            </div>
+            <div className="px-4 pb-2 pt-1">
+              {telHref && (
+                <a
+                  href={telHref}
+                  className="flex items-center gap-3 rounded-[10px] px-2 py-2.5 transition-colors active:bg-[var(--apple-fill)]"
+                >
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px]" style={{ background: 'var(--apple-blue-soft)', color: 'var(--apple-blue)' }}>
+                    <Phone size={15} strokeWidth={2} />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[14px] font-medium" style={{ color: 'var(--apple-label)' }}>{config.support_phone}</p>
+                    <p className="text-[12px]" style={{ color: 'var(--apple-label-2)' }}>Tap to call</p>
+                  </div>
+                  <ChevronRight size={16} style={{ color: 'var(--apple-label-3)' }} />
+                </a>
+              )}
+              {config.support_email && (
+                <a
+                  href={`mailto:${config.support_email}`}
+                  className="flex items-center gap-3 rounded-[10px] px-2 py-2.5 transition-colors active:bg-[var(--apple-fill)]"
+                  style={{ borderTop: telHref ? '0.5px solid var(--apple-separator)' : 'none' }}
+                >
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px]" style={{ background: 'var(--apple-orange-soft)', color: 'var(--apple-orange)' }}>
+                    <Mail size={15} strokeWidth={2} />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[14px] font-medium" style={{ color: 'var(--apple-label)' }}>{config.support_email}</p>
+                    <p className="text-[12px]" style={{ color: 'var(--apple-label-2)' }}>Email us</p>
+                  </div>
+                  <ChevronRight size={16} style={{ color: 'var(--apple-label-3)' }} />
+                </a>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Sign out */}
         <button

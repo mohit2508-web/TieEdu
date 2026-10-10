@@ -1,11 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { ChevronLeft, Bell } from 'lucide-react';
 import { DRIVE_TABS, resolveDriveTab, isDriveRootPath, driveBackHref } from '@/lib/mockDriveNav';
 import { useAuth } from '@/context/AuthContext';
+import { fetchUnreadCountApi } from '@/lib/drivesApi';
 
 /**
  * Full-screen sign-in prompt for a signed-out visitor. Every `/api/drives/*` and
@@ -42,6 +43,16 @@ export const DriveShell: React.FC<{ children: React.ReactNode; title?: string; s
   const active = resolveDriveTab(router.pathname);
   const atRoot = isDriveRootPath(router.pathname);
   const heading = title ?? active.label;
+
+  // Badge refresh: on sign-in and on every tab change (reading notifications
+  // on another screen should clear the dot when the student comes back).
+  const [unread, setUnread] = useState(0);
+  useEffect(() => {
+    if (!user) { setUnread(0); return; }
+    let alive = true;
+    fetchUnreadCountApi().then((n) => { if (alive) setUnread(n); }).catch(() => { /* badge stays as-is */ });
+    return () => { alive = false; };
+  }, [user, router.pathname]);
 
   // Wait for the session probe rather than bouncing a signed-in student to
   // /login on the first paint, before `user` has hydrated.
@@ -88,11 +99,17 @@ export const DriveShell: React.FC<{ children: React.ReactNode; title?: string; s
           {showBell ? (
             <Link
               href="/mock-drive/notifications"
-              aria-label="Notifications"
+              aria-label={unread > 0 ? `Notifications, ${unread} unread` : 'Notifications'}
               className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] transition-colors"
               style={{ color: 'var(--apple-label-2)' }}
             >
               <Bell size={19} strokeWidth={2} />
+              {unread > 0 && (
+                <span
+                  className="absolute right-1.5 top-1.5 h-[9px] w-[9px] rounded-full border-2"
+                  style={{ background: 'var(--apple-red)', borderColor: 'var(--apple-surface)' }}
+                />
+              )}
             </Link>
           ) : (
             <span className="w-2 shrink-0" />

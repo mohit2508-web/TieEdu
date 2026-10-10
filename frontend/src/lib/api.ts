@@ -924,6 +924,7 @@ export interface AdminUserRow {
 export interface PlatformSettings {
   platform_name: string;
   support_email: string;
+  support_phone: string;
   upi_id: string;
   upi_qr: string;
   merchant_name: string;

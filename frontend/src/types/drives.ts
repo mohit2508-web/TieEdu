@@ -160,6 +160,7 @@ export interface DriveHome {
     location: string | null;
     starts_at: string | null;
     starts_at_ist: string | null;
+    registration_opens_at: string | null;
     status_line: string;
   }[];
   open_for_you: {
@@ -170,6 +171,7 @@ export interface DriveHome {
     location: string | null;
     ctc_min: number | null;
     ctc_max: number | null;
+    registration_closes_at: string | null;
     registration_closes_at_ist: string | null;
     status_line: string;
   }[];
@@ -180,7 +182,22 @@ export interface DriveHome {
     drive_title: string;
     company_name: string;
     test_name: string | null;
+    started_at: string | null;
     started_at_ist: string | null;
+  }[];
+  stats: {
+    applied: number;
+    open: number;
+    in_progress: number;
+    completed: number;
+  };
+  recent_notifications: {
+    kind: string;
+    title: string;
+    body: string;
+    read: boolean;
+    created_at: string;
+    created_at_ist: string;
   }[];
   unread_notifications: number;
 }

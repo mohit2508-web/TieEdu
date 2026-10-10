@@ -8,6 +8,7 @@ const inputCls = "w-full sm:w-auto px-3 py-2 border border-gray-200 rounded-xl b
 const emptySettings: PlatformSettings = {
   platform_name: '',
   support_email: '',
+  support_phone: '',
   upi_id: '',
   upi_qr: '',
   merchant_name: 'TieEdu',
@@ -105,6 +106,10 @@ export const SettingsTab: React.FC = () => {
             <div>
               <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Support email</label>
               <input value={form.support_email} onChange={(e) => setForm({ ...form, support_email: e.target.value })} className={inputCls} />
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Support phone / WhatsApp (shown in student app)</label>
+              <input value={form.support_phone} onChange={(e) => setForm({ ...form, support_phone: e.target.value })} className={inputCls} placeholder="+91 98765 43210" />
             </div>
             <div className="flex items-center gap-3 pt-2">
               <button onClick={save} disabled={busy} className="btn btn-primary px-4 py-2 text-xs flex items-center gap-1.5">

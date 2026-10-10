@@ -1034,6 +1034,7 @@ adminRouter.get('/settings', requirePermission('settings.read'), (req: Request, 
   const defaults = {
     platform_name: 'TieEdu',
     support_email: 'support@tieedu.in',
+    support_phone: '',
     upi_id: '',
     upi_qr: '',
     merchant_name: 'TieEdu',
@@ -1048,6 +1049,7 @@ adminRouter.put('/settings', requirePermission('settings.write'), (req: Request,
   const next = { ...(db.settings || {}) };
   if (typeof req.body.platform_name === 'string' && req.body.platform_name.trim()) next.platform_name = req.body.platform_name.trim().slice(0, 60);
   if (typeof req.body.support_email === 'string' && req.body.support_email.trim()) next.support_email = req.body.support_email.trim().slice(0, 120);
+  if (typeof req.body.support_phone === 'string') next.support_phone = req.body.support_phone.trim().slice(0, 30);
   if (typeof req.body.upi_id === 'string') next.upi_id = req.body.upi_id.trim().slice(0, 120);
   if (typeof req.body.upi_qr === 'string') next.upi_qr = req.body.upi_qr.trim();
   if (typeof req.body.merchant_name === 'string' && req.body.merchant_name.trim()) next.merchant_name = req.body.merchant_name.trim().slice(0, 60);

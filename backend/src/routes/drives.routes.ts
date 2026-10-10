@@ -3,6 +3,8 @@ import path from 'path';
 import fs from 'fs';
 import multer from 'multer';
 import { getPool } from '../db/client';
+import { loadDb } from '../data/db';
+import { emitDriveNotification } from '../lib/driveNotify';
 import {
   bridgeUnavailable,
   generateLaunchToken,
@@ -208,6 +210,7 @@ drivesRouter.post('/:driveId/register', async (req: Request, res: Response) => {
 
     const existing = await getPool().query(`SELECT * FROM drive_registration WHERE drive_id=$1 AND user_id=$2`, [drive.drive_id, userId]);
     let registration = existing.rows[0];
+    let createdNew = false;
     if (!registration) {
       const ins = await getPool().query(
         `INSERT INTO drive_registration (drive_id, user_id, roll_no, license_id, college_id, eligibility_checked, status)
@@ -219,6 +222,7 @@ drivesRouter.post('/:driveId/register', async (req: Request, res: Response) => {
       registration =
         ins.rows[0] ||
         (await getPool().query(`SELECT * FROM drive_registration WHERE drive_id=$1 AND user_id=$2`, [drive.drive_id, userId])).rows[0];
+      createdNew = !!ins.rows[0];
       await seedRegistrationTests(drive.drive_id, registration.registration_id);
     }
 
@@ -230,6 +234,18 @@ drivesRouter.post('/:driveId/register', async (req: Request, res: Response) => {
     }
 
     await linkPlacementStudent(registration.college_id, registration.roll_no, userId);
+
+    if (createdNew) {
+      await emitDriveNotification({
+        userId,
+        driveId: drive.drive_id,
+        kind: 'registered',
+        title: 'Registration confirmed',
+        body: `You're registered for ${drive.title}. We'll notify you about rounds, slots and results.`,
+        url: `/mock-drive/drives/${drive.drive_id}`,
+        dedupeKey: `registered:${drive.drive_id}:${userId}`,
+      });
+    }
 
     return res.status(201).json({
       registration: { registration_id: registration.registration_id, status: registration.status, registered_at: registration.registered_at },
@@ -495,6 +511,7 @@ drivesRouter.get('/home', async (req: Request, res: Response) => {
         drive_id: d.drive_id, title: d.title, company_name: d.company_name,
         company_logo_url: d.company_logo_url || null, location: d.location || null,
         starts_at: d.starts_at, starts_at_ist: fmtIst(d.starts_at),
+        registration_opens_at: d.registration_opens_at || null,
         status_line: driveStatusLine(d, d.registration_id ? { status: d.reg_status } : null, null),
       }));
 
@@ -541,6 +558,20 @@ drivesRouter.get('/home', async (req: Request, res: Response) => {
       [userId]
     );
 
+    // Latest three notifications so Home can preview them without a second trip.
+    const recentR = await getPool().query(
+      `SELECT kind, payload, created_at FROM drive_notification
+        WHERE user_id = $1 ORDER BY created_at DESC LIMIT 3`,
+      [userId]
+    );
+
+    // Headline numbers — one round trip instead of three.
+    const statsR = await getPool().query(
+      `SELECT (SELECT COUNT(*)::INT FROM drive_registration WHERE user_id=$1) AS applied,
+              (SELECT COUNT(*)::INT FROM drive_attempt WHERE user_id=$1 AND status='completed') AS completed`,
+      [userId]
+    );
+
     return res.json({
       server_now: new Date().toISOString(),
       upcoming,
@@ -549,6 +580,20 @@ drivesRouter.get('/home', async (req: Request, res: Response) => {
         attempt_id: a.attempt_id, drive_id: a.drive_id, test_id: a.test_id,
         drive_title: a.title, company_name: a.company_name, test_name: a.test_name,
         started_at: a.started_at, started_at_ist: fmtIst(a.started_at),
+      })),
+      stats: {
+        applied: Number(statsR.rows[0]?.applied || 0),
+        open: openForYou.length,
+        in_progress: inProgR.rows.length,
+        completed: Number(statsR.rows[0]?.completed || 0),
+      },
+      recent_notifications: recentR.rows.map((n) => ({
+        kind: n.kind,
+        title: n.payload?.title || n.kind,
+        body: n.payload?.body || '',
+        read: n.payload?.read === true,
+        created_at: n.created_at,
+        created_at_ist: fmtIst(n.created_at),
       })),
       unread_notifications: Number(notifR.rows[0]?.unread || 0),
     });
@@ -691,6 +736,28 @@ drivesRouter.get('/interviews', async (req: Request, res: Response) => {
         duration_minutes: i.duration_minutes, mode: i.mode, location: i.location,
         meeting_url: i.meeting_url, interviewer: i.interviewer, status: i.status, notes: i.notes,
       })),
+    });
+  } catch (err: any) {
+    return bridgeUnavailable(res, err);
+  }
+});
+
+/* --------------------------------- config ---------------------------------
+   Platform-level knobs the student UI needs: the support number shown in the
+   More tab and the UPI details PaymentSheet renders. Registered before
+   `/:driveId` below so the literal path wins the match. */
+
+drivesRouter.get('/config', async (_req: Request, res: Response) => {
+  try {
+    const s: any = loadDb().settings || {};
+    return res.json({
+      support_phone: s.support_phone || '',
+      support_email: s.support_email || '',
+      platform_name: s.platform_name || 'TieEdu',
+      upi_id: s.upi_id || '',
+      upi_qr: s.upi_qr || '',
+      merchant_name: s.merchant_name || 'TieEdu',
+      upi_instructions: s.upi_instructions || '',
     });
   } catch (err: any) {
     return bridgeUnavailable(res, err);
@@ -938,6 +1005,20 @@ studentProfileRouter.delete('/resumes/:resumeId', async (req: Request, res: Resp
 });
 
 /* ----------------------------- notifications ------------------------------ */
+
+// Cheap badge count for the shell's bell — one COUNT, no payload transfer.
+studentProfileRouter.get('/notifications/unread', async (req: Request, res: Response) => {
+  try {
+    const r = await getPool().query(
+      `SELECT COUNT(*)::INT AS unread FROM drive_notification
+        WHERE user_id = $1 AND (payload->>'read') IS DISTINCT FROM 'true'`,
+      [req.userId!]
+    );
+    return res.json({ unread: Number(r.rows[0]?.unread || 0) });
+  } catch (err: any) {
+    return bridgeUnavailable(res, err);
+  }
+});
 
 studentProfileRouter.get('/notifications', async (req: Request, res: Response) => {
   try {

@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import crypto from 'crypto';
 import { getPool } from '../db/client';
 import { bridgeUnavailable } from '../lib/bridge/core';
+import { emitDriveNotification, emitDriveNotificationBulk } from '../lib/driveNotify';
 
 /**
  * Admin/TPO drive management. Mounted behind requireAdmin (platform admin) and
@@ -294,6 +295,22 @@ driveAdminRouter.post('/:driveId/publish', async (req: Request, res: Response) =
       `UPDATE mock_drive SET status='published', updated_at=NOW() WHERE drive_id=$1 RETURNING *`,
       [drive.drive_id]
     );
+    // Roster/invite drives pre-create registrations — tell those students the
+    // drive they were added to is now open. Never blocks the publish.
+    const regs = await getPool().query(`SELECT user_id FROM drive_registration WHERE drive_id=$1`, [drive.drive_id]);
+    if (regs.rows.length) {
+      await emitDriveNotificationBulk(
+        regs.rows.map((x) => x.user_id),
+        {
+          driveId: drive.drive_id,
+          kind: 'drive_published',
+          title: 'Drive is live',
+          body: `${drive.title} is now open — check the rounds and register your interest.`,
+          url: `/mock-drive/drives/${drive.drive_id}`,
+          dedupePrefix: `drive_published:${drive.drive_id}`,
+        }
+      );
+    }
     return res.json({ drive: r.rows[0] });
   } catch (err: any) {
     return bridgeUnavailable(res, err);
@@ -686,6 +703,20 @@ driveAdminRouter.post('/:driveId/publish-results', async (req: Request, res: Res
       `UPDATE mock_drive SET results_published=TRUE, results_published_at=NOW(), updated_at=NOW() WHERE drive_id=$1 RETURNING *`,
       [drive.drive_id]
     );
+    const regs = await getPool().query(`SELECT user_id FROM drive_registration WHERE drive_id=$1`, [drive.drive_id]);
+    if (regs.rows.length) {
+      await emitDriveNotificationBulk(
+        regs.rows.map((x) => x.user_id),
+        {
+          driveId: drive.drive_id,
+          kind: 'results_published',
+          title: 'Results are out',
+          body: `${drive.title} — your result is now visible in Assessments.`,
+          url: `/mock-drive/assessments`,
+          dedupePrefix: `results_published:${drive.drive_id}`,
+        }
+      );
+    }
     return res.json({ drive: r.rows[0] });
   } catch (err: any) {
     return bridgeUnavailable(res, err);
@@ -700,6 +731,113 @@ driveAdminRouter.get('/:driveId/events/unmatched', async (req: Request, res: Res
       `SELECT * FROM drive_webhook_event WHERE status IN ('unmatched','failed') ORDER BY received_at DESC LIMIT 200`
     );
     return res.json({ events: r.rows });
+  } catch (err: any) {
+    return bridgeUnavailable(res, err);
+  }
+});
+
+/* --------------------------- round management ----------------------------- */
+
+// Full round editor: every workflow field a attached test can carry. Partial
+// PATCH — omitted keys keep their stored value (same COALESCE contract as the
+// drive PATCH above).
+driveAdminRouter.patch('/:driveId/tests/:testId', async (req: Request, res: Response) => {
+  const b = req.body || {};
+  try {
+    const drive = await loadScopedDrive(req);
+    if (!drive) return res.status(404).json({ error: 'drive_not_found' });
+    const r = await getPool().query(
+      `UPDATE mock_drive_test SET
+         round_name=COALESCE($3, round_name),
+         kind=COALESCE($4, kind),
+         sort_order=COALESCE($5, sort_order),
+         mandatory=COALESCE($6, mandatory),
+         max_attempts=COALESCE($7, max_attempts),
+         opens_at=COALESCE($8, opens_at),
+         closes_at=COALESCE($9, closes_at),
+         window_hard_close=COALESCE($10, window_hard_close),
+         unlock_rule=COALESCE($11, unlock_rule)
+       WHERE drive_id=$1 AND test_id=$2
+       RETURNING *`,
+      [
+        drive.drive_id, req.params.testId,
+        str(b.round_name), str(b.kind),
+        b.sort_order !== undefined && b.sort_order !== null && b.sort_order !== '' ? num(b.sort_order) : null,
+        typeof b.mandatory === 'boolean' ? b.mandatory : null,
+        b.max_attempts !== undefined && b.max_attempts !== null && b.max_attempts !== '' ? num(b.max_attempts) : null,
+        b.opens_at !== undefined ? b.opens_at : null,
+        b.closes_at !== undefined ? b.closes_at : null,
+        typeof b.window_hard_close === 'boolean' ? b.window_hard_close : null,
+        b.unlock_rule !== undefined ? json(b.unlock_rule, {}) : null,
+      ]
+    );
+    if (!r.rows[0]) return res.status(404).json({ error: 'round_not_found' });
+    return res.json({ round: r.rows[0] });
+  } catch (err: any) {
+    return bridgeUnavailable(res, err);
+  }
+});
+
+/* ----------------------------- drive lifecycle ---------------------------- */
+
+// Unpublish = back to draft. Students only ever see status IN
+// ('published','live'), so this hides the drive from every list and home feed
+// immediately, without touching registrations or rounds.
+driveAdminRouter.post('/:driveId/unpublish', async (req: Request, res: Response) => {
+  try {
+    const drive = await loadScopedDrive(req);
+    if (!drive) return res.status(404).json({ error: 'drive_not_found' });
+    const r = await getPool().query(
+      `UPDATE mock_drive SET status='draft', updated_at=NOW() WHERE drive_id=$1 RETURNING drive_id, status`,
+      [drive.drive_id]
+    );
+    return res.json({ drive: r.rows[0] });
+  } catch (err: any) {
+    return bridgeUnavailable(res, err);
+  }
+});
+
+// Hard delete. Everything attached (rounds, registrations, slots, payments)
+// cascades — but a drive with real attempts is a record of results, so it is
+// refused rather than destroyed: close it instead.
+driveAdminRouter.delete('/:driveId', async (req: Request, res: Response) => {
+  try {
+    const drive = await loadScopedDrive(req);
+    if (!drive) return res.status(404).json({ error: 'drive_not_found' });
+    const a = await getPool().query(`SELECT COUNT(*)::INT AS n FROM drive_attempt WHERE drive_id=$1`, [drive.drive_id]);
+    if (Number(a.rows[0]?.n || 0) > 0) return res.status(409).json({ error: 'drive_has_attempts' });
+    await getPool().query(`DELETE FROM mock_drive WHERE drive_id=$1`, [drive.drive_id]);
+    return res.json({ ok: true, deleted_drive_id: drive.drive_id });
+  } catch (err: any) {
+    return bridgeUnavailable(res, err);
+  }
+});
+
+/* ------------------------------ notify students --------------------------- */
+
+// Admin-authored update to everyone tied to a drive. Audience is deliberately
+// the drive's registrations only — an open drive's "everyone" would be the whole
+// platform, which is what the Broadcast tab is for.
+driveAdminRouter.post('/:driveId/notify', async (req: Request, res: Response) => {
+  const b = req.body || {};
+  const title = str(b.title);
+  const bodyText = str(b.body);
+  if (!title) return res.status(400).json({ error: 'title_required' });
+  try {
+    const drive = await loadScopedDrive(req);
+    if (!drive) return res.status(404).json({ error: 'drive_not_found' });
+    const regs = await getPool().query(`SELECT user_id FROM drive_registration WHERE drive_id=$1`, [drive.drive_id]);
+    const userIds = regs.rows.map((r) => r.user_id);
+    if (!userIds.length) return res.status(422).json({ error: 'no_audience' });
+    const written = await emitDriveNotificationBulk(userIds, {
+      driveId: drive.drive_id,
+      kind: 'admin_update',
+      title,
+      body: bodyText || '',
+      url: `/mock-drive/drives/${drive.drive_id}`,
+      // No dedupe prefix: admins may legitimately re-send an update.
+    });
+    return res.json({ ok: true, notified: written });
   } catch (err: any) {
     return bridgeUnavailable(res, err);
   }
