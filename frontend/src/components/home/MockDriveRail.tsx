@@ -42,7 +42,7 @@ export const MockDriveRail: React.FC = () => {
       eyebrow="Trending"
       title="Mock drives"
       meta={drives && drives.length ? `${drives.length} live` : undefined}
-      seeAllHref="/drives"
+      seeAllHref="/mock-drive/drives"
       seeAllLabel="See all"
       loading={drives === null}
       skeletonWidth={CARD_W}
@@ -53,7 +53,7 @@ export const MockDriveRail: React.FC = () => {
         return (
           <Link
             key={d.drive_id}
-            href={`/drives/${d.drive_id}`}
+            href={`/mock-drive/drives/${d.drive_id}`}
             className={`vault-card group flex flex-col gap-3 p-4 ${CARD_W}`}
           >
             <div className="flex items-start gap-3">

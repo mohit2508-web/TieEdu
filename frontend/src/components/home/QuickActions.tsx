@@ -22,7 +22,7 @@ import {
 const ACTIONS = [
   { icon: LibraryBig, label: 'Courses', href: '/courses', tint: 'text-[#0271B5] bg-[#E8F4FB]' },
   { icon: BrainCircuit, label: 'Skill Tests', href: '/skill-test', tint: 'text-[#7C3AED] bg-[#F1EBFE]' },
-  { icon: ClipboardList, label: 'Mock Drives', href: '/drives', tint: 'text-[#0271B5] bg-[#E8F4FB]' },
+  { icon: ClipboardList, label: 'Mock Drives', href: '/mock-drive', tint: 'text-[#0271B5] bg-[#E8F4FB]' },
   { icon: GraduationCap, label: 'Free Course', href: '/interview-course', tint: 'text-[#B45309] bg-[#FBF1E1]' },
   { icon: Building2, label: 'Vaults', href: '#companies', tint: 'text-[#0E2A44] bg-[#E8EEF4]' },
   { icon: Zap, label: 'Drops', href: '/drops', tint: 'text-[#A63D28] bg-[#FDEDE9]' },

@@ -121,6 +121,24 @@ const nextConfig = {
     ];
   },
 
+  // Legacy drive pages now live under the 5-tab Mock Drive sub-app. Old links
+  // (nav, bookmarks, homepage rail) must land on the new screens rather than
+  // the pre-Section-15 pages, which are kept only so existing code compiles.
+  async redirects() {
+    return [
+      {
+        source: '/drives/:driveId',
+        destination: '/mock-drive/drives/:driveId',
+        permanent: true,
+      },
+      {
+        source: '/drives',
+        destination: '/mock-drive/drives',
+        permanent: true,
+      },
+    ];
+  },
+
   async headers() {
     return [
       {

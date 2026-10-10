@@ -201,7 +201,7 @@ export const NAV_ITEMS: Record<string, NavItem> = {
   },
   drives: {
     id: 'drives',
-    href: '/drives',
+    href: '/mock-drive',
     label: 'Mock Drives',
     icon: ClipboardList,
     match: 'prefix',
