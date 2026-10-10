@@ -11,6 +11,7 @@ import { QuickActions } from '@/components/home/QuickActions';
 import { CourseRail } from '@/components/home/CourseRail';
 import { SkillRail } from '@/components/home/SkillRail';
 import { VaultRail } from '@/components/home/VaultRail';
+import { MockDriveRail } from '@/components/home/MockDriveRail';
 import { FreeCourseBanner } from '@/components/home/FreeCourseBanner';
 import { fetchCompanies, fetchHeroPostersApi } from '@/lib/api';
 import { useCartScope } from '@/context/CartContext';
@@ -157,6 +158,7 @@ export default function Home() {
 
           {/* ===== RAILS: courses → tests → free course → vaults → drops ===== */}
           <CourseRail />
+          <MockDriveRail />
           <SkillRail />
           <FreeCourseBanner />
           <VaultRail
