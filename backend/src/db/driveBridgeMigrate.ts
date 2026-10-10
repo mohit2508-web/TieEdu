@@ -329,6 +329,130 @@ export async function ensureDriveJobLockTable(): Promise<void> {
 }
 
 /**
+ * Section 15 — richer drive catalogue. These columns are additive on the
+ * existing `mock_drive` table (the bridge already ships a populated one in
+ * prod), so each is an `ADD COLUMN IF NOT EXISTS` rather than a table rewrite.
+ * `IF NOT EXISTS` keeps boot idempotent across a cluster shared with other
+ * projects, where a re-run is the normal case, not the exception.
+ */
+async function addColumnIfMissing(table: string, column: string, definition: string): Promise<void> {
+  await getPool().query(`ALTER TABLE ${table} ADD COLUMN IF NOT EXISTS ${column} ${definition}`);
+}
+
+export async function ensureMockDriveExtColumns(): Promise<void> {
+  await addColumnIfMissing('mock_drive', 'company_logo_url', 'TEXT');
+  await addColumnIfMissing('mock_drive', 'location', 'TEXT');
+  await addColumnIfMissing('mock_drive', 'job_type', 'TEXT');
+  await addColumnIfMissing('mock_drive', 'category', 'TEXT');
+  await addColumnIfMissing('mock_drive', 'job_function', 'TEXT');
+  await addColumnIfMissing('mock_drive', 'ctc_min', 'NUMERIC(12,2)');
+  await addColumnIfMissing('mock_drive', 'ctc_max', 'NUMERIC(12,2)');
+  await addColumnIfMissing('mock_drive', 'other_info', `JSONB NOT NULL DEFAULT '{}'`);
+  await addColumnIfMissing('mock_drive', 'description_md', 'TEXT');
+  await addColumnIfMissing('mock_drive', 'additional_info_md', 'TEXT');
+  await addColumnIfMissing('mock_drive', 'documents', `JSONB NOT NULL DEFAULT '[]'`);
+  await addColumnIfMissing('mock_drive', 'tpo_contact', `JSONB NOT NULL DEFAULT '{}'`);
+  await addColumnIfMissing('mock_drive', 'registration_opens_at', 'TIMESTAMPTZ');
+  await addColumnIfMissing('mock_drive', 'registration_closes_at', 'TIMESTAMPTZ');
+
+  // Rounds carry a display name and a kind so the UI can group them without
+  // decoding each provider's slug. Added on the join table, not drive_test,
+  // because the same test can appear as a differently-named round in two drives.
+  await addColumnIfMissing('mock_drive_test', 'round_name', 'TEXT');
+  await addColumnIfMissing('mock_drive_test', 'kind', 'TEXT');
+
+  // A registration pins the resume the student chose at register time.
+  await addColumnIfMissing('drive_registration', 'resume_id', 'TEXT');
+}
+
+/**
+ * Section 15 — the student's resume vault. One row per uploaded/attached
+ * resume; a registration points at one of them via `drive_registration.resume_id`.
+ * `file_name` is the display name, `stored_name` the on-disk name — the same
+ * split the PDF library uses, so a download never trusts a client-supplied path.
+ */
+export async function ensureStudentResumeTable(): Promise<void> {
+  await getPool().query(`
+    CREATE TABLE IF NOT EXISTS student_resume (
+      resume_id    TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+      user_id      TEXT NOT NULL,
+      title        TEXT NOT NULL DEFAULT 'Resume',
+      file_name    TEXT NOT NULL,
+      stored_name  TEXT NOT NULL,
+      size_bytes   INT NOT NULL DEFAULT 0,
+      is_default   BOOLEAN NOT NULL DEFAULT FALSE,
+      created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `);
+  await getPool().query(`CREATE INDEX IF NOT EXISTS student_resume_user_idx ON student_resume(user_id);`);
+  // A student has exactly one default resume; the partial unique index enforces
+  // it without locking rows that are not defaults.
+  await getPool().query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS student_resume_default_idx
+      ON student_resume(user_id) WHERE is_default;
+  `);
+}
+
+/**
+ * Section 15 — scheduled interviews. A drive can advance a registration into
+ * interview rounds; this table records each scheduled slot the student sees on
+ * the Interviews tab. Mode is free-form (`online`/`onsite`/`phone`) rather than
+ * an enum so a new format does not need a migration.
+ */
+export async function ensureDriveInterviewTable(): Promise<void> {
+  await getPool().query(`
+    CREATE TABLE IF NOT EXISTS drive_interview (
+      interview_id    TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+      drive_id        TEXT NOT NULL REFERENCES mock_drive(drive_id) ON DELETE CASCADE,
+      registration_id TEXT REFERENCES drive_registration(registration_id) ON DELETE CASCADE,
+      user_id         TEXT NOT NULL,
+      round_name      TEXT NOT NULL DEFAULT 'Interview',
+      scheduled_at    TIMESTAMPTZ,
+      duration_minutes INT NOT NULL DEFAULT 45,
+      mode            TEXT NOT NULL DEFAULT 'online',
+      location        TEXT,
+      meeting_url     TEXT,
+      interviewer     TEXT,
+      status          TEXT NOT NULL DEFAULT 'scheduled',
+      notes           TEXT,
+      created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      CONSTRAINT drive_interview_status_valid CHECK (status IN
+        ('scheduled','completed','cancelled','rescheduled','no_show'))
+    );
+  `);
+  await getPool().query(`CREATE INDEX IF NOT EXISTS drive_interview_user_idx ON drive_interview(user_id, scheduled_at DESC);`);
+  await getPool().query(`CREATE INDEX IF NOT EXISTS drive_interview_drive_idx ON drive_interview(drive_id);`);
+}
+
+/**
+ * Section 15 — profile correction requests. A student cannot silently rewrite a
+ * TPO-verified field; they raise a correction, the TPO approves it, and only
+ * then does the profile change. `field`/`from_value`/`to_value` are textual so
+ * one table covers every editable field.
+ */
+export async function ensureProfileCorrectionTable(): Promise<void> {
+  await getPool().query(`
+    CREATE TABLE IF NOT EXISTS profile_correction_request (
+      correction_id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+      user_id       TEXT NOT NULL,
+      college_id    TEXT NOT NULL,
+      field         TEXT NOT NULL,
+      from_value    TEXT,
+      to_value      TEXT,
+      reason        TEXT,
+      status        TEXT NOT NULL DEFAULT 'pending',
+      reviewed_by   TEXT,
+      reviewed_at   TIMESTAMPTZ,
+      created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      CONSTRAINT profile_correction_status_valid CHECK (status IN ('pending','approved','rejected'))
+    );
+  `);
+  await getPool().query(`CREATE INDEX IF NOT EXISTS profile_correction_user_idx ON profile_correction_request(user_id, status);`);
+}
+
+/**
  * Runs every bridge migration. Returns false when PostgreSQL is unreachable or a
  * statement fails, and says which. Unlike the main platform, the bridge has NO
  * JSON fallback — a half-migrated bridge would only surface as confusing errors
@@ -355,8 +479,12 @@ export async function runDriveBridgeMigrations(): Promise<boolean> {
     await ensureDriveWebhookEventTable();
     await ensureDriveNotificationTable();
     await ensureDriveJobLockTable();
+    await ensureMockDriveExtColumns();
+    await ensureStudentResumeTable();
+    await ensureDriveInterviewTable();
+    await ensureProfileCorrectionTable();
     console.log(
-      '✅ [DriveBridge] Schema ready (student_profile, provider, test, mock_drive, registration, launch, attempt, events, notifications).'
+      '✅ [DriveBridge] Schema ready (student_profile, provider, test, mock_drive, registration, launch, attempt, events, notifications, resumes, interviews, corrections).'
     );
     return true;
   } catch (err: any) {

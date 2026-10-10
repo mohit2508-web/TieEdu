@@ -1,4 +1,14 @@
-import { API_BASE_URL, apiFetch } from './api';
+import { API_BASE_URL, apiFetch, tryRefreshSession } from './api';
+import { getAccessToken } from './auth';
+import type {
+  DriveListItem, DriveDetail, DriveAssessment, DriveInterview, DriveHome,
+  StudentResume, DriveNotification, DriveSettings, ProfileCorrection, StudentProfile,
+} from '@/types/drives';
+
+// Re-exported so existing call sites (`StudentProfileCard`, `drives/[driveId]`)
+// that import these from '@/lib/drivesApi' keep resolving. Canonical definitions
+// live in '@/types/drives'.
+export type { DriveDetail, StudentProfile } from '@/types/drives';
 
 // ============================================================================
 // MOCK DRIVE & ASSESSMENT BRIDGE API CLIENT
@@ -40,27 +50,6 @@ export interface DriveTest {
   best_percentage: number | null;
 }
 
-export interface DriveDetail {
-  drive: {
-    drive_id: string;
-    title: string;
-    company_name: string;
-    description: string;
-    drive_type: string;
-    status: string;
-    starts_at: string | null;
-    ends_at: string | null;
-    registration_mode: string;
-    results_visibility: string;
-    eligibility: Record<string, any>;
-    window_open: boolean;
-  };
-  registration: { registration_id: string; status: string; registered_at: string } | null;
-  can_register: boolean;
-  eligibility_blockers: string[];
-  tests: DriveTest[];
-}
-
 export interface DriveResult {
   test_id: string;
   name: string;
@@ -72,21 +61,6 @@ export interface DriveResult {
   passed: boolean | null;
   submitted_at: string | null;
   sections: any[];
-}
-
-export interface StudentProfile {
-  user_id: string;
-  college_id: string;
-  roll_no: string;
-  branch: string | null;
-  batch: string | null;
-  degree: string | null;
-  cgpa: number | string | null;
-  class10_pct: number | string | null;
-  class12_pct: number | string | null;
-  backlogs: number;
-  status: string;
-  source: string;
 }
 
 const base = `${API_BASE_URL}/drives`;
@@ -112,23 +86,6 @@ const json = async <T>(res: Response): Promise<T> => {
 export const fetchDrivesApi = async (): Promise<DriveSummary[]> =>
   json<{ drives: DriveSummary[] }>(await apiFetch(base)).then((r) => r.drives);
 
-export const fetchDriveDetailApi = async (driveId: string): Promise<DriveDetail> =>
-  json<DriveDetail>(await apiFetch(`${base}/${encodeURIComponent(driveId)}`));
-
-export const registerForDriveApi = async (driveId: string, inviteToken?: string) =>
-  json<{ registration: { registration_id: string; status: string } }>(
-    await apiFetch(`${base}/${encodeURIComponent(driveId)}/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ invite_token: inviteToken || undefined }),
-    })
-  );
-
-export const launchDriveTestApi = async (driveId: string, testId: string) =>
-  json<{ launch_url: string; expires_at: string; provider: string }>(
-    await apiFetch(`${base}/${encodeURIComponent(driveId)}/tests/${encodeURIComponent(testId)}/launch`, { method: 'POST' })
-  );
-
 export const fetchMyDriveResultsApi = async (driveId: string) =>
   json<{ drive_id: string; visible: boolean; results_visibility: string; tests: DriveResult[] }>(
     await apiFetch(`${base}/${encodeURIComponent(driveId)}/my-results`)
@@ -149,6 +106,135 @@ export const saveMyProfileApi = async (data: Partial<StudentProfile>) =>
       body: JSON.stringify(data),
     })
   );
+
+// ─── Section 15 — richer student surfaces ───────────────────────────────────
+
+export const fetchDriveHomeApi = async (): Promise<DriveHome> =>
+  json<DriveHome>(await apiFetch(`${base}/home`));
+
+export const fetchDriveListApi = async (): Promise<DriveListItem[]> =>
+  json<{ server_now: string; drives: DriveListItem[] }>(await apiFetch(`${base}/list`)).then((r) => r.drives);
+
+export const fetchDriveDetailApi = async (driveId: string): Promise<DriveDetail> =>
+  json<DriveDetail>(await apiFetch(`${base}/${encodeURIComponent(driveId)}`));
+
+export const fetchDriveAssessmentsApi = async (tab: 'all' | 'active' | 'completed' = 'all'): Promise<DriveAssessment[]> =>
+  json<{ attempts: DriveAssessment[] }>(await apiFetch(`${base}/assessments?tab=${tab}`)).then((r) => r.attempts);
+
+export const fetchDriveAttemptApi = async (attemptId: string): Promise<DriveAssessment> =>
+  json<{ attempt: DriveAssessment }>(await apiFetch(`${base}/attempts/${encodeURIComponent(attemptId)}`)).then((r) => r.attempt);
+
+export const fetchDriveInterviewsApi = async (): Promise<DriveInterview[]> =>
+  json<{ interviews: DriveInterview[] }>(await apiFetch(`${base}/interviews`)).then((r) => r.interviews);
+
+export const registerForDriveApi = async (driveId: string, inviteToken?: string) =>
+  json<{ registration: { registration_id: string; status: string } }>(
+    await apiFetch(`${base}/${encodeURIComponent(driveId)}/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ invite_token: inviteToken || undefined }),
+    })
+  );
+
+export const launchDriveTestApi = async (driveId: string, testId: string) =>
+  json<{ launch_url: string; expires_at: string; provider: string }>(
+    await apiFetch(`${base}/${encodeURIComponent(driveId)}/tests/${encodeURIComponent(testId)}/launch`, { method: 'POST' })
+  );
+
+// ─── Resumes ────────────────────────────────────────────────────────────────
+
+export const fetchResumesApi = async (): Promise<StudentResume[]> =>
+  json<{ resumes: StudentResume[] }>(await apiFetch(`${meBase}/resumes`)).then((r) => r.resumes);
+
+// Real multipart upload. Mirrors `uploadModulePdfApi`: XHR so we get upload
+// progress, plus a transparent access-token refresh on the 401 race that can
+// happen right after the 15-minute token expires mid-drive.
+export const uploadResumeApi = async (
+  file: File,
+  title?: string,
+  onProgress?: (percent: number) => void
+): Promise<{ resume: StudentResume }> => {
+  const sendUpload = (token?: string | null): Promise<any> =>
+    new Promise((resolve, reject) => {
+      const form = new FormData();
+      form.append('file', file);
+      if (title) form.append('title', title);
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `${meBase}/resumes/upload`);
+      xhr.timeout = 120000;
+      const authToken = token !== undefined ? token : getAccessToken();
+      if (authToken) xhr.setRequestHeader('Authorization', `Bearer ${authToken}`);
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) onProgress?.(Math.round((e.loaded / e.total) * 100));
+      };
+      xhr.onload = () => {
+        if (xhr.status === 401) return resolve({ __is401: true });
+        if (xhr.status === 413) return reject(new Error('Resume exceeds the 8MB limit.'));
+        try {
+          const data = JSON.parse(xhr.responseText);
+          if (xhr.status >= 200 && xhr.status < 300) resolve(data);
+          else reject(new Error(data.error || `Upload failed (status ${xhr.status})`));
+        } catch {
+          reject(new Error(`Upload failed with server status ${xhr.status}`));
+        }
+      };
+      xhr.onerror = () => reject(new Error('Network error during upload — check your connection.'));
+      xhr.ontimeout = () => reject(new Error('Upload timed out after 120 seconds.'));
+      xhr.send(form);
+    });
+
+  let res = await sendUpload();
+  if (res && res.__is401) {
+    const refreshed = await tryRefreshSession();
+    if (!refreshed) throw new Error('Session expired — please sign in again.');
+    res = await sendUpload(getAccessToken());
+  }
+  if (res && res.__is401) throw new Error('Session expired — please sign in again.');
+  return res;
+};
+
+// URL for a stored resume PDF (used by the register flow / preview).
+export const resumeFileUrl = (resumeId: string) =>
+  `${meBase}/resumes/${encodeURIComponent(resumeId)}/file`;
+
+export const deleteResumeApi = async (resumeId: string) =>
+  json<{ ok: boolean }>(await apiFetch(`${meBase}/resumes/${encodeURIComponent(resumeId)}`, { method: 'DELETE' }));
+
+// ─── Notifications ──────────────────────────────────────────────────────────
+
+export const fetchNotificationsApi = async (): Promise<DriveNotification[]> =>
+  json<{ notifications: DriveNotification[] }>(await apiFetch(`${meBase}/notifications`)).then((r) => r.notifications);
+
+export const markNotificationsReadApi = async (): Promise<{ ok: boolean }> =>
+  json(await apiFetch(`${meBase}/notifications/read-all`, { method: 'POST' }));
+
+// ─── Settings ───────────────────────────────────────────────────────────────
+
+export const fetchDriveSettingsApi = async (): Promise<DriveSettings> =>
+  json<DriveSettings>(await apiFetch(`${meBase}/settings`));
+
+export const saveDriveSettingsApi = async (data: { email_notifications?: boolean; push_notifications?: boolean; drive_alerts?: boolean }) =>
+  json<{ ok: boolean }>(
+    await apiFetch(`${meBase}/settings`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+  );
+
+// ─── Profile corrections ────────────────────────────────────────────────────
+
+export const submitProfileCorrectionApi = async (data: { field: string; to_value: string; reason?: string }) =>
+  json<{ correction: ProfileCorrection }>(
+    await apiFetch(`${meBase}/corrections`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+  );
+
+export const fetchProfileCorrectionsApi = async (): Promise<ProfileCorrection[]> =>
+  json<{ corrections: ProfileCorrection[] }>(await apiFetch(`${meBase}/corrections`)).then((r) => r.corrections);
 
 // ─── Admin ──────────────────────────────────────────────────────────────────
 

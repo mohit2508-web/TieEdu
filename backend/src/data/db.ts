@@ -91,6 +91,8 @@ export interface User {
   license_id?: string;
   roll_no?: string;
   disabled?: boolean;
+  /** Per-user UI preferences (notification toggles etc.), persisted as JSON. */
+  preferences?: Record<string, any>;
   created_at: string;
 }
 

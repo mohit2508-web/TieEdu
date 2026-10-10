@@ -2322,3 +2322,21 @@ body {
 /* No chrome scrollbars in sheets */
 .apple-scroll { scrollbar-width: none; }
 .apple-scroll::-webkit-scrollbar { display: none; }
+
+/* Loading skeleton sweep — one shared keyframe so every skeleton in the app
+   shimmers identically. Colours are theme vars, not hardcoded, so it tracks
+   light/dark the same as the surfaces around it. */
+@keyframes appleSkeletonSweep {
+  0% { background-position: 130% 0; }
+  100% { background-position: -30% 0; }
+}
+.apple-skeleton {
+  background: linear-gradient(
+    110deg,
+    var(--apple-fill) 30%,
+    var(--apple-surface-2) 45%,
+    var(--apple-fill) 60%
+  );
+  background-size: 200% 100%;
+  animation: appleSkeletonSweep 1.6s linear infinite;
+}
