@@ -164,119 +164,6 @@ drivesRouter.get('/', async (req: Request, res: Response) => {
   }
 });
 
-/* ------------------------------ drive detail ------------------------------ */
-
-drivesRouter.get('/:driveId', async (req: Request, res: Response) => {
-  const userId = req.userId!;
-  try {
-    const driveR = await getPool().query(`SELECT * FROM mock_drive WHERE drive_id=$1`, [req.params.driveId]);
-    const drive = driveR.rows[0];
-    if (!drive) return res.status(404).json({ error: 'drive_not_found' });
-
-    const colleges = await playerCollegeIds(userId);
-    const regR = await getPool().query(`SELECT * FROM drive_registration WHERE drive_id=$1 AND user_id=$2`, [drive.drive_id, userId]);
-    const reg = regR.rows[0] || null;
-    const allowed = !drive.college_id || colleges.includes(drive.college_id) || !!reg;
-    if (!allowed) return res.status(403).json({ error: 'drive_not_available' });
-
-    const testsR = await getPool().query(
-      `SELECT t.test_id, t.mode, t.name, t.slug, t.duration_minutes, t.total_questions,
-              mdt.sort_order, mdt.mandatory, mdt.max_attempts, mdt.opens_at, mdt.closes_at,
-              mdt.window_hard_close, mdt.unlock_rule,
-              mdt.round_name, mdt.kind,
-              drt.status AS my_status, drt.attempts_used, drt.best_percentage
-         FROM mock_drive_test mdt
-         JOIN drive_test t ON t.test_id = mdt.test_id
-         LEFT JOIN drive_registration r ON r.drive_id = mdt.drive_id AND r.user_id = $2
-         LEFT JOIN drive_registration_test drt ON drt.registration_id = r.registration_id AND drt.test_id = mdt.test_id
-        WHERE mdt.drive_id = $1
-        ORDER BY mdt.sort_order, t.name`,
-      [drive.drive_id, userId]
-    );
-
-    const profile = await profileForDrive(userId, drive.college_id);
-    const eligReasons = eligibilityReasons(profile, drive);
-
-    const regCountR = await getPool().query(
-      `SELECT COUNT(*)::INT AS n FROM drive_registration WHERE drive_id=$1`,
-      [drive.drive_id]
-    );
-
-    // `rounds` is the canonical field; `tests` is kept as a legacy alias so the
-    // older `pages/drives/[driveId]` route keeps resolving off `detail.tests`.
-    const rounds = testsR.rows.map((t) => ({
-      test_id: t.test_id,
-      round_name: t.round_name || null,
-      kind: t.kind || null,
-      mode: t.mode,
-      name: t.name,
-      slug: t.slug,
-      duration_minutes: t.duration_minutes,
-      total_questions: t.total_questions,
-      mandatory: t.mandatory,
-      sort_order: t.sort_order,
-      max_attempts: t.max_attempts,
-      opens_at: t.opens_at,
-      closes_at: t.closes_at,
-      my_status: t.my_status || (reg ? 'locked' : null),
-      attempts_used: Number(t.attempts_used || 0),
-      best_percentage: num(t.best_percentage),
-      status_label: !reg
-        ? 'locked'
-        : t.my_status === 'completed'
-        ? 'completed'
-        : t.my_status === 'in_progress' || t.my_status === 'launched'
-        ? 'in_progress'
-        : 'unlocked',
-    }));
-
-    return res.json({
-      server_now: new Date().toISOString(),
-      drive: {
-        drive_id: drive.drive_id,
-        title: drive.title,
-        company_name: drive.company_name,
-        company_logo_url: drive.company_logo_url || null,
-        description: drive.description,
-        description_md: drive.description_md || null,
-        additional_info_md: drive.additional_info_md || null,
-        drive_type: drive.drive_type,
-        status: drive.status,
-        location: drive.location || null,
-        job_type: drive.job_type || null,
-        category: drive.category || null,
-        job_function: drive.job_function || null,
-        ctc_min: num(drive.ctc_min),
-        ctc_max: num(drive.ctc_max),
-        starts_at: drive.starts_at,
-        ends_at: drive.ends_at,
-        starts_at_ist: fmtIst(drive.starts_at),
-        ends_at_ist: fmtIst(drive.ends_at),
-        registration_mode: drive.registration_mode,
-        registration_opens_at_ist: fmtIst(drive.registration_opens_at),
-        registration_closes_at_ist: fmtIst(drive.registration_closes_at),
-        results_visibility: drive.results_visibility,
-        other_info: asJson(drive.other_info, {}),
-        documents: asJsonArray(drive.documents),
-        tpo_contact: asJson(drive.tpo_contact, {}),
-        eligibility: asJson(drive.eligibility, {}),
-        window_open: windowState(drive).open,
-        registration_open: registrationOpen(drive),
-        status_line: driveStatusLine(drive, reg, regCountR.rows[0]?.n ?? null),
-      },
-      registration: reg
-        ? { registration_id: reg.registration_id, status: reg.status, registered_at: reg.registered_at }
-        : null,
-      can_register: !reg && eligReasons.length === 0 && registrationOpen(drive),
-      eligibility_blockers: eligReasons,
-      rounds,
-      tests: rounds,
-    });
-  } catch (err: any) {
-    return bridgeUnavailable(res, err);
-  }
-});
-
 /* ------------------------------- register --------------------------------- */
 
 drivesRouter.post('/:driveId/register', async (req: Request, res: Response) => {
@@ -804,6 +691,122 @@ drivesRouter.get('/interviews', async (req: Request, res: Response) => {
         duration_minutes: i.duration_minutes, mode: i.mode, location: i.location,
         meeting_url: i.meeting_url, interviewer: i.interviewer, status: i.status, notes: i.notes,
       })),
+    });
+  } catch (err: any) {
+    return bridgeUnavailable(res, err);
+  }
+});
+
+/* ------------------------------ drive detail ------------------------------
+   Registered AFTER the literal routes above (/home, /list, /assessments,
+   /interviews): Express matches in registration order, so a `/:driveId` here
+   would swallow them and 404 every tab with `drive_not_found`. */
+
+drivesRouter.get('/:driveId', async (req: Request, res: Response) => {
+  const userId = req.userId!;
+  try {
+    const driveR = await getPool().query(`SELECT * FROM mock_drive WHERE drive_id=$1`, [req.params.driveId]);
+    const drive = driveR.rows[0];
+    if (!drive) return res.status(404).json({ error: 'drive_not_found' });
+
+    const colleges = await playerCollegeIds(userId);
+    const regR = await getPool().query(`SELECT * FROM drive_registration WHERE drive_id=$1 AND user_id=$2`, [drive.drive_id, userId]);
+    const reg = regR.rows[0] || null;
+    const allowed = !drive.college_id || colleges.includes(drive.college_id) || !!reg;
+    if (!allowed) return res.status(403).json({ error: 'drive_not_available' });
+
+    const testsR = await getPool().query(
+      `SELECT t.test_id, t.mode, t.name, t.slug, t.duration_minutes, t.total_questions,
+              mdt.sort_order, mdt.mandatory, mdt.max_attempts, mdt.opens_at, mdt.closes_at,
+              mdt.window_hard_close, mdt.unlock_rule,
+              mdt.round_name, mdt.kind,
+              drt.status AS my_status, drt.attempts_used, drt.best_percentage
+         FROM mock_drive_test mdt
+         JOIN drive_test t ON t.test_id = mdt.test_id
+         LEFT JOIN drive_registration r ON r.drive_id = mdt.drive_id AND r.user_id = $2
+         LEFT JOIN drive_registration_test drt ON drt.registration_id = r.registration_id AND drt.test_id = mdt.test_id
+        WHERE mdt.drive_id = $1
+        ORDER BY mdt.sort_order, t.name`,
+      [drive.drive_id, userId]
+    );
+
+    const profile = await profileForDrive(userId, drive.college_id);
+    const eligReasons = eligibilityReasons(profile, drive);
+
+    const regCountR = await getPool().query(
+      `SELECT COUNT(*)::INT AS n FROM drive_registration WHERE drive_id=$1`,
+      [drive.drive_id]
+    );
+
+    // `rounds` is the canonical field; `tests` is kept as a legacy alias so the
+    // older `pages/drives/[driveId]` route keeps resolving off `detail.tests`.
+    const rounds = testsR.rows.map((t) => ({
+      test_id: t.test_id,
+      round_name: t.round_name || null,
+      kind: t.kind || null,
+      mode: t.mode,
+      name: t.name,
+      slug: t.slug,
+      duration_minutes: t.duration_minutes,
+      total_questions: t.total_questions,
+      mandatory: t.mandatory,
+      sort_order: t.sort_order,
+      max_attempts: t.max_attempts,
+      opens_at: t.opens_at,
+      closes_at: t.closes_at,
+      my_status: t.my_status || (reg ? 'locked' : null),
+      attempts_used: Number(t.attempts_used || 0),
+      best_percentage: num(t.best_percentage),
+      status_label: !reg
+        ? 'locked'
+        : t.my_status === 'completed'
+        ? 'completed'
+        : t.my_status === 'in_progress' || t.my_status === 'launched'
+        ? 'in_progress'
+        : 'unlocked',
+    }));
+
+    return res.json({
+      server_now: new Date().toISOString(),
+      drive: {
+        drive_id: drive.drive_id,
+        title: drive.title,
+        company_name: drive.company_name,
+        company_logo_url: drive.company_logo_url || null,
+        description: drive.description,
+        description_md: drive.description_md || null,
+        additional_info_md: drive.additional_info_md || null,
+        drive_type: drive.drive_type,
+        status: drive.status,
+        location: drive.location || null,
+        job_type: drive.job_type || null,
+        category: drive.category || null,
+        job_function: drive.job_function || null,
+        ctc_min: num(drive.ctc_min),
+        ctc_max: num(drive.ctc_max),
+        starts_at: drive.starts_at,
+        ends_at: drive.ends_at,
+        starts_at_ist: fmtIst(drive.starts_at),
+        ends_at_ist: fmtIst(drive.ends_at),
+        registration_mode: drive.registration_mode,
+        registration_opens_at_ist: fmtIst(drive.registration_opens_at),
+        registration_closes_at_ist: fmtIst(drive.registration_closes_at),
+        results_visibility: drive.results_visibility,
+        other_info: asJson(drive.other_info, {}),
+        documents: asJsonArray(drive.documents),
+        tpo_contact: asJson(drive.tpo_contact, {}),
+        eligibility: asJson(drive.eligibility, {}),
+        window_open: windowState(drive).open,
+        registration_open: registrationOpen(drive),
+        status_line: driveStatusLine(drive, reg, regCountR.rows[0]?.n ?? null),
+      },
+      registration: reg
+        ? { registration_id: reg.registration_id, status: reg.status, registered_at: reg.registered_at }
+        : null,
+      can_register: !reg && eligReasons.length === 0 && registrationOpen(drive),
+      eligibility_blockers: eligReasons,
+      rounds,
+      tests: rounds,
     });
   } catch (err: any) {
     return bridgeUnavailable(res, err);

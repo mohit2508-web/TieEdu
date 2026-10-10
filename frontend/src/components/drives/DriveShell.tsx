@@ -15,7 +15,7 @@ import { useAuth } from '@/context/AuthContext';
  * the student knows why.
  */
 const SignInGate: React.FC<{ next: string }> = ({ next }) => (
-  <div className="flex min-h-[100dvh] flex-col items-center justify-center px-6 text-center" style={{ background: 'var(--apple-bg)' }}>
+  <div className="mock-drive-scope flex min-h-[100dvh] flex-col items-center justify-center px-6 text-center" style={{ background: 'var(--apple-bg)' }}>
     <h1 className="text-[22px] font-bold tracking-tight" style={{ color: 'var(--apple-label)' }}>
       Sign in to continue
     </h1>
@@ -51,7 +51,7 @@ export const DriveShell: React.FC<{ children: React.ReactNode; title?: string; s
 
   return (
     <div
-      className="flex min-h-[100dvh] flex-col"
+      className="mock-drive-scope flex min-h-[100dvh] flex-col"
       style={{ background: 'var(--apple-bg)' }}
     >
       {/* Top bar — identity, context, notifications. Nothing else. */}

@@ -65,13 +65,40 @@ export interface DriveResult {
 
 const base = `${API_BASE_URL}/drives`;
 
+// Server errors come back as snake_case keys; show students a sentence instead.
+const ERROR_MESSAGES: Record<string, string> = {
+  drive_not_found: 'This drive is no longer available.',
+  drive_not_available: 'This drive is not available for your college.',
+  drive_not_open: 'This round is not open right now.',
+  registration_window_closed: 'Registration for this drive is closed.',
+  not_eligible: 'You are not eligible for this drive.',
+  not_on_roster: 'You are not on this college roster.',
+  not_registered: 'Register for this drive first.',
+  not_shortlisted: 'You have not been shortlisted for this round.',
+  profile_missing: 'Complete your student profile first.',
+  invite_required: 'You need an invitation for this drive.',
+  disqualified: 'Your attempt was disqualified.',
+  no_attempts_remaining: 'No attempts remaining.',
+  test_not_found: 'This test is no longer available.',
+  test_locked: 'This test is locked.',
+  test_not_open: 'This test is not open right now.',
+  test_window_closed: 'The test window has closed.',
+  attempt_not_found: 'This attempt could not be found.',
+  resume_not_found: 'That resume is no longer available.',
+  provider_unavailable: 'The test platform is unavailable right now. Try again shortly.',
+  internal_mode_not_enabled: 'Direct test launch is not enabled on this server.',
+};
+
+const humanError = (raw: any): string =>
+  (typeof raw === 'string' && ERROR_MESSAGES[raw]) || raw || null;
+
 const json = async <T>(res: Response): Promise<T> => {
   if (!res.ok) {
     let msg = `Request failed (${res.status})`;
     let body: any = null;
     try {
       body = await res.json();
-      if (body?.error) msg = body.error;
+      if (body?.error) msg = humanError(body.error);
     } catch { /* keep default */ }
     const err: any = new Error(msg);
     err.status = res.status;
@@ -249,7 +276,7 @@ const adminJson = async <T>(path: string, options?: RequestInit): Promise<T> => 
     let msg = `Request failed (${res.status})`;
     try {
       const body = await res.json();
-      if (body?.error) msg = body.error;
+      if (body?.error) msg = humanError(body.error);
     } catch { /* keep default */ }
     throw new Error(msg);
   }

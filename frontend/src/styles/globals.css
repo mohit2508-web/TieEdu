@@ -2272,6 +2272,38 @@ body {
   }
 }
 
+/* Mock Drive sub-app always renders in the light Apple palette, even when the
+   OS is in dark mode (uniform light look for drives). Custom properties on a
+   descendant override the inherited :root values, so re-declaring them here
+   pins every screen inside the shell — and its sheets — to light tokens. */
+.mock-drive-scope {
+  color-scheme: light;
+  --apple-bg: #F2F2F7;
+  --apple-surface: #FFFFFF;
+  --apple-surface-2: #EAEAF2;
+  --apple-fill: #F7F7FA;
+  --apple-separator: rgba(60, 60, 67, 0.11);
+
+  --apple-label: #000000;
+  --apple-label-2: rgba(60, 60, 67, 0.72);
+  --apple-label-3: rgba(60, 60, 67, 0.44);
+  --apple-placeholder: rgba(60, 60, 67, 0.26);
+
+  --apple-blue: #007AFF;
+  --apple-blue-soft: rgba(0, 122, 255, 0.12);
+  --apple-green: #34C759;
+  --apple-green-soft: rgba(52, 199, 89, 0.14);
+  --apple-orange: #FF9500;
+  --apple-orange-soft: rgba(255, 149, 0, 0.14);
+  --apple-red: #FF3B30;
+  --apple-red-soft: rgba(255, 59, 48, 0.12);
+  --apple-purple: #AF52DE;
+  --apple-purple-soft: rgba(175, 82, 222, 0.14);
+  --apple-teal: #30B0C7;
+  --apple-teal-soft: rgba(48, 176, 199, 0.14);
+  --apple-yellow: #FFCC00;
+}
+
 /* Grouped card — the iOS settings profile + list section. */
 .apple-card {
   background: var(--apple-surface);

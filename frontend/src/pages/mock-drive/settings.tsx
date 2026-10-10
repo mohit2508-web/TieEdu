@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { AlertCircle, Check } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { DriveShell } from '@/components/drives/DriveShell';
+import { Toggle } from '@/components/apple/Toggle';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { fetchDriveSettingsApi, saveDriveSettingsApi } from '@/lib/drivesApi';
 import type { DriveSettings } from '@/types/drives';
@@ -85,25 +86,12 @@ export default function SettingsScreen() {
                       <p className="text-[14px] font-medium" style={{ color: 'var(--apple-label)' }}>{t.label}</p>
                       <p className="truncate text-[12px]" style={{ color: 'var(--apple-label-2)' }}>{t.sub}</p>
                     </div>
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={on}
-                      aria-label={t.label}
+                    <Toggle
+                      checked={on}
+                      onChange={() => toggle(t.key)}
                       disabled={savingKey === t.key}
-                      onClick={() => toggle(t.key)}
-                      className="relative h-[30px] w-[50px] shrink-0 rounded-full transition-colors disabled:opacity-60"
-                      style={{ background: on ? 'var(--apple-green)' : 'var(--apple-fill)' }}
-                    >
-                      <span
-                        className="absolute top-[3px] h-6 w-6 rounded-full bg-white shadow transition-all"
-                        style={{ left: on ? '23px' : '3px' }}
-                      >
-                        {savingKey === t.key && (
-                          <Check size={12} className="absolute left-[7px] top-[7px]" style={{ color: 'var(--apple-green)' }} />
-                        )}
-                      </span>
-                    </button>
+                      ariaLabel={t.label}
+                    />
                   </div>
                 );
               })}
