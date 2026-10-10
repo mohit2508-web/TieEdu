@@ -21,8 +21,9 @@ import { NotificationsTab } from '@/components/admin/NotificationsTab';
 import BroadcastTab from '@/components/admin/BroadcastTab';
 import { SkillTestTab } from '@/components/admin/SkillTestTab';
 import { EmailTab } from '@/components/admin/EmailTab';
+import { DrivesTab } from '@/components/admin/DrivesTab';
 import {
-  BookOpen, Building2, BarChart3, FileText, Layers, LayoutDashboard,
+  BookOpen, Building2, BarChart3, ClipboardList, FileText, Layers, LayoutDashboard,
   LogOut, Mail, RefreshCw, Settings2, ShoppingBag, Ticket, Users, ExternalLink, Wallet, CalendarRange,
 GraduationCap, Award, Zap, Megaphone, BellRing, Send, BrainCircuit, Sparkles
     } from 'lucide-react';
@@ -32,7 +33,7 @@ import { AdminXpTab } from '@/components/admin/course/AdminXpTab';
 import { NotificationBell } from '@/components/layout/NotificationBell';
 import { AccountMenu } from '@/components/layout/AccountMenu';
 
-type TabId = 'overview' | 'orders' | 'payments' | 'users' | 'analytics' | 'hub' | 'content' | 'pack' | 'studyplans' | 'drops' | 'coupons' | 'posters' | 'courses' | 'certificates' | 'xp' | 'skilltest' | 'reports' | 'emails' | 'notifications' | 'broadcast' | 'settings';
+type TabId = 'overview' | 'orders' | 'payments' | 'users' | 'analytics' | 'hub' | 'content' | 'pack' | 'studyplans' | 'drops' | 'coupons' | 'posters' | 'courses' | 'certificates' | 'xp' | 'skilltest' | 'drives' | 'reports' | 'emails' | 'notifications' | 'broadcast' | 'settings';
 
 const NAV: { id: TabId; label: string; icon: any; group: string }[] = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard, group: 'Commerce & Health' },
@@ -51,6 +52,7 @@ const NAV: { id: TabId; label: string; icon: any; group: string }[] = [
   { id: 'certificates', label: 'Certificates', icon: Award, group: 'Learning' },
   { id: 'xp', label: 'XP Ledger', icon: Zap, group: 'Learning' },
   { id: 'skilltest', label: 'Skill Test', icon: BrainCircuit, group: 'Learning' },
+{ id: 'drives', label: 'Mock Drives', icon: ClipboardList, group: 'Learning' },
   { id: 'reports', label: 'Candidate Reports', icon: FileText, group: 'Engagement' },
   { id: 'emails', label: 'Email Marketing', icon: Mail, group: 'Engagement' },
   { id: 'notifications', label: 'Notifications', icon: BellRing, group: 'System' },
@@ -342,6 +344,8 @@ export const AdminCmsView: React.FC = () => {
         {activeTab === 'xp' && <AdminXpTab />}
 
         {activeTab === 'skilltest' && <SkillTestTab />}
+
+        {activeTab === 'drives' && <DrivesTab />}
 
       {activeTab === 'coupons' && <CouponsManager />}
 

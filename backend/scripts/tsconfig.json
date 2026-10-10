@@ -6,5 +6,5 @@
     "noEmit": true,
     "types": ["node"]
   },
-  "files": ["./seed-drops.ts", "./drops-api.test.ts"]
+  "files": ["./seed-drops.ts", "./drops-api.test.ts", "./drive-bridge.test.ts", "./mock-provider.ts"]
 }

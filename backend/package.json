@@ -33,7 +33,9 @@
     "test:drops": "ts-node --transpile-only scripts/drops-api.test.ts",
     "test:data": "ts-node --transpile-only scripts/section-data.test.ts",
     "test:smoke": "ts-node --transpile-only src/scripts/smokeCourses.ts",
-    "test:email": "ts-node --transpile-only scripts/email.test.ts"
+    "test:email": "ts-node --transpile-only scripts/email.test.ts",
+    "test:drivebridge": "ts-node --transpile-only scripts/drive-bridge.test.ts",
+    "mock-provider": "ts-node --transpile-only scripts/mock-provider.ts"
   },
   "dependencies": {
     "@react-email/components": "^1.0.12",

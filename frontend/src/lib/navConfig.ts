@@ -19,6 +19,7 @@ import {
   BrainCircuit,
   Building2,
   CalendarCheck,
+  ClipboardList,
   Droplets,
   Flame,
   GraduationCap,
@@ -198,6 +199,16 @@ export const NAV_ITEMS: Record<string, NavItem> = {
     tab: true,
     keywords: ['skill test', 'assessment', 'mcq', 'quiz', 'certificate', 'test', 'skills'],
   },
+  drives: {
+    id: 'drives',
+    href: '/drives',
+    label: 'Mock Drives',
+    icon: ClipboardList,
+    match: 'prefix',
+    description: 'Company mock tests and assessments — register, attempt and see results',
+    primary: true,
+    keywords: ['drive', 'mock drive', 'assessment', 'company test', 'hiring', 'placement test'],
+  },
   drops: {
     id: 'drops',
     href: '/drops',
@@ -338,7 +349,7 @@ export const PRIMARY_NAV: NavItem[] = ALL_NAV_ITEMS.filter((i) => i.primary);
  * plane does not belong next to "Compare".
  */
 export const NAV_GROUPS: { id: string; label: string; itemIds: string[] }[] = [
-  { id: 'explore', label: 'Explore', itemIds: ['vaults', 'compare', 'skillTest', 'drops', 'courses', 'freeCourse'] },
+  { id: 'explore', label: 'Explore', itemIds: ['vaults', 'compare', 'skillTest', 'drives', 'drops', 'courses', 'freeCourse'] },
   { id: 'plan', label: 'Plan & learn', itemIds: ['studyPlan', 'myCourses'] },
 ];
 

@@ -35,6 +35,10 @@ import { adminSkillTestRouter } from './routes/admin-skill-test.routes';
 import { dropsRouter } from './routes/drops.routes';
 import { placementRouter } from './routes/placement.routes';
 import { placementAdminRouter } from './routes/placementAdmin.routes';
+import driveBridgeRouter from './routes/bridge.routes';
+import { drivesRouter, studentProfileRouter } from './routes/drives.routes';
+import driveAdminRouter from './routes/driveAdmin.routes';
+import { runDriveBridgeMigrations } from './db/driveBridgeMigrate';
 import { emailLeadsRouter } from './routes/emailLeads.routes';
 import { emailCampaignsRouter } from './routes/emailCampaigns.routes';
 import { emailPublicRouter } from './routes/emailPublic.routes';
@@ -119,6 +123,13 @@ app.use('/api/admin/devices', adminDevicesRouter);
 // placement grant, which is neither requireAuth nor requireAdmin.
 app.use('/api/admin/placement', requireAdmin, placementAdminRouter);
 app.use('/api/placement', placementRouter);
+// Mock Drive & Assessment Bridge. The provider-facing endpoints are HMAC-authed
+// server-to-server calls; everything student/admin-facing uses the normal session
+// auth. Mounted before the SPA catch-all.
+app.use('/api/bridge', driveBridgeRouter);
+app.use('/api/drives', requireAuth, drivesRouter);
+app.use('/api/me', requireAuth, studentProfileRouter);
+app.use('/api/admin/drives', requireAdmin, driveAdminRouter);
 // TieEdu Schools router applies requireSchoolAuth itself — session + a school
 // membership, which is neither requireAuth nor requireAdmin.
 app.use('/api/school', schoolRouter);
@@ -395,6 +406,14 @@ export const httpServer = app.listen(PORT, async () => {
     await runPlacementBoot();
   } catch (e: any) {
     console.log('💡 [Placement] Boot skipped: ' + (e?.message || e));
+  }
+
+  // Mock Drive & Assessment Bridge — PostgreSQL-only, no JSON fallback. Reports
+  // its own failures so a schema problem here never takes down placement/school.
+  try {
+    await runDriveBridgeMigrations();
+  } catch (e: any) {
+    console.log('💡 [DriveBridge] Boot skipped: ' + (e?.message || e));
   }
 
   // TieEdu Schools — same isolation contract as placement: PostgreSQL-only,

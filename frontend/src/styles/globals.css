@@ -2208,3 +2208,117 @@ body {
     max-height: calc(100dvh - var(--header-total) - 48px);
   }
 }
+
+/* ============================================
+   APPLE TOUCH — iOS-style surface tokens
+   Used by the drives module, TPO console and
+   admin. Self-contained so the warm "Vault OS"
+   palette above is untouched everywhere else.
+   ============================================ */
+:root {
+  --apple-bg: #F2F2F7;            /* systemGroupedBackground */
+  --apple-surface: #FFFFFF;
+  --apple-surface-2: #EAEAF2;     /* grouped cell tint / hairline group */
+  --apple-fill: #F7F7FA;          /* secondary fill (segments, chips) */
+  --apple-separator: rgba(60, 60, 67, 0.11);
+
+  --apple-label: #000000;
+  --apple-label-2: rgba(60, 60, 67, 0.72);
+  --apple-label-3: rgba(60, 60, 67, 0.44);
+  --apple-placeholder: rgba(60, 60, 67, 0.26);
+
+  --apple-blue: #007AFF;
+  --apple-blue-soft: rgba(0, 122, 255, 0.12);
+  --apple-green: #34C759;
+  --apple-green-soft: rgba(52, 199, 89, 0.14);
+  --apple-orange: #FF9500;
+  --apple-orange-soft: rgba(255, 149, 0, 0.14);
+  --apple-red: #FF3B30;
+  --apple-red-soft: rgba(255, 59, 48, 0.12);
+  --apple-purple: #AF52DE;
+  --apple-purple-soft: rgba(175, 82, 222, 0.14);
+  --apple-teal: #30B0C7;
+  --apple-teal-soft: rgba(48, 176, 199, 0.14);
+  --apple-yellow: #FFCC00;
+
+  --apple-sheet-max: 560px;
+  --apple-tabbar-h: 76px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --apple-bg: #000000;
+    --apple-surface: #1C1C1E;
+    --apple-surface-2: #242426;
+    --apple-fill: #3A3A3C;
+    --apple-separator: rgba(84, 84, 88, 0.6);
+
+    --apple-label: #FFFFFF;
+    --apple-label-2: rgba(235, 235, 245, 0.6);
+    --apple-label-3: rgba(235, 235, 245, 0.36);
+    --apple-placeholder: rgba(235, 235, 245, 0.16);
+
+    --apple-blue: #0A84FF;
+    --apple-blue-soft: rgba(10, 132, 255, 0.24);
+    --apple-green: #30D158;
+    --apple-green-soft: rgba(48, 209, 88, 0.22);
+    --apple-orange: #FF9F0A;
+    --apple-orange-soft: rgba(255, 159, 10, 0.22);
+    --apple-red: #FF453A;
+    --apple-red-soft: rgba(255, 69, 58, 0.22);
+    --apple-purple: #BF5AF2;
+    --apple-purple-soft: rgba(191, 90, 242, 0.22);
+    --apple-teal: #40C8E0;
+    --apple-teal-soft: rgba(64, 200, 224, 0.22);
+  }
+}
+
+/* Grouped card — the iOS settings profile + list section. */
+.apple-card {
+  background: var(--apple-surface);
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+@media (prefers-color-scheme: dark) {
+  .apple-card { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5); }
+}
+
+/* iOS grouped list row: full-bleed cell with hairline separator. */
+.apple-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  background: transparent;
+  border: 0;
+  text-align: left;
+  font: inherit;
+  color: var(--apple-label);
+  cursor: pointer;
+  transition: background 140ms var(--ease-out);
+}
+.apple-cell:active { background: var(--apple-fill); }
+.apple-cell + .apple-cell { border-top: 0.5px solid var(--apple-separator); }
+.apple-cell .apple-chevron { color: var(--apple-label-3); }
+
+/* Hairline divider */
+.apple-divider { height: 0.5px; background: var(--apple-separator); }
+
+/* Segmented tint */
+.apple-seg-fill { background: var(--apple-fill); }
+
+/* Lazy reveal used by shells */
+@keyframes appleFadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.apple-fade-up { animation: appleFadeUp 320ms var(--ease-out) both; }
+@keyframes applePop {
+  0% { opacity: 0; transform: scale(0.92); }
+  60% { transform: scale(1.02); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.apple-pop { animation: applePop 260ms var(--ease-out) both; }
+
+/* No chrome scrollbars in sheets */
+.apple-scroll { scrollbar-width: none; }
+.apple-scroll::-webkit-scrollbar { display: none; }

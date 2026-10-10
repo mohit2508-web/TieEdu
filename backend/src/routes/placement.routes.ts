@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { loadDb, saveDb, User, Session } from '../data/db';
 import { requireAuth, signAccessToken, safeUser, hashRefresh, COOKIE_NAME, REFRESH_TTL_DAYS, rateLimit } from '../middleware/auth';
-import { requirePlacementAuth } from '../middleware/placementAuth';
+import { requirePlacementAuth, requirePlacementScope } from '../middleware/placementAuth';
 import {
   invalidatePlacementCache,
   loadPlacementGrants,
@@ -11,8 +11,24 @@ import {
 } from '../placement/access';
 import { isPlacementRole, PLACEMENT_ROLE_LABELS, PlacementRole } from '../placement/permissions';
 import { getPool } from '../db/client';
+import { driveAdminRouter } from './driveAdmin.routes';
 
 export const placementRouter = Router();
+
+// ---------------------------------------------------------------------------
+// Mock Drives — re-uses the admin drive router but scoped by the TPO caller's
+// selected college. Reads need `placement.drives.read`; every mutation needs
+// `placement.drives.write`. Drive rows belonging to another college are
+// invisible (loadScopedDrive refuses them), even for a cross-college grant.
+// ---------------------------------------------------------------------------
+const scopedDriveRead = requirePlacementScope('placement.drives.read');
+const scopedDriveWrite = requirePlacementScope('placement.drives.write');
+placementRouter.get('/drives', scopedDriveRead, driveAdminRouter);
+placementRouter.get('/drives/*', scopedDriveRead, driveAdminRouter);
+placementRouter.post('/drives', scopedDriveWrite, driveAdminRouter);
+placementRouter.post('/drives/*', scopedDriveWrite, driveAdminRouter);
+placementRouter.patch('/drives/*', scopedDriveWrite, driveAdminRouter);
+placementRouter.delete('/drives/*', scopedDriveWrite, driveAdminRouter);
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const INVITE_TTL_DAYS = 7;
