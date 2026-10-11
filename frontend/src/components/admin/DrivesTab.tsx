@@ -59,18 +59,31 @@ import {
 } from '@/components/drives/DriveFormEditor';
 
 const input =
-  'w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-[#10151C] focus:outline-none focus:border-[#0284C7] focus:ring-2 focus:ring-[#0284C7]/15 transition';
+  'w-full rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-[#10151C] focus:outline-none focus:border-[#0284C7] focus:ring-2 focus:ring-[#0284C7]/15 transition';
 const btn =
-  'inline-flex items-center gap-1.5 rounded-xl bg-[#1F3A5F] px-4 py-2 text-xs font-bold text-white hover:bg-[#16304f] transition disabled:opacity-50';
+  'inline-flex items-center gap-1.5 rounded-xl bg-[#1F3A5F] px-4 py-2.5 text-[13px] font-bold text-white hover:bg-[#16304f] transition disabled:opacity-50';
 const ghost =
-  'inline-flex items-center gap-1.5 rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs font-bold text-[#3E4754] hover:bg-[#F3F2EE] transition disabled:opacity-50';
+  'inline-flex items-center gap-1.5 rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-[13px] font-bold text-[#3E4754] hover:bg-[#F3F2EE] transition disabled:opacity-50';
 const danger =
-  'inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-white px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-50 transition disabled:opacity-50';
+  'inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-white px-3.5 py-2.5 text-[13px] font-bold text-red-700 hover:bg-red-50 transition disabled:opacity-50';
 
-type Section = 'details' | 'rounds' | 'roster' | 'payments' | 'slots' | 'results' | 'notify';
+/** Slot list helpers: group by day so 35 slots read as days, not one wall. */
+const groupSlotsByDay = (rows: AdminSlotRow[]): [string, AdminSlotRow[]][] => {
+  const map = new Map<string, AdminSlotRow[]>();
+  for (const s of rows) {
+    const key = s.slot_date || s.starts_at.slice(0, 10);
+    if (!map.has(key)) map.set(key, []);
+    map.get(key)!.push(s);
+  }
+  return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+};
+const formatSlotDay = (day: string) =>
+  new Date(day + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' });
+
+type Section = 'details' | 'rounds' | 'roster' | 'payments' | 'slots' | 'results' | 'notify' | 'help';
 
 /**
- * Admin → Mock Drives. Three columns of scaffolding over the drive admin API:
+ * Admin â†’ Mock Drives. Three columns of scaffolding over the drive admin API:
  * providers (assessment platforms), tests (exams pulled from them), and drives
  * (what students see). Selecting a drive opens the full editor: every drive
  * field, its workflow rounds, roster and results.
@@ -205,9 +218,9 @@ function ProvidersPanel({ providers, onDone, setError }: { providers: AdminProvi
             <div key={p.provider_id} className="rounded-xl border border-gray-100 px-3 py-2 text-sm">
               <div className="flex items-center justify-between">
                 <span className="font-bold text-[#1F3A5F]">{p.name}</span>
-                <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${p.status === 'active' ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>{p.status}</span>
+                <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold uppercase ${p.status === 'active' ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>{p.status}</span>
               </div>
-              <p className="mt-0.5 font-mono text-[11px] text-gray-500">{p.code} · {p.launch_url}</p>
+              <p className="mt-0.5 font-mono text-xs text-gray-500">{p.code} Â· {p.launch_url}</p>
             </div>
           ))}
           {providers.length === 0 && <p className="text-xs italic text-gray-400">No providers yet.</p>}
@@ -252,7 +265,7 @@ function TestsPanel({ tests, providers, onDone, setError }: { tests: AdminDriveT
           {form.mode === 'external' && (
             <>
               <select className={input} value={form.provider_id} onChange={(e) => setForm({ ...form, provider_id: e.target.value })}>
-                <option value="">Select provider…</option>
+                <option value="">Select providerâ€¦</option>
                 {providers.map((p) => <option key={p.provider_id} value={p.provider_id}>{p.name}</option>)}
               </select>
               <input className={input} placeholder="provider_exam_id" value={form.provider_exam_id} onChange={(e) => setForm({ ...form, provider_exam_id: e.target.value })} />
@@ -274,9 +287,9 @@ function TestsPanel({ tests, providers, onDone, setError }: { tests: AdminDriveT
             <div key={t.test_id} className="rounded-xl border border-gray-100 px-3 py-2 text-sm">
               <div className="flex items-center justify-between">
                 <span className="font-bold text-[#1F3A5F]">{t.name}</span>
-                <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-bold uppercase text-gray-500">{t.mode}</span>
+                <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-bold uppercase text-gray-500">{t.mode}</span>
               </div>
-              <p className="mt-0.5 font-mono text-[11px] text-gray-500">{t.provider_name || t.skill_slug || '—'}</p>
+              <p className="mt-0.5 font-mono text-xs text-gray-500">{t.provider_name || t.skill_slug || 'â€”'}</p>
             </div>
           ))}
           {tests.length === 0 && <p className="text-xs italic text-gray-400">No tests yet.</p>}
@@ -336,7 +349,7 @@ function DrivesPanel(props: {
   const [notifyBody, setNotifyBody] = useState('');
   const [notifyBusy, setNotifyBusy] = useState(false);
 
-  // Payments (₹99 ledger)
+  // Payments (â‚¹99 ledger)
   const [payments, setPayments] = useState<AdminPaymentRow[]>([]);
   const [payCounts, setPayCounts] = useState({ submitted: 0, approved: 0, rejected: 0 });
   const [payFilter, setPayFilter] = useState<'all' | 'submitted' | 'approved' | 'rejected'>('all');
@@ -434,7 +447,7 @@ function DrivesPanel(props: {
       const d = await adminCreateDriveApi(formToPayload(form, { partial: false }) as Partial<AdminDrive>);
       setForm(emptyDriveForm());
       setShowCreate(false);
-      setNotice('Drive created as draft — add rounds, then publish.');
+      setNotice('Drive created as draft â€” add rounds, then publish.');
       onDone();
       onSelect(d.drive_id);
       setSection('details');
@@ -484,12 +497,12 @@ function DrivesPanel(props: {
 
   const publish = async () => {
     if (!selected) return;
-    await run('Drive published — students can now register.', () => adminPublishDriveApi(selected.drive_id));
+    await run('Drive published â€” students can now register.', () => adminPublishDriveApi(selected.drive_id));
     await loadDetail(selected.drive_id);
   };
   const unpublish = async () => {
     if (!selected) return;
-    await run('Drive unpublished — hidden from students, still a draft.', () => adminUnpublishDriveApi(selected.drive_id));
+    await run('Drive unpublished â€” hidden from students, still a draft.', () => adminUnpublishDriveApi(selected.drive_id));
     await loadDetail(selected.drive_id);
   };
   const publishResults = async () => {
@@ -628,7 +641,7 @@ function DrivesPanel(props: {
     }
   };
 
-  /** Email compose — queued server-side, `queued` is the recipient count. */
+  /** Email compose â€” queued server-side, `queued` is the recipient count. */
   const sendEmail = async () => {
     if (!selected || !emailSubject.trim() || !emailBody.trim()) return;
     if (emailScope === 'slot' && !emailSlotId) return;
@@ -653,7 +666,7 @@ function DrivesPanel(props: {
   };
 
   /**
-   * Roster CSV — every column the drive team asks for on a call: who they are,
+   * Roster CSV â€” every column the drive team asks for on a call: who they are,
    * how to reach them, what they paid, and when they sit.
    */
   const exportRoster = () => {
@@ -676,7 +689,7 @@ function DrivesPanel(props: {
         ].map(esc).join(',')
       )
     );
-    const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+    const blob = new Blob(['ï»¿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -697,7 +710,7 @@ function DrivesPanel(props: {
     try {
       if (approve) await adminApprovePaymentApi(selected.drive_id, p.payment_id, note);
       else await adminRejectPaymentApi(selected.drive_id, p.payment_id, note);
-      setNotice(approve ? 'Payment approved — student can book a slot now.' : 'Payment rejected — student notified.');
+      setNotice(approve ? 'Payment approved â€” student can book a slot now.' : 'Payment rejected â€” student notified.');
       await loadPayments(selected.drive_id);
       await loadBookings(selected.drive_id);
     } catch (e) {
@@ -765,7 +778,7 @@ function DrivesPanel(props: {
     }
   };
 
-  /** One bulk slot call → refresh both ledgers; `{n}` in msg becomes the count. */
+  /** One bulk slot call â†’ refresh both ledgers; `{n}` in msg becomes the count. */
   const slotRun = async (msg: string, fn: () => Promise<{ updated: number }>) => {
     if (!selected) return;
     setBusy(true);
@@ -797,7 +810,7 @@ function DrivesPanel(props: {
   };
 
   const bulkActivate = (slotId: string) =>
-    slotRun('{n} links released — students notified.', () => adminActivateSlotBulkApi(selected!.drive_id, slotId));
+    slotRun('{n} links released â€” students notified.', () => adminActivateSlotBulkApi(selected!.drive_id, slotId));
 
   const bulkDeactivate = (slotId: string) =>
     slotRun('{n} links deactivated.', () => adminDeactivateSlotBulkApi(selected!.drive_id, slotId));
@@ -823,7 +836,7 @@ function DrivesPanel(props: {
         round_name: assignDraft.round_name.trim() || undefined,
         test_url: assignDraft.test_url.trim() || undefined,
       });
-      setNotice('Link assigned — student notified. Activate it when you are ready.');
+      setNotice('Link assigned â€” student notified. Activate it when you are ready.');
       setAssigningId(null);
       setAssignDraft({ round_name: '', test_url: '' });
       await loadBookings(selected.drive_id);
@@ -890,15 +903,15 @@ function DrivesPanel(props: {
                 className={`w-full rounded-xl border px-3 py-2 text-left text-sm ${selected?.drive_id === d.drive_id ? 'border-[#0284C7] bg-[#F0F9FF]' : 'border-gray-100 hover:bg-gray-50'}`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="truncate font-bold text-[#1F3A5F]">{d.title}</span>
-                  <span className="ml-2 flex-none rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-bold uppercase text-gray-500">{d.status}</span>
+                  <span className="truncate text-[13px] font-bold text-[#1F3A5F]">{d.title}</span>
+                  <span className="ml-2 flex-none rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-bold uppercase text-gray-500">{d.status}</span>
                 </div>
-                <p className="mt-0.5 text-[11px] text-gray-500">
-                  {d.company_name || '—'} · {d.registration_count ?? 0} registered · {d.test_count ?? 0} rounds
+                <p className="mt-0.5 text-xs text-gray-500">
+                  {d.company_name || 'â€”'} Â· {d.registration_count ?? 0} registered Â· {d.test_count ?? 0} rounds
                 </p>
               </button>
             ))}
-            {drives.length === 0 && <p className="text-xs italic text-gray-400">No drives yet — create one above.</p>}
+            {drives.length === 0 && <p className="text-xs italic text-gray-400">No drives yet â€” create one above.</p>}
           </div>
         </div>
       </div>
@@ -941,12 +954,12 @@ function DrivesPanel(props: {
 
               {/* Section tabs */}
               <div className="mt-4 flex flex-wrap gap-1.5 border-t border-gray-100 pt-3">
-                {(['details', 'rounds', 'roster', 'payments', 'slots', 'results', 'notify'] as const).map((s) => (
+                {(['details', 'rounds', 'roster', 'payments', 'slots', 'results', 'notify', 'help'] as const).map((s) => (
                   <button
                     key={s}
                     type="button"
                     onClick={() => setSection(s)}
-                    className={`rounded-xl border px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider transition ${
+                    className={`rounded-xl border px-3.5 py-2 text-xs font-bold uppercase tracking-wide transition ${
                       section === s
                         ? 'border-[#1F3A5F] bg-[#1F3A5F] text-white shadow-sm'
                         : 'border-gray-200 bg-white text-[#3E4754] hover:bg-[#F3F2EE]'
@@ -964,7 +977,7 @@ function DrivesPanel(props: {
             {/* --------------------------- details --------------------------- */}
             {section === 'details' && detail && (
               <div className="rounded-3xl border border-[#E9E7E1] bg-white p-6 shadow-xs">
-                <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Drive details</h4>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Drive details</h4>
                 <DriveFormFields form={editForm} setForm={setEditForm} disabled={savingDetail} />
 
                 <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
@@ -980,7 +993,7 @@ function DrivesPanel(props: {
                 </div>
 
                 <div className="mt-4">
-                  <span className="text-[12px] font-medium text-gray-500">Eligibility (JSON — branches, years, cgpa, backlogs…)</span>
+                  <span className="text-[12px] font-medium text-gray-500">Eligibility (JSON â€” branches, years, cgpa, backlogsâ€¦)</span>
                   <textarea
                     className={input + ' mt-1 h-28 font-mono text-xs'}
                     value={eligibilityText}
@@ -1015,7 +1028,7 @@ function DrivesPanel(props: {
                         />
                         <input
                           className={input}
-                          placeholder="https://…"
+                          placeholder="https://â€¦"
                           value={d.url}
                           onChange={(e) => setDocs(docs.map((x, j) => (j === i ? { ...x, url: e.target.value } : x)))}
                           disabled={savingDetail}
@@ -1046,17 +1059,17 @@ function DrivesPanel(props: {
             {section === 'rounds' && (
               <>
                 <div className="rounded-3xl border border-[#E9E7E1] bg-white p-6 shadow-xs">
-                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Attach a round</h4>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Attach a round</h4>
                   <div className="mt-2 flex gap-2">
                     <select className={input} value={attachTestId} onChange={(e) => setAttachTestId(e.target.value)}>
-                      <option value="">Select test…</option>
+                      <option value="">Select testâ€¦</option>
                       {tests.map((t) => <option key={t.test_id} value={t.test_id}>{t.name}</option>)}
                     </select>
                   </div>
                   <div className="mt-2 flex gap-2">
                     <input
                       className={input}
-                      placeholder="Round name (e.g. Round 1 — Aptitude)"
+                      placeholder="Round name (e.g. Round 1 â€” Aptitude)"
                       value={attachRoundName}
                       onChange={(e) => setAttachRoundName(e.target.value)}
                     />
@@ -1076,7 +1089,7 @@ function DrivesPanel(props: {
                 </div>
 
                 <div className="rounded-3xl border border-[#E9E7E1] bg-white p-6 shadow-xs">
-                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Workflow rounds ({rounds.length})</h4>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Workflow rounds ({rounds.length})</h4>
                   <div className="mt-3 space-y-2">
                     {rounds.map((r, i) => (
                       <div key={r.test_id} className="rounded-xl border border-gray-100 px-3 py-2.5">
@@ -1091,24 +1104,24 @@ function DrivesPanel(props: {
                           </span>
                           <span className="min-w-0 flex-1">
                             <span className="block truncate font-bold text-[#1F3A5F]">
-                              {r.round_name || `Round ${i + 1}`} — {r.name}
+                              {r.round_name || `Round ${i + 1}`} â€” {r.name}
                             </span>
-                            <span className="mt-0.5 block text-[11px] text-gray-500">
-                              {r.kind || r.mode} · {r.mandatory ? 'mandatory' : 'optional'} · {r.max_attempts} attempt(s)
-                              {r.opens_at ? ` · opens ${new Date(r.opens_at).toLocaleString()}` : ''}
-                              {r.closes_at ? ` · closes ${new Date(r.closes_at).toLocaleString()}` : ''}
+                            <span className="mt-0.5 block text-xs text-gray-500">
+                              {r.kind || r.mode} Â· {r.mandatory ? 'mandatory' : 'optional'} Â· {r.max_attempts} attempt(s)
+                              {r.opens_at ? ` Â· opens ${new Date(r.opens_at).toLocaleString()}` : ''}
+                              {r.closes_at ? ` Â· closes ${new Date(r.closes_at).toLocaleString()}` : ''}
                             </span>
                           </span>
                           <button
                             type="button"
-                            className="rounded-xl border border-gray-200 bg-white px-3 py-1.5 text-[11px] font-bold text-[#3E4754] transition hover:bg-[#F3F2EE]"
+                            className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-bold text-[#3E4754] transition hover:bg-[#F3F2EE]"
                             onClick={() => openRoundEditor(r)}
                           >
                             {editingRoundId === r.test_id ? 'Close' : <><Pencil className="mr-1 inline h-3 w-3" />Edit</>}
                           </button>
                           <button
                             type="button"
-                            className="rounded-lg px-2.5 py-1 text-[11px] font-bold text-red-600 hover:bg-red-50"
+                            className="rounded-lg px-3 py-1.5 text-xs font-bold text-red-600 hover:bg-red-50"
                             onClick={() => detachRound(r.test_id)}
                             disabled={busy}
                           >
@@ -1119,13 +1132,13 @@ function DrivesPanel(props: {
                         {editingRoundId === r.test_id && roundDraft && (
                           <div className="mt-3 grid gap-2 border-t border-gray-100 pt-3 sm:grid-cols-2">
                             <label>
-                              <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Round name</span>
+                              <span className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Round name</span>
                               <input className={input + ' mt-1'} value={roundDraft.round_name} onChange={(e) => setRoundDraft({ ...roundDraft, round_name: e.target.value })} />
                             </label>
                             <label>
-                              <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Kind</span>
+                              <span className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Kind</span>
                               <select className={input + ' mt-1'} value={roundDraft.kind} onChange={(e) => setRoundDraft({ ...roundDraft, kind: e.target.value })}>
-                                <option value="">—</option>
+                                <option value="">â€”</option>
                                 <option value="aptitude">Aptitude</option>
                                 <option value="technical">Technical</option>
                                 <option value="coding">Coding</option>
@@ -1135,7 +1148,7 @@ function DrivesPanel(props: {
                               </select>
                             </label>
                             <label>
-                              <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Max attempts</span>
+                              <span className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Max attempts</span>
                               <input type="number" min="1" className={input + ' mt-1'} value={roundDraft.max_attempts} onChange={(e) => setRoundDraft({ ...roundDraft, max_attempts: e.target.value })} />
                             </label>
                             <label className="flex items-end gap-2 pb-2">
@@ -1148,15 +1161,15 @@ function DrivesPanel(props: {
                               <span className="text-[13px] font-medium text-gray-600">Mandatory round</span>
                             </label>
                             <label>
-                              <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Opens at</span>
+                              <span className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Opens at</span>
                               <input type="datetime-local" className={input + ' mt-1'} value={roundDraft.opens_at} onChange={(e) => setRoundDraft({ ...roundDraft, opens_at: e.target.value })} />
                             </label>
                             <label>
-                              <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Closes at</span>
+                              <span className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Closes at</span>
                               <input type="datetime-local" className={input + ' mt-1'} value={roundDraft.closes_at} onChange={(e) => setRoundDraft({ ...roundDraft, closes_at: e.target.value })} />
                             </label>
                             <label className="sm:col-span-2">
-                              <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Unlock rule (JSON, e.g. {'{"kind":"open"}'})</span>
+                              <span className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Unlock rule (JSON, e.g. {'{"kind":"open"}'})</span>
                               <textarea className={input + ' mt-1 h-16 font-mono text-xs'} value={roundDraft.unlock_rule} onChange={(e) => setRoundDraft({ ...roundDraft, unlock_rule: e.target.value })} spellCheck={false} />
                             </label>
                             <div className="sm:col-span-2">
@@ -1178,12 +1191,12 @@ function DrivesPanel(props: {
             {section === 'roster' && (
               <div className="rounded-3xl border border-[#E9E7E1] bg-white p-6 shadow-xs">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Roster ({regsLocal.length})</h4>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Roster ({regsLocal.length})</h4>
                   <button className={ghost} onClick={exportRoster} disabled={!regsLocal.length}>
                     <Download className="h-3.5 w-3.5" /> Export CSV
                   </button>
                 </div>
-                <h4 className="mt-4 text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Import roster (roll numbers, one per line)</h4>
+                <h4 className="mt-4 text-xs font-bold uppercase tracking-wider text-[#5A6470]">Import roster (roll numbers, one per line)</h4>
                 <textarea className={input + ' mt-2 h-24 font-mono'} value={importText} onChange={(e) => setImportText(e.target.value)} placeholder={'GLA-2026-001\nGLA-2026-002'} />
                 <button className={btn + ' mt-2'} disabled={busy || !importText.trim()} onClick={importRoster}>
                   <Upload className="h-3.5 w-3.5" /> Import
@@ -1194,16 +1207,16 @@ function DrivesPanel(props: {
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="min-w-0 flex-1 truncate font-bold text-[#1F3A5F]">
                           {r.name || r.roll_no || r.user_id}
-                          {r.status && <span className="ml-2 rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-gray-500">{String(r.status).replace('_', ' ')}</span>}
+                          {r.status && <span className="ml-2 rounded-full bg-gray-100 px-1.5 py-0.5 text-[11px] font-bold uppercase text-gray-500">{String(r.status).replace('_', ' ')}</span>}
                           {r.payment_status && (
-                            <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase ${
+                            <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[11px] font-bold uppercase ${
                               r.payment_status === 'approved' ? 'bg-emerald-50 text-emerald-700'
                               : r.payment_status === 'rejected' ? 'bg-red-50 text-red-600'
                               : 'bg-amber-50 text-amber-700'
-                            }`}>₹ {r.payment_status}</span>
+                            }`}>â‚¹ {r.payment_status}</span>
                           )}
                           {r.booking_status && r.booking_status !== 'cancelled' && (
-                            <span className="ml-1.5 rounded-full bg-blue-50 px-1.5 py-0.5 text-[10px] font-bold uppercase text-blue-700">slot booked</span>
+                            <span className="ml-1.5 rounded-full bg-blue-50 px-1.5 py-0.5 text-[11px] font-bold uppercase text-blue-700">slot booked</span>
                           )}
                         </span>
                         {r.slot_starts_at && (
@@ -1212,7 +1225,7 @@ function DrivesPanel(props: {
                           </span>
                         )}
                       </div>
-                      <div className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-gray-500">
+                      <div className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-gray-500">
                         {r.email && <span>{r.email}</span>}
                         {r.contact_phone && <span className="font-mono">+91 {r.contact_phone}</span>}
                         {r.roll_no && <span className="font-mono">{r.roll_no}</span>}
@@ -1230,10 +1243,10 @@ function DrivesPanel(props: {
             {section === 'payments' && (
               <div className="rounded-3xl border border-[#E9E7E1] bg-white p-6 shadow-xs">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">
                     Payments
                     {payCounts.submitted > 0 && (
-                      <span className="ml-1.5 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] text-amber-700">
+                      <span className="ml-1.5 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] text-amber-700">
                         {payCounts.submitted} pending
                       </span>
                     )}
@@ -1244,7 +1257,7 @@ function DrivesPanel(props: {
                         key={f}
                         type="button"
                         onClick={() => setPayFilter(f)}
-                        className={`rounded-xl border px-2.5 py-1 text-[11px] font-bold capitalize transition ${
+                        className={`rounded-xl border px-3 py-1.5 text-xs font-bold capitalize transition ${
                           payFilter === f
                             ? 'border-[#1F3A5F] bg-[#1F3A5F] text-white shadow-sm'
                             : 'border-gray-200 bg-white text-[#3E4754] hover:bg-[#F3F2EE]'
@@ -1262,14 +1275,14 @@ function DrivesPanel(props: {
                         <CreditCard className="h-4 w-4 shrink-0 text-gray-400" />
                         <span className="min-w-0 flex-1">
                           <span className="block truncate font-bold text-[#1F3A5F]">
-                            ₹{Math.round(p.amount_paise / 100)} · {p.user_email || p.roll_no || p.user_id}
+                            â‚¹{Math.round(p.amount_paise / 100)} Â· {p.user_email || p.roll_no || p.user_id}
                           </span>
-                          <span className="mt-0.5 block text-[11px] text-gray-500">
-                            UTR {p.utr || '—'} · {new Date(p.created_at).toLocaleString()} · {p.registration_status}
-                            {p.reviewer_note ? ` · note: ${p.reviewer_note}` : ''}
+                          <span className="mt-0.5 block text-xs text-gray-500">
+                            UTR {p.utr || 'â€”'} Â· {new Date(p.created_at).toLocaleString()} Â· {p.registration_status}
+                            {p.reviewer_note ? ` Â· note: ${p.reviewer_note}` : ''}
                           </span>
                         </span>
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                        <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold uppercase ${
                           p.status === 'approved' ? 'bg-emerald-50 text-emerald-700'
                           : p.status === 'rejected' ? 'bg-red-50 text-red-600'
                           : 'bg-amber-50 text-amber-700'
@@ -1294,7 +1307,7 @@ function DrivesPanel(props: {
                   ))}
                   {payments.length === 0 && <p className="text-xs italic text-gray-400">No payments for this drive yet.</p>}
                 </div>
-                <p className="mt-3 text-[11px] text-gray-400">
+                <p className="mt-3 text-xs text-gray-400">
                   Approving unlocks the student&apos;s open rounds and lets them book a slot; the student gets a notification either way.
                 </p>
               </div>
@@ -1304,31 +1317,31 @@ function DrivesPanel(props: {
             {section === 'slots' && (
               <>
                 <div className="rounded-3xl border border-[#E9E7E1] bg-white p-6 shadow-xs">
-                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Generate slots</h4>
-                  <p className="mt-1 text-xs text-gray-500">
-                    One slot per day per start time. Times are IST. Defaults: 5 days × 10 AM/12/2/4/6/8/10 PM, 50 seats, 1h each.
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Generate slots</h4>
+                  <p className="mt-1 text-[13px] leading-relaxed text-gray-500">
+                    One slot per day per start time. Times are IST. Defaults: 5 days Ã— 10 AM/12/2/4/6/8/10 PM, 50 seats, 1h each.
                   </p>
-                  <div className="mt-3 grid gap-2 sm:grid-cols-5">
+                  <div className="mt-3 grid gap-3 sm:grid-cols-5">
                     <label>
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Start date</span>
+                      <span className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Start date</span>
                       <input type="date" className={input + ' mt-1'} value={gen.start_date} onChange={(e) => setGen({ ...gen, start_date: e.target.value })} />
                     </label>
                     <label>
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Days</span>
+                      <span className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Days</span>
                       <input type="number" min="1" max="14" className={input + ' mt-1'} value={gen.days} onChange={(e) => setGen({ ...gen, days: e.target.value })} />
                     </label>
                     <label className="sm:col-span-2">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Times (comma-separated, IST)</span>
+                      <span className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Times (comma-separated, IST)</span>
                       <input className={input + ' mt-1'} value={gen.times} onChange={(e) => setGen({ ...gen, times: e.target.value })} />
                     </label>
                     <label>
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Seats / slot</span>
+                      <span className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Seats / slot</span>
                       <input type="number" min="1" className={input + ' mt-1'} value={gen.capacity} onChange={(e) => setGen({ ...gen, capacity: e.target.value })} />
                     </label>
                   </div>
                   <div className="mt-2 grid gap-2 sm:grid-cols-5">
                     <label>
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Duration (min)</span>
+                      <span className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Duration (min)</span>
                       <input type="number" min="15" className={input + ' mt-1'} value={gen.duration_minutes} onChange={(e) => setGen({ ...gen, duration_minutes: e.target.value })} />
                     </label>
                     <div className="flex items-end sm:col-span-4">
@@ -1340,106 +1353,162 @@ function DrivesPanel(props: {
                 </div>
 
                 <div className="rounded-3xl border border-[#E9E7E1] bg-white p-6 shadow-xs">
-                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Slots ({slots.length})</h4>
-                  <p className="mt-1 text-xs text-gray-500">
-                    Slot bhar jaye to ek click me poore slot ke links assign aur release karein — 50 alag-alag nahi.
-                  </p>
-                  <div className="mt-3 max-h-72 space-y-2 overflow-auto text-xs text-gray-600">
-                    {slots.map((s) => {
-                      const st = slotStats(s.slot_id);
-                      const full = s.booked >= s.capacity;
-                      return (
-                        <div key={s.slot_id} className="rounded-lg border border-gray-100 px-2.5 py-2">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="min-w-0 flex-1 font-mono">
-                              {new Date(s.starts_at).toLocaleString()} → {new Date(s.ends_at).toLocaleTimeString()}
-                            </span>
-                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${full ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-700'}`}>
-                              {s.booked}/{s.capacity}{full ? ' FULL' : ''}
-                            </span>
-                            {st.assigned > 0 && (
-                              <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700">{st.assigned} assigned</span>
-                            )}
-                            {st.active > 0 && (
-                              <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">{st.active} live</span>
-                            )}
-                            <button type="button" className={ghost} disabled={busy || s.booked === 0} onClick={() => setSlotAssignId(slotAssignId === s.slot_id ? null : s.slot_id)}>
-                              <Link2 className="h-3.5 w-3.5" /> Assign all
-                            </button>
-                            <button type="button" className={btn} disabled={busy || st.assigned === 0} onClick={() => bulkActivate(s.slot_id)}>
-                              <Zap className="h-3.5 w-3.5" /> Release all
-                            </button>
-                            <button type="button" className={ghost} disabled={busy || st.active === 0} onClick={() => bulkDeactivate(s.slot_id)}>
-                              Pause
-                            </button>
-                            <button type="button" className={ghost} disabled={busy} onClick={() => toggleSlot(s)}>
-                              {s.status === 'open' ? 'Close' : 'Open'}
-                            </button>
-                            <button type="button" className={danger} disabled={busy} onClick={() => deleteSlot(s)}>
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                          {slotAssignId === s.slot_id && (
-                            <div className="mt-2 grid gap-2 border-t border-gray-100 pt-2 sm:grid-cols-2">
-                              <input
-                                className={input}
-                                placeholder="Round name (e.g. Round 1 — AI-assisted Coding)"
-                                value={slotDraft.round_name}
-                                onChange={(e) => setSlotDraft({ ...slotDraft, round_name: e.target.value })}
-                              />
-                              <input
-                                className={input}
-                                placeholder="Test URL (https://…)"
-                                value={slotDraft.test_url}
-                                onChange={(e) => setSlotDraft({ ...slotDraft, test_url: e.target.value })}
-                              />
-                              <div className="sm:col-span-2">
-                                <button className={btn} disabled={busy} onClick={() => bulkAssign(s.slot_id)}>
-                                  <Check className="h-3.5 w-3.5" /> Assign to all {s.booked} in this slot
-                                </button>
-                              </div>
-                            </div>
-                          )}
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Slots ({slots.length})</h4>
+                    <p className="text-[13px] text-gray-500">
+                      Slot bhar jaye to ek click me poore slot ke links assign aur release karein â€” 50 alag-alag nahi.
+                    </p>
+                  </div>
+                  <div className="mt-4 max-h-[560px] space-y-6 overflow-auto pr-1">
+                    {groupSlotsByDay(slots).map(([day, list]) => (
+                      <div key={day}>
+                        <div className="sticky top-0 z-10 flex items-center justify-between rounded-lg bg-white/95 pb-2 pt-1 backdrop-blur">
+                          <span className="text-sm font-extrabold text-[#1F3A5F]">{formatSlotDay(day)}</span>
+                          <span className="text-xs font-semibold text-gray-500">{list.length} slots</span>
                         </div>
-                      );
-                    })}
-                    {slots.length === 0 && <p className="italic text-gray-400">No slots yet — generate them above.</p>}
+                        <div className="space-y-2.5">
+                          {list.map((s) => {
+                            const st = slotStats(s.slot_id);
+                            const full = s.booked >= s.capacity;
+                            const pct = Math.min(100, Math.round((s.booked / Math.max(1, s.capacity)) * 100));
+                            const time = (iso: string) => new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+                            return (
+                              <div key={s.slot_id} className={`rounded-2xl border p-4 transition ${full ? 'border-red-200 bg-red-50/40' : 'border-gray-200 bg-white hover:border-gray-300'}`}>
+                                <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+                                  <div className="min-w-[170px]">
+                                    <p className="text-[15px] font-extrabold text-[#10151C]">{time(s.starts_at)} â€“ {time(s.ends_at)}</p>
+                                    <p className="mt-0.5 text-xs font-semibold text-gray-500">{s.status === 'open' ? 'Open' : 'Paused'}{full ? ' Â· Full' : ''}</p>
+                                  </div>
+                                  <div className="min-w-[150px] flex-1">
+                                    <div className="flex items-baseline justify-between gap-2">
+                                      <span className={`text-sm font-extrabold ${full ? 'text-red-600' : 'text-[#10151C]'}`}>{s.booked} / {s.capacity}</span>
+                                      <span className="text-xs font-semibold text-gray-500">booked</span>
+                                    </div>
+                                    <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-gray-100">
+                                      <div className={`h-2 rounded-full ${full ? 'bg-red-500' : 'bg-[#1F3A5F]'}`} style={{ width: `${pct}%` }} />
+                                    </div>
+                                  </div>
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {st.assigned > 0 && (
+                                      <span className="rounded-lg bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700">{st.assigned} assigned</span>
+                                    )}
+                                    {st.active > 0 && (
+                                      <span className="rounded-lg bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">{st.active} live</span>
+                                    )}
+                                    {full && <span className="rounded-lg bg-red-100 px-2.5 py-1 text-xs font-bold text-red-700">FULL</span>}
+                                  </div>
+                                  <div className="ml-auto flex flex-wrap items-center gap-2">
+                                    <button type="button" className={ghost} disabled={busy || s.booked === 0} onClick={() => setSlotAssignId(slotAssignId === s.slot_id ? null : s.slot_id)}>
+                                      <Link2 className="h-4 w-4" /> Assign all
+                                    </button>
+                                    <button type="button" className={btn} disabled={busy || st.assigned === 0} onClick={() => bulkActivate(s.slot_id)}>
+                                      <Zap className="h-4 w-4" /> Release all
+                                    </button>
+                                    <button type="button" className={ghost} disabled={busy || st.active === 0} onClick={() => bulkDeactivate(s.slot_id)}>
+                                      Pause links
+                                    </button>
+                                    <button type="button" className={ghost} disabled={busy} onClick={() => toggleSlot(s)}>
+                                      {s.status === 'open' ? 'Close' : 'Open'}
+                                    </button>
+                                    <button type="button" className={danger} disabled={busy} onClick={() => deleteSlot(s)} aria-label="Delete slot">
+                                      <Trash2 className="h-4 w-4" />
+                                    </button>
+                                  </div>
+                                </div>
+                                {slotAssignId === s.slot_id && (
+                                  <div className="mt-4 grid gap-3 border-t border-gray-100 pt-4 sm:grid-cols-2">
+                                    <label className="block">
+                                      <span className="text-xs font-semibold text-gray-600">Round name (same for everyone)</span>
+                                      <input
+                                        className={input + ' mt-1'}
+                                        placeholder="e.g. Round 1 â€” AI-assisted Coding"
+                                        value={slotDraft.round_name}
+                                        onChange={(e) => setSlotDraft({ ...slotDraft, round_name: e.target.value })}
+                                      />
+                                    </label>
+                                    <label className="block">
+                                      <span className="text-xs font-semibold text-gray-600">Test URL (from Kryptavia OS)</span>
+                                      <input
+                                        className={input + ' mt-1'}
+                                        placeholder="https://â€¦"
+                                        value={slotDraft.test_url}
+                                        onChange={(e) => setSlotDraft({ ...slotDraft, test_url: e.target.value })}
+                                      />
+                                    </label>
+                                    <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
+                                      <button className={btn} disabled={busy} onClick={() => bulkAssign(s.slot_id)}>
+                                        <Check className="h-4 w-4" /> Assign to all {s.booked} in this slot
+                                      </button>
+                                      <span className="text-xs text-gray-500">Link tab tak dead rehta hai jab tak aap Release na karein.</span>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                    {slots.length === 0 && <p className="italic text-gray-400">No slots yet â€” generate them above.</p>}
                   </div>
                 </div>
 
                 <div className="rounded-3xl border border-[#E9E7E1] bg-white p-6 shadow-xs">
-                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Bookings ({bookings.length})</h4>
-                  <p className="mt-1 text-xs text-gray-500">
-                    Assign the round + URL, then <b>Activate</b> — the student&apos;s link stays dead until you do.
-                  </p>
-                  <div className="mt-3 max-h-80 space-y-2 overflow-auto">
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Bookings ({bookings.length})</h4>
+                    <p className="text-[13px] text-gray-500">
+                      Assign the round + URL, then <b>Release</b> â€” tab tak student ko link dikhta hi nahi.
+                    </p>
+                  </div>
+                  <div className="mt-4 max-h-[560px] space-y-3 overflow-auto pr-1">
                     {bookings.map((b) => (
-                      <div key={b.booking_id} className="rounded-xl border border-gray-100 px-3 py-2.5 text-sm">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="min-w-0 flex-1">
-                            <span className="block truncate font-bold text-[#1F3A5F]">
-                              {b.user_name || b.user_email || b.roll_no || b.user_id}
-                            </span>
-                            <span className="mt-0.5 block text-[11px] text-gray-500">
-                              {b.user_email}{b.contact_phone ? ` · +91 ${b.contact_phone}` : ''}
-                              {b.payment_status ? ` · ₹ ${b.payment_status}` : ''}
-                            </span>
-                            <span className="mt-0.5 block text-[11px] text-gray-500">
-                              {new Date(b.starts_at).toLocaleString()} · {b.round_name || 'round not set'}
-                              {b.link_active_at ? ' · ACTIVE' : b.link_assigned_at ? ' · assigned' : ''}
-                            </span>
-                          </span>
-                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
-                            b.status === 'active' ? 'bg-emerald-50 text-emerald-700'
-                            : b.status === 'link_assigned' ? 'bg-amber-50 text-amber-700'
-                            : b.status === 'cancelled' ? 'bg-gray-100 text-gray-400'
-                            : 'bg-blue-50 text-blue-700'
-                          }`}>
-                            {b.status.replace('_', ' ')}
-                          </span>
+                      <div key={b.booking_id} className={`rounded-2xl border p-4 ${b.status === 'cancelled' ? 'border-gray-100 bg-gray-50 opacity-70' : 'border-gray-200 bg-white'}`}>
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="text-[15px] font-extrabold text-[#10151C]">
+                                {b.user_name || b.roll_no || b.user_id}
+                              </span>
+                              <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold uppercase ${
+                                b.status === 'active' ? 'bg-emerald-50 text-emerald-700'
+                                : b.status === 'link_assigned' ? 'bg-amber-50 text-amber-700'
+                                : b.status === 'cancelled' ? 'bg-gray-100 text-gray-400'
+                                : 'bg-blue-50 text-blue-700'
+                              }`}>
+                                {b.status.replace('_', ' ')}
+                              </span>
+                              {b.link_active_at && (
+                                <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-bold uppercase text-emerald-700">â— Link live</span>
+                              )}
+                            </div>
+                            <p className="mt-1 break-all text-[13px] text-gray-600">
+                              {b.user_email}{b.contact_phone ? ` Â· +91 ${b.contact_phone}` : ''}
+                            </p>
+                            <div className="mt-2 flex flex-wrap gap-1.5">
+                              {b.payment_status && (
+                                <span className={`rounded-lg px-2.5 py-1 text-xs font-bold ${
+                                  /reject/.test(b.payment_status) ? 'bg-red-50 text-red-700'
+                                  : /approv/.test(b.payment_status) ? 'bg-emerald-50 text-emerald-700'
+                                  : 'bg-amber-50 text-amber-700'
+                                }`}>
+                                  â‚¹ {b.payment_status.replace('payment_', '')}
+                                </span>
+                              )}
+                              <span className="rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-semibold text-gray-600">
+                                <CalendarClock className="mr-1 inline h-3.5 w-3.5 align-[-2px]" />
+                                {new Date(b.starts_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}
+                              </span>
+                              <span className={`rounded-lg px-2.5 py-1 text-xs font-semibold ${b.round_name ? 'border border-gray-200 bg-white text-gray-700' : 'bg-amber-50 text-amber-700'}`}>
+                                {b.round_name || 'Round not set'}
+                              </span>
+                              <span className={`rounded-lg px-2.5 py-1 text-xs font-bold ${b.link_active_at ? 'bg-emerald-50 text-emerald-700' : b.link_assigned_at ? 'bg-amber-50 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
+                                {b.link_active_at ? 'Link: live' : b.link_assigned_at ? 'Link: assigned' : 'Link: not set'}
+                              </span>
+                            </div>
+                          </div>
 
                           {b.status !== 'cancelled' && (
-                            <>
+                            <div className="flex flex-wrap gap-2">
                               <button
                                 type="button"
                                 className={ghost}
@@ -1449,16 +1518,16 @@ function DrivesPanel(props: {
                                   setAssignDraft({ round_name: b.round_name || '', test_url: b.test_url || '' });
                                 }}
                               >
-                                <Link2 className="h-3.5 w-3.5" /> {b.link_assigned_at ? 'Edit' : 'Assign'}
+                                <Link2 className="h-4 w-4" /> {b.link_assigned_at ? 'Edit' : 'Assign'}
                               </button>
                               {!b.link_active_at && b.link_assigned_at && (
                                 <button
                                   type="button"
                                   className={btn}
                                   disabled={busy}
-                                  onClick={() => bookingAction(b, () => adminActivateBookingApi(selected!.drive_id, b.booking_id), 'Link ACTIVATED — student notified.')}
+                                  onClick={() => bookingAction(b, () => adminActivateBookingApi(selected!.drive_id, b.booking_id), 'Link ACTIVATED â€” student notified.')}
                                 >
-                                  <Zap className="h-3.5 w-3.5" /> Activate
+                                  <Zap className="h-4 w-4" /> Release
                                 </button>
                               )}
                               {b.link_active_at && (
@@ -1468,7 +1537,7 @@ function DrivesPanel(props: {
                                   disabled={busy}
                                   onClick={() => bookingAction(b, () => adminDeactivateBookingApi(selected!.drive_id, b.booking_id), 'Link deactivated.')}
                                 >
-                                  Deactivate
+                                  Pause
                                 </button>
                               )}
                               <button
@@ -1483,34 +1552,43 @@ function DrivesPanel(props: {
                               >
                                 Cancel
                               </button>
-                            </>
+                            </div>
                           )}
                         </div>
 
                         {assigningId === b.booking_id && (
-                          <div className="mt-2 grid gap-2 border-t border-gray-100 pt-2 sm:grid-cols-2">
-                            <input
-                              className={input}
-                              placeholder="Round name (e.g. Round 1 — Aptitude)"
-                              value={assignDraft.round_name}
-                              onChange={(e) => setAssignDraft({ ...assignDraft, round_name: e.target.value })}
-                            />
-                            <input
-                              className={input}
-                              placeholder="Test URL (https://…)"
-                              value={assignDraft.test_url}
-                              onChange={(e) => setAssignDraft({ ...assignDraft, test_url: e.target.value })}
-                            />
-                            <div className="sm:col-span-2">
+                          <div className="mt-4 grid gap-3 border-t border-gray-100 pt-4 sm:grid-cols-2">
+                            <label className="block">
+                              <span className="text-xs font-semibold text-gray-600">Round name</span>
+                              <input
+                                className={input + ' mt-1'}
+                                placeholder="e.g. Round 1 â€” AI-assisted Coding"
+                                value={assignDraft.round_name}
+                                onChange={(e) => setAssignDraft({ ...assignDraft, round_name: e.target.value })}
+                              />
+                            </label>
+                            <label className="block">
+                              <span className="text-xs font-semibold text-gray-600">Test URL (from Kryptavia OS)</span>
+                              <input
+                                className={input + ' mt-1'}
+                                placeholder="https://â€¦"
+                                value={assignDraft.test_url}
+                                onChange={(e) => setAssignDraft({ ...assignDraft, test_url: e.target.value })}
+                              />
+                            </label>
+                            <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
                               <button className={btn} disabled={busy} onClick={() => assignLink(b)}>
-                                <Check className="h-3.5 w-3.5" /> Save assignment
+                                <Check className="h-4 w-4" /> Save assignment
+                              </button>
+                              <button type="button" className="text-xs font-bold text-[#0284C7] hover:underline" onClick={() => setSection('help')}>
+                                URL kahan se milega? Help dekhein â†’
                               </button>
                             </div>
                           </div>
                         )}
                       </div>
                     ))}
-                    {bookings.length === 0 && <p className="text-xs italic text-gray-400">No bookings yet — students book after payment approval.</p>}
+                    {bookings.length === 0 && <p className="text-sm italic text-gray-400">No bookings yet â€” students book after payment approval.</p>}
                   </div>
                 </div>
               </>
@@ -1520,7 +1598,7 @@ function DrivesPanel(props: {
             {section === 'results' && (
               <div className="rounded-3xl border border-[#E9E7E1] bg-white p-6 shadow-xs">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Results ({results.length})</h4>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Results ({results.length})</h4>
                   <div className="flex gap-2">
                     <button className={ghost} onClick={downloadCsv}>
                       <Download className="h-3.5 w-3.5" /> CSV
@@ -1545,12 +1623,12 @@ function DrivesPanel(props: {
             {/* ---------------------------- notify ---------------------------- */}
             {section === 'notify' && (
               <div className="rounded-3xl border border-[#E9E7E1] bg-white p-6 shadow-xs">
-                <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Send update to registered students</h4>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Send update to registered students</h4>
                 <p className="mt-1 text-xs text-gray-500">
                   Appears in every registrant&apos;s in-app notifications (and push, where enabled).
                 </p>
                 <label className="mt-3 block">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Title</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Title</span>
                   <input
                     className={input + ' mt-1'}
                     placeholder="e.g. Slot bookings open tonight"
@@ -1560,7 +1638,7 @@ function DrivesPanel(props: {
                   />
                 </label>
                 <label className="mt-2 block">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Message</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Message</span>
                   <textarea
                     className={input + ' mt-1 h-24'}
                     placeholder="What should students know? Keep it one or two lines."
@@ -1570,19 +1648,19 @@ function DrivesPanel(props: {
                   />
                 </label>
                 <button className={btn + ' mt-3'} disabled={notifyBusy || !notifyTitle.trim()} onClick={sendUpdate}>
-                  <Send className="h-3.5 w-3.5" /> {notifyBusy ? 'Sending…' : 'Send update'}
+                  <Send className="h-3.5 w-3.5" /> {notifyBusy ? 'Sendingâ€¦' : 'Send update'}
                 </button>
 
                 <div className="mt-6 border-t border-gray-100 pt-5">
-                  <h4 className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">
+                  <h4 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#5A6470]">
                     <Mail className="h-3.5 w-3.5" /> Send email
                   </h4>
                   <p className="mt-1 text-xs text-gray-500">
-                    Email to everyone, one slot, or one student. Payment approval, slot booking aur link-live pe automatic email jaata hai — yeh manual wala hai.
+                    Email to everyone, one slot, or one student. Payment approval, slot booking aur link-live pe automatic email jaata hai â€” yeh manual wala hai.
                   </p>
                   <div className="mt-3 grid gap-2 sm:grid-cols-3">
                     <label>
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Send to</span>
+                      <span className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Send to</span>
                       <select className={input + ' mt-1'} value={emailScope} onChange={(e) => setEmailScope(e.target.value as any)}>
                         <option value="all">All registered ({regsLocal.length})</option>
                         <option value="slot">One slot</option>
@@ -1591,9 +1669,9 @@ function DrivesPanel(props: {
                     </label>
                     {emailScope === 'slot' && (
                       <label className="sm:col-span-2">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Slot</span>
+                        <span className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Slot</span>
                         <select className={input + ' mt-1'} value={emailSlotId} onChange={(e) => setEmailSlotId(e.target.value)}>
-                          <option value="">Pick a slot…</option>
+                          <option value="">Pick a slotâ€¦</option>
                           {slots.map((s) => (
                             <option key={s.slot_id} value={s.slot_id}>
                               {new Date(s.starts_at).toLocaleString()} ({s.booked}/{s.capacity})
@@ -1604,12 +1682,12 @@ function DrivesPanel(props: {
                     )}
                     {emailScope === 'student' && (
                       <label className="sm:col-span-2">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Student</span>
+                        <span className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Student</span>
                         <select className={input + ' mt-1'} value={emailRegId} onChange={(e) => setEmailRegId(e.target.value)}>
-                          <option value="">Pick a student…</option>
+                          <option value="">Pick a studentâ€¦</option>
                           {regsLocal.map((r) => (
                             <option key={r.registration_id} value={r.registration_id}>
-                              {r.name || r.roll_no || r.user_id} · {r.email || r.user_id}
+                              {r.name || r.roll_no || r.user_id} Â· {r.email || r.user_id}
                             </option>
                           ))}
                         </select>
@@ -1617,21 +1695,145 @@ function DrivesPanel(props: {
                     )}
                   </div>
                   <label className="mt-2 block">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Subject</span>
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Subject</span>
                     <input className={input + ' mt-1'} placeholder="e.g. Your Capgemini slot is confirmed" value={emailSubject} onChange={(e) => setEmailSubject(e.target.value)} maxLength={150} />
                   </label>
                   <label className="mt-2 block">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Message</span>
-                    <textarea className={input + ' mt-1 h-28'} placeholder={'Slot time, payment receipt, ya test link ka detail — blank line se paragraph banta hai.'} value={emailBody} onChange={(e) => setEmailBody(e.target.value)} maxLength={4000} />
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Message</span>
+                    <textarea className={input + ' mt-1 h-28'} placeholder={'Slot time, payment receipt, ya test link ka detail â€” blank line se paragraph banta hai.'} value={emailBody} onChange={(e) => setEmailBody(e.target.value)} maxLength={4000} />
                   </label>
                   <button className={btn + ' mt-3'} disabled={emailBusy || !emailSubject.trim() || !emailBody.trim()} onClick={sendEmail}>
-                    <Mail className="h-3.5 w-3.5" /> {emailBusy ? 'Queueing…' : 'Send email'}
+                    <Mail className="h-3.5 w-3.5" /> {emailBusy ? 'Queueingâ€¦' : 'Send email'}
                   </button>
                 </div>
               </div>
             )}
+
+            {/* ------------------------------ help ------------------------------ */}
+            {section === 'help' && <DriveHelp onTab={setSection} />}
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+/** Step-by-step operating manual for a mock drive â€” the drive editor's Help tab. */
+const DRIVE_STEPS: { n: number; title: string; tab: string; body: string }[] = [
+  {
+    n: 1,
+    title: 'Drive banao aur Publish karo',
+    tab: 'details',
+    body: 'Company, fee (â‚¹99), registration dates, eligibility aur description bharo â€” phir Status ko â€œPublishedâ€ kar do. Students ko drive apne portal par dikhne lagti hai.',
+  },
+  {
+    n: 2,
+    title: 'Students register karke â‚¹99 pay karte hain',
+    tab: 'roster',
+    body: 'Student UPI se payment karke screenshot + UTR upload karta hai. Uski registration â€œpayment pendingâ€ dikhti hai.',
+  },
+  {
+    n: 3,
+    title: 'Payment approve karo',
+    tab: 'payments',
+    body: 'Proof kholkar check karo â†’ Approve. Approve hote hi student ko notification + email jaata hai aur uska â€œBook slotâ€ button unlock ho jaata hai. Galat proof ho to Reject + note likho â€” student dobara upload kar sakta hai.',
+  },
+  {
+    n: 4,
+    title: 'Student slot book karta hai',
+    tab: 'slots',
+    body: 'Aapke generate kiye hue slots (day + time) me se student apni seat choose karta hai. Uski booking yahan Slots â†’ Bookings me dikhti hai.',
+  },
+  {
+    n: 5,
+    title: 'Test URL assign karo',
+    tab: 'slots',
+    body: 'Test URL Kryptavia OS (os.kryptavia.in) se copy karo. Bookings me ek student ke liye â€œAssignâ€, ya poore slot ke liye â€œAssign allâ€ â€” round name + URL paste karke save karo.',
+  },
+  {
+    n: 6,
+    title: 'Release karo â€” link live hota hai',
+    tab: 'slots',
+    body: 'Assign ke baad bhi link DEAD rehta hai. â€œReleaseâ€ (ek student) ya â€œRelease allâ€ (poora slot) dabate hi link student ke slot window me open ho jaata hai â€” start se 5 min pehle se, slot end par hard close.',
+  },
+  {
+    n: 7,
+    title: 'Results publish karo',
+    tab: 'results',
+    body: 'Exam khatam hone ke baad Results publish karo â€” students ko scores dikh jaate hain. CSV se sab data download bhi kar sakte ho.',
+  },
+  {
+    n: 8,
+    title: 'Zaroori update bhejo',
+    tab: 'notify',
+    body: 'Reminder, reschedule ya koi bhi announcement â€” sab registered students ko email + in-app notification ek saath bhejo.',
+  },
+];
+
+const HELP_FAQ: [string, string][] = [
+  ['Link open nahi ho raha', 'Booking ka status live hona chahiye aur time slot window ke andar hona chahiye. Bookings card par â€œLink: liveâ€ chip check karo, warna Release karo.'],
+  ['Student ko doosra slot chahiye', 'Bookings me uski booking Cancel karo â€” seat turant free ho jaayegi, student dobara book kar lega.'],
+  ['Payment reject ho gaya', 'Student portal se dobara upload kar sakta hai â€” Payments section me naya proof approve kar dena.'],
+  ['Slot bhar gaya', 'Card par FULL dikhega. Naya slot generate karo ya kisi booking ko cancel karke seat chhodo.'],
+  ['Email nahi ja raha', 'Server par RESEND_API_KEY set hona chahiye â€” uske bina sirf in-app notification + push chalte hain.'],
+];
+
+export function DriveHelp({ onTab }: { onTab: (s: Section) => void }) {
+  return (
+    <div className="space-y-5">
+      <div className="rounded-3xl border border-[#E9E7E1] bg-white p-6 shadow-xs">
+        <h4 className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">How a mock drive runs â€” end to end</h4>
+        <p className="mt-1.5 text-[13px] text-gray-500">Har step ka tab wahan likha hai jahan wo hota hai. Upar wale section tabs se wahi tab kholein.</p>
+        <ol className="mt-4 space-y-4">
+          {DRIVE_STEPS.map((s) => (
+            <li key={s.n} className="flex gap-3.5">
+              <span className="mt-0.5 flex h-8 w-8 flex-none items-center justify-center rounded-full bg-[#1F3A5F] text-sm font-extrabold text-white">
+                {s.n}
+              </span>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-[15px] font-bold text-[#10151C]">{s.title}</p>
+                  <span className="rounded-lg bg-gray-100 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-gray-500">{s.tab}</span>
+                </div>
+                <p className="mt-1 text-[13.5px] leading-relaxed text-gray-600">{s.body}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <div className="rounded-3xl border border-[#E9E7E1] bg-white p-6 shadow-xs">
+        <h4 className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Students ko test link kahan se milega?</h4>
+        <div className="mt-3 space-y-3 text-[13.5px] leading-relaxed text-gray-700">
+          <p>
+            <b>1.</b> Tests / Providers tab me test Kryptavia OS (os.kryptavia.in) par banao â€” wahan uska student-facing link milta hai.
+          </p>
+          <p>
+            <b>2.</b> Woh URL copy karke Slots â†’ Bookings me <b>Assign</b> (ek student) ya <b>Assign all</b> (poora slot) me paste karo.
+          </p>
+          <p>
+            <b>3.</b> Assign ke baad link dead rehta hai. <b>Release</b> ke baad student ke drive page par â€œLaunch testâ€ button uske slot window me hi
+            dikhta hai â€” start se 5 min pehle se, slot end tak.
+          </p>
+          <p className="rounded-xl bg-[#F0F9FF] px-3.5 py-2.5 text-[13px] font-medium text-[#1F3A5F]">
+            Ek hi URL poore slot ko de sakte ho â€” â€œAssign allâ€ se sabko ek saath, phir â€œRelease allâ€.
+          </p>
+        </div>
+      </div>
+
+      <div className="rounded-3xl border border-[#E9E7E1] bg-white p-6 shadow-xs">
+        <h4 className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Problem? â€” quick fixes</h4>
+        <dl className="mt-3 space-y-3.5">
+          {HELP_FAQ.map(([q, a]) => (
+            <div key={q}>
+              <dt className="text-sm font-bold text-[#10151C]">{q}</dt>
+              <dd className="mt-0.5 text-[13.5px] leading-relaxed text-gray-600">{a}</dd>
+            </div>
+          ))}
+        </dl>
+        <button type="button" className={ghost + ' mt-4'} onClick={() => onTab('slots')}>
+          <CalendarClock className="h-4 w-4" /> Slots section par le jao
+        </button>
       </div>
     </div>
   );
