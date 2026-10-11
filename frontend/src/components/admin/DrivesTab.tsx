@@ -59,13 +59,13 @@ import {
 } from '@/components/drives/DriveFormEditor';
 
 const input =
-  'w-full rounded-xl border border-gray-200 bg-[#FAFAF9] px-3 py-2 text-sm text-[#1F3A5F] focus:outline-none focus:ring-2 focus:ring-[#0284C7]';
+  'w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-[#10151C] focus:outline-none focus:border-[#0284C7] focus:ring-2 focus:ring-[#0284C7]/15 transition';
 const btn =
-  'inline-flex items-center gap-1.5 rounded-xl bg-[#0284C7] px-4 py-2 text-xs font-bold text-white hover:bg-[#0369a1] disabled:opacity-50';
+  'inline-flex items-center gap-1.5 rounded-xl bg-[#1F3A5F] px-4 py-2 text-xs font-bold text-white hover:bg-[#16304f] transition disabled:opacity-50';
 const ghost =
-  'inline-flex items-center gap-1.5 rounded-xl border border-gray-200 px-3 py-2 text-xs font-bold text-[#1F3A5F] hover:bg-gray-50 disabled:opacity-50';
+  'inline-flex items-center gap-1.5 rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs font-bold text-[#3E4754] hover:bg-[#F3F2EE] transition disabled:opacity-50';
 const danger =
-  'inline-flex items-center gap-1.5 rounded-xl border border-red-200 px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50 disabled:opacity-50';
+  'inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-white px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-50 transition disabled:opacity-50';
 
 type Section = 'details' | 'rounds' | 'roster' | 'payments' | 'slots' | 'results' | 'notify';
 
@@ -118,14 +118,20 @@ export function DrivesTab() {
 
   return (
     <div className="space-y-5">
+      <div>
+        <p className="eyebrow">Placement operations</p>
+        <h2 className="mt-1 text-xl font-extrabold text-[#10151C]">Mock drives</h2>
+      </div>
       <div className="flex flex-wrap items-center gap-2">
         {(['drives', 'tests', 'providers'] as const).map((t) => (
           <button
             key={t}
             type="button"
             onClick={() => setTab(t)}
-            className={`rounded-full px-4 py-1.5 text-xs font-bold capitalize ${
-              tab === t ? 'bg-[#0284C7] text-white' : 'bg-gray-100 text-[#1F3A5F] hover:bg-gray-200'
+            className={`rounded-xl border px-4 py-1.5 text-xs font-bold capitalize transition ${
+              tab === t
+                ? 'border-[#1F3A5F] bg-[#1F3A5F] text-white shadow-sm'
+                : 'border-gray-200 bg-white text-[#3E4754] hover:bg-[#F3F2EE]'
             }`}
           >
             {t}
@@ -175,7 +181,7 @@ function ProvidersPanel({ providers, onDone, setError }: { providers: AdminProvi
   };
   return (
     <div className="grid gap-5 lg:grid-cols-2">
-      <div className="rounded-2xl border border-gray-200 bg-white p-5">
+      <div className="rounded-3xl border border-[#E9E7E1] bg-white p-6 shadow-xs">
         <h3 className="text-sm font-extrabold text-[#10151C]">Register a provider</h3>
         <p className="mt-1 text-xs text-gray-500">
           The secret env prefix names the environment variables TieEdu reads for HMAC keys. Secret values never enter the database.
@@ -192,7 +198,7 @@ function ProvidersPanel({ providers, onDone, setError }: { providers: AdminProvi
           </button>
         </div>
       </div>
-      <div className="rounded-2xl border border-gray-200 bg-white p-5">
+      <div className="rounded-3xl border border-[#E9E7E1] bg-white p-6 shadow-xs">
         <h3 className="text-sm font-extrabold text-[#10151C]">Providers</h3>
         <div className="mt-3 space-y-2">
           {providers.map((p) => (
@@ -235,7 +241,7 @@ function TestsPanel({ tests, providers, onDone, setError }: { tests: AdminDriveT
   };
   return (
     <div className="grid gap-5 lg:grid-cols-2">
-      <div className="rounded-2xl border border-gray-200 bg-white p-5">
+      <div className="rounded-3xl border border-[#E9E7E1] bg-white p-6 shadow-xs">
         <h3 className="text-sm font-extrabold text-[#10151C]">Create a test</h3>
         <div className="mt-4 space-y-2">
           <input className={input} placeholder="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
@@ -261,7 +267,7 @@ function TestsPanel({ tests, providers, onDone, setError }: { tests: AdminDriveT
           </button>
         </div>
       </div>
-      <div className="rounded-2xl border border-gray-200 bg-white p-5">
+      <div className="rounded-3xl border border-[#E9E7E1] bg-white p-6 shadow-xs">
         <h3 className="text-sm font-extrabold text-[#10151C]">Tests</h3>
         <div className="mt-3 space-y-2">
           {tests.map((t) => (
@@ -851,7 +857,7 @@ function DrivesPanel(props: {
     <div className="grid gap-5 lg:grid-cols-3">
       {/* ----------------------------- left column ---------------------------- */}
       <div className="space-y-4">
-        <div className="rounded-2xl border border-gray-200 bg-white p-5">
+        <div className="rounded-3xl border border-[#E9E7E1] bg-white p-6 shadow-xs">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-extrabold text-[#10151C]">New drive</h3>
             <button
@@ -873,7 +879,7 @@ function DrivesPanel(props: {
           )}
         </div>
 
-        <div className="rounded-2xl border border-gray-200 bg-white p-5">
+        <div className="rounded-3xl border border-[#E9E7E1] bg-white p-6 shadow-xs">
           <h3 className="text-sm font-extrabold text-[#10151C]">Drives</h3>
           <div className="mt-3 space-y-2">
             {drives.map((d) => (
@@ -900,13 +906,13 @@ function DrivesPanel(props: {
       {/* ---------------------------- right column ---------------------------- */}
       <div className="lg:col-span-2">
         {!selected ? (
-          <div className="rounded-2xl border border-dashed border-gray-200 p-12 text-center text-sm italic text-gray-400">
+          <div className="rounded-3xl border border-dashed border-[#E9E7E1] bg-white p-12 text-center text-sm italic text-[#5A6470]">
             Select a drive to manage its details, rounds, roster and results.
           </div>
         ) : (
           <div className="space-y-5">
             {/* Header + lifecycle actions */}
-            <div className="rounded-2xl border border-gray-200 bg-white p-5">
+            <div className="rounded-3xl border border-[#E9E7E1] bg-white p-6 shadow-xs">
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="mr-auto text-base font-extrabold text-[#10151C]">{selected.title}</h3>
                 <span className="rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-bold uppercase text-gray-500">{status}</span>
@@ -940,8 +946,10 @@ function DrivesPanel(props: {
                     key={s}
                     type="button"
                     onClick={() => setSection(s)}
-                    className={`rounded-lg px-3 py-1.5 text-xs font-bold capitalize ${
-                      section === s ? 'bg-[#1F3A5F] text-white' : 'bg-gray-100 text-[#1F3A5F] hover:bg-gray-200'
+                    className={`rounded-xl border px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider transition ${
+                      section === s
+                        ? 'border-[#1F3A5F] bg-[#1F3A5F] text-white shadow-sm'
+                        : 'border-gray-200 bg-white text-[#3E4754] hover:bg-[#F3F2EE]'
                     }`}
                   >
                     {s}
@@ -955,8 +963,8 @@ function DrivesPanel(props: {
 
             {/* --------------------------- details --------------------------- */}
             {section === 'details' && detail && (
-              <div className="rounded-2xl border border-gray-200 bg-white p-5">
-                <h4 className="text-xs font-bold uppercase text-gray-400">Drive details</h4>
+              <div className="rounded-3xl border border-[#E9E7E1] bg-white p-6 shadow-xs">
+                <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Drive details</h4>
                 <DriveFormFields form={editForm} setForm={setEditForm} disabled={savingDetail} />
 
                 <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
@@ -1037,8 +1045,8 @@ function DrivesPanel(props: {
             {/* ---------------------------- rounds ---------------------------- */}
             {section === 'rounds' && (
               <>
-                <div className="rounded-2xl border border-gray-200 bg-white p-5">
-                  <h4 className="text-xs font-bold uppercase text-gray-400">Attach a round</h4>
+                <div className="rounded-3xl border border-[#E9E7E1] bg-white p-6 shadow-xs">
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Attach a round</h4>
                   <div className="mt-2 flex gap-2">
                     <select className={input} value={attachTestId} onChange={(e) => setAttachTestId(e.target.value)}>
                       <option value="">Select test…</option>
@@ -1067,8 +1075,8 @@ function DrivesPanel(props: {
                   </button>
                 </div>
 
-                <div className="rounded-2xl border border-gray-200 bg-white p-5">
-                  <h4 className="text-xs font-bold uppercase text-gray-400">Workflow rounds ({rounds.length})</h4>
+                <div className="rounded-3xl border border-[#E9E7E1] bg-white p-6 shadow-xs">
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Workflow rounds ({rounds.length})</h4>
                   <div className="mt-3 space-y-2">
                     {rounds.map((r, i) => (
                       <div key={r.test_id} className="rounded-xl border border-gray-100 px-3 py-2.5">
@@ -1093,7 +1101,7 @@ function DrivesPanel(props: {
                           </span>
                           <button
                             type="button"
-                            className="rounded-lg bg-gray-100 px-2.5 py-1 text-[11px] font-bold text-[#1F3A5F] hover:bg-gray-200"
+                            className="rounded-xl border border-gray-200 bg-white px-3 py-1.5 text-[11px] font-bold text-[#3E4754] transition hover:bg-[#F3F2EE]"
                             onClick={() => openRoundEditor(r)}
                           >
                             {editingRoundId === r.test_id ? 'Close' : <><Pencil className="mr-1 inline h-3 w-3" />Edit</>}
@@ -1111,11 +1119,11 @@ function DrivesPanel(props: {
                         {editingRoundId === r.test_id && roundDraft && (
                           <div className="mt-3 grid gap-2 border-t border-gray-100 pt-3 sm:grid-cols-2">
                             <label>
-                              <span className="text-[11px] font-bold uppercase text-gray-400">Round name</span>
+                              <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Round name</span>
                               <input className={input + ' mt-1'} value={roundDraft.round_name} onChange={(e) => setRoundDraft({ ...roundDraft, round_name: e.target.value })} />
                             </label>
                             <label>
-                              <span className="text-[11px] font-bold uppercase text-gray-400">Kind</span>
+                              <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Kind</span>
                               <select className={input + ' mt-1'} value={roundDraft.kind} onChange={(e) => setRoundDraft({ ...roundDraft, kind: e.target.value })}>
                                 <option value="">—</option>
                                 <option value="aptitude">Aptitude</option>
@@ -1127,7 +1135,7 @@ function DrivesPanel(props: {
                               </select>
                             </label>
                             <label>
-                              <span className="text-[11px] font-bold uppercase text-gray-400">Max attempts</span>
+                              <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Max attempts</span>
                               <input type="number" min="1" className={input + ' mt-1'} value={roundDraft.max_attempts} onChange={(e) => setRoundDraft({ ...roundDraft, max_attempts: e.target.value })} />
                             </label>
                             <label className="flex items-end gap-2 pb-2">
@@ -1140,15 +1148,15 @@ function DrivesPanel(props: {
                               <span className="text-[13px] font-medium text-gray-600">Mandatory round</span>
                             </label>
                             <label>
-                              <span className="text-[11px] font-bold uppercase text-gray-400">Opens at</span>
+                              <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Opens at</span>
                               <input type="datetime-local" className={input + ' mt-1'} value={roundDraft.opens_at} onChange={(e) => setRoundDraft({ ...roundDraft, opens_at: e.target.value })} />
                             </label>
                             <label>
-                              <span className="text-[11px] font-bold uppercase text-gray-400">Closes at</span>
+                              <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Closes at</span>
                               <input type="datetime-local" className={input + ' mt-1'} value={roundDraft.closes_at} onChange={(e) => setRoundDraft({ ...roundDraft, closes_at: e.target.value })} />
                             </label>
                             <label className="sm:col-span-2">
-                              <span className="text-[11px] font-bold uppercase text-gray-400">Unlock rule (JSON, e.g. {'{"kind":"open"}'})</span>
+                              <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Unlock rule (JSON, e.g. {'{"kind":"open"}'})</span>
                               <textarea className={input + ' mt-1 h-16 font-mono text-xs'} value={roundDraft.unlock_rule} onChange={(e) => setRoundDraft({ ...roundDraft, unlock_rule: e.target.value })} spellCheck={false} />
                             </label>
                             <div className="sm:col-span-2">
@@ -1168,14 +1176,14 @@ function DrivesPanel(props: {
 
             {/* ---------------------------- roster ---------------------------- */}
             {section === 'roster' && (
-              <div className="rounded-2xl border border-gray-200 bg-white p-5">
+              <div className="rounded-3xl border border-[#E9E7E1] bg-white p-6 shadow-xs">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h4 className="text-xs font-bold uppercase text-gray-400">Roster ({regsLocal.length})</h4>
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Roster ({regsLocal.length})</h4>
                   <button className={ghost} onClick={exportRoster} disabled={!regsLocal.length}>
                     <Download className="h-3.5 w-3.5" /> Export CSV
                   </button>
                 </div>
-                <h4 className="mt-4 text-xs font-bold uppercase text-gray-400">Import roster (roll numbers, one per line)</h4>
+                <h4 className="mt-4 text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Import roster (roll numbers, one per line)</h4>
                 <textarea className={input + ' mt-2 h-24 font-mono'} value={importText} onChange={(e) => setImportText(e.target.value)} placeholder={'GLA-2026-001\nGLA-2026-002'} />
                 <button className={btn + ' mt-2'} disabled={busy || !importText.trim()} onClick={importRoster}>
                   <Upload className="h-3.5 w-3.5" /> Import
@@ -1220,9 +1228,9 @@ function DrivesPanel(props: {
 
             {/* ---------------------------- payments --------------------------- */}
             {section === 'payments' && (
-              <div className="rounded-2xl border border-gray-200 bg-white p-5">
+              <div className="rounded-3xl border border-[#E9E7E1] bg-white p-6 shadow-xs">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h4 className="text-xs font-bold uppercase text-gray-400">
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">
                     Payments
                     {payCounts.submitted > 0 && (
                       <span className="ml-1.5 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] text-amber-700">
@@ -1236,8 +1244,10 @@ function DrivesPanel(props: {
                         key={f}
                         type="button"
                         onClick={() => setPayFilter(f)}
-                        className={`rounded-lg px-2.5 py-1 text-[11px] font-bold capitalize ${
-                          payFilter === f ? 'bg-[#1F3A5F] text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                        className={`rounded-xl border px-2.5 py-1 text-[11px] font-bold capitalize transition ${
+                          payFilter === f
+                            ? 'border-[#1F3A5F] bg-[#1F3A5F] text-white shadow-sm'
+                            : 'border-gray-200 bg-white text-[#3E4754] hover:bg-[#F3F2EE]'
                         }`}
                       >
                         {f}
@@ -1293,32 +1303,32 @@ function DrivesPanel(props: {
             {/* ----------------------------- slots ----------------------------- */}
             {section === 'slots' && (
               <>
-                <div className="rounded-2xl border border-gray-200 bg-white p-5">
-                  <h4 className="text-xs font-bold uppercase text-gray-400">Generate slots</h4>
+                <div className="rounded-3xl border border-[#E9E7E1] bg-white p-6 shadow-xs">
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Generate slots</h4>
                   <p className="mt-1 text-xs text-gray-500">
                     One slot per day per start time. Times are IST. Defaults: 5 days × 10 AM/12/2/4/6/8/10 PM, 50 seats, 1h each.
                   </p>
                   <div className="mt-3 grid gap-2 sm:grid-cols-5">
                     <label>
-                      <span className="text-[11px] font-bold uppercase text-gray-400">Start date</span>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Start date</span>
                       <input type="date" className={input + ' mt-1'} value={gen.start_date} onChange={(e) => setGen({ ...gen, start_date: e.target.value })} />
                     </label>
                     <label>
-                      <span className="text-[11px] font-bold uppercase text-gray-400">Days</span>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Days</span>
                       <input type="number" min="1" max="14" className={input + ' mt-1'} value={gen.days} onChange={(e) => setGen({ ...gen, days: e.target.value })} />
                     </label>
                     <label className="sm:col-span-2">
-                      <span className="text-[11px] font-bold uppercase text-gray-400">Times (comma-separated, IST)</span>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Times (comma-separated, IST)</span>
                       <input className={input + ' mt-1'} value={gen.times} onChange={(e) => setGen({ ...gen, times: e.target.value })} />
                     </label>
                     <label>
-                      <span className="text-[11px] font-bold uppercase text-gray-400">Seats / slot</span>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Seats / slot</span>
                       <input type="number" min="1" className={input + ' mt-1'} value={gen.capacity} onChange={(e) => setGen({ ...gen, capacity: e.target.value })} />
                     </label>
                   </div>
                   <div className="mt-2 grid gap-2 sm:grid-cols-5">
                     <label>
-                      <span className="text-[11px] font-bold uppercase text-gray-400">Duration (min)</span>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Duration (min)</span>
                       <input type="number" min="15" className={input + ' mt-1'} value={gen.duration_minutes} onChange={(e) => setGen({ ...gen, duration_minutes: e.target.value })} />
                     </label>
                     <div className="flex items-end sm:col-span-4">
@@ -1329,8 +1339,8 @@ function DrivesPanel(props: {
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-gray-200 bg-white p-5">
-                  <h4 className="text-xs font-bold uppercase text-gray-400">Slots ({slots.length})</h4>
+                <div className="rounded-3xl border border-[#E9E7E1] bg-white p-6 shadow-xs">
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Slots ({slots.length})</h4>
                   <p className="mt-1 text-xs text-gray-500">
                     Slot bhar jaye to ek click me poore slot ke links assign aur release karein — 50 alag-alag nahi.
                   </p>
@@ -1397,8 +1407,8 @@ function DrivesPanel(props: {
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-gray-200 bg-white p-5">
-                  <h4 className="text-xs font-bold uppercase text-gray-400">Bookings ({bookings.length})</h4>
+                <div className="rounded-3xl border border-[#E9E7E1] bg-white p-6 shadow-xs">
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Bookings ({bookings.length})</h4>
                   <p className="mt-1 text-xs text-gray-500">
                     Assign the round + URL, then <b>Activate</b> — the student&apos;s link stays dead until you do.
                   </p>
@@ -1508,9 +1518,9 @@ function DrivesPanel(props: {
 
             {/* ---------------------------- results --------------------------- */}
             {section === 'results' && (
-              <div className="rounded-2xl border border-gray-200 bg-white p-5">
+              <div className="rounded-3xl border border-[#E9E7E1] bg-white p-6 shadow-xs">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold uppercase text-gray-400">Results ({results.length})</h4>
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Results ({results.length})</h4>
                   <div className="flex gap-2">
                     <button className={ghost} onClick={downloadCsv}>
                       <Download className="h-3.5 w-3.5" /> CSV
@@ -1534,13 +1544,13 @@ function DrivesPanel(props: {
 
             {/* ---------------------------- notify ---------------------------- */}
             {section === 'notify' && (
-              <div className="rounded-2xl border border-gray-200 bg-white p-5">
-                <h4 className="text-xs font-bold uppercase text-gray-400">Send update to registered students</h4>
+              <div className="rounded-3xl border border-[#E9E7E1] bg-white p-6 shadow-xs">
+                <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Send update to registered students</h4>
                 <p className="mt-1 text-xs text-gray-500">
                   Appears in every registrant&apos;s in-app notifications (and push, where enabled).
                 </p>
                 <label className="mt-3 block">
-                  <span className="text-[11px] font-bold uppercase text-gray-400">Title</span>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Title</span>
                   <input
                     className={input + ' mt-1'}
                     placeholder="e.g. Slot bookings open tonight"
@@ -1550,7 +1560,7 @@ function DrivesPanel(props: {
                   />
                 </label>
                 <label className="mt-2 block">
-                  <span className="text-[11px] font-bold uppercase text-gray-400">Message</span>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Message</span>
                   <textarea
                     className={input + ' mt-1 h-24'}
                     placeholder="What should students know? Keep it one or two lines."
@@ -1564,7 +1574,7 @@ function DrivesPanel(props: {
                 </button>
 
                 <div className="mt-6 border-t border-gray-100 pt-5">
-                  <h4 className="flex items-center gap-1.5 text-xs font-bold uppercase text-gray-400">
+                  <h4 className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">
                     <Mail className="h-3.5 w-3.5" /> Send email
                   </h4>
                   <p className="mt-1 text-xs text-gray-500">
@@ -1572,7 +1582,7 @@ function DrivesPanel(props: {
                   </p>
                   <div className="mt-3 grid gap-2 sm:grid-cols-3">
                     <label>
-                      <span className="text-[11px] font-bold uppercase text-gray-400">Send to</span>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Send to</span>
                       <select className={input + ' mt-1'} value={emailScope} onChange={(e) => setEmailScope(e.target.value as any)}>
                         <option value="all">All registered ({regsLocal.length})</option>
                         <option value="slot">One slot</option>
@@ -1581,7 +1591,7 @@ function DrivesPanel(props: {
                     </label>
                     {emailScope === 'slot' && (
                       <label className="sm:col-span-2">
-                        <span className="text-[11px] font-bold uppercase text-gray-400">Slot</span>
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Slot</span>
                         <select className={input + ' mt-1'} value={emailSlotId} onChange={(e) => setEmailSlotId(e.target.value)}>
                           <option value="">Pick a slot…</option>
                           {slots.map((s) => (
@@ -1594,7 +1604,7 @@ function DrivesPanel(props: {
                     )}
                     {emailScope === 'student' && (
                       <label className="sm:col-span-2">
-                        <span className="text-[11px] font-bold uppercase text-gray-400">Student</span>
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Student</span>
                         <select className={input + ' mt-1'} value={emailRegId} onChange={(e) => setEmailRegId(e.target.value)}>
                           <option value="">Pick a student…</option>
                           {regsLocal.map((r) => (
@@ -1607,11 +1617,11 @@ function DrivesPanel(props: {
                     )}
                   </div>
                   <label className="mt-2 block">
-                    <span className="text-[11px] font-bold uppercase text-gray-400">Subject</span>
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Subject</span>
                     <input className={input + ' mt-1'} placeholder="e.g. Your Capgemini slot is confirmed" value={emailSubject} onChange={(e) => setEmailSubject(e.target.value)} maxLength={150} />
                   </label>
                   <label className="mt-2 block">
-                    <span className="text-[11px] font-bold uppercase text-gray-400">Message</span>
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A6470]">Message</span>
                     <textarea className={input + ' mt-1 h-28'} placeholder={'Slot time, payment receipt, ya test link ka detail — blank line se paragraph banta hai.'} value={emailBody} onChange={(e) => setEmailBody(e.target.value)} maxLength={4000} />
                   </label>
                   <button className={btn + ' mt-3'} disabled={emailBusy || !emailSubject.trim() || !emailBody.trim()} onClick={sendEmail}>

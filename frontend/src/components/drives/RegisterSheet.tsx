@@ -19,13 +19,21 @@ export const RegisterSheet: React.FC<{
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [phone, setPhone] = useState('');
-  const phoneValid = /^[6-9]\d{9}$/.test(phone.replace(/\D/g, ''));
+  // Accepts "9876543210", "+91 98765 43210", "098765 43210" — normalised to
+  // the 10-digit national number before validation and submit.
+  const normPhone = (v: string) => {
+    let d = v.replace(/\D/g, '');
+    if (d.length === 12 && d.startsWith('91')) d = d.slice(2);
+    if (d.length === 11 && d.startsWith('0')) d = d.slice(1);
+    return d;
+  };
+  const phoneValid = /^[6-9]\d{9}$/.test(normPhone(phone));
 
   const submit = async () => {
     setBusy(true);
     setError(null);
     try {
-      await registerForDriveApi(driveId, undefined, phone.replace(/\D/g, ''));
+      await registerForDriveApi(driveId, undefined, normPhone(phone));
       onRegistered();
       onClose();
     } catch (e) {

@@ -154,6 +154,14 @@ export default function DriveDetailScreen() {
               >
                 Register for this drive
               </button>
+            ) : !can_register && drive.registration_open && profileMissing ? (
+              <Link
+                href="/mock-drive/settings"
+                className="block w-full rounded-[12px] py-3 text-center text-[15px] font-semibold text-white transition-transform active:scale-[0.98]"
+                style={{ background: 'var(--apple-blue)' }}
+              >
+                Complete your profile to register
+              </Link>
             ) : (
               <div className="rounded-[10px] px-3 py-2.5 text-[13px]" style={{ background: 'var(--apple-fill)', color: 'var(--apple-label-2)' }}>
                 {drive.registration_open ? 'Complete your profile to register.' : 'Registration is closed.'}

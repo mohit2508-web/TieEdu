@@ -285,6 +285,7 @@ export interface DriveNotification {
 export interface DriveSettings {
   email: string | null;
   name: string | null;
+  college: string | null;
   email_notifications: boolean;
   push_notifications: boolean;
   drive_alerts: boolean;

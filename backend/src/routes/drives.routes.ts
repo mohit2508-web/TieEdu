@@ -210,7 +210,10 @@ drivesRouter.post('/:driveId/register', async (req: Request, res: Response) => {
 
     // Contact phone rides along with registration — admin needs a real number
     // to reach candidates slot-wise. Mandatory on create, validated whenever sent.
-    const phone = String(req.body?.phone || '').replace(/\D/g, '');
+    // Normalises "+91 98765 43210" / "09876543210" to the 10-digit number.
+    let phone = String(req.body?.phone || '').replace(/\D/g, '');
+    if (phone.length === 12 && phone.startsWith('91')) phone = phone.slice(2);
+    if (phone.length === 11 && phone.startsWith('0')) phone = phone.slice(1);
     if (phone && !/^[6-9]\d{9}$/.test(phone)) return res.status(422).json({ error: 'invalid_phone' });
 
     const existing = await getPool().query(`SELECT * FROM drive_registration WHERE drive_id=$1 AND user_id=$2`, [drive.drive_id, userId]);
@@ -1475,7 +1478,7 @@ studentProfileRouter.get('/settings', async (req: Request, res: Response) => {
     // no second lookup and no invented column.
     const s = u.preferences || {};
     return res.json({
-      email: u.email || null, name: u.name || null,
+      email: u.email || null, name: u.name || null, college: u.college || null,
       email_notifications: s.email_notifications !== false,
       push_notifications: s.push_notifications !== false,
       drive_alerts: s.drive_alerts !== false,
