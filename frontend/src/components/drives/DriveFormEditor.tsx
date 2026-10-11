@@ -42,6 +42,8 @@ export interface DriveFormState {
   job_function: string;
   ctc_min: string;
   ctc_max: string;
+  /** Registration fee in rupees — 0 keeps the drive free. */
+  fee_amount_paise: string;
   description_md: string;
   additional_info_md: string;
   tpo_contact_name: string;
@@ -55,7 +57,7 @@ export const emptyDriveForm = (): DriveFormState => ({
   title: '', company_name: '', description: '', drive_type: 'mock',
   starts_at: '', ends_at: '', registration_mode: 'open', results_visibility: 'after_close',
   company_logo_url: '', location: '', job_type: '', category: '', job_function: '',
-  ctc_min: '', ctc_max: '', description_md: '', additional_info_md: '',
+  ctc_min: '', ctc_max: '', fee_amount_paise: '0', description_md: '', additional_info_md: '',
   tpo_contact_name: '', tpo_contact_email: '', tpo_contact_phone: '',
   registration_opens_at: '', registration_closes_at: '',
 });
@@ -69,6 +71,7 @@ export const driveToForm = (d: AdminDrive): DriveFormState => ({
   company_logo_url: d.company_logo_url || '', location: d.location || '',
   job_type: d.job_type || '', category: d.category || '', job_function: d.job_function || '',
   ctc_min: d.ctc_min == null ? '' : String(d.ctc_min), ctc_max: d.ctc_max == null ? '' : String(d.ctc_max),
+  fee_amount_paise: d.fee_amount_paise == null ? '0' : String(d.fee_amount_paise),
   description_md: d.description_md || '', additional_info_md: d.additional_info_md || '',
   tpo_contact_name: d.tpo_contact?.name || '', tpo_contact_email: d.tpo_contact?.email || '',
   tpo_contact_phone: d.tpo_contact?.phone || '',
@@ -94,6 +97,9 @@ export const formToPayload = (f: DriveFormState, opts: { partial: boolean }): Re
     job_function: f.job_function.trim() || null,
     ctc_min: f.ctc_min.trim() === '' ? null : Number(f.ctc_min),
     ctc_max: f.ctc_max.trim() === '' ? null : Number(f.ctc_max),
+    // Always explicit: blank means "free" for a create, and the field is
+    // prefilled for an edit, so clearing it deliberately means 0.
+    fee_amount_paise: Math.max(0, Number(f.fee_amount_paise) || 0),
     description_md: f.description_md.trim() || null,
     additional_info_md: f.additional_info_md.trim() || null,
     tpo_contact: {
@@ -174,6 +180,10 @@ export function DriveFormFields(props: {
       <label>
         <span className={lbl} style={{ color: 'var(--apple-label-2)' }}>CTC max (₹ / year)</span>
         <input className={input} type="number" min="0" placeholder="900000" value={t('ctc_max')} onChange={set('ctc_max')} disabled={props.disabled} />
+      </label>
+      <label>
+        <span className={lbl} style={{ color: 'var(--apple-label-2)' }}>Registration fee (₹ — 0 = free)</span>
+        <input className={input} type="number" min="0" placeholder="99" value={t('fee_amount_paise')} onChange={set('fee_amount_paise')} disabled={props.disabled} />
       </label>
       <label className="sm:col-span-2">
         <span className={lbl} style={{ color: 'var(--apple-label-2)' }}>Description</span>

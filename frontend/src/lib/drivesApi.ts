@@ -92,6 +92,33 @@ const ERROR_MESSAGES: Record<string, string> = {
   no_audience: 'No registered students to notify yet.',
   attach_at_least_one_test: 'Attach at least one test (round) before publishing.',
   title_required: 'A title is required.',
+  payment_not_required: 'No payment is needed for this drive.',
+  utr_required: 'Enter your UTR / transaction reference.',
+  payment_under_review: 'Your payment proof is already under review.',
+  payment_not_approved: 'Payment approval is required before booking a slot.',
+  payment_rejected: 'Your payment was rejected — upload it again.',
+  payment_already_reviewed: 'This payment was already reviewed.',
+  payment_not_found: 'Payment not found.',
+  slot_full: 'That slot is full — pick another one.',
+  already_booked: 'You already have a slot booked.',
+  slot_not_found: 'That slot is no longer available.',
+  slot_not_booked: 'Book your test slot first.',
+  link_not_active: 'The test link is not active yet — the admin will activate it.',
+  link_not_assigned: 'No test link has been assigned to this booking yet.',
+  slot_not_started: 'Your slot has not started yet.',
+  slot_window_closed: 'Your slot window has closed — contact support.',
+  slot_has_bookings: 'This slot has bookings — cancel them first.',
+  booking_cancelled: 'This booking was cancelled.',
+  already_cancelled: 'This booking is already cancelled.',
+  invalid_slot_window: 'Invalid slot timings.',
+  start_date_required: 'Pick a start date (YYYY-MM-DD).',
+  times_required: 'Add at least one start time.',
+  round_or_url_required: 'Enter a round name or test URL.',
+  invalid_capacity: 'Invalid seat capacity.',
+  invalid_status: 'Invalid status.',
+  proof_not_found: 'The payment screenshot could not be loaded.',
+  booking_not_found: 'Booking not found.',
+  slot_exists: 'A slot at that time already exists.',
 };
 
 const humanError = (raw: any): string =>
@@ -185,6 +212,118 @@ export const launchDriveTestApi = async (driveId: string, testId: string) =>
   json<{ launch_url: string; expires_at: string; provider: string }>(
     await apiFetch(`${base}/${encodeURIComponent(driveId)}/tests/${encodeURIComponent(testId)}/launch`, { method: 'POST' })
   );
+
+// ─── Payment & slots (student) ──────────────────────────────────────────────
+
+export interface DrivePayment {
+  payment_id: string;
+  amount_paise: number;
+  status: 'submitted' | 'approved' | 'rejected';
+  utr: string | null;
+  proof_name: string | null;
+  reviewer_note: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+}
+
+export interface DrivePaymentState {
+  server_now: string;
+  fee_amount_paise: number;
+  registration_status: string | null;
+  payments: DrivePayment[];
+  latest: DrivePayment | null;
+}
+
+export interface DriveSlot {
+  slot_id: string;
+  slot_date: string;
+  starts_at: string;
+  ends_at: string;
+  capacity: number;
+  status: string;
+  remaining?: number;
+}
+
+export interface DriveBooking {
+  booking_id: string;
+  status: 'booked' | 'link_assigned' | 'active' | 'completed' | 'cancelled';
+  round_name: string | null;
+  test_url: string | null;
+  link_assigned_at: string | null;
+  link_active_at: string | null;
+  starts_at: string;
+  ends_at: string;
+  slot_date: string | null;
+}
+
+export const fetchDrivePaymentApi = async (driveId: string): Promise<DrivePaymentState> =>
+  json<DrivePaymentState>(await apiFetch(`${base}/${encodeURIComponent(driveId)}/payment`));
+
+export const fetchDriveSlotsApi = async (driveId: string) =>
+  json<{
+    server_now: string;
+    fee_amount_paise: number;
+    registration_status: string;
+    can_book: boolean;
+    slots: DriveSlot[];
+    booking: Omit<DriveBooking, 'round_name' | 'test_url'> | null;
+  }>(await apiFetch(`${base}/${encodeURIComponent(driveId)}/slots`));
+
+export const bookDriveSlotApi = async (driveId: string, slotId: string) =>
+  json<{ booking: DriveBooking; registration_status: string }>(
+    await apiFetch(`${base}/${encodeURIComponent(driveId)}/slots/${encodeURIComponent(slotId)}/book`, { method: 'POST' })
+  );
+
+export const fetchDriveBookingApi = async (driveId: string) =>
+  json<{ server_now: string; registration_status: string; booking: DriveBooking | null }>(
+    await apiFetch(`${base}/${encodeURIComponent(driveId)}/booking`)
+  );
+
+// Multipart upload with the same transparent refresh behaviour as resume
+// uploads: XHR so FormData keeps its boundary and 401 can be retried once.
+export const submitPaymentProofApi = async (
+  driveId: string,
+  file: File,
+  utr: string,
+  onProgress?: (percent: number) => void
+): Promise<{ payment: DrivePayment; registration_status: string; message: string }> => {
+  const sendUpload = (token?: string | null): Promise<any> =>
+    new Promise((resolve, reject) => {
+      const form = new FormData();
+      form.append('proof', file);
+      form.append('utr', utr);
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `${base}/${encodeURIComponent(driveId)}/payment/proof`);
+      xhr.timeout = 120000;
+      const authToken = token !== undefined ? token : getAccessToken();
+      if (authToken) xhr.setRequestHeader('Authorization', `Bearer ${authToken}`);
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) onProgress?.(Math.round((e.loaded / e.total) * 100));
+      };
+      xhr.onload = () => {
+        if (xhr.status === 401) return resolve({ __is401: true });
+        try {
+          const data = JSON.parse(xhr.responseText);
+          if (xhr.status >= 200 && xhr.status < 300) resolve(data);
+          else reject(new Error(humanError(data.error) || `Upload failed (status ${xhr.status})`));
+        } catch {
+          reject(new Error(`Upload failed with server status ${xhr.status}`));
+        }
+      };
+      xhr.onerror = () => reject(new Error('Network error during upload — check your connection.'));
+      xhr.ontimeout = () => reject(new Error('Upload timed out after 120 seconds.'));
+      xhr.send(form);
+    });
+
+  let res = await sendUpload();
+  if (res && res.__is401) {
+    const refreshed = await tryRefreshSession();
+    if (!refreshed) throw new Error('Session expired — please sign in again.');
+    res = await sendUpload(getAccessToken());
+  }
+  if (res && res.__is401) throw new Error('Session expired — please sign in again.');
+  return res;
+};
 
 // ─── Resumes ────────────────────────────────────────────────────────────────
 
@@ -361,6 +500,7 @@ export interface AdminDrive {
   tpo_contact: { name?: string; email?: string; phone?: string };
   registration_opens_at: string | null;
   registration_closes_at: string | null;
+  fee_amount_paise: number;
   test_count?: number;
   registration_count?: number;
 }
@@ -520,3 +660,128 @@ export const adminDownloadResultsCsv = async (driveId: string, filename?: string
   a.remove();
   URL.revokeObjectURL(url);
 };
+
+// ─── Payments & slots (admin) ───────────────────────────────────────────────
+
+export interface AdminPaymentRow {
+  payment_id: string;
+  user_id: string;
+  user_email: string;
+  roll_no: string | null;
+  amount_paise: number;
+  status: 'submitted' | 'approved' | 'rejected';
+  utr: string | null;
+  proof_name: string | null;
+  reviewer_note: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+  registration_status: string | null;
+}
+
+export interface AdminSlotRow {
+  slot_id: string;
+  slot_date: string;
+  starts_at: string;
+  ends_at: string;
+  capacity: number;
+  status: 'open' | 'closed';
+  booked: number;
+}
+
+export interface AdminBookingRow {
+  booking_id: string;
+  user_id: string;
+  user_email: string;
+  roll_no: string | null;
+  status: 'booked' | 'link_assigned' | 'active' | 'completed' | 'cancelled';
+  round_name: string | null;
+  test_url: string | null;
+  link_assigned_at: string | null;
+  link_active_at: string | null;
+  created_at: string;
+  registration_status: string | null;
+  slot_id: string;
+  slot_date: string;
+  starts_at: string;
+  ends_at: string;
+}
+
+export const adminListPaymentsApi = (driveId: string, status = 'all') =>
+  adminJson<{ fee_amount_paise: number; counts: { submitted: number; approved: number; rejected: number }; payments: AdminPaymentRow[] }>(
+    `/${encodeURIComponent(driveId)}/payments?status=${encodeURIComponent(status)}`
+  );
+
+export const adminApprovePaymentApi = (driveId: string, paymentId: string, note?: string) =>
+  adminJson<{ ok: boolean }>(`/${encodeURIComponent(driveId)}/payments/${encodeURIComponent(paymentId)}/approve`, {
+    method: 'POST',
+    body: JSON.stringify({ note }),
+  });
+
+export const adminRejectPaymentApi = (driveId: string, paymentId: string, note?: string) =>
+  adminJson<{ ok: boolean }>(`/${encodeURIComponent(driveId)}/payments/${encodeURIComponent(paymentId)}/reject`, {
+    method: 'POST',
+    body: JSON.stringify({ note }),
+  });
+
+/** Streams the authenticated proof image/PDF and opens it in a new tab. */
+export const adminOpenPaymentProofApi = async (driveId: string, paymentId: string): Promise<void> => {
+  const res = await apiFetch(`${adminBase}/${encodeURIComponent(driveId)}/payments/${encodeURIComponent(paymentId)}/proof`);
+  if (!res.ok) throw new Error(humanError('proof_not_found'));
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank', 'noopener');
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+};
+
+export const adminListSlotsApi = (driveId: string) =>
+  adminJson<{ slots: AdminSlotRow[] }>(`/${encodeURIComponent(driveId)}/slots`);
+
+export const adminGenerateSlotsApi = (
+  driveId: string,
+  data: { start_date: string; days: number; times: string[]; capacity: number; duration_minutes?: number }
+) =>
+  adminJson<{ ok: boolean; created: number }>(`/${encodeURIComponent(driveId)}/slots/generate`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+
+export const adminCreateSlotApi = (driveId: string, data: { starts_at: string; ends_at: string; capacity: number }) =>
+  adminJson<{ slot: AdminSlotRow }>(`/${encodeURIComponent(driveId)}/slots`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+
+export const adminUpdateSlotApi = (driveId: string, slotId: string, data: { capacity?: number; status?: string }) =>
+  adminJson<{ slot: AdminSlotRow }>(`/${encodeURIComponent(driveId)}/slots/${encodeURIComponent(slotId)}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+
+export const adminDeleteSlotApi = (driveId: string, slotId: string) =>
+  adminJson<{ ok: boolean }>(`/${encodeURIComponent(driveId)}/slots/${encodeURIComponent(slotId)}`, { method: 'DELETE' });
+
+export const adminListBookingsApi = (driveId: string) =>
+  adminJson<{ server_now: string; bookings: AdminBookingRow[] }>(`/${encodeURIComponent(driveId)}/bookings`);
+
+export const adminAssignBookingApi = (driveId: string, bookingId: string, data: { round_name?: string; test_url?: string }) =>
+  adminJson<{ booking: AdminBookingRow }>(`/${encodeURIComponent(driveId)}/bookings/${encodeURIComponent(bookingId)}/assign`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+
+export const adminActivateBookingApi = (driveId: string, bookingId: string) =>
+  adminJson<{ booking: AdminBookingRow }>(`/${encodeURIComponent(driveId)}/bookings/${encodeURIComponent(bookingId)}/activate`, {
+    method: 'POST',
+  });
+
+export const adminDeactivateBookingApi = (driveId: string, bookingId: string) =>
+  adminJson<{ booking: AdminBookingRow }>(`/${encodeURIComponent(driveId)}/bookings/${encodeURIComponent(bookingId)}/deactivate`, {
+    method: 'POST',
+  });
+
+export const adminCancelBookingApi = (driveId: string, bookingId: string) =>
+  adminJson<{ ok: boolean; registration_status: string }>(
+    `/${encodeURIComponent(driveId)}/bookings/${encodeURIComponent(bookingId)}/cancel`,
+    { method: 'POST' }
+  );

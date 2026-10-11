@@ -88,6 +88,7 @@ export interface DriveDetail {
     registration_opens_at_ist: string | null;
     registration_closes_at_ist: string | null;
     results_visibility: string;
+    fee_amount_paise: number;
     other_info: Record<string, any>;
     documents: { title: string; url: string }[];
     tpo_contact: { name?: string; email?: string; phone?: string };
@@ -97,6 +98,8 @@ export interface DriveDetail {
     status_line: string;
   };
   registration: { registration_id: string; status: string; registered_at: string } | null;
+  payment: DrivePaymentBrief | null;
+  booking: DriveBookingBrief | null;
   can_register: boolean;
   eligibility_blockers: string[];
   rounds: DriveRound[];
@@ -149,6 +152,56 @@ export interface DriveInterview {
   notes: string | null;
 }
 
+/** Latest payment row attached to a drive detail payload. */
+export interface DrivePaymentBrief {
+  payment_id: string;
+  amount_paise: number;
+  status: 'submitted' | 'approved' | 'rejected';
+  utr: string | null;
+  proof_name: string | null;
+  reviewer_note: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+}
+
+/** The student's booked slot + link activation state. */
+export interface DriveBookingBrief {
+  booking_id: string;
+  status: 'booked' | 'link_assigned' | 'active' | 'completed' | 'cancelled';
+  round_name: string | null;
+  test_url: string | null;
+  link_assigned_at: string | null;
+  link_active_at: string | null;
+  starts_at: string;
+  ends_at: string;
+  slot_date: string | null;
+}
+
+/** One "what should I do now" card on Home. */
+export interface DriveNeedsAction {
+  drive_id: string;
+  title: string;
+  company_name: string;
+  company_logo_url: string | null;
+  registration_status: string;
+  type: 'pay' | 'payment_review' | 'slot' | 'slot_confirmed' | 'link_waiting' | 'test_ready';
+  message: string;
+  starts_at?: string | null;
+}
+
+/** Nearest booked slot so Home can run the live countdown. */
+export interface DriveNextTest {
+  drive_id: string;
+  title: string;
+  company_name: string;
+  company_logo_url: string | null;
+  registration_status: string;
+  starts_at: string;
+  ends_at: string;
+  link_active_at: string | null;
+  booking_id: string;
+}
+
 /** Aggregated payload for the Home tab. */
 export interface DriveHome {
   server_now: string;
@@ -185,6 +238,8 @@ export interface DriveHome {
     started_at: string | null;
     started_at_ist: string | null;
   }[];
+  needs_action: DriveNeedsAction[];
+  next_test: DriveNextTest | null;
   stats: {
     applied: number;
     open: number;

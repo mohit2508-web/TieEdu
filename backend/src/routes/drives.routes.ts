@@ -212,12 +212,15 @@ drivesRouter.post('/:driveId/register', async (req: Request, res: Response) => {
     let registration = existing.rows[0];
     let createdNew = false;
     if (!registration) {
+      // Paid drives start at payment_pending: rounds stay locked until the
+      // admin approves the ₹99 proof and the student books a slot.
+      const paid = Number(drive.fee_amount_paise || 0) > 0;
       const ins = await getPool().query(
         `INSERT INTO drive_registration (drive_id, user_id, roll_no, license_id, college_id, eligibility_checked, status)
-         VALUES ($1,$2,$3,$4,$5,TRUE,'registered')
+         VALUES ($1,$2,$3,$4,$5,TRUE,$6)
          ON CONFLICT (drive_id, user_id) DO NOTHING
          RETURNING *`,
-        [drive.drive_id, userId, profile?.roll_no || user.roll_no || null, user.license_id || null, drive.college_id || profile?.college_id || null]
+        [drive.drive_id, userId, profile?.roll_no || user.roll_no || null, user.license_id || null, drive.college_id || profile?.college_id || null, paid ? 'payment_pending' : 'registered']
       );
       registration =
         ins.rows[0] ||
@@ -256,13 +259,30 @@ drivesRouter.post('/:driveId/register', async (req: Request, res: Response) => {
 });
 
 async function seedRegistrationTests(driveId: string, registrationId: string): Promise<void> {
+  // On a paid drive every round seeds as locked; payment approval unlocks the
+  // open ones (see unlockRoundsAfterPayment below).
   await getPool().query(
     `INSERT INTO drive_registration_test (registration_id, test_id, status)
-       SELECT $2, mdt.test_id, CASE WHEN (mdt.unlock_rule->>'kind') = 'open' OR mdt.unlock_rule IS NULL THEN 'unlocked' ELSE 'locked' END
+       SELECT $2, mdt.test_id,
+              CASE WHEN COALESCE(d.fee_amount_paise,0) > 0 THEN 'locked'
+                   WHEN (mdt.unlock_rule->>'kind') = 'open' OR mdt.unlock_rule IS NULL THEN 'unlocked'
+                   ELSE 'locked' END
          FROM mock_drive_test mdt
+         JOIN mock_drive d ON d.drive_id = mdt.drive_id
         WHERE mdt.drive_id = $1
      ON CONFLICT (registration_id, test_id) DO NOTHING`,
     [driveId, registrationId]
+  );
+}
+
+/** After a payment is approved, open-rule rounds flip to unlocked. */
+export async function unlockRoundsAfterPayment(driveId: string, registrationId: string): Promise<void> {
+  await getPool().query(
+    `UPDATE drive_registration_test SET status='unlocked', unlocked_at=COALESCE(unlocked_at,NOW()), updated_at=NOW()
+      WHERE registration_id=$1 AND status='locked'
+        AND test_id IN (SELECT test_id FROM mock_drive_test
+                         WHERE drive_id=$2 AND ((unlock_rule->>'kind')='open' OR unlock_rule IS NULL))`,
+    [registrationId, driveId]
   );
 }
 
@@ -311,6 +331,32 @@ drivesRouter.post('/:driveId/tests/:testId/launch', async (req: Request, res: Re
     if (drt.status === 'locked') {
       const rule = test.unlock_rule || {};
       return res.status(409).json({ error: 'test_locked', unlock_rule: rule });
+    }
+
+    // Paid drives: a round only launches inside the student's booked slot and
+    // only after the admin has flipped link_active_at. payment_pending /
+    // payment_submitted / payment_approved-but-unbooked all stop here.
+    if (Number(drive.fee_amount_paise || 0) > 0) {
+      const bkR = await getPool().query(
+        `SELECT b.*, s.starts_at AS slot_starts_at, s.ends_at AS slot_ends_at
+           FROM drive_slot_booking b JOIN drive_slot s ON s.slot_id = b.slot_id
+          WHERE b.registration_id=$1 AND b.status <> 'cancelled'
+          ORDER BY b.created_at DESC LIMIT 1`,
+        [reg.registration_id]
+      );
+      const booking = bkR.rows[0];
+      if (!booking) return res.status(409).json({ error: 'slot_not_booked', message: 'Book your test slot first.' });
+      if (!booking.link_active_at) {
+        return res.status(409).json({ error: 'link_not_active', message: 'Your test link will open once the admin activates it.' });
+      }
+      const nowMs = Date.now();
+      // 5-minute early window absorbs clock skew between browser and server.
+      if (nowMs + 5 * 60 * 1000 < new Date(booking.slot_starts_at).getTime()) {
+        return res.status(409).json({ error: 'slot_not_started', starts_at: booking.slot_starts_at });
+      }
+      if (nowMs > new Date(booking.slot_ends_at).getTime()) {
+        return res.status(409).json({ error: 'slot_window_closed' });
+      }
     }
 
     // Per-test window, if the drive attached one.
@@ -572,10 +618,62 @@ drivesRouter.get('/home', async (req: Request, res: Response) => {
       [userId]
     );
 
+    // What needs the student's attention right now — payment, slot, link —
+    // plus the nearest booked slot so Home can run a live countdown.
+    const attentionR = await getPool().query(
+      `SELECT d.drive_id, d.title, d.company_name, d.company_logo_url, d.fee_amount_paise,
+              r.status AS reg_status,
+              b.booking_id, b.status AS booking_status, b.link_assigned_at, b.link_active_at,
+              s.starts_at AS slot_starts_at, s.ends_at AS slot_ends_at, s.slot_date
+         FROM drive_registration r
+         JOIN mock_drive d ON d.drive_id = r.drive_id
+         LEFT JOIN drive_slot_booking b ON b.registration_id = r.registration_id AND b.status <> 'cancelled'
+         LEFT JOIN drive_slot s ON s.slot_id = b.slot_id
+        WHERE r.user_id = $1 AND d.status IN ('published','live')
+        ORDER BY d.title`,
+      [userId]
+    );
+
+    const needsAction: any[] = [];
+    let nextTest: any = null;
+    for (const a of attentionR.rows) {
+      const base = {
+        drive_id: a.drive_id, title: a.title, company_name: a.company_name,
+        company_logo_url: a.company_logo_url || null, registration_status: a.reg_status,
+      };
+      if (a.reg_status === 'payment_pending' || a.reg_status === 'payment_rejected') {
+        needsAction.push({ ...base, type: 'pay', message: a.reg_status === 'payment_rejected' ? 'Payment was rejected — re-upload your proof.' : 'Complete your ₹99 payment to unlock the drive.' });
+      } else if (a.reg_status === 'payment_submitted') {
+        needsAction.push({ ...base, type: 'payment_review', message: 'Payment submitted — waiting for admin approval.' });
+      } else if (a.reg_status === 'payment_approved' && !a.booking_id) {
+        needsAction.push({ ...base, type: 'slot', message: 'Payment approved — book your test slot now.' });
+      }
+
+      if (a.booking_id && a.slot_ends_at && new Date(a.slot_ends_at).getTime() > Date.now()) {
+        if (a.link_active_at) {
+          needsAction.push({ ...base, type: 'test_ready', message: 'Your test link is ACTIVE.', starts_at: a.slot_starts_at });
+        } else {
+          needsAction.push({
+            ...base,
+            type: a.link_assigned_at ? 'link_waiting' : 'slot_confirmed',
+            message: a.link_assigned_at ? 'Link assigned — it opens when the admin activates it.' : `Slot booked for ${fmtIst(a.slot_starts_at)}.`,
+            starts_at: a.slot_starts_at,
+          });
+        }
+        // Countdown runs from booking, link active ho ya na ho.
+        const target = new Date(a.slot_starts_at).getTime();
+        if (target > Date.now() - 5 * 60 * 1000 && (!nextTest || target < new Date(nextTest.starts_at).getTime())) {
+          nextTest = { ...base, starts_at: a.slot_starts_at, ends_at: a.slot_ends_at, link_active_at: a.link_active_at, booking_id: a.booking_id };
+        }
+      }
+    }
+
     return res.json({
       server_now: new Date().toISOString(),
       upcoming,
       open_for_you: openForYou,
+      needs_action: needsAction.slice(0, 6),
+      next_test: nextTest,
       in_progress: inProgR.rows.map((a) => ({
         attempt_id: a.attempt_id, drive_id: a.drive_id, test_id: a.test_id,
         drive_title: a.title, company_name: a.company_name, test_name: a.test_name,
@@ -782,6 +880,10 @@ drivesRouter.get('/:driveId', async (req: Request, res: Response) => {
     const allowed = !drive.college_id || colleges.includes(drive.college_id) || !!reg;
     if (!allowed) return res.status(403).json({ error: 'drive_not_available' });
 
+    const feePaise = Number(drive.fee_amount_paise || 0);
+    const payment = reg ? (await paymentRows(drive.drive_id, userId, 3))[0] || null : null;
+    const booking = reg ? await activeBookingRow(reg.registration_id) : null;
+
     const testsR = await getPool().query(
       `SELECT t.test_id, t.mode, t.name, t.slug, t.duration_minutes, t.total_questions,
               mdt.sort_order, mdt.mandatory, mdt.max_attempts, mdt.opens_at, mdt.closes_at,
@@ -859,6 +961,7 @@ drivesRouter.get('/:driveId', async (req: Request, res: Response) => {
         registration_opens_at_ist: fmtIst(drive.registration_opens_at),
         registration_closes_at_ist: fmtIst(drive.registration_closes_at),
         results_visibility: drive.results_visibility,
+        fee_amount_paise: feePaise,
         other_info: asJson(drive.other_info, {}),
         documents: asJsonArray(drive.documents),
         tpo_contact: asJson(drive.tpo_contact, {}),
@@ -870,10 +973,306 @@ drivesRouter.get('/:driveId', async (req: Request, res: Response) => {
       registration: reg
         ? { registration_id: reg.registration_id, status: reg.status, registered_at: reg.registered_at }
         : null,
+      payment,
+      booking: booking
+        ? {
+            booking_id: booking.booking_id,
+            status: booking.status,
+            round_name: booking.round_name,
+            test_url: booking.test_url,
+            link_assigned_at: booking.link_assigned_at,
+            link_active_at: booking.link_active_at,
+            starts_at: booking.slot_starts_at,
+            ends_at: booking.slot_ends_at,
+            slot_date: booking.slot_date,
+          }
+        : null,
       can_register: !reg && eligReasons.length === 0 && registrationOpen(drive),
       eligibility_blockers: eligReasons,
       rounds,
       tests: rounds,
+    });
+  } catch (err: any) {
+    return bridgeUnavailable(res, err);
+  }
+});
+
+/* --------------------------- payment & slots (student) ---------------------
+   Multi-segment paths, so registering them after `GET /:driveId` above is safe:
+   Express matches segment counts, not prefixes. */
+
+const PAYMENT_PROOF_DIR = path.join(__dirname, '../../uploads/payment-proofs');
+fs.mkdirSync(PAYMENT_PROOF_DIR, { recursive: true });
+
+// Same rule as resumes: only module-generated names are ever touched on disk.
+const PAYMENT_PROOF_NAME_RE = /^proof-[0-9]+-[a-z0-9]{4,12}\.(png|jpg|jpeg|pdf)$/;
+
+const paymentProofUpload = multer({
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, PAYMENT_PROOF_DIR),
+    filename: (req, file, cb) => {
+      const unique = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+      const ext = file.mimetype === 'image/png' ? '.png' : file.mimetype === 'application/pdf' ? '.pdf' : '.jpg';
+      cb(null, `proof-${reqSafeId(req)}-${unique}${ext}`.replace(/[^a-z0-9.\-]/gi, ''));
+    },
+  }),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (_req, file, cb) => {
+    const ok = ['image/png', 'image/jpeg', 'application/pdf'].includes(file.mimetype);
+    if (!ok) return cb(new Error('Upload a PNG, JPG or PDF payment screenshot'));
+    cb(null, true);
+  },
+});
+
+async function myRegistration(driveId: string, userId: string): Promise<Row | null> {
+  const r = await getPool().query(`SELECT * FROM drive_registration WHERE drive_id=$1 AND user_id=$2`, [driveId, userId]);
+  return r.rows[0] || null;
+}
+
+async function activeBookingRow(registrationId: string): Promise<Row | null> {
+  const r = await getPool().query(
+    `SELECT b.*, s.slot_date, s.starts_at AS slot_starts_at, s.ends_at AS slot_ends_at, s.capacity
+       FROM drive_slot_booking b JOIN drive_slot s ON s.slot_id = b.slot_id
+      WHERE b.registration_id=$1 AND b.status <> 'cancelled'
+      ORDER BY b.created_at DESC LIMIT 1`,
+    [registrationId]
+  );
+  return r.rows[0] || null;
+}
+
+/** Latest payment rows for a registration (newest first). */
+async function paymentRows(driveId: string, userId: string, limit = 5): Promise<Row[]> {
+  const r = await getPool().query(
+    `SELECT payment_id, amount_paise, status, utr, proof_name, reviewer_note, reviewed_at, created_at
+       FROM drive_payment WHERE drive_id=$1 AND user_id=$2
+      ORDER BY created_at DESC LIMIT $3`,
+    [driveId, userId, limit]
+  );
+  return r.rows;
+}
+
+drivesRouter.get('/:driveId/payment', async (req: Request, res: Response) => {
+  const userId = req.userId!;
+  try {
+    const driveR = await getPool().query(`SELECT * FROM mock_drive WHERE drive_id=$1`, [req.params.driveId]);
+    const drive = driveR.rows[0];
+    if (!drive) return res.status(404).json({ error: 'drive_not_found' });
+    const reg = await myRegistration(drive.drive_id, userId);
+    const payments = await paymentRows(drive.drive_id, userId);
+    return res.json({
+      server_now: new Date().toISOString(),
+      fee_amount_paise: Number(drive.fee_amount_paise || 0),
+      registration_status: reg?.status || null,
+      payments,
+      latest: payments[0] || null,
+    });
+  } catch (err: any) {
+    return bridgeUnavailable(res, err);
+  }
+});
+
+drivesRouter.post('/:driveId/payment/proof', (req: Request, res: Response) => {
+  const userId = req.userId!;
+  paymentProofUpload.single('proof')(req, res, async (err: any) => {
+    if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(413).json({ error: 'Payment screenshot exceeds the 5MB limit' });
+    }
+    if (err) return res.status(400).json({ error: err.message || 'Upload failed' });
+    try {
+      const file = req.file as Express.Multer.File | undefined;
+      if (!file || !PAYMENT_PROOF_NAME_RE.test(file.filename)) {
+        if (file) fs.rm(path.join(PAYMENT_PROOF_DIR, file.filename), { force: true }, () => {});
+        return res.status(400).json({ error: 'no_proof_file' });
+      }
+
+      const driveR = await getPool().query(`SELECT * FROM mock_drive WHERE drive_id=$1`, [req.params.driveId]);
+      const drive = driveR.rows[0];
+      if (!drive) {
+        fs.rm(path.join(PAYMENT_PROOF_DIR, file.filename), { force: true }, () => {});
+        return res.status(404).json({ error: 'drive_not_found' });
+      }
+      if (!['published', 'live'].includes(drive.status) || Number(drive.fee_amount_paise || 0) <= 0) {
+        fs.rm(path.join(PAYMENT_PROOF_DIR, file.filename), { force: true }, () => {});
+        return res.status(409).json({ error: 'payment_not_required' });
+      }
+
+      const reg = await myRegistration(drive.drive_id, userId);
+      if (!reg) {
+        fs.rm(path.join(PAYMENT_PROOF_DIR, file.filename), { force: true }, () => {});
+        return res.status(403).json({ error: 'not_registered' });
+      }
+      if (!['payment_pending', 'payment_submitted', 'payment_rejected'].includes(reg.status)) {
+        fs.rm(path.join(PAYMENT_PROOF_DIR, file.filename), { force: true }, () => {});
+        return res.status(409).json({ error: 'payment_not_required', status: reg.status });
+      }
+
+      const utr = String(req.body?.utr || '').trim().slice(0, 64);
+      if (utr.length < 6) {
+        fs.rm(path.join(PAYMENT_PROOF_DIR, file.filename), { force: true }, () => {});
+        return res.status(422).json({ error: 'utr_required', message: 'Enter the UTR / transaction reference (min 6 chars).' });
+      }
+
+      // A still-submitted proof blocks a second upload until the admin decides.
+      const pendingR = await getPool().query(
+        `SELECT payment_id FROM drive_payment WHERE drive_id=$1 AND user_id=$2 AND status='submitted'
+          ORDER BY created_at DESC LIMIT 1`,
+        [drive.drive_id, userId]
+      );
+      if (pendingR.rows.length) {
+        fs.rm(path.join(PAYMENT_PROOF_DIR, file.filename), { force: true }, () => {});
+        return res.status(409).json({ error: 'payment_under_review' });
+      }
+
+      const ins = await getPool().query(
+        `INSERT INTO drive_payment (drive_id, user_id, registration_id, amount_paise, status, utr, proof_file, proof_name)
+         VALUES ($1,$2,$3,$4,'submitted',$5,$6,$7) RETURNING *`,
+        [drive.drive_id, userId, reg.registration_id, Number(drive.fee_amount_paise), utr, file.filename, file.originalname.slice(0, 120)]
+      );
+      await getPool().query(`UPDATE drive_registration SET status='payment_submitted', updated_at=NOW() WHERE registration_id=$1`, [reg.registration_id]);
+
+      return res.status(201).json({
+        payment: ins.rows[0],
+        registration_status: 'payment_submitted',
+        message: 'Payment proof submitted — waiting for admin approval.',
+      });
+    } catch (e: any) {
+      if (req.file) fs.rm(path.join(PAYMENT_PROOF_DIR, (req.file as any).filename), { force: true }, () => {});
+      return bridgeUnavailable(res, e);
+    }
+  });
+});
+
+drivesRouter.get('/:driveId/slots', async (req: Request, res: Response) => {
+  const userId = req.userId!;
+  try {
+    const driveR = await getPool().query(`SELECT * FROM mock_drive WHERE drive_id=$1`, [req.params.driveId]);
+    const drive = driveR.rows[0];
+    if (!drive) return res.status(404).json({ error: 'drive_not_found' });
+    const reg = await myRegistration(drive.drive_id, userId);
+    if (!reg) return res.status(403).json({ error: 'not_registered' });
+
+    const slotsR = await getPool().query(
+      `SELECT s.slot_id, s.slot_date, s.starts_at, s.ends_at, s.capacity, s.status,
+              (s.capacity - (SELECT COUNT(*)::INT FROM drive_slot_booking b
+                              WHERE b.slot_id = s.slot_id AND b.status <> 'cancelled'))::INT AS remaining
+         FROM drive_slot s
+        WHERE s.drive_id=$1 AND s.status='open' AND s.ends_at > NOW()
+        ORDER BY s.starts_at`,
+      [drive.drive_id]
+    );
+    const booking = await activeBookingRow(reg.registration_id);
+    return res.json({
+      server_now: new Date().toISOString(),
+      fee_amount_paise: Number(drive.fee_amount_paise || 0),
+      registration_status: reg.status,
+      can_book: reg.status === 'payment_approved' || (Number(drive.fee_amount_paise || 0) === 0 && reg.status === 'registered'),
+      slots: slotsR.rows,
+      booking: booking
+        ? {
+            booking_id: booking.booking_id,
+            status: booking.status,
+            slot_id: booking.slot_id,
+            slot_date: booking.slot_date,
+            starts_at: booking.slot_starts_at,
+            ends_at: booking.slot_ends_at,
+            link_assigned_at: booking.link_assigned_at,
+            link_active_at: booking.link_active_at,
+          }
+        : null,
+    });
+  } catch (err: any) {
+    return bridgeUnavailable(res, err);
+  }
+});
+
+drivesRouter.post('/:driveId/slots/:slotId/book', async (req: Request, res: Response) => {
+  const userId = req.userId!;
+  try {
+    const driveR = await getPool().query(`SELECT * FROM mock_drive WHERE drive_id=$1`, [req.params.driveId]);
+    const drive = driveR.rows[0];
+    if (!drive) return res.status(404).json({ error: 'drive_not_found' });
+    const reg = await myRegistration(drive.drive_id, userId);
+    if (!reg) return res.status(403).json({ error: 'not_registered' });
+
+    const fee = Number(drive.fee_amount_paise || 0);
+    const allowed = fee > 0 ? reg.status === 'payment_approved' : reg.status === 'registered';
+    if (!allowed) {
+      if (reg.status === 'slot_booked') return res.status(409).json({ error: 'already_booked' });
+      if (reg.status === 'payment_submitted') return res.status(409).json({ error: 'payment_under_review' });
+      if (reg.status === 'payment_rejected') return res.status(409).json({ error: 'payment_rejected' });
+      return res.status(409).json({ error: 'payment_not_approved', status: reg.status });
+    }
+
+    const slotR = await getPool().query(`SELECT * FROM drive_slot WHERE slot_id=$1`, [req.params.slotId]);
+    const slot = slotR.rows[0];
+    if (!slot || slot.drive_id !== drive.drive_id || slot.status !== 'open' || new Date(slot.ends_at).getTime() <= Date.now()) {
+      return res.status(404).json({ error: 'slot_not_found' });
+    }
+
+    const bookedR = await getPool().query(
+      `SELECT COUNT(*)::INT AS n FROM drive_slot_booking WHERE slot_id=$1 AND status <> 'cancelled'`,
+      [slot.slot_id]
+    );
+    if (Number(bookedR.rows[0].n) >= Number(slot.capacity)) return res.status(409).json({ error: 'slot_full' });
+
+    let booking;
+    try {
+      const ins = await getPool().query(
+        `INSERT INTO drive_slot_booking (slot_id, drive_id, registration_id, user_id)
+         VALUES ($1,$2,$3,$4) RETURNING *`,
+        [slot.slot_id, drive.drive_id, reg.registration_id, userId]
+      );
+      booking = ins.rows[0];
+    } catch (e: any) {
+      if (e?.code === '23505') return res.status(409).json({ error: 'already_booked' });
+      throw e;
+    }
+
+    await getPool().query(`UPDATE drive_registration SET status='slot_booked', updated_at=NOW() WHERE registration_id=$1`, [reg.registration_id]);
+    await emitDriveNotification({
+      userId,
+      driveId: drive.drive_id,
+      kind: 'slot_booked',
+      title: 'Slot booked',
+      body: `Your test slot is booked for ${fmtIst(slot.starts_at)} (IST). The link activates here before the slot.`,
+      url: `/mock-drive/drives/${drive.drive_id}`,
+      dedupeKey: `slot_booked:${booking.booking_id}`,
+    });
+
+    return res.status(201).json({
+      booking: { ...booking, starts_at: slot.starts_at, ends_at: slot.ends_at },
+      registration_status: 'slot_booked',
+    });
+  } catch (err: any) {
+    return bridgeUnavailable(res, err);
+  }
+});
+
+drivesRouter.get('/:driveId/booking', async (req: Request, res: Response) => {
+  const userId = req.userId!;
+  try {
+    const driveR = await getPool().query(`SELECT * FROM mock_drive WHERE drive_id=$1`, [req.params.driveId]);
+    const drive = driveR.rows[0];
+    if (!drive) return res.status(404).json({ error: 'drive_not_found' });
+    const reg = await myRegistration(drive.drive_id, userId);
+    if (!reg) return res.status(403).json({ error: 'not_registered' });
+    const booking = await activeBookingRow(reg.registration_id);
+    return res.json({
+      server_now: new Date().toISOString(),
+      registration_status: reg.status,
+      booking: booking
+        ? {
+            booking_id: booking.booking_id,
+            status: booking.status,
+            round_name: booking.round_name,
+            test_url: booking.test_url,
+            link_assigned_at: booking.link_assigned_at,
+            link_active_at: booking.link_active_at,
+            starts_at: booking.slot_starts_at,
+            ends_at: booking.slot_ends_at,
+            slot_date: booking.slot_date,
+          }
+        : null,
     });
   } catch (err: any) {
     return bridgeUnavailable(res, err);

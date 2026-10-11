@@ -7,6 +7,9 @@ import { DriveStatusLine } from '@/components/drives/DriveStatusLine';
 import { WorkflowStepper } from '@/components/drives/WorkflowStepper';
 import { EligibilityTable } from '@/components/drives/EligibilityTable';
 import { RegisterSheet } from '@/components/drives/RegisterSheet';
+import { PaymentSheet } from '@/components/drives/PaymentSheet';
+import { SlotPicker } from '@/components/drives/SlotPicker';
+import { DrivePipelineCard } from '@/components/drives/DrivePipelineCard';
 import { LaunchOverlay } from '@/components/drives/LaunchOverlay';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { fetchDriveDetailApi, launchDriveTestApi } from '@/lib/drivesApi';
@@ -32,18 +35,20 @@ export default function DriveDetailScreen() {
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('overview');
   const [registerOpen, setRegisterOpen] = useState(false);
+  const [paymentOpen, setPaymentOpen] = useState(false);
+  const [slotOpen, setSlotOpen] = useState(false);
   const [launching, setLaunching] = useState<{ round: DriveRound; provider?: string } | null>(null);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (opts: { silent?: boolean } = {}) => {
     if (!driveId) return;
-    setLoading(true);
+    if (!opts.silent) setLoading(true);
     setError(null);
     try {
       setDetail(await fetchDriveDetailApi(driveId));
     } catch (e) {
-      setError((e as Error).message || 'Could not load this drive.');
+      if (!opts.silent) setError((e as Error).message || 'Could not load this drive.');
     } finally {
-      setLoading(false);
+      if (!opts.silent) setLoading(false);
     }
   }, [driveId]);
 
@@ -163,6 +168,18 @@ export default function DriveDetailScreen() {
           </p>
         )}
 
+        {/* Payment → slot → link pipeline (renders nothing before registering). */}
+        {registration && (
+          <div className="mt-3">
+            <DrivePipelineCard
+              detail={detail}
+              onRefresh={() => load({ silent: true })}
+              onPay={() => setPaymentOpen(true)}
+              onBookSlot={() => setSlotOpen(true)}
+            />
+          </div>
+        )}
+
         {/* Tabs */}
         <div className="mt-4 flex gap-1 rounded-[10px] p-1" style={{ background: 'var(--apple-fill)' }}>
           {TABS.map((t) => (
@@ -275,7 +292,28 @@ export default function DriveDetailScreen() {
         }}
         open={registerOpen}
         onClose={() => setRegisterOpen(false)}
-        onRegistered={load}
+        onRegistered={() => {
+          // Paid drive: registration lands on payment_pending — go straight to
+          // the UPI sheet instead of leaving the student hunting for a button.
+          if (Number(drive.fee_amount_paise || 0) > 0) {
+            setRegisterOpen(false);
+            setPaymentOpen(true);
+          }
+          load({ silent: true });
+        }}
+      />
+      <PaymentSheet
+        driveId={drive.drive_id}
+        open={paymentOpen}
+        onClose={() => setPaymentOpen(false)}
+        onApproved={() => setSlotOpen(true)}
+        onChanged={() => load({ silent: true })}
+      />
+      <SlotPicker
+        driveId={drive.drive_id}
+        open={slotOpen}
+        onClose={() => setSlotOpen(false)}
+        onBooked={() => load({ silent: true })}
       />
       <LaunchOverlay visible={!!launching} provider={launching?.provider} />
     </DriveShell>

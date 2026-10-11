@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   ClipboardList, Plus, RefreshCw, Upload, Download, Send, Trash2, Pencil, Check, X,
-  ChevronUp, ChevronDown, Rocket, EyeOff,
+  ChevronUp, ChevronDown, Rocket, EyeOff, CreditCard, CalendarClock, ExternalLink, Zap, Link2,
 } from 'lucide-react';
 import {
   adminFetchDrivesApi,
@@ -24,9 +24,25 @@ import {
   adminPublishResultsApi,
   adminDownloadResultsCsv,
   adminNotifyDriveApi,
+  adminListPaymentsApi,
+  adminApprovePaymentApi,
+  adminRejectPaymentApi,
+  adminOpenPaymentProofApi,
+  adminListSlotsApi,
+  adminGenerateSlotsApi,
+  adminUpdateSlotApi,
+  adminDeleteSlotApi,
+  adminListBookingsApi,
+  adminAssignBookingApi,
+  adminActivateBookingApi,
+  adminDeactivateBookingApi,
+  adminCancelBookingApi,
   AdminDrive,
   AdminDriveTest,
   AdminProvider,
+  AdminPaymentRow,
+  AdminSlotRow,
+  AdminBookingRow,
 } from '@/lib/drivesApi';
 import {
   DriveFormState,
@@ -47,7 +63,7 @@ const ghost =
 const danger =
   'inline-flex items-center gap-1.5 rounded-xl border border-red-200 px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50 disabled:opacity-50';
 
-type Section = 'details' | 'rounds' | 'roster' | 'results' | 'notify';
+type Section = 'details' | 'rounds' | 'roster' | 'payments' | 'slots' | 'results' | 'notify';
 
 /**
  * Admin → Mock Drives. Three columns of scaffolding over the drive admin API:
@@ -310,7 +326,39 @@ function DrivesPanel(props: {
   const [notifyBody, setNotifyBody] = useState('');
   const [notifyBusy, setNotifyBusy] = useState(false);
 
+  // Payments (₹99 ledger)
+  const [payments, setPayments] = useState<AdminPaymentRow[]>([]);
+  const [payCounts, setPayCounts] = useState({ submitted: 0, approved: 0, rejected: 0 });
+  const [payFilter, setPayFilter] = useState<'all' | 'submitted' | 'approved' | 'rejected'>('all');
+
+  // Slots + bookings
+  const [slots, setSlots] = useState<AdminSlotRow[]>([]);
+  const [bookings, setBookings] = useState<AdminBookingRow[]>([]);
+  const [gen, setGen] = useState({ start_date: '', days: '5', times: '09:00,11:00,13:00,15:00,17:00', capacity: '50', duration_minutes: '120' });
+  const [assigningId, setAssigningId] = useState<string | null>(null);
+  const [assignDraft, setAssignDraft] = useState({ round_name: '', test_url: '' });
+
   const [busy, setBusy] = useState(false);
+
+  const loadPayments = async (driveId: string, f = payFilter) => {
+    try {
+      const r = await adminListPaymentsApi(driveId, f);
+      setPayments(r.payments);
+      setPayCounts(r.counts);
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  };
+  const loadSlots = async (driveId: string) => {
+    try {
+      setSlots((await adminListSlotsApi(driveId)).slots);
+    } catch { /* section can retry on refresh */ }
+  };
+  const loadBookings = async (driveId: string) => {
+    try {
+      setBookings((await adminListBookingsApi(driveId)).bookings);
+    } catch { /* section can retry on refresh */ }
+  };
 
   const loadDetail = async (driveId: string) => {
     try {
@@ -332,6 +380,17 @@ function DrivesPanel(props: {
     if (selected) loadDetail(selected.drive_id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected?.drive_id]);
+
+  // Lazy-load the payment/slot ledgers when their section opens.
+  useEffect(() => {
+    if (!selected) return;
+    if (section === 'payments') loadPayments(selected.drive_id);
+    if (section === 'slots') {
+      loadSlots(selected.drive_id);
+      loadBookings(selected.drive_id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [section, selected?.drive_id, payFilter]);
 
   const run = async (msg: string, fn: () => Promise<any>) => {
     setBusy(true);
@@ -546,6 +605,126 @@ function DrivesPanel(props: {
     }
   };
 
+  /* ---------------------- payments & slots actions ---------------------- */
+
+  const decidePayment = async (p: AdminPaymentRow, approve: boolean) => {
+    if (!selected) return;
+    const note = approve ? undefined : window.prompt('Reason for rejecting (shown to the student):') || undefined;
+    if (!approve && note === undefined) return;
+    setBusy(true);
+    try {
+      if (approve) await adminApprovePaymentApi(selected.drive_id, p.payment_id, note);
+      else await adminRejectPaymentApi(selected.drive_id, p.payment_id, note);
+      setNotice(approve ? 'Payment approved — student can book a slot now.' : 'Payment rejected — student notified.');
+      await loadPayments(selected.drive_id);
+      await loadBookings(selected.drive_id);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const openProof = async (p: AdminPaymentRow) => {
+    if (!selected) return;
+    try {
+      await adminOpenPaymentProofApi(selected.drive_id, p.payment_id);
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  };
+
+  const generateSlots = async () => {
+    if (!selected) return;
+    const times = gen.times.split(/[,\s]+/).map((t) => t.trim()).filter(Boolean);
+    setBusy(true);
+    try {
+      const r = await adminGenerateSlotsApi(selected.drive_id, {
+        start_date: gen.start_date,
+        days: Number(gen.days) || 5,
+        times,
+        capacity: Number(gen.capacity) || 50,
+        duration_minutes: Number(gen.duration_minutes) || 120,
+      });
+      setNotice(`Created ${r.created} slot${r.created === 1 ? '' : 's'}.`);
+      await loadSlots(selected.drive_id);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const toggleSlot = async (s: AdminSlotRow) => {
+    if (!selected) return;
+    setBusy(true);
+    try {
+      await adminUpdateSlotApi(selected.drive_id, s.slot_id, { status: s.status === 'open' ? 'closed' : 'open' });
+      await loadSlots(selected.drive_id);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const deleteSlot = async (s: AdminSlotRow) => {
+    if (!selected) return;
+    if (!window.confirm(`Delete the ${new Date(s.starts_at).toLocaleString()} slot?`)) return;
+    setBusy(true);
+    try {
+      await adminDeleteSlotApi(selected.drive_id, s.slot_id);
+      setNotice('Slot deleted.');
+      await loadSlots(selected.drive_id);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const assignLink = async (b: AdminBookingRow) => {
+    if (!selected) return;
+    if (!assignDraft.round_name.trim() && !assignDraft.test_url.trim()) {
+      setError('Enter a round name or test URL for this booking.');
+      return;
+    }
+    setBusy(true);
+    try {
+      await adminAssignBookingApi(selected.drive_id, b.booking_id, {
+        round_name: assignDraft.round_name.trim() || undefined,
+        test_url: assignDraft.test_url.trim() || undefined,
+      });
+      setNotice('Link assigned — student notified. Activate it when you are ready.');
+      setAssigningId(null);
+      setAssignDraft({ round_name: '', test_url: '' });
+      await loadBookings(selected.drive_id);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const bookingAction = async (
+    b: AdminBookingRow,
+    fn: () => Promise<any>,
+    msg: string
+  ) => {
+    if (!selected) return;
+    setBusy(true);
+    try {
+      await fn();
+      setNotice(msg);
+      await loadBookings(selected.drive_id);
+      await loadSlots(selected.drive_id);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <div className="grid gap-5 lg:grid-cols-3">
       {/* ----------------------------- left column ---------------------------- */}
@@ -634,7 +813,7 @@ function DrivesPanel(props: {
 
               {/* Section tabs */}
               <div className="mt-4 flex flex-wrap gap-1.5 border-t border-gray-100 pt-3">
-                {(['details', 'rounds', 'roster', 'results', 'notify'] as const).map((s) => (
+                {(['details', 'rounds', 'roster', 'payments', 'slots', 'results', 'notify'] as const).map((s) => (
                   <button
                     key={s}
                     type="button"
@@ -646,6 +825,7 @@ function DrivesPanel(props: {
                     {s}
                     {s === 'rounds' && rounds.length > 0 ? ` (${rounds.length})` : ''}
                     {s === 'roster' && regsLocal.length > 0 ? ` (${regsLocal.length})` : ''}
+                    {s === 'payments' && payCounts.submitted > 0 ? ` (${payCounts.submitted})` : ''}
                   </button>
                 ))}
               </div>
@@ -882,6 +1062,245 @@ function DrivesPanel(props: {
                   {regsLocal.length === 0 && <p className="italic text-gray-400">No registrations.</p>}
                 </div>
               </div>
+            )}
+
+            {/* ---------------------------- payments --------------------------- */}
+            {section === 'payments' && (
+              <div className="rounded-2xl border border-gray-200 bg-white p-5">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h4 className="text-xs font-bold uppercase text-gray-400">
+                    Payments
+                    {payCounts.submitted > 0 && (
+                      <span className="ml-1.5 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] text-amber-700">
+                        {payCounts.submitted} pending
+                      </span>
+                    )}
+                  </h4>
+                  <div className="flex gap-1">
+                    {(['all', 'submitted', 'approved', 'rejected'] as const).map((f) => (
+                      <button
+                        key={f}
+                        type="button"
+                        onClick={() => setPayFilter(f)}
+                        className={`rounded-lg px-2.5 py-1 text-[11px] font-bold capitalize ${
+                          payFilter === f ? 'bg-[#1F3A5F] text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                        }`}
+                      >
+                        {f}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="mt-3 space-y-2">
+                  {payments.map((p) => (
+                    <div key={p.payment_id} className="rounded-xl border border-gray-100 px-3 py-2.5 text-sm">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <CreditCard className="h-4 w-4 shrink-0 text-gray-400" />
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate font-bold text-[#1F3A5F]">
+                            ₹{Math.round(p.amount_paise / 100)} · {p.user_email || p.roll_no || p.user_id}
+                          </span>
+                          <span className="mt-0.5 block text-[11px] text-gray-500">
+                            UTR {p.utr || '—'} · {new Date(p.created_at).toLocaleString()} · {p.registration_status}
+                            {p.reviewer_note ? ` · note: ${p.reviewer_note}` : ''}
+                          </span>
+                        </span>
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                          p.status === 'approved' ? 'bg-emerald-50 text-emerald-700'
+                          : p.status === 'rejected' ? 'bg-red-50 text-red-600'
+                          : 'bg-amber-50 text-amber-700'
+                        }`}>
+                          {p.status}
+                        </span>
+                        <button type="button" className={ghost} onClick={() => openProof(p)}>
+                          <ExternalLink className="h-3.5 w-3.5" /> Proof
+                        </button>
+                        {p.status === 'submitted' && (
+                          <>
+                            <button type="button" className={btn} disabled={busy} onClick={() => decidePayment(p, true)}>
+                              <Check className="h-3.5 w-3.5" /> Approve
+                            </button>
+                            <button type="button" className={danger} disabled={busy} onClick={() => decidePayment(p, false)}>
+                              <X className="h-3.5 w-3.5" /> Reject
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  {payments.length === 0 && <p className="text-xs italic text-gray-400">No payments for this drive yet.</p>}
+                </div>
+                <p className="mt-3 text-[11px] text-gray-400">
+                  Approving unlocks the student&apos;s open rounds and lets them book a slot; the student gets a notification either way.
+                </p>
+              </div>
+            )}
+
+            {/* ----------------------------- slots ----------------------------- */}
+            {section === 'slots' && (
+              <>
+                <div className="rounded-2xl border border-gray-200 bg-white p-5">
+                  <h4 className="text-xs font-bold uppercase text-gray-400">Generate slots</h4>
+                  <p className="mt-1 text-xs text-gray-500">
+                    One slot per day per start time. Times are IST. Defaults: 5 days × 9/11/1/3/5 PM, 50 seats, 2h each.
+                  </p>
+                  <div className="mt-3 grid gap-2 sm:grid-cols-5">
+                    <label>
+                      <span className="text-[11px] font-bold uppercase text-gray-400">Start date</span>
+                      <input type="date" className={input + ' mt-1'} value={gen.start_date} onChange={(e) => setGen({ ...gen, start_date: e.target.value })} />
+                    </label>
+                    <label>
+                      <span className="text-[11px] font-bold uppercase text-gray-400">Days</span>
+                      <input type="number" min="1" max="14" className={input + ' mt-1'} value={gen.days} onChange={(e) => setGen({ ...gen, days: e.target.value })} />
+                    </label>
+                    <label className="sm:col-span-2">
+                      <span className="text-[11px] font-bold uppercase text-gray-400">Times (comma-separated, IST)</span>
+                      <input className={input + ' mt-1'} value={gen.times} onChange={(e) => setGen({ ...gen, times: e.target.value })} />
+                    </label>
+                    <label>
+                      <span className="text-[11px] font-bold uppercase text-gray-400">Seats / slot</span>
+                      <input type="number" min="1" className={input + ' mt-1'} value={gen.capacity} onChange={(e) => setGen({ ...gen, capacity: e.target.value })} />
+                    </label>
+                  </div>
+                  <div className="mt-2 grid gap-2 sm:grid-cols-5">
+                    <label>
+                      <span className="text-[11px] font-bold uppercase text-gray-400">Duration (min)</span>
+                      <input type="number" min="15" className={input + ' mt-1'} value={gen.duration_minutes} onChange={(e) => setGen({ ...gen, duration_minutes: e.target.value })} />
+                    </label>
+                    <div className="flex items-end sm:col-span-4">
+                      <button className={btn} disabled={busy || !gen.start_date} onClick={generateSlots}>
+                        <CalendarClock className="h-3.5 w-3.5" /> Generate slots
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-gray-200 bg-white p-5">
+                  <h4 className="text-xs font-bold uppercase text-gray-400">Slots ({slots.length})</h4>
+                  <div className="mt-3 max-h-56 space-y-1.5 overflow-auto text-xs text-gray-600">
+                    {slots.map((s) => (
+                      <div key={s.slot_id} className="flex items-center gap-2 rounded-lg border border-gray-100 px-2.5 py-1.5">
+                        <span className="min-w-0 flex-1 font-mono">
+                          {new Date(s.starts_at).toLocaleString()} → {new Date(s.ends_at).toLocaleTimeString()}
+                        </span>
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${s.booked >= s.capacity ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-700'}`}>
+                          {s.booked}/{s.capacity}
+                        </span>
+                        <button type="button" className={ghost} disabled={busy} onClick={() => toggleSlot(s)}>
+                          {s.status === 'open' ? 'Close' : 'Open'}
+                        </button>
+                        <button type="button" className={danger} disabled={busy} onClick={() => deleteSlot(s)}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                    {slots.length === 0 && <p className="italic text-gray-400">No slots yet — generate them above.</p>}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-gray-200 bg-white p-5">
+                  <h4 className="text-xs font-bold uppercase text-gray-400">Bookings ({bookings.length})</h4>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Assign the round + URL, then <b>Activate</b> — the student&apos;s link stays dead until you do.
+                  </p>
+                  <div className="mt-3 max-h-80 space-y-2 overflow-auto">
+                    {bookings.map((b) => (
+                      <div key={b.booking_id} className="rounded-xl border border-gray-100 px-3 py-2.5 text-sm">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate font-bold text-[#1F3A5F]">
+                              {b.user_email || b.roll_no || b.user_id}
+                            </span>
+                            <span className="mt-0.5 block text-[11px] text-gray-500">
+                              {new Date(b.starts_at).toLocaleString()} · {b.round_name || 'round not set'}
+                              {b.link_active_at ? ' · ACTIVE' : b.link_assigned_at ? ' · assigned' : ''}
+                            </span>
+                          </span>
+                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                            b.status === 'active' ? 'bg-emerald-50 text-emerald-700'
+                            : b.status === 'link_assigned' ? 'bg-amber-50 text-amber-700'
+                            : b.status === 'cancelled' ? 'bg-gray-100 text-gray-400'
+                            : 'bg-blue-50 text-blue-700'
+                          }`}>
+                            {b.status.replace('_', ' ')}
+                          </span>
+
+                          {b.status !== 'cancelled' && (
+                            <>
+                              <button
+                                type="button"
+                                className={ghost}
+                                onClick={() => {
+                                  if (assigningId === b.booking_id) { setAssigningId(null); return; }
+                                  setAssigningId(b.booking_id);
+                                  setAssignDraft({ round_name: b.round_name || '', test_url: b.test_url || '' });
+                                }}
+                              >
+                                <Link2 className="h-3.5 w-3.5" /> {b.link_assigned_at ? 'Edit' : 'Assign'}
+                              </button>
+                              {!b.link_active_at && b.link_assigned_at && (
+                                <button
+                                  type="button"
+                                  className={btn}
+                                  disabled={busy}
+                                  onClick={() => bookingAction(b, () => adminActivateBookingApi(selected!.drive_id, b.booking_id), 'Link ACTIVATED — student notified.')}
+                                >
+                                  <Zap className="h-3.5 w-3.5" /> Activate
+                                </button>
+                              )}
+                              {b.link_active_at && (
+                                <button
+                                  type="button"
+                                  className={ghost}
+                                  disabled={busy}
+                                  onClick={() => bookingAction(b, () => adminDeactivateBookingApi(selected!.drive_id, b.booking_id), 'Link deactivated.')}
+                                >
+                                  Deactivate
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                className={danger}
+                                disabled={busy}
+                                onClick={() => {
+                                  if (window.confirm('Cancel this booking? The seat frees up and the student can rebook.')) {
+                                    bookingAction(b, () => adminCancelBookingApi(selected!.drive_id, b.booking_id), 'Booking cancelled.');
+                                  }
+                                }}
+                              >
+                                Cancel
+                              </button>
+                            </>
+                          )}
+                        </div>
+
+                        {assigningId === b.booking_id && (
+                          <div className="mt-2 grid gap-2 border-t border-gray-100 pt-2 sm:grid-cols-2">
+                            <input
+                              className={input}
+                              placeholder="Round name (e.g. Round 1 — Aptitude)"
+                              value={assignDraft.round_name}
+                              onChange={(e) => setAssignDraft({ ...assignDraft, round_name: e.target.value })}
+                            />
+                            <input
+                              className={input}
+                              placeholder="Test URL (https://…)"
+                              value={assignDraft.test_url}
+                              onChange={(e) => setAssignDraft({ ...assignDraft, test_url: e.target.value })}
+                            />
+                            <div className="sm:col-span-2">
+                              <button className={btn} disabled={busy} onClick={() => assignLink(b)}>
+                                <Check className="h-3.5 w-3.5" /> Save assignment
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    {bookings.length === 0 && <p className="text-xs italic text-gray-400">No bookings yet — students book after payment approval.</p>}
+                  </div>
+                </div>
+              </>
             )}
 
             {/* ---------------------------- results --------------------------- */}

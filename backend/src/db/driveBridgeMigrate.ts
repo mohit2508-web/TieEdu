@@ -453,6 +453,93 @@ export async function ensureProfileCorrectionTable(): Promise<void> {
 }
 
 /**
+ * ₹99 payment approval + slot booking.
+ *
+ * Flow the schema encodes: register → (fee > 0) payment_pending → student
+ * uploads proof (`drive_payment`) → admin approves → registration
+ * payment_approved → student books a `drive_slot` (`drive_slot_booking`) →
+ * admin assigns the test link to the booking (`link_assigned_at`) → admin
+ * activates it (`link_active_at`), and only then can the round be launched.
+ * The registration CHECK is widened to carry the payment stages.
+ */
+export async function ensureDriveSlotPaymentTables(): Promise<void> {
+  await addColumnIfMissing('mock_drive', 'fee_amount_paise', 'INT NOT NULL DEFAULT 0');
+
+  await getPool().query(`
+    CREATE TABLE IF NOT EXISTS drive_payment (
+      payment_id      TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+      drive_id        TEXT NOT NULL REFERENCES mock_drive(drive_id) ON DELETE CASCADE,
+      user_id         TEXT NOT NULL,
+      registration_id TEXT REFERENCES drive_registration(registration_id) ON DELETE CASCADE,
+      amount_paise    INT NOT NULL,
+      status          TEXT NOT NULL DEFAULT 'submitted',
+      utr             TEXT,
+      proof_file      TEXT,
+      proof_name      TEXT,
+      reviewer_note   TEXT,
+      reviewed_by     TEXT,
+      reviewed_at     TIMESTAMPTZ,
+      created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      CONSTRAINT drive_payment_status_valid CHECK (status IN ('submitted','approved','rejected'))
+    );
+  `);
+  await getPool().query(`CREATE INDEX IF NOT EXISTS drive_payment_drive_idx ON drive_payment(drive_id, status, created_at DESC);`);
+  await getPool().query(`CREATE INDEX IF NOT EXISTS drive_payment_user_idx ON drive_payment(user_id, created_at DESC);`);
+
+  await getPool().query(`
+    CREATE TABLE IF NOT EXISTS drive_slot (
+      slot_id    TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+      drive_id   TEXT NOT NULL REFERENCES mock_drive(drive_id) ON DELETE CASCADE,
+      slot_date  DATE NOT NULL,
+      starts_at  TIMESTAMPTZ NOT NULL,
+      ends_at    TIMESTAMPTZ NOT NULL,
+      capacity   INT NOT NULL DEFAULT 50,
+      status     TEXT NOT NULL DEFAULT 'open',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      CONSTRAINT drive_slot_status_valid CHECK (status IN ('open','closed')),
+      CONSTRAINT drive_slot_capacity_positive CHECK (capacity > 0)
+    );
+  `);
+  await getPool().query(`CREATE UNIQUE INDEX IF NOT EXISTS drive_slot_drive_starts_idx ON drive_slot(drive_id, starts_at);`);
+
+  await getPool().query(`
+    CREATE TABLE IF NOT EXISTS drive_slot_booking (
+      booking_id       TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+      slot_id          TEXT NOT NULL REFERENCES drive_slot(slot_id) ON DELETE CASCADE,
+      drive_id         TEXT NOT NULL REFERENCES mock_drive(drive_id) ON DELETE CASCADE,
+      registration_id  TEXT NOT NULL REFERENCES drive_registration(registration_id) ON DELETE CASCADE,
+      user_id          TEXT NOT NULL,
+      status           TEXT NOT NULL DEFAULT 'booked',
+      round_name       TEXT,
+      test_url         TEXT,
+      link_assigned_at TIMESTAMPTZ,
+      link_active_at   TIMESTAMPTZ,
+      created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      CONSTRAINT drive_booking_status_valid
+        CHECK (status IN ('booked','link_assigned','active','completed','cancelled'))
+    );
+  `);
+  await getPool().query(`CREATE UNIQUE INDEX IF NOT EXISTS drive_booking_reg_idx ON drive_slot_booking(registration_id);`);
+  await getPool().query(`CREATE UNIQUE INDEX IF NOT EXISTS drive_booking_slot_user_idx ON drive_slot_booking(slot_id, user_id);`);
+  await getPool().query(`CREATE INDEX IF NOT EXISTS drive_booking_drive_idx ON drive_slot_booking(drive_id, status);`);
+
+  // Widen the registration status machine with the payment/slot stages.
+  // CHECK constraints cannot be altered in place on Postgres or Cockroach —
+  // drop and re-add with the full list (old stages kept).
+  await getPool().query(`ALTER TABLE drive_registration DROP CONSTRAINT IF EXISTS drive_reg_status_valid;`);
+  await getPool().query(`
+    ALTER TABLE drive_registration ADD CONSTRAINT drive_reg_status_valid
+      CHECK (status IN (
+        'registered','payment_pending','payment_submitted','payment_approved',
+        'payment_rejected','slot_booked',
+        'launched','in_progress','completed','absent','disqualified'
+      ));
+  `);
+}
+
+/**
  * Runs every bridge migration. Returns false when PostgreSQL is unreachable or a
  * statement fails, and says which. Unlike the main platform, the bridge has NO
  * JSON fallback — a half-migrated bridge would only surface as confusing errors
@@ -483,8 +570,9 @@ export async function runDriveBridgeMigrations(): Promise<boolean> {
     await ensureStudentResumeTable();
     await ensureDriveInterviewTable();
     await ensureProfileCorrectionTable();
+    await ensureDriveSlotPaymentTables();
     console.log(
-      '✅ [DriveBridge] Schema ready (student_profile, provider, test, mock_drive, registration, launch, attempt, events, notifications, resumes, interviews, corrections).'
+      '✅ [DriveBridge] Schema ready (student_profile, provider, test, mock_drive, registration, launch, attempt, events, notifications, resumes, interviews, corrections, payments, slots).'
     );
     return true;
   } catch (err: any) {

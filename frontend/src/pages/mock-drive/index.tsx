@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, MapPin, CalendarClock, Play, Inbox, Bell, ChevronRight } from 'lucide-react';
+import { ArrowRight, MapPin, CalendarClock, Play, Inbox, Bell, ChevronRight, IndianRupee, CreditCard, Link2, Zap, CalendarCheck, Clock3 } from 'lucide-react';
 import { DriveShell } from '@/components/drives/DriveShell';
 import { DriveStatusLine } from '@/components/drives/DriveStatusLine';
+import { Countdown } from '@/components/drives/Countdown';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { fetchDriveHomeApi } from '@/lib/drivesApi';
 import { useAuth } from '@/context/AuthContext';
-import type { DriveHome } from '@/types/drives';
+import type { DriveHome, DriveNeedsAction } from '@/types/drives';
 
 const firstName = (name?: string | null) =>
   name ? name.trim().split(/\s+/)[0] : 'there';
@@ -53,7 +54,12 @@ export default function HomeTab() {
         if (alive) setLoading(false);
       }
     })();
-    return () => { alive = false; };
+    // Background refresh so a payment approval / link activation flips the
+    // cards below without the student pulling.
+    const poll = setInterval(() => {
+      fetchDriveHomeApi().then((h) => alive && setHome(h)).catch(() => {});
+    }, 30000);
+    return () => { alive = false; clearInterval(poll); };
   }, []);
 
   const nowMs = useMemo(() => (home ? new Date(home.server_now).getTime() : Date.now()), [home]);
@@ -108,6 +114,69 @@ export default function HomeTab() {
             </div>
             <ChevronRight size={16} style={{ color: 'var(--apple-label-3)' }} />
           </Link>
+        )}
+
+        {/* Live countdown — "your test starts in …", ticking every second */}
+        {home?.next_test && (
+          <Link
+            href={`/mock-drive/drives/${home.next_test.drive_id}`}
+            className="mt-3 block rounded-[16px] p-4 text-white shadow-sm"
+            style={{ background: 'linear-gradient(135deg, #1C1C1E 0%, #2C2C2E 100%)' }}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-white/60">
+                  <Clock3 size={12} /> Your test starts in
+                </p>
+                <p className="mt-1 text-[27px] font-bold leading-none">
+                  <Countdown targetIso={home.next_test.starts_at} serverNowIso={home.server_now} />
+                </p>
+                <p className="mt-1.5 truncate text-[12.5px] text-white/70">
+                  {home.next_test.title} · {home.next_test.company_name}
+                </p>
+              </div>
+              <span
+                className="flex-none rounded-full px-2.5 py-1 text-[11px] font-bold"
+                style={
+                  home.next_test.link_active_at
+                    ? { background: 'rgba(52,199,89,.22)', color: '#30D158' }
+                    : { background: 'rgba(255,255,255,.14)', color: 'rgba(255,255,255,.85)' }
+                }
+              >
+                {home.next_test.link_active_at ? 'LIVE' : 'LINK SOON'}
+              </span>
+            </div>
+          </Link>
+        )}
+
+        {/* Action items — pay, book slot, waiting-for-link, all in one stack */}
+        {home && home.needs_action.length > 0 && (
+          <section className="mt-4">
+            <div className="mb-2.5 flex items-center justify-between">
+              <h2 className="text-[15px] font-bold tracking-tight" style={{ color: 'var(--apple-label)' }}>Needs you</h2>
+              <Link href="/mock-drive/drives" className="inline-flex items-center gap-0.5 text-[12px] font-semibold" style={{ color: 'var(--apple-blue)' }}>
+                All drives<ArrowRight size={12} />
+              </Link>
+            </div>
+            <ul className="space-y-2">
+              {home.needs_action.map((n) => (
+                <li key={`${n.drive_id}-${n.type}`}>
+                  <Link
+                    href={`/mock-drive/drives/${n.drive_id}`}
+                    className="flex items-start gap-3 rounded-[14px] border p-3"
+                    style={{ background: 'var(--apple-surface)', borderColor: 'var(--apple-separator)' }}
+                  >
+                    <NeedsIcon type={n.type} />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[13.5px] font-semibold" style={{ color: 'var(--apple-label)' }}>{n.title}</p>
+                      <p className="mt-0.5 text-[12.5px] leading-snug" style={{ color: 'var(--apple-label-2)' }}>{n.message}</p>
+                    </div>
+                    <ChevronRight size={15} className="mt-1 shrink-0" style={{ color: 'var(--apple-label-3)' }} />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
         )}
 
         {/* Continue — in-progress attempts */}
@@ -270,6 +339,24 @@ const CompanyLogo: React.FC<{ name: string | null; url: string | null }> = ({ na
     )}
   </span>
 );
+
+const NEEDS_STYLE: Record<DriveNeedsAction['type'], { bg: string; fg: string; icon: React.ReactNode }> = {
+  pay: { bg: 'var(--apple-red-soft)', fg: 'var(--apple-red)', icon: <IndianRupee size={16} /> },
+  payment_review: { bg: 'var(--apple-orange-soft)', fg: 'var(--apple-orange)', icon: <CreditCard size={16} /> },
+  slot: { bg: 'var(--apple-blue-soft)', fg: 'var(--apple-blue)', icon: <CalendarCheck size={16} /> },
+  slot_confirmed: { bg: 'var(--apple-blue-soft)', fg: 'var(--apple-blue)', icon: <CalendarCheck size={16} /> },
+  link_waiting: { bg: 'var(--apple-orange-soft)', fg: 'var(--apple-orange)', icon: <Link2 size={16} /> },
+  test_ready: { bg: 'var(--apple-green-soft)', fg: 'var(--apple-green)', icon: <Zap size={16} fill="currentColor" /> },
+};
+
+const NeedsIcon: React.FC<{ type: DriveNeedsAction['type'] }> = ({ type }) => {
+  const s = NEEDS_STYLE[type] || NEEDS_STYLE.slot;
+  return (
+    <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px]" style={{ background: s.bg, color: s.fg }}>
+      {s.icon}
+    </span>
+  );
+};
 
 const Section: React.FC<{ title: string; href: string; linkLabel: string; children: React.ReactNode }> = ({
   title, href, linkLabel, children,
