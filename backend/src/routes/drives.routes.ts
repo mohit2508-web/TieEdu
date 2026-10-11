@@ -36,10 +36,11 @@ const RESUME_DIR = path.join(__dirname, '../../uploads/resumes');
 fs.mkdirSync(RESUME_DIR, { recursive: true });
 
 // Only the names this module generates are ever served or deleted, so a crafted
-// `stored_name` can never reach outside RESUME_DIR. The id segment mirrors
-// `reqSafeId`, which keeps letters (`user17903202…`), so it must be [a-z0-9]+ —
-// a [0-9]+ pattern here rejected every legitimate upload.
-const RESUME_NAME_RE = /^resume-[a-z0-9]+-[a-z0-9]{4,12}\.pdf$/;
+// `stored_name` can never reach outside RESUME_DIR. Shape (see the filename fn):
+// resume-<safeid>-<timestamp>-<rand>.pdf — 4 hyphen segments. The earlier
+// 3-segment pattern never matched, so every upload was rejected. `/i` because
+// `reqSafeId` keeps the original case of ids like cuids (`AbC123`).
+const RESUME_NAME_RE = /^resume-[a-z0-9]+-[0-9]+-[a-z0-9]{1,16}\.pdf$/i;
 
 const resumeUpload = multer({
   storage: multer.diskStorage({
@@ -1022,22 +1023,37 @@ const PAYMENT_PROOF_DIR = path.join(__dirname, '../../uploads/payment-proofs');
 fs.mkdirSync(PAYMENT_PROOF_DIR, { recursive: true });
 
 // Same rule as resumes: only module-generated names are ever touched on disk.
-// `[a-z0-9]+` for the id segment — `reqSafeId` keeps letters from the user id.
-const PAYMENT_PROOF_NAME_RE = /^proof-[a-z0-9]+-[a-z0-9]{4,12}\.(png|jpg|jpeg|pdf)$/;
+// `proof-<safeid>-<timestamp>-<rand>.<ext>` — 4 hyphen segments, so the
+// pattern allows them; the earlier 3-segment one never matched and rejected
+// every upload with `no_proof_file`. `/i` for mixed-case ids (see resumes).
+const PAYMENT_PROOF_NAME_RE = /^proof-[a-z0-9]+-[0-9]+-[a-z0-9]{1,16}\.(png|jpg|jpeg|pdf|webp|heic)$/i;
+
+// Client MIME is advisory (browsers sometimes send ''/octet-stream, phones send
+// webp/heic), so it only picks the extension — the allowlist below is what
+// actually decides, using MIME first and the original extension as fallback.
+const PROOF_MIME_EXT: Record<string, string> = {
+  'image/png': '.png',
+  'image/jpeg': '.jpg',
+  'image/webp': '.webp',
+  'image/heic': '.heic',
+  'application/pdf': '.pdf',
+};
+const PROOF_ORIG_EXT_RE = /\.(png|jpe?g|pdf|webp|heic)$/i;
 
 const paymentProofUpload = multer({
   storage: multer.diskStorage({
     destination: (_req, _file, cb) => cb(null, PAYMENT_PROOF_DIR),
     filename: (req, file, cb) => {
       const unique = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-      const ext = file.mimetype === 'image/png' ? '.png' : file.mimetype === 'application/pdf' ? '.pdf' : '.jpg';
+      const fromOrig = PROOF_ORIG_EXT_RE.exec(file.originalname || '')?.[0]?.toLowerCase();
+      const ext = PROOF_MIME_EXT[file.mimetype] || fromOrig || '.jpg';
       cb(null, `proof-${reqSafeId(req)}-${unique}${ext}`.replace(/[^a-z0-9.\-]/gi, ''));
     },
   }),
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
   fileFilter: (_req, file, cb) => {
-    const ok = ['image/png', 'image/jpeg', 'application/pdf'].includes(file.mimetype);
-    if (!ok) return cb(new Error('Upload a PNG, JPG or PDF payment screenshot'));
+    const ok = Boolean(PROOF_MIME_EXT[file.mimetype]) || PROOF_ORIG_EXT_RE.test(file.originalname || '');
+    if (!ok) return cb(new Error('Upload a PNG, JPG, WebP or PDF payment screenshot'));
     cb(null, true);
   },
 });

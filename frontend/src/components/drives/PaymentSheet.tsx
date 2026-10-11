@@ -200,12 +200,12 @@ export const PaymentSheet: React.FC<{
                 style={{ borderColor: file ? 'var(--apple-blue)' : 'var(--apple-separator)', color: file ? 'var(--apple-blue)' : 'var(--apple-label-2)', background: 'var(--apple-surface)' }}
               >
                 <UploadCloud size={16} />
-                {file ? file.name : 'Attach payment screenshot (PNG / JPG / PDF, ≤5MB)'}
+                {file ? file.name : 'Attach payment screenshot (image or PDF, ≤5MB)'}
               </button>
               <input
                 ref={fileRef}
                 type="file"
-                accept="image/png,image/jpeg,application/pdf"
+                accept="image/*,application/pdf"
                 className="hidden"
                 onChange={(e) => setFile(e.target.files?.[0] || null)}
               />

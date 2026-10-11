@@ -957,7 +957,7 @@ driveAdminRouter.get('/:driveId/payments/:paymentId/proof', async (req: Request,
     const file = path.join(PAYMENT_PROOF_DIR, p.proof_file);
     if (!fs.existsSync(file)) return res.status(404).json({ error: 'proof_not_found' });
     const ext = path.extname(file).toLowerCase();
-    const types: Record<string, string> = { '.pdf': 'application/pdf', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg' };
+    const types: Record<string, string> = { '.pdf': 'application/pdf', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.heic': 'image/heic' };
     res.setHeader('Content-Type', types[ext] || 'application/octet-stream');
     res.setHeader('Content-Disposition', `inline; filename="${String(p.proof_name || 'proof').replace(/["\\]/g, '')}"`);
     return fs.createReadStream(file).pipe(res);
