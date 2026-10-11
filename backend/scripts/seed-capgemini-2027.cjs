@@ -11,7 +11,9 @@
  *      plain-text drive_id rows in launch/attempt/notification are cleared here).
  *   4. Create the new drive: ₹99 fee, registration open now → 15 Oct IST,
  *      CTC 4.5–16 LPA, the new-format description, status=published.
- *   5. Attach the one existing ContestOS test as round 1 (open unlock).
+ *   5. Attach ONE round (the single test contains all four question types —
+ *      AI-assisted Coding, Debugging, Pseudo Code, Hands-on DSA; see
+ *      scripts/lib/capgemini-rounds.cjs).
  *   6. Generate slots: 7 per day × 11–15 Oct 2026 IST (10:00, 12:00, 14:00,
  *      16:00, 18:00, 20:00, 22:00), 1 hour each, 50 seats = 35 slots.
  *
@@ -27,7 +29,7 @@ const path = require('path');
 const DRY = process.argv.includes('--dry-run');
 const OLD_DRIVE_ID = '67185299-ba79-4443-98ed-554c38f8e831';
 const NEW_TITLE = 'Capgemini Mock Drive (New Format 2027)';
-const TEST_ID = '14185012-855e-419c-b671-014a81353dbb';
+const { setupCapgeminiRound } = require('./lib/capgemini-rounds.cjs');
 
 const SLOT_TIMES_IST = ['10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00'];
 const SLOT_DAYS = ['2026-10-11', '2026-10-12', '2026-10-13', '2026-10-14', '2026-10-15'];
@@ -164,19 +166,8 @@ async function main() {
     const driveId = ins.rows[0].drive_id;
     console.log(`Created drive ${driveId} (published, ₹${FEE_PAISE / 100}, registration → 15 Oct IST).`);
 
-    const testOk = await client.query(`SELECT test_id FROM drive_test WHERE test_id=$1`, [TEST_ID]);
-    if (!testOk.rows.length) {
-      console.warn(`WARN: test ${TEST_ID} not found — skipping round attach.`);
-    } else {
-      await client.query(
-        `INSERT INTO mock_drive_test (drive_id, test_id, sort_order, mandatory, weight,
-                                      max_attempts, window_hard_close, unlock_rule, round_name, kind)
-         VALUES ($1,$2,1,TRUE,1,1,TRUE,'{"kind":"open"}',$3,'coding')
-         ON CONFLICT (drive_id, test_id) DO NOTHING`,
-        [driveId, TEST_ID, 'Capgemini Mock Test (New Format 2027)']
-      );
-      console.log('Attached round 1: Capgemini Mock Test (New Format 2027).');
-    }
+    const round = await setupCapgeminiRound(client, driveId);
+    console.log(`Attached round: ${round.round}`);
 
     let slots = 0;
     for (const day of SLOT_DAYS) {

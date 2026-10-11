@@ -123,6 +123,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   invalid_phone: 'That does not look like a valid 10-digit mobile number.',
   subject_and_body_required: 'Subject and message are required.',
   registration_not_found: 'That registration was not found.',
+  no_proof_file: 'Upload a PNG, JPG or PDF payment screenshot.',
 };
 
 const humanError = (raw: any): string =>

@@ -36,8 +36,10 @@ const RESUME_DIR = path.join(__dirname, '../../uploads/resumes');
 fs.mkdirSync(RESUME_DIR, { recursive: true });
 
 // Only the names this module generates are ever served or deleted, so a crafted
-// `stored_name` can never reach outside RESUME_DIR.
-const RESUME_NAME_RE = /^resume-[0-9]+-[a-z0-9]{4,12}\.pdf$/;
+// `stored_name` can never reach outside RESUME_DIR. The id segment mirrors
+// `reqSafeId`, which keeps letters (`user17903202…`), so it must be [a-z0-9]+ —
+// a [0-9]+ pattern here rejected every legitimate upload.
+const RESUME_NAME_RE = /^resume-[a-z0-9]+-[a-z0-9]{4,12}\.pdf$/;
 
 const resumeUpload = multer({
   storage: multer.diskStorage({
@@ -1020,7 +1022,8 @@ const PAYMENT_PROOF_DIR = path.join(__dirname, '../../uploads/payment-proofs');
 fs.mkdirSync(PAYMENT_PROOF_DIR, { recursive: true });
 
 // Same rule as resumes: only module-generated names are ever touched on disk.
-const PAYMENT_PROOF_NAME_RE = /^proof-[0-9]+-[a-z0-9]{4,12}\.(png|jpg|jpeg|pdf)$/;
+// `[a-z0-9]+` for the id segment — `reqSafeId` keeps letters from the user id.
+const PAYMENT_PROOF_NAME_RE = /^proof-[a-z0-9]+-[a-z0-9]{4,12}\.(png|jpg|jpeg|pdf)$/;
 
 const paymentProofUpload = multer({
   storage: multer.diskStorage({
