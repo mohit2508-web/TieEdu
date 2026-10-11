@@ -208,25 +208,37 @@ drivesRouter.post('/:driveId/register', async (req: Request, res: Response) => {
     const blockers = eligibilityReasons(profile, drive);
     if (blockers.length) return res.status(422).json({ error: 'not_eligible', reasons: blockers });
 
+    // Contact phone rides along with registration — admin needs a real number
+    // to reach candidates slot-wise. Mandatory on create, validated whenever sent.
+    const phone = String(req.body?.phone || '').replace(/\D/g, '');
+    if (phone && !/^[6-9]\d{9}$/.test(phone)) return res.status(422).json({ error: 'invalid_phone' });
+
     const existing = await getPool().query(`SELECT * FROM drive_registration WHERE drive_id=$1 AND user_id=$2`, [drive.drive_id, userId]);
     let registration = existing.rows[0];
     let createdNew = false;
     if (!registration) {
+      if (!phone) return res.status(422).json({ error: 'phone_required' });
       // Paid drives start at payment_pending: rounds stay locked until the
       // admin approves the ₹99 proof and the student books a slot.
       const paid = Number(drive.fee_amount_paise || 0) > 0;
       const ins = await getPool().query(
-        `INSERT INTO drive_registration (drive_id, user_id, roll_no, license_id, college_id, eligibility_checked, status)
-         VALUES ($1,$2,$3,$4,$5,TRUE,$6)
+        `INSERT INTO drive_registration (drive_id, user_id, roll_no, license_id, college_id, eligibility_checked, status, contact_phone)
+         VALUES ($1,$2,$3,$4,$5,TRUE,$6,$7)
          ON CONFLICT (drive_id, user_id) DO NOTHING
          RETURNING *`,
-        [drive.drive_id, userId, profile?.roll_no || user.roll_no || null, user.license_id || null, drive.college_id || profile?.college_id || null, paid ? 'payment_pending' : 'registered']
+        [drive.drive_id, userId, profile?.roll_no || user.roll_no || null, user.license_id || null, drive.college_id || profile?.college_id || null, paid ? 'payment_pending' : 'registered', phone || null]
       );
       registration =
         ins.rows[0] ||
         (await getPool().query(`SELECT * FROM drive_registration WHERE drive_id=$1 AND user_id=$2`, [drive.drive_id, userId])).rows[0];
       createdNew = !!ins.rows[0];
       await seedRegistrationTests(drive.drive_id, registration.registration_id);
+    } else if (phone && phone !== registration.contact_phone) {
+      await getPool().query(
+        `UPDATE drive_registration SET contact_phone=$2, updated_at=NOW() WHERE registration_id=$1`,
+        [registration.registration_id, phone]
+      );
+      registration.contact_phone = phone;
     }
 
     if (invite) {

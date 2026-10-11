@@ -10,6 +10,8 @@
 
 import { getPool } from '../db/client';
 import { sendPushToUsers } from './push';
+import { loadDb } from '../data/db';
+import { sendDriveEmail } from './driveEmail';
 
 export interface DriveNotifyInput {
   userId: string;
@@ -23,6 +25,23 @@ export interface DriveNotifyInput {
   /** Idempotency token; unique per row so retries cannot double-post. */
   dedupeKey?: string;
 }
+
+/**
+ * Kinds that also email the student. Deliberately short — one mail per
+ * meaningful state change (money, seat, live link), not one per event, or the
+ * inbox trains itself to ignore us. Runs only when the in-app row was actually
+ * written, so the dedupe key doubles as an email idempotency guard.
+ */
+const AUTO_EMAIL_KINDS = new Set(['payment_approved', 'payment_rejected', 'slot_booked', 'link_activated']);
+
+const lookupEmail = (userId: string): string => {
+  try {
+    const u: any = (loadDb().users || []).find((x: any) => x?.id === userId);
+    return u?.email || '';
+  } catch {
+    return '';
+  }
+};
 
 const safePath = (url?: string): string | undefined => {
   if (typeof url !== 'string' || !url.startsWith('/')) return undefined;
@@ -59,6 +78,26 @@ export const emitDriveNotification = async (input: DriveNotifyInput): Promise<bo
         body: String(input.body || '').slice(0, 400),
         url: safePath(input.url) || '/',
       }).catch(() => undefined);
+      if (AUTO_EMAIL_KINDS.has(input.kind)) {
+        void (async () => {
+          const to = lookupEmail(input.userId);
+          if (!to) return;
+          let driveName = 'TieEdu';
+          if (input.driveId) {
+            try {
+              const d = await getPool().query(`SELECT title FROM mock_drive WHERE drive_id=$1`, [input.driveId]);
+              if (d.rows[0]?.title) driveName = d.rows[0].title;
+            } catch { /* email must never fail the action */ }
+          }
+          await sendDriveEmail({
+            to,
+            subject: String(input.title || 'Drive update').slice(0, 150),
+            body: String(input.body || ''),
+            url: safePath(input.url) || '/',
+            driveName,
+          });
+        })().catch(() => undefined);
+      }
       return true;
     }
     return false;

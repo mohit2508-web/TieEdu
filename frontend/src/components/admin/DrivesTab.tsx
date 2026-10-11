@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   ClipboardList, Plus, RefreshCw, Upload, Download, Send, Trash2, Pencil, Check, X,
-  ChevronUp, ChevronDown, Rocket, EyeOff, CreditCard, CalendarClock, ExternalLink, Zap, Link2,
+  ChevronUp, ChevronDown, Rocket, EyeOff, CreditCard, CalendarClock, ExternalLink, Zap, Link2, Mail,
 } from 'lucide-react';
 import {
   adminFetchDrivesApi,
@@ -37,6 +37,10 @@ import {
   adminActivateBookingApi,
   adminDeactivateBookingApi,
   adminCancelBookingApi,
+  adminAssignSlotBulkApi,
+  adminActivateSlotBulkApi,
+  adminDeactivateSlotBulkApi,
+  adminSendDriveEmailApi,
   AdminDrive,
   AdminDriveTest,
   AdminProvider,
@@ -334,9 +338,20 @@ function DrivesPanel(props: {
   // Slots + bookings
   const [slots, setSlots] = useState<AdminSlotRow[]>([]);
   const [bookings, setBookings] = useState<AdminBookingRow[]>([]);
-  const [gen, setGen] = useState({ start_date: '', days: '5', times: '09:00,11:00,13:00,15:00,17:00', capacity: '50', duration_minutes: '120' });
+  const [gen, setGen] = useState({ start_date: '', days: '5', times: '10:00,12:00,14:00,16:00,18:00,20:00,22:00', capacity: '50', duration_minutes: '60' });
   const [assigningId, setAssigningId] = useState<string | null>(null);
   const [assignDraft, setAssignDraft] = useState({ round_name: '', test_url: '' });
+  // Slot-level bulk release: one assign form shared across slots
+  const [slotAssignId, setSlotAssignId] = useState<string | null>(null);
+  const [slotDraft, setSlotDraft] = useState({ round_name: '', test_url: '' });
+
+  // Email compose (manual scope: all / one slot / one student)
+  const [emailScope, setEmailScope] = useState<'all' | 'slot' | 'student'>('all');
+  const [emailSlotId, setEmailSlotId] = useState('');
+  const [emailRegId, setEmailRegId] = useState('');
+  const [emailSubject, setEmailSubject] = useState('');
+  const [emailBody, setEmailBody] = useState('');
+  const [emailBusy, setEmailBusy] = useState(false);
 
   const [busy, setBusy] = useState(false);
 
@@ -389,6 +404,8 @@ function DrivesPanel(props: {
       loadSlots(selected.drive_id);
       loadBookings(selected.drive_id);
     }
+    // The email composer's slot scope needs the slot list too.
+    if (section === 'notify') loadSlots(selected.drive_id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [section, selected?.drive_id, payFilter]);
 
@@ -605,6 +622,65 @@ function DrivesPanel(props: {
     }
   };
 
+  /** Email compose — queued server-side, `queued` is the recipient count. */
+  const sendEmail = async () => {
+    if (!selected || !emailSubject.trim() || !emailBody.trim()) return;
+    if (emailScope === 'slot' && !emailSlotId) return;
+    if (emailScope === 'student' && !emailRegId) return;
+    setEmailBusy(true);
+    try {
+      const r = await adminSendDriveEmailApi(selected.drive_id, {
+        scope: emailScope,
+        slot_id: emailScope === 'slot' ? emailSlotId : undefined,
+        registration_id: emailScope === 'student' ? emailRegId : undefined,
+        subject: emailSubject.trim(),
+        body: emailBody.trim(),
+      });
+      setNotice(`Email queued to ${r.queued} student${r.queued === 1 ? '' : 's'}.`);
+      setEmailSubject('');
+      setEmailBody('');
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setEmailBusy(false);
+    }
+  };
+
+  /**
+   * Roster CSV — every column the drive team asks for on a call: who they are,
+   * how to reach them, what they paid, and when they sit.
+   */
+  const exportRoster = () => {
+    const cols = ['name', 'email', 'phone', 'roll_no', 'branch', 'batch', 'status', 'payment_status', 'slot_time', 'booking_status', 'completed_tests'];
+    const esc = (v: any) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const lines = [cols.join(',')].concat(
+      regsLocal.map((r) =>
+        [
+          r.name,
+          r.email,
+          r.contact_phone,
+          r.roll_no,
+          r.branch,
+          r.batch,
+          r.status,
+          r.payment_status,
+          r.slot_starts_at ? new Date(r.slot_starts_at).toLocaleString('en-IN') : '',
+          r.booking_status,
+          r.completed_tests,
+        ].map(esc).join(',')
+      )
+    );
+    const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `drive-${selected?.drive_id || 'roster'}-roster.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+
   /* ---------------------- payments & slots actions ---------------------- */
 
   const decidePayment = async (p: AdminPaymentRow, approve: boolean) => {
@@ -681,6 +757,52 @@ function DrivesPanel(props: {
     } finally {
       setBusy(false);
     }
+  };
+
+  /** One bulk slot call → refresh both ledgers; `{n}` in msg becomes the count. */
+  const slotRun = async (msg: string, fn: () => Promise<{ updated: number }>) => {
+    if (!selected) return;
+    setBusy(true);
+    try {
+      const r = await fn();
+      setNotice(msg.replace('{n}', String(r?.updated ?? 0)));
+      await Promise.all([loadSlots(selected.drive_id), loadBookings(selected.drive_id)]);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const bulkAssign = async (slotId: string) => {
+    if (!selected) return;
+    if (!slotDraft.round_name.trim() && !slotDraft.test_url.trim()) {
+      setError('Enter a round name or test URL first.');
+      return;
+    }
+    await slotRun('Link assigned to {n} students.', () =>
+      adminAssignSlotBulkApi(selected.drive_id, slotId, {
+        round_name: slotDraft.round_name.trim() || undefined,
+        test_url: slotDraft.test_url.trim() || undefined,
+      })
+    );
+    setSlotAssignId(null);
+    setSlotDraft({ round_name: '', test_url: '' });
+  };
+
+  const bulkActivate = (slotId: string) =>
+    slotRun('{n} links released — students notified.', () => adminActivateSlotBulkApi(selected!.drive_id, slotId));
+
+  const bulkDeactivate = (slotId: string) =>
+    slotRun('{n} links deactivated.', () => adminDeactivateSlotBulkApi(selected!.drive_id, slotId));
+
+  /** Per-slot link tallies, derived from the bookings list. */
+  const slotStats = (slotId: string) => {
+    const bs = bookings.filter((b) => b.slot_id === slotId && b.status !== 'cancelled');
+    return {
+      assigned: bs.filter((b) => b.link_assigned_at && !b.link_active_at).length,
+      active: bs.filter((b) => b.link_active_at).length,
+    };
   };
 
   const assignLink = async (b: AdminBookingRow) => {
@@ -1047,16 +1169,48 @@ function DrivesPanel(props: {
             {/* ---------------------------- roster ---------------------------- */}
             {section === 'roster' && (
               <div className="rounded-2xl border border-gray-200 bg-white p-5">
-                <h4 className="text-xs font-bold uppercase text-gray-400">Import roster (roll numbers, one per line)</h4>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h4 className="text-xs font-bold uppercase text-gray-400">Roster ({regsLocal.length})</h4>
+                  <button className={ghost} onClick={exportRoster} disabled={!regsLocal.length}>
+                    <Download className="h-3.5 w-3.5" /> Export CSV
+                  </button>
+                </div>
+                <h4 className="mt-4 text-xs font-bold uppercase text-gray-400">Import roster (roll numbers, one per line)</h4>
                 <textarea className={input + ' mt-2 h-24 font-mono'} value={importText} onChange={(e) => setImportText(e.target.value)} placeholder={'GLA-2026-001\nGLA-2026-002'} />
                 <button className={btn + ' mt-2'} disabled={busy || !importText.trim()} onClick={importRoster}>
                   <Upload className="h-3.5 w-3.5" /> Import
                 </button>
-                <div className="mt-3 max-h-72 overflow-auto text-xs text-gray-600">
+                <div className="mt-3 max-h-96 overflow-auto text-xs text-gray-600">
                   {regsLocal.map((r) => (
-                    <div key={r.registration_id} className="flex items-center justify-between border-b border-gray-50 py-1">
-                      <span className="font-mono">{r.roll_no || r.user_id}</span>
-                      <span className="capitalize text-gray-400">{r.status} · {r.completed_tests || 0} done</span>
+                    <div key={r.registration_id} className="border-b border-gray-50 py-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="min-w-0 flex-1 truncate font-bold text-[#1F3A5F]">
+                          {r.name || r.roll_no || r.user_id}
+                          {r.status && <span className="ml-2 rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-gray-500">{String(r.status).replace('_', ' ')}</span>}
+                          {r.payment_status && (
+                            <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase ${
+                              r.payment_status === 'approved' ? 'bg-emerald-50 text-emerald-700'
+                              : r.payment_status === 'rejected' ? 'bg-red-50 text-red-600'
+                              : 'bg-amber-50 text-amber-700'
+                            }`}>₹ {r.payment_status}</span>
+                          )}
+                          {r.booking_status && r.booking_status !== 'cancelled' && (
+                            <span className="ml-1.5 rounded-full bg-blue-50 px-1.5 py-0.5 text-[10px] font-bold uppercase text-blue-700">slot booked</span>
+                          )}
+                        </span>
+                        {r.slot_starts_at && (
+                          <span className="shrink-0 font-mono text-[11px] text-[#0284C7]">
+                            {new Date(r.slot_starts_at).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true })}
+                          </span>
+                        )}
+                      </div>
+                      <div className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-gray-500">
+                        {r.email && <span>{r.email}</span>}
+                        {r.contact_phone && <span className="font-mono">+91 {r.contact_phone}</span>}
+                        {r.roll_no && <span className="font-mono">{r.roll_no}</span>}
+                        {r.branch && <span>{r.branch}</span>}
+                        {r.batch && <span>{r.batch}</span>}
+                      </div>
                     </div>
                   ))}
                   {regsLocal.length === 0 && <p className="italic text-gray-400">No registrations.</p>}
@@ -1142,7 +1296,7 @@ function DrivesPanel(props: {
                 <div className="rounded-2xl border border-gray-200 bg-white p-5">
                   <h4 className="text-xs font-bold uppercase text-gray-400">Generate slots</h4>
                   <p className="mt-1 text-xs text-gray-500">
-                    One slot per day per start time. Times are IST. Defaults: 5 days × 9/11/1/3/5 PM, 50 seats, 2h each.
+                    One slot per day per start time. Times are IST. Defaults: 5 days × 10 AM/12/2/4/6/8/10 PM, 50 seats, 1h each.
                   </p>
                   <div className="mt-3 grid gap-2 sm:grid-cols-5">
                     <label>
@@ -1177,23 +1331,68 @@ function DrivesPanel(props: {
 
                 <div className="rounded-2xl border border-gray-200 bg-white p-5">
                   <h4 className="text-xs font-bold uppercase text-gray-400">Slots ({slots.length})</h4>
-                  <div className="mt-3 max-h-56 space-y-1.5 overflow-auto text-xs text-gray-600">
-                    {slots.map((s) => (
-                      <div key={s.slot_id} className="flex items-center gap-2 rounded-lg border border-gray-100 px-2.5 py-1.5">
-                        <span className="min-w-0 flex-1 font-mono">
-                          {new Date(s.starts_at).toLocaleString()} → {new Date(s.ends_at).toLocaleTimeString()}
-                        </span>
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${s.booked >= s.capacity ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-700'}`}>
-                          {s.booked}/{s.capacity}
-                        </span>
-                        <button type="button" className={ghost} disabled={busy} onClick={() => toggleSlot(s)}>
-                          {s.status === 'open' ? 'Close' : 'Open'}
-                        </button>
-                        <button type="button" className={danger} disabled={busy} onClick={() => deleteSlot(s)}>
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    ))}
+                  <p className="mt-1 text-xs text-gray-500">
+                    Slot bhar jaye to ek click me poore slot ke links assign aur release karein — 50 alag-alag nahi.
+                  </p>
+                  <div className="mt-3 max-h-72 space-y-2 overflow-auto text-xs text-gray-600">
+                    {slots.map((s) => {
+                      const st = slotStats(s.slot_id);
+                      const full = s.booked >= s.capacity;
+                      return (
+                        <div key={s.slot_id} className="rounded-lg border border-gray-100 px-2.5 py-2">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="min-w-0 flex-1 font-mono">
+                              {new Date(s.starts_at).toLocaleString()} → {new Date(s.ends_at).toLocaleTimeString()}
+                            </span>
+                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${full ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-700'}`}>
+                              {s.booked}/{s.capacity}{full ? ' FULL' : ''}
+                            </span>
+                            {st.assigned > 0 && (
+                              <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700">{st.assigned} assigned</span>
+                            )}
+                            {st.active > 0 && (
+                              <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">{st.active} live</span>
+                            )}
+                            <button type="button" className={ghost} disabled={busy || s.booked === 0} onClick={() => setSlotAssignId(slotAssignId === s.slot_id ? null : s.slot_id)}>
+                              <Link2 className="h-3.5 w-3.5" /> Assign all
+                            </button>
+                            <button type="button" className={btn} disabled={busy || st.assigned === 0} onClick={() => bulkActivate(s.slot_id)}>
+                              <Zap className="h-3.5 w-3.5" /> Release all
+                            </button>
+                            <button type="button" className={ghost} disabled={busy || st.active === 0} onClick={() => bulkDeactivate(s.slot_id)}>
+                              Pause
+                            </button>
+                            <button type="button" className={ghost} disabled={busy} onClick={() => toggleSlot(s)}>
+                              {s.status === 'open' ? 'Close' : 'Open'}
+                            </button>
+                            <button type="button" className={danger} disabled={busy} onClick={() => deleteSlot(s)}>
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                          {slotAssignId === s.slot_id && (
+                            <div className="mt-2 grid gap-2 border-t border-gray-100 pt-2 sm:grid-cols-2">
+                              <input
+                                className={input}
+                                placeholder="Round name (e.g. Round 1 — AI-assisted Coding)"
+                                value={slotDraft.round_name}
+                                onChange={(e) => setSlotDraft({ ...slotDraft, round_name: e.target.value })}
+                              />
+                              <input
+                                className={input}
+                                placeholder="Test URL (https://…)"
+                                value={slotDraft.test_url}
+                                onChange={(e) => setSlotDraft({ ...slotDraft, test_url: e.target.value })}
+                              />
+                              <div className="sm:col-span-2">
+                                <button className={btn} disabled={busy} onClick={() => bulkAssign(s.slot_id)}>
+                                  <Check className="h-3.5 w-3.5" /> Assign to all {s.booked} in this slot
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                     {slots.length === 0 && <p className="italic text-gray-400">No slots yet — generate them above.</p>}
                   </div>
                 </div>
@@ -1209,7 +1408,11 @@ function DrivesPanel(props: {
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="min-w-0 flex-1">
                             <span className="block truncate font-bold text-[#1F3A5F]">
-                              {b.user_email || b.roll_no || b.user_id}
+                              {b.user_name || b.user_email || b.roll_no || b.user_id}
+                            </span>
+                            <span className="mt-0.5 block text-[11px] text-gray-500">
+                              {b.user_email}{b.contact_phone ? ` · +91 ${b.contact_phone}` : ''}
+                              {b.payment_status ? ` · ₹ ${b.payment_status}` : ''}
                             </span>
                             <span className="mt-0.5 block text-[11px] text-gray-500">
                               {new Date(b.starts_at).toLocaleString()} · {b.round_name || 'round not set'}
@@ -1359,6 +1562,62 @@ function DrivesPanel(props: {
                 <button className={btn + ' mt-3'} disabled={notifyBusy || !notifyTitle.trim()} onClick={sendUpdate}>
                   <Send className="h-3.5 w-3.5" /> {notifyBusy ? 'Sending…' : 'Send update'}
                 </button>
+
+                <div className="mt-6 border-t border-gray-100 pt-5">
+                  <h4 className="flex items-center gap-1.5 text-xs font-bold uppercase text-gray-400">
+                    <Mail className="h-3.5 w-3.5" /> Send email
+                  </h4>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Email to everyone, one slot, or one student. Payment approval, slot booking aur link-live pe automatic email jaata hai — yeh manual wala hai.
+                  </p>
+                  <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                    <label>
+                      <span className="text-[11px] font-bold uppercase text-gray-400">Send to</span>
+                      <select className={input + ' mt-1'} value={emailScope} onChange={(e) => setEmailScope(e.target.value as any)}>
+                        <option value="all">All registered ({regsLocal.length})</option>
+                        <option value="slot">One slot</option>
+                        <option value="student">One student</option>
+                      </select>
+                    </label>
+                    {emailScope === 'slot' && (
+                      <label className="sm:col-span-2">
+                        <span className="text-[11px] font-bold uppercase text-gray-400">Slot</span>
+                        <select className={input + ' mt-1'} value={emailSlotId} onChange={(e) => setEmailSlotId(e.target.value)}>
+                          <option value="">Pick a slot…</option>
+                          {slots.map((s) => (
+                            <option key={s.slot_id} value={s.slot_id}>
+                              {new Date(s.starts_at).toLocaleString()} ({s.booked}/{s.capacity})
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    )}
+                    {emailScope === 'student' && (
+                      <label className="sm:col-span-2">
+                        <span className="text-[11px] font-bold uppercase text-gray-400">Student</span>
+                        <select className={input + ' mt-1'} value={emailRegId} onChange={(e) => setEmailRegId(e.target.value)}>
+                          <option value="">Pick a student…</option>
+                          {regsLocal.map((r) => (
+                            <option key={r.registration_id} value={r.registration_id}>
+                              {r.name || r.roll_no || r.user_id} · {r.email || r.user_id}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    )}
+                  </div>
+                  <label className="mt-2 block">
+                    <span className="text-[11px] font-bold uppercase text-gray-400">Subject</span>
+                    <input className={input + ' mt-1'} placeholder="e.g. Your Capgemini slot is confirmed" value={emailSubject} onChange={(e) => setEmailSubject(e.target.value)} maxLength={150} />
+                  </label>
+                  <label className="mt-2 block">
+                    <span className="text-[11px] font-bold uppercase text-gray-400">Message</span>
+                    <textarea className={input + ' mt-1 h-28'} placeholder={'Slot time, payment receipt, ya test link ka detail — blank line se paragraph banta hai.'} value={emailBody} onChange={(e) => setEmailBody(e.target.value)} maxLength={4000} />
+                  </label>
+                  <button className={btn + ' mt-3'} disabled={emailBusy || !emailSubject.trim() || !emailBody.trim()} onClick={sendEmail}>
+                    <Mail className="h-3.5 w-3.5" /> {emailBusy ? 'Queueing…' : 'Send email'}
+                  </button>
+                </div>
               </div>
             )}
           </div>

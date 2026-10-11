@@ -43,3 +43,6 @@ Thumbs.db
 .idea/
 gla-drives.csv
 gla-students.csv
+
+# ---- local DB backups (student PII, never commit) ----
+backend/scripts/backups/

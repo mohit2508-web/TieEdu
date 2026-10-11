@@ -252,6 +252,34 @@ const Reengage: React.FC<TemplateProps> = (p) => {
   );
 };
 
+/* ------------------------------------------------------------- drive-update */
+
+/**
+ * Free-form drive notification: the admin (or an automation) supplies the
+ * subject and body, this owns only the structure — greeting, paragraphs split
+ * on blank lines, and an optional call-to-action button. Used for payment
+ * approvals, slot bookings and test-link releases.
+ */
+const DriveUpdate: React.FC<TemplateProps> = (p) => {
+  const v = vars(p);
+  const body = V(p, 'body', '');
+  const ctaUrl = V(p, 'cta_url', '');
+  const ctaLabel = V(p, 'cta_label', 'Open your drive page');
+  const paragraphs = body.split(/\n\s*\n/).filter((s) => s.trim());
+  return (
+    <Layout preview={V(p, 'subject', 'Update on your TieEdu mock drive')} unsubUrl={p.unsubUrl}>
+      <P>{greeting(p)}</P>
+      {paragraphs.map((para, i) => (
+        <P key={i}>{para.split(/\n/).map((line, j) => (
+          <React.Fragment key={j}>{j > 0 ? <br /> : null}{line}</React.Fragment>
+        ))}</P>
+      ))}
+      {ctaUrl ? <Button href={p.href(ctaUrl)}>{ctaLabel}</Button> : null}
+      <Note>{v.drive_name || 'TieEdu'} · This is a transactional update about your mock drive registration.</Note>
+    </Layout>
+  );
+};
+
 /* ------------------------------------------------------------------ registry */
 
 export const TEMPLATES: Record<EmailTemplateId, TemplateDef> = {
@@ -295,6 +323,11 @@ export const TEMPLATES: Record<EmailTemplateId, TemplateDef> = {
     preheader: () => 'Last email about this — then we stop.',
     Component: Reengage,
   },
+  'drive-update': {
+    subject: (p) => (V(p, 'subject', '') || 'Update on your TieEdu mock drive').slice(0, 150),
+    preheader: (p) => (V(p, 'body', '') || 'A drive update.').replace(/\s+/g, ' ').slice(0, 120),
+    Component: DriveUpdate,
+  },
 };
 
 export const TEMPLATE_LIST: { id: EmailTemplateId; label: string }[] = [
@@ -306,4 +339,5 @@ export const TEMPLATE_LIST: { id: EmailTemplateId; label: string }[] = [
   { id: 'proof', label: 'Proof / FAQ (objections)' },
   { id: 'offer', label: 'Offer (coupon deadline)' },
   { id: 'reengage', label: 'Re-engage (non-openers)' },
+  { id: 'drive-update', label: 'Drive update (payment / slot / link)' },
 ];

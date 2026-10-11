@@ -831,7 +831,8 @@ export type EmailTemplateId =
   | 'skill-test'
   | 'proof'
   | 'offer'
-  | 'reengage';
+  | 'reengage'
+  | 'drive-update';
 
 export interface EmailCampaign {
   id: string;

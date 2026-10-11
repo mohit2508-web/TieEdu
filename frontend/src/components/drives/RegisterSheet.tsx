@@ -18,12 +18,14 @@ export const RegisterSheet: React.FC<{
 }> = ({ driveId, drive, open, onClose, onRegistered }) => {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [phone, setPhone] = useState('');
+  const phoneValid = /^[6-9]\d{9}$/.test(phone.replace(/\D/g, ''));
 
   const submit = async () => {
     setBusy(true);
     setError(null);
     try {
-      await registerForDriveApi(driveId);
+      await registerForDriveApi(driveId, undefined, phone.replace(/\D/g, ''));
       onRegistered();
       onClose();
     } catch (e) {
@@ -53,6 +55,26 @@ export const RegisterSheet: React.FC<{
           Your student profile will be checked against this drive&apos;s eligibility criteria. Once registered you can track the drive from your Drives tab.
         </p>
 
+        <label className="mt-4 block">
+          <span className="text-[13px] font-semibold" style={{ color: 'var(--apple-label)' }}>
+            Mobile number <span style={{ color: 'var(--apple-red)' }}>*</span>
+          </span>
+          <input
+            type="tel"
+            inputMode="numeric"
+            autoComplete="tel"
+            maxLength={13}
+            placeholder="10-digit mobile number"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            className="mt-1.5 w-full rounded-[12px] px-3.5 py-2.5 text-[15px] outline-none"
+            style={{ background: 'var(--apple-fill)', color: 'var(--apple-label)' }}
+          />
+          <span className="mt-1 block text-[12px]" style={{ color: 'var(--apple-label-2)' }}>
+            The drive team uses this to share your slot, payment receipt and test link.
+          </span>
+        </label>
+
         {error && (
           <p className="mt-4 rounded-[10px] px-3 py-2 text-[13px]" style={{ background: 'var(--apple-red-soft)', color: 'var(--apple-red)' }}>
             {error}
@@ -72,7 +94,7 @@ export const RegisterSheet: React.FC<{
           <button
             type="button"
             onClick={submit}
-            disabled={busy}
+            disabled={busy || !phoneValid}
             className="flex-1 rounded-[12px] py-3 text-[15px] font-semibold text-white disabled:opacity-50"
             style={{ background: 'var(--apple-blue)' }}
           >

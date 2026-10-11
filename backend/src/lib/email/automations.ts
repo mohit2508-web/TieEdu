@@ -72,6 +72,7 @@ const A4_ALT_SUBJECT: Record<EmailTemplateId, string> = {
   proof: 'The course breakdown you saved',
   offer: 'Your coupon code, one more time',
   reengage: 'The course link you saved',
+  'drive-update': 'Your mock drive update',
 };
 
 export interface AutomationPassResult {

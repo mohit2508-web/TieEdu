@@ -464,6 +464,7 @@ export async function ensureProfileCorrectionTable(): Promise<void> {
  */
 export async function ensureDriveSlotPaymentTables(): Promise<void> {
   await addColumnIfMissing('mock_drive', 'fee_amount_paise', 'INT NOT NULL DEFAULT 0');
+  await addColumnIfMissing('drive_registration', 'contact_phone', 'TEXT');
 
   await getPool().query(`
     CREATE TABLE IF NOT EXISTS drive_payment (

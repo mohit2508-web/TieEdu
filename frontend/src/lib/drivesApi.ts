@@ -119,6 +119,10 @@ const ERROR_MESSAGES: Record<string, string> = {
   proof_not_found: 'The payment screenshot could not be loaded.',
   booking_not_found: 'Booking not found.',
   slot_exists: 'A slot at that time already exists.',
+  phone_required: 'Enter your 10-digit mobile number to register.',
+  invalid_phone: 'That does not look like a valid 10-digit mobile number.',
+  subject_and_body_required: 'Subject and message are required.',
+  registration_not_found: 'That registration was not found.',
 };
 
 const humanError = (raw: any): string =>
@@ -199,12 +203,12 @@ export const fetchDriveAttemptApi = async (attemptId: string): Promise<DriveAsse
 export const fetchDriveInterviewsApi = async (): Promise<DriveInterview[]> =>
   json<{ interviews: DriveInterview[] }>(await apiFetch(`${base}/interviews`)).then((r) => r.interviews);
 
-export const registerForDriveApi = async (driveId: string, inviteToken?: string) =>
+export const registerForDriveApi = async (driveId: string, inviteToken?: string, phone?: string) =>
   json<{ registration: { registration_id: string; status: string } }>(
     await apiFetch(`${base}/${encodeURIComponent(driveId)}/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ invite_token: inviteToken || undefined }),
+      body: JSON.stringify({ invite_token: inviteToken || undefined, phone: phone || undefined }),
     })
   );
 
@@ -693,7 +697,10 @@ export interface AdminBookingRow {
   booking_id: string;
   user_id: string;
   user_email: string;
+  user_name: string;
   roll_no: string | null;
+  contact_phone: string | null;
+  payment_status: string | null;
   status: 'booked' | 'link_assigned' | 'active' | 'completed' | 'cancelled';
   round_name: string | null;
   test_url: string | null;
@@ -785,3 +792,37 @@ export const adminCancelBookingApi = (driveId: string, bookingId: string) =>
     `/${encodeURIComponent(driveId)}/bookings/${encodeURIComponent(bookingId)}/cancel`,
     { method: 'POST' }
   );
+
+// ─── Slot-level bulk release + email (admin) ────────────────────────────────
+
+/** Assign round + URL to every live booking in the slot in one call. */
+export const adminAssignSlotBulkApi = (driveId: string, slotId: string, data: { round_name?: string; test_url?: string }) =>
+  adminJson<{ updated: number }>(`/${encodeURIComponent(driveId)}/slots/${encodeURIComponent(slotId)}/assign`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+
+/** Release (activate) every assigned-but-dormant link in the slot. */
+export const adminActivateSlotBulkApi = (driveId: string, slotId: string) =>
+  adminJson<{ updated: number }>(`/${encodeURIComponent(driveId)}/slots/${encodeURIComponent(slotId)}/activate`, {
+    method: 'POST',
+  });
+
+/** Pull every active link in the slot back. */
+export const adminDeactivateSlotBulkApi = (driveId: string, slotId: string) =>
+  adminJson<{ updated: number }>(`/${encodeURIComponent(driveId)}/slots/${encodeURIComponent(slotId)}/deactivate`, {
+    method: 'POST',
+  });
+
+/**
+ * Compose an email to a scope: all registrants, one slot's bookings, or a
+ * single student. Queued server-side — `queued` is the recipient count.
+ */
+export const adminSendDriveEmailApi = (
+  driveId: string,
+  data: { scope: 'all' | 'slot' | 'student'; slot_id?: string; registration_id?: string; subject: string; body: string }
+) =>
+  adminJson<{ queued: number }>(`/${encodeURIComponent(driveId)}/email`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });

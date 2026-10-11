@@ -6,6 +6,7 @@ import { getPool } from '../db/client';
 import { loadDb } from '../data/db';
 import { bridgeUnavailable } from '../lib/bridge/core';
 import { emitDriveNotification, emitDriveNotificationBulk } from '../lib/driveNotify';
+import { sendDriveEmailBulk } from '../lib/driveEmail';
 import { unlockRoundsAfterPayment } from './drives.routes';
 
 /**
@@ -377,7 +378,7 @@ driveAdminRouter.get('/:driveId/registrations', async (req: Request, res: Respon
     const offset = (page - 1) * limit;
 
     const where = `g.drive_id=$1
-      AND ($2::text IS NULL OR g.roll_no ILIKE '%'||$2||'%' OR g.user_id ILIKE '%'||$2||'%')
+      AND ($2::text IS NULL OR g.roll_no ILIKE '%'||$2||'%' OR g.user_id ILIKE '%'||$2||'%' OR g.contact_phone ILIKE '%'||$2||'%')
       AND ($3::text IS NULL OR g.status=$3)
       AND ($4::text IS NULL OR EXISTS (SELECT 1 FROM student_profile sp WHERE sp.user_id=g.user_id AND sp.branch=$4))
       AND ($5::text IS NULL OR EXISTS (SELECT 1 FROM student_profile sp WHERE sp.user_id=g.user_id AND sp.batch=$5))`;
@@ -385,15 +386,34 @@ driveAdminRouter.get('/:driveId/registrations', async (req: Request, res: Respon
     const [rows, total] = await Promise.all([
       getPool().query(
         `SELECT g.*,
-                (SELECT COUNT(*) FROM drive_registration_test drt WHERE drt.registration_id = g.registration_id AND drt.status='completed')::INT AS completed_tests
-           FROM drive_registration g WHERE ${where} ORDER BY g.registered_at DESC LIMIT $6 OFFSET $7`,
+                (SELECT sp.branch FROM student_profile sp WHERE sp.user_id=g.user_id ORDER BY sp.updated_at DESC LIMIT 1) AS branch,
+                (SELECT sp.batch FROM student_profile sp WHERE sp.user_id=g.user_id ORDER BY sp.updated_at DESC LIMIT 1) AS batch,
+                (SELECT COUNT(*) FROM drive_registration_test drt WHERE drt.registration_id = g.registration_id AND drt.status='completed')::INT AS completed_tests,
+                (SELECT p.status FROM drive_payment p WHERE p.registration_id = g.registration_id ORDER BY p.created_at DESC LIMIT 1) AS payment_status,
+                (SELECT p.utr FROM drive_payment p WHERE p.registration_id = g.registration_id ORDER BY p.created_at DESC LIMIT 1) AS utr,
+                bk.status AS booking_status, bk.link_assigned_at, bk.link_active_at,
+                sl.slot_date, sl.starts_at AS slot_starts_at, sl.ends_at AS slot_ends_at
+           FROM drive_registration g
+           LEFT JOIN drive_slot_booking bk ON bk.registration_id = g.registration_id AND bk.status <> 'cancelled'
+           LEFT JOIN drive_slot sl ON sl.slot_id = bk.slot_id
+          WHERE ${where} ORDER BY g.registered_at DESC LIMIT $6 OFFSET $7`,
         [drive.drive_id, search, status, branch, batch, limit, offset]
       ),
       getPool().query(`SELECT COUNT(*)::INT AS n FROM drive_registration g WHERE ${where}`, [
         drive.drive_id, search, status, branch, batch,
       ]),
     ]);
-    return res.json({ registrations: rows.rows, total: total.rows[0].n, page, limit });
+    // Name/email live in the JSON user store, not Postgres — hydrate here so
+    // the roster shows who the student actually is, not just their user id.
+    const users = new Map<string, { name?: string; email?: string }>();
+    try {
+      for (const u of (loadDb().users || []) as any[]) if (u?.id) users.set(u.id, u);
+    } catch { /* listing must not fail on the JSON store */ }
+    const registrations = rows.rows.map((r: any) => {
+      const u = users.get(r.user_id);
+      return { ...r, name: u?.name || '', email: u?.email || '' };
+    });
+    return res.json({ registrations, total: total.rows[0].n, page, limit });
   } catch (err: any) {
     return bridgeUnavailable(res, err);
   }
@@ -1160,7 +1180,8 @@ driveAdminRouter.get('/:driveId/bookings', async (req: Request, res: Response) =
       `SELECT b.booking_id, b.user_id, b.status, b.round_name, b.test_url,
               b.link_assigned_at, b.link_active_at, b.created_at, b.registration_id,
               s.slot_id, s.slot_date, s.starts_at, s.ends_at, s.capacity,
-              reg.roll_no, reg.status AS registration_status
+              reg.roll_no, reg.status AS registration_status, reg.contact_phone,
+              (SELECT p.status FROM drive_payment p WHERE p.registration_id = reg.registration_id ORDER BY p.created_at DESC LIMIT 1) AS payment_status
          FROM drive_slot_booking b
          JOIN drive_slot s ON s.slot_id = b.slot_id
          LEFT JOIN drive_registration reg ON reg.registration_id = b.registration_id
@@ -1168,9 +1189,16 @@ driveAdminRouter.get('/:driveId/bookings', async (req: Request, res: Response) =
         ORDER BY s.starts_at, b.created_at DESC`,
       [drive.drive_id]
     );
+    const users = new Map<string, { name?: string; email?: string }>();
+    try {
+      for (const u of (loadDb().users || []) as any[]) if (u?.id) users.set(u.id, u);
+    } catch { /* listing must not fail on the JSON store */ }
     return res.json({
       server_now: new Date().toISOString(),
-      bookings: r.rows.map((bk) => ({ ...bk, user_email: userEmail(bk.user_id) })),
+      bookings: r.rows.map((bk) => {
+        const u = users.get(bk.user_id);
+        return { ...bk, user_email: u?.email || '', user_name: u?.name || '' };
+      }),
     });
   } catch (err: any) {
     return bridgeUnavailable(res, err);
@@ -1184,6 +1212,173 @@ async function loadBookingScoped(req: Request, drive: Record<string, any>) {
   );
   return r.rows[0] || null;
 }
+
+async function loadScopedSlot(req: Request, drive: Record<string, any>) {
+  const r = await getPool().query(
+    `SELECT * FROM drive_slot WHERE slot_id=$1 AND drive_id=$2`,
+    [req.params.slotId, drive.drive_id]
+  );
+  return r.rows[0] || null;
+}
+
+/**
+ * POST /:driveId/slots/:slotId/assign — attach round + URL to every live
+ * booking in the slot in one call. A 50-seat slot must not mean 50 admin
+ * round-trips; status transitions are the same as the per-booking path.
+ */
+driveAdminRouter.post('/:driveId/slots/:slotId/assign', async (req: Request, res: Response) => {
+  const b = req.body || {};
+  try {
+    const drive = await loadScopedDrive(req);
+    if (!drive) return res.status(404).json({ error: 'drive_not_found' });
+    const slot = await loadScopedSlot(req, drive);
+    if (!slot) return res.status(404).json({ error: 'slot_not_found' });
+
+    const roundName = str(b.round_name);
+    const testUrl = str(b.test_url);
+    if (!roundName && !testUrl) return res.status(422).json({ error: 'round_or_url_required' });
+
+    const upd = await getPool().query(
+      `UPDATE drive_slot_booking
+          SET status='link_assigned', link_assigned_at=NOW(),
+              round_name=COALESCE($3, round_name), test_url=COALESCE($4, test_url), updated_at=NOW()
+        WHERE slot_id=$1 AND drive_id=$2 AND status <> 'cancelled'
+        RETURNING user_id, round_name`,
+      [slot.slot_id, drive.drive_id, roundName || null, testUrl || null]
+    );
+    for (const row of upd.rows) {
+      await emitDriveNotification({
+        userId: row.user_id,
+        driveId: drive.drive_id,
+        kind: 'link_assigned',
+        title: 'Test link assigned',
+        body: `Your ${row.round_name || 'test'} link for ${drive.title} has been assigned — it opens when the admin activates it.`,
+        url: `/mock-drive/drives/${drive.drive_id}`,
+      });
+    }
+    return res.json({ updated: upd.rowCount });
+  } catch (err: any) {
+    return bridgeUnavailable(res, err);
+  }
+});
+
+/** POST /:driveId/slots/:slotId/activate — release the whole slot at once. */
+driveAdminRouter.post('/:driveId/slots/:slotId/activate', async (req: Request, res: Response) => {
+  try {
+    const drive = await loadScopedDrive(req);
+    if (!drive) return res.status(404).json({ error: 'drive_not_found' });
+    const slot = await loadScopedSlot(req, drive);
+    if (!slot) return res.status(404).json({ error: 'slot_not_found' });
+
+    const upd = await getPool().query(
+      `UPDATE drive_slot_booking
+          SET status='active', link_active_at=NOW(), updated_at=NOW()
+        WHERE slot_id=$1 AND drive_id=$2 AND status='link_assigned' AND link_assigned_at IS NOT NULL
+        RETURNING user_id`,
+      [slot.slot_id, drive.drive_id]
+    );
+    for (const row of upd.rows) {
+      await emitDriveNotification({
+        userId: row.user_id,
+        driveId: drive.drive_id,
+        kind: 'link_activated',
+        title: 'Your test link is LIVE',
+        body: `The link for ${drive.title} is active now — start before your slot ends.`,
+        url: `/mock-drive/drives/${drive.drive_id}`,
+      });
+    }
+    return res.json({ updated: upd.rowCount });
+  } catch (err: any) {
+    return bridgeUnavailable(res, err);
+  }
+});
+
+/** POST /:driveId/slots/:slotId/deactivate — pull the whole slot's links back. */
+driveAdminRouter.post('/:driveId/slots/:slotId/deactivate', async (req: Request, res: Response) => {
+  try {
+    const drive = await loadScopedDrive(req);
+    if (!drive) return res.status(404).json({ error: 'drive_not_found' });
+    const slot = await loadScopedSlot(req, drive);
+    if (!slot) return res.status(404).json({ error: 'slot_not_found' });
+
+    const upd = await getPool().query(
+      `UPDATE drive_slot_booking
+          SET status='link_assigned', link_active_at=NULL, updated_at=NOW()
+        WHERE slot_id=$1 AND drive_id=$2 AND status='active'
+        RETURNING user_id`,
+      [slot.slot_id, drive.drive_id]
+    );
+    for (const row of upd.rows) {
+      await emitDriveNotification({
+        userId: row.user_id,
+        driveId: drive.drive_id,
+        kind: 'link_deactivated',
+        title: 'Test link paused',
+        body: `The link for ${drive.title} was deactivated by the admin — we'll notify you when it reopens.`,
+        url: `/mock-drive/drives/${drive.drive_id}`,
+      });
+    }
+    return res.json({ updated: upd.rowCount });
+  } catch (err: any) {
+    return bridgeUnavailable(res, err);
+  }
+});
+
+/**
+ * POST /:driveId/email — manual compose to a scope: all registrants, one
+ * slot's bookings, or a single student. Recipients resolve from the JSON user
+ * store; sends are queued in the background so a 1,000-mail blast answers
+ * immediately instead of holding the request open.
+ */
+driveAdminRouter.post('/:driveId/email', async (req: Request, res: Response) => {
+  const b = req.body || {};
+  try {
+    const drive = await loadScopedDrive(req);
+    if (!drive) return res.status(404).json({ error: 'drive_not_found' });
+
+    const subject = String(b.subject || '').trim().slice(0, 150);
+    const body = String(b.body || '').trim().slice(0, 4000);
+    if (!subject || !body) return res.status(422).json({ error: 'subject_and_body_required' });
+
+    const scope = str(b.scope) || 'all';
+    let userIds: string[] = [];
+    if (scope === 'slot') {
+      const slotId = str(b.slot_id);
+      if (!slotId) return res.status(422).json({ error: 'slot_id_required' });
+      const r = await getPool().query(
+        `SELECT user_id FROM drive_slot_booking WHERE slot_id=$1 AND drive_id=$2 AND status <> 'cancelled'`,
+        [slotId, drive.drive_id]
+      );
+      userIds = r.rows.map((x: any) => x.user_id);
+    } else if (scope === 'student') {
+      const registrationId = str(b.registration_id);
+      if (!registrationId) return res.status(422).json({ error: 'registration_id_required' });
+      const r = await getPool().query(
+        `SELECT user_id FROM drive_registration WHERE registration_id=$1 AND drive_id=$2`,
+        [registrationId, drive.drive_id]
+      );
+      if (!r.rows.length) return res.status(404).json({ error: 'registration_not_found' });
+      userIds = r.rows.map((x: any) => x.user_id);
+    } else {
+      const r = await getPool().query(`SELECT user_id FROM drive_registration WHERE drive_id=$1`, [drive.drive_id]);
+      userIds = r.rows.map((x: any) => x.user_id);
+    }
+
+    const users = new Map<string, string>();
+    try {
+      for (const u of (loadDb().users || []) as any[]) if (u?.id && u?.email) users.set(u.id, u.email);
+    } catch { /* empty store = zero sends */ }
+    const emails = Array.from(new Set(userIds.map((id) => users.get(id) || '').filter(Boolean)));
+
+    const queued = sendDriveEmailBulk(
+      emails.map((email) => ({ email, subject, body })),
+      { subject, body, url: `/mock-drive/drives/${drive.drive_id}`, driveName: drive.title }
+    );
+    return res.json({ queued });
+  } catch (err: any) {
+    return bridgeUnavailable(res, err);
+  }
+});
 
 /** POST /:driveId/bookings/:bookingId/assign — attach round + URL (not live yet). */
 driveAdminRouter.post('/:driveId/bookings/:bookingId/assign', async (req: Request, res: Response) => {
