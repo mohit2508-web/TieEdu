@@ -241,7 +241,7 @@ driveAdminRouter.get('/:driveId', async (req: Request, res: Response) => {
     if (!drive) return res.status(404).json({ error: 'drive_not_found' });
     const tests = await getPool().query(
       `SELECT t.*, mdt.sort_order, mdt.mandatory, mdt.weight, mdt.max_attempts, mdt.opens_at, mdt.closes_at, mdt.window_hard_close, mdt.unlock_rule,
-              mdt.round_name, mdt.kind
+              mdt.round_name, mdt.kind, mdt.round_description
          FROM mock_drive_test mdt JOIN drive_test t ON t.test_id = mdt.test_id
         WHERE mdt.drive_id=$1 ORDER BY mdt.sort_order`,
       [drive.drive_id]
@@ -783,7 +783,8 @@ driveAdminRouter.patch('/:driveId/tests/:testId', async (req: Request, res: Resp
          opens_at=COALESCE($8, opens_at),
          closes_at=COALESCE($9, closes_at),
          window_hard_close=COALESCE($10, window_hard_close),
-         unlock_rule=COALESCE($11, unlock_rule)
+         unlock_rule=COALESCE($11, unlock_rule),
+         round_description=COALESCE($12, round_description)
        WHERE drive_id=$1 AND test_id=$2
        RETURNING *`,
       [
@@ -796,6 +797,7 @@ driveAdminRouter.patch('/:driveId/tests/:testId', async (req: Request, res: Resp
         b.closes_at !== undefined ? b.closes_at : null,
         typeof b.window_hard_close === 'boolean' ? b.window_hard_close : null,
         b.unlock_rule !== undefined ? json(b.unlock_rule, {}) : null,
+        b.round_description !== undefined ? String(b.round_description) : null,
       ]
     );
     if (!r.rows[0]) return res.status(404).json({ error: 'round_not_found' });
@@ -1177,7 +1179,7 @@ driveAdminRouter.get('/:driveId/bookings', async (req: Request, res: Response) =
     const drive = await loadScopedDrive(req);
     if (!drive) return res.status(404).json({ error: 'drive_not_found' });
     const r = await getPool().query(
-      `SELECT b.booking_id, b.user_id, b.status, b.round_name, b.test_url,
+      `SELECT b.booking_id, b.user_id, b.status, b.round_name, b.test_url, b.access_code,
               b.link_assigned_at, b.link_active_at, b.created_at, b.registration_id,
               s.slot_id, s.slot_date, s.starts_at, s.ends_at, s.capacity,
               reg.roll_no, reg.status AS registration_status, reg.contact_phone,
@@ -1236,15 +1238,17 @@ driveAdminRouter.post('/:driveId/slots/:slotId/assign', async (req: Request, res
 
     const roundName = str(b.round_name);
     const testUrl = str(b.test_url);
+    const accessCode = str(b.access_code);
     if (!roundName && !testUrl) return res.status(422).json({ error: 'round_or_url_required' });
 
     const upd = await getPool().query(
       `UPDATE drive_slot_booking
           SET status='link_assigned', link_assigned_at=NOW(),
-              round_name=COALESCE($3, round_name), test_url=COALESCE($4, test_url), updated_at=NOW()
+              round_name=COALESCE($3, round_name), test_url=COALESCE($4, test_url),
+              access_code=COALESCE($5, access_code), updated_at=NOW()
         WHERE slot_id=$1 AND drive_id=$2 AND status <> 'cancelled'
-        RETURNING user_id, round_name`,
-      [slot.slot_id, drive.drive_id, roundName || null, testUrl || null]
+        RETURNING user_id, round_name, access_code`,
+      [slot.slot_id, drive.drive_id, roundName || null, testUrl || null, accessCode || null]
     );
     for (const row of upd.rows) {
       await emitDriveNotification({
@@ -1252,7 +1256,7 @@ driveAdminRouter.post('/:driveId/slots/:slotId/assign', async (req: Request, res
         driveId: drive.drive_id,
         kind: 'link_assigned',
         title: 'Test link assigned',
-        body: `Your ${row.round_name || 'test'} link for ${drive.title} has been assigned — it opens when the admin activates it.`,
+        body: `Your ${row.round_name || 'test'} link for ${drive.title} has been assigned — it opens when the admin activates it.${row.access_code ? ` Access code: ${row.access_code}.` : ''}`,
         url: `/mock-drive/drives/${drive.drive_id}`,
       });
     }
@@ -1392,22 +1396,24 @@ driveAdminRouter.post('/:driveId/bookings/:bookingId/assign', async (req: Reques
 
     const roundName = str(b.round_name);
     const testUrl = str(b.test_url);
+    const accessCode = str(b.access_code);
     if (!roundName && !testUrl && !booking.link_assigned_at) {
       return res.status(422).json({ error: 'round_or_url_required' });
     }
     const upd = await getPool().query(
       `UPDATE drive_slot_booking
           SET status='link_assigned', link_assigned_at=NOW(),
-              round_name=COALESCE($2, round_name), test_url=COALESCE($3, test_url), updated_at=NOW()
+              round_name=COALESCE($2, round_name), test_url=COALESCE($3, test_url),
+              access_code=COALESCE($4, access_code), updated_at=NOW()
         WHERE booking_id=$1 RETURNING *`,
-      [booking.booking_id, roundName, testUrl]
+      [booking.booking_id, roundName, testUrl, accessCode]
     );
     await emitDriveNotification({
       userId: booking.user_id,
       driveId: drive.drive_id,
       kind: 'link_assigned',
       title: 'Test link assigned',
-      body: `Your ${roundName || 'test'} link for ${drive.title} has been assigned — it opens when the admin activates it.`,
+      body: `Your ${upd.rows[0].round_name || 'test'} link for ${drive.title} has been assigned — it opens when the admin activates it.${upd.rows[0].access_code ? ` Access code: ${upd.rows[0].access_code}.` : ''}`,
       url: `/mock-drive/drives/${drive.drive_id}`,
     });
     return res.json({ booking: upd.rows[0] });

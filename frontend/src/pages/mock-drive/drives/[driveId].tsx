@@ -258,6 +258,14 @@ export default function DriveDetailScreen() {
                   <WorkflowStepper rounds={roundsList} registered={!!registration} />
                   {registration && (
                     <div className="mt-4 space-y-2 border-t pt-4" style={{ borderColor: 'var(--apple-separator)' }}>
+                      {detail.booking?.access_code && (
+                        <p className="rounded-[10px] px-3 py-2 text-[13px]" style={{ background: 'var(--apple-fill)', color: 'var(--apple-label)' }}>
+                          Test access code:{' '}
+                          <span className="rounded-md px-1.5 py-0.5 font-mono font-bold" style={{ background: 'var(--apple-surface)' }}>
+                            {detail.booking.access_code}
+                          </span>
+                        </p>
+                      )}
                       {roundsList.map((r) => {
                         const launchable = r.status_label !== 'locked' && r.attempts_used < r.max_attempts;
                         if (!launchable) return null;

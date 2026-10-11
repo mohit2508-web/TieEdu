@@ -71,19 +71,27 @@ const danger =
 const groupSlotsByDay = (rows: AdminSlotRow[]): [string, AdminSlotRow[]][] => {
   const map = new Map<string, AdminSlotRow[]>();
   for (const s of rows) {
-    const key = s.slot_date || s.starts_at.slice(0, 10);
+    // Group by the IST calendar day of the slot. `slot_date` may arrive as a
+    // bare date or an ISO timestamp (pg DATE → JS Date), so derive the day
+    // from starts_at in IST instead of string-slicing it.
+    const d = new Date(s.starts_at);
+    const key = isNaN(d.getTime()) ? String(s.slot_date || '').slice(0, 10) : d.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
     if (!map.has(key)) map.set(key, []);
     map.get(key)!.push(s);
   }
   return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]));
 };
-const formatSlotDay = (day: string) =>
-  new Date(day + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' });
+const formatSlotDay = (day: string) => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(day);
+  const d = m ? new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])) : new Date(day);
+  if (isNaN(d.getTime())) return day;
+  return d.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' });
+};
 
 type Section = 'details' | 'rounds' | 'roster' | 'payments' | 'slots' | 'results' | 'notify' | 'help';
 
 /**
- * Admin â†’ Mock Drives. Three columns of scaffolding over the drive admin API:
+ * Admin → Mock Drives. Three columns of scaffolding over the drive admin API:
  * providers (assessment platforms), tests (exams pulled from them), and drives
  * (what students see). Selecting a drive opens the full editor: every drive
  * field, its workflow rounds, roster and results.
@@ -220,7 +228,7 @@ function ProvidersPanel({ providers, onDone, setError }: { providers: AdminProvi
                 <span className="font-bold text-[#1F3A5F]">{p.name}</span>
                 <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold uppercase ${p.status === 'active' ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>{p.status}</span>
               </div>
-              <p className="mt-0.5 font-mono text-xs text-gray-500">{p.code} Â· {p.launch_url}</p>
+              <p className="mt-0.5 font-mono text-xs text-gray-500">{p.code} · {p.launch_url}</p>
             </div>
           ))}
           {providers.length === 0 && <p className="text-xs italic text-gray-400">No providers yet.</p>}
@@ -265,7 +273,7 @@ function TestsPanel({ tests, providers, onDone, setError }: { tests: AdminDriveT
           {form.mode === 'external' && (
             <>
               <select className={input} value={form.provider_id} onChange={(e) => setForm({ ...form, provider_id: e.target.value })}>
-                <option value="">Select providerâ€¦</option>
+                <option value="">Select provider…</option>
                 {providers.map((p) => <option key={p.provider_id} value={p.provider_id}>{p.name}</option>)}
               </select>
               <input className={input} placeholder="provider_exam_id" value={form.provider_exam_id} onChange={(e) => setForm({ ...form, provider_exam_id: e.target.value })} />
@@ -289,7 +297,7 @@ function TestsPanel({ tests, providers, onDone, setError }: { tests: AdminDriveT
                 <span className="font-bold text-[#1F3A5F]">{t.name}</span>
                 <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-bold uppercase text-gray-500">{t.mode}</span>
               </div>
-              <p className="mt-0.5 font-mono text-xs text-gray-500">{t.provider_name || t.skill_slug || 'â€”'}</p>
+              <p className="mt-0.5 font-mono text-xs text-gray-500">{t.provider_name || t.skill_slug || '—'}</p>
             </div>
           ))}
           {tests.length === 0 && <p className="text-xs italic text-gray-400">No tests yet.</p>}
@@ -349,7 +357,7 @@ function DrivesPanel(props: {
   const [notifyBody, setNotifyBody] = useState('');
   const [notifyBusy, setNotifyBusy] = useState(false);
 
-  // Payments (â‚¹99 ledger)
+  // Payments (₹99 ledger)
   const [payments, setPayments] = useState<AdminPaymentRow[]>([]);
   const [payCounts, setPayCounts] = useState({ submitted: 0, approved: 0, rejected: 0 });
   const [payFilter, setPayFilter] = useState<'all' | 'submitted' | 'approved' | 'rejected'>('all');
@@ -359,10 +367,10 @@ function DrivesPanel(props: {
   const [bookings, setBookings] = useState<AdminBookingRow[]>([]);
   const [gen, setGen] = useState({ start_date: '', days: '5', times: '10:00,12:00,14:00,16:00,18:00,20:00,22:00', capacity: '50', duration_minutes: '60' });
   const [assigningId, setAssigningId] = useState<string | null>(null);
-  const [assignDraft, setAssignDraft] = useState({ round_name: '', test_url: '' });
+  const [assignDraft, setAssignDraft] = useState({ round_name: '', test_url: '', access_code: '' });
   // Slot-level bulk release: one assign form shared across slots
   const [slotAssignId, setSlotAssignId] = useState<string | null>(null);
-  const [slotDraft, setSlotDraft] = useState({ round_name: '', test_url: '' });
+  const [slotDraft, setSlotDraft] = useState({ round_name: '', test_url: '', access_code: '' });
 
   // Email compose (manual scope: all / one slot / one student)
   const [emailScope, setEmailScope] = useState<'all' | 'slot' | 'student'>('all');
@@ -447,7 +455,7 @@ function DrivesPanel(props: {
       const d = await adminCreateDriveApi(formToPayload(form, { partial: false }) as Partial<AdminDrive>);
       setForm(emptyDriveForm());
       setShowCreate(false);
-      setNotice('Drive created as draft â€” add rounds, then publish.');
+      setNotice('Drive created as draft — add rounds, then publish.');
       onDone();
       onSelect(d.drive_id);
       setSection('details');
@@ -497,12 +505,12 @@ function DrivesPanel(props: {
 
   const publish = async () => {
     if (!selected) return;
-    await run('Drive published â€” students can now register.', () => adminPublishDriveApi(selected.drive_id));
+    await run('Drive published — students can now register.', () => adminPublishDriveApi(selected.drive_id));
     await loadDetail(selected.drive_id);
   };
   const unpublish = async () => {
     if (!selected) return;
-    await run('Drive unpublished â€” hidden from students, still a draft.', () => adminUnpublishDriveApi(selected.drive_id));
+    await run('Drive unpublished — hidden from students, still a draft.', () => adminUnpublishDriveApi(selected.drive_id));
     await loadDetail(selected.drive_id);
   };
   const publishResults = async () => {
@@ -541,6 +549,7 @@ function DrivesPanel(props: {
     setRoundDraft({
       round_name: r.round_name || '',
       kind: r.kind || '',
+      round_description: r.round_description || '',
       mandatory: !!r.mandatory,
       max_attempts: r.max_attempts ?? 1,
       opens_at: toLocalInput(r.opens_at),
@@ -561,6 +570,7 @@ function DrivesPanel(props: {
       await adminUpdateRoundApi(selected.drive_id, testId, {
         round_name: roundDraft.round_name.trim() || null,
         kind: roundDraft.kind || null,
+        round_description: roundDraft.round_description ?? '',
         mandatory: !!roundDraft.mandatory,
         max_attempts: Number(roundDraft.max_attempts) || 1,
         opens_at: fromLocalInput(roundDraft.opens_at),
@@ -641,7 +651,7 @@ function DrivesPanel(props: {
     }
   };
 
-  /** Email compose â€” queued server-side, `queued` is the recipient count. */
+  /** Email compose — queued server-side, `queued` is the recipient count. */
   const sendEmail = async () => {
     if (!selected || !emailSubject.trim() || !emailBody.trim()) return;
     if (emailScope === 'slot' && !emailSlotId) return;
@@ -666,7 +676,7 @@ function DrivesPanel(props: {
   };
 
   /**
-   * Roster CSV â€” every column the drive team asks for on a call: who they are,
+   * Roster CSV — every column the drive team asks for on a call: who they are,
    * how to reach them, what they paid, and when they sit.
    */
   const exportRoster = () => {
@@ -689,7 +699,7 @@ function DrivesPanel(props: {
         ].map(esc).join(',')
       )
     );
-    const blob = new Blob(['ï»¿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+    const blob = new Blob(['' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -710,7 +720,7 @@ function DrivesPanel(props: {
     try {
       if (approve) await adminApprovePaymentApi(selected.drive_id, p.payment_id, note);
       else await adminRejectPaymentApi(selected.drive_id, p.payment_id, note);
-      setNotice(approve ? 'Payment approved â€” student can book a slot now.' : 'Payment rejected â€” student notified.');
+      setNotice(approve ? 'Payment approved — student can book a slot now.' : 'Payment rejected — student notified.');
       await loadPayments(selected.drive_id);
       await loadBookings(selected.drive_id);
     } catch (e) {
@@ -778,13 +788,13 @@ function DrivesPanel(props: {
     }
   };
 
-  /** One bulk slot call â†’ refresh both ledgers; `{n}` in msg becomes the count. */
-  const slotRun = async (msg: string, fn: () => Promise<{ updated: number }>) => {
+  /** One bulk slot call → refresh both ledgers; the formatter gets the count. */
+  const slotRun = async (msg: (n: number) => string, fn: () => Promise<{ updated: number }>) => {
     if (!selected) return;
     setBusy(true);
     try {
       const r = await fn();
-      setNotice(msg.replace('{n}', String(r?.updated ?? 0)));
+      setNotice(msg(r?.updated ?? 0));
       await Promise.all([loadSlots(selected.drive_id), loadBookings(selected.drive_id)]);
     } catch (e) {
       setError((e as Error).message);
@@ -799,21 +809,22 @@ function DrivesPanel(props: {
       setError('Enter a round name or test URL first.');
       return;
     }
-    await slotRun('Link assigned to {n} students.', () =>
+    await slotRun((n) => `Link assigned to ${n} student${n === 1 ? '' : 's'}.`, () =>
       adminAssignSlotBulkApi(selected.drive_id, slotId, {
         round_name: slotDraft.round_name.trim() || undefined,
         test_url: slotDraft.test_url.trim() || undefined,
+        access_code: slotDraft.access_code.trim() || undefined,
       })
     );
     setSlotAssignId(null);
-    setSlotDraft({ round_name: '', test_url: '' });
+    setSlotDraft({ round_name: '', test_url: '', access_code: '' });
   };
 
   const bulkActivate = (slotId: string) =>
-    slotRun('{n} links released â€” students notified.', () => adminActivateSlotBulkApi(selected!.drive_id, slotId));
+    slotRun((n) => `${n} link${n === 1 ? '' : 's'} released — students notified.`, () => adminActivateSlotBulkApi(selected!.drive_id, slotId));
 
   const bulkDeactivate = (slotId: string) =>
-    slotRun('{n} links deactivated.', () => adminDeactivateSlotBulkApi(selected!.drive_id, slotId));
+    slotRun((n) => `${n} link${n === 1 ? '' : 's'} deactivated.`, () => adminDeactivateSlotBulkApi(selected!.drive_id, slotId));
 
   /** Per-slot link tallies, derived from the bookings list. */
   const slotStats = (slotId: string) => {
@@ -835,10 +846,11 @@ function DrivesPanel(props: {
       await adminAssignBookingApi(selected.drive_id, b.booking_id, {
         round_name: assignDraft.round_name.trim() || undefined,
         test_url: assignDraft.test_url.trim() || undefined,
+        access_code: assignDraft.access_code.trim() || undefined,
       });
-      setNotice('Link assigned â€” student notified. Activate it when you are ready.');
+      setNotice('Link assigned — the student has been notified. Release it when you are ready.');
       setAssigningId(null);
-      setAssignDraft({ round_name: '', test_url: '' });
+      setAssignDraft({ round_name: '', test_url: '', access_code: '' });
       await loadBookings(selected.drive_id);
     } catch (e) {
       setError((e as Error).message);
@@ -907,11 +919,11 @@ function DrivesPanel(props: {
                   <span className="ml-2 flex-none rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-bold uppercase text-gray-500">{d.status}</span>
                 </div>
                 <p className="mt-0.5 text-xs text-gray-500">
-                  {d.company_name || 'â€”'} Â· {d.registration_count ?? 0} registered Â· {d.test_count ?? 0} rounds
+                  {d.company_name || '—'} · {d.registration_count ?? 0} registered · {d.test_count ?? 0} rounds
                 </p>
               </button>
             ))}
-            {drives.length === 0 && <p className="text-xs italic text-gray-400">No drives yet â€” create one above.</p>}
+            {drives.length === 0 && <p className="text-xs italic text-gray-400">No drives yet — create one above.</p>}
           </div>
         </div>
       </div>
@@ -993,7 +1005,7 @@ function DrivesPanel(props: {
                 </div>
 
                 <div className="mt-4">
-                  <span className="text-[12px] font-medium text-gray-500">Eligibility (JSON â€” branches, years, cgpa, backlogsâ€¦)</span>
+                  <span className="text-[12px] font-medium text-gray-500">Eligibility (JSON — branches, years, cgpa, backlogs…)</span>
                   <textarea
                     className={input + ' mt-1 h-28 font-mono text-xs'}
                     value={eligibilityText}
@@ -1028,7 +1040,7 @@ function DrivesPanel(props: {
                         />
                         <input
                           className={input}
-                          placeholder="https://â€¦"
+                          placeholder="https://…"
                           value={d.url}
                           onChange={(e) => setDocs(docs.map((x, j) => (j === i ? { ...x, url: e.target.value } : x)))}
                           disabled={savingDetail}
@@ -1062,14 +1074,14 @@ function DrivesPanel(props: {
                   <h4 className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Attach a round</h4>
                   <div className="mt-2 flex gap-2">
                     <select className={input} value={attachTestId} onChange={(e) => setAttachTestId(e.target.value)}>
-                      <option value="">Select testâ€¦</option>
+                      <option value="">Select test…</option>
                       {tests.map((t) => <option key={t.test_id} value={t.test_id}>{t.name}</option>)}
                     </select>
                   </div>
                   <div className="mt-2 flex gap-2">
                     <input
                       className={input}
-                      placeholder="Round name (e.g. Round 1 â€” Aptitude)"
+                      placeholder="Round name (e.g. Round 1 — Aptitude)"
                       value={attachRoundName}
                       onChange={(e) => setAttachRoundName(e.target.value)}
                     />
@@ -1104,12 +1116,12 @@ function DrivesPanel(props: {
                           </span>
                           <span className="min-w-0 flex-1">
                             <span className="block truncate font-bold text-[#1F3A5F]">
-                              {r.round_name || `Round ${i + 1}`} â€” {r.name}
+                              {r.round_name || `Round ${i + 1}`} — {r.name}
                             </span>
                             <span className="mt-0.5 block text-xs text-gray-500">
-                              {r.kind || r.mode} Â· {r.mandatory ? 'mandatory' : 'optional'} Â· {r.max_attempts} attempt(s)
-                              {r.opens_at ? ` Â· opens ${new Date(r.opens_at).toLocaleString()}` : ''}
-                              {r.closes_at ? ` Â· closes ${new Date(r.closes_at).toLocaleString()}` : ''}
+                              {r.kind || r.mode} · {r.mandatory ? 'mandatory' : 'optional'} · {r.max_attempts} attempt(s)
+                              {r.opens_at ? ` · opens ${new Date(r.opens_at).toLocaleString()}` : ''}
+                              {r.closes_at ? ` · closes ${new Date(r.closes_at).toLocaleString()}` : ''}
                             </span>
                           </span>
                           <button
@@ -1138,7 +1150,7 @@ function DrivesPanel(props: {
                             <label>
                               <span className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Kind</span>
                               <select className={input + ' mt-1'} value={roundDraft.kind} onChange={(e) => setRoundDraft({ ...roundDraft, kind: e.target.value })}>
-                                <option value="">â€”</option>
+                                <option value="">—</option>
                                 <option value="aptitude">Aptitude</option>
                                 <option value="technical">Technical</option>
                                 <option value="coding">Coding</option>
@@ -1167,6 +1179,16 @@ function DrivesPanel(props: {
                             <label>
                               <span className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Closes at</span>
                               <input type="datetime-local" className={input + ' mt-1'} value={roundDraft.closes_at} onChange={(e) => setRoundDraft({ ...roundDraft, closes_at: e.target.value })} />
+                            </label>
+                            <label className="sm:col-span-2">
+                              <span className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Round structure shown to students</span>
+                              <textarea
+                                className={input + ' mt-1 h-20 text-sm'}
+                                value={roundDraft.round_description}
+                                onChange={(e) => setRoundDraft({ ...roundDraft, round_description: e.target.value })}
+                                placeholder={'AI-assisted Coding — 2 questions\nDebugging Coding — 2 questions\nPseudo Code — 15 questions\nHands-on DSA — 1 question'}
+                              />
+                              <span className="mt-1 block text-[11px] text-gray-400">Students see this text on the round card instead of a duration / question count.</span>
                             </label>
                             <label className="sm:col-span-2">
                               <span className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Unlock rule (JSON, e.g. {'{"kind":"open"}'})</span>
@@ -1213,7 +1235,7 @@ function DrivesPanel(props: {
                               r.payment_status === 'approved' ? 'bg-emerald-50 text-emerald-700'
                               : r.payment_status === 'rejected' ? 'bg-red-50 text-red-600'
                               : 'bg-amber-50 text-amber-700'
-                            }`}>â‚¹ {r.payment_status}</span>
+                            }`}>₹ {r.payment_status}</span>
                           )}
                           {r.booking_status && r.booking_status !== 'cancelled' && (
                             <span className="ml-1.5 rounded-full bg-blue-50 px-1.5 py-0.5 text-[11px] font-bold uppercase text-blue-700">slot booked</span>
@@ -1275,11 +1297,11 @@ function DrivesPanel(props: {
                         <CreditCard className="h-4 w-4 shrink-0 text-gray-400" />
                         <span className="min-w-0 flex-1">
                           <span className="block truncate font-bold text-[#1F3A5F]">
-                            â‚¹{Math.round(p.amount_paise / 100)} Â· {p.user_email || p.roll_no || p.user_id}
+                            ₹{Math.round(p.amount_paise / 100)} · {p.user_email || p.roll_no || p.user_id}
                           </span>
                           <span className="mt-0.5 block text-xs text-gray-500">
-                            UTR {p.utr || 'â€”'} Â· {new Date(p.created_at).toLocaleString()} Â· {p.registration_status}
-                            {p.reviewer_note ? ` Â· note: ${p.reviewer_note}` : ''}
+                            UTR {p.utr || '—'} · {new Date(p.created_at).toLocaleString()} · {p.registration_status}
+                            {p.reviewer_note ? ` · note: ${p.reviewer_note}` : ''}
                           </span>
                         </span>
                         <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold uppercase ${
@@ -1319,7 +1341,7 @@ function DrivesPanel(props: {
                 <div className="rounded-3xl border border-[#E9E7E1] bg-white p-6 shadow-xs">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Generate slots</h4>
                   <p className="mt-1 text-[13px] leading-relaxed text-gray-500">
-                    One slot per day per start time. Times are IST. Defaults: 5 days Ã— 10 AM/12/2/4/6/8/10 PM, 50 seats, 1h each.
+                    One slot per day per start time. Times are IST. Defaults: 5 days × 10 AM/12/2/4/6/8/10 PM, 50 seats, 1h each.
                   </p>
                   <div className="mt-3 grid gap-3 sm:grid-cols-5">
                     <label>
@@ -1356,7 +1378,7 @@ function DrivesPanel(props: {
                   <div className="flex flex-wrap items-baseline justify-between gap-2">
                     <h4 className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Slots ({slots.length})</h4>
                     <p className="text-[13px] text-gray-500">
-                      Slot bhar jaye to ek click me poore slot ke links assign aur release karein â€” 50 alag-alag nahi.
+                      Slot bhar jaye to ek click me poore slot ke links assign aur release karein — 50 alag-alag nahi.
                     </p>
                   </div>
                   <div className="mt-4 max-h-[560px] space-y-6 overflow-auto pr-1">
@@ -1376,8 +1398,8 @@ function DrivesPanel(props: {
                               <div key={s.slot_id} className={`rounded-2xl border p-4 transition ${full ? 'border-red-200 bg-red-50/40' : 'border-gray-200 bg-white hover:border-gray-300'}`}>
                                 <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
                                   <div className="min-w-[170px]">
-                                    <p className="text-[15px] font-extrabold text-[#10151C]">{time(s.starts_at)} â€“ {time(s.ends_at)}</p>
-                                    <p className="mt-0.5 text-xs font-semibold text-gray-500">{s.status === 'open' ? 'Open' : 'Paused'}{full ? ' Â· Full' : ''}</p>
+                                    <p className="text-[15px] font-extrabold text-[#10151C]">{time(s.starts_at)} – {time(s.ends_at)}</p>
+                                    <p className="mt-0.5 text-xs font-semibold text-gray-500">{s.status === 'open' ? 'Open' : 'Paused'}{full ? ' · Full' : ''}</p>
                                   </div>
                                   <div className="min-w-[150px] flex-1">
                                     <div className="flex items-baseline justify-between gap-2">
@@ -1421,25 +1443,34 @@ function DrivesPanel(props: {
                                       <span className="text-xs font-semibold text-gray-600">Round name (same for everyone)</span>
                                       <input
                                         className={input + ' mt-1'}
-                                        placeholder="e.g. Round 1 â€” AI-assisted Coding"
+                                        placeholder="e.g. Round 1 — AI-assisted Coding"
                                         value={slotDraft.round_name}
                                         onChange={(e) => setSlotDraft({ ...slotDraft, round_name: e.target.value })}
                                       />
                                     </label>
                                     <label className="block">
-                                      <span className="text-xs font-semibold text-gray-600">Test URL (from Kryptavia OS)</span>
+                                      <span className="text-xs font-semibold text-gray-600">Test URL (optional — Link tab reference)</span>
                                       <input
                                         className={input + ' mt-1'}
-                                        placeholder="https://â€¦"
+                                        placeholder="https://…"
                                         value={slotDraft.test_url}
                                         onChange={(e) => setSlotDraft({ ...slotDraft, test_url: e.target.value })}
+                                      />
+                                    </label>
+                                    <label className="block">
+                                      <span className="text-xs font-semibold text-gray-600">Access code (test ka, e.g. CAPG99)</span>
+                                      <input
+                                        className={input + ' mt-1'}
+                                        placeholder="CAPG99"
+                                        value={slotDraft.access_code}
+                                        onChange={(e) => setSlotDraft({ ...slotDraft, access_code: e.target.value })}
                                       />
                                     </label>
                                     <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
                                       <button className={btn} disabled={busy} onClick={() => bulkAssign(s.slot_id)}>
                                         <Check className="h-4 w-4" /> Assign to all {s.booked} in this slot
                                       </button>
-                                      <span className="text-xs text-gray-500">Link tab tak dead rehta hai jab tak aap Release na karein.</span>
+                                      <span className="text-xs text-gray-500">Link tab tak dead rehta hai jab tak aap Release na karein. Student Launch button se hi test kholega.</span>
                                     </div>
                                   </div>
                                 )}
@@ -1449,7 +1480,7 @@ function DrivesPanel(props: {
                         </div>
                       </div>
                     ))}
-                    {slots.length === 0 && <p className="italic text-gray-400">No slots yet â€” generate them above.</p>}
+                    {slots.length === 0 && <p className="italic text-gray-400">No slots yet — generate them above.</p>}
                   </div>
                 </div>
 
@@ -1457,7 +1488,7 @@ function DrivesPanel(props: {
                   <div className="flex flex-wrap items-baseline justify-between gap-2">
                     <h4 className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Bookings ({bookings.length})</h4>
                     <p className="text-[13px] text-gray-500">
-                      Assign the round + URL, then <b>Release</b> â€” tab tak student ko link dikhta hi nahi.
+                      Assign the round + URL, then <b>Release</b> — tab tak student ko link dikhta hi nahi.
                     </p>
                   </div>
                   <div className="mt-4 max-h-[560px] space-y-3 overflow-auto pr-1">
@@ -1478,11 +1509,11 @@ function DrivesPanel(props: {
                                 {b.status.replace('_', ' ')}
                               </span>
                               {b.link_active_at && (
-                                <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-bold uppercase text-emerald-700">â— Link live</span>
+                                <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-bold uppercase text-emerald-700">● Link live</span>
                               )}
                             </div>
                             <p className="mt-1 break-all text-[13px] text-gray-600">
-                              {b.user_email}{b.contact_phone ? ` Â· +91 ${b.contact_phone}` : ''}
+                              {b.user_email}{b.contact_phone ? ` · +91 ${b.contact_phone}` : ''}
                             </p>
                             <div className="mt-2 flex flex-wrap gap-1.5">
                               {b.payment_status && (
@@ -1491,7 +1522,7 @@ function DrivesPanel(props: {
                                   : /approv/.test(b.payment_status) ? 'bg-emerald-50 text-emerald-700'
                                   : 'bg-amber-50 text-amber-700'
                                 }`}>
-                                  â‚¹ {b.payment_status.replace('payment_', '')}
+                                  ₹ {b.payment_status.replace('payment_', '')}
                                 </span>
                               )}
                               <span className="rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-semibold text-gray-600">
@@ -1501,6 +1532,11 @@ function DrivesPanel(props: {
                               <span className={`rounded-lg px-2.5 py-1 text-xs font-semibold ${b.round_name ? 'border border-gray-200 bg-white text-gray-700' : 'bg-amber-50 text-amber-700'}`}>
                                 {b.round_name || 'Round not set'}
                               </span>
+                              {b.access_code && (
+                                <span className="rounded-lg border border-gray-200 bg-indigo-50 px-2.5 py-1 font-mono text-xs font-bold text-indigo-700">
+                                  Code: {b.access_code}
+                                </span>
+                              )}
                               <span className={`rounded-lg px-2.5 py-1 text-xs font-bold ${b.link_active_at ? 'bg-emerald-50 text-emerald-700' : b.link_assigned_at ? 'bg-amber-50 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
                                 {b.link_active_at ? 'Link: live' : b.link_assigned_at ? 'Link: assigned' : 'Link: not set'}
                               </span>
@@ -1515,7 +1551,7 @@ function DrivesPanel(props: {
                                 onClick={() => {
                                   if (assigningId === b.booking_id) { setAssigningId(null); return; }
                                   setAssigningId(b.booking_id);
-                                  setAssignDraft({ round_name: b.round_name || '', test_url: b.test_url || '' });
+                                  setAssignDraft({ round_name: b.round_name || '', test_url: b.test_url || '', access_code: b.access_code || '' });
                                 }}
                               >
                                 <Link2 className="h-4 w-4" /> {b.link_assigned_at ? 'Edit' : 'Assign'}
@@ -1525,7 +1561,7 @@ function DrivesPanel(props: {
                                   type="button"
                                   className={btn}
                                   disabled={busy}
-                                  onClick={() => bookingAction(b, () => adminActivateBookingApi(selected!.drive_id, b.booking_id), 'Link ACTIVATED â€” student notified.')}
+                                  onClick={() => bookingAction(b, () => adminActivateBookingApi(selected!.drive_id, b.booking_id), 'Link ACTIVATED — student notified.')}
                                 >
                                   <Zap className="h-4 w-4" /> Release
                                 </button>
@@ -1562,18 +1598,27 @@ function DrivesPanel(props: {
                               <span className="text-xs font-semibold text-gray-600">Round name</span>
                               <input
                                 className={input + ' mt-1'}
-                                placeholder="e.g. Round 1 â€” AI-assisted Coding"
+                                placeholder="e.g. Round 1 — AI-assisted Coding"
                                 value={assignDraft.round_name}
                                 onChange={(e) => setAssignDraft({ ...assignDraft, round_name: e.target.value })}
                               />
                             </label>
                             <label className="block">
-                              <span className="text-xs font-semibold text-gray-600">Test URL (from Kryptavia OS)</span>
+                              <span className="text-xs font-semibold text-gray-600">Test URL (optional — Link tab reference)</span>
                               <input
                                 className={input + ' mt-1'}
-                                placeholder="https://â€¦"
+                                placeholder="https://…"
                                 value={assignDraft.test_url}
                                 onChange={(e) => setAssignDraft({ ...assignDraft, test_url: e.target.value })}
+                              />
+                            </label>
+                            <label className="block">
+                              <span className="text-xs font-semibold text-gray-600">Access code (test ka, e.g. CAPG99)</span>
+                              <input
+                                className={input + ' mt-1'}
+                                placeholder="CAPG99"
+                                value={assignDraft.access_code}
+                                onChange={(e) => setAssignDraft({ ...assignDraft, access_code: e.target.value })}
                               />
                             </label>
                             <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
@@ -1581,14 +1626,14 @@ function DrivesPanel(props: {
                                 <Check className="h-4 w-4" /> Save assignment
                               </button>
                               <button type="button" className="text-xs font-bold text-[#0284C7] hover:underline" onClick={() => setSection('help')}>
-                                URL kahan se milega? Help dekhein â†’
+                                URL kahan se milega? Help dekhein →
                               </button>
                             </div>
                           </div>
                         )}
                       </div>
                     ))}
-                    {bookings.length === 0 && <p className="text-sm italic text-gray-400">No bookings yet â€” students book after payment approval.</p>}
+                    {bookings.length === 0 && <p className="text-sm italic text-gray-400">No bookings yet — students book after payment approval.</p>}
                   </div>
                 </div>
               </>
@@ -1648,7 +1693,7 @@ function DrivesPanel(props: {
                   />
                 </label>
                 <button className={btn + ' mt-3'} disabled={notifyBusy || !notifyTitle.trim()} onClick={sendUpdate}>
-                  <Send className="h-3.5 w-3.5" /> {notifyBusy ? 'Sendingâ€¦' : 'Send update'}
+                  <Send className="h-3.5 w-3.5" /> {notifyBusy ? 'Sending…' : 'Send update'}
                 </button>
 
                 <div className="mt-6 border-t border-gray-100 pt-5">
@@ -1656,7 +1701,7 @@ function DrivesPanel(props: {
                     <Mail className="h-3.5 w-3.5" /> Send email
                   </h4>
                   <p className="mt-1 text-xs text-gray-500">
-                    Email to everyone, one slot, or one student. Payment approval, slot booking aur link-live pe automatic email jaata hai â€” yeh manual wala hai.
+                    Email to everyone, one slot, or one student. Payment approval, slot booking aur link-live pe automatic email jaata hai — yeh manual wala hai.
                   </p>
                   <div className="mt-3 grid gap-2 sm:grid-cols-3">
                     <label>
@@ -1671,7 +1716,7 @@ function DrivesPanel(props: {
                       <label className="sm:col-span-2">
                         <span className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Slot</span>
                         <select className={input + ' mt-1'} value={emailSlotId} onChange={(e) => setEmailSlotId(e.target.value)}>
-                          <option value="">Pick a slotâ€¦</option>
+                          <option value="">Pick a slot…</option>
                           {slots.map((s) => (
                             <option key={s.slot_id} value={s.slot_id}>
                               {new Date(s.starts_at).toLocaleString()} ({s.booked}/{s.capacity})
@@ -1684,10 +1729,10 @@ function DrivesPanel(props: {
                       <label className="sm:col-span-2">
                         <span className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Student</span>
                         <select className={input + ' mt-1'} value={emailRegId} onChange={(e) => setEmailRegId(e.target.value)}>
-                          <option value="">Pick a studentâ€¦</option>
+                          <option value="">Pick a student…</option>
                           {regsLocal.map((r) => (
                             <option key={r.registration_id} value={r.registration_id}>
-                              {r.name || r.roll_no || r.user_id} Â· {r.email || r.user_id}
+                              {r.name || r.roll_no || r.user_id} · {r.email || r.user_id}
                             </option>
                           ))}
                         </select>
@@ -1700,10 +1745,10 @@ function DrivesPanel(props: {
                   </label>
                   <label className="mt-2 block">
                     <span className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Message</span>
-                    <textarea className={input + ' mt-1 h-28'} placeholder={'Slot time, payment receipt, ya test link ka detail â€” blank line se paragraph banta hai.'} value={emailBody} onChange={(e) => setEmailBody(e.target.value)} maxLength={4000} />
+                    <textarea className={input + ' mt-1 h-28'} placeholder={'Slot time, payment receipt, ya test link ka detail — blank line se paragraph banta hai.'} value={emailBody} onChange={(e) => setEmailBody(e.target.value)} maxLength={4000} />
                   </label>
                   <button className={btn + ' mt-3'} disabled={emailBusy || !emailSubject.trim() || !emailBody.trim()} onClick={sendEmail}>
-                    <Mail className="h-3.5 w-3.5" /> {emailBusy ? 'Queueingâ€¦' : 'Send email'}
+                    <Mail className="h-3.5 w-3.5" /> {emailBusy ? 'Queueing…' : 'Send email'}
                   </button>
                 </div>
               </div>
@@ -1718,71 +1763,73 @@ function DrivesPanel(props: {
   );
 }
 
-/** Step-by-step operating manual for a mock drive â€” the drive editor's Help tab. */
+/** Step-by-step operating manual for a mock drive — the drive editor's Help tab. */
 const DRIVE_STEPS: { n: number; title: string; tab: string; body: string }[] = [
   {
     n: 1,
     title: 'Drive banao aur Publish karo',
     tab: 'details',
-    body: 'Company, fee (â‚¹99), registration dates, eligibility aur description bharo â€” phir Status ko â€œPublishedâ€ kar do. Students ko drive apne portal par dikhne lagti hai.',
+    body: 'Company, fee (₹99), registration dates, eligibility aur description bharo — phir Status ko “Published” kar do. Students ko drive apne portal par dikhne lagti hai.',
   },
   {
     n: 2,
-    title: 'Students register karke â‚¹99 pay karte hain',
+    title: 'Students register karke ₹99 pay karte hain',
     tab: 'roster',
-    body: 'Student UPI se payment karke screenshot + UTR upload karta hai. Uski registration â€œpayment pendingâ€ dikhti hai.',
+    body: 'Student UPI se payment karke screenshot + UTR upload karta hai. Uski registration “payment pending” dikhti hai.',
   },
   {
     n: 3,
     title: 'Payment approve karo',
     tab: 'payments',
-    body: 'Proof kholkar check karo â†’ Approve. Approve hote hi student ko notification + email jaata hai aur uska â€œBook slotâ€ button unlock ho jaata hai. Galat proof ho to Reject + note likho â€” student dobara upload kar sakta hai.',
+    body: 'Proof kholkar check karo → Approve. Approve hote hi student ko notification + email jaata hai aur uska “Book slot” button unlock ho jaata hai. Galat proof ho to Reject + note likho — student dobara upload kar sakta hai.',
   },
   {
     n: 4,
     title: 'Student slot book karta hai',
     tab: 'slots',
-    body: 'Aapke generate kiye hue slots (day + time) me se student apni seat choose karta hai. Uski booking yahan Slots â†’ Bookings me dikhti hai.',
+    body: 'Aapke generate kiye hue slots (day + time) me se student apni seat choose karta hai. Uski booking yahan Slots → Bookings me dikhti hai.',
   },
   {
     n: 5,
-    title: 'Test URL assign karo',
+    title: 'Round + access code assign karo',
     tab: 'slots',
-    body: 'Test URL Kryptavia OS (os.kryptavia.in) se copy karo. Bookings me ek student ke liye â€œAssignâ€, ya poore slot ke liye â€œAssign allâ€ â€” round name + URL paste karke save karo.',
+    body: 'Bookings me ek student ke liye “Assign”, ya poore slot ke liye “Assign all” — round name, access code (Kryptavia OS ka test code, jaise CAPG99) aur agar ho to URL paste karke save karo. URL sirf aapke reference ke liye hai; student kabhi URL paste karke nahi khelta.',
   },
   {
     n: 6,
-    title: 'Release karo â€” link live hota hai',
+    title: 'Release karo — link live hota hai',
     tab: 'slots',
-    body: 'Assign ke baad bhi link DEAD rehta hai. â€œReleaseâ€ (ek student) ya â€œRelease allâ€ (poora slot) dabate hi link student ke slot window me open ho jaata hai â€” start se 5 min pehle se, slot end par hard close.',
+    body: 'Assign ke baad bhi link DEAD rehta hai. “Release” (ek student) ya “Release all” (poora slot) dabate hi link student ke slot window me open ho jaata hai — start se 5 min pehle se, slot end par hard close.',
   },
   {
     n: 7,
     title: 'Results publish karo',
     tab: 'results',
-    body: 'Exam khatam hone ke baad Results publish karo â€” students ko scores dikh jaate hain. CSV se sab data download bhi kar sakte ho.',
+    body: 'Exam khatam hone ke baad Results publish karo — students ko scores dikh jaate hain. CSV se sab data download bhi kar sakte ho.',
   },
   {
     n: 8,
     title: 'Zaroori update bhejo',
     tab: 'notify',
-    body: 'Reminder, reschedule ya koi bhi announcement â€” sab registered students ko email + in-app notification ek saath bhejo.',
+    body: 'Reminder, reschedule ya koi bhi announcement — sab registered students ko email + in-app notification ek saath bhejo.',
   },
 ];
 
 const HELP_FAQ: [string, string][] = [
-  ['Link open nahi ho raha', 'Booking ka status live hona chahiye aur time slot window ke andar hona chahiye. Bookings card par â€œLink: liveâ€ chip check karo, warna Release karo.'],
-  ['Student ko doosra slot chahiye', 'Bookings me uski booking Cancel karo â€” seat turant free ho jaayegi, student dobara book kar lega.'],
-  ['Payment reject ho gaya', 'Student portal se dobara upload kar sakta hai â€” Payments section me naya proof approve kar dena.'],
+  ['Link open nahi ho raha', 'Booking ka status live hona chahiye aur time slot window ke andar hona chahiye. Bookings card par “Link: live” chip check karo, warna Release karo.'],
+  ['Student ko login maang raha hai', 'Usne raw test URL khola hai. Student ko sirf apne drive page ka Start test button use karne ko bolo — TieEdu auto-login se andar kar deta hai. Raw URL kabhi mat bhejo.'],
+  ['“Link already used / expired” aa raha hai', 'Link ek hi baar khulta hai aur 5 min valid hota hai. Wapas drive page par Start test button dabao — naya link khud ban jaata hai.'],
+  ['Student ko doosra slot chahiye', 'Bookings me uski booking Cancel karo — seat turant free ho jaayegi, student dobara book kar lega.'],
+  ['Payment reject ho gaya', 'Student portal se dobara upload kar sakta hai — Payments section me naya proof approve kar dena.'],
   ['Slot bhar gaya', 'Card par FULL dikhega. Naya slot generate karo ya kisi booking ko cancel karke seat chhodo.'],
-  ['Email nahi ja raha', 'Server par RESEND_API_KEY set hona chahiye â€” uske bina sirf in-app notification + push chalte hain.'],
+  ['Email nahi ja raha', 'Server par RESEND_API_KEY set hona chahiye — uske bina sirf in-app notification + push chalte hain.'],
 ];
 
 export function DriveHelp({ onTab }: { onTab: (s: Section) => void }) {
   return (
     <div className="space-y-5">
       <div className="rounded-3xl border border-[#E9E7E1] bg-white p-6 shadow-xs">
-        <h4 className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">How a mock drive runs â€” end to end</h4>
+        <h4 className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">How a mock drive runs — end to end</h4>
         <p className="mt-1.5 text-[13px] text-gray-500">Har step ka tab wahan likha hai jahan wo hota hai. Upar wale section tabs se wahi tab kholein.</p>
         <ol className="mt-4 space-y-4">
           {DRIVE_STEPS.map((s) => (
@@ -1806,23 +1853,28 @@ export function DriveHelp({ onTab }: { onTab: (s: Section) => void }) {
         <h4 className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Students ko test link kahan se milega?</h4>
         <div className="mt-3 space-y-3 text-[13.5px] leading-relaxed text-gray-700">
           <p>
-            <b>1.</b> Tests / Providers tab me test Kryptavia OS (os.kryptavia.in) par banao â€” wahan uska student-facing link milta hai.
+            <b>1.</b> Assign karte waqt <b>round name + access code</b> do (URL optional hai — sirf aapki reference ke liye).
           </p>
           <p>
-            <b>2.</b> Woh URL copy karke Slots â†’ Bookings me <b>Assign</b> (ek student) ya <b>Assign all</b> (poora slot) me paste karo.
+            <b>2.</b> Phir <b>Release</b> karo. Release hote hi student ko notification chala jaata hai aur uske drive page par
+            <b> “Start test”</b> button uske slot window me khul jaata hai — start se 5 min pehle se, slot end tak.
           </p>
           <p>
-            <b>3.</b> Assign ke baad link dead rehta hai. <b>Release</b> ke baad student ke drive page par â€œLaunch testâ€ button uske slot window me hi
-            dikhta hai â€” start se 5 min pehle se, slot end tak.
+            <b>3.</b> Student sirf <b>Start test</b> button dabata hai — TieEdu usko seedha exam platform par bina login ke
+            pahuncha deta hai (auto-login). Button dikh raha hai matlab sab set hai.
+          </p>
+          <p className="rounded-xl bg-amber-50 px-3.5 py-2.5 text-[13px] font-medium text-amber-800">
+            ⚠ Raw test URL kabhi student ko mat bhejo. Link ek baar ka hai (5 min valid) aur URL se kholne par exam platform
+            login maangega — student atak jaayega. Sirf Start test button hi sahi rasta hai.
           </p>
           <p className="rounded-xl bg-[#F0F9FF] px-3.5 py-2.5 text-[13px] font-medium text-[#1F3A5F]">
-            Ek hi URL poore slot ko de sakte ho â€” â€œAssign allâ€ se sabko ek saath, phir â€œRelease allâ€.
+            Ek hi round + code poore slot ko de sakte ho — “Assign all” se sabko ek saath, phir “Release all”.
           </p>
         </div>
       </div>
 
       <div className="rounded-3xl border border-[#E9E7E1] bg-white p-6 shadow-xs">
-        <h4 className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Problem? â€” quick fixes</h4>
+        <h4 className="text-xs font-bold uppercase tracking-wider text-[#5A6470]">Problem? — quick fixes</h4>
         <dl className="mt-3 space-y-3.5">
           {HELP_FAQ.map(([q, a]) => (
             <div key={q}>

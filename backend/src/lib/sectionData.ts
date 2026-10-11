@@ -5,7 +5,7 @@
  *
  *   module.section_data = req.body || {};
  *
- * That accepted any shape at all â€” unknown keys, non-string values where the reader
+ * That accepted any shape at all — unknown keys, non-string values where the reader
  * expects a string, a body that was an array or a bare string, and content of any
  * size. Those get persisted and only fail much later, when a student opens the
  * pack. This module is the single place that decides what a valid pack is, so the

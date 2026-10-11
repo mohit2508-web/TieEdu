@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Briefcase, Check, Download, Pencil, Plus, Send } from 'lucide-react';
 import { AdminDrive } from '@/lib/drivesApi';
 import { DriveFormState, DriveFormFields, emptyDriveForm, driveToForm, formToPayload } from '@/components/drives/DriveFormEditor';
@@ -89,7 +89,7 @@ export default function DrivesTab(props: {
 
       <GroupedCard title="Drives for this college">
         {props.drives.length === 0 ? (
-          <EmptyState title="No drives yet" body="Create your first drive above â€” it starts as a draft, then you attach assessment rounds and publish." icon={<Briefcase size={24} strokeWidth={1.6} />} />
+          <EmptyState title="No drives yet" body="Create your first drive above — it starts as a draft, then you attach assessment rounds and publish." icon={<Briefcase size={24} strokeWidth={1.6} />} />
         ) : (
           props.drives.map((d) => {
             const selected = props.selectedId === d.drive_id;
@@ -101,7 +101,7 @@ export default function DrivesTab(props: {
                   value={
                     <span className="flex items-center gap-2">
                       <span className="hidden whitespace-nowrap text-[11px] tabular-nums sm:inline" style={{ color: 'var(--apple-label-3)' }}>
-                        {d.registration_count ?? 0} registered Â· {d.test_count ?? 0} rounds
+                        {d.registration_count ?? 0} registered · {d.test_count ?? 0} rounds
                       </span>
                       <StatusPill label={d.status} tone={driveStatusTone(d.status)} />
                     </span>
@@ -133,7 +133,7 @@ export default function DrivesTab(props: {
                           className={`${actionBtn}`}
                           style={{ background: 'var(--apple-green-soft)', color: 'var(--apple-green)' }}
                           disabled={props.busy}
-                          onClick={() => run('Drive published â€” students can now register.', () =>
+                          onClick={() => run('Drive published — students can now register.', () =>
                             tpoDriveFetch(props.collegeId, `/${d.drive_id}/publish`, { method: 'POST' }))}
                         >
                           <Send size={13} /> Publish
@@ -144,7 +144,7 @@ export default function DrivesTab(props: {
                         className={`${actionBtn}`}
                         style={{ background: 'var(--apple-blue-soft)', color: 'var(--apple-blue)' }}
                         disabled={props.busy}
-                        onClick={() => run('Results published â€” students can now see their outcome.', () =>
+                        onClick={() => run('Results published — students can now see their outcome.', () =>
                           tpoDriveFetch(props.collegeId, `/${d.drive_id}/publish-results`, { method: 'POST' }))}
                       >
                         <Send size={13} /> Publish results

@@ -906,7 +906,7 @@ drivesRouter.get('/:driveId', async (req: Request, res: Response) => {
       `SELECT t.test_id, t.mode, t.name, t.slug, t.duration_minutes, t.total_questions,
               mdt.sort_order, mdt.mandatory, mdt.max_attempts, mdt.opens_at, mdt.closes_at,
               mdt.window_hard_close, mdt.unlock_rule,
-              mdt.round_name, mdt.kind,
+              mdt.round_name, mdt.kind, mdt.round_description,
               drt.status AS my_status, drt.attempts_used, drt.best_percentage
          FROM mock_drive_test mdt
          JOIN drive_test t ON t.test_id = mdt.test_id
@@ -931,6 +931,7 @@ drivesRouter.get('/:driveId', async (req: Request, res: Response) => {
       test_id: t.test_id,
       round_name: t.round_name || null,
       kind: t.kind || null,
+      round_description: t.round_description || null,
       mode: t.mode,
       name: t.name,
       slug: t.slug,
@@ -998,6 +999,9 @@ drivesRouter.get('/:driveId', async (req: Request, res: Response) => {
             status: booking.status,
             round_name: booking.round_name,
             test_url: booking.test_url,
+            // Exam-credential material — revealed only once the admin has
+            // released the link (link_active_at set).
+            access_code: booking.link_active_at ? booking.access_code || null : null,
             link_assigned_at: booking.link_assigned_at,
             link_active_at: booking.link_active_at,
             starts_at: booking.slot_starts_at,
@@ -1300,6 +1304,7 @@ drivesRouter.get('/:driveId/booking', async (req: Request, res: Response) => {
             status: booking.status,
             round_name: booking.round_name,
             test_url: booking.test_url,
+            access_code: booking.link_active_at ? booking.access_code || null : null,
             link_assigned_at: booking.link_assigned_at,
             link_active_at: booking.link_active_at,
             starts_at: booking.slot_starts_at,

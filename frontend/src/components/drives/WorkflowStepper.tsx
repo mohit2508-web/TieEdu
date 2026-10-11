@@ -74,6 +74,11 @@ export const WorkflowStepper: React.FC<{ rounds: DriveRound[]; registered: boole
                 {round.max_attempts > 1 && <span>{round.attempts_used}/{round.max_attempts} attempts</span>}
                 {round.best_percentage != null && <span>Best {Math.round(round.best_percentage)}%</span>}
               </div>
+              {round.round_description && (
+                <p className="mt-1 whitespace-pre-line text-[12.5px] leading-relaxed" style={{ color: 'var(--apple-label-2)' }}>
+                  {round.round_description}
+                </p>
+              )}
             </div>
           </li>
         );

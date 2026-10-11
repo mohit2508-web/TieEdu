@@ -44,6 +44,8 @@ export interface DriveRound {
   test_id: string;
   round_name: string | null;
   kind: string | null;
+  /** Free-text round structure shown to students (e.g. the four sections). */
+  round_description: string | null;
   mode: 'external' | 'internal';
   name: string;
   slug: string;
@@ -170,6 +172,8 @@ export interface DriveBookingBrief {
   status: 'booked' | 'link_assigned' | 'active' | 'completed' | 'cancelled';
   round_name: string | null;
   test_url: string | null;
+  /** Test-platform access code — non-null only once the link is live. */
+  access_code: string | null;
   link_assigned_at: string | null;
   link_active_at: string | null;
   starts_at: string;

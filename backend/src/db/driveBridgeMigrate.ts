@@ -360,6 +360,9 @@ export async function ensureMockDriveExtColumns(): Promise<void> {
   // because the same test can appear as a differently-named round in two drives.
   await addColumnIfMissing('mock_drive_test', 'round_name', 'TEXT');
   await addColumnIfMissing('mock_drive_test', 'kind', 'TEXT');
+  // Free-text round structure shown to students (e.g. the four sections of a
+  // Capgemini new-format test) — lives on the join row with round_name/kind.
+  await addColumnIfMissing('mock_drive_test', 'round_description', 'TEXT');
 
   // A registration pins the resume the student chose at register time.
   await addColumnIfMissing('drive_registration', 'resume_id', 'TEXT');
@@ -514,6 +517,9 @@ export async function ensureDriveSlotPaymentTables(): Promise<void> {
       status           TEXT NOT NULL DEFAULT 'booked',
       round_name       TEXT,
       test_url         TEXT,
+      -- Test-platform access code (e.g. CAPG99) shown to the student once the
+      -- link goes live; the URL alone is not enough to enter.
+      access_code      TEXT,
       link_assigned_at TIMESTAMPTZ,
       link_active_at   TIMESTAMPTZ,
       created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -525,6 +531,8 @@ export async function ensureDriveSlotPaymentTables(): Promise<void> {
   await getPool().query(`CREATE UNIQUE INDEX IF NOT EXISTS drive_booking_reg_idx ON drive_slot_booking(registration_id);`);
   await getPool().query(`CREATE UNIQUE INDEX IF NOT EXISTS drive_booking_slot_user_idx ON drive_slot_booking(slot_id, user_id);`);
   await getPool().query(`CREATE INDEX IF NOT EXISTS drive_booking_drive_idx ON drive_slot_booking(drive_id, status);`);
+  // Existing installations predate the access-code field.
+  await addColumnIfMissing('drive_slot_booking', 'access_code', 'TEXT');
 
   // Widen the registration status machine with the payment/slot stages.
   // CHECK constraints cannot be altered in place on Postgres or Cockroach —

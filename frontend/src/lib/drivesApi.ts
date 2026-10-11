@@ -254,6 +254,7 @@ export interface DriveBooking {
   status: 'booked' | 'link_assigned' | 'active' | 'completed' | 'cancelled';
   round_name: string | null;
   test_url: string | null;
+  access_code: string | null;
   link_assigned_at: string | null;
   link_active_at: string | null;
   starts_at: string;
@@ -271,7 +272,7 @@ export const fetchDriveSlotsApi = async (driveId: string) =>
     registration_status: string;
     can_book: boolean;
     slots: DriveSlot[];
-    booking: Omit<DriveBooking, 'round_name' | 'test_url'> | null;
+    booking: Omit<DriveBooking, 'round_name' | 'test_url' | 'access_code'> | null;
   }>(await apiFetch(`${base}/${encodeURIComponent(driveId)}/slots`));
 
 export const bookDriveSlotApi = async (driveId: string, slotId: string) =>
@@ -705,6 +706,7 @@ export interface AdminBookingRow {
   status: 'booked' | 'link_assigned' | 'active' | 'completed' | 'cancelled';
   round_name: string | null;
   test_url: string | null;
+  access_code: string | null;
   link_assigned_at: string | null;
   link_active_at: string | null;
   created_at: string;
@@ -772,7 +774,7 @@ export const adminDeleteSlotApi = (driveId: string, slotId: string) =>
 export const adminListBookingsApi = (driveId: string) =>
   adminJson<{ server_now: string; bookings: AdminBookingRow[] }>(`/${encodeURIComponent(driveId)}/bookings`);
 
-export const adminAssignBookingApi = (driveId: string, bookingId: string, data: { round_name?: string; test_url?: string }) =>
+export const adminAssignBookingApi = (driveId: string, bookingId: string, data: { round_name?: string; test_url?: string; access_code?: string }) =>
   adminJson<{ booking: AdminBookingRow }>(`/${encodeURIComponent(driveId)}/bookings/${encodeURIComponent(bookingId)}/assign`, {
     method: 'POST',
     body: JSON.stringify(data),
@@ -796,8 +798,8 @@ export const adminCancelBookingApi = (driveId: string, bookingId: string) =>
 
 // ─── Slot-level bulk release + email (admin) ────────────────────────────────
 
-/** Assign round + URL to every live booking in the slot in one call. */
-export const adminAssignSlotBulkApi = (driveId: string, slotId: string, data: { round_name?: string; test_url?: string }) =>
+/** Assign round + URL + optional access code to every live booking in the slot. */
+export const adminAssignSlotBulkApi = (driveId: string, slotId: string, data: { round_name?: string; test_url?: string; access_code?: string }) =>
   adminJson<{ updated: number }>(`/${encodeURIComponent(driveId)}/slots/${encodeURIComponent(slotId)}/assign`, {
     method: 'POST',
     body: JSON.stringify(data),

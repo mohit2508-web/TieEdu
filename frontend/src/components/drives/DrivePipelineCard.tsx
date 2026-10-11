@@ -139,6 +139,14 @@ export const DrivePipelineCard: React.FC<{
             Round: <span className="font-medium" style={{ color: 'var(--apple-label)' }}>{booking.round_name}</span>
           </p>
         )}
+        {booking.access_code && (
+          <p className="mt-1 text-[12.5px]" style={{ color: 'var(--apple-label-2)' }}>
+            Access code:{' '}
+            <span className="rounded-md px-1.5 py-0.5 font-mono text-[13px] font-bold" style={{ background: 'var(--apple-fill)', color: 'var(--apple-label)' }}>
+              {booking.access_code}
+            </span>
+          </p>
+        )}
       </div>
     );
   }
