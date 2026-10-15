@@ -1573,19 +1573,43 @@ export interface VideoResolveResponse {
 
 /** One course's state inside a track, as the track endpoints report it. */
 export interface TrackCourseState {
-  course_id: string;
-  slug: string;
+  /** Backend field name is `id` (same as the store course id). */
+  id: string;
+  /** Null when the member course is missing from the store — shown as coming soon. */
+  slug: string | null;
   title: string;
   subtitle: string;
-  level: CourseLevel;
+  level: string;
   is_free: boolean;
   price_inr: number;
+  /** False when the course is unpublished — blocks claiming. */
   published: boolean;
-  /** False when the course is missing or unpublished — blocks claiming. */
-  available: boolean;
-  progress_percent: number;
+  enrolled?: boolean;
+  /** Lesson counts across the whole course. */
+  completed?: number;
+  total?: number;
+  percent: number;
   is_complete: boolean;
-  certificate_ready: boolean;
+}
+
+/** Aggregate progress across member courses. Null for signed-out visitors. */
+export interface TrackProgressState {
+  courses_complete: number;
+  courses_total: number;
+  percent: number;
+  is_complete: boolean;
+  missing?: string[];
+  unavailable?: string[];
+}
+
+/** Track-level certificate, as `presentTrackCertificate` sends it. */
+export interface TrackCertificate {
+  serial: string;
+  track_title: string;
+  tier?: string | null;
+  issued_at: string;
+  verification_url: string;
+  download_path?: string;
 }
 
 export interface LearningTrack {
@@ -1595,23 +1619,12 @@ export interface LearningTrack {
   tagline: string;
   description: string;
   branch: string;
-  course_ids: string[];
-  published: boolean;
+  course_count: number;
+  estimated_hours_total: number | null;
   /** Present only on the detail endpoint, not the list. */
   courses?: TrackCourseState[];
-  /** Aggregate progress across member courses. */
-  progress_percent?: number;
-  completed_courses?: number;
-  total_courses?: number;
-  /** True when every available member course is complete AND cert-ready. */
-  claimable?: boolean;
-  certificate?: {
-    serial: string;
-    course_title: string;
-    tier?: string | null;
-    issued_at: string;
-    verification_url: string;
-  } | null;
+  progress: TrackProgressState | null;
+  certificate: TrackCertificate | null;
 }
 
 export interface TrackListResponse {

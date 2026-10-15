@@ -7,9 +7,9 @@ import { fetchTracks } from '@/lib/tracksApi';
 import type { LearningTrack } from '@/types';
 
 function TrackCard({ track }: { track: LearningTrack }) {
-  const pct = track.progress_percent ?? 0;
-  const completed = track.completed_courses ?? 0;
-  const total = track.total_courses ?? track.course_ids.length;
+  const pct = track.progress?.percent ?? 0;
+  const completed = track.progress?.courses_complete ?? 0;
+  const total = track.progress?.courses_total ?? track.course_count;
   const hasCert = Boolean(track.certificate);
   return (
     <Link

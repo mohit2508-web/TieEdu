@@ -36,15 +36,13 @@ function formatDate(s: string) {
 function CourseRow({
   course,
   index,
-  total,
 }: {
   course: TrackCourseState;
   index: number;
-  total: number;
 }) {
   const done = course.is_complete;
-  const ready = course.certificate_ready;
-  const pct = course.progress_percent ?? 0;
+  const available = course.published;
+  const pct = course.percent ?? 0;
   return (
     <li className="flex flex-col gap-3 rounded-xl border border-[var(--border-subtle)] bg-white p-4 sm:flex-row sm:items-center sm:gap-4">
       <div className="flex items-center gap-3 sm:w-16">
@@ -53,7 +51,7 @@ function CourseRow({
         </span>
         {done ? (
           <CheckCircle2 size={18} className="text-emerald-500" aria-hidden />
-        ) : course.available ? (
+        ) : available ? (
           <Circle size={18} className="text-[var(--text-body)] opacity-40" aria-hidden />
         ) : (
           <Lock size={16} className="text-[var(--text-body)] opacity-40" aria-hidden />
@@ -61,9 +59,9 @@ function CourseRow({
       </div>
       <div className="flex-1 min-w-0">
         <Link
-          href={course.available ? `/courses/${course.slug}` : '#'}
+          href={available && course.slug ? `/courses/${course.slug}` : '#'}
           className={`text-sm font-bold ${
-            course.available
+            available && course.slug
               ? 'text-[var(--ink)] hover:text-[var(--brand-sky)]'
               : 'text-[var(--text-body)] opacity-60 pointer-events-none'
           }`}
@@ -71,12 +69,12 @@ function CourseRow({
           {course.title}
         </Link>
         <p className="mt-0.5 truncate text-xs text-[var(--text-body)]">{course.subtitle}</p>
-        {!course.available && (
+        {!available && (
           <p className="mt-1 text-[11px] font-semibold text-amber-600">
             Coming soon — track certificate unlocks once this course is live.
           </p>
         )}
-        {course.available && pct > 0 && !done && (
+        {available && pct > 0 && !done && (
           <div className="mt-1.5 flex items-center gap-2">
             <div className="h-1 w-24 overflow-hidden rounded-full bg-[var(--bg-subtle)]">
               <div
@@ -89,16 +87,16 @@ function CourseRow({
         )}
       </div>
       <div className="flex items-center gap-2 sm:justify-end">
-        {course.is_free ? (
+        {!course.slug ? null : course.is_free ? (
           <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700">
             Free
           </span>
         ) : (
           <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-700">
-            ₹{course.price_inr}
+            ₹{course.price_inr ?? 0}
           </span>
         )}
-        {course.available && (
+        {available && course.slug && (
           <Link
             href={`/courses/${course.slug}`}
             className="inline-flex items-center gap-1 rounded-lg border border-[var(--border-subtle)] bg-white px-3 py-1.5 text-xs font-bold text-[var(--ink)] shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
@@ -151,7 +149,7 @@ export default function TrackDetailPage() {
       setClaiming(true);
       setClaimError(null);
       const cert = await claimTrackCertificate(slug);
-      setTrack((prev) => (prev ? { ...prev, certificate: cert, claimable: true } : prev));
+      setTrack((prev) => (prev ? { ...prev, certificate: cert } : prev));
     } catch (e: any) {
       setClaimError(e?.message || 'Could not issue certificate');
     } finally {
@@ -206,10 +204,10 @@ export default function TrackDetailPage() {
   }
 
   const courses = track.courses || [];
-  const total = track.total_courses ?? courses.length;
-  const completed = track.completed_courses ?? 0;
-  const pct = track.progress_percent ?? 0;
-  const claimable = track.claimable ?? false;
+  const total = track.progress?.courses_total ?? track.course_count;
+  const completed = track.progress?.courses_complete ?? 0;
+  const pct = track.progress?.percent ?? 0;
+  const claimable = Boolean(track.progress?.is_complete);
   const cert = track.certificate;
 
   return (
@@ -270,7 +268,7 @@ export default function TrackDetailPage() {
           </h2>
           <ul className="mt-4 space-y-3">
             {courses.map((c, i) => (
-              <CourseRow key={c.course_id} course={c} index={i} total={total} />
+              <CourseRow key={c.id} course={c} index={i} />
             ))}
           </ul>
         </section>
@@ -286,31 +284,38 @@ export default function TrackDetailPage() {
           </p>
 
           {cert ? (
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
-              <div>
-                <p className="text-sm font-bold text-emerald-800">{cert.course_title}</p>
-                <p className="mt-0.5 text-xs text-emerald-700">
-                  {cert.serial} · Issued {formatDate(cert.issued_at)}
+            <div className="mt-4">
+              {claimError && (
+                <p className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                  {claimError}
                 </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <a
-                  href={cert.verification_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-white px-3 py-2 text-xs font-bold text-emerald-800 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
-                >
-                  <ExternalLink size={13} aria-hidden /> Verify
-                </a>
-                <button
-                  type="button"
-                  onClick={download}
-                  disabled={downloading}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-emerald-700 disabled:opacity-50"
-                >
-                  <Download size={13} aria-hidden />
-                  {downloading ? 'Downloading…' : 'Download PDF'}
-                </button>
+              )}
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+                <div>
+                  <p className="text-sm font-bold text-emerald-800">{cert.track_title}</p>
+                  <p className="mt-0.5 text-xs text-emerald-700">
+                    {cert.serial} · Issued {formatDate(cert.issued_at)}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <a
+                    href={cert.verification_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-white px-3 py-2 text-xs font-bold text-emerald-800 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+                  >
+                    <ExternalLink size={13} aria-hidden /> Verify
+                  </a>
+                  <button
+                    type="button"
+                    onClick={download}
+                    disabled={downloading}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-emerald-700 disabled:opacity-50"
+                  >
+                    <Download size={13} aria-hidden />
+                    {downloading ? 'Downloading…' : 'Download PDF'}
+                  </button>
+                </div>
               </div>
             </div>
           ) : (

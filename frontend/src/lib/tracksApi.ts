@@ -6,9 +6,9 @@
 // course is complete AND certificate-ready.
 //
 // Two rules the UI depends on:
-//   1. A track's `courses` array may contain `available: false` entries
-//      (member course unpublished or deleted). These are shown as "coming
-//      soon" and block claiming — never silently dropped.
+//   1. A track's `courses` array may contain `published: false` entries
+//      (member course unpublished or missing from the store). These are shown
+//      as "coming soon" and block claiming — never silently dropped.
 //   2. The track certificate reuses the course certificate download/verify
 //      endpoints (serial is the same TIEEDU-YYYY-XXXXXXXX shape), so no
 //      separate download wiring is needed.
@@ -19,7 +19,7 @@ import type {
   TrackListResponse,
   TrackDetailResponse,
   LearningTrack,
-  CertificateSummary,
+  TrackCertificate,
 } from '@/types';
 
 const TRACKS = `${API_BASE_URL}/tracks`;
@@ -53,7 +53,7 @@ export const fetchTrack = async (slug: string): Promise<LearningTrack> => {
  */
 export const claimTrackCertificate = async (
   slug: string
-): Promise<CertificateSummary> => {
+): Promise<TrackCertificate> => {
   const res = await apiFetch(`${TRACKS}/${encodeURIComponent(slug)}/certificate`, {
     method: 'POST',
   });
