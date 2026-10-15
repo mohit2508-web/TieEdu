@@ -679,6 +679,22 @@ async function main() {
     check('an all-correct submission passes', right.body?.result?.passed === true, JSON.stringify(right.body?.result).slice(0, 160));
     check('a full score is 100', right.body?.result?.score_percent === 100, `score=${right.body?.result?.score_percent}`);
     check('correct_count matches', right.body?.result?.correct_count === right.body?.result?.total_count);
+    // The Next-lesson control reads `lesson` and `progress` straight off this
+    // response — they are what flip `is_complete` without a navigation. The
+    // frontend types the contract (GradedQuizResponse); pin it here so neither
+    // side can silently drop a field and recreate the "passed the quiz, still
+    // locked" bug.
+    check(
+      'the graded response carries the fresh lesson state',
+      right.body?.lesson?.quiz_ok === true && typeof right.body?.lesson?.is_complete === 'boolean',
+      JSON.stringify(right.body?.lesson).slice(0, 160)
+    );
+    check(
+      'the graded response carries the fresh course progress',
+      typeof right.body?.progress?.percent === 'number' &&
+        Array.isArray(right.body?.progress?.completed_lesson_ids),
+      JSON.stringify(right.body?.progress).slice(0, 160)
+    );
 
     const noBody = await api(`/api/courses/lessons/${encodeURIComponent(quizLesson.id)}/quiz`, {
       method: 'POST',
@@ -933,6 +949,42 @@ async function main() {
         'the public cover route is not blocked by the admin guard',
         publicThumb.status !== 401,
         `got ${publicThumb.status}`
+      );
+
+      // The cover upload is multipart, and the request must arrive WITHOUT a
+      // forced JSON Content-Type — that was the production bug: the browser's
+      // boundary was erased, multer saw no file, and every upload failed with
+      // "No file uploaded". Pinned end-to-end: upload, fetch the stored bytes
+      // through the public route, then clear back to the generated gradient.
+      const png1px = Buffer.from(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
+        'base64'
+      );
+      const coverForm = new FormData();
+      coverForm.append('file', new Blob([png1px], { type: 'image/png' }), 'smoke-cover.png');
+      const uploadRes = await fetch(
+        `${BASE}/api/course-admin/courses/${encodeURIComponent(listing.id)}/thumbnail`,
+        { method: 'POST', headers: { Authorization: `Bearer ${adminToken}` }, body: coverForm }
+      );
+      const uploadBody: any = await uploadRes.json().catch(() => ({}));
+      check(
+        'a cover uploads over multipart/form-data',
+        uploadRes.status === 201 && typeof uploadBody?.course?.thumbnail_url === 'string' && uploadBody.course.thumbnail_url.length > 0,
+        `status=${uploadRes.status} body=${JSON.stringify(uploadBody).slice(0, 160)}`
+      );
+      const storedName = String(uploadBody?.course?.thumbnail_url || '');
+      if (storedName) {
+        const served = await api(storedName, { raw: true });
+        check('the stored cover is served back through the public route', served.status === 200, `got ${served.status}`);
+      }
+      const cleared = await api(
+        `/api/course-admin/courses/${encodeURIComponent(listing.id)}/thumbnail?remove=1`,
+        { method: 'POST', token: adminToken }
+      );
+      check(
+        'the cover clears again so the generated gradient returns',
+        cleared.status === 200 && cleared.body?.course?.thumbnail_url === '',
+        `status=${cleared.status} body=${JSON.stringify(cleared.body).slice(0, 160)}`
       );
 
       const list = await api('/api/course-admin/courses', { token: adminToken });

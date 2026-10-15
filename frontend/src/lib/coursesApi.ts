@@ -20,6 +20,8 @@ import type {
   CourseFeedback,
   MyCoursesResponse,
   LessonProgressResponse,
+  LessonCompletionState,
+  CourseProgress,
   CertificateSummary,
   CertificateVerifyResponse,
   AdminCourseListResponse,
@@ -184,10 +186,12 @@ export const fetchLesson = async (
 /**
  * Upload a course thumbnail, or clear it with `file` omitted.
  *
- * Uses `fetch` with a `FormData` body rather than the JSON helper: a multipart
- * body must not carry a `Content-Type` header, and setting one (even to the
- * boundary-less default) makes Express ignore the file entirely. The server
- * returns the stored `thumbnail_url` rather than this function guessing a path.
+ * The body is a `FormData`, and `apiFetch` now omits the JSON `Content-Type`
+ * for FormData bodies so the browser can set the multipart boundary itself —
+ * while keeping the shared 401 -> refresh -> retry. Before that fix this
+ * request went out declared as `application/json`, multer never saw a file, and
+ * every upload failed with "No file uploaded". The server returns the stored
+ * `thumbnail_url` rather than this function guessing a path.
  */
 export const uploadCourseThumbnail = async (
   courseId: string,
@@ -236,13 +240,25 @@ export const reportLessonProgress = async (
 };
 
 /**
+ * A graded quiz attempt. `lesson` and `progress` are the server's authoritative
+ * state written by the same request — dropping them left `is_complete` stale
+ * (the Next-lesson control stayed locked after a pass until the learner
+ * navigated away and back), so they are part of the contract, not optional.
+ */
+export interface GradedQuizResponse {
+  result: CourseQuizOutcome;
+  lesson: LessonCompletionState;
+  progress: CourseProgress;
+}
+
+/**
  * Submit an answer sheet. Keys are question ids, values are option indexes.
  * Grading happens on the server; the key never reaches the client beforehand.
  */
 export const submitLessonQuiz = async (
   lessonId: string,
   answers: Record<string, number>
-): Promise<{ result: CourseQuizOutcome }> => {
+): Promise<GradedQuizResponse> => {
   const res = await apiFetch(`${COURSES}/lessons/${encodeURIComponent(lessonId)}/quiz`, {
     method: 'POST',
     body: JSON.stringify({ answers }),

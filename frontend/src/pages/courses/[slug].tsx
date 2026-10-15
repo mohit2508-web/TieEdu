@@ -266,7 +266,9 @@ export default function CoursePage({
   );
 
   /**
-   * Apply one progress heartbeat to the page, without re-fetching the course.
+   * Apply one progress heartbeat — or a graded quiz's `lesson` + `progress`
+   * pair, which carries the same fields — to the page, without re-fetching the
+   * course.
    *
    * The response carries the authoritative lesson state, and it used to be
    * dropped: only `progress` was applied, so the completion beat — the one
@@ -274,7 +276,10 @@ export default function CoursePage({
    * never appeared and the Next-lesson bar stayed disabled until something else
    * happened to trigger a full refetch.
    */
-  const onProgress = (p: LessonProgressResponse, lessonId?: number | string) => {
+  const onProgress = (
+    p: Pick<LessonProgressResponse, 'lesson' | 'progress'>,
+    lessonId?: number | string
+  ) => {
     if (p.progress) setCourse((c) => (c ? { ...c, progress: p.progress } : c));
     if (!p.lesson) return;
     const sameId = (a: unknown, b: unknown) => String(a) === String(b);

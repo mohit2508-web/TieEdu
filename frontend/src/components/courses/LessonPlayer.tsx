@@ -5,7 +5,7 @@ import { TrackedVideoPlayer } from '@/components/courses/TrackedVideoPlayer';
 import { MobileSegmentReader, type LessonSegment } from '@/components/courses/MobileSegmentReader';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { readLessonSegment, writeLessonSegment } from '@/lib/lessonSegments';
-import { reportLessonProgress, submitLessonQuiz } from '@/lib/coursesApi';
+import { reportLessonProgress, submitLessonQuiz, type GradedQuizResponse } from '@/lib/coursesApi';
 import type {
   CourseLessonView,
   CourseQuizQuestion,
@@ -48,7 +48,13 @@ export const LessonPlayer: React.FC<{
   courseSlug: string;
   /** True when the server will accept a progress/quiz write for this lesson. */
   canSubmit: boolean;
-  onProgress: (p: LessonProgressResponse, lessonId?: number | string) => void;
+  /**
+   * Apply server-returned lesson/course state. A heartbeat carries the full
+   * `LessonProgressResponse`; a graded quiz carries the same `lesson` +
+   * `progress` pair — that pair is what flips `is_complete`, so both routes go
+   * through here rather than the quiz response being dropped on the floor.
+   */
+  onProgress: (p: Pick<LessonProgressResponse, 'lesson' | 'progress'>, lessonId?: number | string) => void;
   /** Re-fetch the lesson after a state change (e.g. a graded quiz). */
   onLessonUpdated: () => void;
   onSignInRequired: () => void;
@@ -264,7 +270,20 @@ export const LessonPlayer: React.FC<{
       questions={quiz.questions}
       passingPercent={quiz.passing_percent}
       alreadyPassed={state.quiz_ok}
-      onGraded={onLessonUpdated}
+      onGraded={(res) => {
+        /*
+         * The graded response carries the authoritative lesson state — the
+         * same fields a heartbeat carries. Apply it immediately so
+         * `is_complete` flips and the Next control unlocks right here; the
+         * course re-fetch follows for the syllabus rows and their lock flags.
+         * Without the first half this was a stale-state bug: `fetchedLesson`
+         * only refreshes on navigation, so a passed quiz left the bar disabled
+         * ("Finish this lesson to continue") until the learner left and came
+         * back.
+         */
+        onProgress(res, lesson.id);
+        onLessonUpdated();
+      }}
       onSignInRequired={onSignInRequired}
       // One question at a time on phones — a full quiz list is exactly the
       // "long page" this player exists to avoid. Desktop keeps all-at-once.
@@ -502,7 +521,7 @@ const QuizForm: React.FC<{
   passingPercent: number;
   alreadyPassed: boolean;
   /** Called after an attempt has been graded, so the parent can refresh state. */
-  onGraded: () => void;
+  onGraded: (res: GradedQuizResponse) => void;
   onSignInRequired: () => void;
   /** Phones show one question at a time; desktop keeps the full list. */
   oneAtATime?: boolean;
@@ -521,7 +540,7 @@ const QuizForm: React.FC<{
     try {
       const res = await submitLessonQuiz(lessonId, answers);
       setOutcome(res.result);
-      onGraded();
+      onGraded(res);
     } catch (e) {
       const msg = (e as Error).message;
       if (/sign in/i.test(msg)) onSignInRequired();

@@ -65,11 +65,26 @@ setAuthSession(data.accessToken, data.user?.id || getUserId());
 // Exported so other API modules (e.g. lib/coursesApi.ts) share the single-flight
 // 401 -> refresh -> retry behaviour instead of reimplementing it.
 export const apiFetch = async (url: string, options: RequestInit = {}): Promise<Response> => {
-  const doRequest = (): Promise<Response> =>
-    fetch(url, {
+  const doRequest = (): Promise<Response> => {
+    /*
+     * A FormData body must go out WITHOUT a Content-Type, so the browser can
+     * set its own `multipart/form-data` boundary. Forcing the default
+     * `application/json` here erases the boundary, the server sees a body it
+     * cannot parse, and a file upload fails with an empty `req.file` — which is
+     * exactly how the course-cover upload broke ("No file uploaded"). Every
+     * other request still gets the JSON default; an explicit header from the
+     * caller still wins.
+     */
+    const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
+    return fetch(url, {
       ...options,
-      headers: { 'Content-Type': 'application/json', ...authHeaders(), ...(options.headers || {}) },
+      headers: {
+        ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+        ...authHeaders(),
+        ...(options.headers || {}),
+      },
     });
+  };
   const res = await doRequest();
   // Recover on 401 unless this browser is *known* to be signed out. The old guard
   // required an in-memory access token to be present, so a cold start skipped the
