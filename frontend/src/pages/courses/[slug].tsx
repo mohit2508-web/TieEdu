@@ -1049,7 +1049,7 @@ export default function CoursePage({
               <section className="mb-8 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
                 <div className="flex items-center gap-2">
                   <Sparkles size={16} className="text-[var(--brand-sky)]" />
-                  <h2 className="text-sm font-bold text-[var(--ink)]">What you'll get</h2>
+                  <h2 className="text-sm font-bold text-[var(--ink)]">What you&apos;ll get</h2>
                 </div>
                 <ul className="mt-3 grid gap-2 sm:grid-cols-2">
                   {course.perks.map((perk) => (
