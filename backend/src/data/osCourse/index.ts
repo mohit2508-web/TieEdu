@@ -1,0 +1,457 @@
+// Operating Systems — course assembly.
+// Phase 4 Bucket B branch core (CSE interview + university exam).
+import type { Course, ExamQuestion } from '../db';
+import { module1 } from './module1';
+import { module2 } from './module2';
+import { module3 } from './module3';
+import { module4 } from './module4';
+import { COURSE_ID } from './helpers';
+
+const examBank: ExamQuestion[] = [
+  {
+    id: 'os-ex-1',
+    prompt: 'The main difference between a program and a process is:',
+    options: [
+      'Language used',
+      'A process is a program in execution with runtime state (PCB)',
+      'Programs are larger on disk',
+      'Processes cannot use I/O',
+    ],
+    correct_index: 1,
+    explanation: 'Execution + PCB + address space.',
+    difficulty: 'easy',
+    topic: 'Processes',
+  },
+  {
+    id: 'os-ex-2',
+    prompt: 'Which information is NOT typically in a PCB?',
+    options: ['Program counter', 'CPU registers', 'Source code file path only', 'Memory-management info'],
+    correct_index: 2,
+    explanation: 'PCB holds runtime state, not the source path alone.',
+    difficulty: 'easy',
+    topic: 'Processes',
+  },
+  {
+    id: 'os-ex-3',
+    prompt: 'A process leaves Running for Waiting mainly when:',
+    options: ['Time slice expires', 'It blocks on I/O or an event', 'It is admitted', 'It is terminated'],
+    correct_index: 1,
+    explanation: 'Time slice → Ready; block → Waiting.',
+    difficulty: 'easy',
+    topic: 'Processes',
+  },
+  {
+    id: 'os-ex-4',
+    prompt: 'Threads in the same process typically share:',
+    options: ['Stack', 'Registers', 'Heap', 'Program counter'],
+    correct_index: 2,
+    explanation: 'Heap is process-wide; stack/PC/registers are per-thread.',
+    difficulty: 'easy',
+    topic: 'Threads',
+  },
+  {
+    id: 'os-ex-5',
+    prompt: 'Context switch overhead is high mainly because of:',
+    options: ['Disk formatting', 'Saving/restoring state and possible TLB effects', 'User password checks', 'File locking'],
+    correct_index: 1,
+    explanation: 'Pure overhead; no useful work during the switch.',
+    difficulty: 'medium',
+    topic: 'Processes',
+  },
+  {
+    id: 'os-ex-6',
+    prompt: 'Which algorithm minimizes average waiting time given known bursts (non-preemptive)?',
+    options: ['FCFS', 'SJF', 'Round Robin', 'Priority without aging'],
+    correct_index: 1,
+    explanation: 'SJF is optimal for average waiting with perfect burst knowledge.',
+    difficulty: 'easy',
+    topic: 'Scheduling',
+  },
+  {
+    id: 'os-ex-7',
+    prompt: 'Round Robin mainly optimizes:',
+    options: ['Average waiting', 'Fair response / time-sharing', 'Throughput at all costs', 'Priority inversion'],
+    correct_index: 1,
+    explanation: 'Bounded response via time quantum.',
+    difficulty: 'easy',
+    topic: 'Scheduling',
+  },
+  {
+    id: 'os-ex-8',
+    prompt: 'Aging in priority scheduling is used to prevent:',
+    options: ['Deadlock', 'Starvation', 'Thrashing', 'Fragmentation'],
+    correct_index: 1,
+    explanation: 'Boost long-waiting jobs so they eventually run.',
+    difficulty: 'medium',
+    topic: 'Scheduling',
+  },
+  {
+    id: 'os-ex-9',
+    prompt: 'If all jobs arrive at 0 with bursts 7,3,1,5 and run FCFS in that order, waiting for the third job is:',
+    options: ['1', '7', '10', '5'],
+    correct_index: 2,
+    explanation: '0+7+3=10 before the third job starts.',
+    difficulty: 'medium',
+    topic: 'Scheduling',
+  },
+  {
+    id: 'os-ex-10',
+    prompt: 'Waiting time is computed as:',
+    options: ['Completion − arrival', 'Turnaround − burst', 'Burst − arrival', 'Response − burst'],
+    correct_index: 1,
+    explanation: 'Turnaround includes burst + wait.',
+    difficulty: 'easy',
+    topic: 'Scheduling',
+  },
+  {
+    id: 'os-ex-11',
+    prompt: 'A race condition means:',
+    options: ['Two CPUs always conflict', 'Correctness depends on uncontrolled interleaving of shared access', 'A process is too slow', 'The disk is full'],
+    correct_index: 1,
+    explanation: 'Interleaving-dependent outcome.',
+    difficulty: 'easy',
+    topic: 'Concurrency',
+  },
+  {
+    id: 'os-ex-12',
+    prompt: 'The three critical-section requirements are mutual exclusion, progress, and:',
+    options: ['Fairness of CPU', 'Bounded waiting', 'No preemption always', 'Priority inheritance'],
+    correct_index: 1,
+    explanation: 'Bounded waiting prevents indefinite CS starvation.',
+    difficulty: 'easy',
+    topic: 'Concurrency',
+  },
+  {
+    id: 'os-ex-13',
+    prompt: 'wait(S) when semaphore S is 0:',
+    options: ['Increments S', 'Blocks the caller', 'Returns error and continues in CS', 'Frees the mutex'],
+    correct_index: 1,
+    explanation: 'P operation blocks until a signal makes S > 0.',
+    difficulty: 'easy',
+    topic: 'Concurrency',
+  },
+  {
+    id: 'os-ex-14',
+    prompt: 'In producer-consumer, the correct wait order before modifying the buffer is typically:',
+    options: [
+      'mutex then empty',
+      'empty then mutex',
+      'full then empty only',
+      'No mutex needed',
+    ],
+    correct_index: 1,
+    explanation: 'empty/full resource first, then mutex (avoids deadlock).',
+    difficulty: 'medium',
+    topic: 'Concurrency',
+  },
+  {
+    id: 'os-ex-15',
+    prompt: 'Which is NOT a Coffman deadlock condition?',
+    options: ['Mutual exclusion', 'Hold and wait', 'Preemption always allowed', 'Circular wait'],
+    correct_index: 2,
+    explanation: 'No preemption is the condition; always-allowed preemption would break it.',
+    difficulty: 'medium',
+    topic: 'Deadlock',
+  },
+  {
+    id: 'os-ex-16',
+    prompt: 'Banker’s algorithm is a deadlock:',
+    options: ['Prevention by breaking hold-and-wait', 'Avoidance via safe-state checks', 'Detection only', 'Ignorance strategy'],
+    correct_index: 1,
+    explanation: 'Grants only if a safe sequence still exists.',
+    difficulty: 'medium',
+    topic: 'Deadlock',
+  },
+  {
+    id: 'os-ex-17',
+    prompt: 'Acquiring locks in a global ascending order primarily breaks:',
+    options: ['Mutual exclusion', 'Circular wait', 'Hold and wait only', 'Starvation of readers'],
+    correct_index: 1,
+    explanation: 'No cycle can form if everyone orders locks the same way.',
+    difficulty: 'hard',
+    topic: 'Deadlock',
+  },
+  {
+    id: 'os-ex-18',
+    prompt: 'In fixed-size paging, the offset in a logical address:',
+    options: ['Is remapped by the page table', 'Stays the same in the physical address', 'Is always 8 bits', 'Is stored in the TLB only'],
+    correct_index: 1,
+    explanation: 'Pages and frames share the same size; only page# maps.',
+    difficulty: 'easy',
+    topic: 'Paging',
+  },
+  {
+    id: 'os-ex-19',
+    prompt: 'Page size 4KB implies offset bits equal to:',
+    options: ['10', '11', '12', '16'],
+    correct_index: 2,
+    explanation: '2^12 = 4096.',
+    difficulty: 'easy',
+    topic: 'Paging',
+  },
+  {
+    id: 'os-ex-20',
+    prompt: 'A TLB is:',
+    options: ['A disk buffer', 'A cache of recent page-to-frame mappings', 'A process state', 'A RAID level'],
+    correct_index: 1,
+    explanation: 'Speeds address translation.',
+    difficulty: 'easy',
+    topic: 'Paging',
+  },
+  {
+    id: 'os-ex-21',
+    prompt: 'Belady’s anomaly is associated with:',
+    options: ['FIFO page replacement', 'LRU', 'Optimal', 'Round Robin'],
+    correct_index: 0,
+    explanation: 'More frames can increase faults under FIFO.',
+    difficulty: 'medium',
+    topic: 'Virtual memory',
+  },
+  {
+    id: 'os-ex-22',
+    prompt: 'The working set of a process is:',
+    options: ['All pages on disk', 'Pages referenced in a recent window of references', 'Only dirty pages', 'The inode list'],
+    correct_index: 1,
+    explanation: 'Locality window used to size multiprogramming.',
+    difficulty: 'medium',
+    topic: 'Virtual memory',
+  },
+  {
+    id: 'os-ex-23',
+    prompt: 'Thrashing is best countered by:',
+    options: ['Increasing multiprogramming', 'Reducing multiprogramming / swapping out processes', 'Longer time quantum only', 'Disabling demand paging'],
+    correct_index: 1,
+    explanation: 'Working sets must fit in RAM.',
+    difficulty: 'medium',
+    topic: 'Virtual memory',
+  },
+  {
+    id: 'os-ex-24',
+    prompt: 'Optimal page replacement is useful mainly as:',
+    options: ['The production algorithm', 'A theoretical lower bound for faults', 'A RAID policy', 'A disk scheduler'],
+    correct_index: 1,
+    explanation: 'Needs future knowledge.',
+    difficulty: 'medium',
+    topic: 'Virtual memory',
+  },
+  {
+    id: 'os-ex-25',
+    prompt: 'In the inode model, deleting a file while it is open:',
+    options: ['Immediately frees all blocks even if read continues', 'Removes the name; data freed when last ref closes', 'Crashes the kernel', 'Creates a RAID rebuild'],
+    correct_index: 1,
+    explanation: 'nlink/refcount semantics.',
+    difficulty: 'medium',
+    topic: 'File systems',
+  },
+  {
+    id: 'os-ex-26',
+    prompt: 'Contiguous file allocation suffers mainly from:',
+    options: ['Too many pointers', 'External fragmentation and hard growth', 'Zero copy performance', 'Internal only in the directory'],
+    correct_index: 1,
+    explanation: 'Holes between files; append may relocate.',
+    difficulty: 'easy',
+    topic: 'File systems',
+  },
+  {
+    id: 'os-ex-27',
+    prompt: 'Indexed allocation improves:',
+    options: ['Sequential tape speed only', 'Random access relative to pure linked lists', 'Disk formatting time', 'Symbolic link resolution'],
+    correct_index: 1,
+    explanation: 'Block pointers in an index enable O(1)-ish seeks.',
+    difficulty: 'medium',
+    topic: 'File systems',
+  },
+  {
+    id: 'os-ex-28',
+    prompt: 'SSTF disk scheduling can:',
+    options: ['Never service edge requests under load', 'Starve far requests', 'Exceed light speed', 'Disable the TLB'],
+    correct_index: 1,
+    explanation: 'Nearest-first ignores age of distant cylinders.',
+    difficulty: 'medium',
+    topic: 'Disk',
+  },
+  {
+    id: 'os-ex-29',
+    prompt: 'C-SCAN services requests:',
+    options: ['In both directions equally like SCAN', 'In one direction, then jumps to the other end and continues', 'Only at the extremes', 'In FCFS inside each track'],
+    correct_index: 1,
+    explanation: 'One-way sweep for more uniform wait times.',
+    difficulty: 'medium',
+    topic: 'Disk',
+  },
+  {
+    id: 'os-ex-30',
+    prompt: 'RAID 5 with four 1TB disks has usable capacity closest to:',
+    options: ['4TB', '3TB', '2TB', '1TB'],
+    correct_index: 1,
+    explanation: 'One disk worth of distributed parity.',
+    difficulty: 'easy',
+    topic: 'RAID',
+  },
+];
+
+export function getOperatingSystemsCourse(): Course {
+  return {
+    id: COURSE_ID,
+    slug: 'operating-systems',
+    title: 'Operating Systems',
+    subtitle:
+      'Processes, scheduling, concurrency, deadlock, memory, paging, virtual memory and file systems — exam + interview core',
+    description: `Operating Systems is the course every CSE/IT syllabus shares and every product interview still asks about. This course covers the full university core in eight compact lessons: process models and PCBs, FCFS through Round Robin with Gantt-chart arithmetic, critical sections with mutexes and semaphores, the classic producer-consumer and deadlock conditions, paging with TLB math, page replacement including Belady and thrashing, file inodes and allocation, and disk scheduling with RAID.
+
+Every lesson uses the nine-block structure (objectives, hook, concept, worked example, practice, common mistakes, exam angle, graded quiz, summary). A 30-question bank feeds a 15-question timed final. Passing earns a verifiable TieEdu certificate.
+
+**Who this is for:** second- and third-year CSE/IT students preparing for university exams, GATE fundamentals, and placement interviews that ask OS questions.
+
+**What you need:** pen and paper for Gantt charts and fault counts; a browser for the quizzes.`,
+    category: 'Computer Science',
+    level: 'intermediate',
+    is_free: true,
+    price_inr: 0,
+    thumbnail_url: '',
+    thumbnail_alt: 'Operating Systems course cover',
+    tags: ['os', 'operating-systems', 'cse', 'scheduling', 'deadlock', 'paging', 'free', 'interview'],
+    outcomes: [
+      'Explain processes, PCBs and the five-state model without hand-waving',
+      'Compute waiting/turnaround times for FCFS, SJF, SRTF and Round Robin',
+      'Apply mutex/semaphore patterns and state the critical-section criteria',
+      'List Coffman conditions and distinguish prevention vs Banker avoidance',
+      'Translate virtual addresses with paging and solve TLB effective-time problems',
+      'Count page faults for FIFO/LRU/Optimal and explain thrashing',
+      'Compare file allocation methods and solve basic disk-scheduling and RAID questions',
+    ],
+    prerequisite_course_id: null,
+    certificate_eligible: true,
+    published: true,
+    created_at: '2026-10-14T11:00:00.000Z',
+    updated_at: '2026-10-14T11:00:00.000Z',
+    instructor_id: null,
+    about_course: `University OS courses often split into two painful halves: process/CPU theory and memory/file systems. This course keeps one continuous thread — how the kernel multiplexes the machine — and drills the arithmetic examiners actually grade: Gantt charts, effective access time, page-fault tables and head-movement sums.
+
+Concurrency is taught with runnable mental models (producer-consumer wait order, lock ordering for deadlock) rather than only pseudocode. Virtual memory is taught as the reason your laptop survives 30 tabs, so thrashing and working sets stick. The final exam draws from a 30-question bank; the certificate project is a short written OS design note you can revise from before finals.`,
+    prerequisites: [
+      'Comfort with basic data structures',
+      'Any programming language (pseudocode is explained line by line)',
+    ],
+    audience: [
+      'CSE/IT students in semester 3–5 facing university OS exams',
+      'Placement candidates preparing for OS interview rounds',
+      'GATE aspirants building core CS fundamentals',
+      'Anyone who wants a correct mental model of processes, memory and disks',
+    ],
+    audio_language: 'English',
+    caption_language: 'English',
+    branch: 'cse',
+    branch_label: 'CSE / IT core (also useful for AI-DS)',
+    bucket: 'B',
+    certificate_tier: 'professional',
+    estimated_hours: 8,
+    perks: [
+      { key: 'certificate', label: 'Verifiable certificate' },
+      { key: 'xp', label: 'XP on the leaderboard' },
+    ],
+    exam_prep: {
+      target: 'University mid-terms and finals; GATE CS core; placement OS rounds',
+      units: [
+        {
+          title: 'Processes & Scheduling',
+          summary:
+            'Program vs process; PCB fields; five-state model; context switch = pure overhead. Turnaround = completion−arrival; waiting = turnaround−burst. SJF optimal for average wait; RR for response; aging fixes priority starvation.',
+          questions: [
+            'PCB vs program?',
+            'Five-state model transitions with reasons.',
+            'Compute average waiting for FCFS/SJF on a given table.',
+            'When does RR beat SJF for user perception?',
+          ],
+          pyqs: [],
+        },
+        {
+          title: 'Concurrency & Deadlock',
+          summary:
+            'Race = interleaving-dependent result. Critical section: mutual exclusion, progress, bounded waiting. Semaphores wait/signal. Producer-consumer: empty→mutex order. Coffman: ME, HW, NP, CW. Banker = avoidance. Lock ordering breaks circular wait.',
+          questions: [
+            'Three CS requirements.',
+            'Why wait(empty) before wait(mutex)?',
+            'Four deadlock conditions with one prevention each.',
+            'Banker vs prevention.',
+          ],
+          pyqs: [],
+        },
+        {
+          title: 'Memory & Virtual Memory',
+          summary:
+            'Virtual address = page# + offset; offset unchanged. TLB hit ratio → EAT. Multi-level page tables cut memory. Demand paging faults to disk. FIFO can Belady; LRU/OPT are stack algorithms. Working set + thrashing ⇒ reduce multiprogramming.',
+          questions: [
+            'Page size 4KB ⇒ how many offset bits?',
+            'EAT with given TLB hit rate.',
+            'Belady anomaly statement.',
+            'Working set and thrashing response.',
+          ],
+          pyqs: [],
+        },
+        {
+          title: 'File Systems & Disks',
+          summary:
+            'Inode vs name (hard links, open-after-delete). Contiguous/linked/indexed trade fragmentation vs access. SSTF can starve; SCAN/C-SCAN elevator; RAID 0/1/5/6 capacity and failure counts.',
+          questions: [
+            'Why does unlink of an open file not break the reader?',
+            'Contiguous vs linked allocation.',
+            'SSTF vs SCAN fairness.',
+            'RAID 5 usable capacity and failure tolerance.',
+          ],
+          pyqs: [],
+        },
+      ],
+      important_questions: [
+        'Process vs thread with shared and private resources listed.',
+        'SJF vs RR — which metric each optimizes.',
+        'Producer-consumer with correct semaphore order and a short proof of no overflow.',
+        'Four Coffman conditions and how lock ordering prevents deadlock.',
+        'Paging address translation and TLB effective access time.',
+        'FIFO vs LRU fault counts on a short reference string.',
+        'Inode model explanation of deleted-but-open files.',
+        'RAID 5: capacity formula and how many disks can fail.',
+      ],
+      previous_year_questions: [
+        {
+          year: '2024',
+          question:
+            'Consider processes with arrival time 0 and bursts 24, 3, 3 (ms). Compute average waiting time under FCFS and under SJF (non-preemptive).',
+          solution:
+            'FCFS order 24,3,3: waits 0,24,27 → avg 17. SJF order 3,3,24: waits 0,3,6 → avg 3.',
+        },
+        {
+          year: '2023',
+          question:
+            'Explain the four necessary conditions for deadlock. How does imposing a total order on lock acquisition prevent deadlock?',
+          solution:
+            'ME, hold-and-wait, no preemption, circular wait. Ordered acquisition makes a wait-for cycle impossible (edges only go low→high).',
+        },
+        {
+          year: '2025',
+          question:
+            'A system uses 4KB pages and a two-level page table on a 32-bit address space. Explain why two levels are used and what happens on a TLB miss.',
+          solution:
+            'Flat table would be huge; directory indexes a page table allocated on demand. TLB miss walks directory then PTE, loads frame, refills TLB, retries.',
+        },
+      ],
+    },
+    project: {
+      title: 'OS fundamentals design note',
+      brief:
+        'Write a short design note (4–6 pages or equivalent markdown) that: (1) solves one Gantt-chart scheduling problem and one page-replacement table by hand; (2) designs a correct bounded-buffer using semaphores and states the wait order; (3) sketches how you would diagnose thrashing on a busy server; (4) compares two RAID levels for a small lab cluster. Submit the note as PDF or a public markdown URL.',
+      submission_hint:
+        'PDF or public markdown link showing hand-worked tables (not screenshots of slides), the semaphore code sketch, and a one-page RAID recommendation.',
+      required_for_certificate: true,
+    },
+    exam: {
+      question_count: 15,
+      duration_minutes: 30,
+      passing_percent: 60,
+      retake_cooldown_hours: 24,
+      distinction_percent: 85,
+      bank: examBank,
+    },
+    modules: [module1, module2, module3, module4],
+  };
+}

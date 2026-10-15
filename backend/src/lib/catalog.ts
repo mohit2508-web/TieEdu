@@ -46,9 +46,11 @@ export function isCatalogSort(value: unknown): value is CatalogSort {
 export const CATALOG_PAGE_SIZE = 20;
 
 /** The filter dimensions the catalogue actually has data for. */
-export type CatalogFilterKey = 'category' | 'tag' | 'type' | 'level';
+export type CatalogFilterKey = 'branch' | 'bucket' | 'category' | 'tag' | 'type' | 'level';
 
 export const CATALOG_FILTER_GROUPS = [
+  { key: 'branch', label: 'Branch', param: 'branch' },
+  { key: 'bucket', label: 'Course bucket', param: 'bucket' },
   { key: 'category', label: 'Category', param: 'category' },
   { key: 'tag', label: 'Topic', param: 'tag' },
   { key: 'type', label: 'Course type', param: 'type' },
@@ -57,6 +59,8 @@ export const CATALOG_FILTER_GROUPS = [
 
 export interface CatalogQuery {
   q: string;
+  branch: string[];
+  bucket: string[];
   category: string[];
   tag: string[];
   type: string[];
@@ -87,6 +91,8 @@ export function parseCatalogQuery(query: Record<string, unknown>): CatalogQuery 
 
   return {
     q: String(query.q || '').trim().toLowerCase().slice(0, 120),
+      branch: toList(query.branch),
+      bucket: toList(query.bucket),
       category: toList(query.category),
       tag: toList(query.tag),
       // Raw tokens are kept rather than filtered down to the two valid ones.
@@ -273,6 +279,8 @@ function matchesQuery(course: Course, needle: string): boolean {
 export function filterCourses(courses: Course[], query: CatalogQuery): Course[] {
   return courses.filter((course) => {
     if (!matchesQuery(course, query.q)) return false;
+    if (query.branch.length && !query.branch.includes(String(course.branch || '').toLowerCase())) return false;
+    if (query.bucket.length && !query.bucket.includes(String(course.bucket || '').toLowerCase())) return false;
     if (query.category.length && !query.category.includes((course.category || '').toLowerCase())) return false;
     if (query.level.length && !query.level.includes((course.level || '').toLowerCase())) return false;
     if (query.type.length) {
@@ -355,6 +363,8 @@ export interface FacetOption {
 }
 
 export interface CatalogFacets {
+  branch: FacetOption[];
+  bucket: FacetOption[];
   category: FacetOption[];
   tag: FacetOption[];
   type: FacetOption[];
@@ -365,6 +375,28 @@ const LEVEL_LABELS: Record<string, string> = {
   beginner: 'Beginner',
   intermediate: 'Intermediate',
   advanced: 'Advanced',
+};
+
+/** Human labels for branch keys (the stored value is the bare key). */
+const BRANCH_LABELS: Record<string, string> = {
+  year1: 'Year-1 Common',
+  cse: 'Computer Science & IT',
+  'ai-ds': 'AI & Data Science',
+  ece: 'Electronics & Communication',
+  eee: 'Electrical & Electronics',
+  mech: 'Mechanical',
+  civil: 'Civil',
+  career: 'Career & Placement',
+  tools: 'Industry Tools',
+};
+
+/** Human labels for bucket keys; the leading letter keeps the A→E order visible. */
+const BUCKET_LABELS: Record<string, string> = {
+  a: 'A · Year-1 Common',
+  b: 'B · Branch Core',
+  c: 'C · Industry Tools',
+  d: 'D · Career',
+  e: 'E · Micro-course',
 };
 
 /**
@@ -403,6 +435,8 @@ export function buildFacets(courses: Course[], query: CatalogQuery): CatalogFace
 
   const othersApplied = (skip: CatalogFilterKey) => {
     const narrowed: CatalogQuery = { ...query };
+    if (skip === 'branch') narrowed.branch = [];
+    if (skip === 'bucket') narrowed.bucket = [];
     if (skip === 'category') narrowed.category = [];
     if (skip === 'tag') narrowed.tag = [];
     if (skip === 'type') narrowed.type = [];
@@ -421,6 +455,13 @@ export function buildFacets(courses: Course[], query: CatalogQuery): CatalogFace
   }
 
   return {
+    branch: countBy(othersApplied('branch'), (c) => [c.branch || '']).map((o) => ({
+      ...o,
+      label: BRANCH_LABELS[o.key] || o.label,
+    })),
+    bucket: countBy(othersApplied('bucket'), (c) => [c.bucket || ''])
+      .map((o) => ({ ...o, label: BUCKET_LABELS[o.key] || o.label }))
+      .sort((a, b) => a.key.localeCompare(b.key)),
     category: countBy(othersApplied('category'), (c) => [c.category || '']),
     tag: countBy(othersApplied('tag'), (c) => c.tags || []),
     type: [

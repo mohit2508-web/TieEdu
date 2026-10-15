@@ -9,6 +9,7 @@ import {
 import { summarizePackItems, isCompanyItem, isModuleItem, isCourseItem, SINGLE_MODULE_PRICE, COMPLETE_PACK_PRICE, packPrice } from '@/lib/packPricing';
 import { useCart } from '@/context/CartContext';
 import { useShell } from '@/context/ShellContext';
+import { PENDING_COUPON_KEY } from '@/components/home/OffersStrip';
 import { Sheet } from '@/components/common/Sheet';
 import {
   X, ShoppingBag, Lock, ShieldCheck, CheckCircle2, Trash2,
@@ -96,6 +97,31 @@ export const CartModal: React.FC = () => {
     return () => { cancelled = true; };
   }, [isOpenNow]);
 
+  // A coupon staged by an offer click (`?coupon=` in the URL, or the pending
+  // key the offers strip writes) is applied once here, through the same
+  // server validation as a hand-typed code — never trusted from the URL.
+  const stagedCouponConsumed = React.useRef(false);
+  useEffect(() => {
+    if (!isOpenNow || stagedCouponConsumed.current || appliedCouponCode) return;
+    let staged: string | null = null;
+    try {
+      staged = new URLSearchParams(window.location.search).get('coupon');
+      if (!staged) staged = window.localStorage.getItem(PENDING_COUPON_KEY);
+    } catch {
+      // No URL or storage access: the manual coupon box still works.
+    }
+    staged = (staged || '').trim().toUpperCase();
+    if (!staged) return;
+    stagedCouponConsumed.current = true;
+    try {
+      window.localStorage.removeItem(PENDING_COUPON_KEY);
+    } catch {
+      // Best effort; a stale key simply stages again next open.
+    }
+    void applyCouponHandler(staged);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpenNow]);
+
   // Reset per-open state (order/step) so reopening never shows a stale order.
   useEffect(() => {
     if (isOpenNow) {
@@ -104,6 +130,11 @@ export const CartModal: React.FC = () => {
       setPayError(null);
       setCopied(false);
       if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+    } else {
+      // The staged coupon is single-shot per drawer session: closing without
+      // buying re-arms it, so a second look at the cart re-applies the offer
+      // instead of silently dropping it.
+      stagedCouponConsumed.current = false;
     }
   }, [isOpenNow]);
 
@@ -116,7 +147,11 @@ export const CartModal: React.FC = () => {
     setApplyingCoupon(true);
     setCouponMessage(null);
     try {
-      const res = await validateCouponApi(cleanCode, summary.subtotal);
+      // Course ids ride along so a scoped coupon ("only GenAI") answers for
+      // THIS cart instead of the subtotal alone. The server re-resolves every
+      // line against the catalogue at order time — this is context, not trust.
+      const courseIds = items.filter(isCourseItem).map((c: any) => c.course_id || c.id).filter(Boolean);
+      const res = await validateCouponApi(cleanCode, summary.subtotal, courseIds);
       if (res.valid) {
         setDiscount(res.discount || 0);
         setAppliedCouponCode(cleanCode);

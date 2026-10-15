@@ -10,11 +10,11 @@
 // malformed filter must degrade to "no filter" rather than throw during render.
 // ============================================================================
 
-import type { CatalogFilters, CatalogSortKey, FacetOption } from '@/types';
+import type { CatalogFacets, CatalogFilters, CatalogSortKey } from '@/types';
 import { EMPTY_CATALOG_FILTERS } from '@/types';
 import { formatLevel } from './courseFormat';
 
-export const CATALOG_MULTI_KEYS = ['category', 'tag', 'type', 'level'] as const;
+export const CATALOG_MULTI_KEYS = ['branch', 'bucket', 'category', 'tag', 'type', 'level'] as const;
 export type CatalogMultiKey = (typeof CATALOG_MULTI_KEYS)[number];
 
 export const CATALOG_SORT_KEYS: CatalogSortKey[] = ['popular', 'newest', 'rating', 'az', 'za'];
@@ -49,6 +49,8 @@ const toPage = (raw: string | string[] | undefined): number => {
 
 export const parseCatalogQuery = (query: QueryLike): CatalogFilters & { page: number } => ({
   q: typeof query.q === 'string' ? query.q.slice(0, 120) : '',
+  branch: toList(query.branch).map((v) => v.toLowerCase()),
+  bucket: toList(query.bucket).map((v) => v.toLowerCase()),
   category: toList(query.category),
   tag: toList(query.tag),
   type: toList(query.type).map((v) => v.toLowerCase()),
@@ -91,7 +93,7 @@ export const countActiveFilters = (filters: CatalogFilters): number =>
 /** Human labels for the active-filter pills, resolved against the real facets. */
 export const activeFilterLabels = (
   filters: CatalogFilters,
-  facets: { level: FacetOption[]; type: FacetOption[]; category: FacetOption[]; tag: FacetOption[] }
+  facets: CatalogFacets
 ): { key: CatalogMultiKey; value: string; label: string }[] => {
   const out: { key: CatalogMultiKey; value: string; label: string }[] = [];
   for (const key of CATALOG_MULTI_KEYS) {

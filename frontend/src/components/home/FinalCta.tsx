@@ -7,8 +7,8 @@ import { Reveal } from '@/components/home/Reveal';
 /*
  * The page ended on pricing tables — the last thing a hesitant visitor read
  * was a wall of rupees. This closes on the free entry points instead: the
- * free pack, the feed, the free course, and (when the browser offers it) the
- * home-screen install.
+ * free pack, the feed, the free courses catalogue, and (when the browser
+ * offers it) the home-screen install.
  */
 export const FinalCta: React.FC = () => (
   <section className="pb-6 pt-2 bg-white border-t border-[#E9E7E1]">
@@ -35,6 +35,12 @@ export const FinalCta: React.FC = () => (
               className="btn btn-ghost w-full sm:w-auto min-h-[48px] justify-center px-6 py-3.5 text-[15px] focus-ring"
             >
               <Newspaper className="w-4 h-4" /> Open the career feed
+            </Link>
+            <Link
+              href="/courses?src=finalcta"
+              className="btn btn-ghost w-full sm:w-auto min-h-[48px] justify-center px-6 py-3.5 text-[15px] focus-ring"
+            >
+              Browse free courses
             </Link>
           </div>
           <div className="flex justify-center pt-1">

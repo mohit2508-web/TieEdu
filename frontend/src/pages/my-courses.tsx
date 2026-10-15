@@ -4,11 +4,23 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { Footer } from '@/components/layout/Footer';
 import { ProgressBar } from '@/components/courses/CourseUi';
-import { Award, Download } from 'lucide-react';
+import { tierStyle } from '@/components/courses/CertificatePreview';
+import { Award, Download, Gift } from 'lucide-react';
 import { fetchMyCourses, downloadCertificatePdf, certificateDownloadPath } from '@/lib/coursesApi';
 import { useAuth } from '@/context/AuthContext';
-import { formatDate } from '@/lib/date';
+import { formatDate, formatRelative } from '@/lib/date';
+import { formatLevel } from '@/lib/courseFormat';
 import type { MyCoursesCourse, MyCertificate } from '@/types';
+
+/** Small colour-coded chip used for level, tier and distinction labels. */
+const Chip: React.FC<{ label: string; color?: string; soft?: string }> = ({ label, color, soft }) => (
+  <span
+    className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide"
+    style={color ? { color, background: soft } : undefined}
+  >
+    {label}
+  </span>
+);
 
 export default function MyCoursesPage() {
   const router = useRouter();
@@ -128,29 +140,56 @@ export default function MyCoursesPage() {
             {inProgress.length > 0 && (
               <Section title="In progress">
                 <div className="grid gap-4 sm:grid-cols-2">
-                  {inProgress.map((course) => (
-                    <Link
-                      key={course.id}
-                      href={`/courses/${course.slug}`}
-                      className="rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5 transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-raised)]"
-                    >
-                      <h3 className="text-base font-bold text-[var(--ink)]">{course.title}</h3>
-                      <p className="mt-1 line-clamp-2 text-sm text-[var(--text-body)]">
-                        {course.subtitle}
-                      </p>
-                      <div className="mt-4">
-                        <ProgressBar
-                          percent={course.progress.percent}
-                          label={`${course.progress.completed} of ${course.progress.total}`}
-                        />
-                      </div>
-                      {course.progress.next_lesson_id && (
-                        <p className="mt-3 text-[11px] font-semibold text-[var(--brand-sky)]">
-                          Continue where you left off →
+                  {inProgress.map((course) => {
+                    const tier = tierStyle(course.certificate_tier);
+                    const left = Math.max(0, (course.progress.total || 0) - (course.progress.completed || 0));
+                    // Only promise the extra gates when the row's booleans say
+                    // the course actually has them — no guessing from the UI.
+                    const gates: string[] = [];
+                    if (course.exam_required) gates.push('final exam');
+                    if (course.project_required) gates.push('capstone project');
+                    return (
+                      <Link
+                        key={course.id}
+                        href={`/courses/${course.slug}`}
+                        className="rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5 transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-raised)]"
+                      >
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <Chip label={formatLevel(course.level)} />
+                          {course.certificate_eligible && (
+                            <Chip label={`${tier.label} cert`} color={tier.accent} soft={tier.soft} />
+                          )}
+                        </div>
+                        <h3 className="mt-2 text-base font-bold text-[var(--ink)]">{course.title}</h3>
+                        <p className="mt-1 line-clamp-2 text-sm text-[var(--text-body)]">
+                          {course.subtitle}
                         </p>
-                      )}
-                    </Link>
-                  ))}
+                        <div className="mt-4">
+                          <ProgressBar
+                            percent={course.progress.percent}
+                            label={`${course.progress.completed} of ${course.progress.total}`}
+                          />
+                        </div>
+                        {course.last_activity_at && (
+                          <p className="mt-3 text-[11px] text-[var(--text-muted)]">
+                            Last active {formatRelative(course.last_activity_at)}
+                          </p>
+                        )}
+                        {left > 0 && course.certificate_eligible && (
+                          <p className="mt-1.5 text-[11px] font-semibold text-[var(--brand-sky)]">
+                            {left} lesson{left === 1 ? '' : 's'} from your {tier.label} certificate
+                            {gates.length > 0 ? ` + ${gates.join(' + ')}` : ''} →
+                          </p>
+                        )}
+                        {course.perks && course.perks.length > 0 && (
+                          <p className="mt-2 flex items-center gap-1 text-[11px] text-[var(--text-muted)]">
+                            <Gift size={12} className="shrink-0" />
+                            {course.perks.map((p) => p.label).join(' · ')}
+                          </p>
+                        )}
+                      </Link>
+                    );
+                  })}
                 </div>
               </Section>
             )}
@@ -158,45 +197,68 @@ export default function MyCoursesPage() {
             {completed.length > 0 && (
               <Section title="Completed">
                 <div className="grid gap-4 sm:grid-cols-2">
-                  {completed.map((course) => (
-                    <div
-                      key={course.id}
-                      className="rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5"
-                    >
-                      <div className="flex items-start gap-2">
-                        <Award size={16} className="mt-0.5 shrink-0 text-[var(--color-success)]" />
-                        <div className="min-w-0">
-                          <h3 className="text-base font-bold text-[var(--ink)]">{course.title}</h3>
-                          <p className="mt-1 text-xs text-[var(--text-muted)]">
-                            {course.has_certificate ? 'Certificate issued' : 'Certificate not yet claimed'}
-                          </p>
+                  {completed.map((course) => {
+                    const tier = tierStyle(course.certificate_tier);
+                    const cert = certificates.find((x) => x.course_id === course.id);
+                    return (
+                      <div
+                        key={course.id}
+                        className="rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5"
+                      >
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <Chip label={formatLevel(course.level)} />
+                          {course.certificate_eligible && (
+                            <Chip label={`${tier.label} cert`} color={tier.accent} soft={tier.soft} />
+                          )}
+                          {cert?.distinction && (
+                            <Chip label="With distinction" color="#1B7A4B" soft="#E4F6EC" />
+                          )}
+                        </div>
+                        <div className="mt-2 flex items-start gap-2">
+                          <Award size={16} className="mt-0.5 shrink-0 text-[var(--color-success)]" />
+                          <div className="min-w-0">
+                            <h3 className="text-base font-bold text-[var(--ink)]">{course.title}</h3>
+                            <p className="mt-1 text-xs text-[var(--text-muted)]">
+                              {course.has_certificate ? 'Certificate issued' : 'Certificate not yet claimed'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          <Link
+                            href={`/courses/${course.slug}`}
+                            className="rounded-lg border border-[var(--border-strong)] px-3 py-1.5 text-xs font-bold text-[var(--ink)] hover:bg-[var(--bg-surface-hover)]"
+                          >
+                            Review
+                          </Link>
+                          {course.has_certificate && (
+                            <button
+                              type="button"
+                              onClick={() => { if (cert) download(cert); }}
+                              className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--brand-sky)] px-3 py-1.5 text-xs font-bold text-white hover:bg-[var(--brand-sky-strong)]"
+                            >
+                              <Download size={13} /> PDF
+                            </button>
+                          )}
                         </div>
                       </div>
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        <Link
-                          href={`/courses/${course.slug}`}
-                          className="rounded-lg border border-[var(--border-strong)] px-3 py-1.5 text-xs font-bold text-[var(--ink)] hover:bg-[var(--bg-surface-hover)]"
-                        >
-                          Review
-                        </Link>
-                        {course.has_certificate && (
-                          <button
-                            type="button"
-                            onClick={() => { const c = certificates.find((x) => x.course_id === course.id); if (c) download(c); }}
-                            className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--brand-sky)] px-3 py-1.5 text-xs font-bold text-white hover:bg-[var(--brand-sky-strong)]"
-                          >
-                            <Download size={13} /> PDF
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </Section>
             )}
 
             {certificates.length > 0 && (
-              <Section title="Certificates">
+              <Section
+                title="Certificates"
+                action={
+                  <Link
+                    href="/my-certificates"
+                    className="text-xs font-semibold text-[var(--brand-sky)] underline underline-offset-2"
+                  >
+                    View gallery →
+                  </Link>
+                }
+              >
                 <div className="overflow-x-auto rounded-[var(--radius-md)] border border-[var(--border-subtle)]">
                   <table className="w-full text-left text-sm">
                     <thead>
@@ -212,7 +274,16 @@ export default function MyCoursesPage() {
                       {certificates.map((c) => (
                         <tr key={c.serial} className="border-t border-[var(--border-subtle)]">
                           <td className="px-4 py-2.5 font-mono text-xs">{c.serial}</td>
-                          <td className="px-4 py-2.5 text-[var(--text-body)]">{c.course_title}</td>
+                          <td className="px-4 py-2.5 text-[var(--text-body)]">
+                            <span className="flex flex-wrap items-center gap-1.5">
+                              {c.course_title}
+                              {c.tier && (() => {
+                                const tier = tierStyle(c.tier);
+                                return <Chip label={tier.label} color={tier.accent} soft={tier.soft} />;
+                              })()}
+                              {c.distinction && <Chip label="With distinction" color="#1B7A4B" soft="#E4F6EC" />}
+                            </span>
+                          </td>
                           <td className="px-4 py-2.5 text-xs text-[var(--text-muted)]">
                             {formatDate(c.issued_at)}
                           </td>
@@ -260,9 +331,12 @@ export default function MyCoursesPage() {
   );
 }
 
-const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
+const Section: React.FC<{ title: string; action?: React.ReactNode; children: React.ReactNode }> = ({ title, action, children }) => (
   <section className="mt-10">
-    <h2 className="mb-4 text-lg font-bold text-[var(--ink)]">{title}</h2>
+    <div className="mb-4 flex items-center justify-between gap-3">
+      <h2 className="text-lg font-bold text-[var(--ink)]">{title}</h2>
+      {action}
+    </div>
     {children}
   </section>
 );

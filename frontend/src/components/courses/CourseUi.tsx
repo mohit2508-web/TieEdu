@@ -1,7 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Check, Lock, PlayCircle, FileText, Clock, Award, Star, Users, Layers, X } from 'lucide-react';
+import { Check, Lock, PlayCircle, FileText, Clock, Award, Star, Users, Layers, X, Gift } from 'lucide-react';
 import type { CourseAccess, CourseCard, CourseLessonView, CourseProgress, CourseStats, LessonCompletionState } from '@/types';
 import { apiAssetUrl, isApiAssetUrl } from '@/lib/api';
 import { Skeleton, SkeletonText } from '@/components/common/Skeleton';
@@ -339,7 +339,13 @@ export const CourseCover: React.FC<{
    * small but sharp" rather than "sharp but enormous".
    */
   sizes?: string;
-    }> = ({ slug, title, thumbnailUrl, className, priority, sizes = '168px' }) => {
+  /**
+   * Accessibility text for the cover. Empty (the default) means the image is
+   * decorative and a screen reader should skip it; a real alt string is used
+   * when the admin filled one in via the cover editor.
+   */
+  alt?: string;
+    }> = ({ slug, title, thumbnailUrl, className, priority, sizes = '168px', alt = '' }) => {
     const [loaded, setLoaded] = React.useState(false);
     const cover = courseCover(slug, title);
     // Uploaded covers are stored as server-relative paths ("/api/..."), and the
@@ -390,7 +396,7 @@ export const CourseCover: React.FC<{
         {isApiAssetUrl(src) ? (
           <Image
             src={src}
-            alt=""
+            alt={alt}
             fill
             sizes={sizes}
             priority={priority}
@@ -402,7 +408,7 @@ export const CourseCover: React.FC<{
           // eslint-disable-next-line @next/next/no-img-element -- non-API host, the optimizer would 400, see above
           <img
             src={src}
-            alt=""
+            alt={alt}
             loading={priority ? 'eager' : 'lazy'}
             /* `fetchpriority` on a plain <img> is what a LCP element needs; a
                lazy-loaded hero also reports a late LCP because the load is not
@@ -474,6 +480,7 @@ export const CourseRowCard: React.FC<{ course: CourseCard }> = ({ course }) => {
           slug={course.slug}
           title={course.title}
           thumbnailUrl={course.thumbnail_url}
+          alt={course.thumbnail_alt || ''}
           className="h-20 w-20 rounded-[var(--radius-md)] sm:h-[76px] sm:w-[168px]"
           /* Exact: `w-20` is 80px on a phone, `sm:w-[168px]` above it. */
           sizes="(min-width: 640px) 168px, 80px"
@@ -514,6 +521,11 @@ export const CourseRowCard: React.FC<{ course: CourseCard }> = ({ course }) => {
           </div>
 
           <div className="mt-3 flex flex-wrap items-center gap-2">
+            {course.active_offer && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[11px] font-bold text-[#B91C1C]">
+                {course.active_offer.badge}
+              </span>
+            )}
             {course.is_free && <CourseBadge kind="new" label="Free" />}
             {badges.map((b) => (
               <CourseBadge key={b} kind={b} />
@@ -521,6 +533,19 @@ export const CourseRowCard: React.FC<{ course: CourseCard }> = ({ course }) => {
             {course.certificate_eligible && (
               <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--text-muted)]">
                 <Award size={12} /> Certificate
+              </span>
+            )}
+            {(course.perks || []).length > 0 && (
+              <span
+                className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--text-muted)]"
+                title={(course.perks || []).map((p) => p.label).join(' · ')}
+              >
+                <Gift size={12} />
+                {(course.perks || [])
+                  .slice(0, 2)
+                  .map((p) => p.label)
+                  .join(' · ')}
+                {(course.perks || []).length > 2 ? ` · +${(course.perks || []).length - 2} more` : ''}
               </span>
             )}
           </div>

@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Plus, Search, Save, ExternalLink } from 'lucide-react';
-import type { AdminCourseListItem, AdminCourseForEditor, CourseInstructor, CourseLevel } from '@/types';
+import type { AdminCourseListItem, AdminCourseForEditor, CourseInstructor, CourseLevel, CourseHealth } from '@/types';
 import {
   fetchAdminCourses,
   fetchAdminCourse,
   createAdminCourse,
   updateAdminCourse,
+  uploadCourseThumbnail,
   fetchInstructors,
   createInstructor,
   updateInstructor,
@@ -13,6 +14,9 @@ import {
 } from '@/lib/coursesApi';
 import { Btn, Panel, Field, TextInput, TextArea, Select, Toggle, ErrorNote, OkNote, Loading, Empty, Pill } from './CourseAdminUi';
 import { AdminCourseEditor } from './AdminCourseEditor';
+import { CourseHealthPanel } from './CourseHealthPanel';
+import { CourseThumbnailEditor } from '@/components/courses/CourseThumbnailEditor';
+import { ExamPrepEditor } from './ExamPrepEditor';
 
 const LEVELS: CourseLevel[] = ['beginner', 'intermediate', 'advanced'];
 
@@ -27,8 +31,9 @@ const toList = (raw: string) =>
 
 const CourseMetaForm: React.FC<{
   course: AdminCourseForEditor;
+  health?: CourseHealth | null;
   onSaved: () => Promise<void> | void;
-}> = ({ course, onSaved }) => {
+}> = ({ course, health, onSaved }) => {
   const [form, setForm] = useState({
     title: course.title,
     slug: course.slug,
@@ -50,10 +55,16 @@ const CourseMetaForm: React.FC<{
     audio_language: course.audio_language || '',
     caption_language: course.caption_language || '',
     instructor_id: course.instructor_id || '',
+    thumbnail_alt: course.thumbnail_alt ?? '',
+    offer_badge_enabled: course.offer_badge_enabled !== false,
   });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
+  // The health list is server-derived and refreshed after every successful save
+  // or publish so the checklist always matches what the gate will enforce.
+  const [panelHealth, setPanelHealth] = useState<CourseHealth | null>(health ?? null);
+  const [publishing, setPublishing] = useState(false);
 
   // Re-seed the form whenever the *server's* view of the course changes.
   //
@@ -84,6 +95,8 @@ const CourseMetaForm: React.FC<{
     audio_language: course.audio_language || '',
     caption_language: course.caption_language || '',
     instructor_id: course.instructor_id || '',
+    thumbnail_alt: course.thumbnail_alt ?? '',
+    offer_badge_enabled: course.offer_badge_enabled !== false,
   };
   const seedKey = JSON.stringify(seed);
   const lastSeedKey = useRef<string | null>(null);
@@ -138,6 +151,8 @@ const CourseMetaForm: React.FC<{
         // meaning "unassign the teacher", and sending an empty string would look
         // like a malformed id to the server instead of an explicit unassignment.
         instructor_id: form.instructor_id || null,
+        thumbnail_alt: form.thumbnail_alt.trim(),
+        offer_badge_enabled: form.offer_badge_enabled,
       });
       setOk(true);
       await onSaved();
@@ -145,6 +160,34 @@ const CourseMetaForm: React.FC<{
       setError(e instanceof Error ? e.message : 'Could not save the course');
     } finally {
       setBusy(false);
+    }
+  };
+
+  /**
+   * Publish through the same PUT route the form uses. The server re-runs
+   * `courseHealthFor` on every write and refuses with 400 + `blockers`, so the
+   * button only has to surface that refusal -- the checklist cannot drift from
+   * the gate.
+   */
+  const publish = async () => {
+    setPublishing(true);
+    setError(null);
+    try {
+      await updateAdminCourse(course.id, { published: true });
+      const res = await fetchAdminCourse(course.id);
+      setPanelHealth(res.health);
+      await onSaved();
+      setOk(true);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Could not publish';
+      setError(msg);
+      // Pull the authoritative checklist so the panel shows why.
+      try {
+        const res = await fetchAdminCourse(course.id);
+        setPanelHealth(res.health);
+      } catch { /* the save error is the one worth showing */ }
+    } finally {
+      setPublishing(false);
     }
   };
 
@@ -241,6 +284,23 @@ const CourseMetaForm: React.FC<{
         </div>
       </Panel>
 
+      {/* ---------------------------------------------------------------------
+          Semester Exam Mode — board-wise units, important questions, PYQs.
+          Self-saving (it PUTs its own payload through the course update route),
+          so it sits beside the meta form rather than inside its save. The
+          parent's onSaved re-fetches the course, which reseeds both forms.
+          --------------------------------------------------------------------- */}
+      <Panel
+        title="Semester Exam Mode"
+        subtitle="Units, important questions and previous-year questions students revise before their board/university exams."
+      >
+        <ExamPrepEditor
+          courseId={course.id}
+          examPrep={course.exam_prep ?? null}
+          onSaved={() => onSaved()}
+        />
+      </Panel>
+
       <div className="grid sm:grid-cols-2 gap-4 pt-1">
         <Toggle
           checked={form.is_free}
@@ -272,7 +332,41 @@ const CourseMetaForm: React.FC<{
           label="Published"
           hint="Unpublished courses are invisible in the catalogue and cannot be enrolled in."
         />
+        <Toggle
+          checked={form.offer_badge_enabled}
+          onChange={(v) => set({ offer_badge_enabled: v })}
+          label="Show live offer badge on the card"
+          hint="Only appears while a real, unexpired coupon discounts this paid course. Free courses never show it."
+        />
       </div>
+
+      {/* Cover editor + alt text. It owns its own upload lifecycle and revalidates
+          the course through `onChanged`, so it sits outside the main form state. */}
+      <CourseThumbnailEditor
+        courseId={course.id}
+        slug={course.slug}
+        title={course.title}
+        currentThumbnailUrl={course.thumbnail_url}
+        alt={course.thumbnail_alt}
+        onChanged={async () => {
+          // Refresh the course + health so the checklist sees the new cover.
+          try {
+            const res = await fetchAdminCourse(course.id);
+            setPanelHealth(res.health);
+          } catch { /* non-fatal: the upload already succeeded */ }
+          await onSaved();
+        }}
+        onAltChange={(alt) => set({ thumbnail_alt: alt })}
+      />
+
+      {/* Server-derived publish checklist. Rendered from the same payload the
+          gate enforces, so the two can never disagree. */}
+      <CourseHealthPanel
+        health={panelHealth}
+        published={form.published}
+        busy={publishing}
+        onPublish={publish}
+      />
 
       <div className="flex items-center gap-3">
         <Btn variant="primary" onClick={save} busy={busy}>
@@ -288,6 +382,7 @@ export const AdminCoursesTab: React.FC = () => {
   const [courses, setCourses] = useState<AdminCourseListItem[]>([]);
   const [openId, setOpenId] = useState<string | null>(null);
   const [detail, setDetail] = useState<AdminCourseForEditor | null>(null);
+  const [health, setHealth] = useState<CourseHealth | null>(null);
   const [q, setQ] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -330,14 +425,17 @@ export const AdminCoursesTab: React.FC = () => {
     if (openId === id) {
       setOpenId(null);
       setDetail(null);
+      setHealth(null);
       return;
     }
     setOpenId(id);
     setDetail(null);
+    setHealth(null);
     setError(null);
     try {
       const data = await fetchAdminCourse(id);
       setDetail(data.course);
+      setHealth(data.health ?? null);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not load the course');
     }
@@ -486,7 +584,9 @@ export const AdminCoursesTab: React.FC = () => {
         ) : courses.length === 0 ? (
           <Empty>No courses yet. Create the first one.</Empty>
         ) : (
-          <div className="space-y-2">
+          <>
+            <BulkCoverUploader courses={courses} onDone={load} />
+            <div className="space-y-2">
             {courses.map((c) => (
               <div key={c.id} className="rounded-xl border border-[#E9E7E1] overflow-hidden">
                 <button
@@ -521,11 +621,11 @@ export const AdminCoursesTab: React.FC = () => {
                   <div className="border-t border-[#EDEDEB] bg-white p-4">
                     {detail && detail.id === c.id ? (
                       <div className="space-y-6">
-                        <AdminCourseEditor course={detail} onChanged={load} onBack={() => { setOpenId(null); setDetail(null); }} />
+                        <AdminCourseEditor course={detail} onChanged={load} onBack={() => { setOpenId(null); setDetail(null); setHealth(null); }} />
                         <hr className="border-[#EDEDEB]" />
                         <div>
                           <h3 className="text-[13px] font-bold text-[#10151C] mb-3">Course details</h3>
-                          <CourseMetaForm course={detail} onSaved={load} />
+                          <CourseMetaForm course={detail} health={health} onSaved={load} />
                         </div>
                       </div>
                     ) : (
@@ -535,7 +635,8 @@ export const AdminCoursesTab: React.FC = () => {
                 )}
               </div>
             ))}
-          </div>
+            </div>
+          </>
         )}
       </Panel>
     </div>
@@ -826,5 +927,78 @@ const InstructorPicker: React.FC<{
         </div>
       )}
     </Field>
+  );
+};
+
+/**
+ * Bulk cover upload for the courses list.
+ *
+ * Files are matched to courses by filename stem against the course slug, so an
+ * admin can export covers as `my-slug.webp` and drop them all at once instead of
+ * opening each course. Every path goes through the same per-course upload route
+ * the single editor uses, so the server's size/type checks stay authoritative.
+ */
+const BulkCoverUploader: React.FC<{ courses: AdminCourseListItem[]; onDone: () => void }> = ({ courses, onDone }) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  const pick = () => inputRef.current?.click();
+
+  const handle = async (files: FileList | null) => {
+    if (!files?.length) return;
+    setBusy(true);
+    setError(null);
+    const lines: string[] = [];
+    for (const file of Array.from(files)) {
+      const stem = file.name.replace(/\.[^.]+$/, '').trim().toLowerCase();
+      const match = courses.find((c) => c.slug === stem || c.id === stem);
+      if (!match) {
+        lines.push(`${file.name}: no course with slug/id "${stem}"`);
+        continue;
+      }
+      try {
+        await uploadCourseThumbnail(match.id, file);
+        lines.push(`${file.name}: uploaded to "${match.title}"`);
+      } catch (e) {
+        lines.push(`${file.name}: ${e instanceof Error ? e.message : 'failed'}`);
+      }
+    }
+    setResult(lines);
+    setBusy(false);
+    onDone();
+  };
+
+  return (
+    <div className="rounded-xl border border-[#E9E7E1] bg-[#FCFBF8] p-3 mb-3">
+      <input
+        ref={inputRef}
+        type="file"
+        multiple
+        accept=".jpg,.jpeg,.png,.webp,.avif"
+        className="sr-only"
+        onChange={(e) => {
+          void handle(e.target.files);
+          e.target.value = '';
+        }}
+      />
+      <div className="flex flex-wrap items-center gap-2">
+        <Btn onClick={pick} busy={busy}>
+          Upload covers in bulk
+        </Btn>
+        <span className="text-[12px] text-[#6B7280]">
+          Name each file after the course slug (e.g. <span className="font-mono">dbms-fundamentals.webp</span>).
+        </span>
+      </div>
+      {error && <p className="mt-2 text-[12px] text-[#B91C1C]">{error}</p>}
+      {result.length > 0 && (
+        <ul className="mt-2 space-y-0.5 text-[12px] text-[#374151]">
+          {result.map((line) => (
+            <li key={line}>{line}</li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 };

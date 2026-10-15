@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { getSeedCourses } from './seedCourses';
+import { getSeedTracks } from './seedTracks';
 import { seedStudyPlanTemplates } from './seedStudyPlans';
 
 export interface ReportItem {
@@ -292,6 +293,145 @@ export type StaffRole =
 export type CourseLevel = 'beginner' | 'intermediate' | 'advanced';
 export type VideoProvider = 'youtube' | 'vimeo';
 
+/**
+ * Adoption dimensions (see COURSE_EXPANSION_PLAN.md). These are additive and
+ * optional on purpose: records written before the fields existed stay valid, and
+ * `withCourseDimensions` backfills a sensible value on load.
+ */
+
+/** Branch/audience a course belongs to. `year1`/`career`/`tools` cover the
+ *  cross-branch buckets. */
+export const COURSE_BRANCHES = [
+  'year1',
+  'cse',
+  'ai-ds',
+  'ece',
+  'eee',
+  'mech',
+  'civil',
+  'career',
+  'tools',
+] as const;
+export type CourseBranch = (typeof COURSE_BRANCHES)[number];
+
+/** Why a student would take the course. */
+export const COURSE_BUCKETS = ['A', 'B', 'C', 'D', 'E'] as const;
+export type CourseBucket = (typeof COURSE_BUCKETS)[number];
+
+/** Certificate tier; derived from level/bucket unless explicitly overridden. */
+export const CERT_TIERS = ['foundation', 'professional', 'premium', 'career_track'] as const;
+export type CertTier = (typeof CERT_TIERS)[number];
+
+/** Difficulty tag on an exam-bank question; drives the per-attempt mix. */
+export const EXAM_DIFFICULTIES = ['easy', 'medium', 'hard'] as const;
+export type ExamDifficulty = (typeof EXAM_DIFFICULTIES)[number];
+
+/**
+ * A question in a final-exam bank, carrying the same answer-key discipline as a
+ * lesson quiz: `correct_index` never leaves the server before a submitted
+ * attempt, and only the exam engine reads it when grading.
+ */
+export interface ExamQuestion {
+  id: string;
+  prompt: string;
+  options: string[];
+  correct_index: number;
+  explanation: string;
+  difficulty: ExamDifficulty;
+  /** Optional module/unit tag, for targeted revision and the difficulty mix. */
+  topic?: string;
+}
+
+/**
+ * Final-exam configuration on a course.
+ *
+ * The bank lives here rather than in a shared collection so it travels with the
+ * course definition (see the plan's JSON-store scaling note). It is stripped by
+ * `sanitizeCourse` before the student API sees the course, so publishing the
+ * course never publishes its answers.
+ */
+export interface CourseExamConfig {
+  /** Questions drawn per attempt; never more than the bank holds. */
+  question_count: number;
+  duration_minutes: number;
+  /** Percent needed to pass an attempt. */
+  passing_percent: number;
+  /** Hours a failed learner must wait before a retake. */
+  retake_cooldown_hours: number;
+  /** First-attempt percent that earns "with Distinction". */
+  distinction_percent: number;
+  bank: ExamQuestion[];
+}
+
+/** Capstone project config for Premium / track courses. */
+export interface CourseProjectConfig {
+  title: string;
+  brief: string;
+  /** What the learner is expected to submit (repo URL, doc URL, …). */
+  submission_hint?: string;
+  /** When true, a submitted project is required before the certificate issues. */
+  required_for_certificate: boolean;
+}
+
+/** A reward a course promises, so copy never claims a perk the course lacks. */
+export interface CoursePerk {
+  key: string;
+  label: string;
+  detail?: string;
+}
+
+/** One previous-year question. `solution` is optional — many boards never publish one. */
+export interface CourseExamPrepPyq {
+  year: string;
+  question: string;
+  solution?: string;
+}
+
+/** One unit in the Semester Exam Mode payload. */
+export interface CourseExamPrepUnit {
+  title: string;
+  /** Condensed unit summary — the one-screen-per-unit revision notes. */
+  summary?: string;
+  /** Important questions for this unit, checkable by the learner. */
+  questions: string[];
+  /** Previous-year questions that belong to this unit specifically. */
+  pyqs?: CourseExamPrepPyq[];
+}
+
+/** Semester Exam Mode: university/board units, important Qs and PYQs. */
+export interface CourseExamPrep {
+  /** Board/course this prep targets, e.g. "AKTU · CSE Semester 3". */
+  target?: string;
+  units: CourseExamPrepUnit[];
+  important_questions?: string[];
+  previous_year_questions?: CourseExamPrepPyq[];
+}
+
+/** One final-exam attempt. Written only by the server exam engine. */
+export interface ExamAttempt {
+  id: string;
+  started_at: string;
+  submitted_at: string | null;
+  /** The questions drawn for this attempt, in the order they were shown. */
+  question_ids: string[];
+  score_percent: number | null;
+  passed: boolean;
+  /** False while an attempt is started but not yet submitted/graded. */
+  graded: boolean;
+}
+
+/** One module-test attempt. Same shape rules as ExamAttempt, scoped to a module. */
+export interface ModuleTestAttempt {
+  id: string;
+  module_id: string;
+  started_at: string;
+  submitted_at: string | null;
+  question_ids: string[];
+  score_percent: number | null;
+  passed: boolean;
+  graded: boolean;
+}
+
 export interface LessonVideo {
   provider: VideoProvider;
   /** Normalised watch page URL, exactly as the admin pasted it. */
@@ -341,7 +481,24 @@ export interface CourseModule {
   title: string;
   summary: string;
   sort_order: number;
+  /**
+   * End-of-module test. Randomised draw from `bank`, graded on the server —
+   * the same discipline as the final exam, but untimed and scoped to one
+   * module. Absent means the module has no test.
+   */
+  test?: CourseModuleTest;
   lessons: CourseLesson[];
+}
+
+/** A module test: a small bank drawn from at the end of a module. */
+export interface CourseModuleTest {
+  /** Questions drawn per attempt; clamped to the bank on draw. */
+  question_count: number;
+  /** Percent needed to pass. */
+  passing_percent: number;
+  /** Hours a failed learner must wait before a retake. 0 = immediate. */
+  retake_cooldown_hours: number;
+  bank: ExamQuestion[];
 }
 
 export interface Course {
@@ -356,6 +513,19 @@ export interface Course {
   is_free: boolean;
   price_inr: number;
   thumbnail_url: string;
+  /**
+   * Accessibility text for the cover. Optional: cards fall back to a generic
+   * "Cover for <title>" when it is absent, so a missing value degrades rather
+   * than breaking the page.
+   */
+  thumbnail_alt?: string | null;
+  /**
+   * Whether catalogue cards may overlay the live offer badge ("25% OFF") when
+   * an active public coupon targets this course. Absent means allowed — the
+   * badge is always driven by a real coupon, never hard-coded, and this flag
+   * only lets an admin take it off a specific course.
+   */
+  offer_badge_enabled?: boolean;
   tags: string[];
   outcomes: string[];
   /** Gate: this course can only be opened once that course is 100% complete. */
@@ -394,7 +564,62 @@ export interface Course {
     audio_language?: string;
     /** Subtitle language, if the lessons carry captions. */
     caption_language?: string;
+    /**
+     * Branch/audience this course belongs to. Optional for back-compat: the
+     * catalogue filters and branch landing pages read it, and
+     * `withCourseDimensions` fills it on load when absent.
+     */
+    branch?: CourseBranch;
+    /** Author's display label for the branch ("Computer Science & IT"). */
+    branch_label?: string;
+    /** Adoption bucket ('A' year-1 common … 'E' micro-course). */
+    bucket?: CourseBucket;
+    /** Learning-path / combo this course belongs to, if any. */
+    track_id?: string | null;
+    /** Certificate tier override; when absent it is derived from level/bucket. */
+    certificate_tier?: CertTier;
+    /** Author estimate of total hours. Optional — never invented on read. */
+    estimated_hours?: number;
+    /**
+     * Final-exam config. Absent means the course has no exam yet. The bank's
+     * answer keys are stripped by `sanitizeCourse` before any student response.
+     */
+    exam?: CourseExamConfig;
+    /** Capstone project config; absent means the course has no project. */
+    project?: CourseProjectConfig;
+    /** Rewards this course issues, so copy only promises what it grants. */
+    perks?: CoursePerk[];
+    /** Semester Exam Mode payload (units / important Qs / PYQs). */
+    exam_prep?: CourseExamPrep;
     modules: CourseModule[];
+  }
+
+  /**
+   * A learning track — an ordered path through several courses that awards a
+   * Career Track certificate when every member course is genuinely finished.
+   *
+   * Tracks are seed-authored, not admin-authored: each one is a curated
+   * recommendation ("this is the order to take these in"), and the membership
+   * list references courses by id so a track survives a course being renamed.
+   * A member course that is unpublished simply shows as "coming soon" and
+   * keeps the track unclaimable until it is available — the track never
+   * silently shrinks to whatever happens to be live today.
+   */
+  export interface LearningTrack {
+    id: string;
+    slug: string;
+    title: string;
+    /** One line the catalogue card shows under the title. */
+    tagline: string;
+    /** Longer pitch for the track detail page. */
+    description: string;
+    /** Audience branch, same enum the catalogue filters on. */
+    branch: CourseBranch;
+    /** Ordered member course ids — order is the recommended path order. */
+    course_ids: string[];
+    published: boolean;
+    created_at: string;
+    updated_at: string;
   }
 
   /**
@@ -449,7 +674,17 @@ export type ContentBlockType =
   | 'checklist'
   | 'resources'
   | 'steps'
-  | 'video_link';
+  | 'video_link'
+  /* --- the 9-block lesson standard (COURSE_EXPANSION_PLAN.md Part C.1) --- */
+  | 'objective'
+  | 'worked_example'
+  | 'try_it'
+  | 'mistakes'
+  | 'exam_angle'
+  | 'summary'
+  /* --- hands-on practice (Part C.2) --- */
+  | 'numerical'
+  | 'sim';
 
 /**
  * The single source of truth for the block vocabulary, as a runtime list.
@@ -481,6 +716,14 @@ export const ALL_BLOCK_TYPES = [
   'resources',
   'steps',
   'video_link',
+  'objective',
+  'worked_example',
+  'try_it',
+  'mistakes',
+  'exam_angle',
+  'summary',
+  'numerical',
+  'sim',
 ] as const satisfies readonly ContentBlockType[];
 
 /** Compile-time proof that the runtime list and the union are the same set. */
@@ -580,6 +823,25 @@ export interface CourseProgress {
   quiz_best_percent: Record<string, number>;
   /** quiz_id -> true once passed */
   passed_quiz_ids: string[];
+  /**
+   * Final-exam state. Optional so records written before exams existed stay
+   * valid; the exam engine backfills them on first use.
+   */
+  exam_attempts?: ExamAttempt[];
+  /**
+   * Module-test attempts, newest appended. Optional for the same reason as
+   * exam_attempts: rows written before module tests existed stay valid.
+   */
+  module_test_attempts?: ModuleTestAttempt[];
+  /** Best percentage across submitted attempts, null until one is graded. */
+  best_exam_percent?: number | null;
+  /** True once any submitted attempt passed. */
+  exam_passed?: boolean;
+  /** Percentage on the very first submitted attempt, for the Distinction rule. */
+  first_attempt_percent?: number | null;
+  last_attempt_at?: string | null;
+  /** Submitted capstone project URL, if the course has a project. */
+  project_url?: string | null;
 }
 
 /**
@@ -594,7 +856,7 @@ export interface XpEvent {
   lesson_id: string | null;
   /** Unique idempotency key — prevents double-awarding the same achievement. */
   key: string;
-  reason: 'lesson_complete' | 'quiz_pass' | 'course_complete' | 'feedback_reward' | 'review' | 'reversal' | 'legacy_opening_balance';
+  reason: 'lesson_complete' | 'quiz_pass' | 'course_complete' | 'feedback_reward' | 'review' | 'reversal' | 'legacy_opening_balance' | 'exam_pass' | 'exam_distinction' | 'project_submit';
   xp: number;
   created_at: string;
   note: string;
@@ -627,6 +889,28 @@ export interface Certificate {
   status: 'active' | 'revoked';
   revoked_reason: string;
   revoked_at: string | null;
+  /**
+   * Tiered-certificate fields. Optional so records issued before tiering stay
+   * valid; `signedFieldsOf` derives defaults for them. Covered by the v4
+   * signature — a v3 record simply has none of these.
+   */
+  tier?: CertTier;
+  /** Final-exam percentage, null until a course has an exam. */
+  score_percent?: number | null;
+  /** Frozen skills/outcomes shown on the certificate. */
+  skills?: string[];
+  project_title?: string | null;
+  project_url?: string | null;
+  exam_passed_at?: string | null;
+  /**
+   * "With Distinction" honour — first attempt cleared the course's distinction
+   * threshold. Presentation only, derived from the signed `score_percent` and
+   * the course config, so it is deliberately NOT part of the signed payload
+   * (which stays frozen at v4). Absent on records issued before exams.
+   */
+  distinction?: boolean;
+  /** Which signing version produced `signature`. Absent on pre-v4 records. */
+  signing_version?: number;
 }
 
 export interface CourseFeedback {
@@ -1811,6 +2095,8 @@ const initialDbData = {
   progress: {},
   interview_progress: {},
   courses: getSeedCourses(),
+  // Learning tracks are seed-authored curated paths (see LearningTrack).
+  tracks: getSeedTracks(),
   // Instructors are real people, so this starts EMPTY rather than seeded. A
   // placeholder "Tarun Luthra"-style profile on a course that has never been
   // taught would be a fabricated claim about a named human being, which is worse
@@ -1819,6 +2105,10 @@ const initialDbData = {
   instructors: [],
   course_progress: {},
   xp_ledger: [],
+  // Perks and badges. Seeded EMPTY: a grant is an audit row for a real
+  // achievement, so there is nothing to seed until a learner earns it.
+  reward_grants: [],
+  user_badges: [],
   certificates: [],
   course_feedback: [],
   study_plan_templates: [],
@@ -1857,6 +2147,40 @@ const initialDbData = {
   }
 };
 
+/**
+ * Fill in the branch/bucket/certificate-tier/hours dimensions for a course that
+ * predates them. Purely additive — an explicit author/admin value always wins,
+ * and every derived value comes from the course's own stored fields (category,
+ * level, price, lesson durations), never from a guess about the course's worth.
+ */
+export function withCourseDimensions<T extends Course>(course: T): T {
+  const c = course as any;
+  if (typeof c.branch !== 'string' || !c.branch) {
+    c.branch = /data|machine|ai|analytics/i.test(String(c.category || '')) ? 'ai-ds' : 'cse';
+  }
+  if (typeof c.bucket !== 'string' || !c.bucket) {
+    const level = String(c.level || '');
+    c.bucket = c.is_free === false || level === 'advanced' ? 'C' : level === 'intermediate' ? 'B' : 'A';
+  }
+  if (typeof c.certificate_tier !== 'string' || !c.certificate_tier) {
+    const level = String(c.level || '');
+    c.certificate_tier = level === 'advanced' ? 'premium' : level === 'intermediate' ? 'professional' : 'foundation';
+  }
+  if (typeof c.estimated_hours !== 'number') {
+    const mins = (Array.isArray(c.modules) ? c.modules : []).reduce(
+      (total: number, m: any) =>
+        total +
+        (Array.isArray(m && m.lessons) ? m.lessons : []).reduce(
+          (s: number, l: any) => s + (Number(l && l.duration_minutes) || 0),
+          0
+        ),
+      0
+    );
+    if (mins > 0) c.estimated_hours = Math.max(1, Math.round(mins / 60));
+  }
+  return course;
+}
+
 export function loadDb() {
   if (!fs.existsSync(DATA_DIR)) {
     fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -1879,6 +2203,8 @@ export function loadDb() {
       if (!Array.isArray(data.courses)) { data.courses = []; upgraded = true; }
       if (!data.course_progress) { data.course_progress = {}; upgraded = true; }
       if (!Array.isArray(data.xp_ledger)) { data.xp_ledger = []; upgraded = true; }
+      if (!Array.isArray(data.reward_grants)) { data.reward_grants = []; upgraded = true; }
+      if (!Array.isArray(data.user_badges)) { data.user_badges = []; upgraded = true; }
       if (!Array.isArray(data.certificates)) { data.certificates = []; upgraded = true; }
       // Certificates predate per-record key ids. Backfilled to '' rather than
       // the active key: guessing would attribute an old signature to a key that
@@ -2007,6 +2333,25 @@ export function loadDb() {
         seededCourseSlugs.add(seedCourse.slug);
         upgraded = true;
       }
+      // Learning tracks ride along with the same merge-by-slug contract as the
+      // courses: an existing install receives any track it does not have yet,
+      // and a track that was edited in place is never overwritten.
+      if (!Array.isArray(data.tracks)) {
+        data.tracks = [];
+        upgraded = true;
+      }
+      const seededTrackSlugs = new Set<string>(
+        data.tracks
+          .map((t: any) => (t && typeof t.slug === 'string' ? t.slug : null))
+          .filter((s: string | null): s is string => !!s)
+      );
+      for (const seedTrack of initialDbData.tracks) {
+        if (!seedTrack || typeof seedTrack.slug !== 'string') continue;
+        if (seededTrackSlugs.has(seedTrack.slug)) continue;
+        data.tracks.push(seedTrack);
+        seededTrackSlugs.add(seedTrack.slug);
+        upgraded = true;
+      }
       // NOTE: modules are deliberately NOT auto-filled with placeholder section_data.
       // A module with no admin-authored section_data stays empty and the reader
       // renders an honest "content not published yet" state. Generating generic
@@ -2052,6 +2397,13 @@ export function loadDb() {
         data.xp_ledger = [...(data.xp_ledger || []), ...openingBalances];
         upgraded = true;
       }
+      // Adoption dimensions (branch/bucket/tier/hours) for any course that
+      // predates them. Additive: only fills a value that is missing, so an
+      // admin's chosen branch is never overwritten on the next boot.
+      if (Array.isArray(data.courses) && data.courses.some((c: any) => c && !c.branch)) {
+        for (const c of data.courses as any[]) withCourseDimensions(c as Course);
+        upgraded = true;
+      }
       if (upgraded) {
         saveDb(data);
       }
@@ -2060,6 +2412,7 @@ export function loadDb() {
       // Fall through to rewrite
     }
   }
+  for (const c of initialDbData.courses) withCourseDimensions(c as Course);
   writeFileAtomic(DB_FILE, JSON.stringify(initialDbData, null, 2));
   return initialDbData;
 }

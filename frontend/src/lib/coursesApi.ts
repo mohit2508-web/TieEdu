@@ -35,6 +35,7 @@ import type {
   CatalogFilters,
   CourseCard,
   CourseInstructor,
+  ContentBlock,
 } from '@/types';
 
 const COURSES = `${API_BASE_URL}/courses`;
@@ -74,7 +75,11 @@ function catalogQueryString(params?: Partial<CatalogFilters> & { page?: number }
   if (params?.q?.trim()) qs.set('q', params.q.trim());
   // Repeated params, not comma-joined, so a value containing a comma cannot
   // split into two filters. The server accepts both forms.
-  for (const key of ['category', 'tag', 'type', 'level'] as const) {
+  //
+  // `branch` and `bucket` ride along with the rest: the catalogue page reads
+  // its state from the URL, and a client refetch that dropped the branch
+  // would answer a filtered URL with the whole catalogue.
+  for (const key of ['branch', 'bucket', 'category', 'tag', 'type', 'level'] as const) {
     for (const value of params?.[key] || []) {
       if (value) qs.append(key, value);
     }
@@ -112,6 +117,51 @@ export const fetchRelatedCourses = async (slug: string): Promise<CourseCard[]> =
   if (!res.ok) return [];
   const data = await res.json();
   return data.courses || [];
+};
+
+export interface CourseReview {
+  user_name: string;
+  rating: number;
+  what_learned: string;
+  would_recommend: boolean;
+  created_at: string;
+}
+
+/**
+ * Read-only reviews for a course page. Every row here is post-completion
+ * feedback the server accepted (see POST /:slug/feedback), so this list can
+ * only ever contain people who finished. Never throws: an empty or failed
+ * load renders as "no reviews yet", which is an honest state on the page.
+ */
+export const fetchCourseReviews = async (
+  slug: string
+): Promise<{ reviews: CourseReview[]; total: number }> => {
+  const res = await apiFetch(`${COURSES}/${encodeURIComponent(slug)}/reviews`);
+  if (!res.ok) return { reviews: [], total: 0 };
+  const data = await res.json();
+  return { reviews: data.reviews || [], total: data.total || 0 };
+};
+
+/**
+ * The public first-lesson sample. Paid courses 403 on their main detail
+ * endpoint for anonymous visitors, so this is the only way a shopper ever
+ * reads a lesson body — one lesson, no quiz. Null when the course has no
+ * lessons yet; never throws.
+ */
+export const fetchCourseSample = async (
+  slug: string
+): Promise<{
+  id: string;
+  title: string;
+  summary?: string;
+  blocks?: ContentBlock[];
+  module_title?: string;
+  duration_minutes?: number;
+} | null> => {
+  const res = await apiFetch(`${COURSES}/${encodeURIComponent(slug)}/sample`);
+  if (!res.ok) return null;
+  const data = await res.json();
+  return data.lesson || null;
 };
 
 export const fetchLesson = async (
@@ -204,6 +254,159 @@ export const submitLessonQuiz = async (
 export const fetchMyCourses = async (): Promise<MyCoursesResponse> => {
   const res = await apiFetch(`${COURSES}/my`);
   if (!res.ok) throw await apiError(res, 'Could not load your courses');
+  return res.json();
+};
+
+// --- Final exam --------------------------------------------------------------
+
+/**
+ * One question as the learner receives it: prompt and options only. The answer
+ * key stays server-side until the attempt is graded.
+ */
+export interface ExamQuestionView {
+  id: string;
+  prompt: string;
+  options: string[];
+  difficulty: string;
+  topic: string | null;
+}
+
+export interface ExamStartResponse {
+  status: 'success';
+  attempt_id: string;
+  started_at: string;
+  duration_minutes: number;
+  questions: ExamQuestionView[];
+}
+
+export interface ExamQuestionResult {
+  id: string;
+  prompt: string;
+  difficulty: string;
+  chosen_index: number;
+  correct_index: number;
+  correct: boolean;
+  explanation: string;
+}
+
+export interface ExamSubmitResponse {
+  status: 'success';
+  result: {
+    score_percent: number;
+    passed: boolean;
+    passing_percent: number;
+    results: ExamQuestionResult[];
+  };
+  on_time: boolean;
+  state: import('@/types').ExamState;
+  xp: { reason: string; xp: number; awarded: boolean }[];
+  xp_total: number;
+  certificate_readiness: import('@/types').CertificateReadiness | null;
+}
+
+/** Draws a fresh paper and starts (or resumes) a timed attempt. */
+export const startExam = async (slug: string): Promise<ExamStartResponse> => {
+  const res = await apiFetch(`${COURSES}/${encodeURIComponent(slug)}/exam/start`, {
+    method: 'POST',
+    body: JSON.stringify({}),
+  });
+  if (!res.ok) throw await apiError(res, 'Could not start the exam');
+  return res.json();
+};
+
+/** Submits answers for grading. The server, never the client, decides the score. */
+export const submitExam = async (
+  slug: string,
+  attemptId: string,
+  answers: Record<string, number>
+): Promise<ExamSubmitResponse> => {
+  const res = await apiFetch(`${COURSES}/${encodeURIComponent(slug)}/exam/submit`, {
+    method: 'POST',
+    body: JSON.stringify({ attempt_id: attemptId, answers }),
+  });
+  if (!res.ok) throw await apiError(res, 'Could not submit the exam');
+  return res.json();
+};
+
+/** Submits the capstone project URL for a course that requires one. */
+export const submitProject = async (
+  slug: string,
+  projectUrl: string
+): Promise<{
+  status: string;
+  project_url: string;
+  xp: { reason: string; xp: number; awarded: boolean }[];
+  xp_total: number;
+  certificate_readiness: import('@/types').CertificateReadiness | null;
+}> => {
+  const res = await apiFetch(`${COURSES}/${encodeURIComponent(slug)}/project/submit`, {
+    method: 'POST',
+    body: JSON.stringify({ project_url: projectUrl }),
+  });
+  if (!res.ok) throw await apiError(res, 'Could not submit the project');
+  return res.json();
+};
+
+// --- Module tests ------------------------------------------------------------
+
+/** One question from a module-test paper — same shape as the exam, no key. */
+export interface ModuleTestQuestionView {
+  id: string;
+  prompt: string;
+  options: string[];
+  difficulty: string;
+  topic: string | null;
+}
+
+export interface ModuleTestStartResponse {
+  status: 'success';
+  attempt_id: string;
+  started_at: string;
+  questions: ModuleTestQuestionView[];
+  passing_percent: number;
+  /** Present only when the server rehydrated an open attempt. */
+  state?: import('@/types').ModuleTestState | null;
+}
+
+export interface ModuleTestSubmitResponse {
+  status: 'success';
+  result: {
+    score_percent: number;
+    passed: boolean;
+    passing_percent: number;
+    results: ExamQuestionResult[];
+  };
+  state: import('@/types').ModuleTestState | null;
+}
+
+/**
+ * Starts (or rehydrates) a module-test attempt. The server refuses with 409
+ * when the module's lessons are incomplete or a pass already stands.
+ */
+export const startModuleTest = async (
+  slug: string,
+  moduleId: string
+): Promise<ModuleTestStartResponse> => {
+  const res = await apiFetch(
+    `${COURSES}/${encodeURIComponent(slug)}/module/${encodeURIComponent(moduleId)}/test`,
+    { method: 'POST', body: JSON.stringify({ action: 'start' }) }
+  );
+  if (!res.ok) throw await apiError(res, 'Could not start the module test');
+  return res.json();
+};
+
+/** Submits a module-test attempt for server-side grading. */
+export const submitModuleTest = async (
+  slug: string,
+  moduleId: string,
+  attemptId: string,
+  answers: Record<string, number>
+): Promise<ModuleTestSubmitResponse> => {
+  const res = await apiFetch(
+    `${COURSES}/${encodeURIComponent(slug)}/module/${encodeURIComponent(moduleId)}/test`,
+    { method: 'POST', body: JSON.stringify({ action: 'submit', attempt_id: attemptId, answers }) }
+  );
+  if (!res.ok) throw await apiError(res, 'Could not submit the module test');
   return res.json();
 };
 
@@ -324,7 +527,22 @@ export type CourseDraft = Partial<
         AdminCourseForEditor,
         'about_course' | 'prerequisites' | 'audience' | 'audio_language' | 'caption_language' | 'instructor_id'
       >
-    >;
+    > &
+    /**
+     * Semester Exam Mode. Optional for the same reason as the prose fields: a
+     * partial save must not blank a section it never displayed, so the key is
+     * sent only when the exam-prep editor actually manages it (including as
+     * `null` when the admin is removing the section).
+     */
+    Partial<Pick<AdminCourseForEditor, 'exam_prep'>> &
+    /**
+     * Cover accessibility text and the per-course opt-out of the live offer
+     * badge. Optional like the prose fields: a partial save that never
+     * displays them must not blank values the admin set elsewhere, so the keys
+     * travel only from the meta form, and an empty `thumbnail_alt` is sent as
+     * `''` on purpose to clear the text.
+     */
+    Partial<Pick<AdminCourseForEditor, 'thumbnail_alt' | 'offer_badge_enabled'>>;
 
 
 export const createAdminCourse = async (payload: CourseDraft) => {
@@ -365,7 +583,13 @@ export const addModule = async (courseId: string, payload: { title: string; summ
 
 export const updateModule = async (
   moduleId: string,
-  payload: { title?: string; summary?: string; sort_order?: number }
+  payload: {
+    title?: string;
+    summary?: string;
+    sort_order?: number;
+    /** Full test config with bank; `null` clears the test. Absent leaves it. */
+    test?: import('@/types').AdminModuleTest | null;
+  }
 ) => {
   const res = await apiFetch(`${COURSE_ADMIN}/modules/${encodeURIComponent(moduleId)}`, {
     method: 'PUT',

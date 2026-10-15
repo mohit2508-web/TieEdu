@@ -15,6 +15,25 @@ import { Course, ContentBlockRecord } from './db';
 import { getCProgrammingCourse } from './cCourse';
 import { getPythonProgrammingCourse } from './pythonCourse';
 import { getAdvancedDataStructuresCourse } from './adsCourse';
+import { getResumeLinkedinCourse } from './resumeCourse';
+import { getAptitudeCourse } from './aptitudeCourse';
+import { getEngineeringMaths1Course } from './mathsCourse';
+import { getSqlDatabasesCourse } from './sqlCourse';
+import { getWebDevBootcampCourse } from './webDevCourse';
+import { getDigitalElectronicsCourse } from './digitalElectronicsCourse';
+import { getBasicElectricalCourse } from './beeCourse';
+import { getGenAICourse } from './genaiCourse';
+import { getDsaMasteryCourse } from './dsaCourse';
+import { getAutoCADCourse } from './autocadCourse';
+import { getGitGithubCourse } from './gitCourse';
+import { getLinuxShellCourse } from './linuxCourse';
+import { getOperatingSystemsCourse } from './osCourse';
+import { getComputerNetworksCourse } from './cnCourse';
+import { getDbmsCourse } from './dbCourse';
+import { getSignalsSystemsCourse } from './ssCourse';
+import { getThermodynamicsCourse } from './thCourse';
+import { getFluidMechanicsCourse } from './fmCourse';
+import { getExcelStudentsCourse } from './excelCourse';
 
 let blockSeq = 0;
 const blk = (
@@ -973,6 +992,44 @@ Pass this and the course is complete: you will be able to download your TieEdu c
     },
     getCProgrammingCourse(),
     getPythonProgrammingCourse(),
+    // Phase 4 pilot — Bucket E micro-course. The fastest first-certificate hook.
+    getResumeLinkedinCourse(),
+    // Phase 4 pilot 2 — Bucket D full flagship: aptitude & reasoning for campus OAs.
+    getAptitudeCourse(),
+    // Phase 4 course 3 — Bucket A Year-1 flagship: engineering mathematics.
+    getEngineeringMaths1Course(),
+    // Phase 4 course 4 — Bucket C industry tool: SQL & databases.
+    getSqlDatabasesCourse(),
+    // Phase 4 course 5 — Bucket C industry tool: web development.
+    getWebDevBootcampCourse(),
+    // Phase 4 course 6 — Bucket B branch core: digital electronics (ECE).
+    getDigitalElectronicsCourse(),
+    // Phase 4 course 7 — Bucket A year-1: basic electrical engineering.
+    getBasicElectricalCourse(),
+    // Phase 4 course 8 — Bucket D paid: generative AI for students.
+    getGenAICourse(),
+    // Phase 4 course 9 — Bucket D paid: DSA mastery for interviews.
+    getDsaMasteryCourse(),
+    // Phase 4 course 10 — Bucket C paid: AutoCAD fundamentals.
+    getAutoCADCourse(),
+    // Phase 4 follow-on — Bucket C free tool: Git & GitHub for every branch.
+    getGitGithubCourse(),
+    // Phase 4 follow-on — Bucket C free tool: Linux & shell (pairs with Git).
+    getLinuxShellCourse(),
+    // Phase 4 branch depth — Bucket B CSE core: operating systems.
+    getOperatingSystemsCourse(),
+    // Phase 4 branch depth — Bucket B CSE core: computer networks.
+    getComputerNetworksCourse(),
+    // Phase 4 branch depth — Bucket B CSE core: DBMS.
+    getDbmsCourse(),
+    // Phase 4 branch depth — Bucket B ECE core: signals & systems.
+    getSignalsSystemsCourse(),
+    // Phase 4 branch depth — Bucket B ME core: thermodynamics.
+    getThermodynamicsCourse(),
+    // Phase 4 branch depth — Bucket B ME/CE core: fluid mechanics.
+    getFluidMechanicsCourse(),
+    // Row 6 micro-course — Bucket E fast-path certificate: Excel for students.
+    getExcelStudentsCourse(),
     // The one paid course. It is seeded so the purchase path is exercised against
     // a genuinely stored price rather than a fixture, and so the `paid` filter in
     // the catalogue has something real to return.

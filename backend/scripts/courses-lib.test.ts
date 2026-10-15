@@ -30,23 +30,33 @@ import {
   READ_MIN_SECONDS,
   WATCH_THRESHOLD,
   authorVideoSeconds,
+  certificateReadiness,
   courseAccessState,
   courseMaxXp,
+  drawExamQuestions,
   effectiveVideoSeconds,
   embedUrlFor,
   formatInr,
+  gradeExam,
   gradeQuiz,
   isLessonUnlocked,
   lessonCompletionState,
+  moduleLessonsComplete,
+  moduleTestConfigOf,
+  moduleTestStateForLearner,
   orderedLessons,
   parseVideoUrl,
   readRequiredSeconds,
+  sanitizeCourse,
+  sanitizeExamForLearner,
+  sanitizeExamQuestions,
   sanitizeLesson,
+  sanitizeModuleTestForLearner,
   sanitizeQuizForLearner,
   slugify,
   uniqueSlug,
 } from '../src/lib/courses';
-import { Course, CourseLesson, CourseProgress } from '../src/data/db';
+import { Course, CourseLesson, CourseModule, CourseProgress } from '../src/data/db';
 
 let pass = 0;
 let fail = 0;
@@ -819,6 +829,313 @@ check(
   uniqueSlug(slugDb(['hello-world']), 'Hello World!'),
   'hello-world-2'
 );
+
+// ---------------------------------------------------------------------------
+// The certificate gate reads `Course.exam`, which carries answer keys. Those
+// keys must never survive the trip to the student API: a leaked `correct_index`
+// would make the final exam decorative. `sanitizeCourse` is the single choke
+// point, so it is checked here rather than trusted by inspection.
+// ---------------------------------------------------------------------------
+
+function examCourse() {
+  return course({
+    certificate_tier: 'premium',
+    exam: {
+      question_count: 1,
+      duration_minutes: 30,
+      passing_percent: 60,
+      retake_cooldown_hours: 24,
+      distinction_percent: 85,
+      bank: [
+        {
+          id: 'q1',
+          prompt: 'Secret question',
+          options: ['a', 'b'],
+          correct_index: 1,
+          explanation: 'The answer is b.',
+          difficulty: 'easy',
+        },
+      ],
+    },
+  });
+}
+
+const sanitized = sanitizeCourse(examCourse()) as any;
+check('the exam bank never reaches the student course', 'bank' in (sanitized.exam || {}), false);
+check('the sanitized exam reports its bank size instead', sanitized.exam?.bank_size, 1);
+check('no answer key survives anywhere in the payload', JSON.stringify(sanitized).includes('correct_index'), false);
+check('the exam summary keeps what the UI needs to warn', sanitized.exam?.question_count, 1);
+
+check('a course with no exam sanitizes its exam to null', sanitizeExamForLearner(undefined), null);
+
+// ---------------------------------------------------------------------------
+// Module tests — the checkpoint at the end of a module. Same draw/grade
+// discipline as the final exam, but untimed, per-module, and NOT part of
+// certificate readiness (the certificate stays gated by the final exam).
+// ---------------------------------------------------------------------------
+
+function testBank() {
+  return [
+    { id: 't1', prompt: 'One?', options: ['a', 'b'], correct_index: 1, explanation: 'b', difficulty: 'easy' as const },
+    { id: 't2', prompt: 'Two?', options: ['a', 'b'], correct_index: 0, explanation: 'a', difficulty: 'medium' as const },
+    { id: 't3', prompt: 'Three?', options: ['a', 'b'], correct_index: 1, explanation: 'b', difficulty: 'hard' as const },
+  ];
+}
+
+function testModule(over: Partial<CourseModule> = {}): CourseModule {
+  return {
+    id: 'm1',
+    course_id: 'c1',
+    title: 'Module one',
+    summary: '',
+    sort_order: 1,
+    lessons: [lesson({ id: 'l1', sort_order: 1 }), lesson({ id: 'l2', sort_order: 2 })],
+    test: {
+      question_count: 2,
+      passing_percent: 60,
+      retake_cooldown_hours: 0,
+      bank: testBank(),
+    },
+    ...over,
+  } as CourseModule;
+}
+
+// configOf
+check('a module with a usable test yields the config', moduleTestConfigOf(testModule())?.bank.length, 3);
+check('a module with no test yields null', moduleTestConfigOf(testModule({ test: undefined })), null);
+check(
+  'a test with an empty bank is treated as no test',
+  moduleTestConfigOf(testModule({ test: { question_count: 1, passing_percent: 60, retake_cooldown_hours: 0, bank: [] } })),
+  null
+);
+check(
+  'a test with a non-positive draw size is treated as no test',
+  moduleTestConfigOf(testModule({ test: { question_count: 0, passing_percent: 60, retake_cooldown_hours: 0, bank: testBank() } })),
+  null
+);
+
+// moduleLessonsComplete
+check('no lessons complete means the module is not complete', moduleLessonsComplete(blankP(), testModule()), false);
+check(
+  'a partially completed module is not complete',
+  moduleLessonsComplete(blankP({ completed_lesson_ids: ['l1'] }), testModule()),
+  false
+);
+check(
+  'every lesson complete opens the module',
+  moduleLessonsComplete(blankP({ completed_lesson_ids: ['l1', 'l2'] }), testModule()),
+  true
+);
+check('a module with no lessons can never be complete', moduleLessonsComplete(blankP(), testModule({ lessons: [] })), false);
+
+// state: gated on module lessons, not course completion
+const mod = testModule();
+check(
+  'with lessons unfinished the test cannot start',
+  moduleTestStateForLearner(mod, blankP())?.can_start,
+  false
+);
+check(
+  'with lessons unfinished the state reports the gate',
+  moduleTestStateForLearner(mod, blankP())?.lessons_complete,
+  false
+);
+const done = blankP({ completed_lesson_ids: ['l1', 'l2'] });
+check('with lessons done the test can start', moduleTestStateForLearner(mod, done)?.can_start, true);
+check('a fresh learner has no attempts', moduleTestStateForLearner(mod, done)?.attempts_count, 0);
+check('a fresh learner has not passed', moduleTestStateForLearner(mod, done)?.passed, false);
+
+// an open (ungraded) attempt blocks a second draw
+const withOpen = blankP({
+  completed_lesson_ids: ['l1', 'l2'],
+  module_test_attempts: [
+    {
+      id: 'mta-1',
+      module_id: 'm1',
+      started_at: '2026-01-01T00:00:00.000Z',
+      submitted_at: null,
+      question_ids: ['t1', 't2'],
+      score_percent: null,
+      passed: false,
+      graded: false,
+    },
+  ],
+});
+check('an open attempt blocks a new one', moduleTestStateForLearner(mod, withOpen)?.can_start, false);
+check('an open attempt is reported as in progress', moduleTestStateForLearner(mod, withOpen)?.in_progress, true);
+
+// graded attempts: best-of, pass, cooldown
+const passed = blankP({
+  completed_lesson_ids: ['l1', 'l2'],
+  module_test_attempts: [
+    {
+      id: 'mta-1',
+      module_id: 'm1',
+      started_at: '2026-01-01T00:00:00.000Z',
+      submitted_at: '2026-01-01T00:10:00.000Z',
+      question_ids: ['t1', 't2'],
+      score_percent: 100,
+      passed: true,
+      graded: true,
+    },
+  ],
+});
+check('a passed test is reported passed', moduleTestStateForLearner(mod, passed)?.passed, true);
+check('a passed test cannot be retaken (best score stands)', moduleTestStateForLearner(mod, passed)?.can_start, false);
+check('best percent is reported', moduleTestStateForLearner(mod, passed)?.best_percent, 100);
+
+const failedCooldown = blankP({
+  completed_lesson_ids: ['l1', 'l2'],
+  module_test_attempts: [
+    {
+      id: 'mta-1',
+      module_id: 'm1',
+      started_at: new Date().toISOString(),
+      submitted_at: new Date().toISOString(),
+      question_ids: ['t1', 't2'],
+      score_percent: 0,
+      passed: false,
+      graded: true,
+    },
+  ],
+});
+const cooled = testModule({
+  test: { question_count: 2, passing_percent: 60, retake_cooldown_hours: 24, bank: testBank() },
+});
+check('a failed attempt inside the cooldown cannot retake', moduleTestStateForLearner(cooled, failedCooldown)?.can_start, false);
+check('the cooldown deadline is reported', !!moduleTestStateForLearner(cooled, failedCooldown)?.cooldown_until, true);
+const noCooldown = testModule({
+  test: { question_count: 2, passing_percent: 60, retake_cooldown_hours: 0, bank: testBank() },
+});
+check('with zero cooldown a failed attempt can retake immediately', moduleTestStateForLearner(noCooldown, failedCooldown)?.can_start, true);
+
+// attempts from a DIFFERENT module never bleed into this one's state
+const otherModuleAttempt = blankP({
+  completed_lesson_ids: ['l1', 'l2'],
+  module_test_attempts: [
+    {
+      id: 'mta-x',
+      module_id: 'm-other',
+      started_at: '2026-01-01T00:00:00.000Z',
+      submitted_at: '2026-01-01T00:10:00.000Z',
+      question_ids: ['t1'],
+      score_percent: 100,
+      passed: true,
+      graded: true,
+    },
+  ],
+});
+check('another module\'s attempt is ignored', moduleTestStateForLearner(mod, otherModuleAttempt)?.attempts_count, 0);
+
+// draw + sanitize + grade round trip
+const draw = drawExamQuestions(mod.test!);
+check('the draw asks for question_count questions', draw.question_ids.length, 2);
+check(
+  'the draw only names ids that exist in the bank',
+  draw.question_ids.every((id) => mod.test!.bank.some((q) => q.id === id)),
+  true
+);
+const paper = sanitizeExamQuestions(mod.test!, draw.question_ids);
+check(
+  'the drawn paper never carries the answer key',
+  JSON.stringify(paper).includes('correct_index'),
+  false
+);
+const allRight: Record<string, number> = {};
+for (const q of mod.test!.bank) allRight[q.id] = q.correct_index;
+const rightGrade = gradeExam(mod.test!, draw.question_ids, allRight);
+check('a fully correct paper scores 100', rightGrade.score_percent, 100);
+check('a fully correct paper passes', rightGrade.passed, true);
+const blank = gradeExam(mod.test!, draw.question_ids, {});
+check('a blank paper scores 0', blank.score_percent, 0);
+check('a blank paper fails', blank.passed, false);
+check(
+  'an out-of-range answer is treated as wrong, not as an error',
+  gradeExam(mod.test!, draw.question_ids, { [draw.question_ids[0]]: 99 }).results[0].correct,
+  false
+);
+
+// readiness: module tests are NOT certificate gates
+const readinessCourse = course({
+  modules: [testModule()],
+});
+const readinessDb: any = {
+  course_progress: {
+    u1: {
+      c1: blankP({ completed_lesson_ids: ['l1', 'l2'] }),
+    },
+  },
+  certificates: [],
+};
+const readiness = certificateReadiness(readinessDb, 'u1', readinessCourse);
+check('an unpassed module test does not block the certificate', readiness.missing.includes('module_tests'), false);
+check('a course with no exam has no exam gate', readiness.exam_required, false);
+check('a course with no project has no project gate', readiness.project_required, false);
+check('a course with only module tests is certificate-ready when lessons are done', readiness.ready, true);
+
+// learner view of a module test: summary only, no bank
+const learnerView = sanitizeModuleTestForLearner(mod, done) as any;
+check('the learner view omits the bank', 'bank' in (learnerView || {}), false);
+check('the learner view reports bank size', learnerView?.bank_size, 3);
+check('the learner view carries this learner\'s state', learnerView?.state?.lessons_complete, true);
+check('a module with no test sanitizes to null', sanitizeModuleTestForLearner(testModule({ test: undefined }), done), null);
+
+// the full course payload must not leak module-test keys either
+const leakCourse = course({ modules: [testModule()] });
+const leakSanitized = sanitizeCourse(leakCourse) as any;
+check(
+  'no module-test answer key survives sanitizeCourse',
+  JSON.stringify(leakSanitized).includes('correct_index'),
+  false
+);
+check(
+  'the sanitized module test keeps its summary',
+  leakSanitized.modules[0].test?.bank_size,
+  3
+);
+
+// ---------------------------------------------------------------------------
+
+// ---- course health / publish checklist --------------------------------------
+
+import { courseHealthFor } from '../src/lib/courseHealth';
+
+const healthEmpty: any = {
+  id: 'h1', slug: 'empty', title: 'Empty', subtitle: '', description: '',
+  category: 'Engineering', level: 'beginner', is_free: true, price_inr: 0,
+  thumbnail_url: '', certificate_eligible: true, published: false,
+  modules: [],
+};
+const emptyHealth = courseHealthFor(healthEmpty);
+check('an empty draft is not publishable', emptyHealth.publishable, false);
+check('an empty draft fails the lessons blocker', emptyHealth.blockers.some((b: string) => /lesson/i.test(b)), true);
+check('an empty draft fails the subtitle blocker', emptyHealth.blockers.some((b: string) => /subtitle/i.test(b)), true);
+check('every check carries a severity', emptyHealth.checks.every((c: any) => c.severity === 'blocker' || c.severity === 'warn'), true);
+
+const healthReady: any = {
+  ...healthEmpty,
+  subtitle: 'Learn things',
+  description: 'A real description.',
+  thumbnail_url: '/api/course-admin/thumbnail/thumb-1.jpg',
+  modules: [{
+    id: 'm1', title: 'M', sort_order: 1,
+    lessons: [{ id: 'l1', title: 'L', sort_order: 1, duration_minutes: 5, quiz: { questions: [{}] } }],
+  }],
+  exam: { bank: [{}] },
+};
+const readyHealth = courseHealthFor(healthReady);
+check('a filled draft is publishable', readyHealth.publishable, true);
+check('a filled draft has no blockers', readyHealth.blockers.length, 0);
+check('warnings still surface on a publishable course', readyHealth.checks.every((c: any) => c.pass), true);
+
+const healthPaid: any = { ...healthReady, is_free: false, price_inr: 0, exam: null };
+// Strip the quiz so the assessment warn can fail independently of blockers.
+healthPaid.modules = [{ id: 'm1', title: 'M', sort_order: 1, lessons: [{ id: 'l1', title: 'L', sort_order: 1, duration_minutes: 5 }] }];
+const paidHealth = courseHealthFor(healthPaid);
+check('a paid course with no price is blocked', paidHealth.publishable, false);
+check('the price blocker is named', paidHealth.blockers.some((b: string) => /price/i.test(b)), true);
+check('missing assessment warns without blocking', paidHealth.checks.some((c: any) => c.key === 'assessment' && !c.pass && c.severity === 'warn'), true);
+check('certificate-without-exam warns', paidHealth.checks.some((c: any) => c.key === 'certificate_exam' && !c.pass), true);
 
 // ---------------------------------------------------------------------------
 

@@ -6,8 +6,8 @@ import { formatLevel } from '@/lib/courseFormat';
 /**
  * The catalogue filter rail.
  *
- * Multi-select checkboxes grouped into the four dimensions the data actually
- * has: category, topic, course type and level. There is no "domain" or
+ * Multi-select checkboxes grouped into the dimensions the data actually has:
+ * branch, bucket, course type, level, category and topic. There is no "domain" or
  * "duration" group, because there is no field behind either one — a filter that
  * cannot narrow anything is worse than no filter, because it teaches people that
  * the filters do not work.
@@ -21,6 +21,8 @@ import { formatLevel } from '@/lib/courseFormat';
 const INLINE_LIMIT = 4;
 
 const GROUPS: { key: CatalogMultiKey; title: string; columns?: boolean }[] = [
+  { key: 'branch', title: 'Branch' },
+  { key: 'bucket', title: 'Course bucket' },
   { key: 'type', title: 'Course type', columns: true },
   { key: 'level', title: 'Course level' },
   { key: 'category', title: 'Category' },

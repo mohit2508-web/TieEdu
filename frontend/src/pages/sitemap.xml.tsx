@@ -62,6 +62,21 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
   </url>`
   ).join('');
 
+  // Branch landing pages: one stable URL per branch, server-rendered with its
+  // own catalogue slice. Listed unconditionally — an empty branch page is a
+  // real page with an honest empty state, not an error.
+  const branchUrls = ['year1', 'cse', 'ai-ds', 'ece', 'eee', 'mech', 'civil', 'career', 'tools']
+    .map(
+      (b) => `
+  <url>
+    <loc>${baseUrl}/courses/branch/${b}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>`
+    )
+    .join('');
+
   const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
@@ -89,6 +104,7 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
     <priority>0.9</priority>
   </url>
   ${courseUrls}
+  ${branchUrls}
   ${companyUrls}
 </urlset>`;
 

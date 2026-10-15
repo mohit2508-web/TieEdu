@@ -383,6 +383,51 @@ check('type facet always reports both free and paid', () => {
   assert.strictEqual(paid.count, 1);
 });
 
+// --- adoption dimensions (branch / bucket) ----------------------------------
+
+check('a branch token is lowercased so a hand-typed URL still matches', () => {
+  assert.deepStrictEqual(parseCatalogQuery({ branch: 'CSE' }).branch, ['cse']);
+  assert.deepStrictEqual(parseCatalogQuery({ branch: ['AI-DS', 'ece'] }).branch, ['ai-ds', 'ece']);
+});
+
+check('a branch filter narrows to that branch only', () => {
+  const cse = course({ branch: 'cse' });
+  const ece = course({ branch: 'ece' });
+  const out = filterCourses([cse, ece], q({ branch: ['cse'] }));
+  assert.strictEqual(out.length, 1);
+  assert.strictEqual(out[0]!.branch, 'cse');
+});
+
+check('a bucket filter narrows and is case-insensitive against the stored letter', () => {
+  const a = course({ bucket: 'A' });
+  const c = course({ bucket: 'C' });
+  const out = filterCourses([a, c], q({ bucket: ['a'] }));
+  assert.strictEqual(out.length, 1);
+  assert.strictEqual(out[0]!.bucket, 'A');
+});
+
+check('the branch facet uses a human label and skips courses with no branch', () => {
+  const facets = buildFacets([course({ branch: 'cse' }), course({ branch: 'cse' }), course({})], q());
+  const cse = facets.branch.find((f) => f.key === 'cse')!;
+  assert.strictEqual(cse.count, 2);
+  assert.strictEqual(cse.label, 'Computer Science & IT');
+  // A branch-less course must not mint a nameless '' facet value.
+  assert.ok(!facets.branch.some((f) => f.key === ''));
+});
+
+check('the branch facet is self-narrowing: a selected level narrows its counts', () => {
+  const beginnerCse = course({ branch: 'cse', level: 'beginner' });
+  const advancedCse = course({ branch: 'cse', level: 'advanced' });
+  const facets = buildFacets([beginnerCse, advancedCse], q({ level: ['beginner'] }));
+  assert.strictEqual(facets.branch.find((f) => f.key === 'cse')!.count, 1);
+});
+
+check('the bucket facet keeps A→E order regardless of counts', () => {
+  const facets = buildFacets([course({ bucket: 'C' }), course({ bucket: 'A' }), course({ bucket: 'A' })], q());
+  assert.deepStrictEqual(facets.bucket.map((f) => f.key), ['a', 'c']);
+  assert.strictEqual(facets.bucket[0]!.label, 'A · Year-1 Common');
+});
+
 // --- pagination -------------------------------------------------------------
 
 check('page 2 returns the remainder and reports has_more false', () => {

@@ -28,6 +28,12 @@ export const XP = {
   COURSE_COMPLETE: 150,
   /** Submitting course feedback after finishing. */
   FEEDBACK: 25,
+  /** Passing the final exam. One-shot reward; repeated attempts do not mint it. */
+  EXAM_PASS: 200,
+  /** Earning "with Distinction" on a first attempt. One-shot, awards on first pass. */
+  EXAM_DISTINCTION: 150,
+  /** Capstone project submitted for a course that requires it. */
+  PROJECT_SUBMIT: 75,
 } as const;
 
 /** Thresholds for the leaderboard level label. Derived, never stored. */

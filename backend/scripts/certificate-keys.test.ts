@@ -88,6 +88,13 @@ const FIELDS = {
   lessons_completed: 10,
   lessons_required: 10,
   xp_at_issue: 500,
+  // v4 tier block.
+  tier: 'foundation',
+  score_percent: null,
+  skills: [] as string[],
+  project_title: null as string | null,
+  project_url: null as string | null,
+  exam_passed_at: null as string | null,
 };
 
 /** A store holding one certificate row, shaped the way lib/certificate reads it. */
@@ -141,6 +148,62 @@ check('editing any signed field invalidates the signature', () => {
     const r = modA.verifyCertificate(storeWith(signedA, { [field]: 'tampered' }), FIELDS.serial);
     assert.strictEqual(r.check.signature_valid, false, `${field} was not covered by the signature`);
   }
+});
+
+check('editing a v4-only field invalidates the signature', () => {
+  // The tier block is inside the signature; otherwise a certificate would not be
+  // tamper-evident, it would just be a fancier picture.
+  const tampered: Record<string, any> = {
+    tier: 'premium',
+    score_percent: 99,
+    skills: ['forged skill'],
+    project_title: 'forged project',
+    exam_passed_at: '2026-09-09T00:00:00.000Z',
+  };
+  for (const field of Object.keys(tampered)) {
+    const r = modA.verifyCertificate(storeWith(signedA, { [field]: tampered[field] }), FIELDS.serial);
+    assert.strictEqual(r.check.signature_valid, false, `${field} was not covered by the v4 signature`);
+  }
+});
+
+check('a v3-signed certificate still verifies after the v4 bump', () => {
+  // Rows issued before tiering carry no tier fields and were signed over the v3
+  // payload. The verifier must fall back to the v3 shape rather than report a
+  // legitimate graduate as forged.
+  const legacySignature = crypto
+    .sign(
+      null,
+      Buffer.from(canonicalV3(FIELDS), 'utf8'),
+      crypto.createPrivateKey({ key: Buffer.from(A.priv, 'base64'), format: 'der', type: 'pkcs8' })
+    )
+    .toString('base64');
+  const legacyRow = {
+    certificates: [
+      {
+        id: 'cert-legacy',
+        serial: FIELDS.serial,
+        user_id: FIELDS.user_id,
+        recipient_email: FIELDS.recipient_email,
+        recipient_name: FIELDS.recipient_name,
+        course_id: FIELDS.course_id,
+        course_title: FIELDS.course_title,
+        issued_at: FIELDS.issued_at,
+        lessons_completed: FIELDS.lessons_completed,
+        lessons_required: FIELDS.lessons_required,
+        xp_at_issue: FIELDS.xp_at_issue,
+        signature: legacySignature,
+        signing_key_id: A.id,
+        status: 'active',
+        revoked_reason: '',
+        revoked_at: null,
+      },
+    ],
+    courses: [{ id: 'c-1', title: 'Fundamentals' }],
+    users: [{ id: 'u-1', name: 'Test Learner', college: 'NIT Trichy' }],
+  };
+  const r = modA.verifyCertificate(legacyRow, FIELDS.serial);
+  assert.strictEqual(r.check.record_exists, true, 'the legacy row should still be found');
+  assert.strictEqual(r.check.signature_valid, true, 'a v3 signature must verify against the v3 payload');
 });
 
 check('flipping a byte in the signature invalidates it', () => {
@@ -277,9 +340,45 @@ check('a certificate signed by an unknown key is never genuine', () => {
   assert.strictEqual(r.check.record_exists, true);
 });
 
-/** The module's canonical payload, reconstructed from the published fields. */
+/** The module's canonical v4 payload, reconstructed from the published fields. */
 function canonical(f: typeof FIELDS): string {
-  return ['v3', f.serial, f.user_id, f.recipient_email, f.recipient_name, f.course_id, f.course_title, f.issued_at, String(f.lessons_completed), String(f.lessons_required), String(f.xp_at_issue)].join('|');
+  return [
+    'v4',
+    f.serial,
+    f.user_id,
+    f.recipient_email,
+    f.recipient_name,
+    f.course_id,
+    f.course_title,
+    f.issued_at,
+    String(f.lessons_completed),
+    String(f.lessons_required),
+    String(f.xp_at_issue),
+    f.tier,
+    f.score_percent === null ? '' : String(Math.round(f.score_percent)),
+    String(f.skills.length),
+    ...f.skills,
+    f.project_title || '',
+    f.project_url || '',
+    f.exam_passed_at || '',
+  ].join('|');
+}
+
+/** The retired v3 canonical payload, for the backward-compatibility tests. */
+function canonicalV3(f: typeof FIELDS): string {
+  return [
+    'v3',
+    f.serial,
+    f.user_id,
+    f.recipient_email,
+    f.recipient_name,
+    f.course_id,
+    f.course_title,
+    f.issued_at,
+    String(f.lessons_completed),
+    String(f.lessons_required),
+    String(f.xp_at_issue),
+  ].join('|');
 }
 
 function signWith(privB64: string, fields: typeof FIELDS): string {

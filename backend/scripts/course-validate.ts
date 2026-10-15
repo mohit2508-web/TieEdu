@@ -14,8 +14,14 @@
 // animation and a quiz with two options.
 // ============================================================================
 
-import { ALL_BLOCK_TYPES } from '../src/data/db';
-import type { CourseModule } from '../src/data/db';
+import {
+  ALL_BLOCK_TYPES,
+  CERT_TIERS,
+  COURSE_BRANCHES,
+  COURSE_BUCKETS,
+  EXAM_DIFFICULTIES,
+} from '../src/data/db';
+import type { Course, CourseModule } from '../src/data/db';
 
 /** The kinds the frontend REGISTRY can actually render. */
 export const ANIMATION_KINDS = [
@@ -199,6 +205,39 @@ export function validateCourseModules(
     // Checked after the lessons, not inside the loop: a diagram anywhere in the
     // module satisfies it, whichever lesson it happens to live in.
     if (opts.requireDiagramPerModule && !moduleHasDiagram) fail(mWhere, 'module has no diagram');
+
+    // The end-of-module test, when present, must be gradeable: same question
+    // rules as a lesson quiz, plus a draw size that fits the bank.
+    if (m.test) {
+      const tWhere = `${mWhere} test`;
+      if (typeof m.test.passing_percent !== 'number' || m.test.passing_percent < 1 || m.test.passing_percent > 100) {
+        fail(tWhere, 'passing_percent must be 1..100');
+      }
+      if (typeof m.test.retake_cooldown_hours !== 'number' || m.test.retake_cooldown_hours < 0) {
+        fail(tWhere, 'retake_cooldown_hours must be >= 0');
+      }
+      if (!isArr(m.test.bank) || m.test.bank.length === 0) {
+        fail(tWhere, 'no questions in bank');
+      } else {
+        if (typeof m.test.question_count !== 'number' || m.test.question_count < 1) {
+          fail(tWhere, 'question_count must be >= 1');
+        } else if (m.test.question_count > m.test.bank.length) {
+          fail(tWhere, `question_count ${m.test.question_count} exceeds bank of ${m.test.bank.length}`);
+        }
+        const tIds = new Set<string>();
+        m.test.bank.forEach((q, qi) => {
+          const at = `${tWhere} q${qi + 1}`;
+          if (tIds.has(q.id)) fail(at, 'duplicate question id');
+          tIds.add(q.id);
+          if (!isStr(q.prompt) || !q.prompt.trim()) fail(at, 'missing prompt');
+          if (!isArr(q.options) || q.options.length < 2) fail(at, 'needs at least 2 options');
+          if (typeof q.correct_index !== 'number' || !isArr(q.options)) fail(at, 'missing correct_index');
+          else if (q.correct_index < 0 || q.correct_index >= q.options.length) {
+            fail(at, `correct_index ${q.correct_index} out of range 0..${q.options.length - 1}`);
+          }
+        });
+      }
+    }
   });
 
   // Reported on failure so a schema regression is diagnosable from the output.
@@ -472,4 +511,141 @@ function collectTones(s: any): string[] {
     walk(s.node);
   }
   return out;
+}
+
+/* ---------------------------------------------------------------------------
+   Assessment + reward config (Part C.3 / D / E of the plan).
+
+   These checks are what make "course complete" mean something: a course that
+   promises an exam must have a real bank behind it, a Premium course that gates
+   its certificate on a project must actually carry one, and every perk the page
+   advertises must be a reward the platform can issue. They are separate from
+   `validateCourseModules` because they read the course-level config rather than
+   the lesson tree, and a course with no exam yet is legal (it simply has no
+   final test to sit).
+   --------------------------------------------------------------------------- */
+
+/** Minimum bank size a course must reach before its exam is usable. */
+export const MIN_EXAM_BANK = 25;
+
+export interface AssessmentInput {
+  branch?: string;
+  bucket?: string;
+  certificate_tier?: string;
+  exam?: Course['exam'];
+  project?: Course['project'];
+  perks?: Course['perks'];
+  exam_prep?: Course['exam_prep'];
+}
+
+export function validateCourseAssessment(label: string, course: AssessmentInput): string[] {
+  const errs: string[] = [];
+  const fail = (where: string, msg: string) => errs.push(`${label} ${where}: ${msg}`);
+
+  if (course.branch !== undefined && !(COURSE_BRANCHES as readonly string[]).includes(course.branch)) {
+    fail('<course>', `unknown branch "${course.branch}"`);
+  }
+  if (course.bucket !== undefined && !(COURSE_BUCKETS as readonly string[]).includes(course.bucket)) {
+    fail('<course>', `unknown bucket "${course.bucket}"`);
+  }
+  if (course.certificate_tier !== undefined && !(CERT_TIERS as readonly string[]).includes(course.certificate_tier)) {
+    fail('<course>', `unknown certificate_tier "${course.certificate_tier}"`);
+  }
+
+  const exam = course.exam;
+  if (exam) {
+    if (!isArr(exam.bank)) {
+      fail('exam', 'bank must be an array');
+    } else {
+      if (exam.bank.length < MIN_EXAM_BANK) {
+        fail('exam', `bank has ${exam.bank.length} questions, need at least ${MIN_EXAM_BANK}`);
+      }
+      if (exam.question_count < 1 || exam.question_count > exam.bank.length) {
+        fail('exam', `question_count ${exam.question_count} is not 1..${exam.bank.length}`);
+      }
+      const ids = new Set<string>();
+      const diffs = new Set<string>();
+      exam.bank.forEach((q, qi) => {
+        const at = `exam q${qi + 1}`;
+        if (!isStr(q.id) || !q.id.trim()) fail(at, 'missing id');
+        else if (ids.has(q.id)) fail(at, `duplicate id ${q.id}`);
+        else ids.add(q.id);
+        if (!isStr(q.prompt) || !q.prompt.trim()) fail(at, 'missing prompt');
+        if (!isArr(q.options) || q.options.length < 2) fail(at, 'needs at least 2 options');
+        else {
+          const seen = new Set<string>();
+          q.options.forEach((o, oi) => {
+            if (!isStr(o) || !o.trim()) fail(at, `options[${oi}] is empty`);
+            if (isStr(o) && seen.has(o.trim())) fail(at, `options[${oi}] duplicates an earlier option`);
+            if (isStr(o)) seen.add(o.trim());
+          });
+        }
+        if (typeof q.correct_index !== 'number' || !isArr(q.options)) fail(at, 'missing correct_index');
+        else if (q.correct_index < 0 || q.correct_index >= q.options.length) {
+          fail(at, `correct_index ${q.correct_index} out of range 0..${q.options.length - 1}`);
+        }
+        if (!isStr(q.explanation) || !q.explanation.trim()) fail(at, 'missing explanation');
+        if (!isStr(q.difficulty) || !(EXAM_DIFFICULTIES as readonly string[]).includes(q.difficulty)) {
+          fail(at, `unknown difficulty "${q.difficulty}"`);
+        } else {
+          diffs.add(q.difficulty);
+        }
+      });
+      if (ids.size > 0 && diffs.size < EXAM_DIFFICULTIES.length) {
+        fail('exam', `bank is tagged with ${diffs.size} of ${EXAM_DIFFICULTIES.length} difficulties; a mix is required`);
+      }
+    }
+    if (typeof exam.duration_minutes !== 'number' || exam.duration_minutes < 1) fail('exam', 'duration_minutes must be >= 1');
+    if (typeof exam.passing_percent !== 'number' || exam.passing_percent < 1 || exam.passing_percent > 100) {
+      fail('exam', 'passing_percent must be 1..100');
+    }
+    if (typeof exam.retake_cooldown_hours !== 'number' || exam.retake_cooldown_hours < 0) {
+      fail('exam', 'retake_cooldown_hours must be >= 0');
+    }
+    if (typeof exam.distinction_percent !== 'number' || exam.distinction_percent < 1 || exam.distinction_percent > 100) {
+      fail('exam', 'distinction_percent must be 1..100');
+    } else if (typeof exam.passing_percent === 'number' && exam.distinction_percent < exam.passing_percent) {
+      fail('exam', 'distinction_percent is below passing_percent, so Distinction is unreachable');
+    }
+  }
+
+  const project = course.project;
+  if (project) {
+    if (!isStr(project.title) || !project.title.trim()) fail('project', 'missing title');
+    if (!isStr(project.brief) || !project.brief.trim()) fail('project', 'missing brief');
+  }
+
+  const premiumTier = course.certificate_tier === 'premium' || course.certificate_tier === 'career_track';
+  if (premiumTier && (!project || project.required_for_certificate !== true)) {
+    fail('certificate', `tier "${course.certificate_tier}" gates its certificate on a project, but no required project is configured`);
+  }
+
+  if (course.perks !== undefined) {
+    if (!isArr(course.perks)) {
+      fail('perks', 'perks must be an array');
+    } else {
+      const keys = new Set<string>();
+      course.perks.forEach((p, pi) => {
+        const at = `perk ${pi + 1}`;
+        if (!p || !isStr(p.key) || !p.key.trim()) fail(at, 'missing key');
+        else if (keys.has(p.key)) fail(at, `duplicate key ${p.key}`);
+        else keys.add(p.key);
+        if (!p || !isStr(p.label) || !p.label.trim()) fail(at, 'missing label');
+      });
+    }
+  }
+
+  const prep = course.exam_prep;
+  if (prep) {
+    if (!isArr(prep.units)) fail('exam_prep', 'units must be an array');
+    else {
+      prep.units.forEach((u, ui) => {
+        const at = `exam_prep unit ${ui + 1}`;
+        if (!isStr(u.title) || !u.title.trim()) fail(at, 'missing title');
+        if (!isArr(u.questions) || u.questions.length === 0) fail(at, 'no questions');
+      });
+    }
+  }
+
+  return errs;
 }

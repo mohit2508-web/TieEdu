@@ -14,6 +14,7 @@ import {
 } from '@/lib/coursesApi';
 import { Btn, Field, TextInput, TextArea, Toggle, ErrorNote, Pill, Loading } from './CourseAdminUi';
 import { AdminLessonEditor } from './AdminLessonEditor';
+import { ModuleTestEditor } from './ModuleTestEditor';
 
 /**
  * Course structure editor: course metadata, the module tree, and the selected
@@ -189,6 +190,7 @@ export const AdminCourseEditor: React.FC<{
                   />
                   <p className="text-[11px] text-[#6B7280] px-2">
                     {m.lessons?.length || 0} lessons
+                    {m.test ? ` · test (${m.test.bank?.length || 0} questions)` : ''}
                   </p>
                 </div>
                 <div className="flex gap-1.5">
@@ -243,6 +245,20 @@ export const AdminCourseEditor: React.FC<{
                       </div>
                     </div>
                   ))}
+
+                  {/* The end-of-module test. Saves through its own endpoint, so
+                      a half-written bank never lands in the database and the
+                      parent does not need a draft for it. */}
+                  <div className="mt-3 pt-3 border-t border-[#EDEDEB]">
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-[#6B7280] px-2 mb-2">
+                      End-of-module test
+                    </p>
+                    <ModuleTestEditor
+                      moduleId={m.id}
+                      test={m.test ?? null}
+                      onSaved={() => onChanged()}
+                    />
+                  </div>
                 </div>
               )}
             </div>

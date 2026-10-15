@@ -367,11 +367,11 @@ export const getOrderStatusApi = async (orderId: string) => {
   return await res.json();
 };
 
-export const validateCouponApi = async (code: string, subtotal: number) => {
+export const validateCouponApi = async (code: string, subtotal: number, courseIds?: string[]) => {
   const res = await fetch(`${API_BASE_URL}/checkout/validate-coupon`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ code, subtotal }),
+    body: JSON.stringify({ code, subtotal, course_ids: courseIds || [] }),
   });
   if (!res.ok) throw new Error('Coupon service unavailable');
   return await res.json();

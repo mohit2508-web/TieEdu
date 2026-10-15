@@ -1,11 +1,19 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Head from 'next/head';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 import type { GetServerSideProps } from 'next';
-import { SlidersHorizontal, X, Search as SearchIcon, ChevronDown } from 'lucide-react';
+import { SlidersHorizontal, X, Search as SearchIcon, ChevronDown, Compass, Route } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
 import { CourseRowCard, CourseRowSkeleton, Pill } from '@/components/courses/CourseUi';
 import { CourseFilterRail } from '@/components/courses/CourseFilterRail';
+import {
+  IntentSections,
+  CourseWizard,
+  MobileFilterChips,
+  shouldAutoOpenWizard,
+  dismissWizard,
+} from '@/components/courses/CatalogHelpers';
 import { API_BASE_URL } from '@/lib/api';
 import { fetchCourseCatalog } from '@/lib/coursesApi';
 import {
@@ -22,7 +30,7 @@ import type { CatalogFacets, CatalogFilters, CatalogSortKey, CourseCard, CourseC
 
 const SITE_URL = 'https://tieedu.com';
 
-const EMPTY_FACETS: CatalogFacets = { category: [], tag: [], type: [], level: [] };
+const EMPTY_FACETS: CatalogFacets = { branch: [], bucket: [], category: [], tag: [], type: [], level: [] };
 
 const SORT_LABELS: Record<CatalogSortKey, string> = {
   popular: 'Most popular',
@@ -47,6 +55,8 @@ export default function CoursesPage({ initialData }: { initialData: CourseCatalo
   const filters: CatalogFilters = useMemo(
     () => ({
       q: parsed.q,
+      branch: parsed.branch,
+      bucket: parsed.bucket,
       category: parsed.category,
       tag: parsed.tag,
       type: parsed.type,
@@ -63,6 +73,21 @@ export default function CoursesPage({ initialData }: { initialData: CourseCatalo
   const [error, setError] = useState<string | null>(null);
   const [searchText, setSearchText] = useState(filters.q);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [wizardOpen, setWizardOpen] = useState(false);
+
+  // First-visit wizard: auto-opens only for a truly fresh catalogue visit — a
+  // bare `/courses` URL, never dismissed. Decided after mount so SSR and the
+  // first client paint agree (no hydration flash), and skipped when a band,
+  // intent or shared link already chose the filters.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const hasSelection = ['q', 'branch', 'bucket', 'category', 'tag', 'type', 'level'].some((k) =>
+      params.get(k)
+    );
+    if (!hasSelection && shouldAutoOpenWizard()) {
+      setWizardOpen(true);
+    }
+  }, []);
 
   const facets = data?.facets || EMPTY_FACETS;
   const sorts = data?.sorts?.length
@@ -166,7 +191,7 @@ export default function CoursesPage({ initialData }: { initialData: CourseCatalo
 
   const clearAll = useCallback(() => {
     setSearchText('');
-    applyFilters({ q: '', category: [], tag: [], type: [], level: [], sort: filters.sort });
+    applyFilters({ q: '', branch: [], bucket: [], category: [], tag: [], type: [], level: [], sort: filters.sort });
   }, [applyFilters, filters.sort]);
 
   // --- Infinite scroll -------------------------------------------------------
@@ -313,6 +338,21 @@ export default function CoursesPage({ initialData }: { initialData: CourseCatalo
           </div>
 
           <div className="flex items-center gap-2">
+            <Link
+              href="/tracks"
+              className="inline-flex items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-2.5 text-sm font-bold text-[var(--ink)] transition-colors hover:border-[var(--brand-sky)]"
+            >
+              <Route size={15} />
+              Career tracks
+            </Link>
+            <button
+              type="button"
+              onClick={() => setWizardOpen(true)}
+              className="inline-flex items-center gap-2 rounded-[var(--radius-sm)] border border-dashed border-[var(--brand-sky)]/50 bg-[var(--bg-surface)] px-4 py-2.5 text-sm font-bold text-[var(--brand-sky-strong)]"
+            >
+              <Compass size={15} />
+              Help me choose
+            </button>
             <button
               type="button"
               onClick={() => setSheetOpen(true)}
@@ -374,6 +414,13 @@ export default function CoursesPage({ initialData }: { initialData: CourseCatalo
           )}
         </div>
 
+        {/* Quick branch/bucket chips on phones, where the rail is behind a sheet. */}
+        <MobileFilterChips facets={facets} filters={filters} onToggle={onToggle} />
+
+        {/* Intent doors, only while the catalogue is unfiltered — once the
+            visitor has chosen, the results are the page. */}
+        {activeCount === 0 && !filters.q && status !== 'loading' && <IntentSections />}
+
         <div className="mt-6 flex gap-10">
           <aside className="hidden w-[248px] shrink-0 lg:block">
             <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto pr-2">
@@ -402,12 +449,36 @@ export default function CoursesPage({ initialData }: { initialData: CourseCatalo
                 <p className="text-base font-bold text-[var(--ink)]">
                   {total === 0 && activeCount === 0 && !filters.q
                     ? 'No courses have been published yet.'
-                    : 'Nothing matches those filters.'}
+                    : pills.length > 0
+                      ? `No courses match ${pills.map((p) => p.label).join(' + ')} yet.`
+                      : 'Nothing matches those filters.'}
                 </p>
+                {total === 0 && activeCount === 0 && !filters.q ? (
+                  <p className="mx-auto mt-2 max-w-md text-sm text-[var(--text-muted)]">
+                    New courses are being authored now — check back soon, or take the free
+                    interview masterclass meanwhile.
+                  </p>
+                ) : (
+                  <p className="mx-auto mt-2 max-w-md text-sm text-[var(--text-muted)]">
+                    {filters.bucket.length > 0 && !filters.bucket.includes('e')
+                      ? 'That shelf is still being stocked. Micro-courses ship first — they take a weekend, not a semester.'
+                      : 'Try widening the filters, or start somewhere small.'}
+                  </p>
+                )}
                 {activeCount > 0 && (
-                  <button type="button" onClick={clearAll} className="mt-3 text-sm font-bold text-[var(--brand-sky)] hover:underline">
-                    Clear all filters
-                  </button>
+                  <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+                    <button type="button" onClick={clearAll} className="text-sm font-bold text-[var(--brand-sky)] hover:underline">
+                      Clear all filters
+                    </button>
+                    {filters.bucket.length > 0 && !filters.bucket.includes('e') && (
+                      <Link
+                        href="/courses?bucket=e&src=empty"
+                        className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-2 text-sm font-bold text-[var(--ink)] hover:border-[var(--brand-sky)]"
+                      >
+                        Browse micro-courses instead
+                      </Link>
+                    )}
+                  </div>
                 )}
               </div>
             )}
@@ -440,6 +511,14 @@ export default function CoursesPage({ initialData }: { initialData: CourseCatalo
           onClose={() => setSheetOpen(false)}
         />
       )}
+
+      <CourseWizard
+        open={wizardOpen}
+        onClose={(dismiss) => {
+          if (dismiss) dismissWizard();
+          setWizardOpen(false);
+        }}
+      />
 
       <Footer />
     </>

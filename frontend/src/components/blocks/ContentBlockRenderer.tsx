@@ -17,7 +17,8 @@ import { ContentBlock } from '@/types';
 import {
   Lock, Copy, Check, Info, AlertTriangle, Lightbulb,
   Maximize2, X, ChevronRight, Play, Cpu, Layers, ZoomIn, Table2, Video, Music,
-  ListChecks, Link2, PlayCircle
+  ListChecks, Link2, PlayCircle,
+  Target, Hammer, PenLine, AlertOctagon, GraduationCap, ClipboardCheck, Calculator, FlaskConical,
 } from 'lucide-react';
 
 SyntaxHighlighter.registerLanguage('c', c);
@@ -673,6 +674,257 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
             </span>
             <ChevronRight className="w-4 h-4 text-[--text-muted] ml-auto shrink-0" />
           </a>
+        </div>
+      );
+    }
+
+    /* ---- OBJECTIVE (9-block standard: "is lesson ke baad aap ___ kar paoge") ---- */
+    case 'objective': {
+      const items: string[] = Array.isArray(payload.objectives)
+        ? payload.objectives
+        : payload.text
+          ? [payload.text]
+          : [];
+      return (
+        <div className="my-4 rounded-xl border border-emerald-200 bg-emerald-50/50 p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Target className="w-4 h-4 text-emerald-600" />
+            <span className="text-[12px] font-bold uppercase tracking-wide text-emerald-700">
+              {payload.title || 'What you will learn'}
+            </span>
+          </div>
+          {items.length === 0 ? (
+            <p className="text-[13px] text-[--text-muted]">No objective set for this lesson yet.</p>
+          ) : (
+            <ul className="space-y-1.5">
+              {items.map((it, i) => (
+                <li key={i} className="flex gap-2 text-[14px] text-[--text-body] leading-relaxed">
+                  <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <span>{it}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      );
+    }
+
+    /* ---- WORKED EXAMPLE (step-by-step solved problem) ---- */
+    case 'worked_example': {
+      const steps: { title?: string; desc?: string; code_snippet?: string }[] = Array.isArray(payload.steps)
+        ? payload.steps
+        : [];
+      return (
+        <div className="my-5 rounded-xl border border-[--border-subtle] bg-white overflow-hidden">
+          <div className="flex items-center gap-2 bg-[#F4F4F2] px-4 py-2.5 border-b border-[--border-subtle]">
+            <Hammer className="w-3.5 h-3.5 text-[--brand-accent]" />
+            <span className="text-[12px] font-semibold text-[--text-heading]">{payload.title || 'Worked example'}</span>
+          </div>
+          <div className="p-4 space-y-3">
+            {payload.problem && (
+              <div className="rounded-lg bg-[#FAFAF9] border border-[--border-subtle] p-3 text-[14px] text-[--text-body] leading-relaxed whitespace-pre-line">
+                {payload.problem}
+              </div>
+            )}
+            {steps.length > 0 && (
+              <ol className="space-y-3">
+                {steps.map((s, i) => (
+                  <li key={i} className="flex gap-3">
+                    <span className="shrink-0 w-6 h-6 rounded-full bg-[#E8F4FB] text-[#0271B5] text-[12px] font-extrabold flex items-center justify-center">
+                      {i + 1}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      {s.title && <p className="text-[14px] font-semibold text-[--text-heading] mb-0.5">{s.title}</p>}
+                      {s.desc && <p className="text-[14px] text-[--text-body] leading-relaxed whitespace-pre-line">{s.desc}</p>}
+                      {s.code_snippet && (
+                        <pre className="mt-2 rounded-lg bg-[#1E1E1E] text-[#E6EDF3] p-3 text-[12px] leading-relaxed overflow-x-auto font-mono">
+                          <code>{s.code_snippet}</code>
+                        </pre>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            )}
+            {payload.solution && (
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50/50 p-3">
+                <p className="text-[12px] font-bold text-emerald-700 mb-1">Solution</p>
+                <p className="text-[14px] text-[--text-body] leading-relaxed whitespace-pre-line">{payload.solution}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    /* ---- TRY IT (interactive practice prompt) ---- */
+    case 'try_it': {
+      return (
+        <div className="my-5 rounded-xl border border-indigo-200 bg-indigo-50/40 p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <PenLine className="w-4 h-4 text-indigo-600" />
+            <span className="text-[12px] font-bold uppercase tracking-wide text-indigo-700">
+              {payload.title || 'Try it yourself'}
+            </span>
+          </div>
+          <p className="text-[14px] text-[--text-body] leading-relaxed whitespace-pre-line">
+            {payload.prompt || 'Practise the idea above before moving on.'}
+          </p>
+          {payload.code && (
+            <pre className="mt-3 rounded-lg bg-[#1E1E1E] text-[#E6EDF3] p-3 text-[12px] leading-relaxed overflow-x-auto font-mono">
+              <code>{payload.code}</code>
+            </pre>
+          )}
+          {payload.hint && (
+            <p className="mt-3 text-[13px] text-indigo-700 leading-relaxed">
+              <strong>Hint:</strong> {payload.hint}
+            </p>
+          )}
+        </div>
+      );
+    }
+
+    /* ---- COMMON MISTAKES ---- */
+    case 'mistakes': {
+      const items: { mistake?: string; fix?: string }[] = Array.isArray(payload.mistakes) ? payload.mistakes : [];
+      return (
+        <div className="my-5 rounded-xl border border-amber-300 bg-amber-50/40 overflow-hidden">
+          <div className="flex items-center gap-2 bg-amber-100/70 px-4 py-2.5 border-b border-amber-200">
+            <AlertOctagon className="w-3.5 h-3.5 text-amber-600" />
+            <span className="text-[12px] font-semibold text-amber-900">{payload.title || 'Common mistakes'}</span>
+          </div>
+          {items.length === 0 ? (
+            <p className="px-4 py-4 text-[13px] text-[--text-muted]">No mistakes listed yet.</p>
+          ) : (
+            <ul className="divide-y divide-amber-200/70">
+              {items.map((m, i) => (
+                <li key={i} className="px-4 py-3">
+                  {m.mistake && <p className="text-[14px] font-semibold text-amber-900">{m.mistake}</p>}
+                  {m.fix && <p className="text-[13px] text-[--text-body] leading-relaxed mt-0.5">{m.fix}</p>}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      );
+    }
+
+    /* ---- EXAM / INTERVIEW ANGLE (PYQ or interview question) ---- */
+    case 'exam_angle': {
+      return (
+        <div className="my-5 rounded-xl border border-[#1F3A5F]/20 bg-[#1F3A5F]/[0.04] p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <GraduationCap className="w-4 h-4 text-[#1F3A5F]" />
+            <span className="text-[12px] font-bold uppercase tracking-wide text-[#1F3A5F]">
+              {payload.title || 'Exam / interview angle'}
+            </span>
+          </div>
+          {payload.question && <p className="text-[14px] font-semibold text-[--text-heading] leading-relaxed">{payload.question}</p>}
+          {payload.answer && (
+            <p className="mt-2 text-[14px] text-[--text-body] leading-relaxed whitespace-pre-line">{payload.answer}</p>
+          )}
+          {payload.source && <p className="mt-2 text-[12px] text-[--text-muted]">Source: {payload.source}</p>}
+        </div>
+      );
+    }
+
+    /* ---- SUMMARY (one-screen revision card) ---- */
+    case 'summary': {
+      const points: string[] = Array.isArray(payload.points) ? payload.points : [];
+      return (
+        <div className="my-5 rounded-xl border-2 border-[#1F3A5F]/15 bg-white p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <ClipboardCheck className="w-4 h-4 text-[#0271B5]" />
+            <span className="text-[12px] font-bold uppercase tracking-wide text-[#1F3A5F]">
+              {payload.title || 'Lesson summary'}
+            </span>
+          </div>
+          {points.length === 0 ? (
+            <p className="text-[13px] text-[--text-muted]">No summary yet.</p>
+          ) : (
+            <ul className="space-y-1.5">
+              {points.map((pt, i) => (
+                <li key={i} className="flex gap-2 text-[14px] text-[--text-body] leading-relaxed">
+                  <Check className="w-4 h-4 text-[#0271B5] shrink-0 mt-0.5" />
+                  <span>{pt}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      );
+    }
+
+    /* ---- NUMERICAL PRACTICE ----
+       Values are randomized per attempt and graded server-side, so this view
+       shows the template and the variable ranges only. `answer_expr` is the
+       grading formula and is deliberately NOT rendered here. */
+    case 'numerical': {
+      const vars: { name?: string; min?: number; max?: number }[] = Array.isArray(payload.variables)
+        ? payload.variables
+        : [];
+      return (
+        <div className="my-5 rounded-xl border border-purple-200 bg-purple-50/40 p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Calculator className="w-4 h-4 text-purple-600" />
+            <span className="text-[12px] font-bold uppercase tracking-wide text-purple-700">
+              {payload.title || 'Numerical practice'}
+            </span>
+            {payload.unit && (
+              <span className="ml-auto text-[11px] font-mono bg-white border border-purple-200 rounded px-2 py-0.5 text-purple-700">
+                {payload.unit}
+              </span>
+            )}
+          </div>
+          {payload.template && (
+            <p className="text-[14px] text-[--text-body] leading-relaxed whitespace-pre-line">{payload.template}</p>
+          )}
+          {vars.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {vars.map((v, i) => (
+                <span key={i} className="text-[12px] font-mono bg-white border border-purple-200 rounded px-2 py-0.5 text-purple-700">
+                  {v.name}: {v.min}–{v.max}
+                </span>
+              ))}
+            </div>
+          )}
+          {payload.hint && <p className="mt-3 text-[13px] text-purple-700 leading-relaxed"><strong>Hint:</strong> {payload.hint}</p>}
+          <p className="mt-3 text-[12px] text-purple-700">Values are randomized on every attempt and checked on the server — copying an answer will not work.</p>
+        </div>
+      );
+    }
+
+    /* ---- SIM (embedded circuit / logic simulator) ---- */
+    case 'sim': {
+      const url: string = payload.url || '';
+      // Only https embeds are drawn. The URL is authored, but an iframe is the
+      // one block that can navigate the surrounding page, so an http or
+      // protocol-relative source is refused rather than rendered.
+      const safe = /^https:\/\//i.test(url);
+      if (!safe) {
+        return (
+          <div className="my-5 rounded-xl border border-dashed border-[--border-subtle] p-4 text-[13px] text-[--text-muted]">
+            Simulator block needs an https embed URL.
+          </div>
+        );
+      }
+      return (
+        <div className="my-5 border border-[--border-subtle] rounded-xl overflow-hidden">
+          <div className="flex items-center gap-2 bg-[#F4F4F2] px-4 py-2.5 border-b border-[--border-subtle]">
+            <FlaskConical className="w-3.5 h-3.5 text-[--brand-accent]" />
+            <span className="text-[12px] font-semibold text-[--text-heading]">{payload.title || 'Interactive simulator'}</span>
+            {payload.provider && (
+              <span className="ml-auto text-[10px] font-mono text-[--text-muted]">{payload.provider}</span>
+            )}
+          </div>
+          <iframe
+            className="w-full border-0"
+            style={{ height: `${payload.height || 420}px` }}
+            src={url}
+            title={payload.title || 'Simulator'}
+            loading="lazy"
+            allow="fullscreen"
+          />
         </div>
       );
     }

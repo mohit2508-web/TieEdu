@@ -19,7 +19,16 @@ import { CourseMobileActionBar } from '@/components/courses/CourseMobileActionBa
 import { decideCoursePage } from '@/lib/courseSsr';
 import { applyLessonState } from '@/lib/lessonProgress';
 import { CourseThumbnailEditor } from '@/components/courses/CourseThumbnailEditor';
-import { Award, AlertTriangle, CheckCircle2, Download, Lock, ShieldCheck, Star, Users, Layers, FileText, Clock } from 'lucide-react';
+import { ExamCard } from '@/components/courses/ExamCard';
+import { ModuleTestCard } from '@/components/courses/ModuleTestCard';
+import { CouponBanner } from '@/components/courses/CouponBanner';
+import { ProjectSubmit } from '@/components/courses/ProjectSubmit';
+import { CertificatePreview } from '@/components/courses/CertificatePreview';
+import { CourseReviews } from '@/components/courses/CourseReviews';
+import { ShareSaveButtons } from '@/components/courses/ShareSaveButtons';
+import { ExamPrepPanel } from '@/components/courses/ExamPrepPanel';
+import { Sheet } from '@/components/common/Sheet';
+import { Award, AlertTriangle, CheckCircle2, Download, Lock, ShieldCheck, Star, Users, Layers, FileText, Clock, CircleDashed, Sparkles, Hammer, BookOpenCheck } from 'lucide-react';
 import {
   fetchCourse,
   fetchLesson,
@@ -79,6 +88,12 @@ export default function CoursePage({
 
   const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
   const requestedLesson = typeof router.query.lesson === 'string' ? router.query.lesson : null;
+  // Staged by an offer deep-link (`?coupon=CODE`). Upper-cased once here so the
+  // banner and the cart drawer validate the same code the same way.
+  const stagedCoupon =
+    typeof router.query.coupon === 'string' && router.query.coupon.trim()
+      ? router.query.coupon.trim().toUpperCase()
+      : null;
   // A boolean rather than `user` itself: signing in and out is what should
   // trigger a re-fetch, not a profile update re-rendering the same person.
   const isSignedIn = !!user;
@@ -96,6 +111,10 @@ export default function CoursePage({
   const [certBusy, setCertBusy] = useState(false);
   const [certError, setCertError] = useState<string | null>(null);
   const [feedbackSent, setFeedbackSent] = useState(false);
+  // The in-player exam-prep sheet. Closed by default; opens to the Revision
+  // tab — the night-before view — because that is the state a learner inside
+  // a lesson is actually in.
+  const [examPrepOpen, setExamPrepOpen] = useState(false);
 
   // Flattened, ordered lesson list. The whole gate/lock model is "finish the one
   // before you", so everything the page needs is one array plus the server's
@@ -313,6 +332,15 @@ export default function CoursePage({
   // A certificate can only exist if the course awards one. Without this check an
   // ineligible course renders a claim button that the API refuses with a 400.
   const existingCert = course?.certificate || null;
+
+  /**
+   * Whether the claim button may render at all. Absent readiness data (older
+   * payload, signed-out preview) is treated as ready so the panel keeps its
+   * historical behaviour rather than hiding a button that used to work.
+   */
+  const ready = course?.certificate_readiness
+    ? course.certificate_readiness.ready || !!existingCert
+    : true;
 
   /**
    * The cover as an absolute URL.
@@ -827,6 +855,15 @@ export default function CoursePage({
               <div className="mt-5 flex flex-wrap items-center gap-3">{enrollAction()}</div>
             </header>
 
+            {course && (
+              <CouponBanner
+                couponCode={stagedCoupon}
+                courseId={course.id}
+                coursePriceInr={course.price_inr}
+                isFree={course.is_free}
+              />
+            )}
+
             {locked && (
               <div className="mb-8 flex items-start gap-3 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
                 <Lock size={18} className="mt-0.5 shrink-0 text-[var(--text-muted)]" />
@@ -852,6 +889,39 @@ export default function CoursePage({
                 />
               </div>
             )}
+
+            {progress?.is_complete && (
+              <ExamCard courseSlug={course.slug} exam={course.exam ?? null} onComplete={loadCourse} />
+            )}
+
+            {progress?.is_complete &&
+              course.certificate_eligible &&
+              course.certificate_readiness &&
+              !course.certificate_readiness.ready &&
+              !course.certificate && (
+                <div className="mb-8 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6">
+                  <h3 className="text-sm font-bold text-[var(--ink)]">Before you can claim your certificate</h3>
+                  <ul className="mt-2 space-y-1 text-sm text-[var(--text-body)]">
+                    {course.certificate_readiness.missing.map((m) => (
+                      <li key={m} className="flex items-center gap-2">
+                        <CircleDashed size={14} className="shrink-0 text-[var(--text-muted)]" />
+                        {m === 'final_exam'
+                          ? 'Pass the final exam above.'
+                          : m === 'project'
+                            ? `Submit your capstone project${course.certificate_readiness?.project_title ? `: ${course.certificate_readiness.project_title}` : ''}.`
+                            : m}
+                      </li>
+                    ))}
+                  </ul>
+                  {course.certificate_readiness.project_required &&
+                    !course.certificate_readiness.project_url && (
+                      <ProjectSubmit
+                        courseSlug={course.slug}
+                        onSubmitted={loadCourse}
+                      />
+                    )}
+                </div>
+              )}
 
             {done && (
               /* Two columns, because these are two different kinds of thing.
@@ -903,19 +973,29 @@ export default function CoursePage({
                           that mints it, and say what the learner gets for the click.
                         */}
                         <p className="mt-1 text-xs leading-relaxed text-[var(--text-muted)]">
-                          Issued the moment you finish, with a serial anyone can check.
+                          {ready
+                            ? 'Issued the moment you claim it, with a serial anyone can check.'
+                            : 'The exam and project above have to be done first — then the serial is yours.'}
                         </p>
-                        <div className="mt-4">
-                          <CertificateBlock
-                            courseSlug={slug}
-                            existing={existingCert}
-                            busy={certBusy}
-                            error={certError}
-                            onBusy={setCertBusy}
-                            onError={setCertError}
-                            onIssued={loadCourse}
-                          />
-                        </div>
+                        {/*
+                          The claim button is withheld entirely while a gate is
+                          open. A button that only ever answers 403 teaches the
+                          learner to distrust every other button on the page; the
+                          list of what is missing is the honest control.
+                        */}
+                        {(ready || existingCert) && (
+                          <div className="mt-4">
+                            <CertificateBlock
+                              courseSlug={slug}
+                              existing={existingCert}
+                              busy={certBusy}
+                              error={certError}
+                              onBusy={setCertBusy}
+                              onError={setCertError}
+                              onIssued={loadCourse}
+                            />
+                          </div>
+                        )}
                       </>
                     ) : (
                       <p className="text-sm text-[var(--text-muted)]">
@@ -948,6 +1028,82 @@ export default function CoursePage({
               certificateEligible={course.certificate_eligible}
             />
 
+            {/* Share and save, under the facts rather than under the enrol CTA:
+                the visitor deciding whether to keep this page open is the one
+                who needs these, and they are above the fold on every layout. */}
+            <div className="mb-8">
+              <ShareSaveButtons courseSlug={course.slug} courseTitle={course.title} />
+            </div>
+
+            {/* "What you'll get" — the rewards this course really issues, not a
+                marketing list. The server only sends perks it grants (see
+                lib/perks), so an empty array means there is nothing to promise
+                and the panel disappears rather than claiming a reward that will
+                never arrive. */}
+            {course.perks && course.perks.length > 0 && (
+              <section className="mb-8 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
+                <div className="flex items-center gap-2">
+                  <Sparkles size={16} className="text-[var(--brand-sky)]" />
+                  <h2 className="text-sm font-bold text-[var(--ink)]">What you'll get</h2>
+                </div>
+                <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+                  {course.perks.map((perk) => (
+                    <li
+                      key={perk.key}
+                      className="flex items-start gap-2 rounded-lg bg-[var(--bg-surface-hover)] px-3 py-2.5"
+                    >
+                      <CheckCircle2 size={15} className="mt-0.5 shrink-0 text-[var(--color-success)]" />
+                      <div>
+                        <p className="text-sm font-semibold text-[var(--ink)]">{perk.label}</p>
+                        {perk.detail && (
+                          <p className="text-xs text-[var(--text-muted)]">{perk.detail}</p>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            {/* What the certificate looks like, before the learner commits.
+                Only for courses that actually issue one — the preview is the
+                course's own tier, styled as the issuer will style the PDF, and
+                labelled a preview so it can never be mistaken for the artefact. */}
+            {course.certificate_eligible && (
+              <section aria-labelledby="cert-preview-heading" className="mb-8 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
+                <h2 id="cert-preview-heading" className="text-sm font-bold text-[var(--ink)]">
+                  Your certificate
+                </h2>
+                <div className="mt-3">
+                  <CertificatePreview tier={course.certificate_tier} courseTitle={course.title} className="max-w-[320px]" />
+                </div>
+              </section>
+            )}
+
+            {/* The capstone, advertised up front. A buyer should know what they
+                will build before they pay — the ProjectSubmit card below only
+                appears once the learner is enrolled and past the exam, so
+                without this the project would be a surprise at the end. */}
+            {course.project?.title && (
+              <section aria-labelledby="capstone-heading" className="mb-8 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
+                <div className="flex items-center gap-2">
+                  <Hammer size={16} className="text-[var(--brand-sky)]" />
+                  <h2 id="capstone-heading" className="text-sm font-bold text-[var(--ink)]">
+                    What you will build
+                  </h2>
+                </div>
+                <p className="mt-3 text-sm font-semibold text-[var(--ink)]">{course.project.title}</p>
+                <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-[var(--text-body)]">
+                  {course.project.brief}
+                </p>
+                {course.project.submission_hint && (
+                  <p className="mt-3 text-xs text-[var(--text-muted)]">
+                    You will submit: {course.project.submission_hint}
+                  </p>
+                )}
+              </section>
+            )}
+
             {/* Two columns from `lg`, three from a width that can actually pay for
                 the third one.
 
@@ -977,6 +1133,23 @@ export default function CoursePage({
               />
 
               <section id="lesson-player" className="min-w-0 scroll-mt-[var(--rail-top)]">
+                {/* Exam-prep toggle, above the player: the revision view is a
+                    companion to whatever lesson is open — a student mid-chapter
+                    checking what the board actually asks. Compact sheet, Revision
+                    tab first, and never a second page load. */}
+                {course.exam_prep && (
+                  <div className="mb-4">
+                    <button
+                      type="button"
+                      onClick={() => setExamPrepOpen(true)}
+                      className="focus-ring inline-flex min-h-[40px] w-full items-center justify-center gap-2 rounded-[var(--radius-md)] border border-dashed border-[var(--brand-sky)]/50 bg-[var(--brand-sky-soft)]/40 px-4 py-2.5 text-sm font-bold text-[var(--brand-sky-strong)] transition-colors hover:bg-[var(--brand-sky-soft)]"
+                    >
+                      <BookOpenCheck size={16} />
+                      Semester exam prep — units, PYQs, revision
+                    </button>
+                  </div>
+                )}
+
                 {selectedLesson ? (
                   <LessonPlayer
                     key={selectedLesson.id}
@@ -994,6 +1167,27 @@ export default function CoursePage({
                 ) : (
                   <p className="text-sm text-[var(--text-muted)]">This course has no lessons yet.</p>
                 )}
+
+                {/* The end-of-module test, when the current lesson's module has
+                    one and the learner is actually taking the course. The card
+                    gates itself on the module's own lessons server-side; this
+                    only decides whether to render it at all. */}
+                {progress?.enrolled &&
+                  (() => {
+                    const currentModule = (course?.modules || []).find((m) =>
+                      (m.lessons || []).some((l) => l.id === selectedLesson?.id)
+                    );
+                    if (!currentModule?.test) return null;
+                    return (
+                      <ModuleTestCard
+                        courseSlug={slug}
+                        moduleId={currentModule.id}
+                        moduleTitle={currentModule.title}
+                        test={currentModule.test}
+                        onComplete={loadCourse}
+                      />
+                    );
+                  })()}
               </section>
 
               {/* The sticky enrolment card.
@@ -1043,6 +1237,19 @@ export default function CoursePage({
               </aside>
             </div>
 
+            {/* Semester Exam Mode — the full four-tab surface, below the
+                syllabus and above the outcomes: after "what is in the course"
+                and before "what you'll be able to do", which is where a student
+                deciding whether to commit time looks next. Renders for anyone
+                the detail endpoint serves (free-course visitors included); the
+                payload is study material, not gated teaching content. The panel
+                owns its own heading, so the section is only a landmark. */}
+            {course.exam_prep && (
+              <section aria-label="Semester exam prep" className="mt-14">
+                <ExamPrepPanel courseSlug={course.slug} prep={course.exam_prep} />
+              </section>
+            )}
+
             {/* What you can do by the end. Authored per course by the person who
                 wrote it, so it is specific to this course rather than a generic
                 promise reused on every page. */}
@@ -1091,6 +1298,12 @@ export default function CoursePage({
               </section>
             )}
 
+            {/* Reviews from people who finished — after the FAQ, before related:
+                the visitor who read this far is deciding, and only finishers
+                can leave them, so the list is real social proof rather than
+                drive-by ratings. Renders itself, or nothing when empty. */}
+            <CourseReviews courseSlug={course.slug} />
+
             {related.length > 0 && (
               <section aria-labelledby="related-heading" className="mt-14">
                 <div className="flex items-baseline justify-between gap-4">
@@ -1135,6 +1348,25 @@ export default function CoursePage({
         <div className="md:hidden">
           {mobileAction()}
         </div>
+      )}
+
+      {/* In-player exam-prep sheet. Compact + Revision-first: the learner is
+          mid-lesson and wants the condensed view, not the marketing header.
+          The Sheet owns its own scroll, so a long revision sheet never fights
+          the page behind it. */}
+      {course?.exam_prep && (
+        <Sheet
+          open={examPrepOpen}
+          onClose={() => setExamPrepOpen(false)}
+          title="Semester exam prep"
+        >
+          <ExamPrepPanel
+            courseSlug={course.slug}
+            prep={course.exam_prep}
+            initialTab="revision"
+            compact
+          />
+        </Sheet>
       )}
 
       <Footer />

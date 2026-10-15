@@ -1,6 +1,7 @@
-import React from 'react';
-import { CheckCircle2, Clock, FileText, Layers, Lock } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { CheckCircle2, Clock, FileText, Layers, Lock, PlayCircle } from 'lucide-react';
 import { CourseCover } from '@/components/courses/CourseUi';
+import { ContentBlockRenderer } from '@/components/blocks/ContentBlockRenderer';
 import {
   courseIncludes,
   formatDuration,
@@ -9,8 +10,9 @@ import {
   formatModuleCount,
   formatPrice,
 } from '@/lib/courseFormat';
+import { fetchCourseSample } from '@/lib/coursesApi';
 import { CourseMobileActionBar } from '@/components/courses/CourseMobileActionBar';
-import type { CourseCard } from '@/types';
+import type { ContentBlock, CourseCard } from '@/types';
 
 /**
  * The server-rendered view of a paid course for a signed-out visitor.
@@ -36,9 +38,12 @@ import type { CourseCard } from '@/types';
  *
  * What it deliberately does NOT do
  * --------------------------------
- * It does not reconstruct a `CourseDetail`. There is no syllabus, no instructor,
- * no long-form prose and no lesson content here, because the public API does not
- * hand those to a stranger and this component is not a place to invent them. A
+ * It does not reconstruct a `CourseDetail`. There is no syllabus, no instructor
+ * and no long-form prose here, because the public API does not hand those to a
+ * stranger and this component is not a place to invent them. The one exception
+ * is the first lesson: GET /:slug/sample returns exactly one lesson body (quiz
+ * stripped) as the product's free taste of a paid course, and this shell
+ * renders it with the same ContentBlockRenderer the enrolled player uses. A
  * signing-in visitor is upgraded to the real page by the client effect.
  */
 export const CoursePreviewShell: React.FC<{
@@ -47,6 +52,35 @@ export const CoursePreviewShell: React.FC<{
 }> = ({ course, onSignIn }) => {
   const includes = courseIncludes(course);
   const duration = formatDuration(course.stats?.total_minutes);
+
+  // The public first-lesson sample. Fetched lazily, never blocking the sales
+  // copy above it: if the endpoint is slow or down the page still renders, one
+  // section lighter. The server only ever returns lesson 1 of a published
+  // course, with the quiz stripped — see GET /:slug/sample.
+  const [sample, setSample] = useState<{
+    id: string;
+    title: string;
+    summary?: string;
+    blocks?: ContentBlock[];
+    module_title?: string;
+    duration_minutes?: number;
+  } | null>(null);
+  const [sampleFailed, setSampleFailed] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    fetchCourseSample(course.slug)
+      .then((lesson) => {
+        if (!alive) return;
+        setSample(lesson);
+      })
+      .catch(() => {
+        if (alive) setSampleFailed(true);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [course.slug]);
 
   return (
     <>
@@ -128,6 +162,59 @@ export const CoursePreviewShell: React.FC<{
             </ul>
           </section>
         )}
+
+        {/* The free first lesson — the one part of a paid course a stranger may
+            read. Same ContentBlockRenderer the enrolled player uses, so the
+            sample cannot drift from the real thing. Renders nothing at all when
+            the fetch fails or the course has no lessons: a missing sample is a
+            lighter page, never an error banner in the middle of a sales pitch. */}
+        {sample && (sample.blocks?.length || 0) > 0 && (
+          <section aria-labelledby="preview-sample" className="mt-10 rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-success-soft, #E8F7EE)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--color-success)]">
+                <PlayCircle size={12} /> Free sample
+              </span>
+              {sample.module_title && (
+                <span className="text-xs text-[var(--text-muted)]">{sample.module_title}</span>
+              )}
+              {typeof sample.duration_minutes === 'number' && sample.duration_minutes > 0 && (
+                <span className="inline-flex items-center gap-1 text-xs text-[var(--text-muted)]">
+                  <Clock size={12} /> {formatDuration(sample.duration_minutes)}
+                </span>
+              )}
+            </div>
+            <h2 id="preview-sample" className="mt-3 text-lg font-extrabold tracking-tight text-[var(--ink)]">
+              {sample.title}
+            </h2>
+            {sample.summary && (
+              <p className="mt-1 text-sm leading-relaxed text-[var(--text-body)]">{sample.summary}</p>
+            )}
+            <div className="mt-4 space-y-4">
+              {(sample.blocks || []).map((block, i) => (
+                <ContentBlockRenderer key={i} block={block} />
+              ))}
+            </div>
+            <p className="mt-5 border-t border-[var(--border-subtle)] pt-4 text-sm text-[var(--text-muted)]">
+              That is lesson 1, in full. Sign in to unlock the rest of the course.
+            </p>
+            <button
+              type="button"
+              onClick={onSignIn}
+              className="mt-3 w-full rounded-lg bg-[var(--brand-sky)] px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[var(--brand-sky-strong)] sm:w-auto"
+            >
+              Sign in to continue
+            </button>
+          </section>
+        )}
+        {/* Only an honest failure state, shown when the sample endpoint is
+            unreachable — the page says so once, quietly, rather than silently
+            dropping the section and leaving the "first lesson free" promise in
+            the aside unbacked. */}
+        {sampleFailed && (
+          <p className="mt-8 text-sm text-[var(--text-muted)]">
+            The free sample could not load — sign in to see the full course.
+          </p>
+        )}
       </div>
 
       <aside className="lg:sticky lg:top-[calc(var(--header-h)+1.5rem)]" aria-label="Course access">
@@ -151,15 +238,13 @@ export const CoursePreviewShell: React.FC<{
 
           <div className="mt-4 flex items-start gap-2 text-sm text-[var(--text-body)]">
             <Lock size={15} className="mt-0.5 shrink-0 text-[var(--text-muted)]" />
-            {/* No mention of a free first lesson. This view only ever renders for a
-                paid course, and a paid course does not have one: a signed-in visitor
-                who has not bought it gets the sales syllabus - module and lesson
-                titles, durations, quiz counts - and no lesson bodies at all. Promising
-                a free first lesson here would be a claim the product does not honour,
-                and it would be the most expensive kind of lie on the page, because
-                the visitor signs in specifically to collect it. */}
+            {/* The offer is now real and precisely scoped: the first lesson is
+                free to read via GET /:slug/sample (one lesson, quiz stripped),
+                and everything else still needs a sign-in and a purchase. The
+                copy names both halves so the visitor is never left guessing
+                which one "free" applies to. */}
             <p>
-              Sign in to see the full syllabus, every lesson description and the instructor.
+              Sign in for the full syllabus and every lesson. The first lesson is free to read below.
             </p>
           </div>
 

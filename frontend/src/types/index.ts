@@ -11,7 +11,15 @@ export type BlockType =
   | 'checklist'
   | 'resources'
   | 'steps'
-  | 'video_link';
+  | 'video_link'
+  | 'objective'
+  | 'worked_example'
+  | 'try_it'
+  | 'mistakes'
+  | 'exam_angle'
+  | 'summary'
+  | 'numerical'
+  | 'sim';
 
 /** Course difficulty. Mirrors LEVELS_ALLOWED in backend/src/routes/courseAdmin.routes.ts. */
 export type CourseLevel = 'beginner' | 'intermediate' | 'advanced';
@@ -53,6 +61,22 @@ export interface ContentBlock {
     items?: string[];
     // Resources block
     links?: { label: string; url: string }[];
+    // New lesson-standard blocks (Phase 0d)
+    objectives?: string[];
+    points?: string[];
+    problem?: string;
+    solution?: string;
+    prompt?: string;
+    hint?: string;
+    question?: string;
+    answer?: string;
+    mistakes?: { mistake?: string; fix?: string }[];
+    template?: string;
+    variables?: { name?: string; min?: number; max?: number }[];
+    answer_expr?: string;
+    unit?: string;
+    provider?: string;
+    height?: number;
   };
 }
 
@@ -734,6 +758,8 @@ export interface CourseModule {
   summary: string;
   sort_order: number;
   lessons: CourseLessonView[];
+  /** End-of-module test, when the course author configured one. */
+  test?: ModuleTestSummary | null;
 }
 
 export interface CourseStats {
@@ -755,6 +781,65 @@ export interface CourseProgress {
   completed_lesson_ids: string[];
   xp_earned: number;
   next_lesson_id: string | null;
+}
+
+/** The final-exam card's state, derived server-side from stored attempts. */
+export interface ExamState {
+  question_count: number;
+  duration_minutes: number;
+  passing_percent: number;
+  retake_cooldown_hours: number;
+  distinction_percent: number;
+  bank_size: number;
+  attempts_count: number;
+  best_percent: number | null;
+  first_attempt_percent: number | null;
+  passed: boolean;
+  last_attempt_at: string | null;
+  cooldown_until: string | null;
+  in_progress: boolean;
+  can_start: boolean;
+  project_required: boolean;
+  project_title: string | null;
+}
+
+/** One module test, as the syllabus sees it: config summary plus learner state. */
+export interface ModuleTestSummary {
+  question_count: number;
+  passing_percent: number;
+  retake_cooldown_hours: number;
+  bank_size: number;
+  /** Null when this learner has no state yet (not enrolled / not started). */
+  state: ModuleTestState | null;
+}
+
+/** The module-test card's state, derived server-side from stored attempts. */
+export interface ModuleTestState {
+  module_id: string;
+  question_count: number;
+  passing_percent: number;
+  retake_cooldown_hours: number;
+  bank_size: number;
+  attempts_count: number;
+  best_percent: number | null;
+  passed: boolean;
+  last_attempt_at: string | null;
+  cooldown_until: string | null;
+  in_progress: boolean;
+  can_start: boolean;
+  lessons_complete: boolean;
+}
+
+/** Server-computed assessment gates before a certificate can be claimed. */
+export interface CertificateReadiness {
+  ready: boolean;
+  missing: string[];
+  score_percent: number | null;
+  distinction: boolean;
+  exam_required: boolean;
+  project_required: boolean;
+  project_url: string | null;
+  project_title?: string | null;
 }
 
 /**
@@ -791,6 +876,47 @@ export interface CourseSignals {
 
 export type CourseBadge = 'new' | 'popular' | 'in_progress';
 
+/** One completion reward a course really grants — server-defined, never invented client-side. */
+export interface CoursePerk {
+  key: string;
+  label: string;
+  detail?: string;
+}
+
+// --- Semester Exam Mode (course.exam_prep) ----------------------------------
+//
+// Study material, not assessment: no answer keys, nothing that gates a
+// certificate, nothing the server grades. It ships to every viewer of the
+// course detail (including signed-out visitors to free courses) because its
+// whole purpose is to be revisited before an exam.
+
+/** One previous-year question. The solution is optional — boards do not always publish one. */
+export interface ExamPrepPyq {
+  year: string;
+  question: string;
+  solution?: string;
+}
+
+export interface ExamPrepUnit {
+  title: string;
+  /** Condensed unit summary — the one-screen-per-unit revision notes. */
+  summary?: string;
+  /** Important questions for this unit. Checkable by the learner (local tick). */
+  questions: string[];
+  /** Previous-year questions that belong to this unit specifically. */
+  pyqs?: ExamPrepPyq[];
+}
+
+export interface ExamPrep {
+  /** Board/course this prep targets, e.g. "AKTU · CSE Semester 3". */
+  target?: string;
+  units: ExamPrepUnit[];
+  /** Course-wide important questions, on top of the per-unit ones. */
+  important_questions?: string[];
+  /** Course-wide PYQs, on top of the per-unit ones. */
+  previous_year_questions?: ExamPrepPyq[];
+}
+
 export interface CourseCard {
   id: string;
   slug: string;
@@ -801,8 +927,19 @@ export interface CourseCard {
   is_free: boolean;
   price_inr: number;
   thumbnail_url?: string;
+  /** Accessibility text for the cover. Null when the admin left it blank. */
+  thumbnail_alt?: string | null;
+  /**
+   * The live offer a real, currently-redeemable coupon grants this course, or
+   * null. Never hard-coded: the server only populates it from an active,
+   * unexpired, unexhausted, scoped coupon on a paid course that has not opted
+   * out, so a card can only ever advertise a deal that actually applies.
+   */
+  active_offer?: { label: string; code: string; discount_percent: number; discount_flat: number; badge: string } | null;
   tags: string[];
   certificate_eligible: boolean;
+  /** What the course issues on completion. Empty when the course grants nothing yet. */
+  perks?: CoursePerk[];
   stats: CourseStats;
   progress: CourseProgress | null;
   access?: CourseAccess;
@@ -830,6 +967,54 @@ export interface CourseDetail extends Omit<CourseCard, 'progress'> {
    * already claimed has to click a no-op to reach the download.
    */
   certificate?: CertificateSummary | null;
+
+  /**
+   * What this course actually issues on completion — certificate, credit,
+   * badge. Server-defined; a course only lists rewards it really grants, so
+   * this panel never has to hedge.
+   */
+  perks?: CoursePerk[];
+
+  /**
+   * The learner's final-exam state for this course. `null` when the course has
+   * no exam (or the learner is signed out with no attempt state), so the page
+   * can hide the exam card entirely.
+   */
+  exam?: ExamState | null;
+  /**
+   * The exact gates between this learner and their certificate
+   * (`final_exam`, `project`, …), or `null` when the learner cannot be given
+   * one. Kept as machine keys so the client renders its own copy.
+   */
+  certificate_readiness?: CertificateReadiness | null;
+
+  /**
+   * The certificate tier this course issues — the same value the issuer uses
+   * to style and label the PDF. Optional: older courses predate tiering and
+   * the certificate preview defaults the same way the backend does.
+   */
+  certificate_tier?: string | null;
+
+  /**
+   * The capstone project this course asks for, when it has one. The brief is
+   * the learner-facing half of `CourseProjectConfig` (title, brief, submission
+   * hint); the certificate gate itself is `certificate_readiness.project_required`.
+   * Rendered as the "what you will build" card so a buyer sees the project
+   * before enrolling, not after finishing.
+   */
+  project?: {
+    title: string;
+    brief: string;
+    submission_hint?: string;
+    required_for_certificate: boolean;
+  } | null;
+
+  /**
+   * Semester Exam Mode study material — units, summaries, important questions,
+   * PYQs. Optional; absent means the course has no exam-prep payload and the
+   * page hides the section entirely.
+   */
+  exam_prep?: ExamPrep | null;
 
   // ---------------------------------------------------------------------------
   // The long-form page sections.
@@ -904,10 +1089,12 @@ export interface CatalogFacets {
   tag: FacetOption[];
   type: FacetOption[];
   level: FacetOption[];
+  branch: FacetOption[];
+  bucket: FacetOption[];
 }
 
 export interface CatalogFilterGroup {
-  key: 'category' | 'tag' | 'type' | 'level';
+  key: 'category' | 'tag' | 'type' | 'level' | 'branch' | 'bucket';
   label: string;
   param: string;
 }
@@ -915,6 +1102,8 @@ export interface CatalogFilterGroup {
 /** Everything the listing page needs to render its filter rail. */
 export interface CatalogFilters {
   q: string;
+  branch: string[];
+  bucket: string[];
   category: string[];
   tag: string[];
   type: string[];
@@ -924,6 +1113,8 @@ export interface CatalogFilters {
 
 export const EMPTY_CATALOG_FILTERS: CatalogFilters = {
   q: '',
+  branch: [],
+  bucket: [],
   category: [],
   tag: [],
   type: [],
@@ -958,6 +1149,16 @@ export type MyCoursesCourse = Omit<CourseCard, 'progress'> & {
   last_activity_at: string;
   has_certificate: boolean;
   feedback_given: boolean;
+  /** Tiered certificate this course issues, sent by `/my` for the card chips. */
+  certificate_tier?: string | null;
+  /**
+   * Which certificate gates this course demands, so the nudge can say
+   * "2 lessons + final exam" without a readiness request per course. The
+   * detail page's readiness list remains the authority; these are only
+   * cheap booleans for the list view.
+   */
+  exam_required?: boolean;
+  project_required?: boolean;
 };
 
 /**
@@ -982,6 +1183,10 @@ export interface MyCertificate {
   status: 'active' | 'revoked';
   revoked_reason: string;
   revoked_at: string | null;
+  /** Tiered-certificate fields. Absent on records issued before Phase 0 tiering. */
+  tier?: string | null;
+  score_percent?: number | null;
+  distinction?: boolean | null;
 }
 
 export interface MyCoursesResponse {
@@ -1038,6 +1243,15 @@ export interface CertificateSummary {
   verification_url: string;
   /** API-relative. The download needs a Bearer token, so fetch it, don't link it. */
   download_path: string;
+  /** Tiered-certificate block. Absent on records issued before Phase 0 tiering. */
+  tier?: string | null;
+  score_percent?: number | null;
+  skills?: string[];
+  project_title?: string | null;
+  project_url?: string | null;
+  exam_passed_at?: string | null;
+  /** Presentation-only ribbon: first attempt cleared the distinction mark. */
+  distinction?: boolean | null;
 }
 
 export interface CertificateCheck {
@@ -1103,10 +1317,26 @@ export interface CourseXpEntry {
   idempotency_key: string;
 }
 
+/** The publish checklist the editor renders and the PUT gate enforces. */
+export interface CourseHealthCheck {
+  key: string;
+  label: string;
+  pass: boolean;
+  severity: 'blocker' | 'warn';
+}
+
+export interface CourseHealth {
+  checks: CourseHealthCheck[];
+  blockers: string[];
+  publishable: boolean;
+}
+
 /** GET /course-admin/courses/:id — the full editor payload. */
 export interface AdminCourseDetail {
   status: 'success';
   course: AdminCourseForEditor;
+  /** Derived server-side from the same function the publish gate enforces. */
+  health: CourseHealth;
   enrollments: {
     user_id: string;
     name: string;
@@ -1134,6 +1364,10 @@ export interface AdminCourseForEditor {
   is_free: boolean;
   price_inr: number;
   thumbnail_url: string;
+  /** Accessibility text for the cover. */
+  thumbnail_alt?: string | null;
+  /** Per-course opt-out of the live offer badge overlay. */
+  offer_badge_enabled?: boolean;
   tags: string[];
   outcomes: string[];
   /** Gate: this course can only be opened once that course is 100% complete. */
@@ -1154,6 +1388,13 @@ export interface AdminCourseForEditor {
   audio_language?: string;
   caption_language?: string;
   instructor_id?: string | null;
+
+  /**
+   * Semester Exam Mode. Same shape as the learner type — this payload carries
+   * study material only (no answer keys), so there is nothing extra for the
+   * admin to see and no reason for a parallel Admin* type.
+   */
+  exam_prep?: ExamPrep | null;
 }
 
 export interface AdminModule {
@@ -1163,6 +1404,16 @@ export interface AdminModule {
   summary: string;
   sort_order: number;
   lessons: AdminLesson[];
+  /** End-of-module test. The admin sees the full bank, keys included. */
+  test?: AdminModuleTest | null;
+}
+
+/** The module-test shape accepted by PUT /course-admin/modules/:id (`test`). */
+export interface AdminModuleTest {
+  question_count: number;
+  passing_percent: number;
+  retake_cooldown_hours: number;
+  bank: AdminQuizQuestion[];
 }
 
 /** The quiz shape accepted by PUT /course-admin/lessons/:id/quiz. */
@@ -1316,4 +1567,59 @@ export interface VideoResolveResponse {
   video_id: string;
   title: string;
   channel: string;
+}
+
+// --- Learning tracks (career sequences) -------------------------------------
+
+/** One course's state inside a track, as the track endpoints report it. */
+export interface TrackCourseState {
+  course_id: string;
+  slug: string;
+  title: string;
+  subtitle: string;
+  level: CourseLevel;
+  is_free: boolean;
+  price_inr: number;
+  published: boolean;
+  /** False when the course is missing or unpublished — blocks claiming. */
+  available: boolean;
+  progress_percent: number;
+  is_complete: boolean;
+  certificate_ready: boolean;
+}
+
+export interface LearningTrack {
+  id: string;
+  slug: string;
+  title: string;
+  tagline: string;
+  description: string;
+  branch: string;
+  course_ids: string[];
+  published: boolean;
+  /** Present only on the detail endpoint, not the list. */
+  courses?: TrackCourseState[];
+  /** Aggregate progress across member courses. */
+  progress_percent?: number;
+  completed_courses?: number;
+  total_courses?: number;
+  /** True when every available member course is complete AND cert-ready. */
+  claimable?: boolean;
+  certificate?: {
+    serial: string;
+    course_title: string;
+    tier?: string | null;
+    issued_at: string;
+    verification_url: string;
+  } | null;
+}
+
+export interface TrackListResponse {
+  status: 'success';
+  tracks: LearningTrack[];
+}
+
+export interface TrackDetailResponse {
+  status: 'success';
+  track: LearningTrack;
 }

@@ -20,24 +20,35 @@ import { Router } from 'express';
 import { loadDb, saveDb, Course, CourseLesson, Certificate, CourseFeedback, Instructor } from '../data/db';
 import { optionalAuth, requireAuth, rateLimit } from '../middleware/auth';
 import { awardAndCommit, levelFor, totalXpForUser, xpHistory, XP } from '../lib/xp';
+import { grantCoursePerks, listRewards, isRewardCode } from '../lib/perks';
+import { activeOfferBadgeFor } from '../lib/coupons';
 import {
   MAX_HEARTBEAT_CREDIT_SECONDS,
+  certificateReadiness,
   completionState,
   courseAccessState,
   courseLockReason,
   courseStats,
+  drawExamQuestions,
   effectiveVideoSeconds,
+  examConfigOf,
+  examStateForLearner,
   findLesson,
   generateSerial,
   getOrCreateProgress,
   getProgress,
+  gradeExam,
   gradeQuiz,
   isLessonUnlocked,
   lessonCompletionState,
+  moduleTestConfigOf,
+  moduleTestStateForLearner,
   orderedLessons,
   orderedModules,
+  sanitizeExamQuestions,
   sanitizeLesson,
   sanitizeCourse,
+  sanitizeModuleTestForLearner,
   sanitizeQuizForLearner,
 } from '../lib/courses';
 import {
@@ -53,7 +64,9 @@ import {
 } from '../lib/catalog';
 import {
   buildCertificatePdf,
+  certificateDimensionsFor,
   publicKeyBundle,
+  SIGNING_VERSION,
   signCertificate,
   verificationUrlFor,
   verifyCertificate,
@@ -230,32 +243,40 @@ function courseView(db: any, userId: string | null, course: Course, role?: strin
         0
       ),
 
-      modules: orderedModules(course).map((m) => ({
-        ...m,
-        lessons: (m.lessons || [])
-          .slice()
-          .sort((a, b) => a.sort_order - b.sort_order)
-          .map((l) => {
-            // Same rule as the single-lesson route: the syllabus is public, the
-            // teaching content is not, until the learner reaches it in order.
-            //
-            // `isLessonUnlocked` opens the first lesson unconditionally, so a
-            // signed-out visitor to a FREE course does receive lesson 1's blocks
-            // here. That is intentional — it is the course's public sample, and
-            // smokeCourses.ts asserts it on purpose. It is not a hole: the
-            // `access.granted` branch below short-circuits first, so on a paid
-            // course a signed-out visitor gets stubs for every lesson, sample
-            // included.
-            const gate = isLessonUnlocked(progress, course, l.id);
-            // A locked-by-purchase lesson is also a stub, and for the same reason:
-            // the blocks contain the teaching content and the video object holds
-            // the URL. Browsing the syllabus must not hand over the course.
-            if (!access.granted) return lockedLessonStub(l, progress, access.reason || 'Enrol to unlock.');
-            return gate.unlocked
-              ? lessonView(progress, l)
-              : lockedLessonStub(l, progress, gate.reason);
-          }),
-      })),
+      modules: orderedModules(course).map((m) => {
+        // Same rule as `sanitizeCourse`: the module-test bank carries
+        // `correct_index`, so it is replaced rather than spread. The learner's
+        // own state rides along so the syllabus can show "passed / 3 attempts"
+        // without a second request per module.
+        const { test, ...modRest } = m;
+        return {
+          ...modRest,
+          test: sanitizeModuleTestForLearner(m, progress),
+          lessons: (m.lessons || [])
+            .slice()
+            .sort((a, b) => a.sort_order - b.sort_order)
+            .map((l) => {
+              // Same rule as the single-lesson route: the syllabus is public, the
+              // teaching content is not, until the learner reaches it in order.
+              //
+              // `isLessonUnlocked` opens the first lesson unconditionally, so a
+              // signed-out visitor to a FREE course does receive lesson 1's blocks
+              // here. That is intentional — it is the course's public sample, and
+              // smokeCourses.ts asserts it on purpose. It is not a hole: the
+              // `access.granted` branch below short-circuits first, so on a paid
+              // course a signed-out visitor gets stubs for every lesson, sample
+              // included.
+              const gate = isLessonUnlocked(progress, course, l.id);
+              // A locked-by-purchase lesson is also a stub, and for the same reason:
+              // the blocks contain the teaching content and the video object holds
+              // the URL. Browsing the syllabus must not hand over the course.
+              if (!access.granted) return lockedLessonStub(l, progress, access.reason || 'Enrol to unlock.');
+              return gate.unlocked
+                ? lessonView(progress, l)
+                : lockedLessonStub(l, progress, gate.reason);
+            }),
+        };
+      }),
       stats: courseStats(course),
       // Same derived numbers the card shows, so the detail hero and the catalogue
       // row can never disagree about how many learners or what rating.
@@ -265,6 +286,14 @@ function courseView(db: any, userId: string | null, course: Course, role?: strin
       // Enough for the client to render the right button without a second request.
       certificate: own ? presentCertificate(db, own) : null,
       certificate_eligible: course.certificate_eligible,
+      // The exam card's state (attempts, cooldown, pass). `null` when the course
+      // has no exam, so the page can hide the section entirely.
+      exam: userId ? examStateForLearner(course, progress) : examStateForLearner(course, null),
+      // The exact gates between this learner and their certificate. Kept as a
+      // list of machine keys (`final_exam`, `project`) so the client renders its
+      // own copy rather than parsing a server-authored sentence.
+      certificate_readiness:
+        userId && course.certificate_eligible ? certificateReadiness(db, userId, course) : null,
       lock_reason: userId ? courseLockReason(db, userId, course) : null,
     };
 
@@ -299,6 +328,7 @@ function settleCompletion(
   lesson: CourseLesson
 ) {
   const xp: { reason: string; xp: number; awarded: boolean }[] = [];
+  const perks: { perk_key: string; granted: boolean; coupon_code: string | null }[] = [];
 
   if (!progress.completed_lesson_ids.includes(lesson.id)) {
     progress.completed_lesson_ids.push(lesson.id);
@@ -326,9 +356,24 @@ function settleCompletion(
       note: `Finished course: ${course.title}`,
     });
     xp.push({ reason: 'course_complete', xp: res.event.xp, awarded: res.awarded });
+
+    // Perks are granted in THIS commit path, not in a later request: a reward
+    // that can be issued separately from the completion that earned it is a
+    // reward that can be issued without the completion. `grantCoursePerks` is
+    // idempotent on (user, perk, course), so a retried settle cannot double it.
+    //
+    // When the course has an exam, the grant is deferred to the pass — a
+    // certificate-driven course must not hand out its "you finished" rewards
+    // before the assessment that certifies the finish.
+    const examPending = !!examConfigOf(course) && !progress.exam_passed;
+    if (!examPending) {
+      for (const p of grantCoursePerks(db, userId, course)) {
+        perks.push({ perk_key: p.perk_key, granted: p.granted, coupon_code: p.coupon_code });
+      }
+    }
   }
 
-  return { xp, course_complete: after.is_complete };
+  return { xp, perks, course_complete: after.is_complete };
 }
 
 /**
@@ -358,9 +403,19 @@ function catalogCard(
     is_free: course.is_free,
     price_inr: course.price_inr,
     thumbnail_url: course.thumbnail_url,
+    thumbnail_alt: course.thumbnail_alt || null,
+    // The live offer badge: only ever a real, currently-redeemable coupon
+    // scoped to this course, and only when the course has not opted out.
+    // Null on free courses and on opted-out ones — the card hides the pill.
+    active_offer: activeOfferBadgeFor(db, course, isRewardCode),
     tags: course.tags,
     outcomes: course.outcomes || [],
     certificate_eligible: course.certificate_eligible,
+    branch: course.branch || null,
+    branch_label: course.branch_label || null,
+    bucket: course.bucket || null,
+    certificate_tier: course.certificate_tier || null,
+    estimated_hours: course.estimated_hours ?? null,
     created_at: course.created_at,
     updated_at: course.updated_at,
     signals,
@@ -451,6 +506,13 @@ coursesRouter.get('/my', requireAuth, (req: Request, res: Response) => {
         subtitle: course.subtitle,
         category: course.category,
         level: course.level,
+        branch: course.branch || null,
+    certificate_tier: course.certificate_tier || null,
+    // The catalogue card carries the same perks the detail page promises, so
+    // the card's perks line can never advertise a reward the course does not
+    // grant. Empty when the course grants nothing yet.
+    perks: Array.isArray(course.perks) ? course.perks : [],
+        estimated_hours: course.estimated_hours ?? null,
         is_free: course.is_free,
         thumbnail_url: course.thumbnail_url,
         certificate_eligible: course.certificate_eligible,
@@ -463,6 +525,12 @@ coursesRouter.get('/my', requireAuth, (req: Request, res: Response) => {
           (c: Certificate) => c.user_id === userId && c.course_id === course.id && c.status === 'active'
         ),
         feedback_given: (db.course_feedback || []).some((f: CourseFeedback) => f.user_id === userId && f.course_id === course.id),
+        // Which certificate gates this course actually demands, so the
+        // /my-courses nudge can say "2 lessons + final exam" without firing a
+        // readiness request per enrolled course. Cheap booleans, not a promise:
+        // the detail page's readiness list remains the authority.
+        exam_required: !!course.exam,
+        project_required: !!course.project?.required_for_certificate,
       };
     })
     .filter((row) => row.progress.enrolled);
@@ -501,6 +569,15 @@ coursesRouter.get('/xp', requireAuth, (req: Request, res: Response) => {
     // history length ever disagree, something is wrong and should be visible.
     ledger_entries: (db.xp_ledger || []).filter((e: any) => e.user_id === userId).length,
   });
+});
+
+// GET /api/courses/rewards — perks and badges this learner has actually been
+// granted. Rendered from issued rows only: the client never derives a reward
+// from a course it happens to have finished, because a grant is the audit trail
+// and a derived list can disagree with it.
+coursesRouter.get('/rewards', requireAuth, (req: Request, res: Response) => {
+  const db = loadDb();
+  res.json({ status: 'success', ...listRewards(db, req.user!.id) });
 });
 
 // ============================================================================
@@ -654,6 +731,48 @@ coursesRouter.get('/:slug/related', optionalAuth, (req: Request, res: Response) 
         badges: courseBadges(c, s, { topQuartile: s.enrollment_count > 0 }).badges,
       };
     }),
+  });
+});
+
+/**
+ * GET /api/courses/:slug/sample — the first lesson, free to read.
+ *
+ * The public sample. The main detail route refuses an anonymous request to a
+ * paid course outright (see the 403 at `GET /:slug`), and that refusal is kept
+ * — this route answers a narrower question: "show me lesson 1 so I know what
+ * I am buying". One lesson, the one the plan calls the sample; not lesson N,
+ * not every lesson, not the quiz.
+ *
+ * Why it is safe:
+ *  - Published courses only; unpublished ones 404, never leak existence.
+ *  - Only the first module's first lesson, so the boundary is one endpoint,
+ *    not a loop.
+ *  - `sanitizeLesson` (via `lessonView`) strips the quiz entirely, so the
+ *    graded questions and answers never travel to a stranger. Blocks and the
+ *    video URL for that one lesson do travel — that is the offer: a genuine
+ *    taste, not a summary.
+ *  - No progress, no state machine: an empty progress object is passed so the
+ *    view is the same shape the player already renders.
+ */
+coursesRouter.get('/:slug/sample', (req: Request, res: Response) => {
+  const db = loadDb();
+  const course = findBySlug(db, req.params.slug);
+  if (!course) return res.status(404).json({ error: 'Course not found' });
+  if (!course.published) return res.status(404).json({ error: 'Course not found' });
+
+  const firstModule = orderedModules(course)[0];
+  const firstLesson = firstModule
+    ? (firstModule.lessons || [])
+        .slice()
+        .sort((a, b) => a.sort_order - b.sort_order)[0]
+    : undefined;
+
+  res.setHeader('Cache-Control', 'public, max-age=300');
+  return res.json({
+    status: 'success',
+    lesson: firstLesson
+      ? { ...lessonView({}, firstLesson), module_title: firstModule!.title }
+      : null,
   });
 });
 
@@ -841,6 +960,7 @@ coursesRouter.post('/lessons/:lessonId/progress', requireAuth, (req: Request, re
     xp: settlement?.xp || [],
     xp_total: totalXpForUser(db, userId),
     course_complete: settlement?.course_complete || false,
+    perks: settlement?.perks || [],
   });
 });
 
@@ -904,9 +1024,11 @@ coursesRouter.post('/lessons/:lessonId/quiz', requireAuth, (req: Request, res: R
 
   const before = lessonCompletionState(progress, lesson);
   let courseComplete = false;
+  const perks: { perk_key: string; granted: boolean; coupon_code: string | null }[] = [];
   if (before.ready && !before.is_complete) {
     const settlement = settleCompletion(db, userId, course, progress, lesson);
     xp.push(...settlement.xp);
+    perks.push(...settlement.perks);
     courseComplete = settlement.course_complete;
   }
   progress.updated_at = new Date().toISOString();
@@ -929,7 +1051,386 @@ coursesRouter.post('/lessons/:lessonId/quiz', requireAuth, (req: Request, res: R
     xp,
     xp_total: totalXpForUser(db, userId),
     course_complete: courseComplete,
+    perks,
   });
+});
+
+
+/**
+ * POST /api/courses/:slug/exam/submit — grade an in-progress attempt.
+ */
+coursesRouter.post('/:slug/exam/submit', requireAuth, (req: Request, res: Response) => {
+  const db = loadDb();
+  const userId = req.user!.id;
+  const course = findBySlug(db, req.params.slug);
+  if (!course) return res.status(404).json({ error: 'Course not found' });
+
+  const exam = examConfigOf(course);
+  if (!exam) return res.status(400).json({ error: 'This course has no final exam.' });
+
+  const access = courseAccessState(db, userId, course, { role: req.user!.role });
+  if (!access.granted) return res.status(402).json({ error: access.reason, locked: true, price_inr: access.price_inr });
+
+  const lock = courseLockReason(db, userId, course);
+  if (lock) return res.status(403).json({ error: lock, locked: true });
+
+  const state = completionState(db, userId, course);
+  if (!state.is_complete) {
+    return res.status(403).json({ error: 'Complete all lessons before taking the final exam.' });
+  }
+
+  const { attempt_id, answers } = req.body || {};
+  if (!attempt_id || typeof answers !== 'object' || !answers) {
+    return res.status(400).json({ error: 'attempt_id and answers required' });
+  }
+
+  const progress = getOrCreateProgress(db, userId, course);
+  const open = (progress.exam_attempts || []).find((a) => a.id === attempt_id && !a.graded);
+  if (!open) {
+    return res.status(404).json({ error: 'No in-progress attempt found for this attempt_id.' });
+  }
+
+  const now = Date.now();
+  const deadline = new Date(open.started_at).getTime() + Math.max(1, exam.duration_minutes) * 60_000 + 30_000;
+  const onTime = now <= deadline;
+
+  const graded = gradeExam(exam, open.question_ids, answers as Record<string, number>);
+  const submittedAt = new Date().toISOString();
+
+  open.submitted_at = submittedAt;
+  open.score_percent = graded.score_percent;
+  open.passed = graded.passed;
+  open.graded = true;
+
+  progress.last_attempt_at = submittedAt;
+  const firstPercent = progress.first_attempt_percent;
+  if (firstPercent == null) {
+    progress.first_attempt_percent = graded.score_percent;
+  }
+  const best = progress.best_exam_percent;
+  if (best == null || graded.score_percent > best) {
+    progress.best_exam_percent = graded.score_percent;
+  }
+
+  const xp: { reason: string; xp: number; awarded: boolean }[] = [];
+  if (graded.passed) {
+    if (!progress.exam_passed) {
+      progress.exam_passed = true;
+      const r = awardAndCommit(db, {
+        userId,
+        key: `exam:pass:${course.id}:${userId}`,
+        reason: 'exam_pass',
+        xp: XP.EXAM_PASS,
+        courseId: course.id,
+        note: `Passed final exam in: ${course.title}`,
+      });
+      xp.push({ reason: 'exam_pass', xp: r.event.xp, awarded: r.awarded });
+    }
+    const examCfg = exam;
+    const dist = progress.first_attempt_percent != null && examCfg.distinction_percent > 0 && progress.first_attempt_percent >= examCfg.distinction_percent;
+    if (dist) {
+      const r = awardAndCommit(db, {
+        userId,
+        key: `exam:dist:${course.id}:${userId}`,
+        reason: 'exam_distinction',
+        xp: XP.EXAM_DISTINCTION,
+        courseId: course.id,
+        note: `Distinction (first attempt ${progress.first_attempt_percent}%)`,
+      });
+      xp.push({ reason: 'exam_distinction', xp: r.event.xp, awarded: r.awarded });
+    }
+  }
+
+  // A course with an exam defers its perks to this pass (see settleCompletion).
+  // Same idempotent call, so a second pass cannot re-grant anything.
+  const perks: { perk_key: string; granted: boolean; coupon_code: string | null }[] = [];
+  if (graded.passed && state.is_complete) {
+    perks.push(...grantCoursePerks(db, userId, course));
+  }
+
+  progress.updated_at = submittedAt;
+  saveDb(db);
+
+  res.json({
+    status: 'success',
+    result: graded,
+    on_time: onTime,
+    state: examStateForLearner(course, progress),
+    xp,
+    perks,
+    xp_total: totalXpForUser(db, userId),
+    certificate_readiness: course.certificate_eligible ? certificateReadiness(db, userId, course) : null,
+  });
+});
+
+
+  /**
+   * POST /api/courses/:slug/project/submit — submit capstone project URL.
+   */
+  coursesRouter.post('/:slug/project/submit', requireAuth, (req: Request, res: Response) => {
+    const db = loadDb();
+    const userId = req.user!.id;
+    const course = findBySlug(db, req.params.slug);
+    if (!course) return res.status(404).json({ error: 'Course not found' });
+
+    const access = courseAccessState(db, userId, course, { role: req.user!.role });
+    if (!access.granted) return res.status(402).json({ error: access.reason, locked: true, price_inr: access.price_inr });
+
+    const lock = courseLockReason(db, userId, course);
+    if (lock) return res.status(403).json({ error: lock, locked: true });
+
+    const state = completionState(db, userId, course);
+    if (!state.is_complete) {
+      return res.status(403).json({ error: 'Complete all lessons before submitting the project.' });
+    }
+
+    const exam = examConfigOf(course);
+    if (exam) {
+      const progress = getOrCreateProgress(db, userId, course);
+      const est = examStateForLearner(course, progress);
+      if (!est?.passed) {
+        return res.status(403).json({ error: 'Pass the final exam before submitting the project.' });
+      }
+    }
+
+    const project = course.project;
+    if (!project || !project.required_for_certificate) {
+      return res.status(400).json({ error: 'This course does not require a project for certification.' });
+    }
+
+    const url = String(req.body?.project_url || '').trim();
+    if (!/^https?:\/\//i.test(url)) {
+      return res.status(400).json({ error: 'project_url must be a valid http(s) URL.' });
+    }
+
+    const progress = getOrCreateProgress(db, userId, course);
+  const xp: { reason: string; xp: number; awarded: boolean }[] = [];
+  const perks: { perk_key: string; granted: boolean; coupon_code: string | null }[] = [];
+    if (!progress.project_url) {
+      progress.project_url = url;
+      const r = awardAndCommit(db, {
+        userId,
+        key: `project:submit:${course.id}:${userId}`,
+        reason: 'project_submit',
+        xp: XP.PROJECT_SUBMIT,
+        courseId: course.id,
+        note: `Project submitted for: ${course.title}`,
+      });
+      xp.push({ reason: 'project_submit', xp: r.event.xp, awarded: r.awarded });
+    } else {
+      progress.project_url = url;
+    }
+    progress.updated_at = new Date().toISOString();
+    saveDb(db);
+
+    res.json({
+      status: 'success',
+      project_url: progress.project_url,
+      xp,
+      xp_total: totalXpForUser(db, userId),
+      certificate_readiness: course.certificate_eligible ? certificateReadiness(db, userId, course) : null,
+    });
+  });// ============================================================================
+// FINAL EXAM
+// ============================================================================
+
+/**
+ * POST /api/courses/:slug/exam/start — draw a paper and start a timed attempt.
+ */
+coursesRouter.post('/:slug/exam/start', requireAuth, (req: Request, res: Response) => {
+  const db = loadDb();
+  const userId = req.user!.id;
+  const course = findBySlug(db, req.params.slug);
+  if (!course) return res.status(404).json({ error: 'Course not found' });
+
+  const exam = examConfigOf(course);
+  if (!exam) return res.status(400).json({ error: 'This course has no final exam.' });
+
+  const access = courseAccessState(db, userId, course, { role: req.user!.role });
+  if (!access.granted) return res.status(402).json({ error: access.reason, locked: true, price_inr: access.price_inr });
+
+  const lock = courseLockReason(db, userId, course);
+  if (lock) return res.status(403).json({ error: lock, locked: true });
+
+  const state = completionState(db, userId, course);
+  if (!state.is_complete) {
+    return res.status(403).json({ error: 'Complete all lessons before taking the final exam.' });
+  }
+
+  const progress = getOrCreateProgress(db, userId, course);
+  const est = examStateForLearner(course, progress);
+  if (!est) return res.status(400).json({ error: 'This course has no final exam.' });
+  if (est.in_progress) {
+    // An existing in-progress attempt: return it (no new draw). The client is
+    // expected to rehydrate from its attempt_id if it already has one.
+    const open = (progress.exam_attempts || []).find((a) => !a.graded);
+    if (open) {
+      const byId = new Map(exam.bank.map((q) => [q.id, q]));
+      const questions = open.question_ids
+        .map((id) => byId.get(id))
+        .filter((q): q is any => !!q)
+        .map((q) => ({ id: q.id, prompt: q.prompt, options: [...q.options], difficulty: q.difficulty, topic: q.topic || null }));
+      return res.json({
+        status: 'success',
+        attempt_id: open.id,
+        started_at: open.started_at,
+        duration_minutes: exam.duration_minutes,
+        questions,
+      });
+    }
+  }
+  if (!est.can_start) {
+    return res.status(409).json({ error: 'You cannot start a new exam attempt right now.', state: est });
+  }
+
+  const draw = drawExamQuestions(exam);
+  const attemptId = `exa-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+  const startedAt = new Date().toISOString();
+  progress.exam_attempts = progress.exam_attempts || [];
+  progress.exam_attempts.push({
+    id: attemptId,
+    started_at: startedAt,
+    submitted_at: null,
+    question_ids: draw.question_ids,
+    score_percent: null,
+    passed: false,
+    graded: false,
+  });
+  progress.updated_at = startedAt;
+  saveDb(db);
+
+  res.status(201).json({
+    status: 'success',
+    attempt_id: attemptId,
+    started_at: startedAt,
+    duration_minutes: exam.duration_minutes,
+    questions: sanitizeExamQuestions(exam, draw.question_ids),
+  });
+});
+
+// ============================================================================
+// MODULE TESTS — the checkpoint at the end of a module.
+//
+// Same server-side discipline as the final exam: the draw is random, the key
+// never leaves before grading, and the pass decision is made here. Untimed by
+// design (the timer belongs to the final exam), and deliberately not part of
+// certificate readiness — a module test is practice, the certificate is gated
+// by the final exam and the project.
+//
+// One endpoint, two actions, matching the plan's `POST /courses/:slug/module/
+// :id/test` row: `action: 'start'` draws and returns the paper, `action:
+// 'submit'` grades it.
+// ============================================================================
+
+coursesRouter.post('/:slug/module/:moduleId/test', requireAuth, (req: Request, res: Response) => {
+  const db = loadDb();
+  const userId = req.user!.id;
+  const course = findBySlug(db, req.params.slug);
+  if (!course) return res.status(404).json({ error: 'Course not found' });
+
+  const mod = (course.modules || []).find((m) => m.id === req.params.moduleId);
+  if (!mod) return res.status(404).json({ error: 'Module not found' });
+
+  const test = moduleTestConfigOf(mod);
+  if (!test) return res.status(400).json({ error: 'This module has no test.' });
+
+  const access = courseAccessState(db, userId, course, { role: req.user!.role });
+  if (!access.granted) return res.status(402).json({ error: access.reason, locked: true, price_inr: access.price_inr });
+
+  const lock = courseLockReason(db, userId, course);
+  if (lock) return res.status(403).json({ error: lock, locked: true });
+
+  const action = String(req.body?.action || '').toLowerCase();
+  const progress = getOrCreateProgress(db, userId, course);
+  const state = moduleTestStateForLearner(mod, progress);
+
+  if (action === 'start') {
+    // An open attempt is returned as-is rather than drawing over it — the
+    // client rehydrates from attempt_id, and a second draw would orphan the
+    // first paper while the answers for it were still in the browser.
+    const open = (progress.module_test_attempts || []).find(
+      (a) => a.module_id === mod.id && !a.graded
+    );
+    if (open) {
+      const byId = new Map(test.bank.map((q) => [q.id, q]));
+      const questions = open.question_ids
+        .map((id) => byId.get(id))
+        .filter((q): q is NonNullable<typeof q> => !!q)
+        .map((q) => ({ id: q.id, prompt: q.prompt, options: [...q.options], difficulty: q.difficulty, topic: q.topic || null }));
+      return res.json({
+        status: 'success',
+        attempt_id: open.id,
+        started_at: open.started_at,
+        questions,
+        passing_percent: test.passing_percent,
+        state: moduleTestStateForLearner(mod, progress),
+      });
+    }
+    if (!state?.can_start) {
+      return res.status(409).json({
+        error: !state?.lessons_complete
+          ? 'Finish every lesson in this module before taking its test.'
+          : 'You cannot start a new module test attempt right now.',
+        state,
+      });
+    }
+
+    const draw = drawExamQuestions(test);
+    const attemptId = `mta-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    const startedAt = new Date().toISOString();
+    progress.module_test_attempts = progress.module_test_attempts || [];
+    progress.module_test_attempts.push({
+      id: attemptId,
+      module_id: mod.id,
+      started_at: startedAt,
+      submitted_at: null,
+      question_ids: draw.question_ids,
+      score_percent: null,
+      passed: false,
+      graded: false,
+    });
+    progress.updated_at = startedAt;
+    saveDb(db);
+
+    return res.status(201).json({
+      status: 'success',
+      attempt_id: attemptId,
+      started_at: startedAt,
+      questions: sanitizeExamQuestions(test, draw.question_ids),
+      passing_percent: test.passing_percent,
+    });
+  }
+
+  if (action === 'submit') {
+    const { attempt_id, answers } = req.body || {};
+    if (!attempt_id || typeof answers !== 'object' || !answers) {
+      return res.status(400).json({ error: 'attempt_id and answers required' });
+    }
+
+    const open = (progress.module_test_attempts || []).find(
+      (a) => a.module_id === mod.id && a.id === attempt_id && !a.graded
+    );
+    if (!open) {
+      return res.status(404).json({ error: 'No in-progress attempt found for this attempt_id.' });
+    }
+
+    const graded = gradeExam(test, open.question_ids, answers as Record<string, number>);
+    const submittedAt = new Date().toISOString();
+    open.submitted_at = submittedAt;
+    open.score_percent = graded.score_percent;
+    open.passed = graded.passed;
+    open.graded = true;
+    progress.updated_at = submittedAt;
+    saveDb(db);
+
+    return res.json({
+      status: 'success',
+      result: graded,
+      state: moduleTestStateForLearner(mod, progress),
+    });
+  }
+
+  return res.status(400).json({ error: "action must be 'start' or 'submit'" });
 });
 
 // ============================================================================
@@ -982,6 +1483,20 @@ coursesRouter.post('/:slug/certificate', requireAuth, (req: Request, res: Respon
     });
   }
 
+  // Lessons done is necessary but no longer sufficient: the exam and any
+  // required capstone are separate gates, and the readiness verdict is the
+  // single place that knows which of them this course actually demands. The
+  // 403 carries the machine keys so the page can render the list itself rather
+  // than paraphrasing a server sentence.
+  const readiness = certificateReadiness(db, userId, course);
+  if (!readiness.ready) {
+    return res.status(403).json({
+      error: 'Complete the final exam and project before claiming your certificate.',
+      missing: readiness.missing,
+      readiness,
+    });
+  }
+
   const lessons = orderedLessons(course);
   const issuedAt = new Date().toISOString();
   // Guarantee serial uniqueness even if two issues land in the same millisecond.
@@ -994,6 +1509,16 @@ coursesRouter.post('/:slug/certificate', requireAuth, (req: Request, res: Respon
   }
 
   const recipientName = req.user!.name || 'TieEdu Learner';
+  const progressForCert = getProgress(db, userId, course.id);
+  // The assessment numbers go ON the certificate: a tier with no score is a
+  // claim nobody can check, so the pass mark and the project are read from the
+  // same stored state the readiness gate just used — never from the request.
+  const dims = certificateDimensionsFor(course, {
+    score_percent: progressForCert?.best_exam_percent ?? null,
+    exam_passed_at: progressForCert?.last_attempt_at ?? null,
+    project_title: progressForCert?.project_url ? course.project?.title || null : null,
+    project_url: progressForCert?.project_url ?? null,
+  });
   const fields = {
     serial,
     user_id: userId,
@@ -1005,6 +1530,7 @@ coursesRouter.post('/:slug/certificate', requireAuth, (req: Request, res: Respon
     lessons_completed: state.completed,
     lessons_required: state.total,
     xp_at_issue: totalXpForUser(db, userId),
+    ...dims,
   };
 
   // Signing and the commit are guarded together. A throw used to escape as a bare
@@ -1025,6 +1551,16 @@ coursesRouter.post('/:slug/certificate', requireAuth, (req: Request, res: Respon
       xp_at_issue: fields.xp_at_issue,
       lessons_completed: fields.lessons_completed,
       lessons_required: fields.lessons_required,
+      ...dims,
+      // Presentation only, deliberately outside the signed payload: v4 froze
+      // without it, and adding a field to the signature would invalidate every
+      // certificate already issued. The PDF/verify UI derives it the same way
+      // and can never disagree with the score that IS signed.
+      distinction:
+        progressForCert?.first_attempt_percent != null &&
+        examConfigOf(course) != null &&
+        progressForCert.first_attempt_percent >= (examConfigOf(course)!.distinction_percent || Infinity),
+      signing_version: SIGNING_VERSION,
       // Sign and key id come back together: the id is the fingerprint of the key
       // that just signed, so storing it can never describe a different key.
       ...(() => {
@@ -1064,6 +1600,15 @@ function presentCertificate(db: any, c: Certificate) {
     revoked_at: c.revoked_at,
     signature: c.signature,
     signing_key_id: c.signing_key_id || '',
+    tier: c.tier || null,
+    score_percent: c.score_percent ?? null,
+    skills: c.skills || [],
+    project_title: c.project_title ?? null,
+    project_url: c.project_url ?? null,
+    exam_passed_at: c.exam_passed_at ?? null,
+    // Presentation only — see the certificate construction: the score that
+    // proves it is signed, this badge just renders it.
+    distinction: c.distinction === true,
     verification_url: verificationUrlFor(c.serial),
     // API-relative, not site-relative: the download endpoint requires a Bearer
     // token, so the client must fetch it with auth rather than link to it.
@@ -1118,6 +1663,42 @@ coursesRouter.get('/certificates/:serial/download', requireAuth, async (req: Req
 // ============================================================================
 // FEEDBACK — the gate between finishing a course and moving to the next one
 // ============================================================================
+
+/**
+ * Public reviews for a course — what a shopper reads before buying.
+ *
+ * Only post-completion feedback exists in the db (the POST route refuses
+ * anything else), so this list is real social proof by construction: no
+ * anonymous drive-by ratings. Newest first, capped at 20 — enough to decide
+ * with, not enough to turn into a comment thread.
+ *
+ * Returns 200 with an empty list for a published course with no reviews
+ * (the detail page shows "no reviews yet", which is an honest state), 404
+ * only when the course itself does not exist.
+ */
+coursesRouter.get('/:slug/reviews', (req: Request, res: Response) => {
+  const db = loadDb();
+  const course = findBySlug(db, req.params.slug);
+  if (!course) return res.status(404).json({ error: 'Course not found' });
+
+  const reviews = (db.course_feedback || [])
+    .filter((f: CourseFeedback) => f.course_id === course.id)
+    .sort(
+      (a: CourseFeedback, b: CourseFeedback) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    )
+    .slice(0, 20)
+    .map((f: CourseFeedback) => ({
+      user_name: f.user_name,
+      rating: f.rating,
+      what_learned: f.what_learned,
+      would_recommend: f.would_recommend,
+      created_at: f.created_at,
+    }));
+
+  res.setHeader('Cache-Control', 'public, max-age=120');
+  return res.json({ reviews, total: (db.course_feedback || []).filter((f: CourseFeedback) => f.course_id === course.id).length });
+});
 
 coursesRouter.post('/:slug/feedback', requireAuth, (req: Request, res: Response) => {
   const db = loadDb();
@@ -1218,3 +1799,8 @@ function courseIdTail(courseId: string): string {
 }
 
 export default coursesRouter;
+
+
+
+
+

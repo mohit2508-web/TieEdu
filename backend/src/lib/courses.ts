@@ -10,10 +10,15 @@
 import crypto from 'crypto';
 import {
   Course,
+  CourseExamConfig,
   CourseLesson,
   CourseModule,
+  CourseModuleTest,
   CourseProgress,
+  ExamAttempt,
+  ExamQuestion,
   LessonVideo,
+  ModuleTestAttempt,
   VideoProvider,
 } from '../data/db';
 import { XP } from './xp';
@@ -351,16 +356,54 @@ export function sanitizeLesson<T extends CourseLesson>(lesson: T): Omit<T, 'quiz
   };
 }
 
-export function sanitizeCourse(course: Course) {
+/**
+ * The exam shape a learner may see BEFORE and DURING an attempt.
+ *
+ * Everything the interface needs to warn "20 questions, 30 minutes, 60% to
+ * pass" — and nothing that could be used to skip the exam. The bank is reduced
+ * to its size so the UI can say "drawn from 40 questions"; the questions
+ * themselves are handed out per-attempt by the exam engine (no answers ever).
+ * This is the same discipline as `sanitizeQuizForLearner`.
+ */
+export function sanitizeExamForLearner(exam: Course['exam']) {
+  if (!exam) return null;
   return {
-    ...course,
-    modules: orderedModules(course).map((m) => ({
-      ...m,
-      lessons: (m.lessons || [])
-        .slice()
-        .sort((a, b) => a.sort_order - b.sort_order)
-        .map((l) => sanitizeLesson(l)),
-    })),
+    question_count: exam.question_count,
+    duration_minutes: exam.duration_minutes,
+    passing_percent: exam.passing_percent,
+    retake_cooldown_hours: exam.retake_cooldown_hours,
+    distinction_percent: exam.distinction_percent,
+    bank_size: Array.isArray(exam.bank) ? exam.bank.length : 0,
+  };
+}
+
+export function sanitizeCourse(course: Course) {
+  // `exam` carries the answer keys, so it is replaced rather than spread. A
+  // wholesale `...course` would ship every `correct_index` to the browser and
+  // make the final exam decorative. The same is true of each module's `test`.
+  const { exam, ...rest } = course;
+  return {
+    ...rest,
+    exam: sanitizeExamForLearner(exam),
+    modules: orderedModules(course).map((m) => {
+      // Strip the module-test bank the same way the course exam is stripped.
+      const { test, ...modRest } = m;
+      return {
+        ...modRest,
+        test: test
+          ? {
+              question_count: test.question_count,
+              passing_percent: test.passing_percent,
+              retake_cooldown_hours: test.retake_cooldown_hours,
+              bank_size: Array.isArray(test.bank) ? test.bank.length : 0,
+            }
+          : null,
+        lessons: (m.lessons || [])
+          .slice()
+          .sort((a, b) => a.sort_order - b.sort_order)
+          .map((l) => sanitizeLesson(l)),
+      };
+    }),
   };
 }
 
@@ -383,6 +426,12 @@ export function blankProgress(userId: string, courseId: string): CourseProgress 
     completed_lesson_ids: [],
     quiz_best_percent: {},
     passed_quiz_ids: [],
+    exam_attempts: [],
+    best_exam_percent: null,
+    exam_passed: false,
+    first_attempt_percent: null,
+    last_attempt_at: null,
+    project_url: null,
   };
 }
 
@@ -403,6 +452,12 @@ function normaliseProgress(p: CourseProgress): CourseProgress {
     quiz_best_percent: p.quiz_best_percent || {},
     completed_lesson_ids: p.completed_lesson_ids || [],
     passed_quiz_ids: p.passed_quiz_ids || [],
+    exam_attempts: Array.isArray(p.exam_attempts) ? p.exam_attempts : [],
+    best_exam_percent: p.best_exam_percent ?? null,
+    exam_passed: p.exam_passed === true,
+    first_attempt_percent: p.first_attempt_percent ?? null,
+    last_attempt_at: p.last_attempt_at || null,
+    project_url: p.project_url ?? null,
   };
 }
 
@@ -677,6 +732,395 @@ export function gradeQuiz(
     passed: score >= quiz.passing_percent,
     passing_percent: quiz.passing_percent,
     results,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Final exam engine
+// ---------------------------------------------------------------------------
+//
+// The exam is the one assessment that decides a certificate, so it is built to
+// the same rule as the lesson quizzes and then some:
+//
+//   * The bank never leaves the server. `sanitizeExamForLearner` publishes the
+//     shape; the questions are handed out per attempt, and only after a graded
+//     submission does the answer key come back with the result.
+//   * A draw is random and unpredictable (crypto-backed), so two learners — or
+//     the same learner on two attempts — do not sit the same paper.
+//   * Every judgement (score, pass, cooldown, Distinction eligibility) is
+//     re-derived here from stored state. The client reports answers, never a
+//     score.
+
+/** Slack granted on top of the timer before a submission is refused. */
+export const EXAM_GRACE_SECONDS = 30;
+
+/** A course only has an exam if it carries a usable bank and draw size. */
+export function examConfigOf(course: Course): CourseExamConfig | null {
+  const exam = course.exam;
+  if (!exam || !Array.isArray(exam.bank) || exam.bank.length === 0) return null;
+  if (!Number.isFinite(exam.question_count) || exam.question_count <= 0) return null;
+  return exam;
+}
+
+/**
+ * Unbiased Fisher–Yates shuffle. Uses `crypto.randomInt`, not `Math.random`,
+ * so a draw cannot be predicted from previous outputs — the bank's ordering or
+ * a seeded PRNG would let a determined learner work out the next paper.
+ */
+function shuffled<T>(items: T[]): T[] {
+  const out = items.slice();
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = crypto.randomInt(i + 1);
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
+export interface ExamLearnerState {
+  question_count: number;
+  duration_minutes: number;
+  passing_percent: number;
+  retake_cooldown_hours: number;
+  distinction_percent: number;
+  bank_size: number;
+  attempts_count: number;
+  best_percent: number | null;
+  first_attempt_percent: number | null;
+  passed: boolean;
+  last_attempt_at: string | null;
+  cooldown_until: string | null;
+  in_progress: boolean;
+  can_start: boolean;
+  project_required: boolean;
+  project_title: string | null;
+}
+
+function durationMsOf(exam: CourseExamConfig): number {
+  return Math.max(1, Number(exam.duration_minutes) || 1) * 60_000;
+}
+
+/** Newest attempt first, by start time. */
+function attemptsNewestFirst(progress: CourseProgress | null): ExamAttempt[] {
+  return (progress?.exam_attempts || []).slice().sort((a, b) => b.started_at.localeCompare(a.started_at));
+}
+
+/**
+ * Everything the exam card needs to render its state, derived from stored
+ * attempts. `null` when the course has no exam.
+ */
+export function examStateForLearner(course: Course, progress: CourseProgress | null): ExamLearnerState | null {
+  const exam = examConfigOf(course);
+  if (!exam) return null;
+
+  const attempts = progress?.exam_attempts || [];
+  const graded = attempts.filter((a) => a.graded);
+  const passed = progress?.exam_passed === true;
+  const durationMs = durationMsOf(exam);
+  const now = Date.now();
+
+  const lastGradedAt = graded.reduce<string | null>((latest, a) => {
+    const at = a.submitted_at || a.started_at;
+    return at && (!latest || at > latest) ? at : latest;
+  }, null);
+
+  const cooldownMs = Math.max(0, Number(exam.retake_cooldown_hours) || 0) * 3_600_000;
+  const cooldownUntilIso =
+    !passed && lastGradedAt && cooldownMs > 0
+      ? new Date(new Date(lastGradedAt).getTime() + cooldownMs).toISOString()
+      : null;
+  const cooldownActive = !!cooldownUntilIso && now < new Date(cooldownUntilIso).getTime();
+
+  // An ungraded attempt that is still inside its window is resumable, so a new
+  // one must not start. An expired ungraded attempt is rolled over at start.
+  const open = attempts.find((a) => !a.graded) || null;
+  const inProgress = !!open && now < new Date(open.started_at).getTime() + durationMs;
+
+  return {
+    question_count: Math.min(Number(exam.question_count) || 0, exam.bank.length),
+    duration_minutes: Number(exam.duration_minutes) || 0,
+    passing_percent: Number(exam.passing_percent) || 0,
+    retake_cooldown_hours: Number(exam.retake_cooldown_hours) || 0,
+    distinction_percent: Number(exam.distinction_percent) || 0,
+    bank_size: exam.bank.length,
+    attempts_count: graded.length,
+    best_percent: progress?.best_exam_percent ?? null,
+    first_attempt_percent: progress?.first_attempt_percent ?? null,
+    passed,
+    last_attempt_at: progress?.last_attempt_at ?? null,
+    cooldown_until: cooldownActive ? cooldownUntilIso : null,
+    in_progress: inProgress,
+    can_start: !inProgress && !passed && !cooldownActive,
+    project_required: course.project?.required_for_certificate === true,
+    project_title: course.project?.title || null,
+  };
+}
+
+/**
+ * Draw a fresh paper for an attempt. `question_count` is clamped to the bank so
+ * a mis-sized config can never ask for more questions than exist (which would
+ * otherwise silently shorten the paper and inflate the score).
+ *
+ * Takes the structural subset both the final exam and a module test provide.
+ */
+export function drawExamQuestions(exam: {
+  bank: ExamQuestion[];
+  question_count: number;
+}): { question_ids: string[] } {
+  const count = Math.min(Math.max(1, Number(exam.question_count) || 1), exam.bank.length);
+  return { question_ids: shuffled(exam.bank).slice(0, count).map((q) => q.id) };
+}
+
+/**
+ * The learner-safe shape of a drawn paper: prompt and options only. The answer
+ * key and explanations stay server-side until `gradeExam` has run.
+ */
+export function sanitizeExamQuestions(
+  exam: { bank: ExamQuestion[] },
+  questionIds: string[]
+) {
+  const byId = new Map(exam.bank.map((q) => [q.id, q]));
+  return questionIds
+    .map((id) => byId.get(id))
+    .filter((q): q is ExamQuestion => !!q)
+    .map((q) => ({
+      id: q.id,
+      prompt: q.prompt,
+      options: [...q.options],
+      difficulty: q.difficulty,
+      topic: q.topic || null,
+    }));
+}
+
+/**
+ * Grade a submitted paper. Only ever reports the truth about one attempt; the
+ * caller applies best-of and the pass/cooldown rules.
+ */
+export function gradeExam(
+  exam: { bank: ExamQuestion[]; passing_percent: number },
+  questionIds: string[],
+  answers: Record<string, number>
+): {
+  score_percent: number;
+  passed: boolean;
+  passing_percent: number;
+  results: {
+    id: string;
+    prompt: string;
+    difficulty: string;
+    chosen_index: number;
+    correct_index: number;
+    correct: boolean;
+    explanation: string;
+  }[];
+} {
+  const byId = new Map(exam.bank.map((q) => [q.id, q]));
+  const results = questionIds
+    .map((id) => {
+      const q = byId.get(id);
+      if (!q) return null;
+      const chosen = Number(answers[id]);
+      const hasAnswer = Number.isInteger(chosen) && chosen >= 0 && chosen < q.options.length;
+      return {
+        id: q.id,
+        prompt: q.prompt,
+        difficulty: q.difficulty,
+        chosen_index: hasAnswer ? chosen : -1,
+        correct_index: q.correct_index,
+        correct: hasAnswer && chosen === q.correct_index,
+        explanation: q.explanation,
+      };
+    })
+    .filter((r): r is NonNullable<typeof r> => !!r);
+
+  const total = results.length || 1;
+  const correctCount = results.filter((r) => r.correct).length;
+  const score = Math.round((correctCount / total) * 100);
+
+  return {
+    score_percent: score,
+    passed: score >= (Number(exam.passing_percent) || 0),
+    passing_percent: Number(exam.passing_percent) || 0,
+    results,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Module tests — the checkpoint at the end of a module.
+//
+// Same discipline as the final exam (randomised draw, server-side grading,
+// keys never leave before submit), but untimed, scoped to one module, and —
+// deliberately — NOT part of `certificateReadiness`. A module test is a
+// practice gate; the certificate is gated by the final exam and the project.
+// ---------------------------------------------------------------------------
+
+/** A module only has a test if it carries a usable bank and draw size. */
+export function moduleTestConfigOf(mod: CourseModule): CourseModuleTest | null {
+  const test = mod.test;
+  if (!test || !Array.isArray(test.bank) || test.bank.length === 0) return null;
+  if (!Number.isFinite(test.question_count) || test.question_count <= 0) return null;
+  return test;
+}
+
+/** True once every lesson in the module is complete — the gate to its test. */
+export function moduleLessonsComplete(progress: CourseProgress | null, mod: CourseModule): boolean {
+  const lessons = mod.lessons || [];
+  if (!lessons.length) return false;
+  const done = new Set(progress?.completed_lesson_ids || []);
+  return lessons.every((l) => done.has(l.id));
+}
+
+export interface ModuleTestLearnerState {
+  module_id: string;
+  question_count: number;
+  passing_percent: number;
+  retake_cooldown_hours: number;
+  bank_size: number;
+  attempts_count: number;
+  best_percent: number | null;
+  passed: boolean;
+  last_attempt_at: string | null;
+  cooldown_until: string | null;
+  in_progress: boolean;
+  /** All module lessons done and no attempt currently open. */
+  can_start: boolean;
+  lessons_complete: boolean;
+}
+
+/** Attempts for one module, newest first. */
+function moduleAttempts(progress: CourseProgress | null, moduleId: string): ModuleTestAttempt[] {
+  return (progress?.module_test_attempts || [])
+    .filter((a) => a.module_id === moduleId)
+    .slice()
+    .sort((a, b) => b.started_at.localeCompare(a.started_at));
+}
+
+/**
+ * Everything the module-test card needs, derived from stored attempts. `null`
+ * when the module has no test.
+ */
+export function moduleTestStateForLearner(
+  mod: CourseModule,
+  progress: CourseProgress | null
+): ModuleTestLearnerState | null {
+  const test = moduleTestConfigOf(mod);
+  if (!test) return null;
+
+  const attempts = moduleAttempts(progress, mod.id);
+  const graded = attempts.filter((a) => a.graded);
+  const passed = graded.some((a) => a.passed);
+  const lessonsComplete = moduleLessonsComplete(progress, mod);
+
+  const lastGradedAt = graded.reduce<string | null>((latest, a) => {
+    const at = a.submitted_at || a.started_at;
+    return at && (!latest || at > latest) ? at : latest;
+  }, null);
+
+  const cooldownMs = Math.max(0, Number(test.retake_cooldown_hours) || 0) * 3_600_000;
+  const cooldownUntilIso =
+    !passed && lastGradedAt && cooldownMs > 0
+      ? new Date(new Date(lastGradedAt).getTime() + cooldownMs).toISOString()
+      : null;
+  const cooldownActive = !!cooldownUntilIso && Date.now() < new Date(cooldownUntilIso).getTime();
+
+  // Module tests are untimed, so an ungraded attempt stays open until it is
+  // submitted or the learner starts over — a new draw must not race an open one.
+  const inProgress = attempts.some((a) => !a.graded);
+  const best = graded.reduce<number | null>((b, a) => {
+    if (a.score_percent == null) return b;
+    return b == null || a.score_percent > b ? a.score_percent : b;
+  }, null);
+
+  return {
+    module_id: mod.id,
+    question_count: Math.min(Number(test.question_count) || 0, test.bank.length),
+    passing_percent: Number(test.passing_percent) || 0,
+    retake_cooldown_hours: Number(test.retake_cooldown_hours) || 0,
+    bank_size: test.bank.length,
+    attempts_count: graded.length,
+    best_percent: best,
+    passed,
+    last_attempt_at: lastGradedAt,
+    cooldown_until: cooldownActive ? cooldownUntilIso : null,
+    in_progress: inProgress,
+    // Same rule as the final exam: a pass stands, so a passed test cannot be
+    // re-sat to chase a higher number. A failure can be retaken (subject to
+    // the cooldown) because the point of the test is to eventually pass it.
+    can_start: lessonsComplete && !inProgress && !passed && !cooldownActive,
+    lessons_complete: lessonsComplete,
+  };
+}
+
+/**
+ * The learner-safe shape of a module's test, for the syllabus: config summary
+ * plus this learner's state. The bank is reduced to its size — same rule as
+ * `sanitizeExamForLearner`.
+ */
+export function sanitizeModuleTestForLearner(
+  mod: CourseModule,
+  progress: CourseProgress | null
+) {
+  const test = moduleTestConfigOf(mod);
+  if (!test) return null;
+  const state = moduleTestStateForLearner(mod, progress);
+  return {
+    question_count: Math.min(Number(test.question_count) || 0, test.bank.length),
+    passing_percent: Number(test.passing_percent) || 0,
+    retake_cooldown_hours: Number(test.retake_cooldown_hours) || 0,
+    bank_size: test.bank.length,
+    state,
+  };
+}
+
+export interface CertificateReadiness {
+  ready: boolean;
+  missing: string[];
+  score_percent: number | null;
+  /** True when the first attempt cleared the course's distinction threshold. */
+  distinction: boolean;
+  exam_required: boolean;
+  project_required: boolean;
+  project_url: string | null;
+  project_title: string | null;
+}
+
+/**
+ * The full set of gates between a learner and their certificate, in one place.
+ *
+ * The certificate endpoint and the course page both call this, so "claim" only
+ * ever appears when the server would actually issue. Lesson completion and
+ * course access are checked by the caller (they need request-specific data);
+ * this covers the assessment gates.
+ */
+export function certificateReadiness(db: any, userId: string, course: Course): CertificateReadiness {
+  const progress = getProgress(db, userId, course.id);
+  const exam = examConfigOf(course);
+  const missing: string[] = [];
+
+  const examRequired = !!exam;
+  if (examRequired) {
+    const state = examStateForLearner(course, progress);
+    if (!state?.passed) missing.push('final_exam');
+  }
+
+  const projectRequired = course.project?.required_for_certificate === true;
+  const projectUrl = progress?.project_url || null;
+  if (projectRequired && !projectUrl) missing.push('project');
+
+  const state = examRequired ? examStateForLearner(course, progress) : null;
+  const distinction =
+    !!exam &&
+    progress?.first_attempt_percent != null &&
+    progress.first_attempt_percent >= (Number(exam.distinction_percent) || 101);
+
+  return {
+    ready: missing.length === 0,
+    missing,
+    score_percent: progress?.best_exam_percent ?? null,
+    distinction,
+    exam_required: examRequired,
+    project_required: projectRequired,
+    project_url: projectUrl,
+    project_title: course.project?.title || null,
   };
 }
 

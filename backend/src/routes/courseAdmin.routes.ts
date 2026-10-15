@@ -33,6 +33,21 @@ import {
   ContentBlockType,
   ALL_BLOCK_TYPES,
   XpEvent,
+  COURSE_BRANCHES,
+  COURSE_BUCKETS,
+  CERT_TIERS,
+  EXAM_DIFFICULTIES,
+  CourseBranch,
+  CourseBucket,
+  CertTier,
+  ExamDifficulty,
+  ExamQuestion,
+  CourseExamConfig,
+  CourseModuleTest,
+  CourseProjectConfig,
+  CoursePerk,
+  CourseExamPrep,
+  CourseExamPrepPyq,
 } from '../data/db';
 import { requireAdmin } from '../middleware/auth';
 import { appendAudit } from '../store/audit';
@@ -40,8 +55,10 @@ import { notifyEvent } from '../lib/notify';
 import { createAutoDrop } from '../lib/autoDrops';
 import { autoDropTemplate } from '../lib/drops';
 import { syncUserXp, totalXpForUser, LEVELS, XP } from '../lib/xp';
+import { courseHealthFor } from '../lib/courseHealth';
 import {
   courseStats,
+  certificateReadiness,
   generateSerial,
   orderedLessons,
   orderedModules,
@@ -56,6 +73,7 @@ import {
   CERT_SIGNING_PRIVATE_KEY,
   publicKeyBundle,
   SIGNING_VERSION,
+  certificateDimensionsFor,
   signCertificate,
   SITE_URL,
   siteUrlIsLocalhost,
@@ -403,6 +421,199 @@ function num(v: any, fallback: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, Math.round(n)));
 }
 
+/**
+ * Apply the adoption dimensions (branch/bucket/tier/hours/track) to a course.
+ * Unknown values are cleared rather than stored, so a typo cannot create a
+ * phantom facet no other course shares. Shared by create and update so the two
+ * paths cannot drift.
+ */
+function applyDimensionFields(course: Course, b: any) {
+  if (b.branch !== undefined) {
+    const v = str(b.branch, 40).toLowerCase();
+    course.branch = (COURSE_BRANCHES as readonly string[]).includes(v) ? (v as CourseBranch) : undefined;
+  }
+  if (b.branch_label !== undefined) course.branch_label = str(b.branch_label, 60) || undefined;
+  if (b.bucket !== undefined) {
+    const v = str(b.bucket, 2).toUpperCase();
+    course.bucket = (COURSE_BUCKETS as readonly string[]).includes(v) ? (v as CourseBucket) : undefined;
+  }
+  if (b.track_id !== undefined) course.track_id = str(b.track_id, 60) || null;
+  if (b.certificate_tier !== undefined) {
+    const v = str(b.certificate_tier, 20).toLowerCase();
+    course.certificate_tier = (CERT_TIERS as readonly string[]).includes(v) ? (v as CertTier) : undefined;
+  }
+  if (b.estimated_hours !== undefined) {
+    const n = num(b.estimated_hours, course.estimated_hours || 0, 0, 200);
+    course.estimated_hours = n > 0 ? n : undefined;
+  }
+}
+
+/**
+ * Apply the assessment/reward config (final exam, capstone project, perks,
+ * Semester Exam Mode) to a course.
+ *
+ * Everything is optional and an explicit empty value clears it, so an admin can
+ * remove a section as well as add one. Bank entries that could never be graded
+ * (missing prompt, fewer than two options, an out-of-range key) are dropped
+ * rather than stored, because a bad question in the pool would surface as an
+ * unmarkable exam attempt much later. Shared by create and update so the two
+ * paths cannot drift.
+ */
+function applyAssessmentFields(course: Course, b: any) {
+  if (b.exam !== undefined) course.exam = normaliseExamConfig(b.exam) || undefined;
+  if (b.project !== undefined) course.project = normaliseProjectConfig(b.project) || undefined;
+  if (b.perks !== undefined) {
+    const perks = normalisePerks(b.perks);
+    course.perks = perks.length ? perks : undefined;
+  }
+  if (b.exam_prep !== undefined) course.exam_prep = normaliseExamPrep(b.exam_prep) || undefined;
+}
+
+function normaliseExamConfig(input: any): CourseExamConfig | null {
+  if (!input || typeof input !== 'object') return null;
+  const bank: ExamQuestion[] = [];
+  const seen = new Set<string>();
+  for (const raw of Array.isArray(input.bank) ? input.bank : []) {
+    if (!raw || typeof raw !== 'object') continue;
+    const prompt = str(raw.prompt, 2000);
+    const options = (Array.isArray(raw.options) ? raw.options : [])
+      .map((o: any) => str(o, 500))
+      .filter(Boolean);
+    if (!prompt || options.length < 2) continue;
+    const correctIndex = Number(raw.correct_index);
+    if (!Number.isInteger(correctIndex) || correctIndex < 0 || correctIndex >= options.length) continue;
+    let id = str(raw.id, 60) || `q-${crypto.randomBytes(4).toString('hex')}`;
+    if (seen.has(id)) id = `q-${crypto.randomBytes(4).toString('hex')}`;
+    seen.add(id);
+    const diff = str(raw.difficulty, 20).toLowerCase();
+    const topic = str(raw.topic, 80);
+    bank.push({
+      id,
+      prompt,
+      options,
+      correct_index: correctIndex,
+      explanation: str(raw.explanation, 2000),
+      difficulty: (EXAM_DIFFICULTIES as readonly string[]).includes(diff) ? (diff as ExamDifficulty) : 'medium',
+      ...(topic ? { topic } : {}),
+    });
+  }
+  const bankSize = bank.length;
+  const maxCount = bankSize || 1;
+  const defaultCount = bankSize ? Math.min(20, bankSize) : 1;
+  return {
+    question_count: Math.min(num(input.question_count, defaultCount, 1, 1000), maxCount),
+    duration_minutes: num(input.duration_minutes, 30, 1, 600),
+    passing_percent: num(input.passing_percent, 60, 1, 100),
+    retake_cooldown_hours: num(input.retake_cooldown_hours, 24, 0, 720),
+    distinction_percent: num(input.distinction_percent, 85, 1, 100),
+    bank,
+  };
+}
+
+function normaliseProjectConfig(input: any): CourseProjectConfig | null {
+  if (!input || typeof input !== 'object') return null;
+  const title = str(input.title, 160);
+  if (!title) return null;
+  const hint = str(input.submission_hint, 300);
+  return {
+    title,
+    brief: str(input.brief, 4000),
+    ...(hint ? { submission_hint: hint } : {}),
+    required_for_certificate: !!input.required_for_certificate,
+  };
+}
+
+function normalisePerks(input: any): CoursePerk[] {
+  if (!Array.isArray(input)) return [];
+  const out: CoursePerk[] = [];
+  const seen = new Set<string>();
+  for (const raw of input) {
+    if (!raw || typeof raw !== 'object') continue;
+    const key = str(raw.key, 60).toLowerCase().replace(/[^a-z0-9_]+/g, '_').replace(/^_+|_+$/g, '');
+    const label = str(raw.label, 120);
+    if (!key || !label || seen.has(key)) continue;
+    seen.add(key);
+    const detail = str(raw.detail, 240);
+    out.push({ key, label, ...(detail ? { detail } : {}) });
+  }
+  return out.slice(0, 20);
+}
+
+function normaliseExamPrep(input: any): CourseExamPrep | null {
+  if (!input || typeof input !== 'object') return null;
+  const pyqs = (list: any): CourseExamPrepPyq[] =>
+    (Array.isArray(list) ? list : [])
+      .map((p: any) => ({
+        year: str(p?.year, 20),
+        question: str(p?.question, 1000),
+        ...(str(p?.solution, 4000) ? { solution: str(p.solution, 4000) } : {}),
+      }))
+      .filter((p: CourseExamPrepPyq) => p.year && p.question);
+  const units = (Array.isArray(input.units) ? input.units : [])
+    .map((u: any) => ({
+      title: str(u?.title, 160),
+      ...(str(u?.summary, 4000) ? { summary: str(u.summary, 4000) } : {}),
+      questions: longBullets(u?.questions, 60),
+      ...(pyqs(u?.pyqs).length ? { pyqs: pyqs(u.pyqs) } : {}),
+    }))
+    .filter(
+      (u: { title: string; summary?: string; questions: string[]; pyqs?: CourseExamPrepPyq[] }) =>
+        u.title && (u.summary || u.questions.length || (u.pyqs?.length || 0) > 0)
+    );
+  const important = longBullets(input.important_questions, 60);
+  const pyq = pyqs(input.previous_year_questions);
+  const target = str(input.target, 80);
+  if (!target && !units.length && !important.length && !pyq.length) return null;
+  return {
+    ...(target ? { target } : {}),
+    units,
+    ...(important.length ? { important_questions: important } : {}),
+    ...(pyq.length ? { previous_year_questions: pyq } : {}),
+  };
+}
+
+/**
+ * A module's end-of-module test: same bank rules as the final exam, but
+ * smaller and untimed. `null` (or an empty bank) removes the test, so an
+ * admin can clear a section as well as set one.
+ */
+function normaliseModuleTest(input: any): CourseModuleTest | null {
+  if (!input || typeof input !== 'object') return null;
+  const bank: ExamQuestion[] = [];
+  const seen = new Set<string>();
+  for (const raw of Array.isArray(input.bank) ? input.bank : []) {
+    if (!raw || typeof raw !== 'object') continue;
+    const prompt = str(raw.prompt, 2000);
+    const options = (Array.isArray(raw.options) ? raw.options : [])
+      .map((o: any) => str(o, 500))
+      .filter(Boolean);
+    if (!prompt || options.length < 2) continue;
+    const correctIndex = Number(raw.correct_index);
+    if (!Number.isInteger(correctIndex) || correctIndex < 0 || correctIndex >= options.length) continue;
+    let id = str(raw.id, 60) || `q-${crypto.randomBytes(4).toString('hex')}`;
+    if (seen.has(id)) id = `q-${crypto.randomBytes(4).toString('hex')}`;
+    seen.add(id);
+    const diff = str(raw.difficulty, 20).toLowerCase();
+    const topic = str(raw.topic, 80);
+    bank.push({
+      id,
+      prompt,
+      options,
+      correct_index: correctIndex,
+      explanation: str(raw.explanation, 2000),
+      difficulty: (EXAM_DIFFICULTIES as readonly string[]).includes(diff) ? (diff as ExamDifficulty) : 'medium',
+      ...(topic ? { topic } : {}),
+    });
+  }
+  if (!bank.length) return null;
+  return {
+    question_count: Math.min(num(input.question_count, bank.length, 1, 1000), bank.length),
+    passing_percent: num(input.passing_percent, 60, 1, 100),
+    retake_cooldown_hours: num(input.retake_cooldown_hours, 0, 0, 720),
+    bank,
+  };
+}
+
 function nextSort(list: { sort_order: number }[]): number {
   return list.length ? Math.max(...list.map((l) => l.sort_order || 0)) + 1 : 1;
 }
@@ -471,6 +682,8 @@ courseAdminRouter.post('/courses', async (req: Request, res: Response) => {
     is_free: req.body?.is_free !== false,
     price_inr: Math.max(0, num(req.body?.price_inr, 0, 0, 100000)),
     thumbnail_url: str(req.body?.thumbnail_url, 500),
+    thumbnail_alt: str(req.body?.thumbnail_alt, 200) || null,
+    offer_badge_enabled: req.body?.offer_badge_enabled !== false,
     tags: strArray(req.body?.tags),
     outcomes: strArray(req.body?.outcomes, 12).map((o) => o.slice(0, 240)),
     prerequisite_course_id: str(req.body?.prerequisite_course_id, 60) || null,
@@ -490,6 +703,9 @@ courseAdminRouter.post('/courses', async (req: Request, res: Response) => {
   // lose every one of them, because the body keys were only ever read by PUT.
   const longForm = applyLongFormFields(db, course, req.body || {});
   if (longForm.error) return res.status(400).json({ error: longForm.error });
+
+  applyDimensionFields(course, req.body || {});
+  applyAssessmentFields(course, req.body || {});
 
   db.courses = db.courses || [];
   db.courses.push(course);
@@ -522,6 +738,9 @@ courseAdminRouter.get('/courses/:id', (req: Request, res: Response) => {
   res.json({
     status: 'success',
     course: courseForEditor(db, course),
+    // The publish checklist, computed from the same function the PUT gate
+    // enforces, so the panel and the refusal always agree.
+    health: courseHealthFor(course),
     enrollments,
     feedback: (db.course_feedback || []).filter((f: CourseFeedback) => f.course_id === course.id),
   });
@@ -550,10 +769,16 @@ courseAdminRouter.put('/courses/:id', async (req: Request, res: Response) => {
   }
   if (b.price_inr !== undefined) course.price_inr = Math.max(course.is_free ? 0 : 1, num(b.price_inr, course.price_inr, 0, 100000));
   if (b.thumbnail_url !== undefined) course.thumbnail_url = str(b.thumbnail_url, 500);
+  // Accessibility text for the cover, and the per-course opt-out of the live
+  // offer badge. Both optional: absent means "leave as-is", empty clears the
+  // alt text.
+  if (b.thumbnail_alt !== undefined) course.thumbnail_alt = str(b.thumbnail_alt, 200) || null;
+  if (b.offer_badge_enabled !== undefined) course.offer_badge_enabled = !!b.offer_badge_enabled;
   if (b.tags !== undefined) course.tags = strArray(b.tags);
   if (b.outcomes !== undefined) course.outcomes = strArray(b.outcomes, 12).map((o) => o.slice(0, 240));
+  applyDimensionFields(course, b);
+  applyAssessmentFields(course, b);
   // Long-form page sections. Each is optional and an empty value clears it, so
-  // an admin can remove a section by sending `[]` / `''` rather than only adding.
   const longForm = applyLongFormFields(db, course, b);
   if (longForm.error) return res.status(400).json({ error: longForm.error });
   if (b.certificate_eligible !== undefined) course.certificate_eligible = !!b.certificate_eligible;
@@ -568,14 +793,14 @@ courseAdminRouter.put('/courses/:id', async (req: Request, res: Response) => {
   if (b.published !== undefined) {
     const publishing = !!b.published;
     if (publishing) {
-      const stats = courseStats(course);
-      const problems: string[] = [];
-      if (stats.lesson_count === 0) problems.push('it has no lessons');
-      if (!course.description.trim()) problems.push('the description is empty');
-      if (!course.subtitle.trim()) problems.push('the subtitle is empty');
-      if (problems.length) {
+      // The same checklist the editor's health panel renders — one function,
+      // so the 400 the admin gets and the disabled Publish button they see
+      // can never name different problems.
+      const health = courseHealthFor(course);
+      if (!health.publishable) {
         return res.status(400).json({
-          error: `Cannot publish yet — ${problems.join(', ')}. Add content first, or save it as a draft.`,
+          error: `Cannot publish yet — ${health.blockers.join(', ')}. Add content first, or save it as a draft.`,
+          blockers: health.blockers,
         });
       }
     }
@@ -714,6 +939,13 @@ courseAdminRouter.post('/courses/:id/modules', (req: Request, res: Response) => 
     sort_order: req.body?.sort_order !== undefined ? num(req.body.sort_order, nextSort(course.modules), 1, 9999) : nextSort(course.modules),
     lessons: [],
   };
+  // An optional end-of-module test rides along with creation so a module can
+  // be authored in one round trip. `normaliseModuleTest` drops ungradable
+  // questions and returns null for an empty bank, so an empty body simply
+  // means "no test".
+  if (req.body?.test !== undefined) {
+    mod.test = normaliseModuleTest(req.body.test) || undefined;
+  }
   course.modules.push(mod);
   course.updated_at = new Date().toISOString();
   saveDb(db);
@@ -729,6 +961,10 @@ courseAdminRouter.put('/modules/:moduleId', (req: Request, res: Response) => {
   if (b.title !== undefined) found.module.title = str(b.title, 160) || found.module.title;
   if (b.summary !== undefined) found.module.summary = str(b.summary, 400);
   if (b.sort_order !== undefined) found.module.sort_order = num(b.sort_order, found.module.sort_order, 1, 9999);
+  // Explicit null/empty clears the test; absent leaves it untouched.
+  if (b.test !== undefined) {
+    found.module.test = normaliseModuleTest(b.test) || undefined;
+  }
   found.course.updated_at = new Date().toISOString();
   saveDb(db);
   res.json({ status: 'success', module: found.module });
@@ -1266,7 +1502,32 @@ courseAdminRouter.post('/certificates/issue', async (req: Request, res: Response
     return res.status(409).json({ error: `Already issued: ${existing.serial}`, serial: existing.serial });
   }
 
+  // Lessons alone are not the gate. A manual issue is a human pressing a
+  // button, not a bypass: if this course demands a final exam or a capstone,
+  // the same readiness rule the learner route applies is checked here, or the
+  // admin route becomes a way to mint a certificate the platform itself would
+  // refuse.
+  const readiness = certificateReadiness(db, userId, course);
+  if (!readiness.ready) {
+    return res.status(403).json({
+      error: 'Refusing to issue: this learner has not cleared the course assessment yet.',
+      missing: readiness.missing,
+      readiness,
+    });
+  }
+
   const issuedAt = new Date().toISOString();
+  // Same assessment dimensions the learner route signs: a manually issued
+  // certificate must look and verify exactly like a claimed one, or an admin
+  // pressing the button would mint a visibly different artefact for the same
+  // achievement.
+  const progressForCert = db.course_progress?.[userId]?.[course.id];
+  const dims = certificateDimensionsFor(course, {
+    score_percent: progressForCert?.best_exam_percent ?? null,
+    exam_passed_at: progressForCert?.last_attempt_at ?? null,
+    project_title: progressForCert?.project_url ? course.project?.title || null : null,
+    project_url: progressForCert?.project_url ?? null,
+  });
   let serial = generateSerial();
   for (let attempt = 0; (db.certificates || []).some((c: Certificate) => c.serial === serial); attempt++) {
     if (attempt >= 5) {
@@ -1285,6 +1546,7 @@ courseAdminRouter.post('/certificates/issue', async (req: Request, res: Response
     lessons_completed: done,
     lessons_required: required,
     xp_at_issue: totalXpForUser(db, userId),
+    ...dims,
   };
 
   // Guarded for the same reason as the learner claim route: an unset or
@@ -1317,6 +1579,8 @@ courseAdminRouter.post('/certificates/issue', async (req: Request, res: Response
     xp_at_issue: fields.xp_at_issue,
     lessons_completed: fields.lessons_completed,
     lessons_required: fields.lessons_required,
+    ...dims,
+    signing_version: SIGNING_VERSION,
     signature: signed.signature,
     signing_key_id: signed.keyId,
     status: 'active',

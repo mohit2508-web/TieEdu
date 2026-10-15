@@ -2,6 +2,9 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, ListChecks, Check, X, Lock, FileText } from 'lucide-react';
 import { ContentBlockRenderer } from '@/components/blocks/ContentBlockRenderer';
 import { TrackedVideoPlayer } from '@/components/courses/TrackedVideoPlayer';
+import { MobileSegmentReader, type LessonSegment } from '@/components/courses/MobileSegmentReader';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { readLessonSegment, writeLessonSegment } from '@/lib/lessonSegments';
 import { reportLessonProgress, submitLessonQuiz } from '@/lib/coursesApi';
 import type {
   CourseLessonView,
@@ -91,6 +94,34 @@ export const LessonPlayer: React.FC<{
    * is on screen. Video lessons are driven by real playback instead.
    */
   const readGated = (state?.requirements || []).some((r) => r.key === 'read' && !r.met);
+
+  // ---- mobile segment reader (Part G, "no long pages") ----------------------
+  // On phones a lesson is a sequence of one-step-at-a-time cards — video,
+  // each block, quiz — with swipe/Next and a resume point. Desktop keeps the
+  // continuous layout; both render the same data, so there is one source of
+  // truth. `useMediaQuery` starts false (SSR-safe) and flips after hydration,
+  // which means the first paint is always the desktop tree.
+  const isMobile = useMediaQuery('(max-width: 767px)');
+  const [segIndex, setSegIndex] = useState(0);
+
+  // Cheap counts for mode decisions, computed without narrowing the whole
+  // lesson: locked lessons and signed-out previews simply have zero segments.
+  const openForSegments = isOpenLesson(lesson);
+  const videoSegmentable =
+    openForSegments && !!lesson.video?.embed_url && !!lesson.video.provider;
+  const quizSegmentable =
+    openForSegments && !!(lesson.quiz?.questions && lesson.quiz.questions.length > 0);
+  const blockList: CourseLessonBlock[] = openForSegments ? lesson.blocks || [] : [];
+  const segmentCount = (videoSegmentable ? 1 : 0) + blockList.length + (quizSegmentable ? 1 : 0);
+  const inSegmentMode = isMobile && segmentCount > 1;
+
+  // Reopening a lesson resumes at the last step the learner was on (per-device
+  // convenience only — completion stays server-owned). Runs on lesson change;
+  // clamping against the live segment count happens at render.
+  useEffect(() => {
+    const saved = readLessonSegment(lesson.id);
+    setSegIndex(saved !== null ? saved : 0);
+  }, [lesson.id]);
 
   // ---- watch-time heartbeats -------------------------------------------------
   // The player reports its own real duration and playhead, so unlike the old
@@ -196,6 +227,79 @@ export const LessonPlayer: React.FC<{
   const quiz = lesson.quiz;
   const video = lesson.video;
 
+  const videoSection =
+    video?.embed_url && video.provider ? (
+      <section className="mb-6">
+        <TrackedVideoPlayer
+          provider={video.provider}
+          embedUrl={video.embed_url}
+          title={video.title || lesson.title}
+          watchedSeconds={state.video_watched_seconds || 0}
+          durationSeconds={state.video_duration_seconds || 0}
+          positionSeconds={state.video_position_seconds || 0}
+          watchPercent={state.video_percent || 0}
+          requiredPercent={state.watch_required_percent || 90}
+          isComplete={state.video_ok}
+          canSubmit={canSubmit}
+          onSignInRequired={onSignInRequired}
+          onPlayingChange={setPlaying}
+          onTimeUpdate={(position, duration) => {
+            if (duration > 0) reportedDuration.current = duration;
+            positionSeconds.current = position;
+          }}
+        />
+        {rejectedNote && (
+          <p className="mt-2 rounded-lg bg-[var(--bg-sky-soft)] px-3 py-2 text-[11px] leading-relaxed text-[var(--brand-sky-strong)]">
+            {rejectedNote}
+          </p>
+        )}
+        {beatError && <p className="mt-2 text-[11px] text-[var(--color-error)]">{beatError}</p>}
+      </section>
+    ) : null;
+
+  const quizSection = quiz?.questions && quiz.questions.length > 0 ? (
+    <QuizForm
+      lessonId={lesson.id}
+      quizId={quiz.id}
+      questions={quiz.questions}
+      passingPercent={quiz.passing_percent}
+      alreadyPassed={state.quiz_ok}
+      onGraded={onLessonUpdated}
+      onSignInRequired={onSignInRequired}
+      // One question at a time on phones — a full quiz list is exactly the
+      // "long page" this player exists to avoid. Desktop keeps all-at-once.
+      oneAtATime={isMobile}
+    />
+  ) : null;
+
+  // One lesson, two presentations of the same data. Segments order: video,
+  // every content block, quiz. The summary jump targets the authored summary
+  // block when the lesson has one; no summary, no false affordance.
+  const segments: LessonSegment[] = [];
+  if (videoSection) {
+    segments.push({ id: 'video', label: 'Watch', render: () => videoSection });
+  }
+  blockList.forEach((block) => {
+    segments.push({
+      id: `b:${block.id}`,
+      label: blockSegmentLabel(block),
+      render: () => <ContentBlockRenderer key={block.id} block={block} />,
+    });
+  });
+  if (quizSection) {
+    segments.push({ id: 'quiz', label: 'Quiz', render: () => quizSection });
+  }
+  const summaryBlockPos = blockList.findIndex((b) => b.block_type === 'summary');
+  const summarySegIndex =
+    summaryBlockPos === -1 ? null : (videoSection ? 1 : 0) + summaryBlockPos;
+  const safeSeg = Math.min(Math.max(0, segIndex), Math.max(0, segmentCount - 1));
+  const atLastSegment = safeSeg >= segmentCount - 1;
+  const goSegment = (next: number) => {
+    const clamped = Math.min(Math.max(0, next), Math.max(0, segmentCount - 1));
+    setSegIndex(clamped);
+    writeLessonSegment(lesson.id, clamped);
+  };
+
   return (
     <article>
       <header className="mb-6">
@@ -213,43 +317,30 @@ export const LessonPlayer: React.FC<{
         </Banner>
       )}
 
-      {video?.embed_url && video.provider && (
-        <section className="mb-6">
-          <TrackedVideoPlayer
-            provider={video.provider}
-            embedUrl={video.embed_url}
-            title={video.title || lesson.title}
-            watchedSeconds={state.video_watched_seconds || 0}
-            durationSeconds={state.video_duration_seconds || 0}
-            positionSeconds={state.video_position_seconds || 0}
-            watchPercent={state.video_percent || 0}
-            requiredPercent={state.watch_required_percent || 90}
-            isComplete={state.video_ok}
-            canSubmit={canSubmit}
-            onSignInRequired={onSignInRequired}
-            onPlayingChange={setPlaying}
-            onTimeUpdate={(position, duration) => {
-              if (duration > 0) reportedDuration.current = duration;
-              positionSeconds.current = position;
-            }}
+      {inSegmentMode ? (
+        <div className="mb-8">
+          <MobileSegmentReader
+            segments={segments}
+            index={safeSeg}
+            onIndexChange={goSegment}
+            minutes={lesson.duration_minutes || null}
+            summaryIndex={summarySegIndex}
           />
-          {rejectedNote && (
-            <p className="mt-2 rounded-lg bg-[var(--bg-sky-soft)] px-3 py-2 text-[11px] leading-relaxed text-[var(--brand-sky-strong)]">
-              {rejectedNote}
-            </p>
-          )}
-          {beatError && (
-            <p className="mt-2 text-[11px] text-[var(--color-error)]">{beatError}</p>
-          )}
-        </section>
-      )}
+        </div>
+      ) : (
+        <>
+          {videoSection}
 
-      {(lesson.blocks || []).length > 0 && (
-        <section className="mb-8 space-y-5">
-          {(lesson.blocks || []).map((block) => (
-            <ContentBlockRenderer key={block.id} block={block} />
-          ))}
-        </section>
+          {blockList.length > 0 && (
+            <section className="mb-8 space-y-5">
+              {blockList.map((block) => (
+                <ContentBlockRenderer key={block.id} block={block} />
+              ))}
+            </section>
+          )}
+
+          {quizSection}
+        </>
       )}
 
       {readGated && (
@@ -259,18 +350,6 @@ export const LessonPlayer: React.FC<{
             ? 'Nearly there — keep reading to finish this lesson.'
             : 'This lesson counts the time you spend on it. Keep this tab open and reading; switching away stops the clock.'}
         </p>
-      )}
-
-      {quiz?.questions && quiz.questions.length > 0 && (
-        <QuizForm
-          lessonId={lesson.id}
-          quizId={quiz.id}
-          questions={quiz.questions}
-          passingPercent={quiz.passing_percent}
-          alreadyPassed={state.quiz_ok}
-          onGraded={onLessonUpdated}
-          onSignInRequired={onSignInRequired}
-        />
       )}
 
       {(previousLesson || nextLesson) && (
@@ -317,7 +396,7 @@ export const LessonPlayer: React.FC<{
         </nav>
       )}
 
-      {/* The mobile bottom bar - Phase 4, §4.1.
+      {/* The mobile bottom bar - Phase 4, §4.1, segment-aware in 3c.
           Owned by the player, not the page: the page's enrolment bar returns null
           once the learner is enrolled precisely so these two cannot both claim
           the bottom of the screen.
@@ -328,6 +407,12 @@ export const LessonPlayer: React.FC<{
           scroll for. This is the same "primary action stays in reach" fix as the
           enrolment bar, aimed at a different action.
 
+          While a multi-step lesson is open on a phone, the primary action is
+          "Next step" until the last step, then it becomes the next-lesson
+          control — the bar always offers the one thing to do next, never two.
+          Mid-steps the control does not wait for completion: a step is free to
+          open, only the *lesson* gate unlocks the next lesson.
+
           It is hidden from `md` up, where the inline nav is already beside the
           video rather than under it.
 
@@ -335,41 +420,67 @@ export const LessonPlayer: React.FC<{
           says how much is left, so the bar is honest about the gate instead of
           offering a button that does nothing. The percentage is only shown when
           there is one to show: a signed-out viewer has no progress to report. */}
-      {nextLesson && (
+      {(nextLesson || inSegmentMode) && (
         <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 pt-3 pb-[calc(0.75rem+var(--safe-bottom))] md:hidden">
           <div className="mx-auto flex w-full max-w-[var(--reader-max)] items-center gap-3">
-            {previousLesson && (
+            {previousLesson || (inSegmentMode && safeSeg > 0) ? (
               <button
                 type="button"
-                onClick={() => onNavigate(previousLesson.id)}
-                aria-label="Previous lesson"
+                onClick={() => {
+                  if (inSegmentMode && safeSeg > 0) goSegment(safeSeg - 1);
+                  else if (previousLesson) onNavigate(previousLesson.id);
+                }}
+                aria-label={inSegmentMode && safeSeg > 0 ? 'Previous step' : 'Previous lesson'}
                 className="focus-ring flex h-12 w-12 flex-none items-center justify-center rounded-xl border border-[var(--border-strong)] bg-[var(--bg-surface)] text-[var(--ink)] transition-colors active:bg-[var(--bg-surface-hover)]"
               >
                 <ChevronLeft size={20} />
               </button>
-            )}
+            ) : null}
 
             <div className="min-w-0 flex-1">
-              {complete && (
-                <p className="truncate text-[11px] font-semibold tracking-wide text-[var(--text-muted)] uppercase">
-                  Up next
-                </p>
+              {inSegmentMode && !atLastSegment ? (
+                <button
+                  type="button"
+                  onClick={() => goSegment(safeSeg + 1)}
+                  className="focus-ring mt-0.5 flex min-h-[48px] w-full items-center justify-between gap-2 rounded-xl bg-[var(--brand-sky)] px-4 text-sm font-bold text-white transition-colors active:opacity-90"
+                >
+                  <span className="min-w-0 truncate">
+                    Next step · {safeSeg + 2} of {segmentCount}
+                  </span>
+                  <ChevronRight size={18} className="flex-none" />
+                </button>
+              ) : (
+                <>
+                  {complete && nextLesson && (
+                    <p className="truncate text-[11px] font-semibold tracking-wide text-[var(--text-muted)] uppercase">
+                      Up next
+                    </p>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => { if (nextLesson) onNavigate(nextLesson.id); }}
+                    disabled={!complete || !nextLesson}
+                    className={`focus-ring mt-0.5 flex min-h-[48px] w-full items-center justify-between gap-2 rounded-xl px-4 text-sm font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+                      complete && nextLesson
+                        ? 'bg-[var(--brand-sky)] text-white active:opacity-90'
+                        : 'border border-[var(--border-strong)] bg-[var(--bg-surface)] text-[var(--ink)]'
+                    }`}
+                  >
+                    <span className="min-w-0 truncate">
+                      {!nextLesson
+                        ? 'That was the last lesson'
+                        : complete
+                          ? nextLesson.title
+                          : 'Finish this lesson to continue'}
+                    </span>
+                    {complete && nextLesson ? (
+                      <ChevronRight size={18} className="flex-none" />
+                    ) : (
+                      <Lock size={16} className="flex-none" />
+                    )}
+                  </button>
+                </>
               )}
-              <button
-                type="button"
-                onClick={() => onNavigate(nextLesson.id)}
-                disabled={!complete}
-                className={`focus-ring mt-0.5 flex min-h-[48px] w-full items-center justify-between gap-2 rounded-xl px-4 text-sm font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
-                  complete
-                    ? 'bg-[var(--brand-sky)] text-white active:opacity-90'
-                    : 'border border-[var(--border-strong)] bg-[var(--bg-surface)] text-[var(--ink)]'
-                }`}
-              >
-                <span className="min-w-0 truncate">
-                  {complete ? nextLesson.title : 'Finish this lesson to continue'}
-                </span>
-                {complete ? <ChevronRight size={18} className="flex-none" /> : <Lock size={16} className="flex-none" />}
-              </button>
             </div>
           </div>
         </div>
@@ -377,7 +488,7 @@ export const LessonPlayer: React.FC<{
 
       {/* Reserve the bar's height so the last thing in the lesson - a transcript,
           a quiz, a mark-complete notice - is not sitting underneath it. */}
-      {nextLesson && <div aria-hidden="true" className="h-28 md:hidden" />}
+      {(nextLesson || inSegmentMode) && <div aria-hidden="true" className="h-28 md:hidden" />}
     </article>
   );
 };
@@ -393,11 +504,16 @@ const QuizForm: React.FC<{
   /** Called after an attempt has been graded, so the parent can refresh state. */
   onGraded: () => void;
   onSignInRequired: () => void;
-}> = ({ lessonId, questions, passingPercent, alreadyPassed, onGraded, onSignInRequired }) => {
+  /** Phones show one question at a time; desktop keeps the full list. */
+  oneAtATime?: boolean;
+}> = ({ lessonId, questions, passingPercent, alreadyPassed, onGraded, onSignInRequired, oneAtATime = false }) => {
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [outcome, setOutcome] = useState<CourseQuizOutcome | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Focus mode: which question is on screen. Reset with the answers so a retry
+  // starts at question one again.
+  const [focusedQ, setFocusedQ] = useState(0);
 
   const submit = async () => {
     setBusy(true);
@@ -475,7 +591,7 @@ const QuizForm: React.FC<{
           {!outcome.passed && (
             <button
               type="button"
-              onClick={() => { setOutcome(null); setAnswers({}); }}
+              onClick={() => { setOutcome(null); setAnswers({}); setFocusedQ(0); }}
               className="mt-4 rounded-lg border border-[var(--border-strong)] px-4 py-2 text-xs font-bold text-[var(--ink)] hover:bg-[var(--bg-surface-hover)]"
             >
               Try again
@@ -484,51 +600,134 @@ const QuizForm: React.FC<{
         </div>
       ) : (
         <div>
-          {questions.map((q, qi) => (
-            <fieldset key={q.id} className="mb-5 last:mb-0">
-              <legend className="mb-2 text-sm font-semibold text-[var(--ink)]">
-                {qi + 1}. {q.prompt}
-              </legend>
-              <div className="space-y-1.5">
-                {q.options.map((opt, oi) => {
-                  const selected = answers[q.id] === oi;
-                  return (
-                    <label
-                      key={oi}
-                      className={[
-                        'flex cursor-pointer items-start gap-2.5 rounded-lg border px-3 py-2 text-sm transition-colors',
-                        selected
-                          ? 'border-[var(--brand-sky)] bg-[var(--brand-sky-soft)]'
-                          : 'border-[var(--border-subtle)] hover:border-[var(--border-strong)]',
-                      ].join(' ')}
-                    >
-                      <input
-                        type="radio"
-                        name={q.id}
-                        checked={selected}
-                        onChange={() => setAnswers((a) => ({ ...a, [q.id]: oi }))}
-                        className="mt-0.5 accent-[var(--brand-sky)]"
-                      />
-                      <span className="text-[var(--text-body)]">{opt}</span>
-                    </label>
-                  );
-                })}
+          {oneAtATime ? (
+            <>
+              <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+                Question {focusedQ + 1} of {questions.length}
+              </p>
+              {(() => {
+                const q = questions[focusedQ];
+                if (!q) return null;
+                return (
+                  <fieldset key={q.id} className="last:mb-0">
+                    <legend className="mb-2 text-sm font-semibold text-[var(--ink)]">
+                      {focusedQ + 1}. {q.prompt}
+                    </legend>
+                    <div className="space-y-1.5">
+                      {q.options.map((opt, oi) => {
+                        const selected = answers[q.id] === oi;
+                        return (
+                          <label
+                            key={oi}
+                            className={[
+                              'flex min-h-[44px] cursor-pointer items-start gap-2.5 rounded-lg border px-3 py-2 text-sm transition-colors',
+                              selected
+                                ? 'border-[var(--brand-sky)] bg-[var(--brand-sky-soft)]'
+                                : 'border-[var(--border-subtle)] hover:border-[var(--border-strong)]',
+                            ].join(' ')}
+                          >
+                            <input
+                              type="radio"
+                              name={q.id}
+                              checked={selected}
+                              onChange={() => setAnswers((a) => ({ ...a, [q.id]: oi }))}
+                              className="mt-0.5 accent-[var(--brand-sky)]"
+                            />
+                            <span className="text-[var(--text-body)]">{opt}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </fieldset>
+                );
+              })()}
+
+              <div className="mt-4 flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setFocusedQ((i) => Math.max(0, i - 1))}
+                  disabled={focusedQ === 0}
+                  className="focus-ring min-h-[44px] rounded-lg border border-[var(--border-strong)] px-4 py-2 text-sm font-bold text-[var(--ink)] disabled:opacity-40"
+                >
+                  Back
+                </button>
+                {focusedQ < questions.length - 1 ? (
+                  <button
+                    type="button"
+                    onClick={() => setFocusedQ((i) => Math.min(questions.length - 1, i + 1))}
+                    disabled={answers[questions[focusedQ]?.id] === undefined}
+                    className="focus-ring min-h-[44px] flex-1 rounded-lg bg-[var(--brand-sky)] px-4 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Next question
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={submit}
+                    disabled={!answeredAll || busy}
+                    className="focus-ring min-h-[44px] flex-1 rounded-lg bg-[var(--brand-sky)] px-4 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    {busy ? 'Marking…' : alreadyPassed ? 'Submit again' : 'Submit answers'}
+                  </button>
+                )}
               </div>
-            </fieldset>
-          ))}
+              {focusedQ === questions.length - 1 && !answeredAll && (
+                <p className="mt-2 text-[11px] text-[var(--text-muted)]">
+                  Answer every question to submit — use Back to fill any you skipped.
+                </p>
+              )}
+            </>
+          ) : (
+            questions.map((q, qi) => (
+              <fieldset key={q.id} className="mb-5 last:mb-0">
+                <legend className="mb-2 text-sm font-semibold text-[var(--ink)]">
+                  {qi + 1}. {q.prompt}
+                </legend>
+                <div className="space-y-1.5">
+                  {q.options.map((opt, oi) => {
+                    const selected = answers[q.id] === oi;
+                    return (
+                      <label
+                        key={oi}
+                        className={[
+                          'flex cursor-pointer items-start gap-2.5 rounded-lg border px-3 py-2 text-sm transition-colors',
+                          selected
+                            ? 'border-[var(--brand-sky)] bg-[var(--brand-sky-soft)]'
+                            : 'border-[var(--border-subtle)] hover:border-[var(--border-strong)]',
+                        ].join(' ')}
+                      >
+                        <input
+                          type="radio"
+                          name={q.id}
+                          checked={selected}
+                          onChange={() => setAnswers((a) => ({ ...a, [q.id]: oi }))}
+                          className="mt-0.5 accent-[var(--brand-sky)]"
+                        />
+                        <span className="text-[var(--text-body)]">{opt}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </fieldset>
+            ))
+          )}
 
           {error && <p className="mb-3 text-xs text-[var(--color-error)]">{error}</p>}
 
-          <button
-            type="button"
-            onClick={submit}
-            disabled={!answeredAll || busy}
-            className="rounded-lg bg-[var(--brand-sky)] px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-[var(--brand-sky-strong)] disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            {busy ? 'Marking…' : alreadyPassed ? 'Submit again' : 'Submit answers'}
-          </button>
-          {!answeredAll && (
-            <p className="mt-2 text-[11px] text-[var(--text-muted)]">Answer every question to submit.</p>
+          {!oneAtATime && (
+            <>
+              <button
+                type="button"
+                onClick={submit}
+                disabled={!answeredAll || busy}
+                className="rounded-lg bg-[var(--brand-sky)] px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-[var(--brand-sky-strong)] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {busy ? 'Marking…' : alreadyPassed ? 'Submit again' : 'Submit answers'}
+              </button>
+              {!answeredAll && (
+                <p className="mt-2 text-[11px] text-[var(--text-muted)]">Answer every question to submit.</p>
+              )}
+            </>
           )}
         </div>
       )}
@@ -537,6 +736,37 @@ const QuizForm: React.FC<{
 };
 
 // --- shared bits ------------------------------------------------------------
+
+/** Friendly step label for a content block in the mobile segment reader. */
+const BLOCK_SEGMENT_LABELS: Partial<Record<CourseLessonBlock['block_type'], string>> = {
+  objective: 'Objective',
+  callout: 'Key idea',
+  markdown: 'Read',
+  diagram: 'Diagram',
+  image: 'Picture',
+  code: 'Code',
+  table: 'Table',
+  worked_example: 'Worked example',
+  try_it: 'Try it',
+  numerical: 'Try it',
+  sim: 'Simulator',
+  mistakes: 'Common mistakes',
+  exam_angle: 'Exam angle',
+  summary: 'Summary',
+  checklist: 'Checklist',
+  resources: 'Resources',
+  steps: 'Steps',
+  audio: 'Listen',
+  video: 'Watch',
+  video_link: 'Watch',
+  animation: 'Animation',
+};
+
+const blockSegmentLabel = (block: CourseLessonBlock): string => {
+  const titled = block.payload?.title?.trim();
+  if (titled) return titled;
+  return BLOCK_SEGMENT_LABELS[block.block_type] || 'Content';
+};
 
 const Banner: React.FC<{ tone: 'success'; icon: React.ReactNode; children: React.ReactNode }> = ({
   tone,

@@ -23,6 +23,14 @@ const BLOCK_TYPES = [
   { value: 'resources', label: 'Links' },
   { value: 'steps', label: 'Numbered steps' },
   { value: 'video_link', label: 'Video link' },
+  { value: 'objective', label: 'Learning objective' },
+  { value: 'worked_example', label: 'Worked example' },
+  { value: 'try_it', label: 'Try it (practice)' },
+  { value: 'mistakes', label: 'Common mistakes' },
+  { value: 'exam_angle', label: 'Exam / interview angle' },
+  { value: 'summary', label: 'Summary card' },
+  { value: 'numerical', label: 'Numerical practice' },
+  { value: 'sim', label: 'Simulator embed' },
 ] as const;
 
 type BlockType = (typeof BLOCK_TYPES)[number]['value'];
@@ -49,6 +57,22 @@ const emptyPayload = (type: BlockType): Record<string, any> => {
       return { title: '', steps: [{ title: '', desc: '' }] };
     case 'video_link':
       return { title: '', url: '' };
+    case 'objective':
+      return { title: '', objectives: [''] };
+    case 'summary':
+      return { title: '', points: [''] };
+    case 'worked_example':
+      return { title: '', problem: '', steps: [{ title: '', desc: '' }], solution: '' };
+    case 'try_it':
+      return { title: '', prompt: '', hint: '', code: '', language: 'javascript' };
+    case 'mistakes':
+      return { title: '', mistakes: [{ mistake: '', fix: '' }] };
+    case 'exam_angle':
+      return { title: '', question: '', answer: '', source: '' };
+    case 'numerical':
+      return { title: '', template: '', variables: [{ name: 'x', min: 1, max: 10 }], answer_expr: '', unit: '' };
+    case 'sim':
+      return { title: '', provider: 'iframe', url: '', height: 420 };
     default:
       return {};
   }
@@ -337,6 +361,221 @@ const BlockCard: React.FC<{
           <Btn onClick={() => set({ steps: [...(p.steps || []), { title: '', desc: '' }] })}>
             <Plus className="w-3.5 h-3.5" /> Step
           </Btn>
+        </div>
+      )}
+
+      {(type === 'objective' || type === 'summary') && (
+        <div className="space-y-2">
+          <TextInput
+            value={p.title || ''}
+            placeholder={type === 'objective' ? 'Learning objective' : 'Summary title'}
+            onChange={(e) => set({ title: e.target.value })}
+          />
+          {((type === 'objective' ? p.objectives : p.points) || []).map((item: string, ii: number) => (
+            <div key={ii} className="flex gap-2">
+              <TextInput
+                value={item}
+                placeholder={type === 'objective' ? `Is lesson ke baad aap… ${ii + 1}` : `Point ${ii + 1}`}
+                onChange={(e) => {
+                  const key = type === 'objective' ? 'objectives' : 'points';
+                  const list = (p[key] || []).slice();
+                  list[ii] = e.target.value;
+                  set({ [key]: list });
+                }}
+              />
+              <Btn
+                variant="danger"
+                onClick={() => {
+                  const key = type === 'objective' ? 'objectives' : 'points';
+                  set({ [key]: (p[key] || []).filter((_: string, x: number) => x !== ii) });
+                }}
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </Btn>
+            </div>
+          ))}
+          <Btn
+            onClick={() => {
+              const key = type === 'objective' ? 'objectives' : 'points';
+              set({ [key]: [...(p[key] || []), ''] });
+            }}
+          >
+            <Plus className="w-3.5 h-3.5" /> {type === 'objective' ? 'Objective' : 'Point'}
+          </Btn>
+        </div>
+      )}
+
+      {type === 'worked_example' && (
+        <div className="space-y-2">
+          <TextInput value={p.title || ''} placeholder="Worked example title" onChange={(e) => set({ title: e.target.value })} />
+          <TextArea rows={3} value={p.problem || ''} placeholder="The problem to solve" onChange={(e) => set({ problem: e.target.value })} />
+          {(p.steps || []).map((s: any, si: number) => (
+            <div key={si} className="rounded-lg border border-gray-200 p-2.5 space-y-2">
+              <div className="flex gap-2">
+                <TextInput
+                  value={s.title || ''}
+                  placeholder="Step title"
+                  onChange={(e) => {
+                    const steps = (p.steps || []).map((x: any) => ({ ...x }));
+                    steps[si].title = e.target.value;
+                    set({ steps });
+                  }}
+                />
+                <Btn variant="danger" onClick={() => set({ steps: (p.steps || []).filter((_: any, x: number) => x !== si) })}>
+                  <Trash2 className="w-3.5 h-3.5" />
+                </Btn>
+              </div>
+              <TextArea
+                rows={2}
+                value={s.desc || ''}
+                placeholder="What happens at this step"
+                onChange={(e) => {
+                  const steps = (p.steps || []).map((x: any) => ({ ...x }));
+                  steps[si].desc = e.target.value;
+                  set({ steps });
+                }}
+              />
+            </div>
+          ))}
+          <Btn onClick={() => set({ steps: [...(p.steps || []), { title: '', desc: '' }] })}>
+            <Plus className="w-3.5 h-3.5" /> Step
+          </Btn>
+          <TextArea rows={2} value={p.solution || ''} placeholder="Final solution" onChange={(e) => set({ solution: e.target.value })} />
+        </div>
+      )}
+
+      {type === 'try_it' && (
+        <div className="space-y-2">
+          <TextInput value={p.title || ''} placeholder="Try-it title" onChange={(e) => set({ title: e.target.value })} />
+          <TextArea rows={2} value={p.prompt || ''} placeholder="What should the learner try?" onChange={(e) => set({ prompt: e.target.value })} />
+          <TextInput value={p.hint || ''} placeholder="Hint (optional)" onChange={(e) => set({ hint: e.target.value })} />
+          <div className="flex gap-2">
+            <Select value={p.language || 'javascript'} onChange={(e) => set({ language: e.target.value })} className="w-36">
+              {['c', 'cpp', 'javascript', 'typescript', 'python', 'java', 'sql', 'bash'].map((l) => (
+                <option key={l}>{l}</option>
+              ))}
+            </Select>
+          </div>
+          <TextArea rows={5} value={p.code || ''} placeholder="Starter code (optional)" onChange={(e) => set({ code: e.target.value })} className="text-[#E6EDF3] bg-[#1E1E1E]" />
+        </div>
+      )}
+
+      {type === 'mistakes' && (
+        <div className="space-y-2">
+          <TextInput value={p.title || ''} placeholder="Common mistakes title" onChange={(e) => set({ title: e.target.value })} />
+          {(p.mistakes || []).map((m: any, mi: number) => (
+            <div key={mi} className="rounded-lg border border-gray-200 p-2.5 space-y-2">
+              <div className="flex gap-2">
+                <TextInput
+                  value={m.mistake || ''}
+                  placeholder="The mistake"
+                  onChange={(e) => {
+                    const mistakes = (p.mistakes || []).map((x: any) => ({ ...x }));
+                    mistakes[mi].mistake = e.target.value;
+                    set({ mistakes });
+                  }}
+                />
+                <Btn variant="danger" onClick={() => set({ mistakes: (p.mistakes || []).filter((_: any, x: number) => x !== mi) })}>
+                  <Trash2 className="w-3.5 h-3.5" />
+                </Btn>
+              </div>
+              <TextArea
+                rows={2}
+                value={m.fix || ''}
+                placeholder="How to avoid / fix it"
+                onChange={(e) => {
+                  const mistakes = (p.mistakes || []).map((x: any) => ({ ...x }));
+                  mistakes[mi].fix = e.target.value;
+                  set({ mistakes });
+                }}
+              />
+            </div>
+          ))}
+          <Btn onClick={() => set({ mistakes: [...(p.mistakes || []), { mistake: '', fix: '' }] })}>
+            <Plus className="w-3.5 h-3.5" /> Mistake
+          </Btn>
+        </div>
+      )}
+
+      {type === 'exam_angle' && (
+        <div className="space-y-2">
+          <TextInput value={p.title || ''} placeholder="Angle title" onChange={(e) => set({ title: e.target.value })} />
+          <TextInput value={p.question || ''} placeholder="PYQ / interview question" onChange={(e) => set({ question: e.target.value })} />
+          <TextArea rows={3} value={p.answer || ''} placeholder="Model answer" onChange={(e) => set({ answer: e.target.value })} />
+          <TextInput value={p.source || ''} placeholder="Source (e.g. AKTU 2023)" onChange={(e) => set({ source: e.target.value })} />
+        </div>
+      )}
+
+      {type === 'numerical' && (
+        <div className="space-y-2">
+          <TextInput value={p.title || ''} placeholder="Numerical title" onChange={(e) => set({ title: e.target.value })} />
+          <TextArea
+            rows={3}
+            value={p.template || ''}
+            placeholder="Question with {placeholders}, e.g. 'Find the value of {a} + {b}'"
+            onChange={(e) => set({ template: e.target.value })}
+          />
+          <div className="space-y-1.5">
+            {(p.variables || []).map((v: any, vi: number) => (
+              <div key={vi} className="flex gap-2">
+                <TextInput
+                  value={v.name || ''}
+                  placeholder="name"
+                  onChange={(e) => {
+                    const variables = (p.variables || []).map((x: any) => ({ ...x }));
+                    variables[vi].name = e.target.value;
+                    set({ variables });
+                  }}
+                />
+                <TextInput
+                  value={v.min ?? ''}
+                  placeholder="min"
+                  onChange={(e) => {
+                    const variables = (p.variables || []).map((x: any) => ({ ...x }));
+                    variables[vi].min = Number(e.target.value);
+                    set({ variables });
+                  }}
+                />
+                <TextInput
+                  value={v.max ?? ''}
+                  placeholder="max"
+                  onChange={(e) => {
+                    const variables = (p.variables || []).map((x: any) => ({ ...x }));
+                    variables[vi].max = Number(e.target.value);
+                    set({ variables });
+                  }}
+                />
+                <Btn variant="danger" onClick={() => set({ variables: (p.variables || []).filter((_: any, x: number) => x !== vi) })}>
+                  <Trash2 className="w-3.5 h-3.5" />
+                </Btn>
+              </div>
+            ))}
+          </div>
+          <Btn onClick={() => set({ variables: [...(p.variables || []), { name: '', min: 1, max: 10 }] })}>
+            <Plus className="w-3.5 h-3.5" /> Variable
+          </Btn>
+          <TextInput
+            value={p.answer_expr || ''}
+            placeholder="Answer expression, e.g. a + b (graded on the server, never shown)"
+            onChange={(e) => set({ answer_expr: e.target.value })}
+          />
+          <TextInput value={p.unit || ''} placeholder="Unit (optional)" onChange={(e) => set({ unit: e.target.value })} />
+        </div>
+      )}
+
+      {type === 'sim' && (
+        <div className="space-y-2">
+          <TextInput value={p.title || ''} placeholder="Simulator title" onChange={(e) => set({ title: e.target.value })} />
+          <div className="flex gap-2">
+            <Select value={p.provider || 'iframe'} onChange={(e) => set({ provider: e.target.value })} className="w-36">
+              {['iframe', 'wokwi', 'falstad'].map((s) => (
+                <option key={s}>{s}</option>
+              ))}
+            </Select>
+            <TextInput value={p.height ?? ''} placeholder="Height (px)" onChange={(e) => set({ height: Number(e.target.value) })} />
+          </div>
+          <TextInput value={p.url || ''} placeholder="https://... embed URL" onChange={(e) => set({ url: e.target.value })} />
+          <p className="text-[11px] text-[#9CA3AF]">Only https embeds render. Wokwi / Falstad share links work as iframe sources.</p>
         </div>
       )}
     </div>

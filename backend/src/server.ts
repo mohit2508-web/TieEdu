@@ -20,6 +20,7 @@ import { analyticsRouter } from './routes/analytics.routes';
 import { interviewCourseRouter } from './routes/interviewCourse.routes';
 import { coursesRouter } from './routes/courses.routes';
 import { courseAdminRouter } from './routes/courseAdmin.routes';
+import { tracksRouter } from './routes/tracks.routes';
 import { progressRouter } from './routes/progress.routes';
 import { commentsRouter } from './routes/comments.routes';
 import { sandboxRouter } from './routes/sandbox.routes';
@@ -144,6 +145,10 @@ app.use('/api/analytics', analyticsRouter);
 app.use('/api/interview-course', interviewCourseRouter);
 app.use('/api/courses', coursesRouter);
 app.use('/api/course-admin', courseAdminRouter);
+// Learning tracks: public list/detail (optionalAuth inside), certificate claim
+// carries its own requireAuth. Mounted after /api/courses so the certificate
+// download route the track cert reuses stays on the courses subtree.
+app.use('/api/tracks', tracksRouter);
 app.use('/api/progress', progressRouter);
 app.use('/api/comments', commentsRouter);
 // requireAuth: the handler compiles and executes nothing (it returns a fixed

@@ -1235,6 +1235,8 @@ async function main() {
       const RENDERABLE_BLOCKS = [
         'markdown', 'code', 'image', 'diagram', 'animation', 'callout',
         'audio', 'table', 'video', 'checklist', 'resources', 'steps', 'video_link',
+        'objective', 'worked_example', 'try_it', 'mistakes', 'exam_angle', 'summary',
+        'numerical', 'sim',
       ];
       // Typed `string | undefined` on purpose: `b` is untyped here, so a block
       // written without a `block_type` really does land in this set as
@@ -1867,6 +1869,578 @@ async function main() {
       check('the unsigned legacy certificate endpoint is gone', legacy.status === 410, `got ${legacy.status}`);
       check('the legacy endpoint points at the signed system', typeof legacy.body?.replacement?.verify === 'string');
       check('the legacy endpoint mints no serial', !JSON.stringify(legacy.body).includes('TIEEDU-CERT-'));
+    }
+
+    // ======================================================================
+    // [20] MODULE TESTS
+    //
+    // The end-of-module test is the final-exam discipline in miniature: a
+    // randomised draw from a per-module bank, graded on the server, keys never
+    // sent before submit. It gates nothing on the certificate — the certificate
+    // stays gated by the final exam — but it must still refuse to start before
+    // the module's lessons are done, and it must still refuse a second draw
+    // while an attempt is open.
+    // ======================================================================
+    console.log('\n[20] module tests');
+    {
+      const admin2 = await loginAdmin();
+      const dbNow = readDb();
+      const courseRow = dbNow.courses.find((c: any) => c.id === listing.id);
+      const firstModule = courseRow.modules[0];
+
+      // Attach a 3-question test bank to the first module as the admin.
+      const testBank = [
+        { id: 'mt1', prompt: 'Module question one?', options: ['a', 'b'], correct_index: 1, explanation: 'b is right.', difficulty: 'easy' },
+        { id: 'mt2', prompt: 'Module question two?', options: ['a', 'b'], correct_index: 0, explanation: 'a is right.', difficulty: 'medium' },
+        { id: 'mt3', prompt: 'Module question three?', options: ['a', 'b'], correct_index: 1, explanation: 'b is right.', difficulty: 'hard' },
+      ];
+      const saved = await api(`/api/course-admin/modules/${encodeURIComponent(firstModule.id)}`, {
+        method: 'PUT', token: admin2, body: { test: { question_count: 2, passing_percent: 60, retake_cooldown_hours: 0, bank: testBank } },
+      });
+      check('the admin can attach a module test', saved.status === 200, `got ${saved.status} ${JSON.stringify(saved.body).slice(0, 140)}`);
+      check('the stored module test keeps its bank', (readDb().courses.find((c: any) => c.id === listing.id).modules[0].test?.bank || []).length === 3);
+
+      // A fresh learner who has NOT finished the module must be refused.
+      const stranger = await signup('Module Test Stranger');
+      await api(`/api/courses/${encodeURIComponent(slug)}/enroll`, { method: 'POST', token: stranger.token, body: {} }).catch(() => undefined);
+      // Enrolment on a free course happens via progress; just try to start.
+      const tooEarly = await api(`/api/courses/${encodeURIComponent(slug)}/module/${encodeURIComponent(firstModule.id)}/test`, {
+        method: 'POST', token: stranger.token, body: { action: 'start' },
+      });
+      check(
+        'a learner who has not finished the module cannot start its test',
+        tooEarly.status === 402 || tooEarly.status === 403 || tooEarly.status === 409,
+        `got ${tooEarly.status}`
+      );
+
+      // The enrolled student (who finished every lesson in [8]) can start.
+      const start = await api(`/api/courses/${encodeURIComponent(slug)}/module/${encodeURIComponent(firstModule.id)}/test`, {
+        method: 'POST', token, body: { action: 'start' },
+      });
+      check('a learner who finished the module can start its test', start.status === 201, `got ${start.status} ${JSON.stringify(start.body).slice(0, 160)}`);
+      check('the drawn paper has the configured question count', (start.body?.questions || []).length === 2, `got ${(start.body?.questions || []).length}`);
+      check(
+        'the drawn paper never carries the answer key',
+        !JSON.stringify(start.body?.questions || []).includes('correct_index')
+      );
+
+      // A second start while the attempt is open must return the SAME attempt.
+      const restart = await api(`/api/courses/${encodeURIComponent(slug)}/module/${encodeURIComponent(firstModule.id)}/test`, {
+        method: 'POST', token, body: { action: 'start' },
+      });
+      check('a second start returns the open attempt, not a new draw', restart.body?.attempt_id === start.body?.attempt_id, `${restart.body?.attempt_id} vs ${start.body?.attempt_id}`);
+
+      // A blank submission scores 0 and fails.
+      const blankSubmit = await api(`/api/courses/${encodeURIComponent(slug)}/module/${encodeURIComponent(firstModule.id)}/test`, {
+        method: 'POST', token, body: { action: 'submit', attempt_id: start.body?.attempt_id, answers: {} },
+      });
+      check('a blank module-test submission is graded, not rejected', blankSubmit.status === 200, `got ${blankSubmit.status}`);
+      check('a blank submission scores 0', blankSubmit.body?.result?.score_percent === 0, `score=${blankSubmit.body?.result?.score_percent}`);
+      check('a blank submission fails', blankSubmit.body?.result?.passed === false);
+
+      // Retake immediately (cooldown is 0) and answer from the real key.
+      const keySheet: Record<string, number> = {};
+      for (const q of testBank) keySheet[q.id] = q.correct_index;
+      const retake = await api(`/api/courses/${encodeURIComponent(slug)}/module/${encodeURIComponent(firstModule.id)}/test`, {
+        method: 'POST', token, body: { action: 'start' },
+      });
+      check('a failed attempt can be retaken when the cooldown is zero', retake.status === 201, `got ${retake.status}`);
+      const rightAnswers: Record<string, number> = {};
+      for (const q of retake.body?.questions || []) rightAnswers[q.id] = keySheet[q.id];
+      const passSubmit = await api(`/api/courses/${encodeURIComponent(slug)}/module/${encodeURIComponent(firstModule.id)}/test`, {
+        method: 'POST', token, body: { action: 'submit', attempt_id: retake.body?.attempt_id, answers: rightAnswers },
+      });
+      check('a fully correct submission scores 100', passSubmit.body?.result?.score_percent === 100, `score=${passSubmit.body?.result?.score_percent}`);
+      check('a fully correct submission passes', passSubmit.body?.result?.passed === true);
+      check('the module state reports passed', passSubmit.body?.state?.passed === true);
+
+      // Once passed, the test cannot be re-sat.
+      const afterPass = await api(`/api/courses/${encodeURIComponent(slug)}/module/${encodeURIComponent(firstModule.id)}/test`, {
+        method: 'POST', token, body: { action: 'start' },
+      });
+      check('a passed module test cannot be re-sat', afterPass.status === 409, `got ${afterPass.status}`);
+
+      // The course detail must expose the module-test summary without the bank.
+      const detail2 = await api(`/api/courses/${encodeURIComponent(slug)}`, { token });
+      const modView = (detail2.body?.course?.modules || []).find((m: any) => m.id === firstModule.id);
+      check('course detail exposes the module test summary', !!modView?.test, JSON.stringify(modView?.test).slice(0, 160));
+      check('the summary reports bank size, not the bank', modView?.test?.bank_size === 3 && !('bank' in (modView?.test || {})));
+      check('the summary carries the learner state', modView?.test?.state?.passed === true);
+
+      // And the answer key must not appear anywhere in the public payload.
+      check(
+        'no module-test key leaks in the course payload',
+        !JSON.stringify(detail2.body || {}).includes('correct_index')
+      );
+
+      // A bogus action is rejected.
+      const bogus = await api(`/api/courses/${encodeURIComponent(slug)}/module/${encodeURIComponent(firstModule.id)}/test`, {
+        method: 'POST', token, body: { action: 'teleport' },
+      });
+      check('an unknown action is rejected', bogus.status === 400, `got ${bogus.status}`);
+
+      // A module that has no test says so.
+      const noTestModule = courseRow.modules[1] || courseRow.modules[0];
+      const absent = await api(`/api/courses/${encodeURIComponent(slug)}/module/${encodeURIComponent(noTestModule.id)}/test`, {
+        method: 'POST', token, body: { action: 'start' },
+      });
+      // Only meaningful if this module genuinely has no test.
+      if (!noTestModule.test) {
+        check('a module with no test refuses to start one', absent.status === 400, `got ${absent.status}`);
+      }
+    }
+
+    // ======================================================================
+    // [21] OFFERS FEED
+    //
+    // The landing strip renders for anonymous visitors, so the offers feed is
+    // public — but it must still only advertise codes that actually redeem:
+    // active, unexpired, unexhausted, and never a single-use reward code. The
+    // full discount, remaining uses, real expiry and target courses travel
+    // with each offer so the strip never invents a number, and every offer
+    // deep-links to a course that exists.
+    // ======================================================================
+    console.log('\n[21] offers feed');
+    {
+      // Anonymous: the strip's own perspective.
+      const feed = await api('/api/checkout/coupons');
+      check('the offers feed is public', feed.status === 200, `got ${feed.status}`);
+      const offers = Array.isArray(feed.body) ? feed.body : [];
+      check('the seed coupons are listed', offers.some((o: any) => o.code === 'TIEEDU20'));
+      const seed = offers.find((o: any) => o.code === 'TIEEDU20') || {};
+      check(
+        'an offer carries its real discount',
+        seed.discount_percent === 20 && seed.max_uses === 0 && seed.remaining === null,
+        JSON.stringify(seed).slice(0, 200)
+      );
+      check(
+        'no reward code leaks into the public feed',
+        !offers.some((o: any) => String(o.code || '').startsWith('REWARD-')),
+        JSON.stringify(offers.map((o: any) => o.code))
+      );
+
+      const admin3 = await loginAdmin();
+      const target = readDb().courses.find((c: any) => c.id === listing.id);
+
+      // A scoped, expiring offer on the smoke course.
+      const created = await api('/api/admin/coupons', {
+        method: 'POST', token: admin3, body: {
+          code: 'SMOKE20',
+          label: 'Smoke 20% off',
+          discount_percent: 20,
+          is_active: true,
+          expires_at: new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString(),
+          applies_to_course_ids: [target.id, 'ghost-course'],
+        },
+      });
+      check('the admin can create a scoped offer', created.status === 201, `got ${created.status} ${JSON.stringify(created.body).slice(0, 160)}`);
+      check(
+        'ghost course ids are dropped on save',
+        JSON.stringify((created.body?.coupon?.applies_to_course_ids || [])) === JSON.stringify([target.id]),
+        JSON.stringify(created.body?.coupon?.applies_to_course_ids)
+      );
+
+      const feed2 = await api('/api/checkout/coupons');
+      const scoped = (Array.isArray(feed2.body) ? feed2.body : []).find((o: any) => o.code === 'SMOKE20') || {};
+      check('the scoped offer appears in the feed', !!scoped.code, JSON.stringify((feed2.body || []).map((o: any) => o.code)));
+      check(
+        'the offer resolves its target course to a real slug',
+        (scoped.courses || []).some((c: any) => c.slug === target.slug),
+        JSON.stringify(scoped.courses)
+      );
+      check('the offer carries its real expiry', typeof scoped.expires_at === 'string' && scoped.expires_at.length > 10);
+
+      // Validation: right cart validates, wrong cart is refused, no context validates on subtotal.
+      const subtotal = Math.max(1, Number(target.price_inr) || 500);
+      const rightCart = await api('/api/checkout/validate-coupon', {
+        method: 'POST', token, body: { code: 'SMOKE20', subtotal, course_ids: [target.id] },
+      });
+      check('the scoped code validates for its own course', rightCart.body?.valid === true && rightCart.body?.discount > 0, JSON.stringify(rightCart.body));
+      const wrongCart = await api('/api/checkout/validate-coupon', {
+        method: 'POST', token, body: { code: 'SMOKE20', subtotal, course_ids: ['some-other-course'] },
+      });
+      check(
+        'the scoped code is refused for an unrelated cart',
+        wrongCart.body?.valid === false,
+        JSON.stringify(wrongCart.body)
+      );
+
+      // An expired offer is hidden from the feed and refused at validation.
+      const dead = await api('/api/admin/coupons', {
+        method: 'POST', token: admin3, body: {
+          code: 'SMOKEDEAD',
+          label: 'Smoke expired',
+          discount_flat: 50,
+          is_active: true,
+          expires_at: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
+        },
+      });
+      check('the admin can create an expired offer', dead.status === 201, `got ${dead.status}`);
+      const feed3 = await api('/api/checkout/coupons');
+      check(
+        'the expired offer is hidden from the feed',
+        !(Array.isArray(feed3.body) ? feed3.body : []).some((o: any) => o.code === 'SMOKEDEAD')
+      );
+      const deadCheck = await api('/api/checkout/validate-coupon', {
+        method: 'POST', token, body: { code: 'SMOKEDEAD', subtotal },
+      });
+      check('the expired offer is refused at validation', deadCheck.body?.valid === false, JSON.stringify(deadCheck.body));
+
+      // The use counter is append-only by design: only a real redemption moves
+      // it, so an admin cannot fake (or erase) redemptions from the editor.
+      // Exhaustion hiding itself is pinned by the unit suite (`isPublicOffer`
+      // refuses an exhausted code), because the counter cannot be staged here.
+      const one = await api('/api/admin/coupons', {
+        method: 'POST', token: admin3, body: {
+          code: 'SMOKEONE', label: 'Smoke one use', discount_flat: 10, is_active: true, max_uses: 1,
+        },
+      });
+      const oneId = one.body?.coupon?.id;
+      await api(`/api/admin/coupons/${encodeURIComponent(oneId)}`, {
+        method: 'PUT', token: admin3, body: { uses: 1 },
+      });
+      const untouched = readDb().coupons.find((c: any) => c.code === 'SMOKEONE');
+      check('the use counter is not admin-editable', Number(untouched?.uses) === 0, `uses=${untouched?.uses}`);
+    }
+
+    // ======================================================================
+    // [22] SEMESTER EXAM MODE + PUBLIC SAMPLE & REVIEWS
+    //
+    // Exam prep is study material, not assessment: the admin PUT stores units
+    // (summary + important Qs + PYQs with solutions) and the learner detail
+    // must carry it verbatim — including the per-unit summary and the PYQ
+    // solution, which the first iteration of the payload could not hold. An
+    // all-empty PUT clears the section so the learner page hides it again.
+    //
+    // The sample route is the paid-course free taste: one lesson, blocks and
+    // all, quiz stripped. Reviews are post-completion feedback only, so a
+    // fresh course answers 200 with an empty list — an honest state, not an
+    // error.
+    // ======================================================================
+    console.log('\n[22] semester exam prep, public sample and reviews');
+    {
+      const admin4 = await loginAdmin();
+      const course = readDb().courses.find((c: any) => c.id === listing.id);
+
+      const prepPayload = {
+        target: 'AKTU · CSE Semester 3',
+        units: [
+          {
+            title: 'Unit 1 — Foundations',
+            summary: 'The definitions the whole unit hangs on, in three sentences.',
+            questions: ['Define X and state its properties.', 'Prove Y.'],
+            pyqs: [
+              {
+                year: '2023',
+                question: 'Explain X with a diagram.',
+                solution: 'Diagram plus the three properties, in order.',
+              },
+            ],
+          },
+        ],
+        important_questions: ['Course-spanning question one.'],
+        previous_year_questions: [{ year: '2022', question: 'Full-course PYQ.', solution: 'Sketch of an answer.' }],
+      };
+      const saved = await api(`/api/course-admin/courses/${encodeURIComponent(course.id)}`, {
+        method: 'PUT', token: admin4, body: { exam_prep: prepPayload },
+      });
+      check('the admin can save exam prep', saved.status === 200, `got ${saved.status} ${JSON.stringify(saved.body).slice(0, 140)}`);
+      const stored = readDb().courses.find((c: any) => c.id === course.id)?.exam_prep;
+      check(
+        'the unit summary is stored',
+        stored?.units?.[0]?.summary === prepPayload.units[0].summary,
+        JSON.stringify(stored?.units?.[0]).slice(0, 200)
+      );
+      check(
+        'the PYQ solution is stored',
+        stored?.units?.[0]?.pyqs?.[0]?.solution === prepPayload.units[0].pyqs[0].solution,
+        JSON.stringify(stored?.units?.[0]?.pyqs).slice(0, 200)
+      );
+
+      // Learner view: same payload, verbatim — study material carries no keys.
+      const learner = await api(`/api/courses/${encodeURIComponent(course.slug)}`);
+      check('exam prep reaches the learner detail', learner.status === 200 && !!learner.body?.course?.exam_prep, `got ${learner.status}`);
+      const seen = learner.body?.course?.exam_prep;
+      check(
+        'the learner sees the unit summary and PYQ solution',
+        seen?.units?.[0]?.summary === prepPayload.units[0].summary &&
+          seen?.units?.[0]?.pyqs?.[0]?.solution === prepPayload.units[0].pyqs[0].solution,
+        JSON.stringify(seen).slice(0, 240)
+      );
+      check('the learner sees the target label', seen?.target === prepPayload.target);
+
+      // Admin editor round-trip: the GET the editor loads carries it back.
+      const adminView = await api(`/api/course-admin/courses/${encodeURIComponent(course.id)}`, { token: admin4 });
+      check(
+        'the admin editor receives the saved exam prep',
+        adminView.body?.course?.exam_prep?.units?.[0]?.title === prepPayload.units[0].title
+      );
+
+      // Clearing: an all-empty PUT removes the section entirely.
+      const cleared = await api(`/api/course-admin/courses/${encodeURIComponent(course.id)}`, {
+        method: 'PUT', token: admin4, body: { exam_prep: { units: [] } },
+      });
+      check(
+        'an empty exam prep saves as null',
+        cleared.status === 200 && (cleared.body?.course?.exam_prep === undefined || cleared.body?.course?.exam_prep === null),
+        JSON.stringify(cleared.body?.course?.exam_prep)
+      );
+      const after = readDb().courses.find((c: any) => c.id === course.id)?.exam_prep;
+      check('the cleared section is gone from the store', !after, JSON.stringify(after));
+
+      // Public sample: first lesson, blocks present, quiz stripped.
+      const sample = await api(`/api/courses/${encodeURIComponent(course.slug)}/sample`);
+      check('the sample route answers 200', sample.status === 200, `got ${sample.status}`);
+      check('the sample carries the first lesson', !!sample.body?.lesson?.id && !!sample.body?.lesson?.title, JSON.stringify(sample.body).slice(0, 160));
+      check('the sample carries blocks', Array.isArray(sample.body?.lesson?.blocks) && sample.body.lesson.blocks.length > 0);
+      // sanitizeLesson re-adds a quiz *summary* (id, counts) — that is fine and
+      // deliberate. What must never travel is the question list itself.
+      check(
+        'the sample never carries quiz questions',
+        !sample.body?.lesson?.quiz?.questions,
+        JSON.stringify(sample.body?.lesson?.quiz).slice(0, 160)
+      );
+      const sampleDb = readDb().courses.find((c: any) => c.id === course.id);
+      const allLessons = (sampleDb.modules || []).flatMap((m: any) => m.lessons || []);
+      check(
+        'the sample really is a lesson of this course',
+        allLessons.some((l: any) => l.id === sample.body?.lesson?.id),
+        `${sample.body?.lesson?.id} not in course`
+      );
+
+      // Reviews: earlier sections of this suite genuinely finish the course and
+      // leave feedback, so "empty" would be a false claim here. What matters is
+      // the shape: real names, real ratings, and no identity/XP internals.
+      const reviews = await api(`/api/courses/${encodeURIComponent(course.slug)}/reviews`);
+      check('the reviews route answers 200', reviews.status === 200, `got ${reviews.status}`);
+      const list = Array.isArray(reviews.body?.reviews) ? reviews.body.reviews : null;
+      check('the reviews payload is a list', list !== null, JSON.stringify(reviews.body).slice(0, 160));
+      check(
+        'every review carries a name and a 1-5 rating',
+        (list || []).every((r: any) => typeof r.user_name === 'string' && r.rating >= 1 && r.rating <= 5),
+        JSON.stringify(list).slice(0, 200)
+      );
+      check(
+        'reviews leak no identity or XP internals',
+        !list!.some((r: any) => 'user_id' in r || 'xp_awarded' in r || 'id' in r),
+        JSON.stringify(list).slice(0, 200)
+      );
+      const ghostReviews = await api('/api/courses/no-such-course/reviews');
+      check('reviews 404 for a course that does not exist', ghostReviews.status === 404, `got ${ghostReviews.status}`);
+    }
+
+    // =======================================================================
+    // [23] /my-courses ROW FLAGS
+    //
+    // The /my-courses page nudges with "N lessons + final exam from your
+    // Premium certificate" — the gate booleans (exam_required,
+    // project_required) and the tier travel on the /my row so the list never
+    // fires a readiness request per enrolled course. Values here are only
+    // shape-checked: earlier sections decide whether this course really has
+    // an exam or a required project, and both answers are legitimate.
+    // =======================================================================
+    console.log('\n[23] /my-courses row flags');
+    {
+      const mine = await api('/api/courses/my', { token });
+      check('the enrolled learner can load /my', mine.status === 200, `got ${mine.status}`);
+      const rows: any[] = Array.isArray(mine.body?.courses) ? mine.body.courses : [];
+      const row = rows.find((r: any) => r.slug === listing.slug);
+      check('the smoke course appears as an enrolled row', !!row, JSON.stringify(rows.map((r: any) => r.slug)));
+      if (row) {
+        check('the row carries its certificate tier', 'certificate_tier' in row, JSON.stringify(row).slice(0, 160));
+        check('the row carries last_activity_at', typeof row.last_activity_at === 'string' && row.last_activity_at.length > 10, String(row.last_activity_at));
+        check('the row declares its exam gate', typeof row.exam_required === 'boolean', String(row.exam_required));
+        check('the row declares its project gate', typeof row.project_required === 'boolean', String(row.project_required));
+        check('the row reports certificate status', typeof row.has_certificate === 'boolean', String(row.has_certificate));
+        check(
+          'the row never leaks admin fields',
+          !('draft' in row) && !('admin' in row) && !('password_hash' in row),
+          JSON.stringify(row).slice(0, 160)
+        );
+      }
+      const unauthed = await api('/api/courses/my');
+      check('/my still requires a session', unauthed.status === 401 || unauthed.status === 403, `got ${unauthed.status}`);
+    }
+
+    // =======================================================================
+    // [24] COURSE HEALTH PUBLISH GATE + COVER FIELDS + OFFER BADGE
+    //
+    // The editor's checklist and the PUT publish refusal come from one
+    // function (courseHealthFor), so these assertions pin both halves: a
+    // draft that fails a blocker cannot publish, the 400 names the blockers,
+    // and once the content exists the same course publishes cleanly. The
+    // catalog badge is only ever a real, scoped, live coupon on a paid course
+    // — free courses and opted-out courses never wear one.
+    // =======================================================================
+    console.log('\n[24] course health gate, cover fields and offer badge');
+    {
+      const admin5 = await loginAdmin();
+
+        // --- health on a fresh draft ---
+        const draft = await api('/api/course-admin/courses', {
+          method: 'POST', token: admin5, body: { title: 'Health Gate Draft', subtitle: 'A subtitle for the gate', description: 'Description for the gate.', is_free: true, price_inr: 0 },
+        });
+      check('the health draft was created', draft.status === 201, `got ${draft.status}`);
+      const draftId = draft.body?.course?.id;
+      const draftSlug = draft.body?.course?.slug;
+
+      const draftView = await api(`/api/course-admin/courses/${encodeURIComponent(draftId)}`, { token: admin5 });
+      const draftHealth = draftView.body?.health;
+      check('the editor payload carries the health checklist', Array.isArray(draftHealth?.checks) && draftHealth.checks.length > 0, JSON.stringify(draftHealth).slice(0, 160));
+      check('an empty draft is not publishable', draftHealth?.publishable === false, String(draftHealth?.publishable));
+      check(
+        'the checklist names the missing lessons',
+        (draftHealth?.blockers || []).some((b: string) => /lesson/i.test(b))
+      );
+
+      const earlyPublish = await api(`/api/course-admin/courses/${encodeURIComponent(draftId)}`, {
+        method: 'PUT', token: admin5, body: { published: true },
+      });
+      check('publishing an empty draft is refused', earlyPublish.status === 400, `got ${earlyPublish.status}`);
+      check('the refusal lists blockers', Array.isArray(earlyPublish.body?.blockers) && earlyPublish.body.blockers.length > 0);
+      // Content + prose, but still no lessons: the lessons blocker remains.
+      const prose = await api(`/api/course-admin/courses/${encodeURIComponent(draftId)}`, {
+        method: 'PUT', token: admin5, body: { subtitle: 'Health gate', description: 'Enough prose for the gate.', published: true },
+      });
+      check('prose alone does not unlock publish', prose.status === 400, `got ${prose.status}`);
+
+      const mod = await api(`/api/course-admin/courses/${encodeURIComponent(draftId)}/modules`, {
+        method: 'POST', token: admin5, body: { title: 'Health module' },
+      });
+      const lesson = await api(`/api/course-admin/modules/${encodeURIComponent(mod.body?.module?.id || 'x')}/lessons`, {
+        method: 'POST', token: admin5,
+        body: { title: 'Health lesson', summary: 'Body.', duration_minutes: 4, blocks: [{ block_type: 'markdown', block_order: 1, payload: { text: 'Hi.' } }] },
+      });
+      check('the health draft gained a lesson', lesson.status === 201, `got ${lesson.status}`);
+
+      const readyView = await api(`/api/course-admin/courses/${encodeURIComponent(draftId)}`, { token: admin5 });
+      check('a filled draft is publishable', readyView.body?.health?.publishable === true, JSON.stringify(readyView.body?.health?.blockers));
+      const published = await api(`/api/course-admin/courses/${encodeURIComponent(draftId)}`, {
+        method: 'PUT', token: admin5, body: { published: true },
+      });
+      check('the filled draft publishes', published.status === 200 && published.body?.course?.published === true, `got ${published.status}`);
+
+      // --- cover alt + offer-badge toggle round-trip ---
+      const coverFields = await api(`/api/course-admin/courses/${encodeURIComponent(draftId)}`, {
+        method: 'PUT', token: admin5, body: { thumbnail_alt: 'A blue cover with the course title', offer_badge_enabled: false },
+      });
+      check('cover alt text saves', coverFields.status === 200 && coverFields.body?.course?.thumbnail_alt === 'A blue cover with the course title', JSON.stringify(coverFields.body?.course?.thumbnail_alt));
+      check('the offer-badge toggle saves', coverFields.body?.course?.offer_badge_enabled === false, String(coverFields.body?.course?.offer_badge_enabled));
+      check('clearing alt text with empty string works', (
+        await api(`/api/course-admin/courses/${encodeURIComponent(draftId)}`, { method: 'PUT', token: admin5, body: { thumbnail_alt: '' } })
+      ).body?.course?.thumbnail_alt === null);
+
+      // --- offer badge: a paid course with a live scoped coupon ---
+      const paidBadge = await api('/api/course-admin/courses', {
+        method: 'POST', token: admin5, body: {
+          title: 'Badge Paid Course', subtitle: 'Paid, badged', description: 'Long enough for the publish gate to stay happy.',
+          is_free: false, price_inr: 999,
+        },
+      });
+      const badgeId = paidBadge.body?.course?.id;
+      const badgeSlug = paidBadge.body?.course?.slug;
+      const badgeMod = await api(`/api/course-admin/courses/${encodeURIComponent(badgeId)}/modules`, {
+        method: 'POST', token: admin5, body: { title: 'Badge module' },
+      });
+      await api(`/api/course-admin/modules/${encodeURIComponent(badgeMod.body?.module?.id || 'x')}/lessons`, {
+        method: 'POST', token: admin5, body: { title: 'Badge lesson', summary: 'Body.', duration_minutes: 3 },
+      });
+      await api(`/api/course-admin/courses/${encodeURIComponent(badgeId)}`, { method: 'PUT', token: admin5, body: { published: true } });
+
+      await api('/api/admin/coupons', {
+        method: 'POST', token: admin5, body: {
+          code: 'BADGE20', label: 'Badge 20', discount_percent: 20, is_active: true,
+          applies_to_course_ids: [badgeId],
+        },
+      });
+
+        const badgedList = await api(`/api/courses?q=${encodeURIComponent('Badge Paid Course')}`);
+        const badgedRow = (badgedList.body?.courses || []).find((c: any) => c.slug === badgeSlug);
+        check('the paid course appears in the catalog', !!badgedRow, JSON.stringify((badgedList.body?.courses || []).map((c: any) => c.slug)));
+        check('a live scoped coupon puts a badge on the card', badgedRow?.active_offer?.badge === '20% OFF', JSON.stringify(badgedRow?.active_offer));
+
+        await api(`/api/course-admin/courses/${encodeURIComponent(badgeId)}`, {
+          method: 'PUT', token: admin5, body: { offer_badge_enabled: false },
+        });
+        const optedOutList = await api(`/api/courses?q=${encodeURIComponent('Badge Paid Course')}`);
+        const optedOutRow = (optedOutList.body?.courses || []).find((c: any) => c.slug === badgeSlug);
+        check('the per-course toggle removes the badge', !optedOutRow?.active_offer, JSON.stringify(optedOutRow?.active_offer));
+
+        // A free course never wears a badge, even with a coupon scoped to it.
+        await api('/api/admin/coupons', {
+          method: 'POST', token: admin5, body: {
+            code: 'FREEBIE', label: 'Freebie', discount_percent: 50, is_active: true,
+            applies_to_course_ids: [draftId],
+          },
+        });
+        const freeList = await api(`/api/courses?q=${encodeURIComponent('Health Gate Draft')}`);
+        const freeRow = (freeList.body?.courses || []).find((c: any) => c.slug === draftSlug);
+        check('a free course never wears the badge', !!freeRow && !freeRow.active_offer, JSON.stringify(freeRow?.active_offer));
+        check('the catalog carries cover alt text', freeRow?.thumbnail_alt === null || typeof freeRow?.thumbnail_alt === 'string', String(freeRow?.thumbnail_alt));
+    }
+
+    // =======================================================================
+    // [25] PER-BRANCH / PER-BUCKET COURSE ANALYTICS
+    //
+    // The admin snapshot now carries a course funnel sliced by branch and
+    // bucket: enrolments and completions from course_progress, paid
+    // conversions and revenue from paid order lines. The assertions pin the
+    // reconciliation invariants — slices must sum back to their totals (a
+    // course with no branch counts as 'unlisted', never vanishes), rates
+    // must be derived from their own parts, and anonymous callers stay out.
+    // =======================================================================
+    console.log('\n[25] per-branch course funnel in admin analytics');
+    {
+      const admin6 = await loginAdmin();
+      const snap = await api('/api/analytics', { token: admin6 });
+      check('an admin reads the analytics snapshot', snap.status === 200, `got ${snap.status}`);
+
+      const ca = snap.body?.courses;
+      check('the snapshot carries a courses slice', !!ca && typeof ca === 'object', JSON.stringify(ca || null).slice(0, 120));
+      check(
+        'the slice lists by_branch and by_bucket',
+        Array.isArray(ca?.by_branch) && Array.isArray(ca?.by_bucket),
+        `${ca?.by_branch?.length} branch rows, ${ca?.by_bucket?.length} bucket rows`
+      );
+
+      // Reconciliation: every slice sums back to the total it came from.
+      const sum = (arr: any[], key: string) => (arr || []).reduce((s, r) => s + (Number(r[key]) || 0), 0);
+      check(
+        'by_branch courses sum to the catalogue total',
+        sum(ca?.by_branch, 'courses') === ca?.total_courses,
+        `${sum(ca?.by_branch, 'courses')} vs ${ca?.total_courses}`
+      );
+      check(
+        'by_bucket courses sum to the catalogue total',
+        sum(ca?.by_bucket, 'courses') === ca?.total_courses,
+        `${sum(ca?.by_bucket, 'courses')} vs ${ca?.total_courses}`
+      );
+      check(
+        'by_branch enrolments sum to the total',
+        sum(ca?.by_branch, 'enrolments') === ca?.enrolments,
+        `${sum(ca?.by_branch, 'enrolments')} vs ${ca?.enrolments}`
+      );
+      check(
+        'by_bucket paid revenue matches the total',
+        Math.abs(sum(ca?.by_bucket, 'revenue_inr') - (ca?.paid_revenue_inr || 0)) < 0.01,
+        `${sum(ca?.by_bucket, 'revenue_inr')} vs ${ca?.paid_revenue_inr}`
+      );
+
+      // The smoke run enrolled and completed coding-foundations in [8], so the
+      // funnel must show that real activity rather than an empty shell.
+      check('the funnel saw the smoke enrolment', (ca?.enrolments || 0) >= 1, String(ca?.enrolments));
+      check('the funnel saw the smoke completion', (ca?.completions || 0) >= 1, String(ca?.completions));
+      check(
+        'completion rate is derived from its own parts',
+        ca?.enrolments > 0
+          ? ca.completion_rate === Math.round((ca.completions / ca.enrolments) * 100)
+          : ca.completion_rate === 0,
+        `${ca?.completion_rate}% (${ca?.completions}/${ca?.enrolments})`
+      );
+
+      // Router-wide guard: the snapshot stays admin-only.
+      const anon2 = await api('/api/analytics');
+      check('the analytics snapshot is closed to anonymous callers', anon2.status === 401, `got ${anon2.status}`);
     }
   } catch (err: any) {
     failures.push(`threw: ${err?.stack || err}`);

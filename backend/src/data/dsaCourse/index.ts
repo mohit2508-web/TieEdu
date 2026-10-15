@@ -1,0 +1,446 @@
+// ============================================================================
+// DSA MASTERY — flagship paid course (Phase 4 course 9).
+//
+// Complexity, arrays/two-pointers, hashing/stacks/lists, trees/heaps/greedy,
+// graphs and dynamic programming — the interview track. Four modules, eight
+// lessons on the 9-block standard, 30-question exam bank. Priced at ₹1499.
+// ============================================================================
+
+import type { Course, ExamQuestion } from '../db';
+import { module1 } from './module1';
+import { module2 } from './module2';
+import { module3 } from './module3';
+import { module4 } from './module4';
+
+const examBank: ExamQuestion[] = [
+  {
+    id: 'dsa-exam-01',
+    prompt: 'O(2n + 5) simplifies to:',
+    options: ['O(2n)', 'O(n)', 'O(n²)', 'O(5)'],
+    correct_index: 1,
+    explanation: 'Constants and lower-order terms are dropped.',
+    difficulty: 'easy',
+    topic: 'Complexity',
+  },
+  {
+    id: 'dsa-exam-02',
+    prompt: 'For n ≤ 10⁵ in a 1s limit, prefer:',
+    options: ['O(n²)', 'O(n log n) or better', 'O(2ⁿ)', 'O(n³)'],
+    correct_index: 1,
+    explanation: 'O(n²) typically TLEs at this scale.',
+    difficulty: 'easy',
+    topic: 'Complexity',
+  },
+  {
+    id: 'dsa-exam-03',
+    prompt: 'Dynamic array push is O(1) in which sense?',
+    options: ['Strict worst case', 'Amortized', 'Best case only', 'Never'],
+    correct_index: 1,
+    explanation: 'Resizes are rare; average per operation is constant.',
+    difficulty: 'medium',
+    topic: 'Complexity',
+  },
+  {
+    id: 'dsa-exam-04',
+    prompt: 'Sliding window max-sum of size k runs in:',
+    options: ['O(k)', 'O(n)', 'O(n log n)', 'O(nk)'],
+    correct_index: 1,
+    explanation: 'Each element enters and leaves once.',
+    difficulty: 'easy',
+    topic: 'Arrays',
+  },
+  {
+    id: 'dsa-exam-05',
+    prompt: 'Pair-sum on a SORTED array is typically:',
+    options: ['O(n²)', 'O(n) two pointers', 'O(n log n) always', 'O(1)'],
+    correct_index: 1,
+    explanation: 'Move the pointer that is on the wrong side of the target.',
+    difficulty: 'easy',
+    topic: 'Arrays',
+  },
+  {
+    id: 'dsa-exam-06',
+    prompt: 'Average hash map lookup is:',
+    options: ['O(1)', 'O(log n)', 'O(n)', 'O(n log n)'],
+    correct_index: 0,
+    explanation: 'Amortized constant with good hashing.',
+    difficulty: 'easy',
+    topic: 'Hashing',
+  },
+  {
+    id: 'dsa-exam-07',
+    prompt: 'Monotonic stack next-greater is:',
+    options: ['O(n²)', 'O(n)', 'O(n log n)', 'O(n!)'],
+    correct_index: 1,
+    explanation: 'Each index is pushed and popped at most once.',
+    difficulty: 'easy',
+    topic: 'Stacks',
+  },
+  {
+    id: 'dsa-exam-08',
+    prompt: 'Valid parentheses is solved with:',
+    options: ['Queue', 'Stack', 'Heap', 'Two pointers'],
+    correct_index: 1,
+    explanation: 'LIFO matching of opening brackets.',
+    difficulty: 'easy',
+    topic: 'Stacks',
+  },
+  {
+    id: 'dsa-exam-09',
+    prompt: 'Floyd cycle detection uses:',
+    options: ['O(n) space', 'O(1) space', 'O(log n) space', 'A hash set always'],
+    correct_index: 1,
+    explanation: 'Slow and fast pointers only.',
+    difficulty: 'easy',
+    topic: 'Linked lists',
+  },
+  {
+    id: 'dsa-exam-10',
+    prompt: 'Reversing a linked list iteratively returns:',
+    options: ['Original head', 'New head (old tail)', 'Null', 'Middle'],
+    correct_index: 1,
+    explanation: 'prev ends at the last node.',
+    difficulty: 'easy',
+    topic: 'Linked lists',
+  },
+  {
+    id: 'dsa-exam-11',
+    prompt: 'A dummy head node helps with:',
+    options: ['Sorting', 'Head/empty edge cases in insert/delete', 'Cycles', 'Copying'],
+    correct_index: 1,
+    explanation: 'Uniform code path for all positions.',
+    difficulty: 'easy',
+    topic: 'Linked lists',
+  },
+  {
+    id: 'dsa-exam-12',
+    prompt: 'Inorder traversal of a BST yields:',
+    options: ['Reverse sorted', 'Sorted order', 'Level order', 'Preorder'],
+    correct_index: 1,
+    explanation: 'Left, node, right follows the BST invariant.',
+    difficulty: 'easy',
+    topic: 'Trees',
+  },
+  {
+    id: 'dsa-exam-13',
+    prompt: 'Correct BST validation needs:',
+    options: ['Parent-only comparison', 'Min/max bounds from ancestors', 'A stack only', 'Postorder only'],
+    correct_index: 1,
+    explanation: 'Deep descendants can violate order vs ancestors.',
+    difficulty: 'medium',
+    topic: 'Trees',
+  },
+  {
+    id: 'dsa-exam-14',
+    prompt: 'LCA in a general binary tree is found with:',
+    options: ['BFS only', 'Postorder combine of left/right results', 'Dijkstra', 'Two pointers'],
+    correct_index: 1,
+    explanation: 'If both sides return non-null, current is LCA.',
+    difficulty: 'medium',
+    topic: 'Trees',
+  },
+  {
+    id: 'dsa-exam-15',
+    prompt: 'Kth largest with a min-heap of size k runs in:',
+    options: ['O(n log n)', 'O(n log k)', 'O(k log n)', 'O(n)'],
+    correct_index: 1,
+    explanation: 'Heap stays size k; each op is log k.',
+    difficulty: 'easy',
+    topic: 'Heaps',
+  },
+  {
+    id: 'dsa-exam-16',
+    prompt: 'Activity selection (max non-overlapping) is correctly greedy by:',
+    options: ['Longest duration', 'Earliest start', 'Earliest end', 'Random'],
+    correct_index: 2,
+    explanation: 'Classic exchange-argument greedy.',
+    difficulty: 'easy',
+    topic: 'Greedy',
+  },
+  {
+    id: 'dsa-exam-17',
+    prompt: '0/1 knapsack is best solved with:',
+    options: ['Greedy by value/weight', 'Dynamic programming', 'BFS', 'Binary search'],
+    correct_index: 1,
+    explanation: 'Greedy fails on indivisible items.',
+    difficulty: 'easy',
+    topic: 'DP',
+  },
+  {
+    id: 'dsa-exam-18',
+    prompt: 'BFS finds shortest paths on:',
+    options: ['Any weighted graph', 'Unweighted / unit-weight graphs', 'Negative graphs only', 'DAGs only'],
+    correct_index: 1,
+    explanation: 'First reach is optimal for unit edges.',
+    difficulty: 'easy',
+    topic: 'Graphs',
+  },
+  {
+    id: 'dsa-exam-19',
+    prompt: 'Kahn’s topological sort detects a cycle when:',
+    options: ['Queue is empty early', 'Fewer than V nodes are peeled', 'Graph is sparse', 'Heap overflows'],
+    correct_index: 1,
+    explanation: 'Unprocessed nodes are locked in a cycle.',
+    difficulty: 'medium',
+    topic: 'Graphs',
+  },
+  {
+    id: 'dsa-exam-20',
+    prompt: 'Dijkstra is invalid when:',
+    options: ['Graph is disconnected', 'Edge weights are negative', 'V is large', 'Graph is a tree'],
+    correct_index: 1,
+    explanation: 'Use Bellman-Ford for negative weights.',
+    difficulty: 'easy',
+    topic: 'Graphs',
+  },
+  {
+    id: 'dsa-exam-21',
+    prompt: 'In BFS you should mark visited:',
+    options: ['On dequeue only', 'On enqueue', 'Never', 'After answering'],
+    correct_index: 1,
+    explanation: 'Avoids duplicate queue entries.',
+    difficulty: 'medium',
+    topic: 'Graphs',
+  },
+  {
+    id: 'dsa-exam-22',
+    prompt: 'Climbing stairs (1 or 2 steps) recurrence is:',
+    options: ['dp[i]=dp[i-1]', 'dp[i]=dp[i-1]+dp[i-2]', 'dp[i]=2^n', 'dp[i]=i'],
+    correct_index: 1,
+    explanation: 'Fibonacci-style partition by last step.',
+    difficulty: 'easy',
+    topic: 'DP',
+  },
+  {
+    id: 'dsa-exam-23',
+    prompt: 'First formal step of the DP recipe:',
+    options: ['Write the code', 'Define the state', 'Sort input', 'Pick a language'],
+    correct_index: 1,
+    explanation: 'State signature before recurrence.',
+    difficulty: 'easy',
+    topic: 'DP',
+  },
+  {
+    id: 'dsa-exam-24',
+    prompt: 'House robber recurrence is:',
+    options: ['Always take', 'max(dp[i-1], dp[i-2]+a[i])', 'dp[i]=a[i]+a[i-1]', 'dp[i]=min'],
+    correct_index: 1,
+    explanation: 'Skip current or take current plus best two back.',
+    difficulty: 'easy',
+    topic: 'DP',
+  },
+  {
+    id: 'dsa-exam-25',
+    prompt: 'Merge k sorted lists with a heap runs in:',
+    options: ['O(k log n)', 'O(N log k)', 'O(N²)', 'O(N log N) always'],
+    correct_index: 1,
+    explanation: 'N total elements, heap size k.',
+    difficulty: 'medium',
+    topic: 'Heaps',
+  },
+  {
+    id: 'dsa-exam-26',
+    prompt: 'Graph adjacency list space is:',
+    options: ['O(V²)', 'O(V+E)', 'O(E²)', 'O(V log V)'],
+    correct_index: 1,
+    explanation: 'One list per vertex plus edge entries.',
+    difficulty: 'easy',
+    topic: 'Graphs',
+  },
+  {
+    id: 'dsa-exam-27',
+    prompt: 'Iterative DFS is preferred when:',
+    options: ['Graph is tiny', 'Recursion depth may blow the stack', 'Edges are weighted', 'Always'],
+    correct_index: 1,
+    explanation: 'Large V can exceed call-stack limits.',
+    difficulty: 'medium',
+    topic: 'Graphs',
+  },
+  {
+    id: 'dsa-exam-28',
+    prompt: 'In the interview playbook, after clarifying you should:',
+    options: ['Code immediately', 'Work a tiny example and state brute force', 'Leave', 'Ask for hints'],
+    correct_index: 1,
+    explanation: 'Example + brute complexity frame the optimization.',
+    difficulty: 'easy',
+    topic: 'Interview',
+  },
+  {
+    id: 'dsa-exam-29',
+    prompt: 'Space optimization of DP is valid when:',
+    options: ['Any DP', 'dp[i] depends only on a constant window of previous states', 'Only 2D DP', 'Never'],
+    correct_index: 1,
+    explanation: 'Keep only the needed rows/variables.',
+    difficulty: 'medium',
+    topic: 'DP',
+  },
+  {
+    id: 'dsa-exam-30',
+    prompt: 'Two-sum on an unsorted array in O(n) uses:',
+    options: ['Two pointers only', 'A hash set/map of complements', 'Sorting only', 'Binary search'],
+    correct_index: 1,
+    explanation: 'Check if target − a[i] was already seen.',
+    difficulty: 'easy',
+    topic: 'Hashing',
+  },
+];
+
+export function getDsaMasteryCourse(): Course {
+  return {
+    id: 'crs-dsa-mastery',
+    slug: 'dsa-mastery',
+    title: 'DSA Mastery for Interviews',
+    subtitle:
+      'Complexity, arrays, trees, graphs and DP — the patterns that clear OAs and technical rounds',
+    description: `Data structures and algorithms remain the single highest-leverage filter in engineering hiring. This course teaches the patterns interviewers actually use, not a tour of every exotic structure: Big-O fluency and constraint budgets, two pointers and sliding windows, hashing and monotonic stacks, linked-list surgery, trees and BSTs, heaps and greedy proofs, graph templates (BFS, DFS, Dijkstra, topological sort), and a dynamic-programming recipe that turns "hard" problems into state-recurrence work. A final lesson covers the 45-minute interview conversation itself — clarify, example, brute force, optimize, code, test.
+
+Four modules, eight lessons on the nine-step standard: objective, hook, concept, worked example, practice, common mistakes, exam angle, server-graded quiz and revision summary. A 30-question bank feeds the timed final; passing earns a verifiable TieEdu certificate.
+
+**Who this is for:** students preparing for campus placements, off-campus OAs and interviews at product and service companies. Assumes you can write basic code in any language; every pattern is shown with complexity and edge cases called out.
+
+**What you need:** a language you can code in during practice. No prior competitive programming is required.`,
+    category: 'Programming',
+    level: 'intermediate',
+    is_free: false,
+    price_inr: 1499,
+    thumbnail_url: '',
+    thumbnail_alt: 'DSA Mastery for Interviews course cover',
+    tags: ['dsa', 'algorithms', 'interview', 'placement', 'graphs', 'dp'],
+    outcomes: [
+      'Read constraints and pick the right complexity tier before coding',
+      'Apply two pointers and sliding windows to linear scan problems',
+      'Solve frequency, complement and grouping problems with hash maps',
+      'Use stacks and the monotonic-stack template for next-greater families',
+      'Perform linked-list reversal, cycle detection and merge with O(1) extra space',
+      'Traverse and validate trees; answer LCA and BST-order questions',
+      'Use heaps for top-k, merge-k and running median; justify simple greedy proofs',
+      'Implement BFS, DFS, Kahn topological sort and Dijkstra correctly',
+      'Design DP states and recurrences; code memo and tabulation forms',
+      'Run a structured interview conversation end-to-end',
+    ],
+    prerequisite_course_id: null,
+    certificate_eligible: true,
+    // Phase 4 decision: paid courses stay unpublished until payment infra lands.
+    published: false,
+    created_at: '2026-10-13T20:00:00.000Z',
+    updated_at: '2026-10-13T20:00:00.000Z',
+    instructor_id: null,
+    about_course: `Most DSA courses either dump theory with no interview focus or chase contest problems that never appear in campus rounds. This course is built around the patterns that show up repeatedly in service and product company interviews: the constraint-budget rule, sliding window, hash complements, monotonic stack, pointer surgery on lists, BST bounds, heap top-k, three graph templates and a DP recipe.
+
+Each lesson is a compact nine-block unit: why the pattern matters, the mental model, a fully worked example, practice with hints, the traps that cost offers, and the exact question an interviewer will ask next. The closing playbook turns technical communication into a skill you can rehearse — not just algorithm recognition.
+
+A 15-question timed exam from a 30-question bank gates the verifiable TieEdu certificate.`,
+    prerequisites: [
+      'Comfort writing basic programs (loops, functions, arrays) in any language',
+    ],
+    audience: [
+      'Final-year and pre-final students preparing for placements',
+      'Anyone facing product-company OA and technical rounds',
+      'Engineers refreshing DFA before interviews',
+      'Competitive programmers who want a structured interview-oriented recap',
+    ],
+    audio_language: 'English',
+    caption_language: 'English',
+    branch: 'cse',
+    branch_label: 'CSE/IT primary (open to all branches)',
+    bucket: 'D',
+    certificate_tier: 'professional',
+    estimated_hours: 10,
+    perks: [
+      { key: 'certificate', label: 'Verifiable certificate' },
+      { key: 'xp', label: 'XP on the leaderboard' },
+    ],
+    exam_prep: {
+      target: 'Campus placements, off-campus OAs and technical interviews',
+      units: [
+        {
+          title: 'Complexity & Arrays',
+          summary:
+            'Big-O with constraint budgets (n≤10⁵ → O(n log n)). Two pointers on sorted pairs/palindromes. Sliding window: expand R, shrink L, O(n).',
+          questions: [
+            'What complexity fits n=10⁵?',
+            'When does sliding window apply?',
+            'How does pair-sum become O(n) on sorted input?',
+          ],
+          pyqs: [],
+        },
+        {
+          title: 'Hashing, Stacks, Lists',
+          summary:
+            'Hash map average O(1). Stack for matching and monotonic next-greater (O(n)). Floyd cycle O(1) space; iterative reversal; dummy head.',
+          questions: [
+            'Why is monotonic stack O(n)?',
+            'How do you find the cycle start?',
+            'Two-sum unsorted: map of complements — why?',
+          ],
+          pyqs: [],
+        },
+        {
+          title: 'Trees, Heaps, Greedy',
+          summary:
+            'Inorder = sorted on BST; validate with (min,max) bounds. LCA via postorder combine or BST walk. Min-heap size k = top-k largest O(n log k). Greedy needs exchange argument; 0/1 knapsack is not greedy.',
+          questions: [
+            'Why parent-only BST checks fail.',
+            'Complexity of kth largest with a heap.',
+            'When is earliest-deadline greedy optimal?',
+          ],
+          pyqs: [],
+        },
+        {
+          title: 'Graphs, DP, Playbook',
+          summary:
+            'BFS unweighted shortest; DFS components/topo; Dijkstra non-negative only. Kahn cycle detection. DP: state → recurrence → base → order. Interview: clarify, example, brute, optimize, code, test.',
+          questions: [
+            'When is Dijkstra invalid?',
+            'Coin-change recurrence?',
+            'Order of the 45-minute interview conversation?',
+          ],
+          pyqs: [],
+        },
+      ],
+      important_questions: [
+        'Classify complexity of three nested loops and state the n budget.',
+        'Longest substring with at most k distinct characters in O(n).',
+        'Next greater element for every index with a monotonic stack.',
+        'Find the start of a cycle in O(1) space.',
+        'Validate a binary tree as a BST using bounds.',
+        'Kth largest element with a size-k min-heap.',
+        'Shortest path in a 0/1 grid with BFS.',
+        'Minimum coins for an amount with DP; state recurrence and bases.',
+      ],
+      previous_year_questions: [
+        {
+          year: '2024',
+          question: 'Given an array, return indices of two numbers that add to a target.',
+          solution: 'One pass with a hash map of value→index; complement check O(1).',
+        },
+        {
+          year: '2023',
+          question: 'Level-order traversal of a binary tree.',
+          solution: 'BFS with a queue; process level sizes in batches.',
+        },
+        {
+          year: '2025',
+          question: 'Coin change — minimum coins for amount.',
+          solution: 'Bottom-up DP over amounts; dp[x]=1+min(dp[x−c]).',
+        },
+      ],
+    },
+    exam: {
+      question_count: 15,
+      duration_minutes: 45,
+      passing_percent: 60,
+      retake_cooldown_hours: 24,
+      distinction_percent: 85,
+      bank: examBank,
+    },
+    project: {
+      title: 'Pattern pack: 8 problems with complexity notes',
+      brief:
+        'Solve eight problems (one per major pattern): sliding-window longest substring; hash two-sum; monotonic next-greater; linked-list reverse + cycle start; BST validate + inorder; heap kth-largest; BFS grid shortest path; DP coin change. For each: state the approach in 2–3 sentences, give time/space complexity, list edge cases you tested, and include code (any mainstream language). Submit as one PDF or a repo README plus source files.',
+      submission_hint: 'PDF or repo with 8 solutions; each has approach, complexity, edge cases and working code.',
+      required_for_certificate: true,
+    },
+    modules: [module1, module2, module3, module4],
+  };
+}

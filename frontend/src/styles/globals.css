@@ -1512,6 +1512,19 @@ code, pre, kbd, samp, .font-mono {
 }
 .animate-fade-in { animation: fade-in 200ms ease; }
 
+/* --- Lesson segment steps (mobile reader) -------------------------------
+   Opacity-only crossfade between lesson steps — no layout properties, so the
+   transition cannot trigger reflow. Under reduced motion the swap is instant:
+   the step content still changes, only the animation is dropped. */
+@keyframes segment-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.segment-fade { animation: segment-fade 160ms ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .segment-fade { animation: none; }
+}
+
 @keyframes slide-in-right {
   from { transform: translateX(100%); }
   to { transform: translateX(0); }

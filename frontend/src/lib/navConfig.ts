@@ -15,6 +15,7 @@
 import type { LucideIcon } from 'lucide-react';
 import {
   Award,
+  BadgeCheck,
   BookOpen,
   BrainCircuit,
   Building2,
@@ -290,6 +291,16 @@ export const NAV_ITEMS: Record<string, NavItem> = {
     primary: false,
     keywords: ['enrolled', 'progress', 'certificates'],
   },
+  myCertificates: {
+    id: 'myCertificates',
+    href: '/my-certificates',
+    label: 'My Certificates',
+    icon: BadgeCheck,
+    match: 'exact',
+    description: 'Certificates you have earned, with PDF download and verification',
+    primary: false,
+    keywords: ['certificates', 'verify', 'download', 'pdf', 'tier', 'distinction'],
+  },
   account: {
     id: 'account',
     href: '/account',
@@ -350,7 +361,7 @@ export const PRIMARY_NAV: NavItem[] = ALL_NAV_ITEMS.filter((i) => i.primary);
  */
 export const NAV_GROUPS: { id: string; label: string; itemIds: string[] }[] = [
   { id: 'explore', label: 'Explore', itemIds: ['vaults', 'compare', 'skillTest', 'drives', 'drops', 'courses', 'freeCourse'] },
-  { id: 'plan', label: 'Plan & learn', itemIds: ['studyPlan', 'myCourses'] },
+  { id: 'plan', label: 'Plan & learn', itemIds: ['studyPlan', 'myCourses', 'myCertificates'] },
 ];
 
 export const NAV_GROUP_LABELS: Record<string, string> = {

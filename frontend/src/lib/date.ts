@@ -117,3 +117,29 @@ export function formatDateLong(value: Date | string | null | undefined): string 
 
   return `${day} ${MONTHS_LONG[month - 1]} ${year}`;
 }
+
+/**
+ * Coarse client-relative label ("just now", "3 days ago", "5 months ago") for
+ * activity stamps. Deliberately bucketed to days/weeks/months — the learner
+ * needs a sense of recency, not an exact delta, and the coarse buckets mean
+ * the text does not churn every second.
+ */
+export function formatRelative(value: Date | string | null | undefined): string | null {
+  if (!value) return null;
+  const then = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(then.getTime())) return null;
+  const minutes = Math.floor((Date.now() - then.getTime()) / 60000);
+  if (minutes < 1) return 'just now';
+  if (minutes < 60) return `${minutes} min ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hr ago`;
+  const days = Math.floor(hours / 24);
+  if (days === 1) return 'yesterday';
+  if (days < 14) return `${days} days ago`;
+  const weeks = Math.floor(days / 7);
+  if (weeks < 8) return `${weeks} weeks ago`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months} months ago`;
+  const years = Math.floor(days / 365);
+  return `${years === 1 ? 'a year' : `${years} years`} ago`;
+}

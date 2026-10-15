@@ -55,6 +55,18 @@
       "short_name": "Ranks",
       "description": "Placement season XP rankings",
       "url": "/?action=leaderboard"
+    },
+    {
+      "name": "Browse courses",
+      "short_name": "Browse",
+      "description": "Explore the full course catalogue",
+      "url": "/courses"
+    },
+    {
+      "name": "My certificates",
+      "short_name": "Certs",
+      "description": "View and verify your certificates",
+      "url": "/my-certificates"
     }
   ]
 }

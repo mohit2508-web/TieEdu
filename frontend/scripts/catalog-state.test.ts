@@ -58,7 +58,25 @@ const queryObject = (qs: string): Record<string, string | string[]> => {
 // --- parsing ----------------------------------------------------------------
 
 check('an empty query is the default filter set', () => {
-  deep(parseCatalogQuery({}), { q: '', category: [], tag: [], type: [], level: [], sort: 'popular', page: 1 });
+  deep(parseCatalogQuery({}), { q: '', branch: [], bucket: [], category: [], tag: [], type: [], level: [], sort: 'popular', page: 1 });
+});
+
+check('branch and bucket arrive lowercase so the server key matches', () => {
+  // The landing band links `?branch=CSE&bucket=B` in display case; the server
+  // lowercases every token, so the client must too or the link filters nothing.
+  const parsed = parseCatalogQuery({ branch: 'CSE', bucket: 'B' });
+  deep(parsed.branch, ['cse']);
+  deep(parsed.bucket, ['b']);
+});
+
+check('branch and bucket survive a serialise round-trip', () => {
+  const original = filters({ branch: ['cse'], bucket: ['b'] });
+  const qs = catalogQueryFor(original);
+  if (!qs.includes('branch=cse')) throw new Error(`branch missing from ${qs}`);
+  if (!qs.includes('bucket=b')) throw new Error(`bucket missing from ${qs}`);
+  const parsed = parseCatalogQuery(queryObject(qs));
+  deep(parsed.branch, ['cse']);
+  deep(parsed.bucket, ['b']);
 });
 
 check('repeated params accumulate into a list', () => {
@@ -138,7 +156,7 @@ check('a whitespace-only search term is not sent', () => {
 });
 
 check('parse and serialise are inverses for a realistic query', () => {
-  const original = filters({ q: 'c programming', category: ['Computer Science'], tag: ['c', 'basics'], type: ['free'], level: ['beginner'], sort: 'rating' });
+  const original = filters({ q: 'c programming', branch: ['cse'], bucket: ['b'], category: ['Computer Science'], tag: ['c', 'basics'], type: ['free'], level: ['beginner'], sort: 'rating' });
   const parsed = parseCatalogQuery(queryObject(catalogQueryFor(original)));
   deep({ ...parsed, page: 1 }, { ...original, page: 1 });
 });
@@ -169,13 +187,15 @@ check('toggling never mutates the input object', () => {
 
 // --- counting and labelling -------------------------------------------------
 
-check('active filters are counted across all four groups', () => {
+check('active filters are counted across all six groups', () => {
   eq(countActiveFilters(filters()), 0);
-  eq(countActiveFilters(filters({ category: ['a'], tag: ['b', 'c'], type: ['free'] })), 4);
+  eq(countActiveFilters(filters({ branch: ['cse'], bucket: ['b'], category: ['a'], tag: ['b', 'c'], type: ['free'] })), 6);
   eq(countActiveFilters(filters({ q: 'search', sort: 'az' })), 0, 'search and sort are not filters');
 });
 
 const FACETS: CatalogFacets = {
+  branch: [{ key: 'cse', label: 'Computer Science & IT', count: 3 }],
+  bucket: [{ key: 'a', label: 'A · Year-1 Common', count: 3 }],
   level: [
     { key: 'beginner', label: 'Beginner', count: 2 },
     { key: 'intermediate', label: 'Intermediate', count: 1 },
@@ -186,10 +206,13 @@ const FACETS: CatalogFacets = {
 };
 
 check('pills use the server label, not the raw key', () => {
-  // Pills come out in group order (category, tag, type, level) so the row of
-  // pills always matches the order of the groups in the rail above it.
-  const pills = activeFilterLabels(filters({ category: ['computer science'], level: ['beginner'] }), FACETS);
-  deep(pills.map((p) => p.label), ['Computer Science', 'Beginner']);
+  // Pills come out in group order (branch, bucket, category, tag, type, level)
+  // so the row of pills always matches the order of the groups in the rail.
+  const pills = activeFilterLabels(
+    filters({ branch: ['cse'], bucket: ['a'], category: ['computer science'], level: ['beginner'] }),
+    FACETS
+  );
+  deep(pills.map((p) => p.label), ['Computer Science & IT', 'A · Year-1 Common', 'Computer Science', 'Beginner']);
 });
 
 check('a level pill is humanised even when the facet is missing it', () => {

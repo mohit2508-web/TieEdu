@@ -221,6 +221,44 @@ check('a valid installable manifest is served', () => {
   ok(typeof manifest.theme_color === 'string', 'manifest needs theme_color');
 });
 
+check('the manifest offers catalogue and certificate shortcuts', () => {
+  // Phase 3c: the installed home-screen entry must reach the two course
+  // surfaces without a detour through the drawer.
+  const manifest = JSON.parse(read('public/manifest.json'));
+  const urls = (manifest.shortcuts || []).map((s: { url?: string }) => s.url);
+  ok(urls.includes('/courses'), 'shortcuts must include Browse courses (/courses)');
+  ok(urls.includes('/my-certificates'), 'shortcuts must include My certificates');
+});
+
+// --- lesson segment reader (Phase 3c) ---------------------------------------
+
+check('the mobile lesson reader chunks content into steps', () => {
+  // "No long pages": on phones the player swaps the continuous flow for
+  // one-step-at-a-time cards. These pins keep the wiring from silently
+  // reverting to a single scroll.
+  const player = read('src/components/courses/LessonPlayer.tsx');
+  ok(player.includes('MobileSegmentReader'), 'LessonPlayer must render the segment reader');
+  ok(player.includes('useMediaQuery'), 'LessonPlayer must gate the reader on a real media query');
+  ok(player.includes('writeLessonSegment'), 'step changes must be remembered for resume');
+  ok(fs.existsSync(path.join(ROOT, 'src/components/courses/MobileSegmentReader.tsx')), 'MobileSegmentReader.tsx is missing');
+  ok(
+    fs.existsSync(path.join(ROOT, 'src/lib/lessonSegments.ts')),
+    'lessonSegments.ts (per-device step resume) is missing'
+  );
+  const css = read('src/styles/globals.css');
+  ok(css.includes('.segment-fade'), 'segment swaps must use the opacity-only segment-fade animation');
+  ok(
+    /prefers-reduced-motion[\s\S]{0,400}\.segment-fade/.test(css),
+    'segment-fade must be disabled under prefers-reduced-motion'
+  );
+});
+
+check('the quiz goes one-question-at-a-time on phones', () => {
+  const player = read('src/components/courses/LessonPlayer.tsx');
+  ok(player.includes('oneAtATime'), 'QuizForm must accept the focus-mode prop');
+  ok(/oneAtATime=\{isMobile\}/.test(player), 'focus mode must be driven by the real mobile query');
+});
+
 check('the manifest is declared in the document head', () => {
   ok(read('src/pages/_app.tsx').includes('rel="manifest"'), '_app must link the manifest');
 });

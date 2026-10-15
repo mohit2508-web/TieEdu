@@ -1,0 +1,445 @@
+// ============================================================================
+// DIGITAL ELECTRONICS — flagship free course (Phase 4 course 6).
+//
+// The ECE/EEE entry subject every university exam and Viva expects:
+// number systems, Boolean algebra + K-maps, combinational building blocks,
+// and sequential logic through FSMs. Four modules, eight lessons on the
+// 9-block standard, 30-question exam bank.
+// ============================================================================
+
+import type { Course, ExamQuestion } from '../db';
+import { module1 } from './module1';
+import { module2 } from './module2';
+import { module3 } from './module3';
+import { module4 } from './module4';
+
+const examBank: ExamQuestion[] = [
+  {
+    id: 'de-exam-01',
+    prompt: '1101_2 equals which decimal?',
+    options: ['11', '12', '13', '14'],
+    correct_index: 2,
+    explanation: '8+0+4+1 = 13.',
+    difficulty: 'easy',
+    topic: 'Number systems',
+  },
+  {
+    id: 'de-exam-02',
+    prompt: 'Hex 2B equals which decimal?',
+    options: ['43', '44', '27', '211'],
+    correct_index: 0,
+    explanation: '2x16 + 11 = 43.',
+    difficulty: 'easy',
+    topic: 'Number systems',
+  },
+  {
+    id: 'de-exam-03',
+    prompt: 'BCD encoding of 58 is:',
+    options: ['00111010', '01011000', '0101 1000', '0110 1000'],
+    correct_index: 2,
+    explanation: '5=0101, 8=1000.',
+    difficulty: 'easy',
+    topic: 'Codes',
+  },
+  {
+    id: 'de-exam-04',
+    prompt: 'Gray code of binary 1100 is:',
+    options: ['1010', '1110', '1001', '1111'],
+    correct_index: 0,
+    explanation: 'g3=1, g2=1^1=0, g1=1^0=1, g0=0^0=0 → 1010.',
+    difficulty: 'medium',
+    topic: 'Codes',
+  },
+  {
+    id: 'de-exam-05',
+    prompt: 'ASCII code for character 0 (digit zero):',
+    options: ['0', '48', '65', '32'],
+    correct_index: 1,
+    explanation: 'Digit characters start at 48.',
+    difficulty: 'easy',
+    topic: 'Codes',
+  },
+  {
+    id: 'de-exam-06',
+    prompt: 'A single-bit error is detected by:',
+    options: ['BCD', 'Parity bit', 'Gray code', 'Hex encoding'],
+    correct_index: 1,
+    explanation: 'Parity makes the 1-count even or odd for detection.',
+    difficulty: 'easy',
+    topic: 'Codes',
+  },
+  {
+    id: 'de-exam-07',
+    prompt: '(A + B)‾ equals:',
+    options: ['A̅+B̅', 'A̅·B̅', 'A·B', 'A+B'],
+    correct_index: 1,
+    explanation: "De Morgan: sum's complement is product of complements.",
+    difficulty: 'easy',
+    topic: 'Boolean algebra',
+  },
+  {
+    id: 'de-exam-08',
+    prompt: 'A·(A+B) simplifies to:',
+    options: ['A·B', 'A', 'B', 'A+B'],
+    correct_index: 1,
+    explanation: 'Absorption: A·(A+B) = A·A + A·B = A + A·B = A.',
+    difficulty: 'easy',
+    topic: 'Boolean algebra',
+  },
+  {
+    id: 'de-exam-09',
+    prompt: 'A 4-variable K-map has how many cells?',
+    options: ['8', '12', '16', '32'],
+    correct_index: 2,
+    explanation: '2^4 = 16.',
+    difficulty: 'easy',
+    topic: 'K-map',
+  },
+  {
+    id: 'de-exam-10',
+    prompt: 'Legal K-map group sizes include:',
+    options: ['3', '5', '6', '8'],
+    correct_index: 3,
+    explanation: 'Only powers of two: 1,2,4,8,16.',
+    difficulty: 'easy',
+    topic: 'K-map',
+  },
+  {
+    id: 'de-exam-11',
+    prompt: 'Sum output of a full adder is:',
+    options: ['A⊕B', 'A⊕B⊕Cin', 'A·B', 'A+B+Cin'],
+    correct_index: 1,
+    explanation: 'XOR of all three inputs.',
+    difficulty: 'easy',
+    topic: 'Combinational',
+  },
+  {
+    id: 'de-exam-12',
+    prompt: 'A ripple-carry adder for n bits uses how many full adders?',
+    options: ['n', 'n−1', 'n+1', '2n'],
+    correct_index: 0,
+    explanation: 'One full adder per bit position.',
+    difficulty: 'easy',
+    topic: 'Combinational',
+  },
+  {
+    id: 'de-exam-13',
+    prompt: 'A − B in two’s complement hardware is:',
+    options: ['A + B − 1', 'A + B̄ + 1', 'A̅ + B + 1', 'A − B̄'],
+    correct_index: 1,
+    explanation: 'Invert B and set Cin=1.',
+    difficulty: 'medium',
+    topic: 'Combinational',
+  },
+  {
+    id: 'de-exam-14',
+    prompt: 'Select lines on a 32:1 MUX:',
+    options: ['3', '4', '5', '6'],
+    correct_index: 2,
+    explanation: 'log2(32) = 5.',
+    difficulty: 'easy',
+    topic: 'Combinational',
+  },
+  {
+    id: 'de-exam-15',
+    prompt: 'Decoder outputs correspond to:',
+    options: ['Maxterms', 'Minterms', 'XOR terms', 'Parity bits'],
+    correct_index: 1,
+    explanation: 'One-hot minterm lines.',
+    difficulty: 'easy',
+    topic: 'Combinational',
+  },
+  {
+    id: 'de-exam-16',
+    prompt: 'A priority encoder ensures:',
+    options: ['All inputs read simultaneously', 'Highest-index active input wins', 'Lowest wins', 'No output if multiple'],
+    correct_index: 1,
+    explanation: 'Standard interrupt-arbitration behavior.',
+    difficulty: 'easy',
+    topic: 'Combinational',
+  },
+  {
+    id: 'de-exam-17',
+    prompt: 'Q(t+1) for a D flip-flop:',
+    options: ['Q', 'D', 'D̅', 'T⊕Q'],
+    correct_index: 1,
+    explanation: 'Next state equals D at the active edge.',
+    difficulty: 'easy',
+    topic: 'Sequential',
+  },
+  {
+    id: 'de-exam-18',
+    prompt: 'J=K=1 on a JK flip-flop:',
+    options: ['Reset', 'Set', 'Toggle', 'Hold'],
+    correct_index: 2,
+    explanation: 'Toggle mode.',
+    difficulty: 'easy',
+    topic: 'Sequential',
+  },
+  {
+    id: 'de-exam-19',
+    prompt: 'A latch differs from a flip-flop by being:',
+    options: ['Edge-triggered', 'Level-sensitive', 'Clocked only', 'Async only'],
+    correct_index: 1,
+    explanation: 'Transparent while enable is asserted.',
+    difficulty: 'easy',
+    topic: 'Sequential',
+  },
+  {
+    id: 'de-exam-20',
+    prompt: 'JK flip-flop converted to D requires:',
+    options: ['J=D, K=D', 'J=D, K=D̅', 'J=D̅, K=D', 'J=K=D'],
+    correct_index: 1,
+    explanation: 'J=D and K=D̅ forces Q(t+1)=D.',
+    difficulty: 'medium',
+    topic: 'Sequential',
+  },
+  {
+    id: 'de-exam-21',
+    prompt: 'Main drawback of a ripple counter:',
+    options: ['Too many flip-flops', 'Cumulative clock delay', 'Needs more power always', 'Cannot count above 8'],
+    correct_index: 1,
+    explanation: 'Each stage waits for the previous Q edge.',
+    difficulty: 'easy',
+    topic: 'Sequential',
+  },
+  {
+    id: 'de-exam-22',
+    prompt: 'Moore machine outputs depend on:',
+    options: ['Inputs only', 'State only', 'State and inputs', 'Clock only'],
+    correct_index: 1,
+    explanation: 'Output = f(state).',
+    difficulty: 'easy',
+    topic: 'FSM',
+  },
+  {
+    id: 'de-exam-23',
+    prompt: 'Mealy outputs can glitch because they depend on:',
+    options: ['State only', 'Inputs as well as state', 'Reset only', 'Propagation only'],
+    correct_index: 1,
+    explanation: 'Input changes can alter Mealy outputs mid-cycle.',
+    difficulty: 'medium',
+    topic: 'FSM',
+  },
+  {
+    id: 'de-exam-24',
+    prompt: 'A mod-16 counter has how many states?',
+    options: ['8', '10', '16', '32'],
+    correct_index: 2,
+    explanation: '0..15 inclusive.',
+    difficulty: 'easy',
+    topic: 'Sequential',
+  },
+  {
+    id: 'de-exam-25',
+    prompt: 'T flip-flop characteristic equation:',
+    options: ['Q', 'T⊕Q', 'T·Q', 'T+Q'],
+    correct_index: 1,
+    explanation: 'Toggle when T=1, hold when T=0.',
+    difficulty: 'easy',
+    topic: 'Sequential',
+  },
+  {
+    id: 'de-exam-26',
+    prompt: 'To implement any SOP directly you need:',
+    options: ['MUX only', 'Decoder + OR gates', 'Encoder only', 'Shift register'],
+    correct_index: 1,
+    explanation: 'Decoder lines are minterms; OR the needed ones.',
+    difficulty: 'medium',
+    topic: 'Combinational',
+  },
+  {
+    id: 'de-exam-27',
+    prompt: 'Gray code is preferred in rotary encoders because:',
+    options: ['It is shorter', 'Only one bit changes per step', 'It is binary compatible', 'It compresses data'],
+    correct_index: 1,
+    explanation: 'Single-bit transitions prevent multi-bit glitches.',
+    difficulty: 'easy',
+    topic: 'Codes',
+  },
+  {
+    id: 'de-exam-28',
+    prompt: 'SR latch with S=R=1 produces:',
+    options: ['Q=0', 'Q=1', 'Forbidden / race', 'Q holds'],
+    correct_index: 2,
+    explanation: 'Both outputs try to flip — invalid state.',
+    difficulty: 'easy',
+    topic: 'Sequential',
+  },
+  {
+    id: 'de-exam-29',
+    prompt: 'Excitation tables are used to design:',
+    options: ['Adders', 'Counters and FSMs', 'MUXes', 'Coders'],
+    correct_index: 1,
+    explanation: 'They map desired state transitions to required inputs.',
+    difficulty: 'medium',
+    topic: 'Sequential',
+  },
+  {
+    id: 'de-exam-30',
+    prompt: 'Presets and clears on a flip-flop are:',
+    options: ['Synchronous inputs', 'Asynchronous overrides of the clock', 'Clock enables', 'Parity controls'],
+    correct_index: 1,
+    explanation: 'They force Q regardless of the clock edge.',
+    difficulty: 'easy',
+    topic: 'Sequential',
+  },
+];
+
+export function getDigitalElectronicsCourse(): Course {
+  return {
+    id: 'crs-digital-electronics',
+    slug: 'digital-electronics',
+    title: 'Digital Electronics',
+    subtitle:
+      'Number systems, Boolean algebra, K-maps, combinational and sequential circuits — the ECE exam and Viva foundation',
+    description: `Digital Electronics is the first serious ECE/EEE course in most university syllabi, and the one every Viva and written exam tests hardest. This course covers the full foundation in eight compact lessons: binary, octal, hex, BCD and Gray codes; Boolean algebra with De Morgan and K-map minimization; adders, multiplexers, decoders and encoders; and sequential logic from flip-flops through counters and finite state machines.
+
+Every lesson follows the nine-step structure: objective, hook, concept, worked example, practice, common mistakes, the exam angle, a server-graded quiz and a one-screen summary. A 30-question bank feeds a 15-question timed final; passing earns a verifiable TieEdu certificate.
+
+**Who this is for:** first- and second-year ECE/EEE students, and any CS student who wants the hardware fundamentals that interviews still ask. The course is exam-oriented without being shallow — every worked example is the kind of problem that appears on mid-terms and in placement screening.
+
+**What you need:** pen and paper for the maps and truth tables; a browser for the quizzes. No simulator or lab kit is required, though anyone with one should re-verify the worked circuits on it.`,
+    category: 'Electronics',
+    level: 'beginner',
+    is_free: true,
+    price_inr: 0,
+    thumbnail_url: '',
+    thumbnail_alt: 'Digital Electronics course cover',
+    tags: ['digital', 'electronics', 'ece', 'boolean', 'kmap', 'flipflop', 'free'],
+    outcomes: [
+      'Convert between binary, octal, hexadecimal and decimal accurately',
+      'Encode and decode BCD, Gray and ASCII, and compute parity bits',
+      "Apply De Morgan's laws and absorption to simplify Boolean expressions",
+      'Minimize functions on 2-, 3- and 4-variable K-maps',
+      'Design and cascade adders, and build two’s-complement subtractors',
+      'Use MUX, decoders and priority encoders as standard building blocks',
+      'Work with D, JK and T flip-flops via characteristic and excitation tables',
+      'Design mod-N counters and sketch Moore/Mealy FSMs with state tables',
+    ],
+    prerequisite_course_id: null,
+    certificate_eligible: true,
+    published: true,
+    created_at: '2026-10-13T17:00:00.000Z',
+    updated_at: '2026-10-13T17:00:00.000Z',
+    instructor_id: null,
+    about_course: `University digital electronics courses often move too fast through number systems before landing students in K-maps and flip-flops they do not fully own. This course slows the foundation down to eight focused lessons, then accelerates once the basics are solid.
+
+Codes and conversions come first because every later topic assumes them. Boolean algebra and K-maps are taught as a single minimization workflow — not as isolated tricks. Combinational circuits are presented as a fixed vocabulary (adders, MUX, decoders) that you recombine rather than re-derive. Sequential circuits close the course with the design recipe that answers "design a mod-6 counter" or "draw a traffic-light FSM" — the two questions that appear most often in exams and interviews.
+
+Each lesson ends with a quiz graded on the server, and the course finishes with a 15-question timed exam from a 30-question bank. Passing earns a verifiable TieEdu certificate.`,
+    prerequisites: [
+      'Basic high-school algebra',
+      'Comfort with binary numbers (helpful but re-taught in Module 1)',
+    ],
+    audience: [
+      'ECE and EEE students in their first or second year',
+      'CS students wanting hardware fundamentals for interviews',
+      'Anyone preparing for university digital electronics mid-terms and finals',
+      'Aspirants facing Viva questions on gates, flip-flops and FSMs',
+    ],
+    audio_language: 'English',
+    caption_language: 'English',
+    branch: 'ece',
+    branch_label: 'ECE core (also useful for EEE and Year 1)',
+    bucket: 'B',
+    certificate_tier: 'foundation',
+    estimated_hours: 5,
+    perks: [
+      { key: 'certificate', label: 'Verifiable certificate' },
+      { key: 'xp', label: 'XP on the leaderboard' },
+    ],
+    exam_prep: {
+      target: 'University mid-terms, finals and ECE Viva rounds',
+      units: [
+        {
+          title: 'Number Systems & Codes',
+          summary:
+            'Positional weight expansion; binary↔hex/octal by 3/4-bit grouping; decimal by repeated division. BCD = one nibble per digit. Gray changes one bit per step. ASCII: A=65, a=97, 0=48. Parity detects single-bit errors.',
+          questions: [
+            'Convert 174 to binary and hex.',
+            'Why is Gray code used in rotary encoders?',
+            'What does BCD(23) look like vs binary 23?',
+          ],
+          pyqs: [],
+        },
+        {
+          title: 'Boolean Algebra & K-maps',
+          summary:
+            'De Morgan: flip operators, invert literals. Absorption A+AB=A. SOP/POS. K-map Gray ordering; groups powers of two; wrap-around allowed; don’t-cares free.',
+          questions: [
+            "Simplify (A+B)·(A+B̄).",
+            'Implement A+B with NAND only.',
+            'How many groups cover Σm(0,1,2,5,7) of three variables?',
+          ],
+          pyqs: [],
+        },
+        {
+          title: 'Combinational Circuits',
+          summary:
+            'Half vs full adder equations; ripple-carry cascade. Subtractor: A+B̄+1. MUX: Y=S̄D0+SD1. Decoder lines = minterms + OR for SOP. Priority encoder for interrupts.',
+          questions: [
+            'Full adder Cout equation?',
+            'How many select lines on a 32:1 MUX?',
+            'Subtract with an adder — what changes on B and Cin?',
+          ],
+          pyqs: [],
+        },
+        {
+          title: 'Sequential Circuits & FSMs',
+          summary:
+            'Latch = level-sensitive; flip-flop = edge-triggered. D: Q+=D; JK: Q+=JQ̄+K̄Q; T: Q+=T⊕Q. Excitation tables drive counter/FSM design. Ripple vs synchronous counters. Moore = f(state); Mealy = f(state, inputs).',
+          questions: [
+            'JK flip-flop converted to D: what are J and K?',
+            'Mod-6 counter terminal count?',
+            'Moore vs Mealy — when is each preferred?',
+          ],
+          pyqs: [],
+        },
+      ],
+      important_questions: [
+        'Convert 255 to binary and hex; encode 389 in BCD.',
+        "Apply De Morgan to (A·B·C)‾ and implement with NAND.",
+        'Minimize F=Σm(0,1,2,5,7) on a 3-variable K-map.',
+        'Design a 4-bit ripple-carry adder; add 10+11 and show carries.',
+        'Realize a Boolean function with a 4:1 MUX using two variables as selects.',
+        'Write the JK excitation table and convert JK to T.',
+        'Design a mod-6 synchronous counter with T flip-flops.',
+        'Draw a three-state traffic-light FSM and mark Moore vs Mealy outputs.',
+      ],
+      previous_year_questions: [
+        {
+          year: '2024',
+          question: 'Convert (3A.5F)_16 to decimal.',
+          solution: '3x16 + 10 + 5/16 + 15/256 = 58.37109375.',
+        },
+        {
+          year: '2023',
+          question: "Using De Morgan's laws, simplify (A̅+B̅+C)‾.",
+          solution: 'A·B·C̅.',
+        },
+        {
+          year: '2025',
+          question: 'Design a mod-5 up counter using JK flip-flops.',
+          solution: 'Three JK stages; terminal count 100 forces wrap to 000 with appropriate J/K from the excitation table.',
+        },
+      ],
+    },
+    exam: {
+      question_count: 15,
+      duration_minutes: 30,
+      passing_percent: 60,
+      retake_cooldown_hours: 24,
+      distinction_percent: 85,
+      bank: examBank,
+    },
+    project: {
+      title: 'Traffic-light controller + mod-N counter (design doc)',
+      brief:
+        'Design two circuits end-to-end on paper (or in a free simulator like Digital or Logisim if you prefer): (1) a two-road traffic light as a Moore FSM with states, state table, state assignment, K-maps for next-state and output logic, and the final gate/flip-flop diagram; (2) a mod-N synchronous counter for an N of your choice between 5 and 10, with the terminal-count logic and a wrap-around proof. Submit a single PDF with both designs, the K-maps, and a short reflection on why you chose Moore over Mealy for the traffic light.',
+      submission_hint: 'One PDF: FSM state table + K-maps + circuit diagram for the traffic light; mod-N counter design with wrap logic; short reflection paragraph.',
+      required_for_certificate: true,
+    },
+    modules: [module1, module2, module3, module4],
+  };
+}

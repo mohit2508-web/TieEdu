@@ -8,6 +8,10 @@ import { DropsStrip } from '@/components/drops/DropsStrip';
 import { HeroVaultMock } from '@/components/home/HeroVaultMock';
 import { FinalCta } from '@/components/home/FinalCta';
 import { QuickActions } from '@/components/home/QuickActions';
+import { BranchGoalBand } from '@/components/home/BranchGoalBand';
+import { OffersStrip } from '@/components/home/OffersStrip';
+import { FirstWinStrip } from '@/components/home/FirstWinStrip';
+import { HomeMobileCtaBar } from '@/components/home/HomeMobileCtaBar';
 import { CourseRail } from '@/components/home/CourseRail';
 import { SkillRail } from '@/components/home/SkillRail';
 import { VaultRail } from '@/components/home/VaultRail';
@@ -112,8 +116,8 @@ export default function Home() {
                   <Link href="#companies" className="btn btn-primary w-full sm:w-auto min-h-[48px] justify-center px-6 py-3.5 text-[15px] focus-ring">
                     Explore vaults <ArrowRight className="w-4 h-4" />
                   </Link>
-                  <Link href="/interview-course" className="btn btn-ghost w-full sm:w-auto min-h-[48px] justify-center px-6 py-3.5 text-[15px] focus-ring">
-                    Free course
+                  <Link href="/courses?src=hero" className="btn btn-ghost w-full sm:w-auto min-h-[48px] justify-center px-6 py-3.5 text-[15px] focus-ring">
+                    Start free — get certified
                   </Link>
                 </div>
 
@@ -153,11 +157,19 @@ export default function Home() {
             </div>
           )}
 
+          {/* ===== BRANCH / GOAL BAND — the capture lever, directly below the hero ===== */}
+          <BranchGoalBand />
+
           {/* ===== QUICK ACTIONS — the product in one glance ===== */}
           <QuickActions />
 
-          {/* ===== RAILS: courses → tests → free course → vaults → drops ===== */}
+          {/* Renders nothing when there are no live offers */}
+          <OffersStrip />
+
+          {/* ===== RAILS: courses → first win → tests → free course → vaults → drops ===== */}
           <CourseRail />
+          {/* Renders nothing until Bucket E micro-courses exist */}
+          <FirstWinStrip />
           <MockDriveRail />
           <SkillRail />
           <FreeCourseBanner />
@@ -190,6 +202,9 @@ export default function Home() {
 
           {/* ===== CLOSING CTA ===== */}
           <FinalCta />
+
+          {/* Phones only: sticky free-courses action once the hero scrolls away */}
+          <HomeMobileCtaBar />
         </main>
 
         <Footer />

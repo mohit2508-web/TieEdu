@@ -1,0 +1,443 @@
+// ============================================================================
+// BASIC ELECTRICAL ENGINEERING (BEE) — flagship free course (Phase 4 course 7).
+//
+// The universal first-year subject for EEE, ECE, Mech and Civil: DC circuits,
+// network theorems, AC fundamentals and a machines/transformer primer.
+// Four modules, eight lessons on the 9-block standard, 30-question exam bank.
+// ============================================================================
+
+import type { Course, ExamQuestion } from '../db';
+import { module1 } from './module1';
+import { module2 } from './module2';
+import { module3 } from './module3';
+import { module4 } from './module4';
+
+const examBank: ExamQuestion[] = [
+  {
+    id: 'bee-exam-01',
+    prompt: 'A 15 V source drives 500 mA through a resistor. R equals:',
+    options: ['30 ohm', '0.03 ohm', '75 ohm', '3 ohm'],
+    correct_index: 0,
+    explanation: 'R = 15/0.5 = 30 ohm.',
+    difficulty: 'easy',
+    topic: 'DC basics',
+  },
+  {
+    id: 'bee-exam-02',
+    prompt: 'Power in a 10 ohm resistor with 3 A:',
+    options: ['30 W', '90 W', '300 W', '9 W'],
+    correct_index: 1,
+    explanation: 'P = I²R = 9×10 = 90 W.',
+    difficulty: 'easy',
+    topic: 'DC basics',
+  },
+  {
+    id: 'bee-exam-03',
+    prompt: 'A 1.5 kW heater runs for 2 h. Energy consumed:',
+    options: ['3 kWh', '750 Wh', '1.5 kWh', '3000 Wh'],
+    correct_index: 0,
+    explanation: '1.5 × 2 = 3 kWh.',
+    difficulty: 'easy',
+    topic: 'DC basics',
+  },
+  {
+    id: 'bee-exam-04',
+    prompt: 'Two equal resistors in series across 12 V: voltage across each is:',
+    options: ['12 V', '6 V', '24 V', '3 V'],
+    correct_index: 1,
+    explanation: 'Equal series resistors split the voltage evenly.',
+    difficulty: 'easy',
+    topic: 'Networks',
+  },
+  {
+    id: 'bee-exam-05',
+    prompt: 'KVL states that the sum of voltages around a closed loop is:',
+    options: ['Equal to current', 'Zero', 'Equal to power', 'Equal to resistance'],
+    correct_index: 1,
+    explanation: 'Conservation of energy.',
+    difficulty: 'easy',
+    topic: 'Networks',
+  },
+  {
+    id: 'bee-exam-06',
+    prompt: 'KCL at a node states that the sum of currents is:',
+    options: ['Equal to voltage', 'Zero', 'Equal to power', 'Always positive'],
+    correct_index: 1,
+    explanation: 'Conservation of charge.',
+    difficulty: 'easy',
+    topic: 'Networks',
+  },
+  {
+    id: 'bee-exam-07',
+    prompt: '4 ohm in parallel with 12 ohm equals:',
+    options: ['16 ohm', '3 ohm', '48 ohm', '8 ohm'],
+    correct_index: 1,
+    explanation: '(4×12)/(4+12) = 48/16 = 3.',
+    difficulty: 'easy',
+    topic: 'Networks',
+  },
+  {
+    id: 'bee-exam-08',
+    prompt: 'To kill a voltage source for superposition:',
+    options: ['Open it', 'Short it', 'Double it', 'Reverse it'],
+    correct_index: 1,
+    explanation: 'V becomes zero.',
+    difficulty: 'easy',
+    topic: 'Theorems',
+  },
+  {
+    id: 'bee-exam-09',
+    prompt: 'Dependent sources during superposition are:',
+    options: ['Killed', 'Left active', 'Opened', 'Shorted'],
+    correct_index: 1,
+    explanation: 'Only independent sources are turned off.',
+    difficulty: 'medium',
+    topic: 'Theorems',
+  },
+  {
+    id: 'bee-exam-10',
+    prompt: 'R_th of a network is found as:',
+    options: ['V_oc only', 'V_oc/I_sc', 'I_sc only', 'V_oc×I_sc'],
+    correct_index: 1,
+    explanation: 'Open-circuit voltage over short-circuit current.',
+    difficulty: 'easy',
+    topic: 'Theorems',
+  },
+  {
+    id: 'bee-exam-11',
+    prompt: 'Maximum power transfer occurs when R_L equals:',
+    options: ['0', 'R_th', '2 R_th', 'Infinity'],
+    correct_index: 1,
+    explanation: 'Matched load condition.',
+    difficulty: 'easy',
+    topic: 'Theorems',
+  },
+  {
+    id: 'bee-exam-12',
+    prompt: 'Efficiency at maximum power is:',
+    options: ['25%', '50%', '75%', '100%'],
+    correct_index: 1,
+    explanation: 'Half the power is lost in R_th.',
+    difficulty: 'easy',
+    topic: 'Theorems',
+  },
+  {
+    id: 'bee-exam-13',
+    prompt: 'Thevenin equivalent of V_th in series with R_th has Norton current:',
+    options: ['V_th×R_th', 'V_th/R_th', 'R_th/V_th', 'V_th'],
+    correct_index: 1,
+    explanation: 'I_N = V_th/R_th.',
+    difficulty: 'easy',
+    topic: 'Theorems',
+  },
+  {
+    id: 'bee-exam-14',
+    prompt: 'Impedance of an inductor is:',
+    options: ['R', 'jωL', '−j/(ωC)', '1/(jωL)'],
+    correct_index: 1,
+    explanation: 'Z_L = jωL.',
+    difficulty: 'easy',
+    topic: 'AC',
+  },
+  {
+    id: 'bee-exam-15',
+    prompt: 'Impedance of a capacitor is:',
+    options: ['jωC', '−j/(ωC)', 'ωL', 'R'],
+    correct_index: 1,
+    explanation: 'Z_C = 1/(jωC) = −j/(ωC).',
+    difficulty: 'easy',
+    topic: 'AC',
+  },
+  {
+    id: 'bee-exam-16',
+    prompt: 'Series RLC resonance occurs when:',
+    options: ['ωL = 1/(ωC)', 'R = ωL', 'ωC = R', 'L = C'],
+    correct_index: 0,
+    explanation: 'Reactive parts cancel; Z is purely resistive.',
+    difficulty: 'medium',
+    topic: 'AC',
+  },
+  {
+    id: 'bee-exam-17',
+    prompt: 'In a pure inductor, current ______ voltage by 90°:',
+    options: ['Leads', 'Lags', 'Is in phase with', 'Leads by 45°'],
+    correct_index: 1,
+    explanation: 'V leads I by 90°.',
+    difficulty: 'easy',
+    topic: 'AC',
+  },
+  {
+    id: 'bee-exam-18',
+    prompt: 'Unit of reactive power is:',
+    options: ['W', 'VA', 'VAR', 'Wh'],
+    correct_index: 2,
+    explanation: 'Volt-ampere reactive.',
+    difficulty: 'easy',
+    topic: 'Power',
+  },
+  {
+    id: 'bee-exam-19',
+    prompt: 'Power factor is defined as:',
+    options: ['Q/S', 'P/S', 'S/P', 'P/Q'],
+    correct_index: 1,
+    explanation: 'cosφ = real/apparent.',
+    difficulty: 'easy',
+    topic: 'Power',
+  },
+  {
+    id: 'bee-exam-20',
+    prompt: 'A lagging power factor indicates which load?',
+    options: ['Capacitive', 'Inductive', 'Resistive', 'Resonant'],
+    correct_index: 1,
+    explanation: 'Current lags in inductive loads.',
+    difficulty: 'easy',
+    topic: 'Power',
+  },
+  {
+    id: 'bee-exam-21',
+    prompt: 'Balanced three-phase real power is:',
+    options: ['3 VI cosφ', '√3 V_L I_L cosφ', 'VI cosφ', 'V²/R'],
+    correct_index: 1,
+    explanation: 'Using line voltage and line current.',
+    difficulty: 'medium',
+    topic: 'Power',
+  },
+  {
+    id: 'bee-exam-22',
+    prompt: 'Power-factor correction uses:',
+    options: ['Series inductors', 'Parallel capacitors', 'Series resistors', 'Open switches'],
+    correct_index: 1,
+    explanation: 'Capacitive VARs cancel inductive VARs.',
+    difficulty: 'easy',
+    topic: 'Power',
+  },
+  {
+    id: 'bee-exam-23',
+    prompt: 'Back EMF of a DC motor at standstill is:',
+    options: ['Maximum', 'Zero', 'Equal to supply', 'Negative'],
+    correct_index: 1,
+    explanation: 'E ∝ N, so N=0 gives E=0.',
+    difficulty: 'easy',
+    topic: 'Machines',
+  },
+  {
+    id: 'bee-exam-24',
+    prompt: 'DC motor equation (motor mode) is:',
+    options: ['E = V + I_aR_a', 'V = E + I_aR_a', 'V = E − I_aR_a', 'E = I_aR_a'],
+    correct_index: 1,
+    explanation: 'Supply overcomes back EMF plus armature drop.',
+    difficulty: 'easy',
+    topic: 'Machines',
+  },
+  {
+    id: 'bee-exam-25',
+    prompt: 'A DC shunt motor needs a starter because at start:',
+    options: ['E is maximum', 'E is zero and I_a = V/R_a is huge', 'Flux is zero', 'Speed is high'],
+    correct_index: 1,
+    explanation: 'No back EMF to limit current.',
+    difficulty: 'easy',
+    topic: 'Machines',
+  },
+  {
+    id: 'bee-exam-26',
+    prompt: 'EMF equation constant A for wave winding is:',
+    options: ['P', '2', 'P/2', '4'],
+    correct_index: 1,
+    explanation: 'Wave: two parallel paths.',
+    difficulty: 'medium',
+    topic: 'Machines',
+  },
+  {
+    id: 'bee-exam-27',
+    prompt: 'Ideal transformer V₁/V₂ equals:',
+    options: ['I₁/I₂', 'N₁/N₂', 'N₂/N₁', '1'],
+    correct_index: 1,
+    explanation: 'Voltage follows turns ratio.',
+    difficulty: 'easy',
+    topic: 'Transformers',
+  },
+  {
+    id: 'bee-exam-28',
+    prompt: 'Ideal transformer current ratio I₁/I₂ equals:',
+    options: ['N₁/N₂', 'N₂/N₁', '1', '(N₁/N₂)²'],
+    correct_index: 1,
+    explanation: 'Current is inversely proportional to turns.',
+    difficulty: 'easy',
+    topic: 'Transformers',
+  },
+  {
+    id: 'bee-exam-29',
+    prompt: 'Transformer efficiency is maximum when:',
+    options: ['Copper loss = iron loss', 'Load = zero', 'Copper loss = 0', 'Iron loss max'],
+    correct_index: 0,
+    explanation: 'Standard crossover condition.',
+    difficulty: 'medium',
+    topic: 'Transformers',
+  },
+  {
+    id: 'bee-exam-30',
+    prompt: 'Voltage regulation of a transformer compares:',
+    options: ['No-load to full-load secondary voltage', 'Primary to secondary voltage', 'Copper to iron loss', 'kVA ratings'],
+    correct_index: 0,
+    explanation: '%reg = (V_nl − V_fl)/V_fl × 100.',
+    difficulty: 'easy',
+    topic: 'Transformers',
+  },
+];
+
+export function getBasicElectricalCourse(): Course {
+  return {
+    id: 'crs-basic-electrical',
+    slug: 'basic-electrical-engineering',
+    title: 'Basic Electrical Engineering (BEE)',
+    subtitle:
+      'DC circuits, network theorems, AC fundamentals and machines — the universal first-year subject, exam-ready',
+    description: `Basic Electrical Engineering is the first-year subject shared by EEE, ECE, Mechanical and Civil cohorts — and the one that sets the tone for every machines and power course that follows. This course covers the full foundation in eight compact lessons: Ohm's law and power, series-parallel networks with KVL/KCL, superposition and Thevenin/Norton equivalents, maximum power transfer, AC phasors and RLC impedance, real/reactive/apparent power with power-factor correction, and a machines/transformer primer with the EMF and turns-ratio equations.
+
+Every lesson follows the nine-step structure: objective, hook, concept, worked example, practice, common mistakes, the exam angle, a server-graded quiz and a one-screen summary. A 30-question bank feeds a 15-question timed final; passing earns a verifiable TieEdu certificate.
+
+**Who this is for:** first-year engineering students facing their BEE mid-terms and finals, and anyone who wants the electrical fundamentals that electronics and power courses assume. The course is exam-oriented — every worked example is the type of problem that appears on university papers.
+
+**What you need:** a scientific calculator. No lab kit is required, though re-verified calculations on a breadboard or simulator deepen the intuition.`,
+    category: 'Electrical Engineering',
+    level: 'beginner',
+    is_free: true,
+    price_inr: 0,
+    thumbnail_url: '',
+    thumbnail_alt: 'Basic Electrical Engineering course cover',
+    tags: ['electrical', 'bee', 'circuits', 'ac', 'transformer', 'first-year', 'free'],
+    outcomes: [
+      "Apply Ohm's law and compute power in all four common forms",
+      'Reduce series-parallel resistor networks and solve two-loop circuits with KVL/KCL',
+      'Use superposition, Thevenin and Norton theorems to simplify multi-source networks',
+      'Apply maximum power transfer and interpret its 50% efficiency',
+      'Represent sinusoids as phasors and compute RLC impedance',
+      'Compute real, reactive and apparent power; design basic power-factor correction',
+      'Write the DC machine EMF and torque equations; explain back EMF and starting',
+      'Apply ideal transformer ratios and compute efficiency and regulation',
+    ],
+    prerequisite_course_id: null,
+    certificate_eligible: true,
+    published: true,
+    created_at: '2026-10-13T18:00:00.000Z',
+    updated_at: '2026-10-13T18:00:00.000Z',
+    instructor_id: null,
+    about_course: `Most first-year electrical courses race through DC theory before landing students in AC phasors and machine equations they do not own. This course slows the foundation to eight focused lessons, then accelerates once the basics are solid.
+
+DC circuits and network theorems come first because every later topic assumes KVL/KCL fluency and Thevenin thinking. AC fundamentals teach phasors as the tool that converts calculus into the DC methods already learned. Power and power factor close the "why industries care" loop. The machines module is deliberately a primer — enough EMF, torque and transformer theory to pass BEE exams and to understand the courses that come next, without pretending to be a full machines course.
+
+Each lesson ends with a quiz graded on the server, and the course finishes with a 15-question timed exam from a 30-question bank. Passing earns a verifiable TieEdu certificate.`,
+    prerequisites: [
+      'Basic high-school algebra and complex numbers (helpful, re-taught where needed)',
+    ],
+    audience: [
+      'First-year EEE, ECE, Mechanical and Civil engineering students',
+      'Anyone preparing for university BEE mid-terms and finals',
+      'Students who want a solid base before machines and power systems courses',
+      'Aspirants facing electrical fundamentals in placement OAs',
+    ],
+    audio_language: 'English',
+    caption_language: 'English',
+    branch: 'year1',
+    branch_label: 'Year 1 common (all branches)',
+    bucket: 'A',
+    certificate_tier: 'foundation',
+    estimated_hours: 5,
+    perks: [
+      { key: 'certificate', label: 'Verifiable certificate' },
+      { key: 'xp', label: 'XP on the leaderboard' },
+    ],
+    exam_prep: {
+      target: 'University BEE mid-terms, finals and first-year Viva rounds',
+      units: [
+        {
+          title: 'DC Circuits & Ohm’s Law',
+          summary:
+            'V = IR; P = VI = I²R = V²/R. Series R adds; parallel 1/R adds (two-resistor: product/sum). KVL for loops, KCL for nodes. Energy W = Pt in kWh.',
+          questions: [
+            'Find energy of a 2 kW geyser for 45 min.',
+            'Reduce 12||6 and combine with a series 4 ohm.',
+            'State the passive sign convention.',
+          ],
+          pyqs: [],
+        },
+        {
+          title: 'Network Theorems',
+          summary:
+            'Superposition: kill independent V (short) and I (open); never kill dependents. Thevenin: V_oc in series with R_th = V_oc/I_sc. Norton: I_N = V_th/R_th. Max power at R_L = R_th, 50% efficiency.',
+          questions: [
+            'Find Thevenin across a load after a 2 ohm series resistor.',
+            'State max power transfer and efficiency at match.',
+            'Why are dependent sources left active in superposition?',
+          ],
+          pyqs: [],
+        },
+        {
+          title: 'AC Fundamentals & Power',
+          summary:
+            'Z_R = R, Z_L = jωL, Z_C = −j/(ωC). Resonance: ωL = 1/(ωC). S = VI, P = VI cosφ, Q = VI sinφ. Correction: Q_c = P(tanφ₁−tanφ₂). Three-phase: P = √3 V_L I_L cosφ.',
+          questions: [
+            'Series RLC current phasor for given V and Z.',
+            'Size a capacitor bank for pf correction 0.6→0.95.',
+            'Why do industries correct power factor?',
+          ],
+          pyqs: [],
+        },
+        {
+          title: 'DC Machines & Transformers',
+          summary:
+            'E = φZNP/(60A); T = φZP I_a/(2πA). Motor: V = E + I_aR_a; start with E=0 ⇒ huge I_a. Ideal transformer: V∝N, I∝1/N. Peak efficiency when P_cu = P_iron. Regulation = (V_nl−V_fl)/V_fl.',
+          questions: [
+            'Why must a DC shunt motor use a starter?',
+            'Turns ratio 11:1 step-down: current ratio?',
+            'When is transformer efficiency maximum?',
+          ],
+          pyqs: [],
+        },
+      ],
+      important_questions: [
+        'Compute power and energy for a heating element over a shift.',
+        'Solve a two-loop circuit with KVL and KCL.',
+        'Find the Thevenin equivalent seen by a variable load.',
+        'Apply maximum power transfer and comment on efficiency.',
+        'Convert a sinusoid to a phasor and find series RLC current.',
+        'Design power-factor correction for a lagging industrial load.',
+        'Write the DC motor EMF equation and explain back EMF at start.',
+        'Compute transformer turns ratio, currents and efficiency at a given load.',
+      ],
+      previous_year_questions: [
+        {
+          year: '2024',
+          question: 'Find Thevenin equivalent across the load terminals of a two-source resistive network.',
+          solution: 'V_oc from open-circuit analysis; R_th by turning off sources or V_oc/I_sc.',
+        },
+        {
+          year: '2023',
+          question: 'A 10 kW load at pf 0.6 is corrected to 0.95 — find the capacitor kVAR.',
+          solution: 'Q_c = P(tanφ₁ − tanφ₂) ≈ 10 kVAR.',
+        },
+        {
+          year: '2025',
+          question: 'Why is a starter required for a DC shunt motor?',
+          solution: 'At standstill back EMF is zero, so I_a = V/R_a is dangerously high.',
+        },
+      ],
+    },
+    exam: {
+      question_count: 15,
+      duration_minutes: 30,
+      passing_percent: 60,
+      retake_cooldown_hours: 24,
+      distinction_percent: 85,
+      bank: examBank,
+    },
+    project: {
+      title: 'Network analysis + correction design (problem set)',
+      brief:
+        'Solve and submit a single PDF with full working for four problems: (1) reduce a series-parallel network and find all branch currents with KVL/KCL; (2) find the Thevenin equivalent seen by a variable load and compute the load for maximum power; (3) analyze a series RLC circuit at and away from resonance, stating the power factor in each case; (4) size a capacitor bank to correct a given lagging load to a target power factor, and compute the energy saved over a 100-hour week at the new current. Show every step — partial credit follows the working, not just the final number.',
+      submission_hint: 'One PDF with four fully worked problems; include the power-factor correction sizing and a short note on energy savings.',
+      required_for_certificate: true,
+    },
+    modules: [module1, module2, module3, module4],
+  };
+}

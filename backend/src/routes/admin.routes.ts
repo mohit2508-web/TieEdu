@@ -9,6 +9,7 @@ import { notifyEvent } from '../lib/notify';
 import { createAutoDrop } from '../lib/autoDrops';
 import { autoDropTemplate } from '../lib/drops';
 import { requirePermission } from '../middleware/auth';
+import { normaliseCouponExpiry, normaliseCouponScope } from '../lib/coupons';
 
 export const adminRouter = Router();
 
@@ -781,6 +782,7 @@ adminRouter.post('/coupons', requirePermission('coupons.write'), (req: Request, 
     return res.status(409).json({ error: 'Coupon code already exists' });
   }
 
+  const scope = normaliseCouponScope(db, req.body);
   const newCoupon = {
     id: `coup-${Date.now()}`,
     code,
@@ -789,7 +791,10 @@ adminRouter.post('/coupons', requirePermission('coupons.write'), (req: Request, 
     is_active: req.body.is_active ?? true,
     max_uses: req.body.max_uses || 0,
     uses: 0,
-    label: req.body.label || `${code} Discount`
+    label: req.body.label || `${code} Discount`,
+    expires_at: normaliseCouponExpiry(req.body.expires_at),
+    applies_to_course_ids: scope.applies_to_course_ids,
+    applies_to_branch: scope.applies_to_branch,
   };
 
   if (!db.coupons) db.coupons = [];
@@ -810,6 +815,18 @@ adminRouter.put('/coupons/:id', requirePermission('coupons.write'), (req: Reques
   coupon.is_active = req.body.is_active ?? coupon.is_active;
   coupon.max_uses = req.body.max_uses ?? coupon.max_uses;
   coupon.label = req.body.label ?? coupon.label;
+  // Expiry and scope are opt-in per field: absent leaves the stored value, an
+  // explicit empty clears it. Unknown course ids never persist — an offer
+  // scoped to a course that does not exist would deep-link nowhere.
+  if (req.body.expires_at !== undefined) coupon.expires_at = normaliseCouponExpiry(req.body.expires_at);
+  if (req.body.applies_to_course_ids !== undefined || req.body.applies_to_branch !== undefined) {
+    const scope = normaliseCouponScope(db, {
+      applies_to_course_ids: req.body.applies_to_course_ids ?? coupon.applies_to_course_ids,
+      applies_to_branch: req.body.applies_to_branch !== undefined ? req.body.applies_to_branch : coupon.applies_to_branch,
+    });
+    coupon.applies_to_course_ids = scope.applies_to_course_ids;
+    coupon.applies_to_branch = scope.applies_to_branch;
+  }
 
   saveDb(db);
   res.json({ status: 'success', coupon });

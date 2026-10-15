@@ -6,8 +6,37 @@ import { effectivePaymentMode } from '../config';
 import { completePaidOrder, unlockedCompanyIds, ownedModuleIdsFor, ownedCourseIdsFor } from '../payments/orders';
 import { appendAudit } from '../store/audit';
 import { SINGLE_MODULE_PRICE, COMPLETE_PACK_COUNT, packPrice, listPriceFor } from '../lib/pricing';
+import { isRewardCode } from '../lib/perks';
+import {
+  couponEligibleSubtotal,
+  couponScopeMatches,
+  couponScopeOf,
+  isCouponExpired,
+  isCouponExhausted,
+  isPublicOffer,
+  publicOfferFor,
+} from '../lib/coupons';
 
 export const checkoutRouter = Router();
+
+// GET /api/checkout/coupons — Active coupon codes as a public offers feed.
+//
+// PUBLIC ON PURPOSE: the landing offers strip renders for anonymous visitors,
+// so this route sits above the `requireAuth` guard below. Reward coupons are
+// deliberately excluded: they are single-use, issued to one learner by name,
+// and listing them here would hand every visitor a code they did not earn.
+// Validation still accepts them when typed, because the learner who earned it
+// gets it back from /api/courses/rewards.
+//
+// Only genuinely redeemable offers are listed: expired and fully-used codes
+// are hidden rather than advertised. Counts and expiry are computed here, on
+// the server — the strip never invents a number.
+checkoutRouter.get('/coupons', (req: Request, res: Response) => {
+  const db = loadDb();
+  res.json(
+    (db.coupons || []).filter((c: any) => isPublicOffer(c, isRewardCode)).map((c: any) => publicOfferFor(db, c))
+  );
+});
 
 // Checkout requires a real logged-in account — no anonymous orders, no spoofable user_id.
 checkoutRouter.use(requireAuth);
@@ -126,9 +155,13 @@ function buildCourseOrderLines(courses: { course_id: string; slug: string; title
 }
 
 // Compute discount for a coupon against a subtotal (single source of truth)
+//
+// Expired and exhausted coupons discount nothing: the guard is here rather
+// than only at validation time because order creation calls this directly,
+// and a code that dies between "applied" and "paid" must not resurrect.
 function computeDiscount(coupon: any, subtotal: number) {
   if (!coupon || !coupon.is_active) return 0;
-  if (coupon.max_uses > 0 && coupon.uses >= coupon.max_uses) return 0;
+  if (isCouponExpired(coupon) || isCouponExhausted(coupon)) return 0;
   if (coupon.discount_percent && coupon.discount_percent > 0) {
     return Math.round(subtotal * coupon.discount_percent) / 100;
   }
@@ -148,17 +181,13 @@ checkoutRouter.get('/payment-info', (req: Request, res: Response) => {
   });
 });
 
-// GET /api/checkout/coupons — Active coupon codes (for checkout UI chips)
-checkoutRouter.get('/coupons', (req: Request, res: Response) => {
-  const db = loadDb();
-  res.json((db.coupons || []).filter((c: any) => c.is_active).map((c: any) => ({
-    id: c.id,
-    code: c.code,
-    label: c.label || c.code
-  })));
-});
-
 // POST /api/checkout/validate-coupon — Validate code against server-side coupons
+//
+// `course_ids` is optional context, not trust: the cart drawer sends the ids
+// of the course lines it holds so a scoped coupon ("only GenAI") can answer
+// honestly for THIS cart instead of for the subtotal alone. When no ids are
+// sent, validation answers for the subtotal and order creation enforces the
+// scope — the receipt is where the truth has to live anyway.
 checkoutRouter.post('/validate-coupon', (req: Request, res: Response) => {
   const db = loadDb();
   const code = (req.body.code || '').trim().toUpperCase();
@@ -173,8 +202,27 @@ checkoutRouter.post('/validate-coupon', (req: Request, res: Response) => {
   if (!coupon.is_active) {
     return res.json({ valid: false, discount: 0, message: 'Coupon is no longer active' });
   }
-  if (coupon.max_uses > 0 && coupon.uses >= coupon.max_uses) {
+  if (isCouponExpired(coupon)) {
+    return res.json({ valid: false, discount: 0, message: 'Coupon has expired' });
+  }
+  if (isCouponExhausted(coupon)) {
     return res.json({ valid: false, discount: 0, message: 'Coupon usage limit reached' });
+  }
+
+  // A scoped coupon in the wrong cart is refused here, while the drawer can
+  // still explain itself — at order creation the same mismatch silently
+  // discounts nothing, which is correct for a receipt but bewildering in a UI.
+  const sentIds = Array.isArray(req.body.course_ids)
+    ? req.body.course_ids.map((v: unknown) => String(v ?? ''))
+    : [];
+  if (sentIds.length > 0) {
+    const branches = sentIds.map((id: string) => {
+      const course = (db.courses || []).find((c: any) => c.id === id);
+      return course?.branch || '';
+    });
+    if (!couponScopeMatches(coupon, sentIds, branches)) {
+      return res.json({ valid: false, discount: 0, message: 'Coupon does not apply to this cart' });
+    }
   }
 
   const discount = Math.min(computeDiscount(coupon, subtotal), subtotal);
@@ -312,7 +360,24 @@ checkoutRouter.post('/create-order', async (req: Request, res: Response) => {
   const code = (coupon_code || '').trim().toUpperCase();
   if (code) {
     appliedCoupon = (db.coupons || []).find((c: any) => c.code === code);
-    if (appliedCoupon) discount = computeDiscount(appliedCoupon, subtotal);
+    if (appliedCoupon) {
+      // A scoped coupon discounts only its target lines: resolve each course
+      // line's branch from the catalogue (the cart line is display-only) and
+      // let the coupon helpers decide the eligible subtotal. Anything else —
+      // vault packs, unmatched courses — pays full price. No eligible lines
+      // means no discount, never a cart-wide fallback.
+      const scopedLines = courses.lines.map((l) => {
+        const record = (db.courses || []).find((c: any) => c.id === l.course_id);
+        return { price: l.price, course_id: l.course_id, branch: record?.branch || '' };
+      });
+      const { courseIds, branch } = couponScopeOf(appliedCoupon);
+      const base = courseIds.length === 0 && !branch
+        ? subtotal
+        : couponEligibleSubtotal(appliedCoupon, scopedLines);
+      // A zero base discounts nothing: without this a flat-₹ coupon would
+      // take its full face value off an unrelated cart.
+      discount = base > 0 ? Math.min(computeDiscount(appliedCoupon, base), base) : 0;
+    }
   }
 
   const total = Math.max(0, subtotal - discount);

@@ -34,7 +34,7 @@ import crypto from 'crypto';
 import QRCode from 'qrcode';
 import { PDFDocument, StandardFonts, rgb, degrees } from 'pdf-lib';
 import dotenv from 'dotenv';
-import { Certificate, Course, User } from '../data/db';
+import { Certificate, CertTier, Course, User } from '../data/db';
 import { orderedLessons } from './courses';
 
 // This module reads its key material and the public site URL at import time, and
@@ -295,11 +295,16 @@ export function verificationUrlFor(serial: string): string {
  * shape, but the signature is a completely different construction, so a v2
  * record could never be validated by a v3 verifier even by accident. There were
  * no certificates in circulation at this bump, so nothing needed reissuing.
+ *
+ * v4 adds the tiered-certificate fields (tier, score, skills, project, exam
+ * date) to the signed set. Verification stays backward compatible: it tries the
+ * v4 payload first and the v3 payload after, so a certificate issued before the
+ * bump keeps verifying against its own signature without a reissue queue.
  */
-export const SIGNING_VERSION = 3;
+export const SIGNING_VERSION = 4;
 
 /** The exact set of fields covered by the signature. Nothing else is protected. */
-export interface SignedCertificateFields {
+export interface SignedCertificateFieldsV3 {
   serial: string;
   user_id: string;
   recipient_email: string;
@@ -314,6 +319,22 @@ export interface SignedCertificateFields {
 }
 
 /**
+ * The current (v4) field set. The tier fields are optional on the INPUT so a
+ * caller that predates them still compiles and signs a valid v4 payload (the
+ * normaliser fills the defaults); `signedFieldsOf` always returns them.
+ */
+export interface SignedCertificateFields extends SignedCertificateFieldsV3 {
+  tier?: CertTier | string;
+  /** Final-exam percentage, or null when the course has no exam yet. */
+  score_percent?: number | null;
+  /** Frozen skills/outcomes shown on the certificate. */
+  skills?: string[];
+  project_title?: string | null;
+  project_url?: string | null;
+  exam_passed_at?: string | null;
+}
+
+/**
  * Canonical form of the signed fields. Field order is fixed and separators are
  * unambiguous, so the same record always produces the same signature.
  *
@@ -322,9 +343,9 @@ export interface SignedCertificateFields {
  * able to change without re-signing, and it is enforced by the stored row
  * rather than by the signature.
  */
-function canonicalPayload(c: SignedCertificateFields): string {
+function canonicalPayloadV3(c: SignedCertificateFieldsV3): string {
   return [
-    `v${SIGNING_VERSION}`,
+    'v3',
     c.serial,
     c.user_id,
     c.recipient_email,
@@ -335,6 +356,28 @@ function canonicalPayload(c: SignedCertificateFields): string {
     String(c.lessons_completed),
     String(c.lessons_required),
     String(c.xp_at_issue),
+  ].join('|');
+}
+
+/**
+ * v4 payload. Skills are encoded as a count followed by each item, so a skill
+ * that happens to contain the `|` separator cannot make two different field sets
+ * produce the same string.
+ */
+function canonicalPayloadV4(c: SignedCertificateFields): string {
+  const skills = (c.skills || [])
+    .map((s) => String(s).replace(/[|\r\n]/g, ' ').trim())
+    .filter(Boolean);
+  return [
+    'v4',
+    ...canonicalPayloadV3(c).split('|').slice(1),
+    c.tier || 'foundation',
+    c.score_percent === null || c.score_percent === undefined ? '' : String(Math.round(c.score_percent)),
+    String(skills.length),
+    ...skills,
+    c.project_title || '',
+    c.project_url || '',
+    c.exam_passed_at || '',
   ].join('|');
 }
 
@@ -350,7 +393,7 @@ export function signCertificate(fields: SignedCertificateFields): { signature: s
   assertSiteUrlConfigured();
   const signature = crypto.sign(
     null,
-    Buffer.from(canonicalPayload(fields), 'utf8'),
+    Buffer.from(canonicalPayloadV4(fields), 'utf8'),
     privateKeyFromDer(Buffer.from(CERT_SIGNING_PRIVATE_KEY, 'base64'))
   );
   return { signature: signature.toString('base64'), keyId: ACTIVE_KEY_ID };
@@ -381,13 +424,20 @@ function verifySignature(fields: SignedCertificateFields, signatureB64: string, 
   }
   if (sig.length !== 64) return false;
 
-  const payload = Buffer.from(canonicalPayload(fields), 'utf8');
+  // Try the current payload first, then the v3 payload, so a certificate issued
+  // before the v4 bump still verifies against the signature it actually carries.
+  // Trying both is safe: a payload only validates if it was signed by a trusted
+  // key, and the two payload shapes cannot collide (v3 never carries a tier).
+  const payloads = [canonicalPayloadV4(fields), canonicalPayloadV3(fields)];
   return candidates.some((pub) => {
-    try {
-      return crypto.verify(null, payload, publicKeyFromDer(Buffer.from(pub, 'base64')), sig);
-    } catch {
-      return false;
-    }
+    const key = publicKeyFromDer(Buffer.from(pub, 'base64'));
+    return payloads.some((payload) => {
+      try {
+        return crypto.verify(null, Buffer.from(payload, 'utf8'), key, sig);
+      } catch {
+        return false;
+      }
+    });
   });
 }
 
@@ -484,6 +534,41 @@ export function signedFieldsOf(c: Certificate): SignedCertificateFields {
     lessons_completed: c.lessons_completed,
     lessons_required: c.lessons_required,
     xp_at_issue: c.xp_at_issue,
+    tier: c.tier || 'foundation',
+    score_percent: c.score_percent ?? null,
+    skills: c.skills || [],
+    project_title: c.project_title ?? null,
+    project_url: c.project_url ?? null,
+    exam_passed_at: c.exam_passed_at ?? null,
+  };
+}
+
+/**
+ * The tier/score/skills block a certificate is issued with, derived on the
+ * server from the course record — never from the request body.
+ *
+ * The tier is the author's explicit `course.certificate_tier` when set, else a
+ * fallback derived from the level. Score, skills, project and exam date are
+ * populated by the assessment engine once a course has an exam; until then they
+ * are empty, which the normaliser in `canonicalPayloadV4` signs as blanks.
+ */
+export function certificateDimensionsFor(course: Course | null, over: {
+  score_percent?: number | null;
+  project_title?: string | null;
+  project_url?: string | null;
+  exam_passed_at?: string | null;
+} = {}) {
+  const explicit = course?.certificate_tier;
+  const level = String(course?.level || '');
+  const tier: CertTier =
+    explicit || (level === 'advanced' ? 'premium' : level === 'intermediate' ? 'professional' : 'foundation');
+  return {
+    tier,
+    score_percent: over.score_percent ?? null,
+    skills: (course?.outcomes || []).slice(0, 6),
+    project_title: over.project_title ?? null,
+    project_url: over.project_url ?? null,
+    exam_passed_at: over.exam_passed_at ?? null,
   };
 }
 
