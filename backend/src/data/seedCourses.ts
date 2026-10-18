@@ -34,6 +34,13 @@ import { getSignalsSystemsCourse } from './ssCourse';
 import { getThermodynamicsCourse } from './thCourse';
 import { getFluidMechanicsCourse } from './fmCourse';
 import { getExcelStudentsCourse } from './excelCourse';
+import { getAILiteracyCourse } from './aiLiteracyCourse';
+import { getPythonForAICourse } from './pyAiCourse';
+import { getMLFundamentalsCourse } from './mlCourse';
+import { getDeepLearningCourse } from './dlCourse';
+import { getGenAIEssentialsCourse } from './genaiEssCourse';
+import { getPromptEngineeringMasterclassCourse } from './promptEngCourse';
+import { getLLMAppsCourse } from './llmAppsCourse';
 
 let blockSeq = 0;
 const blk = (
@@ -1030,6 +1037,20 @@ Pass this and the course is complete: you will be able to download your TieEdu c
     getFluidMechanicsCourse(),
     // Row 6 micro-course — Bucket E fast-path certificate: Excel for students.
     getExcelStudentsCourse(),
+    // AI series 1 of 20 — free+published, 40 lessons: AI literacy for everyone.
+    getAILiteracyCourse(),
+    // AI series 2 of 20 — Python for AI (from zero to first sklearn model).
+    getPythonForAICourse(),
+    // AI series 3 of 20 — ML fundamentals (interview-grade applied ML).
+    getMLFundamentalsCourse(),
+    // AI series 4 of 20 — Deep learning with neural networks (advanced, 24h).
+    getDeepLearningCourse(),
+    // AI series 5 of 20 — Generative AI essentials (deep companion course).
+    getGenAIEssentialsCourse(),
+    // AI series 6 of 20 — Prompt engineering masterclass.
+    getPromptEngineeringMasterclassCourse(),
+    // AI series 7 of 20 — Building apps with LLMs (production mini-apps).
+    getLLMAppsCourse(),
     // The one paid course. It is seeded so the purchase path is exercised against
     // a genuinely stored price rather than a fixture, and so the `paid` filter in
     // the catalogue has something real to return.
