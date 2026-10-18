@@ -4,6 +4,7 @@ import { ShieldCheck, Lock, Server, Heart } from 'lucide-react';
 import { TieEduLogo } from '@/components/common/TieEduLogo';
 import { useAuth } from '@/context/AuthContext';
 import { ALL_NAV_ITEMS, type NavItem } from '@/lib/navConfig';
+import { SOCIAL_LINKS } from '@/lib/socialLinks';
 
 /**
  * Footer order, and the only two destinations it leaves out.
@@ -54,9 +55,25 @@ export const Footer: React.FC = () => {
         </div>
 
         <div className="pt-6 flex flex-col lg:flex-row items-center justify-between gap-5 text-[13px] text-[var(--text-muted)]">
-          <div className="flex items-center gap-3">
-            <TieEduLogo size="sm" />
-            <p>© 2026 TieEdu Technologies. All rights reserved.</p>
+          <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-center sm:gap-4">
+            <div className="flex items-center gap-3">
+              <TieEduLogo size="sm" />
+              <p>© 2026 TieEdu Technologies. All rights reserved.</p>
+            </div>
+            <nav aria-label="Social media" className="flex items-center gap-2">
+              {SOCIAL_LINKS.map((social) => (
+                <a
+                  key={social.label}
+                  href={social.href}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  aria-label={social.label}
+                  className="flex h-8 w-8 items-center justify-center rounded-full border border-[#E9E7E1] text-[#3E4754] transition-all hover:-translate-y-0.5 hover:border-[var(--brand-sky)] hover:text-[var(--brand-sky)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand-sky)]"
+                >
+                  {social.icon}
+                </a>
+              ))}
+            </nav>
           </div>
           {/*
             Derived from `navConfig` instead of a hand-written list. That list had

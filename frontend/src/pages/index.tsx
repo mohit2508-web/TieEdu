@@ -26,6 +26,11 @@ const HeroPosterCarousel = dynamic(() => import('@/components/common/HeroPosterC
   ssr: false,
 });
 
+const JoinChannelsPopup = dynamic(
+  () => import('@/components/home/JoinChannelsPopup').then((m) => m.JoinChannelsPopup),
+  { ssr: false }
+);
+
 const INDUSTRIES = ['All', 'Big Tech', 'IT Services', 'Cybersecurity', 'Fintech', 'SaaS', 'Consulting'];
 
 /*
@@ -209,6 +214,9 @@ export default function Home() {
 
         <Footer />
       </div>
+
+      {/* Occasional "join our channels" promo — 7-day localStorage cooldown */}
+      <JoinChannelsPopup />
     </>
   );
 }
