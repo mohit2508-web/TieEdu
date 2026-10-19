@@ -37,6 +37,15 @@ export interface ShellContextValue {
   toggleOverlay: (id: OverlayId) => void;
   /** True while any overlay is up — used to lock body scroll once, centrally. */
   anyOpen: boolean;
+  /**
+   * Page-supplied title for the mobile drill header, overriding the nav
+   * item's generic label. `/courses/[slug]` is "Courses" in `navConfig` —
+   * correct as a label, useless as a title when the reader is twelve lessons
+   * deep in one specific course. The page sets the real course title here;
+   * the Header falls back to `resolveNavTitle` when this is null.
+   */
+  drillTitle: string | null;
+  setDrillTitle: (title: string | null) => void;
 }
 
 const ShellContext = createContext<ShellContextValue | null>(null);
@@ -46,6 +55,7 @@ const BLOCKS_SCROLL: OverlayId[] = ['drawer', 'search', 'leaderboard', 'cart'];
 
 export const ShellProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [stack, setStack] = useState<OverlayId[]>([]);
+  const [drillTitle, setDrillTitle] = useState<string | null>(null);
   // Mirrors `stack` for the keydown handler, which is registered once and must
   // not re-subscribe on every open/close.
   const stackRef = useRef<OverlayId[]>([]);
@@ -117,8 +127,10 @@ export const ShellProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       closeAll,
       toggleOverlay,
       anyOpen,
+      drillTitle,
+      setDrillTitle,
     }),
-    [stack, openOverlay, closeOverlay, closeTop, closeAll, toggleOverlay, anyOpen]
+    [stack, openOverlay, closeOverlay, closeTop, closeAll, toggleOverlay, anyOpen, drillTitle]
   );
 
   return <ShellContext.Provider value={value}>{children}</ShellContext.Provider>;

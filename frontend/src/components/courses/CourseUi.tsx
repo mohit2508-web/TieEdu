@@ -210,7 +210,7 @@ export const Pill: React.FC<{
   <button
     type="button"
     onClick={onRemove}
-    className="inline-flex items-center gap-1.5 rounded-full bg-[var(--bg-surface-hover)] px-3 py-1 text-xs font-semibold text-[var(--ink)] transition-colors hover:bg-[var(--border-subtle)]"
+    className="inline-flex min-h-[40px] items-center gap-1.5 rounded-full bg-[var(--bg-surface-hover)] px-3 py-1 text-xs font-semibold text-[var(--ink)] transition-colors hover:bg-[var(--border-subtle)]"
   >
     {children}
     <X size={12} aria-hidden="true" />

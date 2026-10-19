@@ -63,6 +63,15 @@ export const LessonPlayer: React.FC<{
   nextLesson?: { id: string; title: string } | null;
   /** True once this lesson is finished and the next one is open. */
   complete?: boolean;
+  /**
+   * A free-course visitor who has not enrolled can read the open lesson but
+   * can never finish it — `canSubmit` is false, so the heartbeat and the quiz
+   * writes are refused and "Finish this lesson to continue" is a dead end.
+   * The bar's Next control offers this instead, wired to the page's own
+   * enrol flow (sign-in → enroll). Absent, the gate degrades to the old
+   * disabled button.
+   */
+  onEnrollRequired?: () => void;
   onNavigate: (lessonId: string) => void;
 }> = ({
   lesson,
@@ -74,6 +83,7 @@ export const LessonPlayer: React.FC<{
   previousLesson,
   nextLesson,
   complete,
+  onEnrollRequired,
   onNavigate,
 }) => {
   const beatTimer = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -319,6 +329,18 @@ export const LessonPlayer: React.FC<{
     writeLessonSegment(lesson.id, clamped);
   };
 
+  /**
+   * What the bar's lesson-level Next is actually gating on.
+   *
+   * For an enrolled learner it is completion, as always. For a free-course
+   * visitor who has not enrolled, completion is unreachable (`canSubmit` is
+   * false, so no write ever lands) and a disabled "Finish this lesson to
+   * continue" is a dead end with the reason hidden. The gate is enrolment, so
+   * the control says so and takes the enrol route. Mid-lesson steps are
+   * unaffected — a step is free to open; only the lesson gate is rewritten.
+   */
+  const gateIsEnrol = !canSubmit && !!onEnrollRequired && !complete && !!nextLesson;
+
   return (
     <article>
       <header className="mb-6">
@@ -371,10 +393,19 @@ export const LessonPlayer: React.FC<{
         </p>
       )}
 
+      {/* Lesson prev/next. The fixed bar below owns this on a phone whenever it
+          is up (`nextLesson || inSegmentMode`), so the inline pair is hidden
+          below `md` in that case — three copies of one action was the audit's
+          P7. When the bar is NOT up (no next lesson, no segments) the inline
+          pair stays visible at every width, or a last-lesson reader would have
+          no previous control at all. From `md` the bar is gone and this is the
+          only prev/next. */}
       {(previousLesson || nextLesson) && (
         <nav
           aria-label="Lesson navigation"
-          className="mt-8 flex flex-col gap-3 border-t border-[var(--border-subtle)] pt-5 sm:flex-row sm:items-stretch sm:justify-between"
+          className={`mt-8 gap-3 border-t border-[var(--border-subtle)] pt-5 sm:flex-row sm:items-stretch sm:justify-between ${
+            nextLesson || inSegmentMode ? 'hidden md:flex' : 'flex flex-col'
+          }`}
         >
           {previousLesson ? (
             <button
@@ -475,12 +506,22 @@ export const LessonPlayer: React.FC<{
                       Up next
                     </p>
                   )}
+                  {/* Enrolled → gate on completion, as always. Free visitor who
+                      has not enrolled → the gate is enrolment itself, so the
+                      control is live and takes the enrol route rather than
+                      sitting disabled with the reason hidden (audit P8). */}
                   <button
                     type="button"
-                    onClick={() => { if (nextLesson) onNavigate(nextLesson.id); }}
-                    disabled={!complete || !nextLesson}
+                    onClick={() => {
+                      if (gateIsEnrol) {
+                        onEnrollRequired?.();
+                        return;
+                      }
+                      if (nextLesson) onNavigate(nextLesson.id);
+                    }}
+                    disabled={!gateIsEnrol && (!complete || !nextLesson)}
                     className={`focus-ring mt-0.5 flex min-h-[48px] w-full items-center justify-between gap-2 rounded-xl px-4 text-sm font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
-                      complete && nextLesson
+                      gateIsEnrol || (complete && nextLesson)
                         ? 'bg-[var(--brand-sky)] text-white active:opacity-90'
                         : 'border border-[var(--border-strong)] bg-[var(--bg-surface)] text-[var(--ink)]'
                     }`}
@@ -488,11 +529,13 @@ export const LessonPlayer: React.FC<{
                     <span className="min-w-0 truncate">
                       {!nextLesson
                         ? 'That was the last lesson'
-                        : complete
-                          ? nextLesson.title
-                          : 'Finish this lesson to continue'}
+                        : gateIsEnrol
+                          ? 'Enroll free to continue'
+                          : complete
+                            ? nextLesson.title
+                            : 'Finish this lesson to continue'}
                     </span>
-                    {complete && nextLesson ? (
+                    {gateIsEnrol || (complete && nextLesson) ? (
                       <ChevronRight size={18} className="flex-none" />
                     ) : (
                       <Lock size={16} className="flex-none" />
@@ -611,7 +654,7 @@ const QuizForm: React.FC<{
             <button
               type="button"
               onClick={() => { setOutcome(null); setAnswers({}); setFocusedQ(0); }}
-              className="mt-4 rounded-lg border border-[var(--border-strong)] px-4 py-2 text-xs font-bold text-[var(--ink)] hover:bg-[var(--bg-surface-hover)]"
+              className="mt-4 inline-flex min-h-[44px] items-center rounded-lg border border-[var(--border-strong)] px-4 py-2 text-xs font-bold text-[var(--ink)] hover:bg-[var(--bg-surface-hover)]"
             >
               Try again
             </button>

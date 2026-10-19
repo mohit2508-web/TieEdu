@@ -154,7 +154,7 @@ export const ModuleTestCard: React.FC<{
               setAttemptId(null);
               setQuestions([]);
             }}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-subtle)] px-3.5 py-2 text-sm font-bold text-[var(--ink)] hover:bg-[var(--bg-surface-hover)]"
+            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-[var(--border-subtle)] px-3.5 py-2 text-sm font-bold text-[var(--ink)] hover:bg-[var(--bg-surface-hover)]"
           >
             Back to module
           </button>

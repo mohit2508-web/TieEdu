@@ -447,7 +447,7 @@ export const TrackedVideoPlayer: React.FC<TrackedVideoPlayerProps> = ({
                 <button
                   type="button"
                   onClick={skipForward}
-                  className="focus-ring inline-flex items-center gap-1 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-2.5 py-1.5 text-[11px] font-bold text-[var(--ink)] hover:bg-[var(--bg-surface-hover)]"
+                  className="focus-ring inline-flex min-h-[44px] items-center gap-1 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-2.5 py-1.5 text-[11px] font-bold text-[var(--ink)] hover:bg-[var(--bg-surface-hover)]"
                 >
                   <SkipForward className="h-3.5 w-3.5" /> Skip {SKIP_SECONDS}s
                 </button>
@@ -458,7 +458,7 @@ export const TrackedVideoPlayer: React.FC<TrackedVideoPlayerProps> = ({
               <button
                 type="button"
                 onClick={toggleManual}
-                className="focus-ring inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-bold transition-colors"
+                className="focus-ring inline-flex min-h-[44px] items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-bold transition-colors"
                 style={{
                   background: isPlaying ? 'var(--brand-sky-soft)' : 'var(--brand-sky)',
                   color: isPlaying ? 'var(--brand-sky-strong)' : '#fff',

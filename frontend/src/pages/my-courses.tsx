@@ -110,7 +110,7 @@ export default function MyCoursesPage() {
             <button
               type="button"
               onClick={() => router.push('/login?next=/my-courses')}
-              className="mt-4 rounded-lg bg-[var(--brand-sky)] px-5 py-2.5 text-sm font-bold text-white hover:bg-[var(--brand-sky-strong)]"
+              className="mt-4 inline-flex min-h-[44px] items-center rounded-lg bg-[var(--brand-sky)] px-5 py-2.5 text-sm font-bold text-white hover:bg-[var(--brand-sky-strong)]"
             >
               Sign in
             </button>
@@ -223,10 +223,14 @@ export default function MyCoursesPage() {
                             </p>
                           </div>
                         </div>
+                        {/* Both controls clear the 44px thumb floor — at
+                            `py-1.5 text-xs` they were ~28px, the smallest
+                            targets on the page and the ones a finisher
+                            reaches for (audit P21). */}
                         <div className="mt-4 flex flex-wrap gap-2">
                           <Link
                             href={`/courses/${course.slug}`}
-                            className="rounded-lg border border-[var(--border-strong)] px-3 py-1.5 text-xs font-bold text-[var(--ink)] hover:bg-[var(--bg-surface-hover)]"
+                            className="inline-flex min-h-[44px] items-center rounded-lg border border-[var(--border-strong)] px-4 text-sm font-bold text-[var(--ink)] hover:bg-[var(--bg-surface-hover)]"
                           >
                             Review
                           </Link>
@@ -234,9 +238,9 @@ export default function MyCoursesPage() {
                             <button
                               type="button"
                               onClick={() => { if (cert) download(cert); }}
-                              className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--brand-sky)] px-3 py-1.5 text-xs font-bold text-white hover:bg-[var(--brand-sky-strong)]"
+                              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg bg-[var(--brand-sky)] px-4 text-sm font-bold text-white hover:bg-[var(--brand-sky-strong)]"
                             >
-                              <Download size={13} /> PDF
+                              <Download size={14} /> PDF
                             </button>
                           )}
                         </div>
@@ -253,7 +257,7 @@ export default function MyCoursesPage() {
                 action={
                   <Link
                     href="/my-certificates"
-                    className="text-xs font-semibold text-[var(--brand-sky)] underline underline-offset-2"
+                    className="inline-flex min-h-[44px] items-center text-xs font-semibold text-[var(--brand-sky)] underline underline-offset-2"
                   >
                     View gallery →
                   </Link>

@@ -200,7 +200,7 @@ export const CoursePreviewShell: React.FC<{
             <button
               type="button"
               onClick={onSignIn}
-              className="mt-3 w-full rounded-lg bg-[var(--brand-sky)] px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[var(--brand-sky-strong)] sm:w-auto"
+              className="mt-3 inline-flex min-h-[44px] w-full items-center rounded-lg bg-[var(--brand-sky)] px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[var(--brand-sky-strong)] sm:w-auto"
             >
               Sign in to continue
             </button>
@@ -264,7 +264,7 @@ export const CoursePreviewShell: React.FC<{
           <button
             type="button"
             onClick={onSignIn}
-            className="mt-4 hidden w-full rounded-lg bg-[var(--brand-sky)] px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[var(--brand-sky-strong)] lg:block"
+            className="mt-4 hidden min-h-[44px] w-full items-center rounded-lg bg-[var(--brand-sky)] px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[var(--brand-sky-strong)] lg:flex"
           >
             Sign in to continue
           </button>

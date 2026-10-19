@@ -303,14 +303,14 @@ export default function CoursesPage({ initialData }: { initialData: CourseCatalo
             </h2>
             <div className="mt-3 flex flex-wrap gap-2">
               {continueLearning.map((c) => (
-                <a
+                <Link
                   key={c.id}
                   href={`/courses/${c.slug}`}
-                  className="inline-flex items-center gap-2 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-2 text-sm font-semibold text-[var(--ink)] transition-colors hover:border-[var(--brand-sky)]"
+                  className="inline-flex min-h-[44px] items-center gap-2 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-2 text-sm font-semibold text-[var(--ink)] transition-colors hover:border-[var(--brand-sky)]"
                 >
                   {c.title}
                   <span className="text-xs font-bold text-[var(--brand-sky)]">{c.progress?.percent}%</span>
-                </a>
+                </Link>
               ))}
             </div>
           </section>
@@ -337,10 +337,15 @@ export default function CoursesPage({ initialData }: { initialData: CourseCatalo
             />
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* `flex-wrap`: at 390px the four controls (tracks, wizard, filters,
+              sort) do not fit on one line — Sort and Filters were being clipped
+              off the right edge with no way to reach them (audit P15). Wrapping
+              puts the second pair on their own row instead of shrinking them
+              into the margin. Every control clears the 44px thumb floor. */}
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
             <Link
               href="/tracks"
-              className="inline-flex items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-2.5 text-sm font-bold text-[var(--ink)] transition-colors hover:border-[var(--brand-sky)]"
+              className="inline-flex min-h-[44px] items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-2.5 text-sm font-bold text-[var(--ink)] transition-colors hover:border-[var(--brand-sky)]"
             >
               <Route size={15} />
               Career tracks
@@ -348,7 +353,7 @@ export default function CoursesPage({ initialData }: { initialData: CourseCatalo
             <button
               type="button"
               onClick={() => setWizardOpen(true)}
-              className="inline-flex items-center gap-2 rounded-[var(--radius-sm)] border border-dashed border-[var(--brand-sky)]/50 bg-[var(--bg-surface)] px-4 py-2.5 text-sm font-bold text-[var(--brand-sky-strong)]"
+              className="inline-flex min-h-[44px] items-center gap-2 rounded-[var(--radius-sm)] border border-dashed border-[var(--brand-sky)]/50 bg-[var(--bg-surface)] px-4 py-2.5 text-sm font-bold text-[var(--brand-sky-strong)]"
             >
               <Compass size={15} />
               Help me choose
@@ -356,7 +361,7 @@ export default function CoursesPage({ initialData }: { initialData: CourseCatalo
             <button
               type="button"
               onClick={() => setSheetOpen(true)}
-              className="inline-flex items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-2.5 text-sm font-bold text-[var(--ink)] lg:hidden"
+              className="inline-flex min-h-[44px] items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-2.5 text-sm font-bold text-[var(--ink)] lg:hidden"
             >
               <SlidersHorizontal size={15} />
               Filters
@@ -375,7 +380,7 @@ export default function CoursesPage({ initialData }: { initialData: CourseCatalo
                 id="catalog-sort"
                 value={filters.sort}
                 onChange={(e) => applyFilters({ ...filters, sort: e.target.value as CatalogSortKey })}
-                className="appearance-none rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] py-2.5 pl-4 pr-9 text-sm font-bold text-[var(--ink)] outline-none focus:border-[var(--brand-sky)]"
+                className="min-h-[44px] appearance-none rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] py-2.5 pl-4 pr-9 text-sm font-bold text-[var(--ink)] outline-none focus:border-[var(--brand-sky)]"
               >
                 {sorts.map((s) => (
                   <option key={s.key} value={s.key}>
@@ -408,7 +413,11 @@ export default function CoursesPage({ initialData }: { initialData: CourseCatalo
             </Pill>
           ))}
           {activeCount > 0 && (
-            <button type="button" onClick={clearAll} className="text-xs font-bold text-[var(--brand-sky)] hover:underline">
+            <button
+              type="button"
+              onClick={clearAll}
+              className="inline-flex min-h-[40px] items-center rounded-full px-2 text-xs font-bold text-[var(--brand-sky)] hover:underline"
+            >
               Clear all
             </button>
           )}
@@ -467,13 +476,17 @@ export default function CoursesPage({ initialData }: { initialData: CourseCatalo
                 )}
                 {activeCount > 0 && (
                   <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
-                    <button type="button" onClick={clearAll} className="text-sm font-bold text-[var(--brand-sky)] hover:underline">
+                    <button
+                      type="button"
+                      onClick={clearAll}
+                      className="inline-flex min-h-[44px] items-center px-2 text-sm font-bold text-[var(--brand-sky)] hover:underline"
+                    >
                       Clear all filters
                     </button>
                     {filters.bucket.length > 0 && !filters.bucket.includes('e') && (
                       <Link
                         href="/courses?bucket=e&src=empty"
-                        className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-2 text-sm font-bold text-[var(--ink)] hover:border-[var(--brand-sky)]"
+                        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-2 text-sm font-bold text-[var(--ink)] hover:border-[var(--brand-sky)]"
                       >
                         Browse micro-courses instead
                       </Link>

@@ -26,9 +26,20 @@ export const PWAInstallPrompt: React.FC = () => {
    * copy block, deadline and CTA all live in the bottom band this prompt
    * occupies — so the prompt would cover the exact content it is asking the
    * reader to leave. It also breaks the snap feed's "one screen, no chrome"
-   * contract. Off both; every other route can carry it.
+   * contract.
+   *
+   * The course detail route is off for the same class of reason: its fixed
+   * bottom bars (the enrolment CTA, the lesson player's Next) live in this
+   * band too, and this prompt sits at `z-50` above them at `z-30` — covering
+   * the single most valuable control on the page. Off both; every other route
+   * can carry it.
    */
-  if (router.pathname === '/drops' || router.pathname === '/drops/[id]') return null;
+  if (
+    router.pathname === '/drops' ||
+    router.pathname === '/drops/[id]' ||
+    router.pathname === '/courses/[slug]'
+  )
+    return null;
 
   if (isInstalled || !isInstallable || dismissed) {
     return null;

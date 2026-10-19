@@ -49,7 +49,7 @@ const BELOW_MD = '(max-width: 767.98px)';
 export const Header: React.FC = () => {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
-  const { toggleOverlay, anyOpen, isOpen } = useShell();
+  const { toggleOverlay, anyOpen, isOpen, drillTitle: drillTitleOverride, setDrillTitle } = useShell();
   const { count, hydrated } = useCart();
   const [accountOpen, setAccountOpen] = useState(false);
 
@@ -78,7 +78,10 @@ export const Header: React.FC = () => {
   // -------------------------------------------------------------------------
   // Phase 1 §1.3 — the native nav bar a pushed screen gets below `md`.
   // -------------------------------------------------------------------------
-  const drillTitle = router.isReady ? resolveNavTitle(router.pathname) : '';
+  // A page may override the generic nav label with its own title (course name
+  // on `/courses/[slug]`); the label remains the fallback and the reset below
+  // keeps an override from leaking into the next pushed screen.
+  const drillTitle = drillTitleOverride || (router.isReady ? resolveNavTitle(router.pathname) : '');
   const backHref = router.isReady ? resolveBackHref(router.pathname) : '/';
 
   /*
@@ -182,11 +185,18 @@ export const Header: React.FC = () => {
   // A new page starts from the top. Resetting on `routeChangeStart` rather than
   // `Complete` avoids inheriting the previous page's hidden state during the
   // navigation, when `window.scrollY` is still the old value.
+  //
+  // The page-supplied drill title is cleared here too: the next page sets its
+  // own after its data loads, and until then the previous page's title (a
+  // course name on a different course) would be a lie.
   useEffect(() => {
-    const onRouteStart = () => setScroll(initialHeaderScrollState);
+    const onRouteStart = () => {
+      setScroll(initialHeaderScrollState);
+      setDrillTitle(null);
+    };
     router.events.on('routeChangeStart', onRouteStart);
     return () => router.events.off('routeChangeStart', onRouteStart);
-  }, [router.events]);
+  }, [router.events, setDrillTitle]);
 
   return (
     /*

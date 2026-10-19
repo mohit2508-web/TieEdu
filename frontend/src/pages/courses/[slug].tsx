@@ -52,6 +52,7 @@ import {
   formatReviewCount,
   plainText,
 } from '@/lib/courseFormat';
+import { cn } from '@/lib/cn';
 import { useAuth } from '@/context/AuthContext';
 import { useCart, useCartScope } from '@/context/CartContext';
 import { useShell } from '@/context/ShellContext';
@@ -84,7 +85,7 @@ export default function CoursePage({
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const { add } = useCart();
-  const { openOverlay } = useShell();
+  const { openOverlay, setDrillTitle } = useShell();
 
   const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
   const requestedLesson = typeof router.query.lesson === 'string' ? router.query.lesson : null;
@@ -179,6 +180,15 @@ export default function CoursePage({
       .catch(() => { /* Sibling courses are optional; the page works without them. */ });
     return () => { cancelled = true; };
   }, [slug, initialRelated.length]);
+
+  // The mobile drill header's title. "Courses" is the right label for the
+  // catalogue and the wrong title for a reader twelve lessons deep in one
+  // course, so the real course title is handed to the shell; the Header falls
+  // back to the nav label when this is null (loading, or any other route).
+  useEffect(() => {
+    setDrillTitle(course?.title || null);
+    return () => setDrillTitle(null);
+  }, [course?.title, setDrillTitle]);
 
   /**
    * The course payload ships each unlocked lesson's blocks, but deliberately NOT
@@ -334,6 +344,26 @@ export default function CoursePage({
   // when the field is missing keeps an older cached payload from rendering a
   // paywall over a course the learner may well already own.
   const locked = course ? course.access?.granted === false : false;
+
+  /**
+   * Whether THIS page's fixed enrolment bar owns the bottom edge.
+   *
+   * Exactly one fixed bar may exist below the viewport: `LessonPlayer` renders
+   * its own "Next lesson" bar the moment an open lesson is on screen, and two
+   * stacked `fixed bottom-0` bars hide the player's control under the enrolment
+   * one (the audit's P1). So the rule is:
+   *
+   *  - enrolled → never (the player's bar is the more useful control);
+   *  - an open lesson is loaded (`fetchedLesson`) → never (the player owns the
+   *    slot — either its bar, or LockNotice with no bar at all);
+   *  - otherwise (paid-and-locked, or a free course whose selected lesson is
+   *    still gated) → yes.
+   *
+   * `pb-40`, the hero's duplicate CTA and the footer spacer below are all
+   * keyed off this one value, so the page can never reserve space for a bar it
+   * is not rendering.
+   */
+  const hasEnrolBar = !!course && !progress?.enrolled && !fetchedLesson;
   // A certificate can only exist if the course awards one. Without this check an
   // ineligible course renders a claim button that the API refuses with a 400.
   const existingCert = course?.certificate || null;
@@ -445,34 +475,28 @@ export default function CoursePage({
   /**
    * The mobile bottom bar's contents - Phase 4, §4.1.
    *
-   * This bar only speaks for the two states where *buying* is the primary
-   * action. Once the learner is enrolled it returns null, because
-   * `LessonPlayer`'s own "Next lesson" bar takes over the same slot - and "Next
-   * lesson" is the more useful thing to be able to reach from the bottom of the
-   * screen. Having both mounted would be two bars fighting over 64px.
+   * This bar only renders when `hasEnrolBar` says it owns the bottom edge —
+   * never while `LessonPlayer`'s "Next lesson" bar is also up. Every branch
+   * below already exists above, in `enrollAction` or the side card. The only
+   * thing new here is the shape: a bar is one control and one short line,
+   * where a card is a price, a sentence, a button and a list.
    *
-   * Every branch below already exists above, in `enrollAction` or the side card.
-   * The only thing new here is the shape: a bar is one control and one short
-   * line, where a card is a price, a sentence, a button and a list.
-   *
-   * - Locked → the paywall's own button, with the price stated. The learner is
-   *   about to be charged, so the bar says so rather than leaving them to find
-   *   the hero.
+   * - Locked → the same "Buy this course" label the hero's PayWall uses, with
+   *   the price in the note. Two labels for one action ("Buy this course" vs
+   *   the old "Unlock with the vault") read as two different offers.
    * - Otherwise → the catalogue's label and tone, unchanged.
    *
-   * Nothing is offered here that the page does not also offer above it, which is
-   * the failure mode the `enrollAction` comment describes.
+   * Nothing is offered here that the page does not also offer above it, which
+   * is the failure mode the `enrollAction` comment describes.
    */
   const mobileAction = () => {
-    if (!course) return null;
-    /* Enrolled: `LessonPlayer` renders the bar for this route. See above. */
-    if (progress?.enrolled) return null;
+    if (!hasEnrolBar || !course) return null;
 
     if (locked) {
       return (
         <CourseMobileActionBar note={course.is_free ? 'Free course' : formatPrice(course.price_inr)}>
           <CtaButton tone={cta.tone} onClick={buy} disabled={enrolling} className="w-full py-3 disabled:opacity-50">
-            {enrolling ? 'Adding…' : 'Unlock with the vault'}
+            {enrolling ? 'Adding…' : 'Buy this course'}
           </CtaButton>
         </CourseMobileActionBar>
       );
@@ -740,13 +764,24 @@ export default function CoursePage({
         block in. Prose on this page keeps its own measure (the FAQ is max-w-3xl,
         outcomes max-w-2xl), so only the reading column widens.
 
-        `pb-40` below 1440px and `pb-24` from 1440px: the mobile bottom bar
-        (Phase 4, §4.1) is `fixed`, so the page has to reserve its own height or
-        the last section - the FAQ, or a related course - ends up underneath it.
-        At 1440px the bar is gone and the side card takes over, so the original
-        96px is correct again. */}
-    <main className="mx-auto w-full max-w-[var(--reader-max)] px-4 pb-40 pt-10 sm:px-6 min-[1440px]:px-8 min-[1440px]:pb-24">
-        {loading && <CourseDetailSkeleton />}
+        `pb-40` only while the enrolment bar is actually mounted below `md`
+        (see `hasEnrolBar`): the bar is `fixed`, so the page has to reserve its
+        own height or the last section - the FAQ, or a related course - ends up
+        underneath it. Without the bar the generic `pb-24` is correct, and
+        reserving 160px for a bar that is not there is the dead space the audit
+        measured. The bar never renders from `md` up, so `md:pb-24` restores
+        the generic value at every width that can see it. */}
+    <main
+      className={cn(
+        'mx-auto w-full max-w-[var(--reader-max)] px-4 pb-24 pt-10 sm:px-6 min-[1440px]:px-8',
+        hasEnrolBar && 'pb-40 md:pb-24'
+      )}
+    >
+        {/* Skeleton only when there is nothing to show. A signed-in revisit
+            re-fetches for personalised progress, and flashing the skeleton
+            over the server-rendered course the learner is already reading was
+            a full-page blink for data they already had. */}
+        {loading && !course && <CourseDetailSkeleton />}
 
         {error && !loading && !preview && (
           <p className="my-10 rounded-xl border border-[var(--color-error)]/30 bg-[var(--color-error)]/5 px-4 py-3 text-sm text-[var(--color-error)]">
@@ -857,7 +892,21 @@ export default function CoursePage({
                 <span className="text-[var(--text-muted)]">{formatLevel(course.level)}</span>
               </div>
 
-              <div className="mt-5 flex flex-wrap items-center gap-3">{enrollAction()}</div>
+              {/* One enrol control per screen. Below `md` the fixed bar already
+                  carries it whenever `hasEnrolBar`, so the hero copy is hidden
+                  there rather than rendered twice — same action, two targets,
+                  is exactly the clutter the mobile audit flagged. From `md` up
+                  there is no bar (and no side card until 1440px), so the hero
+                  stays the control. Progress is information, not a duplicate
+                  action, so the enrolled state keeps it at every width. */}
+              <div
+                className={cn(
+                  'mt-5 flex flex-wrap items-center gap-3',
+                  hasEnrolBar && 'md:flex hidden'
+                )}
+              >
+                {enrollAction()}
+              </div>
             </header>
 
             {course && (
@@ -931,43 +980,15 @@ export default function CoursePage({
             {done && (
               /* Two columns, because these are two different kinds of thing.
 
-                 On the left is the fact - you finished, here is the number. On the
-                 right are the two things you can do about it: rate the course, and
-                 take the certificate. Stacked, the second column's controls floated
-                 under a full-width paragraph with a heading that was already done
-                 saying something, and widening the page for the reader made that
-                 worse rather than better. Split, the panel reads as a summary with
-                 its actions beside it, and the rating stars land next to the review
-                 count they are answering. */
+                 The certificate column is FIRST in the DOM: on a phone the grid
+                 stacks, and the payoff of finishing — the certificate — is the
+                 thing worth showing above the rating form, not below it (audit
+                 P12). `lg:order-*` restores the original desktop split
+                 (summary+rating left, certificate right) without a second copy
+                 of either. */
               <section className="mb-8 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6">
                 <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:items-start">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 size={18} className="text-[var(--color-success)]" />
-                      <h2 className="text-lg font-bold text-[var(--ink)]">Course complete</h2>
-                    </div>
-                    <p className="mt-2 text-sm leading-relaxed text-[var(--text-body)]">
-                      You finished all {progress?.total} lessons
-                      {course.certificate_eligible ? '. Tell us what stuck, then claim your certificate.' : '.'}
-                    </p>
-                    {/*
-                      The two actions are siblings in the right-hand column, so
-                      whichever comes first gets the top edge rather than the
-                      FeedbackBlock's own `mt-5` pushing the certificate down.
-                    */}
-                    <div className="mt-1 lg:mt-0">
-                      <FeedbackBlock
-                        courseSlug={slug}
-                        done={feedbackSent}
-                        onSent={() => {
-                          setFeedbackSent(true);
-                          loadCourse();
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="lg:border-l lg:border-[var(--border-subtle)] lg:pl-6">
+                  <div className="lg:order-2 lg:border-l lg:border-[var(--border-subtle)] lg:pl-6">
                     {course.certificate_eligible ? (
                       <>
                         <h3 className="text-sm font-bold text-[var(--ink)]">Your certificate</h3>
@@ -1007,6 +1028,29 @@ export default function CoursePage({
                         This course does not award a certificate.
                       </p>
                     )}
+                  </div>
+
+                  <div className="lg:order-1">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 size={18} className="text-[var(--color-success)]" />
+                      <h2 className="text-lg font-bold text-[var(--ink)]">Course complete</h2>
+                    </div>
+                    <p className="mt-2 text-sm leading-relaxed text-[var(--text-body)]">
+                      You finished all {progress?.total} lessons
+                      {course.certificate_eligible
+                        ? '. Claim your certificate, then tell us what stuck.'
+                        : '.'}
+                    </p>
+                    <div className="mt-1 lg:mt-0">
+                      <FeedbackBlock
+                        courseSlug={slug}
+                        done={feedbackSent}
+                        onSent={() => {
+                          setFeedbackSent(true);
+                          loadCourse();
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
               </section>
@@ -1138,16 +1182,18 @@ export default function CoursePage({
               />
 
               <section id="lesson-player" className="min-w-0 scroll-mt-[var(--rail-top)]">
-                {/* Exam-prep toggle, above the player: the revision view is a
-                    companion to whatever lesson is open — a student mid-chapter
-                    checking what the board actually asks. Compact sheet, Revision
-                    tab first, and never a second page load. */}
+                {/* Exam-prep entry. Below `md` this sheet toggle is the ONLY
+                    entry — the full four-tab panel further down is hidden on a
+                    phone, where two copies of the same surface (audit P6) meant
+                    twice the scroll and two things to maintain. From `md` the
+                    inline panel below is the surface and this toggle steps
+                    aside, so each breakpoint has exactly one entry. */}
                 {course.exam_prep && (
-                  <div className="mb-4">
+                  <div className="mb-4 md:hidden">
                     <button
                       type="button"
                       onClick={() => setExamPrepOpen(true)}
-                      className="focus-ring inline-flex min-h-[40px] w-full items-center justify-center gap-2 rounded-[var(--radius-md)] border border-dashed border-[var(--brand-sky)]/50 bg-[var(--brand-sky-soft)]/40 px-4 py-2.5 text-sm font-bold text-[var(--brand-sky-strong)] transition-colors hover:bg-[var(--brand-sky-soft)]"
+                      className="focus-ring inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[var(--radius-md)] border border-dashed border-[var(--brand-sky)]/50 bg-[var(--brand-sky-soft)]/40 px-4 py-2.5 text-sm font-bold text-[var(--brand-sky-strong)] transition-colors hover:bg-[var(--brand-sky-soft)]"
                     >
                       <BookOpenCheck size={16} />
                       Semester exam prep — units, PYQs, revision
@@ -1167,6 +1213,7 @@ export default function CoursePage({
                     previousLesson={neighbours.previous}
                     nextLesson={neighbours.next}
                     complete={!!(selectedLesson.state as LessonCompletionState)?.is_complete}
+                    onEnrollRequired={enrol}
                     onNavigate={goToLesson}
                   />
                 ) : (
@@ -1248,9 +1295,11 @@ export default function CoursePage({
                 deciding whether to commit time looks next. Renders for anyone
                 the detail endpoint serves (free-course visitors included); the
                 payload is study material, not gated teaching content. The panel
-                owns its own heading, so the section is only a landmark. */}
+                owns its own heading, so the section is only a landmark.
+                `hidden md:block`: a phone gets this content through the sheet
+                toggle above the player instead — one entry per breakpoint. */}
             {course.exam_prep && (
-              <section aria-label="Semester exam prep" className="mt-14">
+              <section aria-label="Semester exam prep" className="mt-14 hidden md:block">
                 <ExamPrepPanel courseSlug={course.slug} prep={course.exam_prep} />
               </section>
             )}
@@ -1354,6 +1403,12 @@ export default function CoursePage({
           {mobileAction()}
         </div>
       )}
+
+      {/* The bar is a sibling of `<footer>`, not of `<main>`, so `pb-40` on
+          main never protected the footer: the last links sat underneath the
+          fixed bar. This spacer is the footer's own reservation, keyed off the
+          same `hasEnrolBar` as the bar itself. */}
+      {hasEnrolBar && <div aria-hidden="true" className="h-28 md:hidden" />}
 
       {/* In-player exam-prep sheet. Compact + Revision-first: the learner is
           mid-lesson and wants the condensed view, not the marketing header.

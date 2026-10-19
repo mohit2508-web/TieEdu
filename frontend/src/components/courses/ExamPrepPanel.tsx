@@ -311,7 +311,7 @@ export const ExamPrepPanel: React.FC<{
                     onClick={() => setPyqFilter(y)}
                     aria-pressed={pyqFilter === y}
                     className={[
-                      'focus-ring inline-flex min-h-[36px] flex-none items-center rounded-full border px-3 text-[13px] font-bold transition-colors',
+                      'focus-ring inline-flex min-h-[40px] flex-none items-center rounded-full border px-3 text-[13px] font-bold transition-colors',
                       pyqFilter === y
                         ? 'border-[var(--brand-sky)] bg-[var(--brand-sky)] text-white'
                         : 'border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-body)]',
