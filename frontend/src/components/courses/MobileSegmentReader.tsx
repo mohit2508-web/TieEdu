@@ -118,11 +118,19 @@ export const MobileSegmentReader: React.FC<{
       </div>
 
       {/* Step body: its own scroll container, so a long step scrolls inside the
-          card instead of becoming a full-page scroll again. */}
+          card instead of becoming a full-page scroll again.
+
+          No `overscroll-contain`: it would also cut the gesture off at the
+          container's edge, so once a step was scrolled to its end the page
+          below (module test, footer) could never be reached from inside the
+          card - which on a phone, where this card fills the viewport, made the
+          page look frozen. Default chaining lets the scroll continue into the
+          page the moment the step is done, which is the behaviour a native
+          reader has. */}
       <div
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
-        className="min-h-[45vh] max-h-[calc(100dvh-15rem)] overscroll-contain overflow-y-auto pb-2"
+        className="min-h-[45vh] max-h-[calc(100dvh-15rem)] overflow-y-auto pb-2"
       >
         <div key={`${segment.id}-${pulse}`} className="segment-fade space-y-5">
           <p
