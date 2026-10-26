@@ -198,3 +198,49 @@ export const saveCampusPageSettings = async (
   if (!res.ok) return fail(res);
   return res.json();
 };
+
+// ---- Campus intel (backend lib/campusIntel): placement history + senior notes ----
+
+export interface CampusHistoryRow {
+  id: string;
+  company_slug: string;
+  year: number;
+  selected: number | null;
+  cgpa_cutoff: number | null;
+  backlogs_allowed: number | null;
+  note: string;
+  updated_at: string;
+}
+export interface SeniorNoteRow {
+  id: string;
+  company_slug: string;
+  label: string;
+  body: string;
+  status: 'pending' | 'approved' | 'rejected';
+  created_at: string;
+}
+
+export const getCampusIntel = async (collegeId?: string | null): Promise<{ history: CampusHistoryRow[]; notes: SeniorNoteRow[] }> => {
+  const res = await apiFetch(`${API_BASE_URL}/placement/campus-intel`, { headers: collegeHeader(collegeId) });
+  if (!res.ok) return fail(res);
+  return res.json();
+};
+
+export const saveCampusHistory = async (
+  row: { company_slug: string; year: number; selected?: number | null; cgpa_cutoff?: number | null; backlogs_allowed?: number | null; note?: string },
+  collegeId?: string | null
+): Promise<CampusHistoryRow> => {
+  const res = await apiFetch(`${API_BASE_URL}/placement/campus-history`, { method: 'PUT', headers: collegeHeader(collegeId), body: JSON.stringify(row) });
+  if (!res.ok) return fail(res);
+  return res.json();
+};
+
+export const deleteCampusHistory = async (id: string, collegeId?: string | null): Promise<void> => {
+  const res = await apiFetch(`${API_BASE_URL}/placement/campus-history/${encodeURIComponent(id)}`, { method: 'DELETE', headers: collegeHeader(collegeId) });
+  if (!res.ok) return fail(res);
+};
+
+export const moderateSeniorNote = async (id: string, status: 'approved' | 'rejected', collegeId?: string | null): Promise<void> => {
+  const res = await apiFetch(`${API_BASE_URL}/placement/senior-notes/${encodeURIComponent(id)}`, { method: 'PUT', headers: collegeHeader(collegeId), body: JSON.stringify({ status }) });
+  if (!res.ok) return fail(res);
+};

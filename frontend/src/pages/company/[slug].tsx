@@ -27,6 +27,7 @@ import { Company, PricingPlan, ContentItem, ContentModule, RoundType, CompanyMod
 import type { CpContent, CpRadarItem } from '@/types/companyPage';
 import { fetchCompanyPage, serverApiBase } from '@/lib/companyPagesApi';
 import { CompanyPageV2 } from '@/components/companyPage/CompanyPageV2';
+import { CampusIntelCard } from '@/components/company/CampusIntelCard';
 import type { RoundOffer } from '@/components/companyPage/shared';
 import { ArrowLeft, CheckCircle2, ChevronRight, ChevronLeft, Bookmark, List, ShoppingBag } from 'lucide-react';
 
@@ -690,6 +691,7 @@ export default function CompanyVaultPage({
               ======================================================== */
           <CompanyPageV2
             content={cpPage}
+            campusSlot={user ? <CampusIntelCard slug={company.slug} company={company.name} /> : undefined}
             company={company}
             companies={allCompanies}
             packPrice={remainingPremium.length > 0 ? (packPriceCap ? Math.min(remainingPrice, packPriceCap) : remainingPrice) : null}

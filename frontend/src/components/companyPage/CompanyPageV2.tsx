@@ -106,6 +106,8 @@ export interface CompanyPageV2Props extends CpHandlers {
   packOwned: boolean;
   /** The existing experiences component, supplied by the page. */
   experiencesSlot?: React.ReactNode;
+  /** "At your college" (campus intel), shown under the hero figures for a linked student. */
+  campusSlot?: React.ReactNode;
   /** Admin studio preview: no sticky chrome, no head tags, inert links. */
   preview?: boolean;
   /** Preview only: outline this section and report clicks on any section. */
@@ -130,6 +132,7 @@ export function CompanyPageV2({
   packPrice,
   packOwned,
   experiencesSlot,
+  campusSlot,
   preview = false,
   selectedSectionId = null,
   onSelectSection,
@@ -385,6 +388,8 @@ export function CompanyPageV2({
   );
 
   const rendered: React.ReactNode[] = [];
+  // The campus card goes under the hero figures (or the hero, when a page has none).
+  const campusAfter = visible.some((v) => v.type === 'stat_strip') ? 'stat_strip' : 'hero';
   for (let i = 0; i < visible.length; i++) {
     const sec = visible[i];
     const start = i;
@@ -482,6 +487,13 @@ export function CompanyPageV2({
         );
         break;
       }
+    }
+    if (campusSlot && !preview && sec.type === campusAfter) {
+      blocks.push(
+        <div key="campus" className={s.wrap} style={{ paddingTop: 24 }}>
+          {campusSlot}
+        </div>
+      );
     }
 
     // One broken section must not take the page down: each renders inside

@@ -43,7 +43,7 @@
     "test:today": "ts-node --transpile-only scripts/today.test.ts && ts-node --transpile-only scripts/passport.test.ts && ts-node --transpile-only scripts/batch-readiness.test.ts",
     "test:mojibake": "ts-node --transpile-only scripts/mojibake.test.ts",
     "repair:encoding": "ts-node --transpile-only scripts/repair-mojibake.ts",
-    "test:daily": "ts-node --transpile-only scripts/daily-challenge.test.ts && ts-node --transpile-only scripts/prep-plan.test.ts && ts-node --transpile-only scripts/debrief.test.ts"
+    "test:daily": "ts-node --transpile-only scripts/daily-challenge.test.ts && ts-node --transpile-only scripts/prep-plan.test.ts && ts-node --transpile-only scripts/debrief.test.ts && ts-node --transpile-only scripts/campus-intel.test.ts"
   },
   "dependencies": {
     "@react-email/components": "^1.0.12",

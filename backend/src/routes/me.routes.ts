@@ -2,6 +2,8 @@ import { Router, Request, Response } from 'express';
 import { loadDb, saveDb } from '../data/db';
 import { buildToday } from '../lib/today';
 import { calendarFor } from '../lib/prepPlan';
+import { addNote, deleteMyNote, intelFor, IntelError } from '../lib/campusIntel';
+import { playerCollegeIds, isConnectionFailure } from '../lib/bridge/core';
 import { createDebrief, debriefView, deleteDebrief, myDebriefs, DebriefError, DEBRIEF_REASONS, REASON_LABEL, ROUNDS } from '../lib/debrief';
 import { buildPassport, handleError, passportOf, suggestHandle } from '../lib/passport';
 import { buildParentView, newParentToken } from '../lib/parentView';
@@ -57,6 +59,53 @@ meRouter.post('/debriefs', rateLimit(20), (req: Request, res: Response) => {
 meRouter.delete('/debriefs/:id', (req: Request, res: Response) => {
   const db = loadDb();
   if (!deleteDebrief(db, req.user!.id, String(req.params.id))) return res.status(404).json({ error: 'Not found.' });
+  saveDb(db);
+  res.status(204).end();
+});
+
+/**
+ * Campus intel (lib/campusIntel): my college's placement history for a
+ * company and its approved senior notes. College membership comes from the
+ * placement database; when that is unreachable the card simply does not show.
+ */
+const collegeUnavailable = (res: Response, err: any) => {
+  const notConfigured = /DATABASE_URL is not set/.test(String(err?.message || ''));
+  if (isConnectionFailure(err) || notConfigured) return res.status(503).json({ error: 'College data is temporarily unavailable.' });
+  console.error('[campus-intel]', err?.message || err);
+  return res.status(500).json({ error: 'Could not load your college’s notes.' });
+};
+
+meRouter.get('/campus-intel/:slug', async (req: Request, res: Response) => {
+  try {
+    const colleges = await playerCollegeIds(req.user!.id);
+    res.setHeader('Cache-Control', 'private, no-store');
+    res.json(intelFor(loadDb(), req.user!.id, colleges, String(req.params.slug)));
+  } catch (err) {
+    collegeUnavailable(res, err);
+  }
+});
+
+meRouter.post('/campus-notes', rateLimit(10), async (req: Request, res: Response) => {
+  let colleges: string[];
+  try {
+    colleges = await playerCollegeIds(req.user!.id);
+  } catch (err) {
+    return collegeUnavailable(res, err);
+  }
+  const db = loadDb();
+  try {
+    const note = addNote(db, req.user!.id, colleges, req.body);
+    saveDb(db);
+    res.status(201).json({ id: note.id, status: note.status });
+  } catch (err: any) {
+    if (err instanceof IntelError) return res.status(err.status).json({ error: err.message });
+    throw err;
+  }
+});
+
+meRouter.delete('/campus-notes/:id', (req: Request, res: Response) => {
+  const db = loadDb();
+  if (!deleteMyNote(db, req.user!.id, String(req.params.id))) return res.status(404).json({ error: 'Not found.' });
   saveDb(db);
   res.status(204).end();
 });

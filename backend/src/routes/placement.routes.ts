@@ -14,6 +14,7 @@ import { getPool } from '../db/client';
 import { driveAdminRouter } from './driveAdmin.routes';
 import { buildBatchReadiness } from '../lib/batchReadiness';
 import { campusPagesOf, campusSettings } from '../lib/campusPage';
+import { deleteHistory, IntelError, moderateNote, tpoIntel, upsertHistory } from '../lib/campusIntel';
 import { placementCan } from '../placement/permissions';
 
 export const placementRouter = Router();
@@ -395,6 +396,48 @@ placementRouter.get(
 // or off and writes its intro. Stored in the JSON store; nothing is written to
 // the placement database.
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Campus intel (lib/campusIntel): this college's placement history per company
+// and the senior-notes moderation queue. JSON store, keyed by college_id.
+// ---------------------------------------------------------------------------
+const intelError = (res: Response, err: any) => {
+  if (err instanceof IntelError) return res.status(err.status).json({ error: err.message });
+  throw err;
+};
+
+placementRouter.get('/campus-intel', requirePlacementAuth, requirePlacementScope('placement.dashboard.read'), (req: Request, res: Response) => {
+  res.json(tpoIntel(loadDb(), req.placement!.collegeId!));
+});
+
+placementRouter.put('/campus-history', requirePlacementAuth, requirePlacementScope('placement.settings.write'), (req: Request, res: Response) => {
+  const db = loadDb();
+  try {
+    const row = upsertHistory(db, req.placement!.collegeId!, req.user!.id, req.body);
+    saveDb(db);
+    res.json(row);
+  } catch (err) {
+    intelError(res, err);
+  }
+});
+
+placementRouter.delete('/campus-history/:id', requirePlacementAuth, requirePlacementScope('placement.settings.write'), (req: Request, res: Response) => {
+  const db = loadDb();
+  if (!deleteHistory(db, req.placement!.collegeId!, String(req.params.id))) return res.status(404).json({ error: 'Not found.' });
+  saveDb(db);
+  res.status(204).end();
+});
+
+placementRouter.put('/senior-notes/:id', requirePlacementAuth, requirePlacementScope('placement.settings.write'), (req: Request, res: Response) => {
+  const db = loadDb();
+  try {
+    const n = moderateNote(db, req.placement!.collegeId!, String(req.params.id), req.body?.status, req.user!.id);
+    saveDb(db);
+    res.json({ id: n.id, status: n.status });
+  } catch (err) {
+    intelError(res, err);
+  }
+});
+
 placementRouter.get('/campus-page', requirePlacementAuth, requirePlacementScope('placement.dashboard.read'), (req: Request, res: Response) => {
   res.json(campusSettings(loadDb(), req.placement!.collegeId!));
 });
