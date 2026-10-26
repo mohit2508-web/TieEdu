@@ -59,7 +59,7 @@ export default function OverviewTab(props: { collegeId: string; driveId: string 
         <KpiCard label="Pass rate" value={s.pass_pct ? `${s.pass_pct}%` : '0%'} tone="purple" hint={`${s.passed} passed / ${s.attempts_completed} scored`} />
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         <GroupedCard title="Registration funnel">
           <div className="flex items-center gap-6 px-4 py-5">
             <div className="shrink-0">
@@ -78,7 +78,7 @@ export default function OverviewTab(props: { collegeId: string; driveId: string 
             </div>
           </div>
           <div className="apple-divider" />
-          <div className="grid gap-2 px-4 py-4 text-sm sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-2 px-4 py-4 text-sm sm:grid-cols-3">
             <div><span className="text-[var(--apple-label-2)]">Avg score </span><span className="font-semibold tabular-nums">{s.avg_score?.toFixed(1) ?? '—'}%</span></div>
             <div><span className="text-[var(--apple-label-2)]">Best score </span><span className="font-semibold tabular-nums">{s.best_score?.toFixed(1) ?? '—'}%</span></div>
             <div><span className="text-[var(--apple-label-2)]">Attempts </span><span className="font-semibold tabular-nums">{s.attempts} ({s.attempts_completed} scored)</span></div>

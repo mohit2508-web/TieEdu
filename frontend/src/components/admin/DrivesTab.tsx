@@ -201,7 +201,7 @@ function ProvidersPanel({ providers, onDone, setError }: { providers: AdminProvi
     }
   };
   return (
-    <div className="grid gap-5 lg:grid-cols-2">
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
       <div className="rounded-3xl border border-line bg-white p-6 shadow-xs">
         <h3 className="text-sm font-extrabold text-heading">Register a provider</h3>
         <p className="mt-1 text-xs text-gray-500">
@@ -261,7 +261,7 @@ function TestsPanel({ tests, providers, onDone, setError }: { tests: AdminDriveT
     }
   };
   return (
-    <div className="grid gap-5 lg:grid-cols-2">
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
       <div className="rounded-3xl border border-line bg-white p-6 shadow-xs">
         <h3 className="text-sm font-extrabold text-heading">Create a test</h3>
         <div className="mt-4 space-y-2">
@@ -879,7 +879,7 @@ function DrivesPanel(props: {
   };
 
   return (
-    <div className="grid gap-5 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
       {/* ----------------------------- left column ---------------------------- */}
       <div className="space-y-4">
         <div className="rounded-3xl border border-line bg-white p-6 shadow-xs">
@@ -992,7 +992,7 @@ function DrivesPanel(props: {
                 <h4 className="text-xs font-bold uppercase tracking-wider text-muted">Drive details</h4>
                 <DriveFormFields form={editForm} setForm={setEditForm} disabled={savingDetail} />
 
-                <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
+                <div className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                   <label>
                     <span className="text-xs font-medium text-gray-500">Status</span>
                     <select className={input + ' mt-1'} value={status} onChange={(e) => setStatus(e.target.value)} disabled={savingDetail}>
@@ -1142,7 +1142,7 @@ function DrivesPanel(props: {
                         </div>
 
                         {editingRoundId === r.test_id && roundDraft && (
-                          <div className="mt-3 grid gap-2 border-t border-gray-100 pt-3 sm:grid-cols-2">
+                          <div className="mt-3 grid grid-cols-1 gap-2 border-t border-gray-100 pt-3 sm:grid-cols-2">
                             <label>
                               <span className="text-xs font-bold uppercase tracking-wider text-muted">Round name</span>
                               <input className={input + ' mt-1'} value={roundDraft.round_name} onChange={(e) => setRoundDraft({ ...roundDraft, round_name: e.target.value })} />
@@ -1343,7 +1343,7 @@ function DrivesPanel(props: {
                   <p className="mt-1 text-sm leading-relaxed text-gray-500">
                     One slot per day per start time. Times are IST. Defaults: 5 days × 10 AM/12/2/4/6/8/10 PM, 50 seats, 1h each.
                   </p>
-                  <div className="mt-3 grid gap-3 sm:grid-cols-5">
+                  <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-5">
                     <label>
                       <span className="text-xs font-bold uppercase tracking-wider text-muted">Start date</span>
                       <input type="date" className={input + ' mt-1'} value={gen.start_date} onChange={(e) => setGen({ ...gen, start_date: e.target.value })} />
@@ -1361,7 +1361,7 @@ function DrivesPanel(props: {
                       <input type="number" min="1" className={input + ' mt-1'} value={gen.capacity} onChange={(e) => setGen({ ...gen, capacity: e.target.value })} />
                     </label>
                   </div>
-                  <div className="mt-2 grid gap-2 sm:grid-cols-5">
+                  <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-5">
                     <label>
                       <span className="text-xs font-bold uppercase tracking-wider text-muted">Duration (min)</span>
                       <input type="number" min="15" className={input + ' mt-1'} value={gen.duration_minutes} onChange={(e) => setGen({ ...gen, duration_minutes: e.target.value })} />
@@ -1438,7 +1438,7 @@ function DrivesPanel(props: {
                                   </div>
                                 </div>
                                 {slotAssignId === s.slot_id && (
-                                  <div className="mt-4 grid gap-3 border-t border-gray-100 pt-4 sm:grid-cols-2">
+                                  <div className="mt-4 grid grid-cols-1 gap-3 border-t border-gray-100 pt-4 sm:grid-cols-2">
                                     <label className="block">
                                       <span className="text-xs font-semibold text-gray-600">Round name (same for everyone)</span>
                                       <input
@@ -1593,7 +1593,7 @@ function DrivesPanel(props: {
                         </div>
 
                         {assigningId === b.booking_id && (
-                          <div className="mt-4 grid gap-3 border-t border-gray-100 pt-4 sm:grid-cols-2">
+                          <div className="mt-4 grid grid-cols-1 gap-3 border-t border-gray-100 pt-4 sm:grid-cols-2">
                             <label className="block">
                               <span className="text-xs font-semibold text-gray-600">Round name</span>
                               <input
@@ -1703,7 +1703,7 @@ function DrivesPanel(props: {
                   <p className="mt-1 text-xs text-gray-500">
                     Email to everyone, one slot, or one student. Payment approval, slot booking aur link-live pe automatic email jaata hai — yeh manual wala hai.
                   </p>
-                  <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                  <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
                     <label>
                       <span className="text-xs font-bold uppercase tracking-wider text-muted">Send to</span>
                       <select className={input + ' mt-1'} value={emailScope} onChange={(e) => setEmailScope(e.target.value as any)}>

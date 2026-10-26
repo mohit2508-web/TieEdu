@@ -131,7 +131,7 @@ export function DriveFormFields(props: {
   const lbl = 'text-xs font-medium';
   const input = `${field} mt-1`;
   return (
-    <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
+    <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
       <label className="sm:col-span-2">
         <span className={lbl} style={{ color: 'var(--apple-label-2)' }}>Title *</span>
         <input className={input} placeholder="Capgemini Mock Drive" value={t('title')} onChange={set('title')} disabled={props.disabled} />

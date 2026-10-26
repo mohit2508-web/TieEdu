@@ -311,26 +311,31 @@ const AccountPageContent: React.FC = () => {
 
   useEffect(() => {
     let active = true;
-    Promise.all([
+    // Settled, not all-or-nothing: one slow or failing panel (reports, the
+    // interview course) used to blank the whole account page. Only the account
+    // itself is required; the rest fill in when they arrive.
+    Promise.allSettled([
       fetchMyAccount(),
       fetchCompanies(),
       fetchMyReports(),
       getInterviewCourseProgressApi(),
-    ])
-      .then(([acc, comps, rep, prog]) => {
-        if (!active) return;
-        setAccount(acc);
-        setCompanies(comps || []);
-        setReports(rep?.reports || []);
+    ]).then(([acc, comps, rep, prog]) => {
+      if (!active) return;
+      if (acc.status === 'rejected') {
+        setError('Your account could not be loaded. Check your connection and try again.');
+        return;
+      }
+      setAccount(acc.value);
+      if (acc.value.user?.id) setUser(acc.value.user);
+      setCompanies(comps.status === 'fulfilled' ? comps.value || [] : []);
+      setReports(rep.status === 'fulfilled' ? rep.value?.reports || [] : []);
+      if (prog.status === 'fulfilled') {
         setModules({
-          completed: prog?.progress?.completed_module_ids?.length || 0,
-          xp: prog?.progress?.total_xp || 0,
+          completed: prog.value?.progress?.completed_module_ids?.length || 0,
+          xp: prog.value?.progress?.total_xp || 0,
         });
-        if (acc.user?.id) setUser(acc.user);
-      })
-      .catch(() => {
-        if (active) setError('Dashboard data could not be loaded — check the backend/server and try again.');
-      });
+      }
+    });
     return () => { active = false; };
   }, [setUser]);
 

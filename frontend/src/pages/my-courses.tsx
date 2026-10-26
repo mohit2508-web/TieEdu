@@ -139,7 +139,7 @@ export default function MyCoursesPage() {
 
             {inProgress.length > 0 && (
               <Section title="In progress">
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   {inProgress.map((course) => {
                     const tier = tierStyle(course.certificate_tier);
                     const left = Math.max(0, (course.progress.total || 0) - (course.progress.completed || 0));
@@ -196,7 +196,7 @@ export default function MyCoursesPage() {
 
             {completed.length > 0 && (
               <Section title="Completed">
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   {completed.map((course) => {
                     const tier = tierStyle(course.certificate_tier);
                     const cert = certificates.find((x) => x.course_id === course.id);

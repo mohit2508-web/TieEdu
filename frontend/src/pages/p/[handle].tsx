@@ -134,7 +134,7 @@ export default function PassportPage({ passport: p }: { passport: PassportView }
             {p.companies.length > 0 && (
               <section aria-labelledby="ready-title">
                 <SectionHead id="ready-title" title="Company readiness" description={`Scored from ${firstName}'s skill tests on each company's rounds.`} />
-                <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <ul className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {p.companies.map((c) => (
                     <li key={c.slug}>
                       <Card className="flex items-center gap-4">
@@ -157,7 +157,7 @@ export default function PassportPage({ passport: p }: { passport: PassportView }
             {p.skills.length > 0 && (
               <section aria-labelledby="skills-title">
                 <SectionHead id="skills-title" title="Skills" description="Best score in each skill test." />
-                <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+                <ul className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
                   {p.skills.map((s) => (
                     <li key={s.slug}>
                       <Card pad="sm" className="flex items-center justify-between gap-3">
@@ -183,7 +183,7 @@ export default function PassportPage({ passport: p }: { passport: PassportView }
             {p.certificates.length > 0 && (
               <section aria-labelledby="certs-title">
                 <SectionHead id="certs-title" title="Course certificates" description="Each one opens its own verification page." />
-                <ul className="mt-6 grid gap-4 md:grid-cols-2">
+                <ul className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
                   {p.certificates.map((c) => (
                     <li key={c.serial}>
                       <Ticket

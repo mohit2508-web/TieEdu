@@ -182,7 +182,7 @@ export const AdminXpTab: React.FC = () => {
         )}
       </Panel>
 
-      <div className="grid lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Panel title="XP rules" subtitle="Server-authoritative. A client cannot award itself points.">
           <div className="space-y-2">
             {Object.entries(rules).map(([k, v]) => (

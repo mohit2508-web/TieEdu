@@ -102,7 +102,7 @@ const DemoForm: React.FC = () => {
   const field = 'min-h-[44px] w-full rounded-xl border border-line-strong bg-card px-3 text-base text-heading placeholder:text-text-light focus:border-signal focus:outline-none focus:ring-4 focus:ring-signal/10';
   return (
     <Card variant="raised" as="section">
-      <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2" noValidate>
+      <form onSubmit={submit} className="grid grid-cols-1 gap-4 sm:grid-cols-2" noValidate>
         <label className="flex flex-col gap-1.5 text-sm font-semibold text-heading">
           Your name
           <input name="name" required autoComplete="name" className={field} />
@@ -199,7 +199,7 @@ export default function CollegesPage() {
 
           <section className="mx-auto max-w-[1200px] px-4 pb-14 sm:px-6">
             <SectionHead title="What your placement cell gets" />
-            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {FEATURES.map((f) => (
                 <Card key={f.title}>
                   <f.icon className="h-6 w-6 text-signal" aria-hidden />
@@ -211,7 +211,7 @@ export default function CollegesPage() {
           </section>
 
           <section className="border-y border-line bg-card">
-            <div className="mx-auto grid max-w-[1200px] gap-10 px-4 py-14 sm:px-6 lg:grid-cols-2">
+            <div className="mx-auto grid grid-cols-1 max-w-[1200px] gap-10 px-4 py-14 sm:px-6 lg:grid-cols-2">
               <div>
                 <SectionHead eyebrow="Student data" title="What you see, and what you don't" />
                 <p className="mt-4 text-base leading-relaxed text-body">
@@ -236,7 +236,7 @@ export default function CollegesPage() {
           </section>
 
           <section id="demo" className="mx-auto max-w-[1200px] scroll-mt-24 px-4 py-14 sm:px-6">
-            <div className="grid gap-10 lg:grid-cols-[1fr_1.4fr]">
+            <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_1.4fr]">
               <div>
                 <SectionHead eyebrow="Pricing" title="Priced per batch" />
                 <p className="mt-4 text-base leading-relaxed text-body">

@@ -398,7 +398,7 @@ export const CourseThumbnailEditor: React.FC<CourseThumbnailEditorProps> = ({
             ))}
           </div>
 
-          <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
             <label className="block">
               <span className="text-xs font-semibold text-[var(--text-muted)]">Horizontal focus</span>
               <input

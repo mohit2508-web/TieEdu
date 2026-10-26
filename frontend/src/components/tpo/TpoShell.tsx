@@ -92,7 +92,7 @@ const CollegePickerCard: React.FC = () => {
           You hold platform-wide placement access, so the portal needs to know which college&apos;s data to show.
           Every dashboard, import and offer stays scoped to the college you pick.
         </p>
-        <div className="grid sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {colleges.map((c) => (
             <button
               key={c.college_id}

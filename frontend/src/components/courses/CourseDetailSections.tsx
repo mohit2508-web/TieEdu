@@ -87,7 +87,7 @@ const BulletList: React.FC<{ items?: string[] }> = ({ items }) => {
   const rows = bulletRows(items);
   if (rows.length === 0) return null;
   return (
-    <ul className="grid gap-2.5 sm:grid-cols-2">
+    <ul className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
       {rows.map((row, i) => (
         <li key={i} className="flex gap-2.5 text-sm leading-relaxed text-[var(--text-body)]">
           <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-[var(--color-success)]" aria-hidden="true" />

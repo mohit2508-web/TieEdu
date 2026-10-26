@@ -420,6 +420,9 @@ body {
 /* Buttons */
 .btn {
   display: inline-flex;
+  /* A .btn with no padding of its own collapsed to its text line (18px "Sign in",
+     thin "Save" and "Resume lesson"). Explicit heights still win. */
+  min-height: 36px;
   align-items: center;
   justify-content: center;
   gap: 8px;

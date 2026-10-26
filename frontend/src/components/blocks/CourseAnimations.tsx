@@ -440,7 +440,7 @@ function PassingLab({ payload }: { payload: any }) {
       step={step}
       stepCount={steps.length}
     >
-      <div className="grid gap-px bg-[--border-subtle] sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-px bg-[--border-subtle] sm:grid-cols-2">
         {panes.map((p, i) => (
           <div key={i} className="bg-white p-4">
             <p className="text-xs font-bold text-[--text-heading]">{p.title}</p>
@@ -641,7 +641,7 @@ export function Tracer({ payload }: { payload: any }) {
       step={step}
       stepCount={steps.length}
     >
-      <div className="grid lg:grid-cols-[1.35fr_1fr] gap-px bg-[--border-subtle]">
+      <div className="grid grid-cols-1 lg:grid-cols-[1.35fr_1fr] gap-px bg-[--border-subtle]">
         <div className="bg-heading overflow-x-auto">
           <pre className="text-xs leading-[1.65] font-mono py-3 min-w-full">
             {lines.map((l, i) => {
@@ -1177,7 +1177,7 @@ export function Pipeline({ payload }: { payload: any }) {
       </div>
 
       {cur && (
-        <div key={step} className="grid sm:grid-cols-[1fr_auto_1fr] gap-3 p-4 items-start anim-stage-flow">
+        <div key={step} className="grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] gap-3 p-4 items-start anim-stage-flow">
           <div className="min-w-0">
             <p className="font-mono text-xs uppercase tracking-wide text-[--text-muted] mb-1">input</p>
             <p className="text-xs text-[--text-body] leading-relaxed mb-2">{cur.in}</p>

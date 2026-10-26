@@ -303,7 +303,7 @@ export default function StudyPlanPage() {
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-[20rem_1fr] gap-6 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-[20rem_1fr] gap-6 items-start">
             {/* Controls */}
             <div className="space-y-4 lg:sticky lg:top-6">
               <div className="bg-white border border-line rounded-2xl p-5 shadow-sm space-y-4">

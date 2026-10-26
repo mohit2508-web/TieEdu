@@ -1007,7 +1007,7 @@ export default function CompanyPageStudio({
       </div>
 
       {/* ------------------------------------------------------------- body */}
-      <div className="flex-1 min-h-0 grid lg:grid-cols-[260px_400px_minmax(0,1fr)]">
+      <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[260px_400px_minmax(0,1fr)]">
         {/* Section list */}
         <aside className={`${panelCls('sections')} bg-white border-r border-gray-200`}>
           <div className="flex-1 overflow-y-auto p-2 space-y-0.5">

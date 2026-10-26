@@ -40,7 +40,7 @@ const AnalyticsBody: React.FC = () => {
   if (!data) {
     return (
       <div className="space-y-4" aria-busy="true">
-        <div className="grid gap-3 sm:grid-cols-4">{SEGMENTS.map((s) => <Skeleton key={s.key} className="h-24 w-full" />)}</div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">{SEGMENTS.map((s) => <Skeleton key={s.key} className="h-24 w-full" />)}</div>
         <Skeleton className="h-80 w-full" />
       </div>
     );

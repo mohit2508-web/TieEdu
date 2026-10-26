@@ -68,7 +68,7 @@ export default function ParentPage({ view: v }: { view: ParentView }) {
             </p>
           </section>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Card>
               <p className="eyebrow text-muted">Study streak</p>
               <p className="mt-2 flex items-center gap-2 font-display text-3xl font-bold tabular-nums text-heading">
@@ -85,7 +85,7 @@ export default function ParentPage({ view: v }: { view: ParentView }) {
           {v.companies.length > 0 && (
             <section aria-labelledby="companies-title">
               <SectionHead id="companies-title" title="Readiness for target companies" description="From skill tests on each company's interview rounds." />
-              <ul className="mt-6 grid gap-4 sm:grid-cols-2">
+              <ul className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {v.companies.map((c) => (
                   <li key={c.name}>
                     <Card className="flex items-center gap-4">

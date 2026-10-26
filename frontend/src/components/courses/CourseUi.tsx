@@ -646,7 +646,7 @@ export const CourseDetailSkeleton: React.FC = () => (
       <SkeletonText lines={2} />
     </div>
 
-    <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+    <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
       <div className="space-y-3">
         {[0, 1, 2].map((i) => (
           <div key={i} className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4">

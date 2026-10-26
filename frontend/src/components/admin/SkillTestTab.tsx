@@ -219,7 +219,7 @@ const SkillsSection: React.FC<{ skills: SkillTestSkill[]; reload: () => Promise<
       {form && (
         <div className="mb-5 rounded-xl border border-signal/30 bg-app-warm p-4 space-y-3">
           <p className="text-xs font-extrabold text-brand-ink">{editingId ? 'Edit skill' : 'New skill'}</p>
-          <div className="grid sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Field label="Name"><TextInput value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value, slug: editingId ? form.slug : slugify(e.target.value) })} placeholder="Java Programming" /></Field>
             <Field label="Slug" hint="Unique — used in the public URL">
               <TextInput value={form.slug} onChange={(e) => setForm({ ...form, slug: slugify(e.target.value) })} placeholder="java" />
@@ -472,7 +472,7 @@ const QuestionsSection: React.FC<{ skills: SkillTestSkill[]; topics: SkillTestTo
         subtitle={`${total} question${total === 1 ? '' : 's'} matched`}
         actions={<Btn variant="primary" onClick={openCreate} disabled={skills.length === 0}><Plus className="w-3.5 h-3.5" /> New question</Btn>}
       >
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mb-4">
           <Select value={effSkill} onChange={(e) => setSkillFilter(e.target.value)}>
             {skills.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
           </Select>
@@ -496,7 +496,7 @@ const QuestionsSection: React.FC<{ skills: SkillTestSkill[]; topics: SkillTestTo
         {editing && (
           <div className="mb-5 rounded-xl border border-signal/30 bg-app-warm p-4 space-y-3">
             <p className="text-xs font-extrabold text-brand-ink">{editingId ? 'Edit question' : 'New question'}</p>
-            <div className="grid sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="Skill">
                 <Select value={editing.skillId} onChange={(e) => {
                   const sid = e.target.value;
@@ -690,7 +690,7 @@ const AssessmentsSection: React.FC<{ skills: SkillTestSkill[]; topics: SkillTest
       {form && (
         <div className="mb-5 rounded-xl border border-signal/30 bg-app-warm p-4 space-y-3">
           <p className="text-xs font-extrabold text-brand-ink">{editingId ? 'Edit assessment' : 'New assessment'}</p>
-          <div className="grid sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Field label="Title" className="sm:col-span-2"><TextInput value={form.title || ''} onChange={(e) => setForm({ ...form, title: e.target.value })} /></Field>
             <Field label="Duration (minutes)"><TextInput type="number" value={form.durationMinutes ?? 30} onChange={(e) => setForm({ ...form, durationMinutes: Number(e.target.value) })} /></Field>
             <Field label="Total questions"><TextInput type="number" value={form.totalQuestions ?? 30} onChange={(e) => setForm({ ...form, totalQuestions: Number(e.target.value) })} /></Field>

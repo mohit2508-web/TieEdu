@@ -134,7 +134,7 @@ const BlockForm: React.FC<{
         ))}
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-4 p-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4">
         <div className="space-y-3 min-w-0">
           {type === 'markdown' && (
             <MarkdownEditor
@@ -412,7 +412,7 @@ export const StudyPlanPhaseEditor: React.FC<Props> = ({ templateId, phases, onCh
         ))}
       </div>
 
-      <div className="grid lg:grid-cols-[18rem_1fr] gap-4 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-[18rem_1fr] gap-4 items-start">
         <div className={`space-y-2 ${mobilePane === 'list' ? '' : 'hidden lg:block'}`}>
           {phases.map((p, i) => (
             <div
@@ -488,7 +488,7 @@ export const StudyPlanPhaseEditor: React.FC<Props> = ({ templateId, phases, onCh
           <div className={`space-y-4 min-w-0 ${mobilePane === 'detail' ? '' : 'hidden lg:block'}`}>
             {!readOnly && (
               <div className="rounded-2xl border border-gray-200 bg-white p-4 space-y-3">
-                <div className="grid sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-mono font-bold uppercase text-gray-500 mb-1">Phase title</label>
                     <input className={inputCls} value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} />

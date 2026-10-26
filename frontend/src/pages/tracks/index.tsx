@@ -114,7 +114,7 @@ export default function TracksPage() {
         </header>
 
         {loading && (
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 3 }).map((_, i) => (
               <div
                 key={i}
@@ -140,7 +140,7 @@ export default function TracksPage() {
         )}
 
         {!loading && !error && tracks.length > 0 && (
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {tracks.map((t) => (
               <TrackCard key={t.id} track={t} />
             ))}

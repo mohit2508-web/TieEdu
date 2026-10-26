@@ -50,7 +50,7 @@ const TpoDashboardBody: React.FC = () => {
     <TpoShell title="Dashboard">
       <div className="mx-auto max-w-[1180px] px-4 py-6 space-y-5">
         {/* Identity row — the three facts every placement request is scoped by */}
-        <div className="grid sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <DashboardCard>
             <div className="flex items-center gap-3">
               <span
@@ -113,7 +113,7 @@ const TpoDashboardBody: React.FC = () => {
               </p>
             </div>
           </div>
-          <ul className="grid sm:grid-cols-2 gap-x-6 gap-y-1.5 text-sm text-body">
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 text-sm text-body">
             <li>✓ &nbsp;Placement authority (role + grant) resolved per request</li>
             <li>✓ &nbsp;College-scoped tenancy with switcher</li>
             <li>✓ &nbsp;Invite + access management in the admin console</li>

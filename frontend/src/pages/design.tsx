@@ -177,7 +177,7 @@ const DesignGuide: React.FC = () => {
                 { label: 'HR', state: 'next' },
               ]}
             />
-            <div className="grid gap-6 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
               <RouteLine
                 orientation="vertical"
                 stations={[
@@ -211,7 +211,7 @@ const DesignGuide: React.FC = () => {
             <ProgressRing value={100} label="Plan complete" tone="success" size={72} />
             <Button kind="secondary" size="sm" onClick={() => setRing((r) => (r >= 100 ? 10 : r + 15))}>Advance</Button>
           </div>
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatTile label="CTC range" icon={IndianRupee} value="18–32" unit="LPA" source={<Stamp kind="source" flat>From 12 offers</Stamp>} />
             <StatTile label="Process length" icon={Timer} value="14" unit="days" source={<Stamp kind="pending" flat>Being verified</Stamp>} />
             <StatTile label="Rounds" icon={Briefcase} value="4" note="OA, two technical, HR" />
@@ -220,7 +220,7 @@ const DesignGuide: React.FC = () => {
         </Block>
 
         <Block title="Cards and tickets" note="Hairline by default; one raised card per screen; tickets for anything bought or earned.">
-          <div className="grid gap-4 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             <Card>
               <p className="font-semibold text-heading">Plain card</p>
               <p className="mt-1 text-sm text-muted">Most cards. Hairline border, 14px radius.</p>
@@ -234,7 +234,7 @@ const DesignGuide: React.FC = () => {
               <p className="mt-1 text-sm text-white/80">The page&apos;s one heavy area.</p>
             </Card>
           </div>
-          <div className="mt-4 grid gap-4 lg:grid-cols-2">
+          <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
             <Ticket stub={<><p className="text-xs font-semibold uppercase tracking-wider">Pack</p><p className="font-display text-2xl font-bold tabular-nums">₹99</p></>}>
               <p className="font-semibold text-heading">Zscaler round pack</p>
               <p className="mt-1 text-sm text-muted">4 rounds · lifetime access</p>
@@ -247,7 +247,7 @@ const DesignGuide: React.FC = () => {
         </Block>
 
         <Block title="Generated covers" note="Pattern from the subject, colour from the title. Same course, same cover, everywhere.">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[
               ['Python Programming', 'Programming', 'Course · 24 lessons'],
               ['Digital Electronics', 'ECE', 'Course · 18 lessons'],
@@ -269,7 +269,7 @@ const DesignGuide: React.FC = () => {
             <Avatar name="Large" size="lg" />
             <Avatar name="Small" size="sm" />
           </div>
-          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <EmptyState icon={Inbox} title="No interview experiences yet." note="Be the first from your batch to share one." action={{ label: 'Share your experience', onClick: () => undefined }} />
             <EmptyState icon={BookOpen} title="You have not started a course." action={{ label: 'Browse courses', onClick: () => undefined }} />
           </div>

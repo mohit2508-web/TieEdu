@@ -313,7 +313,7 @@ export const StudyPlansTab: React.FC = () => {
         ))}
       </div>
 
-      <div className="grid lg:grid-cols-[19rem_1fr] gap-4 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-[19rem_1fr] gap-4 items-start">
         <div className={`space-y-2 ${mobilePane === 'list' ? '' : 'hidden lg:block'}`}>
           <div className="relative">
             <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -385,7 +385,7 @@ export const StudyPlansTab: React.FC = () => {
           ) : (
             <div className="space-y-4">
               <div className="rounded-2xl border border-gray-200 bg-white p-4 space-y-3">
-                <div className="grid sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-mono font-bold uppercase text-gray-500 mb-1">Title</label>
                     <input className={inputCls} value={meta.title} onChange={(e) => setMeta({ ...meta, title: e.target.value })} />

@@ -102,7 +102,7 @@ export default function CampusPage({ page }: { page: CampusPublic }) {
             {a.companies.length > 0 && (
               <section aria-labelledby="companies-title">
                 <SectionHead id="companies-title" title="Companies the batch is preparing for" description="Average readiness of the students who have taken that company's tests." />
-                <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <ul className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {a.companies.map((c) => (
                     <li key={c.slug}>
                       <Card className="flex items-center gap-4">

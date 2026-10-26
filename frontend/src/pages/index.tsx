@@ -119,7 +119,7 @@ export default function Home() {
               The finder is the page's primary action on every screen size; it
               also drives the vault rail filter below through `searchQuery`. */}
           <section className="border-b border-line bg-paper">
-            <div className="mx-auto grid w-full max-w-[1200px] gap-10 px-4 pb-12 pt-10 sm:px-6 sm:pb-16 sm:pt-14 lg:grid-cols-12 lg:items-center">
+            <div className="mx-auto grid grid-cols-1 w-full max-w-[1200px] gap-10 px-4 pb-12 pt-10 sm:px-6 sm:pb-16 sm:pt-14 lg:grid-cols-12 lg:items-center">
               <div className="min-w-0 lg:col-span-7">
                 <p className="eyebrow text-signal-ink">Placement prep for engineering students</p>
                 <h1 className="mt-3 font-display text-4xl font-bold leading-[1.05] tracking-tight text-heading sm:text-5xl lg:text-6xl">

@@ -195,7 +195,7 @@ const CourseMetaForm: React.FC<{
     <div className="space-y-4">
       {error && <ErrorNote>{error}</ErrorNote>}
 
-      <div className="grid sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Field label="Title">
           <TextInput value={form.title} onChange={(e) => set({ title: e.target.value })} />
         </Field>
@@ -248,7 +248,7 @@ const CourseMetaForm: React.FC<{
           written these would otherwise assume a bug.
           --------------------------------------------------------------------- */}
       <Panel title="Course page sections" subtitle="Leave a section empty and its heading is hidden on the public page.">
-        <div className="grid sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field
             label="About this course"
             hint="Long prose. Leave a blank line between paragraphs. Empty hides the section."
@@ -301,7 +301,7 @@ const CourseMetaForm: React.FC<{
         />
       </Panel>
 
-      <div className="grid sm:grid-cols-2 gap-4 pt-1">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
         <Toggle
           checked={form.is_free}
           onChange={(v) => set({ is_free: v, price_inr: v ? 0 : form.price_inr })}
@@ -505,7 +505,7 @@ export const AdminCoursesTab: React.FC = () => {
       >
         {showCreate && (
           <div className="rounded-xl border border-line bg-app-warm p-4 mb-4 space-y-3">
-            <div className="grid sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Field label="Title" className="sm:col-span-2">
                 <TextInput
                   value={draft.title}
@@ -531,7 +531,7 @@ export const AdminCoursesTab: React.FC = () => {
               likely to publish before noticing. Answering it at creation makes
               "free" a decision instead of an accident.
             */}
-            <div className="grid sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Toggle
                 label="Free course"
                 checked={draft.is_free}
@@ -878,7 +878,7 @@ const InstructorPicker: React.FC<{
                 Use a real name, role and bio. These appear on the public course page, so
                 write what is true rather than what fills the space.
               </p>
-              <div className="grid sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Field label="Name">
                   <TextInput
                     value={draft.name}

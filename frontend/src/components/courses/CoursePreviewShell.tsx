@@ -84,7 +84,7 @@ export const CoursePreviewShell: React.FC<{
 
   return (
     <>
-    <div className="grid gap-8 lg:grid-cols-[1fr_280px] lg:items-start">
+    <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_280px] lg:items-start">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           {course.category && (
@@ -133,7 +133,7 @@ export const CoursePreviewShell: React.FC<{
             <h2 id="preview-outcomes" className="text-xl font-extrabold tracking-tight text-[var(--ink)]">
               What you will be able to do
             </h2>
-            <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+            <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
               {course.outcomes!.map((outcome, i) => (
                 <li
                   key={i}
@@ -152,7 +152,7 @@ export const CoursePreviewShell: React.FC<{
             <h2 id="preview-includes" className="text-xl font-extrabold tracking-tight text-[var(--ink)]">
               What is included
             </h2>
-            <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+            <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
               {includes.map((item) => (
                 <li key={item} className="flex gap-2 text-sm leading-snug text-[var(--text-body)]">
                   <CheckCircle2 size={15} className="mt-0.5 shrink-0 text-[var(--color-success)]" />

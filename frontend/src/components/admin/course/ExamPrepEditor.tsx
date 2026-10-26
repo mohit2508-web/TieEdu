@@ -313,7 +313,7 @@ export const ExamPrepEditor: React.FC<{
       </div>
 
       {/* Course-wide lists */}
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="Course-wide important questions" hint="One per line. Shown on top of the per-unit ones.">
           <TextArea
             rows={4}

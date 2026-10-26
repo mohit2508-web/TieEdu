@@ -144,7 +144,7 @@ export const TodayScreen: React.FC<{ ready: boolean }> = ({ ready }) => {
       <main className="mx-auto max-w-[1200px] px-4 py-10 sm:px-6" aria-busy="true">
         <Skeleton className="h-10 w-72" />
         <Skeleton className="mt-6 h-40 w-full" />
-        <div className="mt-6 grid gap-4 lg:grid-cols-3">
+        <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
           <Skeleton className="h-48 w-full" />
           <Skeleton className="h-48 w-full" />
           <Skeleton className="h-48 w-full" />
@@ -192,7 +192,7 @@ export const TodayScreen: React.FC<{ ready: boolean }> = ({ ready }) => {
         </div>
       </Card>
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-3">
+      <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* This week */}
         <Card className="lg:row-span-2">
           <h2 className="font-display text-lg font-bold text-heading">This week</h2>
@@ -316,7 +316,7 @@ export const TodayScreen: React.FC<{ ready: boolean }> = ({ ready }) => {
         {!data.continue && !data.recap && data.targets.length === 0 && (
           <Card className="lg:col-span-2">
             <p className="eyebrow text-muted">Start somewhere</p>
-            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
               {[
                 { href: '/courses', label: 'Learn', note: 'Courses, free to start' },
                 { href: '/skill-test', label: 'Practise', note: 'Free skill tests' },

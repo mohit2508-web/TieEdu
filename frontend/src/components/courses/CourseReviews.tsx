@@ -68,7 +68,7 @@ export const CourseReviews: React.FC<{ courseSlug: string }> = ({ courseSlug }) 
         Only people who completed the whole course can leave feedback — so every review here is
         from someone who actually did the work.
       </p>
-      <ul className="mt-5 grid gap-4 sm:grid-cols-2">
+      <ul className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
         {reviews.slice(0, 8).map((review, i) => (
           <li
             key={`${review.user_name}-${i}`}

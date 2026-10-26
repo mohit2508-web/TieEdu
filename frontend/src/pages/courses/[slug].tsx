@@ -810,7 +810,7 @@ export default function CoursePage({
                   cover gives the page an anchor. On narrow screens the cover
                   drops below the title rather than squeezing the title into a
                   narrow column. */}
-              <div className="grid gap-6 sm:grid-cols-[1fr_240px] sm:items-start">
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-[1fr_240px] sm:items-start">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="rounded-full bg-[var(--brand-sky-soft)] px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-[var(--brand-sky-strong)]">
@@ -996,7 +996,7 @@ export default function CoursePage({
                  (summary+rating left, certificate right) without a second copy
                  of either. */
               <section className="mb-8 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6">
-                <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:items-start">
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:items-start">
                   <div className="lg:order-2 lg:border-l lg:border-[var(--border-subtle)] lg:pl-6">
                     {course.certificate_eligible ? (
                       <>
@@ -1104,7 +1104,7 @@ export default function CoursePage({
                   <Gift size={16} className="text-[var(--brand-sky)]" />
                   <h2 className="text-sm font-bold text-[var(--ink)]">What you&apos;ll get</h2>
                 </div>
-                <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+                <ul className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
                   {course.perks.map((perk) => (
                     <li
                       key={perk.key}
@@ -1181,7 +1181,7 @@ export default function CoursePage({
                 have been a small, silent regression at laptop widths. The extra
                 20px on the outline, and the card, both arrive together at 1440px,
                 which is where the lesson still gets ~724px with all three. */}
-            <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-8 min-[1440px]:grid-cols-[300px_minmax(0,1fr)_288px] lg:items-start">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-8 min-[1440px]:grid-cols-[300px_minmax(0,1fr)_288px] lg:items-start">
               <CourseSyllabusNav
                 modules={course.modules || []}
                 courseSlug={slug}
@@ -1321,7 +1321,7 @@ export default function CoursePage({
                 <h2 id="outcomes-heading" className="text-xl font-extrabold tracking-tight text-[var(--ink)]">
                   What you will be able to do
                 </h2>
-                <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+                <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                   {course.outcomes!.map((outcome, i) => (
                     <li key={i} className="flex gap-3 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4">
                       <CheckCircle2 size={17} className="mt-0.5 shrink-0 text-[var(--color-success)]" />
