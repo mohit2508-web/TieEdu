@@ -18,6 +18,7 @@ import { postersRouter } from './routes/posters.routes';
 import { campusRouter } from './routes/campus.routes';
 import { analyticsRouter } from './routes/analytics.routes';
 import { interviewCourseRouter } from './routes/interviewCourse.routes';
+import { dailyChallengeRouter } from './routes/dailyChallenge.routes';
 import { coursesRouter } from './routes/courses.routes';
 import { courseAdminRouter } from './routes/courseAdmin.routes';
 import { tracksRouter } from './routes/tracks.routes';
@@ -154,6 +155,7 @@ app.use('/api/study-plan', optionalAuth, studyPlanRouter);
 app.use('/api/campus', campusRouter);
 app.use('/api/analytics', analyticsRouter);
 app.use('/api/interview-course', interviewCourseRouter);
+app.use('/api/daily-challenge', dailyChallengeRouter);
 app.use('/api/courses', coursesRouter);
 app.use('/api/course-admin', courseAdminRouter);
 // Learning tracks: public list/detail (optionalAuth inside), certificate claim

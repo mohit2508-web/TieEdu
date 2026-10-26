@@ -28,7 +28,7 @@ export interface InterviewModule {
 }
 
 // 50 Masterclass Modules Data Bank
-const INTERVIEW_MODULES: InterviewModule[] = [
+export const INTERVIEW_MODULES: InterviewModule[] = [
   // Modules 1 - 10
   {
     id: 1,

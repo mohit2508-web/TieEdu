@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, BookOpen, CalendarClock, ClipboardCheck, Flame, RotateCw, Snowflake, TrendingUp } from 'lucide-react';
 import { Button, Card, EmptyState, ProgressRing, RouteLine, Skeleton } from '@/components/ui';
+import { DailyChallengeCard } from '@/components/today/DailyChallengeCard';
 import { fetchToday, saveGradYear, TodayView } from '@/lib/todayApi';
 import { cn } from '@/lib/cn';
 import { PassportCard } from './PassportCard';
@@ -191,6 +192,8 @@ export const TodayScreen: React.FC<{ ready: boolean }> = ({ ready }) => {
           )}
         </div>
       </Card>
+
+      <DailyChallengeCard />
 
       <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* This week */}

@@ -36,6 +36,7 @@ import {
   Tag,
   Video,
   UserRound,
+  Zap,
 } from 'lucide-react';
 
 // ---------------------------------------------------------------------------
@@ -236,6 +237,16 @@ export const NAV_ITEMS: Record<string, NavItem> = {
     primary: true,
     keywords: ['drive', 'mock drive', 'assessment', 'company test', 'hiring', 'placement test'],
   },
+  daily: {
+    id: 'daily',
+    href: '/daily',
+    label: 'Daily challenge',
+    icon: Zap,
+    match: 'exact',
+    description: 'Ten minutes a day: one aptitude, one coding and one HR question',
+    primary: true,
+    keywords: ['daily', 'challenge', 'streak', 'aptitude', 'quiz', 'practice', 'question of the day'],
+  },
   drops: {
     id: 'drops',
     href: '/drops',
@@ -404,7 +415,7 @@ export interface NavSection {
 export const NAV_SECTIONS: NavSection[] = [
   { id: 'home', label: 'Home', icon: House, itemIds: ['home'] },
   { id: 'learn', label: 'Learn', icon: BookOpen, itemIds: ['courses', 'tracks', 'freeCourse', 'studyPlan', 'myCourses', 'myCertificates'] },
-  { id: 'practise', label: 'Practise', icon: Target, itemIds: ['skillTest', 'drives'] },
+  { id: 'practise', label: 'Practise', icon: Target, itemIds: ['skillTest', 'daily', 'drives'] },
   { id: 'companies', label: 'Companies', icon: Building2, itemIds: ['companies', 'compare'], extraPrefixes: ['/company'] },
   { id: 'feed', label: 'Feed', icon: Newspaper, itemIds: ['drops'] },
 ];
