@@ -238,6 +238,16 @@ export const NAV_ITEMS: Record<string, NavItem> = {
     primary: true,
     keywords: ['drive', 'mock drive', 'assessment', 'company test', 'hiring', 'placement test'],
   },
+  offerCheck: {
+    id: 'offerCheck',
+    href: '/offer-check',
+    label: 'Offer checker',
+    icon: ShieldCheck,
+    match: 'exact',
+    description: 'Is this job offer real? Check a message for the signs of a fake offer',
+    primary: false,
+    keywords: ['scam', 'fake job', 'fake offer', 'fraud', 'is this real', 'job offer', 'verify offer', 'security deposit'],
+  },
   calendar: {
     id: 'calendar',
     href: '/calendar',
@@ -427,7 +437,7 @@ export const NAV_SECTIONS: NavSection[] = [
   { id: 'home', label: 'Home', icon: House, itemIds: ['home'] },
   { id: 'learn', label: 'Learn', icon: BookOpen, itemIds: ['courses', 'tracks', 'freeCourse', 'studyPlan', 'calendar', 'myCourses', 'myCertificates'] },
   { id: 'practise', label: 'Practise', icon: Target, itemIds: ['skillTest', 'daily', 'drives'] },
-  { id: 'companies', label: 'Companies', icon: Building2, itemIds: ['companies', 'compare'], extraPrefixes: ['/company'] },
+  { id: 'companies', label: 'Companies', icon: Building2, itemIds: ['companies', 'compare', 'offerCheck'], extraPrefixes: ['/company'] },
   { id: 'feed', label: 'Feed', icon: Newspaper, itemIds: ['drops'] },
 ];
 
