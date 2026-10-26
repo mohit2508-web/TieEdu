@@ -72,7 +72,7 @@ function DrivesListScreen() {
 
   return (
     <DriveShell title="Drives">
-      <div className="mx-auto w-full max-w-[720px] px-4 pb-8 pt-3">
+      <div className="mx-auto w-full max-w-[880px] px-4 pb-8 pt-3">
         {/* Search */}
         <div className="relative">
           <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--apple-label-2)' }} />

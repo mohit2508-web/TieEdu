@@ -14,9 +14,12 @@ function stateFor(round: DriveRound, registered: boolean): NodeState {
   return 'available';
 }
 
+/** Text on a filled node: white in light, dark ink in dark (the fills lighten). */
+const ON_FILL = 'var(--apple-on-fill, #fff)';
+
 const STYLES: Record<NodeState, { ring: string; fill: string; fg: string; label: string }> = {
-  done:      { ring: 'var(--apple-green)',  fill: 'var(--apple-green)',  fg: '#fff', label: 'Completed' },
-  current:   { ring: 'var(--apple-blue)',   fill: 'var(--apple-blue)',   fg: '#fff', label: 'In progress' },
+  done:      { ring: 'var(--apple-green)',  fill: 'var(--apple-green)',  fg: ON_FILL, label: 'Completed' },
+  current:   { ring: 'var(--apple-blue)',   fill: 'var(--apple-blue)',   fg: ON_FILL, label: 'In progress' },
   available: { ring: 'var(--apple-blue)',   fill: 'var(--apple-surface)', fg: 'var(--apple-blue)', label: 'Available' },
   locked:    { ring: 'var(--apple-separator)', fill: 'var(--apple-fill)', fg: 'var(--apple-label-3)', label: 'Locked' },
 };
@@ -64,7 +67,7 @@ export const WorkflowStepper: React.FC<{ rounds: DriveRound[]; registered: boole
                 <span className="truncate text-sm font-semibold" style={{ color: 'var(--apple-label)' }}>
                   {round.round_name || round.name}
                 </span>
-                <span className="shrink-0 text-xs font-semibold uppercase tracking-wide" style={{ color: st.fg === '#fff' ? st.ring : 'var(--apple-label-2)' }}>
+                <span className="shrink-0 text-xs font-semibold uppercase tracking-wide" style={{ color: st.fg === ON_FILL ? st.ring : 'var(--apple-label-2)' }}>
                   {st.label}
                 </span>
               </div>

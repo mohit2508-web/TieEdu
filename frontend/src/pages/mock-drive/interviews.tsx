@@ -38,7 +38,7 @@ function InterviewsScreen() {
 
   return (
     <DriveShell title="Interviews">
-      <div className="mx-auto w-full max-w-[720px] px-4 pb-8 pt-4">
+      <div className="mx-auto w-full max-w-[880px] px-4 pb-8 pt-4">
         {loading ? (
           <div className="space-y-3">{[0, 1].map((i) => <Skeleton key={i} className="h-24 w-full" />)}</div>
         ) : error ? (
@@ -81,7 +81,7 @@ function InterviewsScreen() {
                       )}
                     </div>
                     {iv.meeting_url && iv.status === 'scheduled' && (
-                      <span className="mt-3 inline-block rounded-[10px] px-3 py-1.5 text-xs font-semibold text-white" style={{ background: 'var(--apple-blue)' }}>
+                      <span className="mt-3 inline-block rounded-[10px] px-3 py-1.5 text-xs font-semibold text-[color:var(--apple-on-fill,#fff)]" style={{ background: 'var(--apple-blue)' }}>
                         Join meeting
                       </span>
                     )}

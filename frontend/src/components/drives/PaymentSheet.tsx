@@ -125,7 +125,7 @@ export const PaymentSheet: React.FC<{
             <button
               type="button"
               onClick={() => { onClose(); onApproved?.(); }}
-              className="mt-4 flex w-full items-center justify-center gap-2 rounded-[12px] py-3 text-base font-semibold text-white"
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-[12px] py-3 text-base font-semibold text-[color:var(--apple-on-fill,#fff)]"
               style={{ background: 'var(--apple-blue)' }}
             >
               Book your slot <ArrowRight size={16} />
@@ -221,7 +221,7 @@ export const PaymentSheet: React.FC<{
               type="button"
               onClick={submit}
               disabled={busy}
-              className="mt-4 w-full rounded-[12px] py-3 text-base font-semibold text-white disabled:opacity-50"
+              className="mt-4 w-full rounded-[12px] py-3 text-base font-semibold text-[color:var(--apple-on-fill,#fff)] disabled:opacity-50"
               style={{ background: 'var(--apple-blue)' }}
             >
               {busy ? (progress ? `Uploading… ${progress}%` : 'Submitting…') : status === 'payment_rejected' ? 'Re-submit proof' : 'I’ve paid — submit proof'}

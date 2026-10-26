@@ -103,7 +103,7 @@ export const RegisterSheet: React.FC<{
             type="button"
             onClick={submit}
             disabled={busy || !phoneValid}
-            className="flex-1 rounded-[12px] py-3 text-base font-semibold text-white disabled:opacity-50"
+            className="flex-1 rounded-[12px] py-3 text-base font-semibold text-[color:var(--apple-on-fill,#fff)] disabled:opacity-50"
             style={{ background: 'var(--apple-blue)' }}
           >
             {busy ? 'Registering…' : 'Register'}

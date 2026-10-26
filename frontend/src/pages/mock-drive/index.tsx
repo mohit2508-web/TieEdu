@@ -67,13 +67,11 @@ function HomeTab() {
 
   return (
     <DriveShell title="Mock Drives">
-      <div className="mx-auto w-full max-w-[720px] px-4 pb-8 pt-4">
-        {/* Hero — greeting + headline numbers on a colour wash */}
-        <div
-          className="rounded-[18px] p-4 text-white shadow-sm"
-          style={{ background: 'linear-gradient(135deg, var(--apple-blue) 0%, #5E5CE6 100%)' }}
-        >
-          <h1 className="text-2xl font-bold tracking-tight">Hi {firstName(user?.name)} 👋</h1>
+      <div className="mx-auto w-full max-w-[880px] px-4 pb-8 pt-4">
+        {/* Hero — greeting + headline numbers on the brand's navy band (dark in both
+            themes, so the white text holds). The shell owns the page's h1. */}
+        <div className="rounded-[18px] bg-brand-ink p-4 text-white shadow-sm sm:p-5">
+          <p className="font-display text-xl font-bold tracking-tight text-white sm:text-2xl">Hi {firstName(user?.name)} 👋</p>
           <p className="mt-0.5 text-sm text-white/80">
             Everything happening with your mock drives, in one place.
           </p>
@@ -100,7 +98,7 @@ function HomeTab() {
           >
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] relative" style={{ background: 'var(--apple-surface)', color: 'var(--apple-red)' }}>
               <Bell size={16} strokeWidth={2} />
-              <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-xs font-bold text-white" style={{ background: 'var(--apple-red)' }}>
+              <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-xs font-bold text-[color:var(--apple-on-fill,#fff)]" style={{ background: 'var(--apple-red)' }}>
                 {home.unread_notifications}
               </span>
             </span>
@@ -120,15 +118,14 @@ function HomeTab() {
         {home?.next_test && (
           <Link
             href={`/mock-drive/drives/${home.next_test.drive_id}`}
-            className="mt-3 block rounded-[16px] p-4 text-white shadow-sm"
-            style={{ background: 'linear-gradient(135deg, #1C1C1E 0%, #2C2C2E 100%)' }}
+            className="mt-3 block rounded-[16px] bg-brand-ink p-4 text-white shadow-sm"
           >
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
                 <p className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-white/60">
                   <Clock3 size={12} /> Your test starts in
                 </p>
-                <p className="mt-1 text-2xl font-bold leading-none">
+                <p className="mt-1 text-2xl font-bold leading-none text-white">
                   <Countdown targetIso={home.next_test.starts_at} serverNowIso={home.server_now} />
                 </p>
                 <p className="mt-1.5 truncate text-xs text-white/70">
@@ -320,7 +317,7 @@ const HeroStat: React.FC<{ label: string; value: number | null; loading: boolean
     {loading ? (
       <Skeleton className="mx-auto h-5 w-7 bg-white/30" />
     ) : (
-      <p className="text-lg font-bold leading-none">{value ?? 0}</p>
+      <p className="text-lg font-bold leading-none text-white">{value ?? 0}</p>
     )}
     <p className="mt-1 text-xs font-medium text-white/75">{label}</p>
   </div>
@@ -379,7 +376,7 @@ const Empty: React.FC<{ icon: React.ReactNode; title: string; body: string; href
     <span style={{ color: 'var(--apple-label-2)' }}>{icon}</span>
     <p className="mt-2 text-sm font-medium" style={{ color: 'var(--apple-label)' }}>{title}</p>
     <p className="mx-auto mt-1 max-w-[260px] text-xs" style={{ color: 'var(--apple-label-2)' }}>{body}</p>
-    <Link href={href} className="mt-3 inline-block rounded-[10px] px-4 py-2 text-sm font-semibold text-white" style={{ background: 'var(--apple-blue)' }}>
+    <Link href={href} className="mt-3 inline-block rounded-[10px] px-4 py-2 text-sm font-semibold text-[color:var(--apple-on-fill,#fff)]" style={{ background: 'var(--apple-blue)' }}>
       {cta}
     </Link>
   </div>

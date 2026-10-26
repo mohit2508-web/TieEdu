@@ -41,7 +41,7 @@ function AttemptDetailScreen() {
   if (loading) {
     return (
       <DriveShell title="Result">
-        <div className="mx-auto w-full max-w-[720px] space-y-4 px-4 pb-8 pt-4">
+        <div className="mx-auto w-full max-w-[880px] space-y-4 px-4 pb-8 pt-4">
           <Skeleton className="h-28 w-full" />
           <Skeleton className="h-40 w-full" />
         </div>
@@ -52,7 +52,7 @@ function AttemptDetailScreen() {
   if (error || !attempt) {
     return (
       <DriveShell title="Result">
-        <div className="mx-auto w-full max-w-[720px] px-4 pb-8 pt-10">
+        <div className="mx-auto w-full max-w-[880px] px-4 pb-8 pt-10">
           <div className="flex items-start gap-2.5 rounded-[12px] px-4 py-3 text-sm" style={{ background: 'var(--apple-red-soft)', color: 'var(--apple-red)' }}>
             <AlertCircle size={16} className="mt-0.5 shrink-0" />
             <span>{error || 'Attempt not found.'}</span>
@@ -70,7 +70,7 @@ function AttemptDetailScreen() {
 
   return (
     <DriveShell title="Result">
-      <div className="mx-auto w-full max-w-[720px] px-4 pb-8 pt-4">
+      <div className="mx-auto w-full max-w-[880px] px-4 pb-8 pt-4">
         {/* Score card */}
         <div className="rounded-[14px] border p-5 text-center" style={{ background: 'var(--apple-surface)', borderColor: 'var(--apple-separator)' }}>
           <div

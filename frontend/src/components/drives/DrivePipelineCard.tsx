@@ -187,7 +187,7 @@ const StepCard: React.FC<{
         <button
           type="button"
           onClick={action.onClick}
-          className="mt-3 w-full rounded-[11px] py-2.5 text-sm font-semibold text-white transition-transform active:scale-[0.98]"
+          className="mt-3 w-full rounded-[11px] py-2.5 text-sm font-semibold text-[color:var(--apple-on-fill,#fff)] transition-transform active:scale-[0.98]"
           style={{ background: 'var(--apple-blue)' }}
         >
           {action.label}

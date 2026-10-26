@@ -81,7 +81,7 @@ function ProfileScreen() {
 
   return (
     <DriveShell title="My profile">
-      <div className="mx-auto w-full max-w-[720px] px-4 pb-8 pt-4">
+      <div className="mx-auto w-full max-w-[880px] px-4 pb-8 pt-4">
         {notice && (
           <div className="mb-3 flex items-center gap-2 rounded-[10px] px-3 py-2 text-sm" style={{ background: 'var(--apple-green-soft)', color: 'var(--apple-green)' }}>
             <Check size={14} /> {notice}

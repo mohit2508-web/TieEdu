@@ -82,7 +82,7 @@ export const SlotPicker: React.FC<{
             <button
               type="button"
               onClick={onClose}
-              className="mt-3.5 w-full rounded-[12px] py-2.5 text-base font-semibold text-white"
+              className="mt-3.5 w-full rounded-[12px] py-2.5 text-base font-semibold text-[color:var(--apple-on-fill,#fff)]"
               style={{ background: 'var(--apple-blue)' }}
             >
               Done

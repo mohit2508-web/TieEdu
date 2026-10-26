@@ -13,6 +13,7 @@
 // ============================================================================
 
 import type { LucideIcon } from 'lucide-react';
+import { driveBackHref, isDriveRootPath } from '@/lib/mockDriveNav';
 import {
   Award,
   BadgeCheck,
@@ -497,7 +498,9 @@ export const MOBILE_TAB_ACTIONS: NavActionItem['id'][] = ['search', 'cart'];
  *
  * Prefix-matched, so `/admin` also covers `/admin/login`.
  */
-export const SHELL_EXCLUDED_ROUTES: string[] = ['/login', '/signup', '/admin', '/tpo', '/school', '/mock-drive'];
+// `/mock-drive` left this list in Phase 5: it now sits inside the site shell under
+// Practise, with its five screens as an in-page strip (DriveShell).
+export const SHELL_EXCLUDED_ROUTES: string[] = ['/login', '/signup', '/admin', '/tpo', '/school'];
 
 /** True when this pathname opts out of the site shell entirely. */
 export const isShellExcluded = (pathname: string): boolean =>
@@ -598,6 +601,8 @@ export const resolveNavTitle = (pathname: string): string => {
  * prevent.
  */
 export const resolveBackHref = (pathname: string): string => {
+  // Mock Drives knows its own parents (`/mock-drive/profile` has no nesting to strip).
+  if (normalizePath(pathname).startsWith('/mock-drive/')) return driveBackHref(pathname);
   const item = resolveNavItem(pathname);
   if (!item) return '/';
   const current = normalizePath(pathname);
@@ -630,6 +635,9 @@ export const getNavigationDepth = (pathname: string): NavigationDepth => {
     // the tab stack), so this is a plain prefix test, not a segment test.
     if (current === prefix || current.startsWith(`${prefix}/`)) return 'detail';
   }
+
+  // Mock Drives' five screens are tabs of their own, not details of `/mock-drive`.
+  if (isDriveRootPath(current)) return 'root';
 
   const item = resolveNavItem(current);
 

@@ -1080,6 +1080,14 @@ p {
   line-height: 1.8;
   font-size: 17px;
 }
+/* The rule above colours <p> directly, so a paragraph ignores a band's text-white
+   and turns navy-on-navy in light mode (Mock Drives' hero did). On the dark
+   bands, a paragraph inherits the band's colour instead. `:where()` keeps this at
+   the element rule's own specificity (0,0,1) — it wins only by coming later, so
+   any colour class on the paragraph itself still beats it. */
+:where(.bg-brand-ink) p {
+  color: inherit;
+}
 
 code, pre, kbd, samp, .font-mono {
   font-family: var(--font-mono), ui-monospace, monospace;
@@ -2416,36 +2424,39 @@ body {
   --apple-teal-soft: rgba(64, 200, 224, 0.22);
 }
 
-/* Mock Drive sub-app always renders in the light Apple palette, even when the
-   OS is in dark mode (uniform light look for drives). Custom properties on a
-   descendant override the inherited :root values, so re-declaring them here
-   pins every screen inside the shell — and its sheets — to light tokens. */
+/* Mock Drives in the brand (UI_REDESIGN_PLAN_V2 Phase 5). The screens were
+   written against the iOS palette; rather than rewrite them, the scope maps every
+   --apple-* name onto a brand token. Channels, so this follows light and dark
+   with no second block. (It used to pin the light Apple palette, which left
+   Mock Drives blue and white inside an orange, dark-capable site.) */
 .mock-drive-scope {
-  color-scheme: light;
-  --apple-bg: #F2F2F7;
-  --apple-surface: #FFFFFF;
-  --apple-surface-2: #EAEAF2;
-  --apple-fill: #F7F7FA;
-  --apple-separator: rgba(60, 60, 67, 0.11);
+  --apple-bg: rgb(var(--rgb-bg-app));
+  --apple-surface: rgb(var(--rgb-bg-surface));
+  --apple-surface-2: rgb(var(--rgb-bg-surface-hover));
+  --apple-fill: rgb(var(--rgb-bg-surface-hover));
+  --apple-separator: rgb(var(--rgb-border-subtle));
 
-  --apple-label: #000000;
-  --apple-label-2: rgba(60, 60, 67, 0.76);  /* 5.0:1 on the grouped background (0.72 was 4.47) */
-  --apple-label-3: rgba(60, 60, 67, 0.44);
-  --apple-placeholder: rgba(60, 60, 67, 0.26);
+  --apple-label: rgb(var(--rgb-text-heading));
+  --apple-label-2: rgb(var(--rgb-text-muted));
+  --apple-label-3: rgb(var(--rgb-text-light));
+  --apple-placeholder: rgb(var(--rgb-text-light) / 0.7);
 
-  --apple-blue: #0066CC;   /* 5.0:1 as text on the grouped background, 5.6:1 under white (was #0071E3, 4.2 / 4.7) */
-  --apple-blue-soft: rgba(0, 113, 227, 0.12);
-  --apple-green: #1E7A34;  /* accessible green; #34C759 was 2.0:1 as text */
-  --apple-green-soft: rgba(52, 199, 89, 0.14);
-  --apple-orange: #C93400; /* accessible orange; #FF9500 was 2.0:1 as text */
-  --apple-orange-soft: rgba(255, 149, 0, 0.14);
-  --apple-red: #D70015;    /* accessible red; #FF3B30 was 3.2:1 as text */
-  --apple-red-soft: rgba(255, 59, 48, 0.12);
-  --apple-purple: #8944AB;
-  --apple-purple-soft: rgba(175, 82, 222, 0.14);
-  --apple-teal: #00708C;
-  --apple-teal-soft: rgba(48, 176, 199, 0.14);
-  --apple-yellow: #FFCC00;
+  --apple-blue: rgb(var(--rgb-signal));          /* the brand action colour */
+  --apple-blue-soft: rgb(var(--rgb-signal-soft));
+  --apple-green: rgb(var(--rgb-success));
+  --apple-green-soft: rgb(var(--rgb-success-soft));
+  --apple-orange: rgb(var(--rgb-warning));
+  --apple-orange-soft: rgb(var(--rgb-warning-soft));
+  --apple-red: rgb(var(--rgb-danger));
+  --apple-red-soft: rgb(var(--rgb-danger-soft));
+  --apple-purple: rgb(var(--rgb-purple));
+  --apple-purple-soft: rgb(var(--rgb-purple-soft));
+  --apple-teal: rgb(var(--rgb-track));
+  --apple-teal-soft: rgb(var(--rgb-track) / 0.14);
+  --apple-yellow: rgb(var(--rgb-money));
+
+  /* Text on a filled colour: white in light, dark ink in dark (the fills lighten). */
+  --apple-on-fill: rgb(var(--rgb-on-accent));
 }
 
 /* Grouped card — the iOS settings profile + list section. */
@@ -2455,7 +2466,12 @@ body {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 :root[data-theme='dark'] .apple-card { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5); }
-.mock-drive-scope .apple-card { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); }
+/* In Mock Drives a grouped card is a brand card: hairline border, the site radius. */
+.mock-drive-scope .apple-card {
+  border: 1px solid rgb(var(--rgb-border-subtle));
+  border-radius: 14px;
+  box-shadow: var(--shadow-xs, 0 1px 2px rgba(16, 21, 28, 0.06));
+}
 
 /* iOS grouped list row: full-bleed cell with hairline separator. */
 .apple-cell {

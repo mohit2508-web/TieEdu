@@ -4,33 +4,43 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
-import { ChevronLeft, Bell } from 'lucide-react';
+import { ChevronLeft, Bell, ClipboardList } from 'lucide-react';
 import { DRIVE_TABS, resolveDriveTab, isDriveRootPath, driveBackHref } from '@/lib/mockDriveNav';
 import { useAuth } from '@/context/AuthContext';
 import { fetchUnreadCountApi } from '@/lib/drivesApi';
+import { cn } from '@/lib/cn';
+
+/*
+ * Mock Drives inside the site (UI_REDESIGN_PLAN_V2 Phase 5).
+ *
+ * This used to be a separate iOS-styled app: its own top bar, its own bottom
+ * tab bar, Apple blue, and always light. It now lives in the site shell under
+ * Practise — the site header and tab bar, the site fonts and dark mode — and its
+ * five screens are an in-page strip. The screens still read the `--apple-*`
+ * tokens; `.mock-drive-scope` (globals.css) maps those onto the brand tokens, so
+ * no screen had to be rewritten to change its look.
+ */
 
 /**
- * Full-screen sign-in prompt for a signed-out visitor. Every `/api/drives/*` and
- * `/api/me/*` route is `requireAuth`, so rendering data for a guest would only
- * produce a flash of empty cards followed by a 401. Matching the site's own
- * pattern: bounce to `/login?next=<here>` on the button, but state it first so
- * the student knows why.
+ * Sign-in prompt for a signed-out visitor. Every `/api/drives/*` and `/api/me/*`
+ * route is `requireAuth`, so rendering data for a guest would only produce a
+ * flash of empty cards followed by a 401. Bounce to `/login?next=<here>` on the
+ * button, but state it first so the student knows why.
  */
 const SignInGate: React.FC<{ next: string }> = ({ next }) => (
-  <div className="mock-drive-scope flex min-h-[100dvh] flex-col items-center justify-center px-6 text-center" style={{ background: 'var(--apple-bg)' }}>
-    <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--apple-label)' }}>
-      Sign in to continue
-    </h1>
-    <p className="mt-2 max-w-[320px] text-sm leading-relaxed" style={{ color: 'var(--apple-label-2)' }}>
-      Mock Drives are tied to your student profile, so we need you signed in to show your drives, assessments and results.
-    </p>
-    <Link
-      href={`/login?next=${encodeURIComponent(next)}`}
-      className="mt-6 inline-flex min-h-[44px] items-center justify-center rounded-[12px] px-7 text-base font-semibold text-white transition-transform active:scale-[0.98]"
-      style={{ background: 'var(--apple-blue)' }}
-    >
-      Sign in
-    </Link>
+  <div className="mock-drive-scope mx-auto flex w-full max-w-[880px] px-4 py-10 sm:py-16">
+    <div className="vault-card w-full p-8 text-center sm:p-10">
+      <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-signal-soft text-signal-ink" aria-hidden>
+        <ClipboardList className="h-6 w-6" />
+      </span>
+      <h1 className="mt-4 font-display text-2xl font-bold text-heading">Sign in to see your drives</h1>
+      <p className="mx-auto mt-2 max-w-[360px] text-sm leading-relaxed text-muted">
+        Mock Drives are tied to your student profile: the drives you can apply to, your assessments and your results.
+      </p>
+      <Link href={`/login?next=${encodeURIComponent(next)}`} className="btn btn-primary mt-6 min-h-[44px] px-7">
+        Sign in
+      </Link>
+    </div>
   </div>
 );
 
@@ -78,115 +88,79 @@ export const DriveShell: React.FC<{ children: React.ReactNode; title?: string; s
     return (
       <>
         {head}
-        <div className="mock-drive-scope min-h-[100dvh]" style={{ background: 'var(--apple-bg)' }} aria-busy="true" />
+        <div className="mock-drive-scope min-h-[60vh]" aria-busy="true" />
       </>
     );
   }
 
-  return (
-    <div
-      className="mock-drive-scope flex min-h-[100dvh] flex-col"
-      style={{ background: 'var(--apple-bg)' }}
+  const bell = showBell ? (
+    <Link
+      href="/mock-drive/notifications"
+      aria-label={unread > 0 ? `Drive notifications, ${unread} unread` : 'Drive notifications'}
+      className="focus-ring relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-line bg-card text-body transition-colors hover:text-heading"
     >
+      <Bell size={18} strokeWidth={2} aria-hidden />
+      {unread > 0 && <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-danger ring-2 ring-card" aria-hidden />}
+    </Link>
+  ) : null;
+
+  return (
+    // The screens render no landmark of their own and the site shell adds none.
+    <main id="main" className="mock-drive-scope">
       {head}
-      {/* Top bar — identity, context, notifications. Nothing else. */}
-      <header
-        className="sticky top-0 z-40 border-b"
-        style={{
-          background: 'var(--apple-surface)',
-          borderColor: 'var(--apple-separator)',
-          paddingTop: 'var(--safe-top)',
-        }}
-      >
-        <div className="mx-auto flex h-[52px] max-w-[720px] items-center gap-2 px-2">
-          {!atRoot ? (
-            <button
-              type="button"
-              onClick={() => router.push(driveBackHref(router.pathname))}
-              aria-label="Back"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] transition-colors"
-              style={{ color: 'var(--apple-blue)' }}
-            >
-              <ChevronLeft size={22} strokeWidth={2.2} />
-            </button>
-          ) : (
-            <span className="w-2 shrink-0" />
-          )}
-
-          <h1
-            className="min-w-0 flex-1 truncate text-lg font-semibold tracking-tight"
-            style={{ color: 'var(--apple-label)' }}
-          >
-            {heading}
-          </h1>
-
-          {showBell ? (
+      <div className="mx-auto w-full max-w-[880px] px-4 pt-5 sm:pt-7">
+        {atRoot ? (
+          <>
+            <div className="flex items-end justify-between gap-3">
+              <div className="min-w-0">
+                {heading !== 'Mock Drives' && <p className="eyebrow text-signal">Mock Drives</p>}
+                <h1 className="truncate font-display text-2xl font-bold text-heading sm:text-3xl">{heading}</h1>
+              </div>
+              {bell}
+            </div>
+            {/* The five screens. One row at every width; scrolls on a narrow phone. */}
+            <nav aria-label="Mock Drive pages" className="-mx-4 mt-4 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <ul className="flex gap-2">
+                {DRIVE_TABS.map((tab) => {
+                  const on = tab.id === active.id;
+                  const Icon = tab.icon;
+                  return (
+                    <li key={tab.id} className="shrink-0">
+                      <Link
+                        href={tab.href}
+                        aria-current={on ? 'page' : undefined}
+                        className={cn(
+                          'focus-ring inline-flex min-h-[40px] items-center gap-1.5 rounded-full border px-3.5 text-sm font-semibold transition-colors',
+                          on ? 'border-heading bg-heading text-card' : 'border-line bg-card text-body hover:border-line-strong hover:text-heading'
+                        )}
+                      >
+                        <Icon size={15} strokeWidth={2.1} aria-hidden />
+                        {tab.label}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </nav>
+          </>
+        ) : (
+          <div className="flex items-center gap-2">
+            {/* The site header carries the back chevron on a phone; this is the desktop way back. */}
             <Link
-              href="/mock-drive/notifications"
-              aria-label={unread > 0 ? `Notifications, ${unread} unread` : 'Notifications'}
-              className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] transition-colors"
-              style={{ color: 'var(--apple-label-2)' }}
+              href={driveBackHref(router.pathname)}
+              aria-label="Back"
+              className="focus-ring -ml-2 hidden h-10 w-10 shrink-0 items-center justify-center rounded-xl text-body hover:text-heading md:flex"
             >
-              <Bell size={19} strokeWidth={2} />
-              {unread > 0 && (
-                <span
-                  className="absolute right-1.5 top-1.5 h-[9px] w-[9px] rounded-full border-2"
-                  style={{ background: 'var(--apple-red)', borderColor: 'var(--apple-surface)' }}
-                />
-              )}
+              <ChevronLeft size={22} strokeWidth={2.2} aria-hidden />
             </Link>
-          ) : (
-            <span className="w-2 shrink-0" />
-          )}
-        </div>
-      </header>
-
-      {/* Content column. A plain div (not <main>): pages own the landmark. */}
-      <div
-        className="flex-1"
-        style={{
-          // Reserve the space the fixed bottom bar vacates on a root tab.
-          paddingBottom: atRoot ? `calc(var(--apple-tabbar-h, 56px) + var(--safe-bottom, 0px))` : 'var(--safe-bottom, 0px)',
-        }}
-      >
-        {children}
+            <h1 className="min-w-0 flex-1 truncate font-display text-xl font-bold text-heading sm:text-2xl">{heading}</h1>
+            {bell}
+          </div>
+        )}
       </div>
 
-      {/* Bottom tab bar — five tabs, hides on pushed detail screens. */}
-      {atRoot && (
-        <nav
-          className="fixed inset-x-0 bottom-0 z-40 border-t"
-          style={{
-            background: 'var(--apple-surface)',
-            borderColor: 'var(--apple-separator)',
-            paddingBottom: 'var(--safe-bottom, 0px)',
-          }}
-          aria-label="Mock drive sections"
-        >
-          <ul className="mx-auto flex max-w-[720px] items-stretch">
-            {DRIVE_TABS.map((tab) => {
-              const isActive = tab.id === active.id;
-              const Icon = tab.icon;
-              return (
-                <li key={tab.id} className="flex-1">
-                  <Link
-                    href={tab.href}
-                    aria-current={isActive ? 'page' : undefined}
-                    className="flex min-h-[52px] flex-col items-center justify-center gap-[3px] px-1 py-1.5 transition-colors"
-                    style={{ color: isActive ? 'var(--apple-blue)' : 'var(--apple-label-2)' }}
-                  >
-                    <Icon size={21} strokeWidth={isActive ? 2.3 : 1.9} />
-                    <span className={`text-xs leading-none ${isActive ? 'font-semibold' : 'font-medium'}`}>
-                      {tab.shortLabel}
-                    </span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
-      )}
-    </div>
+      {children}
+    </main>
   );
 };
 

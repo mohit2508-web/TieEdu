@@ -20,7 +20,8 @@ export interface DriveTab {
 }
 
 export const DRIVE_TABS: DriveTab[] = [
-  { id: 'home', href: '/mock-drive', label: 'Home', shortLabel: 'Home', icon: Home },
+  // "Overview", not "Home": inside the site shell, Home is the site's own first tab.
+  { id: 'home', href: '/mock-drive', label: 'Overview', shortLabel: 'Overview', icon: Home },
   { id: 'drives', href: '/mock-drive/drives', label: 'Drives', shortLabel: 'Drives', icon: ClipboardList },
   { id: 'interviews', href: '/mock-drive/interviews', label: 'Interviews', shortLabel: 'Interviews', icon: Video },
   { id: 'assessments', href: '/mock-drive/assessments', label: 'Assessments', shortLabel: 'Assess', icon: FileCheck2 },

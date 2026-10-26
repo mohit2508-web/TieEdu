@@ -70,7 +70,7 @@ function DriveDetailScreen() {
   if (loading) {
     return (
       <DriveShell title="Drive">
-        <div className="mx-auto w-full max-w-[720px] space-y-4 px-4 pb-8 pt-4">
+        <div className="mx-auto w-full max-w-[880px] space-y-4 px-4 pb-8 pt-4">
           <Skeleton className="h-24 w-full" />
           <Skeleton className="h-10 w-full" />
           <Skeleton className="h-40 w-full" />
@@ -82,7 +82,7 @@ function DriveDetailScreen() {
   if (error && !detail) {
     return (
       <DriveShell title="Drive">
-        <div className="mx-auto w-full max-w-[720px] px-4 pb-8 pt-10">
+        <div className="mx-auto w-full max-w-[880px] px-4 pb-8 pt-10">
           <div className="flex items-start gap-2.5 rounded-[12px] px-4 py-3 text-sm" style={{ background: 'var(--apple-red-soft)', color: 'var(--apple-red)' }}>
             <AlertCircle size={16} className="mt-0.5 shrink-0" />
             <span>{error}</span>
@@ -109,7 +109,7 @@ function DriveDetailScreen() {
 
   return (
     <DriveShell title={drive.company_name || 'Drive'}>
-      <div className="mx-auto w-full max-w-[720px] px-4 pb-8 pt-4">
+      <div className="mx-auto w-full max-w-[880px] px-4 pb-8 pt-4">
         {/* Header card */}
         <div className="rounded-[14px] border p-4" style={{ background: 'var(--apple-surface)', borderColor: 'var(--apple-separator)' }}>
           <div className="flex items-start gap-3">
@@ -149,7 +149,7 @@ function DriveDetailScreen() {
               <button
                 type="button"
                 onClick={() => setRegisterOpen(true)}
-                className="w-full rounded-[12px] py-3 text-base font-semibold text-white transition-transform active:scale-[0.98]"
+                className="w-full rounded-[12px] py-3 text-base font-semibold text-[color:var(--apple-on-fill,#fff)] transition-transform active:scale-[0.98]"
                 style={{ background: 'var(--apple-blue)' }}
               >
                 Register for this drive
@@ -157,7 +157,7 @@ function DriveDetailScreen() {
             ) : !can_register && drive.registration_open && profileMissing ? (
               <Link
                 href="/mock-drive/settings"
-                className="block w-full rounded-[12px] py-3 text-center text-base font-semibold text-white transition-transform active:scale-[0.98]"
+                className="block w-full rounded-[12px] py-3 text-center text-base font-semibold text-[color:var(--apple-on-fill,#fff)] transition-transform active:scale-[0.98]"
                 style={{ background: 'var(--apple-blue)' }}
               >
                 Complete your profile to register

@@ -84,7 +84,7 @@ function SettingsScreen() {
 
   return (
     <DriveShell title="Settings">
-      <div className="mx-auto w-full max-w-[720px] px-4 pb-8 pt-4">
+      <div className="mx-auto w-full max-w-[880px] px-4 pb-8 pt-4">
         {error && (
           <div className="mb-3 flex items-start gap-2 rounded-[10px] px-3 py-2 text-sm" style={{ background: 'var(--apple-red-soft)', color: 'var(--apple-red)' }}>
             <AlertCircle size={14} className="mt-0.5 shrink-0" /> {error}
@@ -131,7 +131,7 @@ function SettingsScreen() {
                 <button
                   type="submit"
                   disabled={acctBusy}
-                  className="flex items-center gap-1.5 rounded-[10px] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                  className="flex items-center gap-1.5 rounded-[10px] px-4 py-2 text-sm font-semibold text-[color:var(--apple-on-fill,#fff)] disabled:opacity-50"
                   style={{ background: 'var(--apple-blue)' }}
                 >
                   {acctBusy ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} Save
