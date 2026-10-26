@@ -453,6 +453,10 @@
 .crumbs a {
   text-decoration: underline;
   text-underline-offset: 3px;
+  /* a 24px-tall tap target on phones without moving the text */
+  display: inline-block;
+  padding: 5px 0;
+  margin: -5px 0;
 }
 
 .hero .tChip:nth-child(1) {

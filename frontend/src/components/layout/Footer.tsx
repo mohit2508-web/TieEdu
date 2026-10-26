@@ -82,12 +82,12 @@ export const Footer: React.FC = () => {
             account, and it pointed "Admin" at `/admin/login` while the header
             pointed at `/admin`. One list cannot drift.
           */}
-          <div className="flex flex-wrap items-center justify-center gap-4 text-sm font-bold text-body">
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-0 text-sm font-bold text-body">
             {FOOTER_ITEMS.map((item) => (
               <Link
                 key={item.id}
                 href={item.href}
-                className="transition-colors hover:text-[var(--brand-sky)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand-sky)]"
+                className="inline-flex min-h-[40px] items-center transition-colors hover:text-[var(--brand-sky)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand-sky)]"
               >
                 {item.label}
               </Link>
@@ -95,7 +95,7 @@ export const Footer: React.FC = () => {
             {/* Colleges get their own door, outside the student nav (§5). */}
             <Link
               href="/colleges"
-              className="transition-colors hover:text-[var(--brand-sky)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand-sky)]"
+              className="inline-flex min-h-[40px] items-center transition-colors hover:text-[var(--brand-sky)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand-sky)]"
             >
               For colleges
             </Link>

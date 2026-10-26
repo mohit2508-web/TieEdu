@@ -251,8 +251,10 @@ export default function ComparePage() {
                     {slugs.length > 1 && (
                       <button
                         onClick={() => toggleSlug(s)}
+                        type="button"
                         aria-label={`Remove ${c?.name || s}`}
-                        className="hover:text-amber-300"
+                        // 24px target around a 14px glyph; the negative margin keeps the chip's size.
+                        className="-m-[5px] inline-flex h-6 w-6 items-center justify-center rounded-full hover:text-amber-300"
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>

@@ -81,7 +81,7 @@ export const AccountMenu: React.FC<{ onOpenChange?: (open: boolean) => void }> =
        * usable width at 320px - and "Sign in" is the affordance that matters.
        * "Sign up" is one tap further, in the drawer.
        */
-      <Link href="/login" className="btn btn-primary px-3 text-xs focus-ring sm:px-4 sm:text-sm">
+      <Link href="/login" className="btn btn-primary min-h-[40px] px-3 text-xs focus-ring sm:px-4 sm:text-sm">
         Sign in
       </Link>
     );

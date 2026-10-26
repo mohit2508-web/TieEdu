@@ -1342,6 +1342,8 @@ code, pre, kbd, samp, .font-mono {
 /* Code inside a block must not inherit the inline-code red (3.5:1 on #0F172A). */
 .prose-article pre code {
   color: #E6EDF3;
+  /* the block sets the size; the inline-code 0.88em shrank it to 11.5px on phones */
+  font-size: inherit;
 }
 
 .prose-article pre code.hljs {
@@ -2109,7 +2111,7 @@ code, pre, kbd, samp, .font-mono {
   border-radius: 999px;
   background: var(--drop-chip, var(--brand-sky));
   color: #fff;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -2138,7 +2140,7 @@ code, pre, kbd, samp, .font-mono {
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   color: #fff;
-  font-size: 10.5px;
+  font-size: 12px; /* the app-wide floor; 10.5px failed the phone audit */
   font-weight: 600;
   letter-spacing: 0.01em;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
@@ -2528,6 +2530,20 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .route-fill { transition: none; }
   .route-stamp-land { animation: none; }
+}
+
+/* ---- Touch target floor (WCAG 2.2 AA 2.5.8: 24 × 24 CSS px) -----------------
+   A phone audit found ~20 controls per page under 24px tall: compact text
+   buttons, icon buttons, chips. This is the net under all of them, on touch
+   screens only. `:where()` keeps it at zero specificity, so any explicit size
+   wins; a plain link inside a sentence is inline, and min-height does not apply
+   to inline boxes, so running text is untouched. Primary controls still aim for
+   40-44px with their own classes. */
+@media (pointer: coarse) {
+  :where(a[href], button, [role='button'], [role='tab'], [role='radio'], summary):not(.sr-only) { min-height: 24px; }
+  /* Height only. A min-width here replaced flex items' default `min-width: auto`,
+     which is what stops a chip shrinking below its label: the industry chips on
+     /companies collapsed to "Al", "IT S". Narrow icon buttons size themselves. */
 }
 
 /* ---- Dark mode: legacy palette remap ----------------------------------------
