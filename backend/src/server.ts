@@ -38,6 +38,10 @@ import { placementRouter } from './routes/placement.routes';
 import { placementAdminRouter } from './routes/placementAdmin.routes';
 import driveBridgeRouter from './routes/bridge.routes';
 import { drivesRouter, studentProfileRouter } from './routes/drives.routes';
+import { meRouter, parentRouter, passportRouter } from './routes/me.routes';
+import { startWeeklyRecapScheduler } from './lib/recapPush';
+import { collegesRouter, collegesAdminRouter } from './routes/colleges.routes';
+import { campusPagesRouter } from './routes/campusPages.routes';
 import driveAdminRouter from './routes/driveAdmin.routes';
 import { runDriveBridgeMigrations } from './db/driveBridgeMigrate';
 import { emailLeadsRouter } from './routes/emailLeads.routes';
@@ -130,6 +134,12 @@ app.use('/api/placement', placementRouter);
 // auth. Mounted before the SPA catch-all.
 app.use('/api/bridge', driveBridgeRouter);
 app.use('/api/drives', requireAuth, drivesRouter);
+app.use('/api/me', requireAuth, meRouter);
+app.use('/api/passport', passportRouter);
+app.use('/api/parent', parentRouter);
+app.use('/api/colleges', collegesRouter);
+app.use('/api/campus-pages', campusPagesRouter);
+app.use('/api/admin/college-requests', requireAdmin, collegesAdminRouter);
 app.use('/api/me', requireAuth, studentProfileRouter);
 app.use('/api/admin/drives', requireAdmin, driveAdminRouter);
 // TieEdu Schools router applies requireSchoolAuth itself — session + a school
@@ -355,6 +365,8 @@ export const httpServer = app.listen(PORT, async () => {
   ensureSeedData();
   try { seedSkillTest(); } catch (e: any) { console.error('[SkillTest] Seed failed:', e?.message); }
   console.log(`⚡ [TieEdu Backend API] Server running on http://localhost:${PORT}`);
+  // Off unless WEEKLY_RECAP_PUSH=1 (lib/recapPush): dev shares real push subscriptions.
+  startWeeklyRecapScheduler();
   if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
     console.warn('🔐 [Auth] JWT_SECRET env missing in production — auth is FAIL-CLOSED. Set JWT_SECRET (32+ chars) now.');
   }

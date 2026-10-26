@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Image as ImageIcon, Loader2, Sparkles, Trash2, Upload } from 'lucide-react';
+import { Image as ImageIcon, Loader2, Trash2, Upload, ImagePlus } from 'lucide-react';
 import { uploadCourseThumbnail } from '@/lib/coursesApi';
 import { apiAssetUrl } from '@/lib/api';
 import { courseCover } from '@/lib/courseFormat';
@@ -336,7 +336,7 @@ export const CourseThumbnailEditor: React.FC<CourseThumbnailEditorProps> = ({
               title="Uses the same deterministic gradient the card falls back to, rendered at card size."
               className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--border-strong)] px-3 py-1.5 text-xs font-bold text-[var(--ink)] transition-colors hover:bg-[var(--bg-surface-hover)] disabled:opacity-50"
             >
-              <Sparkles size={13} aria-hidden="true" />
+              <ImagePlus size={13} aria-hidden="true" />
               Generate from title
             </button>
 
@@ -353,10 +353,10 @@ export const CourseThumbnailEditor: React.FC<CourseThumbnailEditorProps> = ({
             ) : null}
           </div>
 
-          <p className="mt-2 text-[11px] text-[var(--text-muted)]">
+          <p className="mt-2 text-xs text-[var(--text-muted)]">
             Drop a file here or upload. JPG, PNG, WebP or AVIF, up to 4 MB, at least {MIN_WIDTH}×{MIN_HEIGHT}. Without a cover, {slug} shows a generated gradient.
           </p>
-          {error && <p className="mt-1.5 text-[11px] font-semibold text-[var(--color-error)]">{error}</p>}
+          {error && <p className="mt-1.5 text-xs font-semibold text-[var(--color-error)]">{error}</p>}
         </div>
       </div>
 
@@ -370,7 +370,7 @@ export const CourseThumbnailEditor: React.FC<CourseThumbnailEditorProps> = ({
             placeholder="Describe the cover for screen readers"
             className="mt-1.5 w-full rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 py-2 text-sm text-[var(--ink)] outline-none focus:border-[var(--brand-sky)]"
           />
-          <span className="mt-1 block text-[11px] text-[var(--text-muted)]">
+          <span className="mt-1 block text-xs text-[var(--text-muted)]">
             Saved with the course when you leave the field.
           </span>
         </label>
@@ -400,7 +400,7 @@ export const CourseThumbnailEditor: React.FC<CourseThumbnailEditorProps> = ({
 
           <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
             <label className="block">
-              <span className="text-[11px] font-semibold text-[var(--text-muted)]">Horizontal focus</span>
+              <span className="text-xs font-semibold text-[var(--text-muted)]">Horizontal focus</span>
               <input
                 type="range"
                 min={0}
@@ -412,7 +412,7 @@ export const CourseThumbnailEditor: React.FC<CourseThumbnailEditorProps> = ({
               />
             </label>
             <label className="block">
-              <span className="text-[11px] font-semibold text-[var(--text-muted)]">Vertical focus</span>
+              <span className="text-xs font-semibold text-[var(--text-muted)]">Vertical focus</span>
               <input
                 type="range"
                 min={0}

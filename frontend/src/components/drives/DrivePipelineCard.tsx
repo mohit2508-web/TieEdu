@@ -105,19 +105,19 @@ export const DrivePipelineCard: React.FC<{
     const linkState = booking.link_active_at ? 'active' : booking.link_assigned_at ? 'assigned' : 'pending';
     return (
       <div className="rounded-[14px] border p-4" style={{ borderColor: 'var(--apple-separator)', background: 'var(--apple-surface)' }}>
-        <div className="flex items-center gap-2 text-[12.5px] font-semibold" style={{ color: 'var(--apple-label-2)' }}>
+        <div className="flex items-center gap-2 text-xs font-semibold" style={{ color: 'var(--apple-label-2)' }}>
           <Clock3 size={14} style={{ color: 'var(--apple-blue)' }} />
           YOUR TEST STARTS IN
         </div>
-        <div className="mt-1 text-[26px] font-bold leading-none" style={{ color: 'var(--apple-label)' }}>
+        <div className="mt-1 text-2xl font-bold leading-none" style={{ color: 'var(--apple-label)' }}>
           <Countdown targetIso={booking.starts_at} serverNowIso={detail.server_now} />
         </div>
-        <p className="mt-1.5 text-[13px]" style={{ color: 'var(--apple-label-2)' }}>
+        <p className="mt-1.5 text-sm" style={{ color: 'var(--apple-label-2)' }}>
           {istLine(booking.starts_at)} · slot ends {istLine(booking.ends_at)}
         </p>
 
         <div
-          className="mt-3 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[12px] font-semibold"
+          className="mt-3 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-semibold"
           style={
             linkState === 'active'
               ? { background: 'var(--apple-green-soft)', color: 'var(--apple-green)' }
@@ -135,14 +135,14 @@ export const DrivePipelineCard: React.FC<{
         </div>
 
         {booking.round_name && (
-          <p className="mt-2 text-[12.5px]" style={{ color: 'var(--apple-label-2)' }}>
+          <p className="mt-2 text-xs" style={{ color: 'var(--apple-label-2)' }}>
             Round: <span className="font-medium" style={{ color: 'var(--apple-label)' }}>{booking.round_name}</span>
           </p>
         )}
         {booking.access_code && (
-          <p className="mt-1 text-[12.5px]" style={{ color: 'var(--apple-label-2)' }}>
+          <p className="mt-1 text-xs" style={{ color: 'var(--apple-label-2)' }}>
             Access code:{' '}
-            <span className="rounded-md px-1.5 py-0.5 font-mono text-[13px] font-bold" style={{ background: 'var(--apple-fill)', color: 'var(--apple-label)' }}>
+            <span className="rounded-md px-1.5 py-0.5 text-sm font-bold" style={{ background: 'var(--apple-fill)', color: 'var(--apple-label)' }}>
               {booking.access_code}
             </span>
           </p>
@@ -176,18 +176,18 @@ const StepCard: React.FC<{
         <span className="inline-flex h-7 w-7 items-center justify-center rounded-full" style={{ background: tones.bg, color: tones.fg }}>
           {icon}
         </span>
-        <p className="text-[14.5px] font-semibold" style={{ color: 'var(--apple-label)' }}>
+        <p className="text-sm font-semibold" style={{ color: 'var(--apple-label)' }}>
           {title}
           {pulse && <span className="ml-1.5 inline-block h-1.5 w-1.5 animate-pulse rounded-full align-middle" style={{ background: tones.fg }} />}
         </p>
       </div>
-      <p className="mt-1.5 text-[13px] leading-relaxed" style={{ color: 'var(--apple-label-2)' }}>{body}</p>
-      {note && <p className="mt-1 text-[12.5px]" style={{ color: tones.fg }}>{note}</p>}
+      <p className="mt-1.5 text-sm leading-relaxed" style={{ color: 'var(--apple-label-2)' }}>{body}</p>
+      {note && <p className="mt-1 text-xs" style={{ color: tones.fg }}>{note}</p>}
       {action && (
         <button
           type="button"
           onClick={action.onClick}
-          className="mt-3 w-full rounded-[11px] py-2.5 text-[14.5px] font-semibold text-white transition-transform active:scale-[0.98]"
+          className="mt-3 w-full rounded-[11px] py-2.5 text-sm font-semibold text-white transition-transform active:scale-[0.98]"
           style={{ background: 'var(--apple-blue)' }}
         >
           {action.label}

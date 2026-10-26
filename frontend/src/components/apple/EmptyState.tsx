@@ -11,9 +11,9 @@ export default function EmptyState(props: { title: string; body?: string; icon?:
         {props.icon ?? <Inbox size={24} strokeWidth={1.6} />}
       </div>
       <div>
-        <p className="text-[15px] font-semibold" style={{ color: 'var(--apple-label)' }}>{props.title}</p>
+        <p className="text-base font-semibold" style={{ color: 'var(--apple-label)' }}>{props.title}</p>
         {props.body ? (
-          <p className="mt-1 max-w-sm text-[13px] leading-relaxed" style={{ color: 'var(--apple-label-2)' }}>{props.body}</p>
+          <p className="mt-1 max-w-sm text-sm leading-relaxed" style={{ color: 'var(--apple-label-2)' }}>{props.body}</p>
         ) : null}
       </div>
     </div>

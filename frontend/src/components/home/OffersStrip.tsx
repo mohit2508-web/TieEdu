@@ -97,18 +97,18 @@ const OfferCard: React.FC<{ offer: PublicOffer }> = ({ offer }) => {
   };
 
   return (
-    <div className="flex w-[300px] flex-none snap-start flex-col gap-3 rounded-2xl border border-[#E9E7E1] bg-white p-4 sm:w-[320px]">
+    <div className="flex w-[300px] flex-none snap-start flex-col gap-3 rounded-2xl border border-line bg-white p-4 sm:w-[320px]">
       <div className="flex items-start gap-2.5">
-        <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#FBF1E1] text-[#B45309]">
+        <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-warning-soft text-amber-deep">
           <BadgePercent className="h-5 w-5" aria-hidden />
         </span>
         <div className="min-w-0">
-          <p className="truncate text-[14px] font-extrabold text-[#10151C]">{offer.label}</p>
-          <p className="text-[13px] font-bold text-[#15803D]">{discountText(offer)}</p>
+          <p className="truncate text-sm font-extrabold text-heading">{offer.label}</p>
+          <p className="text-sm font-bold text-success">{discountText(offer)}</p>
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] font-semibold text-[var(--text-muted)]">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold text-[var(--text-muted)]">
         {offer.remaining !== null && <span>{offer.remaining} left</span>}
         {countdown && (
           <span className="inline-flex items-center gap-1">
@@ -123,16 +123,16 @@ const OfferCard: React.FC<{ offer: PublicOffer }> = ({ offer }) => {
           type="button"
           onClick={stage}
           title="Copy code"
-          className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-xl border border-dashed border-[#0284C7]/50 bg-[#E8F4FB] px-3 font-mono text-[14px] font-extrabold tracking-wider text-[#0E2A44] transition-colors hover:bg-[#D8EDFA] focus-ring"
+          className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-xl border border-dashed border-signal/50 bg-signal-soft px-3 text-sm font-extrabold tracking-wider text-brand-ink transition-colors hover:bg-signal-soft focus-ring"
         >
-          {copied ? <Check className="h-4 w-4 text-[#15803D]" aria-hidden /> : <Copy className="h-4 w-4" aria-hidden />}
+          {copied ? <Check className="h-4 w-4 text-success" aria-hidden /> : <Copy className="h-4 w-4" aria-hidden />}
           {copied ? 'Copied!' : offer.code}
         </button>
         <Link
           href={targetHref(offer)}
           onClick={stage}
           aria-label={`Use ${offer.code} on ${targetLabel(offer)}`}
-          className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl bg-[#0284C7] px-3 text-white transition-colors hover:bg-[#0369A1] focus-ring"
+          className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl bg-signal px-3 text-white transition-colors hover:bg-signal focus-ring"
         >
           <ArrowRight className="h-4 w-4" aria-hidden />
         </Link>
@@ -161,21 +161,21 @@ export const OffersStrip: React.FC = () => {
   if (offers !== null && offers.length === 0) return null;
 
   return (
-    <section aria-label="Live offers" className="border-b border-[#E9E7E1] bg-[#FAFAF9]">
+    <section aria-label="Live offers" className="border-b border-line bg-app-warm">
       <Reveal className="mx-auto w-full max-w-[1700px] px-4 py-8 sm:px-8 sm:py-10 lg:px-12">
         <div className="mb-5 flex items-end justify-between gap-4">
           <div className="min-w-0">
             <span className="eyebrow">Live offers</span>
-            <h2 className="font-serif-heading text-2xl font-extrabold leading-tight text-[#10151C] sm:text-3xl">
+            <h2 className="font-serif-heading text-2xl font-extrabold leading-tight text-heading sm:text-3xl">
               Save on paid courses
             </h2>
-            <p className="mt-1 text-[13px] font-semibold text-[var(--text-muted)]">
+            <p className="mt-1 text-sm font-semibold text-[var(--text-muted)]">
               Real codes, working right now — tap to copy, applied at checkout.
             </p>
           </div>
           <Link
             href="/courses?src=offers"
-            className="inline-flex shrink-0 items-center gap-1.5 min-h-[44px] px-3 rounded-xl text-[14px] font-bold text-[#0271B5] hover:text-[#025a95] transition-colors focus-ring"
+            className="inline-flex shrink-0 items-center gap-1.5 min-h-[44px] px-3 rounded-xl text-sm font-bold text-signal hover:text-signal-hover transition-colors focus-ring"
           >
             All courses <ArrowRight className="h-4 w-4" aria-hidden />
           </Link>
@@ -187,7 +187,7 @@ export const OffersStrip: React.FC = () => {
                 <div
                   key={i}
                   aria-hidden="true"
-                  className="h-[212px] w-[300px] flex-none snap-start animate-pulse rounded-2xl bg-[#F0EFEC] sm:w-[320px]"
+                  className="h-[212px] w-[300px] flex-none snap-start animate-pulse rounded-2xl bg-surface-hover sm:w-[320px]"
                 />
               ))
             : offers.map((o) => <OfferCard key={o.id} offer={o} />)}

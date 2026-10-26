@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { ArrowRight, Award, Briefcase, Compass, GraduationCap, Sparkles, Target, Wrench, X } from 'lucide-react';
+import { ArrowRight, Award, Briefcase, Compass, GraduationCap, Target, Timer, Wrench, X } from 'lucide-react';
 import type { CatalogFacets, CatalogFilters } from '@/types';
 import type { CatalogMultiKey } from '@/lib/catalogState';
 
@@ -41,7 +41,7 @@ const INTENTS = [
     label: 'Start here in a weekend',
     sub: 'Micro-courses, 2–4 hours',
     href: '/courses?bucket=e&src=intent',
-    icon: Sparkles,
+    icon: Timer,
   },
 ];
 
@@ -54,7 +54,7 @@ export const IntentSections: React.FC = () => (
           href={intent.href}
           className="group flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3.5 transition-colors hover:border-[var(--brand-sky)]/50 focus-ring sm:p-4"
         >
-          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#E8F4FB] text-[#0271B5]">
+          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-signal-soft text-signal">
             <intent.icon size={18} aria-hidden />
           </span>
           <span className="min-w-0">
@@ -242,15 +242,6 @@ export const CourseWizard: React.FC<{
   );
 };
 
-export function shouldAutoOpenWizard(): boolean {
-  if (typeof window === 'undefined') return false;
-  try {
-    return window.localStorage.getItem(WIZARD_KEY) !== '1';
-  } catch {
-    return true;
-  }
-}
-
 export function dismissWizard(): void {
   try {
     window.localStorage.setItem(WIZARD_KEY, '1');
@@ -279,7 +270,7 @@ export const MobileFilterChips: React.FC<{
       onClick={() => onToggle(key, optKey)}
       aria-pressed={selected}
       className={[
-        'min-h-[40px] flex-none snap-start rounded-full border px-3.5 text-[13px] font-bold transition-colors focus-ring',
+        'min-h-[40px] flex-none snap-start rounded-full border px-3.5 text-sm font-bold transition-colors focus-ring',
         selected
           ? 'border-[var(--brand-sky)] bg-[var(--brand-sky)] text-white'
           : 'border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-body)]',

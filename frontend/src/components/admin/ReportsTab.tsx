@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { fetchModerationReportsApi, updateReportStatusApi } from '@/lib/api';
+import { fetchModerationReportsApi, updateReportStatusApi, updateReportVerificationApi } from '@/lib/api';
 import { InterviewReport } from '@/types';
 import { Company } from '@/types';
 import { BadgeCheck, Check, ChevronDown, FileText, Search, X } from 'lucide-react';
@@ -45,6 +45,15 @@ export const ReportsTab: React.FC<{ companies: Company[]; onChanged?: () => void
     }
   };
 
+  const changeVerification = async (id: string, method: 'offer_letter' | 'college_email' | null) => {
+    try {
+      const res = await updateReportVerificationApi(id, method);
+      setReports((prev) => prev.map((r) => (r.id === id ? { ...r, verification: res.report?.verification ?? null } : r)));
+    } catch (e: any) {
+      setError(e?.message || 'Verification update failed');
+    }
+  };
+
   const visible = reports
     .filter((r) => (filter === 'all' ? true : r.status === filter))
     .filter((r) => {
@@ -66,14 +75,14 @@ export const ReportsTab: React.FC<{ companies: Company[]; onChanged?: () => void
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
           <p className="eyebrow">#05 — Candidate Reports</p>
-          <h2 className="text-xl font-extrabold text-[#10151C] mt-1">Interview experience moderation</h2>
+          <h2 className="text-xl font-extrabold text-heading mt-1">Interview experience moderation</h2>
         </div>
         <div className="flex flex-wrap gap-1.5 text-xs font-mono font-bold">
           {(['all', 'pending_review', 'published', 'rejected'] as const).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 rounded-full border transition-all ${filter === f ? 'bg-[#1F3A5F] text-white border-[#1F3A5F]' : 'bg-white text-gray-500 border-gray-200 hover:border-[#0284C7] hover:text-[#0284C7]'}`}
+              className={`px-3 py-1.5 rounded-full border transition-all ${filter === f ? 'bg-brand-ink text-white border-brand-ink' : 'bg-white text-gray-500 border-gray-200 hover:border-signal hover:text-signal'}`}
             >
               {f === 'all' ? 'All' : f === 'pending_review' ? 'Pending' : f === 'published' ? 'Published' : 'Rejected'} ({counts[f]})
             </button>
@@ -88,7 +97,7 @@ export const ReportsTab: React.FC<{ companies: Company[]; onChanged?: () => void
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search candidate, company, role…"
-            className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#0284C7]/30"
+            className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-signal/30"
           />
         </div>
       )}
@@ -111,15 +120,15 @@ export const ReportsTab: React.FC<{ companies: Company[]; onChanged?: () => void
             <div key={r.id} className={`bg-white border rounded-2xl p-5 shadow-xs space-y-3 ${r.status === 'pending_review' ? 'border-amber-200' : 'border-gray-200'}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <span className="w-9 h-9 rounded-full bg-[#1F3A5F] text-white flex items-center justify-center text-sm font-bold uppercase">
+                  <span className="w-9 h-9 rounded-full bg-brand-ink text-white flex items-center justify-center text-sm font-bold uppercase">
                     {r.user_name.slice(0, 1)}
                   </span>
                   <div>
-                    <p className="text-sm font-bold text-[#1E293B]">{r.user_name} · {r.user_role}</p>
-                    <p className="text-[10px] font-mono text-gray-400">{companyName(r.company_id)} · {new Date(r.created_at).toLocaleDateString()}</p>
+                    <p className="text-sm font-bold text-ink-soft">{r.user_name} · {r.user_role}</p>
+                    <p className="text-xs font-mono text-gray-400">{companyName(r.company_id)} · {new Date(r.created_at).toLocaleDateString()}</p>
                   </div>
                 </div>
-                <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${outcomeChip(r.outcome)}`}>{r.outcome || 'pending'}</span>
+                <span className={`px-2 py-1 rounded-full text-xs font-bold uppercase ${outcomeChip(r.outcome)}`}>{r.outcome || 'pending'}</span>
               </div>
 
               <div className="space-y-1">
@@ -128,11 +137,11 @@ export const ReportsTab: React.FC<{ companies: Company[]; onChanged?: () => void
                     <span className="text-gray-600 font-semibold">
                       {round.round_name} {round.matched_questions && <span className="text-emerald-600">✓ matched</span>}
                     </span>
-                    <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${diffChip(round.difficulty)}`}>{round.difficulty}</span>
+                    <span className={`text-xs font-mono font-bold px-1.5 py-0.5 rounded ${diffChip(round.difficulty)}`}>{round.difficulty}</span>
                   </div>
                 ))}
                 {r.rounds.length > 2 && (
-                  <button onClick={() => setExpanded(expanded === r.id ? null : r.id)} className="text-[11px] font-semibold text-[#0284C7] flex items-center gap-1">
+                  <button onClick={() => setExpanded(expanded === r.id ? null : r.id)} className="text-xs font-semibold text-signal flex items-center gap-1">
                     <ChevronDown className={`w-3.5 h-3.5 transition-transform ${expanded === r.id ? 'rotate-180' : ''}`} />
                     {expanded === r.id ? 'Show less' : `+${r.rounds.length - 2} more rounds`}
                   </button>
@@ -140,23 +149,38 @@ export const ReportsTab: React.FC<{ companies: Company[]; onChanged?: () => void
               </div>
 
               <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-                <div className="text-[11px] font-mono text-gray-500">
-                  Accuracy: <strong className="text-[#0284C7]">{r.accuracy_rating}%</strong>
+                <div className="text-xs font-mono text-gray-500">
+                  Accuracy: <strong className="text-signal">{r.accuracy_rating}%</strong>
                   {r.salary_lpa ? ` · ${r.salary_lpa} LPA` : ''}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  {r.outcome === 'selected' && (
+                    <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-600">
+                      Proof seen
+                      <select
+                        value={r.verification?.method || ''}
+                        onChange={(e) => changeVerification(r.id, (e.target.value || null) as 'offer_letter' | 'college_email' | null)}
+                        className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs font-semibold text-gray-800"
+                        title="Shown publicly as 'Verified selection'. No document is stored."
+                      >
+                        <option value="">Not verified</option>
+                        <option value="offer_letter">Offer letter</option>
+                        <option value="college_email">College email</option>
+                      </select>
+                    </label>
+                  )}
                   {r.status === 'pending_review' && (
                     <>
-                      <button onClick={() => changeStatus(r.id, 'published')} className="px-2.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-[10px] font-bold flex items-center gap-1">
+                      <button onClick={() => changeStatus(r.id, 'published')} className="px-2.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold flex items-center gap-1">
                         <Check className="w-3 h-3" /> Publish (+50 XP)
                       </button>
-                      <button onClick={() => changeStatus(r.id, 'rejected')} className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg text-[10px] font-bold flex items-center gap-1">
+                      <button onClick={() => changeStatus(r.id, 'rejected')} className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg text-xs font-bold flex items-center gap-1">
                         <X className="w-3 h-3" /> Reject
                       </button>
                     </>
                   )}
                   {r.status !== 'pending_review' && (
-                    <span className={`text-[10px] font-mono font-bold uppercase px-2 py-1 rounded flex items-center gap-1 ${r.status === 'published' ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
+                    <span className={`text-xs font-mono font-bold uppercase px-2 py-1 rounded flex items-center gap-1 ${r.status === 'published' ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
                       {r.status === 'published' && <BadgeCheck className="w-3 h-3" />} {r.status}
                     </span>
                   )}
@@ -166,7 +190,7 @@ export const ReportsTab: React.FC<{ companies: Company[]; onChanged?: () => void
           ))}
         </div>
       )}
-      <p className="text-[11px] text-gray-400 font-mono">Publish hone par contributor ko +50 XP aur +1 streak milega (server-side).</p>
+      <p className="text-xs text-gray-400 font-mono">Publish hone par contributor ko +50 XP milega (server-side). Sirf &ldquo;Selected&rdquo; report hi feed mein selection story banti hai.</p>
     </div>
   );
 };

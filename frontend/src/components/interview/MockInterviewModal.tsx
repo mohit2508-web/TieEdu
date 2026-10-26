@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Play, Clock, Sparkles, CheckCircle2, Award, ArrowRight, Eye, RefreshCw, Star } from 'lucide-react';
+import { X, Play, Clock, CheckCircle2, Award, ArrowRight, Eye, RefreshCw, Star, Mic } from 'lucide-react';
 import { saveInterviewCourseProgressApi } from '@/lib/api';
 import { Sheet } from '@/components/common/Sheet';
 
@@ -99,12 +99,12 @@ export const MockInterviewModal: React.FC<MockInterviewModalProps> = ({
         <div className="px-4 sm:px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/50 gap-3 shrink-0">
           <div className="flex items-center gap-2 min-w-0">
             <span className="bg-brand-orange/20 text-brand-orange p-1.5 rounded-lg shrink-0">
-              <Sparkles className="w-5 h-5" />
+              <Mic className="w-5 h-5" />
             </span>
             <div className="min-w-0">
               <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
                 Mock Interview Practice Room
-                <span className="text-xs bg-slate-800 text-slate-300 px-2.5 py-0.5 rounded-full font-mono shrink-0">
+                <span className="text-xs bg-slate-800 text-slate-300 px-2.5 py-0.5 rounded-full shrink-0">
                   Module {currentIndex + 1} of {modules.length}
                 </span>
               </h3>
@@ -136,7 +136,7 @@ export const MockInterviewModal: React.FC<MockInterviewModalProps> = ({
             {!submitted ? (
               <button
                 onClick={handleSubmitAnswer}
-                className="bg-brand-orange hover:bg-brand-orange/90 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-all shadow-lg shadow-brand-orange/20"
+                className="bg-signal hover:bg-signal-hover text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-all shadow-lg shadow-brand-orange/20"
               >
                 Submit &amp; Reveal Model Answer
               </button>
@@ -163,7 +163,7 @@ export const MockInterviewModal: React.FC<MockInterviewModalProps> = ({
 
             {/* Timer Pill */}
             <div className="flex items-center gap-2">
-              <span className={`text-xs font-mono font-bold px-3 py-1 rounded-full flex items-center gap-1.5 border ${
+              <span className={`text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 border ${
                 secondsLeft < 30
                   ? 'bg-rose-950/50 border-rose-800 text-rose-400 animate-pulse'
                   : 'bg-slate-900 border-slate-800 text-amber-400'
@@ -196,7 +196,7 @@ export const MockInterviewModal: React.FC<MockInterviewModalProps> = ({
             <label className="text-sm font-semibold text-slate-200">
               Your Answer Draft / Verbal Notes:
             </label>
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-slate-400">
               {candidateResponse.split(/\s+/).filter(Boolean).length} words
             </span>
           </div>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Bell, CheckCheck } from 'lucide-react';
-import { DriveShell } from '@/components/drives/DriveShell';
+import { DriveShell, withDriveAuth } from '@/components/drives/DriveShell';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { fetchNotificationsApi, markNotificationsReadApi } from '@/lib/drivesApi';
 import type { DriveNotification } from '@/types/drives';
@@ -9,7 +9,7 @@ import type { DriveNotification } from '@/types/drives';
 const kindLabel = (kind: string) =>
   kind.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 
-export default function NotificationsScreen() {
+function NotificationsScreen() {
   const [rows, setRows] = useState<DriveNotification[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +53,7 @@ export default function NotificationsScreen() {
               type="button"
               onClick={markAllRead}
               disabled={marking}
-              className="inline-flex items-center gap-1.5 rounded-[10px] px-3 py-1.5 text-[12px] font-semibold disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-[10px] px-3 py-1.5 text-xs font-semibold disabled:opacity-50"
               style={{ background: 'var(--apple-blue-soft)', color: 'var(--apple-blue)' }}
             >
               <CheckCheck size={13} /> Mark all read
@@ -64,12 +64,12 @@ export default function NotificationsScreen() {
         {loading ? (
           <div className="space-y-3">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-16 w-full" />)}</div>
         ) : error ? (
-          <p className="rounded-[10px] px-3 py-2 text-[13px]" style={{ background: 'var(--apple-red-soft)', color: 'var(--apple-red)' }}>{error}</p>
+          <p className="rounded-[10px] px-3 py-2 text-sm" style={{ background: 'var(--apple-red-soft)', color: 'var(--apple-red)' }}>{error}</p>
         ) : rows.length === 0 ? (
           <div className="rounded-[12px] border px-4 py-12 text-center" style={{ borderColor: 'var(--apple-separator)', background: 'var(--apple-surface)' }}>
-            <Bell size={24} className="mx-auto" style={{ color: 'var(--apple-label-3)' }} />
-            <p className="mt-2 text-[14px] font-medium" style={{ color: 'var(--apple-label)' }}>No notifications</p>
-            <p className="mt-1 text-[13px]" style={{ color: 'var(--apple-label-2)' }}>Drive updates and reminders will appear here.</p>
+            <Bell size={24} className="mx-auto" style={{ color: 'var(--apple-label-2)' }} />
+            <p className="mt-2 text-sm font-medium" style={{ color: 'var(--apple-label)' }}>No notifications</p>
+            <p className="mt-1 text-sm" style={{ color: 'var(--apple-label-2)' }}>Drive updates and reminders will appear here.</p>
           </div>
         ) : (
           <ul className="space-y-2.5">
@@ -83,11 +83,11 @@ export default function NotificationsScreen() {
                   }}
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <p className="text-[14px] font-semibold" style={{ color: 'var(--apple-label)' }}>{n.title}</p>
+                    <p className="text-sm font-semibold" style={{ color: 'var(--apple-label)' }}>{n.title}</p>
                     {!n.read && <span className="mt-1 h-2 w-2 shrink-0 rounded-full" style={{ background: 'var(--apple-blue)' }} />}
                   </div>
-                  {n.body && <p className="mt-1 text-[13px] leading-snug" style={{ color: 'var(--apple-label-2)' }}>{n.body}</p>}
-                  <p className="mt-1.5 text-[11px]" style={{ color: 'var(--apple-label-3)' }}>
+                  {n.body && <p className="mt-1 text-sm leading-snug" style={{ color: 'var(--apple-label-2)' }}>{n.body}</p>}
+                  <p className="mt-1.5 text-xs" style={{ color: 'var(--apple-label-2)' }}>
                     {kindLabel(n.kind)}{n.created_at_ist ? ` · ${n.created_at_ist}` : ''}
                   </p>
                 </div>
@@ -108,3 +108,5 @@ export default function NotificationsScreen() {
     </DriveShell>
   );
 }
+
+export default withDriveAuth(NotificationsScreen);

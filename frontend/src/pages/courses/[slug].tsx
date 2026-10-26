@@ -28,7 +28,7 @@ import { CourseReviews } from '@/components/courses/CourseReviews';
 import { ShareSaveButtons } from '@/components/courses/ShareSaveButtons';
 import { ExamPrepPanel } from '@/components/courses/ExamPrepPanel';
 import { Sheet } from '@/components/common/Sheet';
-import { Award, AlertTriangle, CheckCircle2, Download, Lock, ShieldCheck, Star, Users, Layers, FileText, Clock, CircleDashed, Sparkles, Hammer, BookOpenCheck } from 'lucide-react';
+import { Award, AlertTriangle, CheckCircle2, Download, Lock, ShieldCheck, Star, Users, Layers, FileText, Clock, CircleDashed, Hammer, BookOpenCheck, Gift } from 'lucide-react';
 import {
   fetchCourse,
   fetchLesson,
@@ -39,6 +39,7 @@ import {
   submitCourseFeedback,
 } from '@/lib/coursesApi';
 import { API_BASE_URL, apiAssetUrl } from '@/lib/api';
+import { serverApiBase } from '@/lib/companyPagesApi';
 import {
   courseCta,
   courseIncludes,
@@ -413,6 +414,12 @@ export default function CoursePage({
     access: course?.access,
     price_inr: course?.price_inr,
   });
+  // On a catalogue card "Start learning" is an outline, because a list of
+  // solid buttons has no primary. Here it is the one next step on the page, so
+  // the same label is promoted to the solid primary; label and meaning still
+  // come from `courseCta`, so the two pages cannot disagree about the offer.
+  const pageTone = cta.tone === 'outline' ? 'primary' : cta.tone;
+
 
   // Real counts only. An unrated course shows no rating, and a course nobody has
   // enrolled in shows no learner count — see lib/courseFormat.ts.
@@ -466,7 +473,7 @@ export default function CoursePage({
     /* Label and tone come from `courseCta` - the same helper the catalogue card
        uses - so the same purchase state reads the same on both pages. */
     return (
-      <CtaButton tone={cta.tone} onClick={enrol} disabled={enrolling} className="disabled:opacity-50">
+      <CtaButton tone={pageTone} onClick={enrol} disabled={enrolling} className="disabled:opacity-50">
         {enrolling ? 'Starting…' : cta.label}
       </CtaButton>
     );
@@ -506,7 +513,7 @@ export default function CoursePage({
       <CourseMobileActionBar
         note={course.is_free ? 'Free · lifetime access' : `${formatPrice(course.price_inr)} · one-time`}
       >
-        <CtaButton tone={cta.tone} onClick={enrol} disabled={enrolling} className="w-full py-3 disabled:opacity-50">
+        <CtaButton tone={pageTone} onClick={enrol} disabled={enrolling} className="w-full py-3 disabled:opacity-50">
           {enrolling ? 'Starting…' : cta.label}
         </CtaButton>
       </CourseMobileActionBar>
@@ -806,15 +813,15 @@ export default function CoursePage({
               <div className="grid gap-6 sm:grid-cols-[1fr_240px] sm:items-start">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="rounded-full bg-[var(--brand-sky-soft)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--brand-sky-strong)]">
+                    <span className="rounded-full bg-[var(--brand-sky-soft)] px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-[var(--brand-sky-strong)]">
                       {course.category}
                     </span>
                     {course.is_free ? (
-                      <span className="rounded-full bg-[var(--bg-sky-soft)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--brand-sky)]">
+                      <span className="rounded-full bg-[var(--bg-sky-soft)] px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-[var(--brand-sky)]">
                         Free
                       </span>
                     ) : (
-                      <span className="rounded-full bg-[var(--brand-mint)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--brand-sky-strong)]">
+                      <span className="rounded-full bg-[var(--brand-mint)] px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-[var(--brand-sky-strong)]">
                         {formatPrice(course.price_inr)}
                       </span>
                     )}
@@ -837,6 +844,7 @@ export default function CoursePage({
                 <CourseCover
                   slug={course.slug}
                   title={course.title}
+                  subject={course.category}
                   thumbnailUrl={course.thumbnail_url}
                   priority
                   className="hidden aspect-[4/3] w-full overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border-subtle)] sm:block"
@@ -850,6 +858,7 @@ export default function CoursePage({
             <CourseCover
               slug={course.slug}
               title={course.title}
+              subject={course.category}
               thumbnailUrl={course.thumbnail_url}
               priority
               className="mt-5 aspect-[16/9] w-full overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border-subtle)] sm:hidden"
@@ -1092,7 +1101,7 @@ export default function CoursePage({
             {course.perks && course.perks.length > 0 && (
               <section className="mb-8 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
                 <div className="flex items-center gap-2">
-                  <Sparkles size={16} className="text-[var(--brand-sky)]" />
+                  <Gift size={16} className="text-[var(--brand-sky)]" />
                   <h2 className="text-sm font-bold text-[var(--ink)]">What you&apos;ll get</h2>
                 </div>
                 <ul className="mt-3 grid gap-2 sm:grid-cols-2">
@@ -1688,7 +1697,7 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
   let upstreamStatus: number | null = null;
 
   try {
-    const res = await fetch(`${API_BASE_URL}/courses/${encodeURIComponent(slug)}`);
+    const res = await fetch(`${serverApiBase()}/courses/${encodeURIComponent(slug)}`);
     upstreamStatus = res.status;
     if (res.ok) {
       const data = await res.json();
@@ -1705,7 +1714,7 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
   let catalogue: unknown;
   if (!initialCourse && upstreamStatus === 403) {
     try {
-      const res = await fetch(`${API_BASE_URL}/courses`);
+      const res = await fetch(`${serverApiBase()}/courses`);
       if (res.ok) {
         const data = await res.json();
         catalogue = data.courses;
@@ -1719,7 +1728,7 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
   // take the page down with it.
   if (initialCourse) {
     try {
-      const res = await fetch(`${API_BASE_URL}/courses/${encodeURIComponent(slug)}/related`);
+      const res = await fetch(`${serverApiBase()}/courses/${encodeURIComponent(slug)}/related`);
       if (res.ok) {
         const data = await res.json();
         initialRelated = Array.isArray(data.courses) ? data.courses : [];

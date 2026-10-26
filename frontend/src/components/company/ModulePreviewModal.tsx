@@ -3,7 +3,7 @@ import { ContentItem, ContentBlock } from '@/types';
 import { ContentBlockRenderer } from '@/components/blocks/ContentBlockRenderer';
 import { Sheet } from '@/components/common/Sheet';
 import { QuestionDiscussion } from './QuestionDiscussion';
-import { X, CheckCircle, Bookmark, Lock, Sparkles, ShieldCheck, Star, Eye, MessageSquare, ArrowRight } from 'lucide-react';
+import { X, CheckCircle, Bookmark, Lock, ShieldCheck, Star, Eye, MessageSquare, ArrowRight } from 'lucide-react';
 
 interface ModulePreviewModalProps {
   item: ContentItem | null;
@@ -65,9 +65,9 @@ export const ModulePreviewModal: React.FC<ModulePreviewModalProps> = ({
       className="sm:max-w-4xl sm:mx-auto sm:rounded-3xl max-h-[92vh]"
       contentClassName="p-0"
       header={
-        <div className="px-4 sm:px-6 py-4 bg-[#FAFAF9] border-b border-[#EDEDEB] flex items-center justify-between gap-3 shrink-0">
+        <div className="px-4 sm:px-6 py-4 bg-app-warm border-b border-line flex items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap min-w-0">
-            <span className={`px-3 py-1 rounded-xl text-xs font-mono font-bold uppercase border ${
+            <span className={`px-3 py-1 rounded-xl text-xs font-bold uppercase border ${
               item.is_free_preview
                 ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
                 : 'bg-amber-100 text-amber-900 border-amber-200'
@@ -75,11 +75,11 @@ export const ModulePreviewModal: React.FC<ModulePreviewModalProps> = ({
               {item.is_free_preview ? '👁️ Free Preview Available' : '🔒 Premium Verified Item'}
             </span>
 
-            <span className="text-xs font-mono font-bold text-[#1F3A5F] bg-[#1F3A5F]/10 px-3 py-1 rounded-xl">
+            <span className="text-xs font-bold text-brand-ink bg-brand-ink/10 px-3 py-1 rounded-xl">
               Role: {item.role_tag || 'SDE-1'}
             </span>
 
-            <span className={`text-xs font-mono font-bold capitalize px-2.5 py-0.5 rounded-lg ${
+            <span className={`text-xs font-bold capitalize px-2.5 py-0.5 rounded-lg ${
               item.difficulty === 'hard' ? 'bg-red-100 text-red-700' :
               item.difficulty === 'medium' ? 'bg-amber-100 text-amber-700' :
               'bg-green-100 text-green-700'
@@ -131,12 +131,12 @@ export const ModulePreviewModal: React.FC<ModulePreviewModalProps> = ({
       }
       footer={
         !isFree ? (
-          <div className="p-4 sm:p-5 bg-gradient-to-r from-[#1F3A5F] via-slate-900 to-[#1F3A5F] text-white shrink-0 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="p-4 sm:p-5 bg-gradient-to-r from-brand-ink via-slate-900 to-brand-ink text-white shrink-0 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <span className="font-bold text-amber-400 text-base">Unlock Complete {companyName} Intelligence Hub</span>
+                <span className="font-bold text-amber-400 text-base">Get the full {companyName} pack</span>
                 {typeof unlockPrice === 'number' && (
-                  <span className="bg-amber-400 text-[#1F3A5F] text-[11px] font-mono px-2.5 py-0.5 rounded-md font-black uppercase">₹{unlockPrice} One-Time</span>
+                  <span className="bg-amber-400 text-brand-ink text-xs px-2.5 py-0.5 rounded-md font-black uppercase">₹{unlockPrice} One-Time</span>
                 )}
               </div>
               <p className="text-xs text-gray-300">
@@ -146,9 +146,9 @@ export const ModulePreviewModal: React.FC<ModulePreviewModalProps> = ({
 
             <button
               onClick={onUnlockClick}
-              className="w-full sm:w-auto px-7 py-3 bg-[#E8A33D] hover:bg-[#D4902C] text-[#241A06] font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2 shrink-0"
+              className="w-full sm:w-auto px-7 py-3 bg-money hover:bg-money text-money-ink font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2 shrink-0"
             >
-              <span>Unlock Intelligence Hub{typeof unlockPrice === 'number' ? ` — ₹${unlockPrice}` : ' Now'}</span>
+              <span>Get the full pack{typeof unlockPrice === 'number' ? ` — ₹${unlockPrice}` : ''}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -156,31 +156,31 @@ export const ModulePreviewModal: React.FC<ModulePreviewModalProps> = ({
       }
     >
       {/* Question Title & Reader Tabs */}
-      <div className="px-4 sm:px-6 py-5 bg-white border-b border-[#EDEDEB] shrink-0">
-        <h2 className="text-xl sm:text-2xl font-extrabold text-[#1A1A1A] leading-snug mb-3">
+      <div className="px-4 sm:px-6 py-5 bg-white border-b border-line shrink-0">
+        <h2 className="text-xl sm:text-2xl font-extrabold text-heading leading-snug mb-3">
           {item.question_text || 'Interview Question & System Specification'}
         </h2>
 
-        <div className="flex items-center gap-6 text-xs font-mono font-bold text-gray-500">
+        <div className="flex items-center gap-6 text-xs font-bold text-gray-500">
           <button
             onClick={() => setActiveTab('content')}
             aria-pressed={activeTab === 'content'}
             className={`pb-2 border-b-2 transition-all flex items-center gap-2 ${
-              activeTab === 'content' ? 'border-[#E8A33D] text-[#1F3A5F]' : 'border-transparent hover:text-gray-900'
+              activeTab === 'content' ? 'border-money text-brand-ink' : 'border-transparent hover:text-gray-900'
             }`}
           >
-            <Eye className="w-4 h-4 text-[#B45309]" />
-            <span>Verified Solution & Architecture Diagram</span>
+            <Eye className="w-4 h-4 text-amber-deep" />
+            <span>Solution and architecture diagram</span>
           </button>
 
           <button
             onClick={() => setActiveTab('discussion')}
             aria-pressed={activeTab === 'discussion'}
             className={`pb-2 border-b-2 transition-all flex items-center gap-2 ${
-              activeTab === 'discussion' ? 'border-[#E8A33D] text-[#1F3A5F]' : 'border-transparent hover:text-gray-900'
+              activeTab === 'discussion' ? 'border-money text-brand-ink' : 'border-transparent hover:text-gray-900'
             }`}
           >
-            <MessageSquare className="w-4 h-4 text-[#1F3A5F]" />
+            <MessageSquare className="w-4 h-4 text-brand-ink" />
             <span>Candidate Discussion</span>
           </button>
         </div>
@@ -203,7 +203,7 @@ export const ModulePreviewModal: React.FC<ModulePreviewModalProps> = ({
                 />
               ))
             ) : (
-              <div className="p-8 text-center text-gray-500 text-xs font-mono">
+              <div className="p-8 text-center text-gray-500 text-xs ">
                 No preview blocks initialized for this item yet.
               </div>
             )}

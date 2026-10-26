@@ -86,13 +86,13 @@ export const ReaderContentsSheet: React.FC<ReaderContentsSheetProps> = ({
                       aria-current={active ? 'true' : undefined}
                       className={cn(
                         'flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-colors',
-                        active && 'bg-[#0284C7]/10',
+                        active && 'bg-signal/10',
                         !active && !locked && 'active:bg-black/5',
                         locked && 'opacity-60'
                       )}
                     >
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-bold text-[#10151C]">
+                        <span className="block truncate text-sm font-bold text-heading">
                           {mod.round_type || mod.title}
                         </span>
                         <span className="block text-xs text-[color:var(--text-muted)]">
@@ -102,7 +102,7 @@ export const ReaderContentsSheet: React.FC<ReaderContentsSheetProps> = ({
                       {locked ? (
                         <Lock className="h-4 w-4 flex-none text-gray-400" aria-hidden />
                       ) : active ? (
-                        <CheckCircle2 className="h-4 w-4 flex-none text-[#0284C7]" aria-hidden />
+                        <CheckCircle2 className="h-4 w-4 flex-none text-signal" aria-hidden />
                       ) : null}
                     </button>
                   </li>
@@ -130,20 +130,20 @@ export const ReaderContentsSheet: React.FC<ReaderContentsSheetProps> = ({
                   aria-current={active ? 'true' : undefined}
                   className={cn(
                     'flex min-h-[48px] w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors',
-                    active ? 'bg-[#0284C7]/10' : 'active:bg-black/5'
+                    active ? 'bg-signal/10' : 'active:bg-black/5'
                   )}
                 >
                   <span
                     className={cn(
                       'flex h-8 w-8 flex-none items-center justify-center rounded-lg',
-                      active ? 'bg-[#0284C7] text-white' : 'bg-gray-100 text-gray-500'
+                      active ? 'bg-signal text-white' : 'bg-gray-100 text-gray-500'
                     )}
                     aria-hidden
                   >
                     <Icon className="h-4 w-4" />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-bold text-[#10151C]">
+                    <span className="block truncate text-sm font-bold text-heading">
                       {section.label.replace(/^\d+\.\s*/, '')}
                     </span>
                     {/* The guide's own section list is positional, and saying

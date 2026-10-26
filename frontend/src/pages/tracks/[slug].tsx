@@ -2,17 +2,7 @@ import { useEffect, useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import {
-  ArrowLeft,
-  ArrowRight,
-  Award,
-  CheckCircle2,
-  Circle,
-  Download,
-  ExternalLink,
-  Lock,
-  Sparkles,
-} from 'lucide-react';
+import { ArrowLeft, ArrowRight, Award, CheckCircle2, Circle, Download, ExternalLink, Lock } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { fetchTrack, claimTrackCertificate } from '@/lib/tracksApi';
 import {
@@ -70,7 +60,7 @@ function CourseRow({
         </Link>
         <p className="mt-0.5 truncate text-xs text-[var(--text-body)]">{course.subtitle}</p>
         {!available && (
-          <p className="mt-1 text-[11px] font-semibold text-amber-600">
+          <p className="mt-1 text-xs font-semibold text-amber-600">
             Coming soon — track certificate unlocks once this course is live.
           </p>
         )}
@@ -82,17 +72,17 @@ function CourseRow({
                 style={{ width: `${pct}%` }}
               />
             </div>
-            <span className="text-[11px] text-[var(--text-body)]">{pct}%</span>
+            <span className="text-xs text-[var(--text-body)]">{pct}%</span>
           </div>
         )}
       </div>
       <div className="flex items-center gap-2 sm:justify-end">
         {!course.slug ? null : course.is_free ? (
-          <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700">
+          <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">
             Free
           </span>
         ) : (
-          <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-700">
+          <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700">
             ₹{course.price_inr ?? 0}
           </span>
         )}
@@ -101,7 +91,9 @@ function CourseRow({
             href={`/courses/${course.slug}`}
             className="inline-flex items-center gap-1 rounded-lg border border-[var(--border-subtle)] bg-white px-3 py-1.5 text-xs font-bold text-[var(--ink)] shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
           >
-            {done ? 'Review' : pct > 0 ? 'Continue' : 'Start'}{' '}
+            {done ? 'Review' : pct > 0 ? 'Continue' : 'Start'}
+            {/* A row of identical "Start" links is unusable by link list; name the course. */}
+            <span className="sr-only"> {course.title}</span>{' '}
             <ArrowRight size={12} aria-hidden />
           </Link>
         )}
@@ -243,7 +235,7 @@ export default function TrackDetailPage() {
                 </span>
               ) : claimable ? (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--brand-sky)]/10 px-3 py-1.5 text-xs font-bold text-[var(--brand-sky)]">
-                  <Sparkles size={14} aria-hidden /> Ready to claim
+                  <Award size={14} aria-hidden /> Ready to claim
                 </span>
               ) : null}
               <div className="text-right">

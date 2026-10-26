@@ -27,10 +27,8 @@ import { Company, PricingPlan, ContentItem, ContentModule, RoundType, CompanyMod
 import type { CpContent, CpRadarItem } from '@/types/companyPage';
 import { fetchCompanyPage, serverApiBase } from '@/lib/companyPagesApi';
 import { CompanyPageV2 } from '@/components/companyPage/CompanyPageV2';
-import {
-  ArrowLeft, CheckCircle2, ChevronRight, ChevronLeft,
-  Sparkles, Bookmark, List, ShoppingBag
-} from 'lucide-react';
+import type { RoundOffer } from '@/components/companyPage/shared';
+import { ArrowLeft, CheckCircle2, ChevronRight, ChevronLeft, Bookmark, List, ShoppingBag } from 'lucide-react';
 
 /*
  * The cart, the search palette, the leaderboard and the header are all mounted
@@ -95,7 +93,7 @@ export default function CompanyVaultPage({
   const { slug } = router.query;
   const { user, loading: authLoading } = useAuth();
   const { addMany, items } = useCart();
-  const { openOverlay } = useShell();
+  const { openOverlay, setDrillTitle } = useShell();
 
   const [company, setCompany] = useState<Company | null>(initialCompany);
   const [allCompanies, setAllCompanies] = useState<Company[]>([]);
@@ -346,6 +344,23 @@ export default function CompanyVaultPage({
 
   useCartScope(cartScope);
 
+  // The phone's back bar shows the company, not the generic "TieEdu" fallback
+  // (no nav item owns /company/[slug]). Same hand-off as the course page.
+  useEffect(() => {
+    setDrillTitle(company?.name || null);
+    return () => setDrillTitle(null);
+  }, [company?.name, setDrillTitle]);
+
+  /** Premium rounds still for sale on their own, for the redesigned page's route line. */
+  const roundOffers = useMemo(() => {
+    const out: Record<string, RoundOffer> = {};
+    for (const m of premiumModules) {
+      if (isModuleOwned(m)) continue;
+      out[m.id] = { title: m.title, price: SINGLE_MODULE_PRICE, inCart: cartModuleIds.has(m.id) };
+    }
+    return out;
+  }, [premiumModules, isModuleOwned, cartModuleIds]);
+
   if (!company) {
     /*
      * The skeleton is keyed on *not having the data*, not on a `loading` flag.
@@ -527,7 +542,7 @@ export default function CompanyVaultPage({
                 </button>
 
                 {/* Breadcrumb */}
-                <div className="flex items-center gap-1.5 text-[12px] text-[var(--text-muted)] mb-4">
+                <div className="flex items-center gap-1.5 text-xs text-[var(--text-muted)] mb-4">
                   <button
                     onClick={() => setSelectedItem(null)}
                     className="hover:text-[var(--brand-primary)] transition-colors"
@@ -542,7 +557,7 @@ export default function CompanyVaultPage({
 
                 {/* Badge row */}
                 <div className="flex flex-wrap items-center gap-2 mb-3">
-                  <span className={`inline-block px-2.5 py-0.5 rounded text-[11px] font-bold uppercase tracking-wide ${
+                  <span className={`inline-block px-2.5 py-0.5 rounded text-xs font-bold uppercase tracking-wide ${
                     selectedItem.difficulty === 'hard' ? 'bg-red-100 text-red-700' :
                     selectedItem.difficulty === 'medium' ? 'bg-amber-100 text-amber-700' :
                     'bg-green-100 text-green-700'
@@ -550,24 +565,24 @@ export default function CompanyVaultPage({
                     {selectedItem.difficulty}
                   </span>
                   {selectedItem.role_tag && (
-                    <span className="inline-block px-2.5 py-0.5 rounded text-[11px] font-bold uppercase tracking-wide bg-[#1F3A5F]/8 text-[#1F3A5F]">
+                    <span className="inline-block px-2.5 py-0.5 rounded text-xs font-bold uppercase tracking-wide bg-brand-ink/8 text-brand-ink">
                       {selectedItem.role_tag}
                     </span>
                   )}
                   {selectedItem.frequency_tag === 'high' && (
-                    <span className="inline-block px-2.5 py-0.5 rounded text-[11px] font-bold uppercase tracking-wide bg-purple-100 text-purple-700">
+                    <span className="inline-block px-2.5 py-0.5 rounded text-xs font-bold uppercase tracking-wide bg-purple-100 text-purple-700">
                       Asked Often
                     </span>
                   )}
                   {(selectedItem.is_free_preview || isItemUnlocked(selectedItem)) && (
-                    <span className="inline-block px-2.5 py-0.5 rounded text-[11px] font-bold uppercase tracking-wide bg-emerald-100 text-emerald-700">
+                    <span className="inline-block px-2.5 py-0.5 rounded text-xs font-bold uppercase tracking-wide bg-emerald-100 text-emerald-700">
                       Free Preview
                     </span>
                   )}
                 </div>
 
                 {/* Title */}
-                <h1 className="text-[22px] sm:text-[27px] font-bold text-[#111] leading-[1.25] mb-5">
+                <h1 className="text-2xl sm:text-2xl font-bold text-heading leading-[1.25] mb-5">
                   {selectedItem.question_text}
                 </h1>
 
@@ -578,7 +593,7 @@ export default function CompanyVaultPage({
                       <button
                         key={tab}
                         onClick={() => setActiveReaderTab(tab)}
-                        className={`px-1 pb-2.5 mr-6 text-[13.5px] font-semibold border-b-2 transition-all capitalize ${
+                        className={`px-1 pb-2.5 mr-6 text-sm font-semibold border-b-2 transition-all capitalize ${
                           activeReaderTab === tab
                             ? 'border-[var(--brand-accent)] text-[var(--brand-primary)]'
                             : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-body)]'
@@ -592,7 +607,7 @@ export default function CompanyVaultPage({
                   <div className="flex items-center gap-2 pb-2">
                     <button
                       onClick={() => handleToggleSolve(selectedItem.id)}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold border transition-all ${
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
                         solvedItemIds.includes(selectedItem.id)
                           ? 'bg-emerald-700 text-white border-emerald-600'
                           : 'bg-white text-[var(--text-muted)] border-[var(--border-subtle)] hover:border-gray-300'
@@ -646,7 +661,7 @@ export default function CompanyVaultPage({
                   {prevItem ? (
                     <button
                       onClick={() => selectItem(prevItem)}
-                      className="flex items-center gap-2 px-4 py-2.5 bg-white border border-[var(--border-subtle)] hover:border-gray-300 text-[13px] font-semibold text-[var(--text-heading)] rounded-xl transition-all max-w-[45%]"
+                      className="flex items-center gap-2 px-4 py-2.5 bg-white border border-[var(--border-subtle)] hover:border-gray-300 text-sm font-semibold text-[var(--text-heading)] rounded-xl transition-all max-w-[45%]"
                     >
                       <ChevronLeft className="w-4 h-4 text-[var(--brand-accent)] shrink-0" />
                       <span className="truncate">{prevItem.question_text}</span>
@@ -656,7 +671,7 @@ export default function CompanyVaultPage({
                   {nextItem ? (
                     <button
                       onClick={() => selectItem(nextItem)}
-                      className="flex items-center gap-2 px-4 py-2.5 bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] text-white text-[13px] font-semibold rounded-xl transition-all max-w-[45%]"
+                      className="flex items-center gap-2 px-4 py-2.5 bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] text-white text-sm font-semibold rounded-xl transition-all max-w-[45%]"
                     >
                       <span className="truncate">{nextItem.question_text}</span>
                       <ChevronRight className="w-4 h-4 text-amber-300 shrink-0" />
@@ -702,6 +717,13 @@ export default function CompanyVaultPage({
               if (item) selectItem(item);
             }}
             onShareExperience={() => setIsSubmitReportOpen(true)}
+            // Single-round buying, kept from the old layout: the same line item,
+            // ownership rule and shared cart as "Add to cart" on a module card.
+            roundOffers={roundOffers}
+            onBuyModules={(ids) => {
+              const mods = premiumModules.filter((m) => ids.includes(m.id) && !isModuleOwned(m));
+              if (mods.length > 0) addToCart(mods.map(moduleLineItem), true);
+            }}
             experiencesSlot={
               <InterviewExperiences
                 key={`exp-${reportTick}`}
@@ -718,8 +740,8 @@ export default function CompanyVaultPage({
           <main className="flex-1 w-full px-4 sm:px-8 lg:px-12 py-8 pb-24 space-y-8">
 
             {/* Breadcrumb */}
-            <div className="flex items-center gap-1.5 text-[13px] text-[var(--text-muted)]">
-              <Link href="/" className="hover:text-[var(--brand-primary)] flex items-center gap-1 transition-colors">
+            <div className="flex items-center gap-1.5 text-sm text-[var(--text-muted)]">
+              <Link href="/companies" className="hover:text-[var(--brand-primary)] flex items-center gap-1 transition-colors">
                 <ArrowLeft className="w-3.5 h-3.5" />
                 Companies
               </Link>
@@ -771,7 +793,7 @@ export default function CompanyVaultPage({
                         className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
                           activeRoundTab === r
                             ? 'bg-[var(--brand-primary)] text-white'
-                            : 'bg-[#F4F4F2] text-[var(--text-muted)] hover:bg-gray-200'
+                            : 'bg-paper text-[var(--text-muted)] hover:bg-gray-200'
                         }`}
                       >
                         {r === 'all' ? 'All Rounds' : r}
@@ -822,8 +844,8 @@ export default function CompanyVaultPage({
 
             {/* Interview Experiences */}
             <section className="bg-white border border-[var(--border-subtle)] rounded-2xl p-6">
-              <h2 className="text-[15px] font-bold text-[var(--text-heading)] mb-1">Candidate Experiences</h2>
-              <p className="text-[12px] text-[var(--text-muted)] mb-5">Verified drive logs & candid Q&A</p>
+              <h2 className="text-base font-bold text-[var(--text-heading)] mb-1">Candidate Experiences</h2>
+              <p className="text-xs text-[var(--text-muted)] mb-5">Interview experiences shared by candidates</p>
               <InterviewExperiences
                 key={`exp-${reportTick}`}
                 companyName={company.name}
@@ -840,34 +862,39 @@ export default function CompanyVaultPage({
             STICKY UNLOCK BAR (only when locked)
             ================================================ */}
         {!cpPage && !isUnlocked && remainingPremium.length > 0 && (
-          <div className="fixed bottom-0 left-0 right-0 z-30 bg-[var(--brand-primary)] border-t border-white/10 text-white px-4 pt-3 safe-bottom shadow-2xl">
+          <div className="fixed bottom-0 left-0 right-0 z-30 bg-brand-ink border-t border-white/10 text-white px-4 pt-3 safe-bottom shadow-2xl">
             <div className="max-w-[1100px] mx-auto flex items-center justify-between gap-3 sm:gap-4">
               <div className="min-w-0">
-                <p className="text-[13px] font-semibold leading-snug">
+                <p className="text-sm font-semibold leading-snug text-white">
                   {ownedModuleIds.length > 0
                     ? `Finish ${company.name} prep — ${remainingPremium.length} round${remainingPremium.length === 1 ? '' : 's'} left`
                     : `Unlock full ${company.name} preparation pack`}
-                  <span className="ml-2 bg-[var(--brand-accent)] text-[#241A06] text-[11px] font-bold px-2 py-0.5 rounded">₹{remainingPrice}</span>
+                  <span className="ml-2 bg-[var(--brand-accent)] text-money-ink text-xs font-bold px-2 py-0.5 rounded">₹{remainingPrice}</span>
                 </p>
-                <p className="text-[11px] text-white/90 mt-1 truncate">
+                <p className="text-xs text-white/80 mt-1 truncate">
                   {thisCompanyCartCount > 0
                     ? `${company.name}: ${thisCompanyCartCount} item${thisCompanyCartCount === 1 ? '' : 's'} in cart · combo savings apply`
                     : ownedModuleIds.length > 0
                       ? 'Buy the remaining rounds at the combo pack price — no re-purchasing what you already own.'
-                      : '45+ verified questions · code solutions · system design guides'}
+                      : (() => {
+                          // The real count, not a slogan: questions in the rounds still to buy.
+                          const n = remainingPremium.reduce((sum, m) => sum + (m.items || []).length, 0);
+                          const r = remainingPremium.length;
+                          return `${n} question${n === 1 ? '' : 's'} across ${r} round${r === 1 ? '' : 's'}`;
+                        })()}
                 </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 {thisCompanyCartCount > 0 && (
-                  <span className="inline-flex items-center min-w-[2rem] h-7 px-2 rounded-full bg-white/15 text-white text-[11px] font-bold border border-white/20" title="Items in cart for this vault">
+                  <span className="inline-flex items-center min-w-[2rem] h-7 px-2 rounded-full bg-white/15 text-white text-xs font-bold border border-white/20" title="Items in cart for this vault">
                     <ShoppingBag className="w-3.5 h-3.5 mr-1" />{thisCompanyCartCount}
                   </span>
                 )}
                 <button
                   onClick={() => (thisCompanyCartCount > 0 ? openOverlay('cart') : handleUnlockClick())}
-                  className="inline-flex items-center justify-center gap-2 min-h-[46px] px-5 sm:px-6 py-2.5 bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[#241A06] text-[13px] sm:text-sm font-bold rounded-xl transition-colors"
+                  className="inline-flex items-center justify-center gap-2 min-h-[46px] px-5 sm:px-6 py-2.5 bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-money-ink text-sm sm:text-sm font-bold rounded-xl transition-colors"
                 >
-                  <Sparkles className="w-4 h-4 shrink-0" />
+                  <ShoppingBag className="w-4 h-4 shrink-0" />
                   <span>{thisCompanyCartCount > 0 ? 'Checkout →' : 'Unlock Now'}</span>
                 </button>
               </div>

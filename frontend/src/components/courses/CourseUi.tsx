@@ -1,4 +1,5 @@
 import React from 'react';
+import { Cover } from '@/components/ui';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Check, Lock, PlayCircle, FileText, Clock, Award, Star, Users, Layers, X, Gift } from 'lucide-react';
@@ -46,7 +47,7 @@ export const ProgressBar: React.FC<{ percent: number; label?: string }> = ({ per
   return (
     <div>
       {label && (
-        <div className="mb-1.5 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+        <div className="mb-1.5 flex items-center justify-between text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">
           <span>{label}</span>
           <span className="tabular-nums">{clamped}%</span>
         </div>
@@ -123,12 +124,12 @@ export const LessonRow: React.FC<{
             {lesson.title}
           </span>
           {isNext && !locked && !done && (
-            <span className="shrink-0 rounded-full bg-[var(--brand-sky-soft)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--brand-sky-strong)]">
+            <span className="shrink-0 rounded-full bg-[var(--brand-sky-soft)] px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-[var(--brand-sky-strong)]">
               Next
             </span>
           )}
         </span>
-        <span className="mt-0.5 flex items-center gap-2 text-[11px] text-[var(--text-muted)]">
+        <span className="mt-0.5 flex items-center gap-2 text-xs text-[var(--text-muted)]">
           {lesson.duration_minutes > 0 && (
             <span className="inline-flex items-center gap-1">
               <Clock size={11} /> {lesson.duration_minutes} min
@@ -231,12 +232,13 @@ export const ctaToneClasses = (tone: CourseCtaTone): string =>
   [
     'inline-flex items-center justify-center rounded-[var(--radius-sm)] border px-5 py-2.5 text-sm font-bold transition-colors',
     tone === 'primary'
-      ? 'border-[var(--brand-sky)] bg-[var(--brand-sky)] text-white hover:bg-[var(--brand-sky-strong)]'
+      ? 'border-signal bg-signal text-white hover:bg-signal-hover hover:border-signal-hover'
       : tone === 'gold'
-        ? 'border-[var(--brand-accent)] bg-[var(--brand-accent)] text-white hover:bg-[var(--brand-accent-hover)]'
+        ? // Amber is money. Dark ink on it: white on amber is 2.2:1.
+          'border-money bg-money text-money-ink hover:bg-money-hover hover:border-money-hover'
         : tone === 'muted'
-          ? 'border-[var(--border-subtle)] bg-[var(--bg-surface-hover)] text-[var(--text-muted)]'
-          : 'border-[var(--brand-sky)] bg-transparent text-[var(--brand-sky)] hover:bg-[var(--brand-sky)] hover:text-white',
+          ? 'border-line bg-surface-hover text-muted'
+          : 'border-signal bg-transparent text-signal hover:bg-signal-soft',
   ].join(' ');
 
 /** A live CTA button. Presentational only — the click handler is the caller's. */
@@ -287,7 +289,7 @@ export const CourseBadge: React.FC<{ kind: string; label?: string }> = ({ kind, 
   return (
     <span
       className={[
-        'inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider',
+        'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wider',
         BADGE_STYLES[kind] || 'bg-[var(--bg-surface-hover)] text-[var(--text-muted)]',
       ].join(' ')}
     >
@@ -301,14 +303,18 @@ export const CourseBadge: React.FC<{ kind: string; label?: string }> = ({ kind, 
  *
  * Every seeded course has an empty `thumbnail_url`, and rendering `<img>` for it
  * would give a broken image icon; rendering an empty grey box would read as an
- * unfinished card. So an absent thumbnail falls back to a gradient derived from
- * the slug — deterministic, so the server and the browser paint the same tile,
- * which matters because these cards are server-rendered for SEO.
+ * unfinished card. So an absent thumbnail falls back to a generated cover
+ * (`components/ui/Cover`, UI_REDESIGN_PLAN_V2 §4.6): the subject picks the
+ * pattern, the title picks the colour. Deterministic, so the server and the
+ * browser paint the same tile, which matters because these cards are
+ * server-rendered for SEO.
  */
 export const CourseCover: React.FC<{
   slug: string;
   title: string;
   thumbnailUrl?: string;
+  /** Category or branch; picks the generated cover's pattern when there is no thumbnail. */
+  subject?: string;
   className?: string;
   /**
    * The image is above the fold and should start loading immediately.
@@ -345,7 +351,7 @@ export const CourseCover: React.FC<{
    * when the admin filled one in via the cover editor.
    */
   alt?: string;
-    }> = ({ slug, title, thumbnailUrl, className, priority, sizes = '168px', alt = '' }) => {
+    }> = ({ slug, title, thumbnailUrl, subject, className, priority, sizes = '168px', alt = '' }) => {
     const [loaded, setLoaded] = React.useState(false);
     const cover = courseCover(slug, title);
     // Uploaded covers are stored as server-relative paths ("/api/..."), and the
@@ -410,10 +416,10 @@ export const CourseCover: React.FC<{
             src={src}
             alt={alt}
             loading={priority ? 'eager' : 'lazy'}
-            /* `fetchpriority` on a plain <img> is what a LCP element needs; a
+            /* `fetchpriority` (lowercase: React 18 warns on the camelCase prop) on a plain <img> is what an LCP element needs; a
                lazy-loaded hero also reports a late LCP because the load is not
                started until the browser decides the image is close enough. */
-            fetchPriority={priority ? 'high' : 'auto'}
+            {...{ fetchpriority: priority ? 'high' : 'auto' }}
             decoding={priority ? 'sync' : 'async'}
             onLoad={() => setLoaded(true)}
             onError={() => setLoaded(false)}
@@ -425,17 +431,8 @@ export const CourseCover: React.FC<{
   }
 
   return (
-    <div
-      aria-hidden="true"
-      className={[
-        'relative shrink-0 overflow-hidden rounded-xl',
-        className || 'h-[76px] w-[168px]',
-      ].join(' ')}
-      style={{ backgroundImage: `linear-gradient(135deg, ${cover.from}, ${cover.to})` }}
-    >
-      <span className="absolute inset-0 flex items-center justify-center text-3xl font-extrabold text-white/85">
-        {cover.initial}
-      </span>
+    <div aria-hidden="true" className={['relative shrink-0 overflow-hidden rounded-xl', className || 'h-[76px] w-[168px]'].join(' ')}>
+      <Cover bare title={title} subject={subject} aspect="" className="absolute inset-0 h-full w-full" />
     </div>
   );
 };
@@ -479,6 +476,7 @@ export const CourseRowCard: React.FC<{ course: CourseCard }> = ({ course }) => {
         <CourseCover
           slug={course.slug}
           title={course.title}
+          subject={course.category}
           thumbnailUrl={course.thumbnail_url}
           alt={course.thumbnail_alt || ''}
           className="h-20 w-20 rounded-[var(--radius-md)] sm:h-[76px] sm:w-[168px]"
@@ -522,7 +520,7 @@ export const CourseRowCard: React.FC<{ course: CourseCard }> = ({ course }) => {
 
           <div className="mt-3 flex flex-wrap items-center gap-2">
             {course.active_offer && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[11px] font-bold text-[#B91C1C]">
+              <span className="inline-flex items-center gap-1 rounded-full bg-danger-soft px-2 py-0.5 text-xs font-bold text-danger">
                 {course.active_offer.badge}
               </span>
             )}
@@ -531,13 +529,13 @@ export const CourseRowCard: React.FC<{ course: CourseCard }> = ({ course }) => {
               <CourseBadge key={b} kind={b} />
             ))}
             {course.certificate_eligible && (
-              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--text-muted)]">
+              <span className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--text-muted)]">
                 <Award size={12} /> Certificate
               </span>
             )}
             {(course.perks || []).length > 0 && (
               <span
-                className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--text-muted)]"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--text-muted)]"
                 title={(course.perks || []).map((p) => p.label).join(' · ')}
               >
                 <Gift size={12} />

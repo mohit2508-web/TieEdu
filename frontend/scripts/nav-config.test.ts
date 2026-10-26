@@ -21,6 +21,9 @@ import {
   ALL_NAV_ITEMS,
   MOBILE_TAB_SLOTS,
   MOBILE_TABS,
+  NAV_SECTIONS,
+  resolveSection,
+  sectionHref,
   NAV_ACTIONS,
   NAV_DETAIL_PREFIXES,
   NAV_GROUPS,
@@ -242,51 +245,74 @@ check('a route that merely starts with the same letters is not excluded', () => 
 // Desktop bar and tab bar composition
 // ---------------------------------------------------------------------------
 
-check('the desktop bar keeps every top-level destination', () => {
-  const ids = PRIMARY_NAV.map((i) => i.id);
-  for (const required of ['vaults', 'compare', 'freeCourse', 'courses', 'studyPlan']) {
-    ok(ids.includes(required), `${required} is missing from the desktop bar`);
-  }
-  ok(PRIMARY_NAV.length >= 5, 'desktop bar collapsed below five links');
-  ok(!ids.includes('campus'), 'the B2B TPO portal does not belong in the main bar');
-  ok(!ids.includes('admin'), 'the admin console does not belong in the main bar');
+check('the five sections are home, learn, practise, companies, feed', () => {
+  // UI_REDESIGN_PLAN_V2 §5 / decision D4. The desktop bar and the tab bar both
+  // render exactly these, so this order is the product's whole top level.
+  eq(NAV_SECTIONS.map((s) => s.id).join(','), 'home,learn,practise,companies,feed');
 });
 
-check('the desktop bar hides admin-only items from its rendered order', () => {
-  // PRIMARY_NAV is role-independent by design; the component filters. Guard
-  // that the filter is even possible: nothing admin-only may be marked primary.
+check('every student destination belongs to exactly one section', () => {
+  const owners = new Map<string, string>();
+  for (const section of NAV_SECTIONS) {
+    for (const id of section.itemIds) {
+      ok(NAV_ITEMS[id], `section ${section.id} lists unknown item ${id}`);
+      ok(!owners.has(id), `${id} is in both ${owners.get(id)} and ${section.id}`);
+      owners.set(id, section.id);
+    }
+  }
+  for (const item of PRIMARY_NAV) {
+    ok(owners.has(item.id), `${item.id} is primary but in no section — unreachable from the bar`);
+  }
+  for (const id of ['campus', 'admin', 'account', 'pricing']) {
+    ok(!owners.has(id), `${id} is not a student section destination`);
+  }
+});
+
+check('nothing admin-only is marked primary', () => {
   for (const item of PRIMARY_NAV) {
     ok(!item.adminOnly, `${item.id} is adminOnly but marked primary`);
   }
 });
 
-check('the tab bar stays at five slots', () => {
+check('the tab bar stays at five slots, one per section', () => {
   eq(MOBILE_TAB_SLOTS.length, 5, 'five slots is the touch-target ceiling on 320px');
-  // Every slot must resolve, or it renders as a blank target on the bar.
-  for (const id of MOBILE_TAB_SLOTS) {
-    const isRoute = Object.prototype.hasOwnProperty.call(NAV_ITEMS, id);
-    const isAction = Object.prototype.hasOwnProperty.call(NAV_ACTIONS, id);
-    ok(isRoute || isAction, `slot ${id} resolves to neither a route nor an action`);
-  }
+  eq(MOBILE_TAB_SLOTS.join(','), NAV_SECTIONS.map((s) => s.id).join(','), 'tabs mirror the desktop sections');
   eq(NAV_ACTIONS.search.id, 'search');
   eq(NAV_ACTIONS.cart.id, 'cart');
   eq(NAV_ACTIONS.leaderboard.id, 'leaderboard');
-  ok(!MOBILE_TAB_SLOTS.includes('cart'), 'cart gave up its slot to drops');
 });
 
-check('tab bar routes are ordered vaults, skill test, drops, search, courses', () => {
-  eq(MOBILE_TAB_SLOTS.join(','), 'vaults,skillTest,drops,search,courses');
+check('every tab item is the landing page of a section', () => {
   // `MOBILE_TABS` stays derived so a new `tab: true` item cannot fall off the
-  // bar unnoticed — it lands here and fails until it is placed in the slots.
-  eq(MOBILE_TABS.map((i) => i.id).join(','), 'vaults,skillTest,drops,courses');
-  ok(
-    MOBILE_TABS.every((i) => MOBILE_TAB_SLOTS.includes(i.id)),
-    'a tab item is not placed in the slot list'
-  );
-  ok(
-    !MOBILE_TABS.some((i) => i.id === 'studyPlan'),
-    'study plan is drawer-only now — it kept its desktop bar slot'
-  );
+  // bar unnoticed — it lands here and fails until it leads a section.
+  const landings = NAV_SECTIONS.map((s) => s.itemIds[0]);
+  eq(MOBILE_TABS.map((i) => i.id).sort().join(','), [...landings].sort().join(','));
+  for (const section of NAV_SECTIONS) {
+    eq(getNavigationDepth(sectionHref(section)) === 'root' || section.id === 'feed', true, `${section.id} must land on a root page (feed is the full-screen exception)`);
+  }
+});
+
+check('a page resolves to the section that owns it', () => {
+  const cases: Array<[string, string | null]> = [
+    ['/', 'home'],
+    ['/courses', 'learn'],
+    ['/courses/python', 'learn'],
+    ['/tracks', 'learn'],
+    ['/study-plan', 'learn'],
+    ['/interview-course', 'learn'],
+    ['/skill-test', 'practise'],
+    ['/skill-test/java', 'practise'],
+    ['/companies', 'companies'],
+    ['/company/zscaler', 'companies'],
+    ['/compare', 'companies'],
+    ['/drops', 'feed'],
+    ['/account', null],
+    ['/verify/ABC', null],
+    ['/companiesxyz', null],
+  ];
+  for (const [path, want] of cases) {
+    eq(resolveSection(path)?.id ?? null, want, `${path}`);
+  }
 });
 
 check('nav icons are unique where the surfaces show them side by side', () => {
@@ -326,7 +352,7 @@ check('only the free course and the skill test carry the free badge', () => {
 // route in the app is pinned below rather than spot-checked.
 // ---------------------------------------------------------------------------
 
-const ROOT_ROUTES = ['/', '/courses', '/study-plan', '/compare', '/account', '/my-courses', '/campus'];
+const ROOT_ROUTES = ['/', '/companies', '/tracks', '/skill-test', '/courses', '/study-plan', '/compare', '/account', '/my-courses', '/campus'];
 
 check('top-level tab routes resolve to root depth', () => {
   for (const route of ROOT_ROUTES) {
@@ -367,7 +393,7 @@ check('a course lesson query does not drag a root route off the tab bar', () => 
 });
 
 check('the longest matching item wins over the home route', () => {
-  // `/` is a prefix of everything. If `vaults` won the match, every route on
+  // `/` is a prefix of everything. If `home` won the match, every route on
   // the site would resolve as a drill-down out of the home tab.
   eq(getNavigationDepth('/courses'), 'root');
   eq(getNavigationDepth('/study-plan'), 'root');
@@ -417,7 +443,7 @@ check('a route that is a detail at its own href uses its declared parent', () =>
   // `/interview-course` is a detail with nothing nested below it, so there is no
   // parent to strip from the path — it has to be declared.
   eq(getNavigationDepth('/interview-course'), 'detail');
-  eq(resolveBackHref('/interview-course'), '/');
+  eq(resolveBackHref('/interview-course'), '/courses', 'the free course lives in Learn');
   ok(NAV_ITEMS.freeCourse.parent, 'freeCourse must declare a parent, or its chevron dead-ends');
 });
 
@@ -462,7 +488,7 @@ check('the title and back target ignore trailing slashes, query and hash', () =>
     eq(resolveBackHref(variant), '/courses', `${variant} still backs out to the catalog`);
   }
   eq(resolveNavTitle('/interview-course?lesson=2'), 'Free Course');
-  eq(resolveBackHref('/interview-course/'), '/');
+  eq(resolveBackHref('/interview-course/'), '/courses');
 });
 
 check('resolveNavItem is the shared match, so depth and title cannot disagree', () => {

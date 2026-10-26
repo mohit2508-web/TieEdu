@@ -13,7 +13,7 @@ export const PWAInstallButton: React.FC<{ className?: string }> = ({ className =
     <button
       type="button"
       onClick={promptInstall}
-      className={`flex items-center gap-1.5 rounded-lg bg-[#0284C7] px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-[#0369A1] ${className}`}
+      className={`flex items-center gap-1.5 rounded-lg bg-signal px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-signal ${className}`}
     >
       <Download size={14} strokeWidth={2.4} />
       Get App

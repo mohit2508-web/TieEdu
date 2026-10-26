@@ -372,7 +372,7 @@ const CourseMetaForm: React.FC<{
         <Btn variant="primary" onClick={save} busy={busy}>
           <Save className="w-3.5 h-3.5" /> Save course
         </Btn>
-        {ok && <span className="text-[12px] text-emerald-700 font-semibold">Saved.</span>}
+        {ok && <span className="text-xs text-emerald-700 font-semibold">Saved.</span>}
       </div>
     </div>
   );
@@ -504,7 +504,7 @@ export const AdminCoursesTab: React.FC = () => {
         }
       >
         {showCreate && (
-          <div className="rounded-xl border border-[#E9E7E1] bg-[#FCFBF8] p-4 mb-4 space-y-3">
+          <div className="rounded-xl border border-line bg-app-warm p-4 mb-4 space-y-3">
             <div className="grid sm:grid-cols-3 gap-3">
               <Field label="Title" className="sm:col-span-2">
                 <TextInput
@@ -569,7 +569,7 @@ export const AdminCoursesTab: React.FC = () => {
         )}
 
         <div className="relative mb-4 max-w-sm">
-          <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
+          <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-text-light" />
           <TextInput value={q} placeholder="Search title, category, tags" onChange={(e) => setQ(e.target.value)} className="pl-8" />
         </div>
 
@@ -588,14 +588,14 @@ export const AdminCoursesTab: React.FC = () => {
             <BulkCoverUploader courses={courses} onDone={load} />
             <div className="space-y-2">
             {courses.map((c) => (
-              <div key={c.id} className="rounded-xl border border-[#E9E7E1] overflow-hidden">
+              <div key={c.id} className="rounded-xl border border-line overflow-hidden">
                 <button
                   onClick={() => open(c.id)}
-                  className="w-full text-left px-4 py-3 hover:bg-[#F8F7F4] flex items-center gap-3 flex-wrap"
+                  className="w-full text-left px-4 py-3 hover:bg-paper flex items-center gap-3 flex-wrap"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="text-[14px] font-bold text-[#10151C]">{c.title}</p>
-                    <p className="text-[12px] text-[#6B7280]">
+                    <p className="text-sm font-bold text-heading">{c.title}</p>
+                    <p className="text-xs text-text-light">
                       {c.category} · {c.module_count} modules · {c.stats.lesson_count} lessons · {c.stats.total_minutes} min ·{' '}
                       {c.enrolled} enrolled
                     </p>
@@ -609,7 +609,7 @@ export const AdminCoursesTab: React.FC = () => {
                       target="_blank"
                       rel="noreferrer"
                       onClick={(e) => e.stopPropagation()}
-                      className="text-[#0284C7] hover:text-[#0271B5]"
+                      className="text-signal hover:text-signal"
                       title="Open the learner page"
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
@@ -618,13 +618,13 @@ export const AdminCoursesTab: React.FC = () => {
                 </button>
 
                 {openId === c.id && (
-                  <div className="border-t border-[#EDEDEB] bg-white p-4">
+                  <div className="border-t border-line bg-white p-4">
                     {detail && detail.id === c.id ? (
                       <div className="space-y-6">
                         <AdminCourseEditor course={detail} onChanged={load} onBack={() => { setOpenId(null); setDetail(null); setHealth(null); }} />
-                        <hr className="border-[#EDEDEB]" />
+                        <hr className="border-line" />
                         <div>
-                          <h3 className="text-[13px] font-bold text-[#10151C] mb-3">Course details</h3>
+                          <h3 className="text-sm font-bold text-heading mb-3">Course details</h3>
                           <CourseMetaForm course={detail} health={health} onSaved={load} />
                         </div>
                       </div>
@@ -796,7 +796,7 @@ const InstructorPicker: React.FC<{
           {error && <ErrorNote>{error}</ErrorNote>}
 
           {rows.length === 0 ? (
-            <p className="text-[13px] text-[#6B7280]">
+            <p className="text-sm text-text-light">
               No instructors yet. Add the person who actually teaches this course.
             </p>
           ) : (
@@ -819,21 +819,21 @@ const InstructorPicker: React.FC<{
                 person they did not want. The list is the record; the course is a
                 separate assignment.
               */}
-              <ul className="divide-y divide-[#EDEDEB] rounded-lg border border-[#EDEDEB]">
+              <ul className="divide-y divide-line rounded-lg border border-line">
                 {rows.map((i) => {
                   const isAssigned = value === i.id;
                   const isEditing = editingId === i.id;
                   return (
                     <li key={i.id} className="flex flex-wrap items-center gap-2 px-3 py-2">
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-[13px] font-semibold text-[#1F2937]">
+                        <span className="block truncate text-sm font-semibold text-ink-soft">
                           {i.name}
-                          {i.title ? <span className="font-normal text-[#6B7280]"> - {i.title}</span> : null}
+                          {i.title ? <span className="font-normal text-text-light"> - {i.title}</span> : null}
                         </span>
                         {isAssigned ? (
-                          <span className="block text-[11px] font-semibold text-[#0E7490]">Assigned to this course</span>
+                          <span className="block text-xs font-semibold text-signal">Assigned to this course</span>
                         ) : (
-                          <span className="block text-[11px] text-[#6B7280]">
+                          <span className="block text-xs text-text-light">
                             {i.course_count ?? 0} course{(i.course_count ?? 0) === 1 ? '' : 's'}
                           </span>
                         )}
@@ -873,8 +873,8 @@ const InstructorPicker: React.FC<{
           )}
 
           {rows.length === 0 || adding || editingId ? (
-            <div className="rounded-lg border border-[#EDEDEB] bg-[#FAFAF8] p-3 space-y-3">
-              <p className="text-[12px] text-[#6B7280]">
+            <div className="rounded-lg border border-line bg-app-warm p-3 space-y-3">
+              <p className="text-xs text-text-light">
                 Use a real name, role and bio. These appear on the public course page, so
                 write what is true rather than what fills the space.
               </p>
@@ -971,7 +971,7 @@ const BulkCoverUploader: React.FC<{ courses: AdminCourseListItem[]; onDone: () =
   };
 
   return (
-    <div className="rounded-xl border border-[#E9E7E1] bg-[#FCFBF8] p-3 mb-3">
+    <div className="rounded-xl border border-line bg-app-warm p-3 mb-3">
       <input
         ref={inputRef}
         type="file"
@@ -987,13 +987,13 @@ const BulkCoverUploader: React.FC<{ courses: AdminCourseListItem[]; onDone: () =
         <Btn onClick={pick} busy={busy}>
           Upload covers in bulk
         </Btn>
-        <span className="text-[12px] text-[#6B7280]">
+        <span className="text-xs text-text-light">
           Name each file after the course slug (e.g. <span className="font-mono">dbms-fundamentals.webp</span>).
         </span>
       </div>
-      {error && <p className="mt-2 text-[12px] text-[#B91C1C]">{error}</p>}
+      {error && <p className="mt-2 text-xs text-danger">{error}</p>}
       {result.length > 0 && (
-        <ul className="mt-2 space-y-0.5 text-[12px] text-[#374151]">
+        <ul className="mt-2 space-y-0.5 text-xs text-body">
           {result.map((line) => (
             <li key={line}>{line}</li>
           ))}

@@ -1,39 +1,25 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import Head from 'next/head';
 import Link from 'next/link';
-import {
-  BrainCircuit, Award, BarChart3, Target, FileCheck, CheckCircle,
-  ChevronRight, Clock, Users, Sparkles, ArrowRight, Search, X, SearchX,
-} from 'lucide-react';
+import { ArrowRight, BadgeCheck, ClipboardCheck, Search, SearchX, X } from 'lucide-react';
+import { Chip, EmptyState, RouteLine, SectionHead, SkeletonCard } from '@/components/ui';
 import { fetchSkillsApi, SkillTestSkill } from '@/lib/skillTestApi';
 
-const FALLBACK_CATEGORIES = [
-  {
-    name: 'Programming',
-    skills: [
-      { name: 'Java', slug: 'java', q: 30, min: 30 },
-      { name: 'Python', slug: 'python', q: 30, min: 30 },
-      { name: 'C++', slug: 'cpp', q: 30, min: 30 },
-      { name: 'JavaScript', slug: 'javascript', q: 30, min: 30 },
-    ],
-  },
-  {
-    name: 'Core Computer Science',
-    skills: [
-      { name: 'DSA', slug: 'dsa', q: 30, min: 30 },
-      { name: 'DBMS', slug: 'dbms', q: 30, min: 30 },
-      { name: 'SQL', slug: 'sql', q: 30, min: 30 },
-      { name: 'Operating Systems', slug: 'os', q: 30, min: 30 },
-    ],
-  },
-];
-
-const HOW_IT_WORKS = [
-  { icon: Target, title: 'Choose Skill', desc: 'Select from programming or core CS skills' },
-  { icon: FileCheck, title: 'Take Assessment', desc: 'Answer 30 questions in 30 minutes' },
-  { icon: BarChart3, title: 'Get Insights', desc: 'See strengths, weaknesses & level' },
-  { icon: Award, title: 'Earn Certificate', desc: 'Get verified certificate on passing' },
-  { icon: CheckCircle, title: 'Showcase', desc: 'Share on LinkedIn & Skill Passport' },
-];
+/**
+ * /skill-test — the Practise section's landing page (UI_REDESIGN_PLAN_V2 §7,
+ * "Skill Test rebuild in brand").
+ *
+ * What changed, and why:
+ *  - Every number comes from the API. The old "how it works" promised "30
+ *    questions in 30 minutes" while 99 of the 100 live tests are 10 in 15; the
+ *    steps now state the most common length, computed from the data.
+ *  - No invented fallback. When the API failed, the page used to show eight
+ *    hard-coded tests with made-up counts; it now says it could not load them
+ *    and offers a retry.
+ *  - Cards say what differs between tests (name, length, certificate,
+ *    popular) instead of repeating the same brain icon and "Certificate
+ *    Available" a hundred times.
+ */
 
 type CardSkill = {
   name: string;
@@ -42,46 +28,91 @@ type CardSkill = {
   min: number;
   category: string;
   tags: string[];
+  popular: boolean;
+  certificate: boolean;
 };
 
+const toCard = (s: SkillTestSkill): CardSkill => ({
+  name: s.name.replace(/ Programming$/, ''),
+  slug: s.slug,
+  q: s.totalQuestions,
+  min: s.avgCompletionTime,
+  category: s.category || 'Other',
+  tags: s.tags || [],
+  popular: !!s.isPopular,
+  certificate: s.certificateAvailable !== false,
+});
+
+/** The length most tests share, so the steps can say it without a hard-coded number. */
+const typicalLength = (skills: CardSkill[]): { q: number; min: number } | null => {
+  const counts = new Map<string, { q: number; min: number; n: number }>();
+  for (const s of skills) {
+    const key = `${s.q}/${s.min}`;
+    const prev = counts.get(key);
+    counts.set(key, { q: s.q, min: s.min, n: (prev?.n ?? 0) + 1 });
+  }
+  const best = [...counts.values()].sort((a, b) => b.n - a.n)[0];
+  return best ? { q: best.q, min: best.min } : null;
+};
+
+const SkillCard: React.FC<{ skill: CardSkill }> = ({ skill }) => (
+  <Link
+    href={`/skill-test/${skill.slug}`}
+    className="group focus-ring flex min-h-[120px] flex-col rounded-[14px] border border-line bg-card p-4 transition-colors hover:border-line-strong"
+  >
+    <div className="flex items-start justify-between gap-2">
+      <h4 className="font-display text-lg font-bold leading-snug text-heading transition-colors group-hover:text-signal">
+        {skill.name}
+      </h4>
+      {skill.popular && <Chip tone="signal">Popular</Chip>}
+    </div>
+    <p className="mt-1 text-sm tabular-nums text-muted">
+      {skill.q} questions · {skill.min} min
+    </p>
+    <div className="mt-auto flex items-center justify-between pt-3">
+      {skill.certificate ? (
+        <span className="inline-flex items-center gap-1 text-xs font-semibold text-success">
+          <BadgeCheck className="h-3.5 w-3.5" aria-hidden /> Certificate
+        </span>
+      ) : (
+        <span />
+      )}
+      <ArrowRight className="h-4 w-4 text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-signal" aria-hidden />
+    </div>
+  </Link>
+);
+
 export default function SkillTestLanding() {
-  const [skills, setSkills] = useState<SkillTestSkill[]>([]);
+  const [skills, setSkills] = useState<CardSkill[]>([]);
   const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
   const [query, setQuery] = useState('');
   const [activeCat, setActiveCat] = useState('All');
 
-  useEffect(() => {
+  const load = useCallback(() => {
+    setLoading(true);
     fetchSkillsApi()
-      .then((data) => setSkills(data.filter((s) => s.status === 'active')))
-      .catch(() => setSkills([]))
+      .then((data) => {
+        setSkills(data.filter((s) => s.status === 'active').map(toCard));
+        setFailed(false);
+      })
+      .catch(() => setFailed(true))
       .finally(() => setLoading(false));
   }, []);
 
-  const allSkills = React.useMemo<CardSkill[]>(() => {
-    if (skills.length === 0) {
-      return FALLBACK_CATEGORIES.flatMap((cat) =>
-        cat.skills.map((s) => ({ ...s, category: cat.name, tags: [] as string[] }))
-      );
-    }
-    return skills.map((s) => ({
-      name: s.name.replace(' Programming', ''),
-      slug: s.slug,
-      q: s.totalQuestions,
-      min: s.avgCompletionTime,
-      category: s.category || 'Others',
-      tags: s.tags || [],
-    }));
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const catNames = useMemo(() => {
+    const seen: string[] = [];
+    for (const s of skills) if (!seen.includes(s.category)) seen.push(s.category);
+    return seen;
   }, [skills]);
 
-  const catNames = React.useMemo(() => {
-    const seen: string[] = [];
-    for (const s of allSkills) if (!seen.includes(s.category)) seen.push(s.category);
-    return seen;
-  }, [allSkills]);
-
-  const filtered = React.useMemo(() => {
+  const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return allSkills.filter((s) => {
+    return skills.filter((s) => {
       if (activeCat !== 'All' && s.category !== activeCat) return false;
       if (!q) return true;
       return (
@@ -91,9 +122,9 @@ export default function SkillTestLanding() {
         s.tags.some((t) => t.toLowerCase().includes(q))
       );
     });
-  }, [allSkills, query, activeCat]);
+  }, [skills, query, activeCat]);
 
-  const groups = React.useMemo(() => {
+  const groups = useMemo(() => {
     const map = new Map<string, CardSkill[]>();
     for (const s of filtered) {
       if (!map.has(s.category)) map.set(s.category, []);
@@ -102,204 +133,184 @@ export default function SkillTestLanding() {
     return Array.from(map.entries()).map(([name, list]) => ({ name, skills: list }));
   }, [filtered]);
 
+  const typical = useMemo(() => typicalLength(skills), [skills]);
+  const firstSlug = skills.find((s) => s.popular)?.slug ?? skills[0]?.slug ?? 'java';
+
   const clearFilters = () => {
     setQuery('');
     setActiveCat('All');
   };
 
+  const steps = [
+    { label: 'Pick a skill', note: skills.length ? `${skills.length} to choose from` : undefined },
+    {
+      label: typical ? `Answer ${typical.q} questions` : 'Answer the questions',
+      note: typical ? `About ${typical.min} minutes` : undefined,
+    },
+    { label: 'See your score by topic', note: 'Strengths and gaps' },
+    { label: 'Pass, get a certificate', note: 'With a public verification link' },
+  ];
+
   return (
-    <div className="min-h-screen bg-white">
-      {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#0F7BFF] via-[#0C5AD9] to-[#0842A9] text-white">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
-          <div className="text-center max-w-3xl mx-auto">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1.5 text-xs font-medium text-blue-100 mb-6 backdrop-blur">
-              <Sparkles className="h-3.5 w-3.5" /> Free Skill Assessments
-            </div>
-            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl leading-tight">
-              Know Your Skills.
-              <br className="sm:hidden" /> <span className="text-blue-200">Prove Them.</span>
-            </h1>
-            <p className="mt-4 text-base text-blue-100 sm:text-lg max-w-2xl mx-auto leading-relaxed">
-              Take free skill assessments, discover your strengths, identify your gaps and earn verified certificates.
-            </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-              <Link
-                href="/skill-test/java"
-                className="rounded-full bg-white px-8 py-3.5 text-base font-semibold text-[#0F7BFF] shadow-lg hover:shadow-xl hover:bg-blue-50 transition-all"
-              >
-                Test Your Skills — Free
-              </Link>
-              <a
-                href="#skills"
-                className="rounded-full border-2 border-white/60 px-8 py-3.5 text-base font-semibold text-white hover:bg-white/10 transition-colors"
-              >
-                Explore Skills
-              </a>
-            </div>
-            <div className="mt-8 flex items-center justify-center gap-6 text-sm text-blue-200">
-              <span className="flex items-center gap-1.5"><Users className="h-4 w-4" /> 10,000+ Students</span>
-              <span className="flex items-center gap-1.5"><Award className="h-4 w-4" /> Verified Certificates</span>
-            </div>
-          </div>
-        </div>
-      </section>
+    <>
+      <Head>
+        <title>Free skill tests with certificates | TieEdu</title>
+        <meta
+          name="description"
+          content="Free skill tests for engineering students: programming, core CS, data and cloud. See your score by topic and earn a certificate anyone can verify."
+        />
+      </Head>
 
-      {/* Skills */}
-      <section id="skills" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold sm:text-3xl text-gray-900">Choose Your Skill</h2>
-          <p className="mt-2 text-gray-600">Start with your area of expertise</p>
-        </div>
-
-        {loading ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-40 animate-pulse rounded-2xl border border-gray-200 bg-gray-100" />
-            ))}
+      <div className="min-h-screen bg-paper">
+        {/* Hero — the page's one ink band. */}
+        <section className="bg-brand-ink text-white">
+          <div className="mx-auto max-w-[1200px] px-4 py-12 sm:px-6 sm:py-16 lg:py-20">
+            <div className="max-w-3xl">
+              <p className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-white/90">
+                <ClipboardCheck className="h-3.5 w-3.5" aria-hidden /> Free skill tests
+              </p>
+              <h1 className="mt-5 font-display text-4xl font-bold leading-tight tracking-tight text-white sm:text-5xl">
+                Know your skills. <span className="text-money">Prove them.</span>
+              </h1>
+              <p className="mt-4 max-w-2xl text-lg leading-relaxed text-white/80">
+                Take a free test, see where you are strong and where you are not, and earn a certificate anyone can
+                verify.
+              </p>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <Link
+                  href={`/skill-test/${firstSlug}`}
+                  className="pressable focus-ring inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-signal px-6 text-base font-semibold text-white transition-colors hover:bg-signal-hover"
+                >
+                  Take a free test <ArrowRight className="h-4 w-4" aria-hidden />
+                </Link>
+                <a
+                  href="#skills"
+                  className="focus-ring inline-flex min-h-[48px] items-center justify-center rounded-xl border border-white/30 px-6 text-base font-semibold text-white transition-colors hover:bg-white/10"
+                >
+                  Browse all tests
+                </a>
+              </div>
+            </div>
+            <RouteLine onInk numbered className="mt-12 hidden md:block" stations={steps.map((s) => ({ ...s, state: 'next' as const }))} />
+            <RouteLine onInk numbered orientation="vertical" className="mt-10 md:hidden" stations={steps.map((s) => ({ ...s, state: 'next' as const }))} />
           </div>
-        ) : (
-          <>
-            {/* Search + category filters */}
-            <div className="mb-8 space-y-4">
-              <div className="relative mx-auto max-w-xl">
-                <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search skills — e.g. Python, AWS, Excel"
-                  aria-label="Search skills"
-                  className="w-full rounded-xl border border-gray-300 bg-white py-3 pl-11 pr-12 text-sm text-gray-900 placeholder-gray-400 focus:border-[#0F7BFF] focus:outline-none focus:ring-2 focus:ring-[#0F7BFF]/20"
+        </section>
+
+        {/* Skills */}
+        <section id="skills" className="mx-auto max-w-[1200px] scroll-mt-24 px-4 py-12 sm:px-6">
+          <SectionHead
+            eyebrow="All tests"
+            title="Choose a skill"
+            description={loading ? 'Loading tests…' : `${skills.length} tests, all free.`}
+          />
+
+          {loading ? (
+            <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <SkeletonCard key={i} lines={1} />
+              ))}
+            </div>
+          ) : failed ? (
+            <EmptyState
+              className="mt-8"
+              icon={ClipboardCheck}
+              title="Skill tests could not be loaded."
+              note="This is on our side. Try again in a moment."
+              action={{ label: 'Try again', onClick: load }}
+            />
+          ) : (
+            <>
+              <div className="mt-8 space-y-4">
+                <label className="relative block max-w-xl">
+                  <span className="sr-only">Search skills</span>
+                  <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden />
+                  <input
+                    type="search"
+                    inputMode="search"
+                    autoComplete="off"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Search a skill: Python, SQL, AWS…"
+                    className="min-h-[44px] w-full rounded-xl border border-line bg-card pl-10 pr-12 text-sm text-heading placeholder:text-text-light focus:border-signal focus:outline-none focus:ring-4 focus:ring-signal/10"
+                  />
+                  {query && (
+                    <button
+                      type="button"
+                      onClick={() => setQuery('')}
+                      aria-label="Clear search"
+                      className="focus-ring absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-lg text-muted hover:text-heading"
+                    >
+                      <X className="h-4 w-4" aria-hidden />
+                    </button>
+                  )}
+                </label>
+
+                <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0">
+                  {['All', ...catNames].map((cat) => (
+                    <Chip key={cat} selected={activeCat === cat} onClick={() => setActiveCat(cat)}>
+                      {cat}
+                    </Chip>
+                  ))}
+                </div>
+
+                <p className="text-sm text-muted" aria-live="polite">
+                  {filtered.length === skills.length ? `All ${skills.length}` : `${filtered.length} of ${skills.length}`}
+                  {activeCat !== 'All' && ` in ${activeCat}`}
+                  {query.trim() && ` matching “${query.trim()}”`}
+                </p>
+              </div>
+
+              {filtered.length === 0 ? (
+                <EmptyState
+                  className="mt-6"
+                  icon={SearchX}
+                  title="No test matches that."
+                  note="Try another word, or clear the filters."
+                  action={{ label: 'Clear filters', onClick: clearFilters }}
                 />
-                {query && (
-                  <button
-                    type="button"
-                    onClick={() => setQuery('')}
-                    aria-label="Clear search"
-                    className="absolute right-1.5 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
+              ) : (
+                groups.map((cat) => (
+                  <section key={cat.name} className="mt-10" aria-labelledby={`cat-${cat.name}`}>
+                    <h3 id={`cat-${cat.name}`} className="flex items-baseline gap-2 font-display text-xl font-bold text-heading">
+                      {cat.name}
+                      <span className="text-sm font-normal tabular-nums text-muted">{cat.skills.length}</span>
+                    </h3>
+                    <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                      {cat.skills.map((skill) => (
+                        <li key={skill.slug} className="min-w-0">
+                          <SkillCard skill={skill} />
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                ))
+              )}
+            </>
+          )}
+        </section>
 
-              <div className="scrollbar-none -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
-                {['All', ...catNames].map((cat) => (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => setActiveCat(cat)}
-                    className={`min-h-[44px] flex-none whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-                      activeCat === cat
-                        ? 'border-[#0F7BFF] bg-[#0F7BFF] text-white'
-                        : 'border-gray-300 bg-white text-gray-600 hover:border-blue-300 hover:text-[#0F7BFF]'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
-
-              <p className="text-center text-xs text-gray-500" aria-live="polite">
-                Showing {filtered.length} of {allSkills.length} skills
-                {activeCat !== 'All' && ` in ${activeCat}`}
-                {query.trim() && ` for "${query.trim()}"`}
+        {/* Closing — a plain card; the hero is the page's ink band. */}
+        <section className="mx-auto max-w-[1200px] px-4 pb-16 sm:px-6">
+          <div className="flex flex-col items-start gap-5 rounded-[20px] border border-line bg-card p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
+            <div>
+              <h2 className="font-display text-2xl font-bold text-heading">Don&apos;t just say you know it. Prove it.</h2>
+              <p className="mt-1 text-base text-muted">
+                Every certificate you earn is listed on your{' '}
+                <Link href="/skill-test/skill-passport" className="font-semibold text-signal hover:underline">
+                  skill passport
+                </Link>
+                , and each one has its own verification page.
               </p>
             </div>
-
-            {filtered.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 px-6 py-12 text-center">
-                <SearchX className="mx-auto h-8 w-8 text-gray-400" />
-                <p className="mt-3 text-sm font-medium text-gray-700">No skills match your search</p>
-                <p className="mt-1 text-xs text-gray-500">Try a different keyword or clear the filters.</p>
-                <button
-                  type="button"
-                  onClick={clearFilters}
-                  className="mt-4 rounded-full bg-[#0F7BFF] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#0C5AD9] transition-colors"
-                >
-                  Clear filters
-                </button>
-              </div>
-            ) : (
-              groups.map((cat) => (
-                <div key={cat.name} className="mb-10">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                    <BrainCircuit className="h-5 w-5 text-[#0F7BFF]" />
-                    {cat.name}
-                  </h3>
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    {cat.skills.map((skill) => (
-                      <Link
-                        key={skill.slug}
-                        href={`/skill-test/${skill.slug}`}
-                        className="group block rounded-2xl border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md hover:border-blue-300 transition-all"
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-[#0F7BFF] group-hover:bg-[#0F7BFF] group-hover:text-white transition-colors">
-                            <BrainCircuit className="h-5 w-5" />
-                          </div>
-                          <Award className="h-5 w-5 text-blue-500" />
-                        </div>
-                        <h4 className="mt-3 text-base font-semibold text-gray-900">{skill.name}</h4>
-                        <div className="mt-2 flex items-center gap-3 text-xs text-gray-500">
-                          <span className="flex items-center gap-1"><FileCheck className="h-3.5 w-3.5" />{skill.q} Q</span>
-                          <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{skill.min} min</span>
-                        </div>
-                        <div className="mt-3 flex items-center justify-between">
-                          <span className="text-xs font-medium text-[#0F7BFF]">Certificate Available</span>
-                          <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-[#0F7BFF] group-hover:translate-x-0.5 transition-all" />
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              ))
-            )}
-          </>
-        )}
-      </section>
-
-      {/* How it works */}
-      <section className="bg-gray-50">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl font-bold sm:text-3xl text-gray-900">How It Works</h2>
-            <p className="mt-2 text-gray-600">From assessment to certified skill in 5 steps</p>
+            <Link
+              href={`/skill-test/${firstSlug}`}
+              className="pressable focus-ring inline-flex min-h-[48px] shrink-0 items-center gap-2 rounded-xl bg-signal px-6 text-base font-semibold text-white transition-colors hover:bg-signal-hover"
+            >
+              Take a free test <ArrowRight className="h-4 w-4" aria-hidden />
+            </Link>
           </div>
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
-            {HOW_IT_WORKS.map((step, i) => {
-              const Icon = step.icon;
-              return (
-                <div key={i} className="rounded-2xl bg-white p-5 text-center shadow-sm">
-                  <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-blue-50 text-[#0F7BFF]">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <p className="mt-3 text-[10px] font-bold text-[#0F7BFF]">STEP {i + 1}</p>
-                  <h3 className="text-sm font-semibold text-gray-900">{step.title}</h3>
-                  <p className="mt-1 text-xs text-gray-500 leading-relaxed">{step.desc}</p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="rounded-3xl bg-gradient-to-br from-[#0F7BFF] to-[#0C5AD9] px-6 py-10 sm:px-10 text-center text-white">
-          <h2 className="text-2xl font-bold sm:text-3xl">Don&apos;t Just Say You Know It. Prove It.</h2>
-          <p className="mt-2 text-blue-100 max-w-xl mx-auto text-sm sm:text-base">
-            Test your technical skills for free, understand where you stand, and earn verified certificates.
-          </p>
-          <Link
-            href="/skill-test/java"
-            className="mt-6 inline-flex items-center gap-2 rounded-full bg-white px-8 py-3.5 text-base font-semibold text-[#0F7BFF] hover:bg-blue-50 transition-colors"
-          >
-            Start Free Assessment <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-      </section>
-    </div>
+        </section>
+      </div>
+    </>
   );
 }

@@ -59,7 +59,7 @@ export const SlashMenu: React.FC<SlashMenuProps> = ({
       ref={listRef}
       role="listbox"
       aria-label="Insert block"
-      className="absolute z-30 w-[min(19rem,calc(100vw-3rem))] max-h-64 overflow-y-auto rounded-xl border border-[#E2E8F0] bg-white shadow-xl p-1"
+      className="absolute z-30 w-[min(19rem,calc(100vw-3rem))] max-h-64 overflow-y-auto rounded-xl border border-line bg-white shadow-xl p-1"
       style={{ top, left: 8 }}
     >
       {items.map((item, i) => {
@@ -78,15 +78,15 @@ export const SlashMenu: React.FC<SlashMenuProps> = ({
               onSelect(item.cmd);
             }}
             className={`w-full flex items-center gap-3 px-2.5 py-2 rounded-lg text-left transition-colors ${
-              active ? 'bg-[#0284C7]/10 text-[#0284C7]' : 'text-[#334155] hover:bg-[#F1F5F9]'
+              active ? 'bg-signal/10 text-signal' : 'text-body hover:bg-paper'
             }`}
           >
-            <span className="w-7 h-7 rounded-md bg-[#F1F5F9] flex items-center justify-center shrink-0">
+            <span className="w-7 h-7 rounded-md bg-paper flex items-center justify-center shrink-0">
               <Icon className="w-3.5 h-3.5" />
             </span>
             <span className="min-w-0">
-              <span className="block text-[13px] font-semibold leading-tight">{item.label}</span>
-              <span className="block text-[11px] text-[--text-muted] leading-tight">{item.hint}</span>
+              <span className="block text-sm font-semibold leading-tight">{item.label}</span>
+              <span className="block text-xs text-[--text-muted] leading-tight">{item.hint}</span>
             </span>
           </button>
         );

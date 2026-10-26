@@ -49,23 +49,23 @@ export const CouponBanner: React.FC<{
       className={[
         'mb-8 flex items-start gap-3 rounded-[var(--radius-md)] border p-4',
         state.valid
-          ? 'border-[#15803D]/30 bg-[#E9F6EE]'
+          ? 'border-success/30 bg-surface-hover'
           : 'border-[var(--border-subtle)] bg-[var(--bg-surface)]',
       ].join(' ')}
       role="status"
     >
       {state.valid ? (
-        <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-[#15803D]" aria-hidden />
+        <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-success" aria-hidden />
       ) : (
         <BadgePercent size={18} className="mt-0.5 shrink-0 text-[var(--text-muted)]" aria-hidden />
       )}
       <p className="text-sm leading-relaxed text-[var(--text-body)]">
         {state.valid ? (
           <>
-            Code <span className="font-mono font-extrabold text-[#10151C]">{couponCode}</span> is staged
+            Code <span className="font-extrabold text-heading">{couponCode}</span> is staged
             {state.discount > 0 ? (
               <>
-                {' '}— <span className="font-extrabold text-[#15803D]">₹{state.discount} off</span> this
+                {' '}— <span className="font-extrabold text-success">₹{state.discount} off</span> this
                 course at checkout.
               </>
             ) : (
@@ -74,7 +74,7 @@ export const CouponBanner: React.FC<{
           </>
         ) : (
           <>
-            Code <span className="font-mono font-extrabold text-[#10151C]">{couponCode}</span> does not
+            Code <span className="font-extrabold text-heading">{couponCode}</span> does not
             apply here{state.message ? `: ${state.message}.` : '.'} The course is still fully buyable
             without it.
           </>

@@ -24,7 +24,17 @@ reportsRouter.get('/', optionalAuth, (req: Request, res: Response) => {
   );
   if (company_id) reports = reports.filter((r: ReportItem) => r.company_id === company_id);
   if (!isAdmin && status && status !== 'published') reports = [];
-  res.json(reports);
+  // The public never sees account ids: not the contributor's, not the admin
+  // who verified a selection. The verification method and date stay — that is
+  // the part a reader needs to trust the story.
+  res.json(
+    isAdmin
+      ? reports
+      : reports.map(({ user_id: _u, verification, ...rest }: any) => ({
+          ...rest,
+          verification: verification ? { method: verification.method, verified_at: verification.verified_at } : null,
+        }))
+  );
 });
 
 // GET /api/reports/mine — signed-in user ke apne submitted reports (honest)
@@ -83,15 +93,37 @@ reportsRouter.post('/', optionalAuth, (req: Request, res: Response) => {
 // PATCH /api/reports/:id — Approve or reject candidate report (admin only)
 reportsRouter.patch('/:id', requireAdmin, (req: Request, res: Response) => {
   const { id } = req.params;
-  const { status } = req.body; // 'published' | 'rejected'
+  const { status, verification } = req.body as { status?: string; verification?: string | null };
   const db = loadDb();
 
   const report = db.reports.find((r: ReportItem) => r.id === id);
   if (!report) {
     return res.status(404).json({ error: 'Report not found' });
   }
+  if (status !== undefined && !['published', 'rejected', 'pending_review'].includes(String(status))) {
+    return res.status(400).json({ error: 'status must be published, rejected or pending_review' });
+  }
 
-  report.status = status;
+  /*
+   * Selection verification (UI_REDESIGN_PLAN_V2 §6.6: "verified by email or
+   * offer letter and marked as such"). An admin attests HOW they checked it;
+   * no document is stored here — an offer letter is personal data, and the
+   * claim only needs the method, the date and who made it.
+   */
+  if (verification !== undefined) {
+    if (verification !== null && !['offer_letter', 'college_email'].includes(verification)) {
+      return res.status(400).json({ error: 'verification must be offer_letter, college_email or null' });
+    }
+    if (verification && report.outcome !== 'selected') {
+      return res.status(400).json({ error: 'Only a selection can be verified as one.' });
+    }
+    report.verification = verification
+      ? { method: verification as 'offer_letter' | 'college_email', verified_at: new Date().toISOString(), verified_by: req.userId || 'admin' }
+      : null;
+  }
+
+  const wasPublished = report.status === 'published';
+  if (status) report.status = status as ReportItem['status'];
   if (status === 'published' && report.user_id) {
     // +50 XP for the real contributor, awarded through the append-only ledger.
     // The key is derived from the report id, so an admin who re-saves the same
@@ -122,7 +154,10 @@ reportsRouter.patch('/:id', requireAdmin, (req: Request, res: Response) => {
    * at; with no vault to link to the drop still validates via a minimal
    * article, because a card with nowhere to go is worse than no card.
    */
-  if (status === 'published') {
+  // Only a selection becomes a "selection story" card. This used to fire for
+  // every published report, so approving a rejection announced it as a
+  // selection in the feed.
+  if (status === 'published' && !wasPublished && report.outcome === 'selected') {
     const company = (db.companies || []).find((c: any) => c.id === report.company_id);
     const copy = autoDropTemplate('selected', {
       title: report.company_name || company?.name || company?.title || 'a company',
@@ -145,5 +180,5 @@ reportsRouter.patch('/:id', requireAdmin, (req: Request, res: Response) => {
     });
   }
 
-  res.json({ status: 'success', message: `Report status updated to ${status}`, report });
+  res.json({ status: 'success', message: status ? `Report status updated to ${status}` : 'Report updated', report });
 });

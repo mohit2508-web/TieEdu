@@ -37,7 +37,8 @@ export interface Command {
 
 /** Words the product is full of that no label contains. */
 const GLOBAL_KEYWORDS: Record<string, string[]> = {
-  vaults: ['companies', 'browse', 'home', 'start'],
+  home: ['home', 'start', 'today'],
+  companies: ['vaults', 'browse', 'company vaults'],
   compare: ['vs', 'versus', 'difference', 'side by side'],
   freeCourse: ['free', 'xp', 'practice', 'interview'],
   courses: ['catalog', 'python', 'c programming', 'paid'],

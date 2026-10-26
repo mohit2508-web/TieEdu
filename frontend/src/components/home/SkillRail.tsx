@@ -8,9 +8,9 @@ const CARD_W = 'w-[70vw] max-w-[260px] sm:w-[240px] lg:w-[260px]';
 
 /* Deterministic tint per category — same category, same colour, every render. */
 const TINTS = [
-  'text-[#0271B5] bg-[#E8F4FB]',
-  'text-[#15803D] bg-[#E9F6EE]',
-  'text-[#B45309] bg-[#FBF1E1]',
+  'text-signal bg-signal-soft',
+  'text-success bg-surface-hover',
+  'text-amber-deep bg-warning-soft',
   'text-[#7C3AED] bg-[#F1EBFE]',
 ];
 const tintFor = (seed: string) => {
@@ -36,34 +36,34 @@ const SkillRailCard: React.FC<{ skill: SkillTestSkill }> = ({ skill }) => (
         <BrainCircuit className="w-5 h-5" aria-hidden />
       </span>
       {skill.isPopular && (
-        <span className="inline-flex items-center gap-1 rounded-full bg-[#FDEDE9] border border-[#F2C9BC] px-2 py-0.5 text-[11px] font-extrabold text-[#A63D28]">
+        <span className="inline-flex items-center gap-1 rounded-full bg-signal-soft border border-signal/30 px-2 py-0.5 text-xs font-extrabold text-danger">
           <Flame className="w-3 h-3" aria-hidden /> Popular
         </span>
       )}
     </div>
 
     <div>
-      <h3 className="line-clamp-2 text-[15px] font-extrabold leading-snug text-[#10151C] transition-colors group-hover:text-[#0271B5]">
+      <h3 className="line-clamp-2 text-base font-extrabold leading-snug text-heading transition-colors group-hover:text-signal">
         {skill.name}
       </h3>
-      <p className="mt-0.5 text-[12px] font-semibold text-[var(--text-muted)]">{skill.category}</p>
+      <p className="mt-0.5 text-xs font-semibold text-[var(--text-muted)]">{skill.category}</p>
     </div>
 
     <div className="flex flex-wrap gap-1.5">
-      <span className="inline-flex items-center gap-1 rounded-full bg-[#F1F3F5] px-2 py-1 text-[12px] font-bold text-[#3E4754]">
+      <span className="inline-flex items-center gap-1 rounded-full bg-paper px-2 py-1 text-xs font-bold text-body">
         <FileCheck className="w-3.5 h-3.5" aria-hidden /> {skill.totalQuestions} Q
       </span>
-      <span className="inline-flex items-center gap-1 rounded-full bg-[#F1F3F5] px-2 py-1 text-[12px] font-bold text-[#3E4754]">
+      <span className="inline-flex items-center gap-1 rounded-full bg-paper px-2 py-1 text-xs font-bold text-body">
         <Clock className="w-3.5 h-3.5" aria-hidden /> {skill.avgCompletionTime} min
       </span>
       {skill.certificateAvailable && (
-        <span className="inline-flex items-center rounded-full bg-[#E9F6EE] border border-[#CDE9D4] px-2 py-1 text-[12px] font-bold text-[#15803D]">
+        <span className="inline-flex items-center rounded-full bg-surface-hover border border-line px-2 py-1 text-xs font-bold text-success">
           Certificate
         </span>
       )}
     </div>
 
-    <span className="mt-auto inline-flex items-center gap-1 pt-1 text-[13px] font-bold text-[#0271B5]">
+    <span className="mt-auto inline-flex items-center gap-1 pt-1 text-sm font-bold text-signal">
       Start test
       <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
     </span>

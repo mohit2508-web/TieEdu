@@ -54,30 +54,30 @@ const TpoDashboardBody: React.FC = () => {
           <DashboardCard>
             <div className="flex items-center gap-3">
               <span
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-[14px] font-black shrink-0"
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm font-black shrink-0"
                 style={{ background: college?.theme_color || '#1F3A5F' }}
               >
                 {(college?.short_name || college?.name || '??').slice(0, 2).toUpperCase()}
               </span>
               <div className="min-w-0">
-                <p className="text-[11px] font-extrabold uppercase tracking-widest text-[--text-muted]">
+                <p className="text-xs font-extrabold uppercase tracking-widest text-[--text-muted]">
                   College
                 </p>
-                <p className="text-[14px] font-bold text-[#10151C] truncate">{college?.name || '—'}</p>
+                <p className="text-sm font-bold text-heading truncate">{college?.name || '—'}</p>
               </div>
             </div>
           </DashboardCard>
 
           <DashboardCard>
             <div className="flex items-center gap-3">
-              <span className="w-10 h-10 rounded-xl bg-[#E8F1FA] flex items-center justify-center shrink-0">
-                <ShieldCheck className="w-5 h-5 text-[#0E2A44]" />
+              <span className="w-10 h-10 rounded-xl bg-signal-soft flex items-center justify-center shrink-0">
+                <ShieldCheck className="w-5 h-5 text-brand-ink" />
               </span>
               <div className="min-w-0">
-                <p className="text-[11px] font-extrabold uppercase tracking-widest text-[--text-muted]">
+                <p className="text-xs font-extrabold uppercase tracking-widest text-[--text-muted]">
                   Your role
                 </p>
-                <p className="text-[14px] font-bold text-[#10151C] truncate">
+                <p className="text-sm font-bold text-heading truncate">
                   {grant?.role_label || '—'}
                 </p>
               </div>
@@ -86,14 +86,14 @@ const TpoDashboardBody: React.FC = () => {
 
           <DashboardCard>
             <div className="flex items-center gap-3">
-              <span className="w-10 h-10 rounded-xl bg-[#ECFDF3] flex items-center justify-center shrink-0">
-                <Database className="w-5 h-5 text-[#067647]" />
+              <span className="w-10 h-10 rounded-xl bg-success-soft flex items-center justify-center shrink-0">
+                <Database className="w-5 h-5 text-success" />
               </span>
               <div className="min-w-0">
-                <p className="text-[11px] font-extrabold uppercase tracking-widest text-[--text-muted]">
+                <p className="text-xs font-extrabold uppercase tracking-widest text-[--text-muted]">
                   Backend
                 </p>
-                <p className="text-[14px] font-bold text-[#10151C]">PostgreSQL connected</p>
+                <p className="text-sm font-bold text-heading">PostgreSQL connected</p>
               </div>
             </div>
           </DashboardCard>
@@ -102,10 +102,10 @@ const TpoDashboardBody: React.FC = () => {
         {/* What exists today vs what is coming — no zero-metrics pretence */}
         <DashboardCard>
           <div className="flex items-start gap-3 mb-4">
-            <CalendarDays className="w-5 h-5 text-[#B45309] mt-0.5 shrink-0" />
+            <CalendarDays className="w-5 h-5 text-amber-deep mt-0.5 shrink-0" />
             <div>
-              <h2 className="text-[16px] font-black text-[#10151C]">Placement season 2026-27</h2>
-              <p className="text-[14px] text-[--text-muted]">
+              <h2 className="text-base font-black text-heading">Placement season 2026-27</h2>
+              <p className="text-sm text-[--text-muted]">
                 Welcome, {user?.name || user?.email}. This is the P0 foundation of the Campus TPO portal —
                 identity, college scoping and permissions are live; metric screens arrive with the analytics
                 slices (M3 onward) and will show real numbers or an explicit “no data yet”, never zeros
@@ -113,7 +113,7 @@ const TpoDashboardBody: React.FC = () => {
               </p>
             </div>
           </div>
-          <ul className="grid sm:grid-cols-2 gap-x-6 gap-y-1.5 text-[13px] text-[#3E4754]">
+          <ul className="grid sm:grid-cols-2 gap-x-6 gap-y-1.5 text-sm text-body">
             <li>✓ &nbsp;Placement authority (role + grant) resolved per request</li>
             <li>✓ &nbsp;College-scoped tenancy with switcher</li>
             <li>✓ &nbsp;Invite + access management in the admin console</li>
@@ -126,21 +126,21 @@ const TpoDashboardBody: React.FC = () => {
         {/* Live permission truth — what requirePlacementScope will check */}
         <DashboardCard>
           <div className="flex items-center gap-3 mb-3">
-            <KeyRound className="w-5 h-5 text-[#0E2A44]" />
+            <KeyRound className="w-5 h-5 text-brand-ink" />
             <div>
-              <h2 className="text-[16px] font-black text-[#10151C]">Your resolved permissions</h2>
-              <p className="text-[13px] text-[--text-muted]">
+              <h2 className="text-base font-black text-heading">Your resolved permissions</h2>
+              <p className="text-sm text-[--text-muted]">
                 Read from the database for this college on every request — a revoked grant takes effect
                 immediately, not at token expiry.
               </p>
             </div>
           </div>
           {isWildcard ? (
-            <p className="text-[13px] font-bold text-[#067647]">
+            <p className="text-sm font-bold text-success">
               Platform super admin — all placement permissions (wildcard).
             </p>
           ) : permissions.length === 0 ? (
-            <p className="text-[13px] font-semibold text-[#92400E]">
+            <p className="text-sm font-semibold text-amber-deep">
               No permissions resolved for this college yet — ask your T&amp;P Head to confirm your grant.
             </p>
           ) : (
@@ -148,14 +148,14 @@ const TpoDashboardBody: React.FC = () => {
               {permissions.sort().map((p) => (
                 <span
                   key={p}
-                  className="px-2.5 py-1 rounded-lg bg-[#F1EEE7] border border-[#E4E1DA] font-mono text-[11px] font-semibold text-[#3E4754]"
+                  className="px-2.5 py-1 rounded-lg bg-surface-hover border border-line text-xs font-semibold text-body"
                 >
                   {p}
                 </span>
               ))}
             </div>
           )}
-          <p className="mt-3 text-[12px] text-[--text-muted]">
+          <p className="mt-3 text-xs text-[--text-muted]">
             <Building2 className="w-3.5 h-3.5 inline -mt-0.5 mr-1" />
             Scoped to {college?.name || 'the active college'} · signed in as {user?.email}
           </p>

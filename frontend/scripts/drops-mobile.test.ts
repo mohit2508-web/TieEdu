@@ -156,7 +156,9 @@ ok(
 
 console.log('\n--- image delivery ---');
 ok(card.includes("loading={eager ? 'eager' : 'lazy'}"), 'the first cards load eagerly, the rest lazily');
-ok(card.includes("fetchPriority={eager ? 'high' : 'auto'}"), 'the first creative is marked high priority');
+// Lowercase attribute: React 18 warns on the camelCase `fetchPriority` prop.
+ok(card.includes("fetchpriority: eager ? 'high' : 'auto'"), 'the first creative is marked high priority');
+ok(!card.includes('fetchPriority='), 'no camelCase fetchPriority prop (React 18 warns on it)');
 ok(card.includes('decoding="async"'), 'creatures decode off the main thread');
 ok(card.includes('index'), 'DropCard receives a feed index to decide eagerness');
 ok(page.includes('new Image()'), 'the page prefetches the next creative');
@@ -229,10 +231,9 @@ ok(strip.includes('overscroll-x-contain'), 'the strip does not hand its overscro
 
 console.log('\n--- nav contract (must not drift) ---');
 ok(
-  /MOBILE_TAB_SLOTS:\s*string\[\]\s*=\s*\[[^\]]*vaults[^\]]*skillTest[^\]]*drops[^\]]*search[^\]]*courses/.test(
-    navConfig
-  ),
-  'tab slot order is still vaults, skillTest, drops, search, courses'
+  /MOBILE_TAB_SLOTS[^=]*=\s*\[\s*'home',\s*'learn',\s*'practise',\s*'companies',\s*'feed'\s*\]/.test(navConfig) &&
+    /id: 'feed'[^}]*itemIds: \['drops'\]/.test(navConfig),
+  'tab slots are the five sections, and Feed opens Drops'
 );
 ok(
   navConfig.includes("id: 'drops'") && navConfig.includes("depth: 'detail'"),

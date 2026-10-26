@@ -61,21 +61,21 @@ export const WorkflowStepper: React.FC<{ rounds: DriveRound[]; registered: boole
             {/* Label */}
             <div className="min-w-0 flex-1 pt-0.5">
               <div className="flex items-center gap-2">
-                <span className="truncate text-[14px] font-semibold" style={{ color: 'var(--apple-label)' }}>
+                <span className="truncate text-sm font-semibold" style={{ color: 'var(--apple-label)' }}>
                   {round.round_name || round.name}
                 </span>
-                <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide" style={{ color: st.fg === '#fff' ? st.ring : 'var(--apple-label-3)' }}>
+                <span className="shrink-0 text-xs font-semibold uppercase tracking-wide" style={{ color: st.fg === '#fff' ? st.ring : 'var(--apple-label-2)' }}>
                   {st.label}
                 </span>
               </div>
-              <div className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[12px]" style={{ color: 'var(--apple-label-2)' }}>
+              <div className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs" style={{ color: 'var(--apple-label-2)' }}>
                 {round.duration_minutes != null && <span>{round.duration_minutes} min</span>}
                 {round.total_questions != null && <span>{round.total_questions} Qs</span>}
                 {round.max_attempts > 1 && <span>{round.attempts_used}/{round.max_attempts} attempts</span>}
                 {round.best_percentage != null && <span>Best {Math.round(round.best_percentage)}%</span>}
               </div>
               {round.round_description && (
-                <p className="mt-1 whitespace-pre-line text-[12.5px] leading-relaxed" style={{ color: 'var(--apple-label-2)' }}>
+                <p className="mt-1 whitespace-pre-line text-xs leading-relaxed" style={{ color: 'var(--apple-label-2)' }}>
                   {round.round_description}
                 </p>
               )}

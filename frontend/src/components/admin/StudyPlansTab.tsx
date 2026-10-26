@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 
 const inputCls =
-  'w-full p-2.5 border border-gray-200 rounded-xl bg-[#FAFAF9] text-sm focus:outline-none focus:ring-2 focus:ring-[#0284C7]';
+  'w-full p-2.5 border border-gray-200 rounded-xl bg-app-warm text-sm focus:outline-none focus:ring-2 focus:ring-signal';
 
 const STATUS_STYLES: Record<string, string> = {
   published: 'bg-emerald-100 text-emerald-800',
@@ -268,10 +268,10 @@ export const StudyPlansTab: React.FC = () => {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         <div>
-          <h3 className="text-base font-extrabold text-[#10151C] flex items-center gap-2">
-            <CalendarRange className="w-4 h-4 text-[#0284C7]" /> Study Plan Templates
+          <h3 className="text-base font-extrabold text-heading flex items-center gap-2">
+            <CalendarRange className="w-4 h-4 text-signal" /> Study Plan Templates
           </h3>
-          <p className="text-[11px] text-gray-500">
+          <p className="text-xs text-gray-500">
             Author preparation plans students see on the Study Plan page. Published templates are matched by
             company and role, then fall back to a generic plan.
           </p>
@@ -280,7 +280,7 @@ export const StudyPlansTab: React.FC = () => {
           type="button"
           onClick={createTemplate}
           disabled={busy}
-          className="ml-auto inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#0284C7] text-white text-[11px] font-bold uppercase tracking-wider min-h-[2.5rem]"
+          className="ml-auto inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-signal text-white text-xs font-bold uppercase tracking-wider min-h-[2.5rem]"
         >
           <Plus className="w-4 h-4" /> New plan
         </button>
@@ -297,7 +297,7 @@ export const StudyPlansTab: React.FC = () => {
         </p>
       )}
 
-      <div className="lg:hidden flex gap-1 p-1 bg-[#F1F5F9] rounded-xl" role="tablist">
+      <div className="lg:hidden flex gap-1 p-1 bg-paper rounded-xl" role="tablist">
         {(['list', 'detail'] as const).map((t) => (
           <button
             key={t}
@@ -305,7 +305,7 @@ export const StudyPlansTab: React.FC = () => {
             aria-selected={mobilePane === t}
             onClick={() => setMobilePane(t)}
             className={`flex-1 py-2 text-xs font-bold rounded-lg min-h-[2.5rem] ${
-              mobilePane === t ? 'bg-white text-[#0284C7] shadow-sm' : 'text-gray-500'
+              mobilePane === t ? 'bg-white text-signal shadow-sm' : 'text-gray-500'
             }`}
           >
             {t === 'list' ? 'All plans' : selected ? selected.title : 'Editor'}
@@ -332,8 +332,8 @@ export const StudyPlansTab: React.FC = () => {
                 key={f}
                 type="button"
                 onClick={() => setFilter(f)}
-                className={`shrink-0 px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase min-h-[2rem] ${
-                  filter === f ? 'bg-[#1F3A5F] text-white' : 'bg-white border border-gray-200 text-gray-500'
+                className={`shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-bold uppercase min-h-[2rem] ${
+                  filter === f ? 'bg-brand-ink text-white' : 'bg-white border border-gray-200 text-gray-500'
                 }`}
               >
                 {f}
@@ -355,21 +355,21 @@ export const StudyPlansTab: React.FC = () => {
               type="button"
               onClick={() => { setSelectedId(t.id); setMobilePane('detail'); }}
               className={`w-full text-left rounded-xl border p-3 transition-colors ${
-                t.id === selectedId ? 'border-[#0284C7] bg-[#0284C7]/5' : 'border-gray-200 bg-white hover:border-gray-300'
+                t.id === selectedId ? 'border-signal bg-signal/5' : 'border-gray-200 bg-white hover:border-gray-300'
               }`}
             >
               <span className="flex items-center gap-2 mb-1">
-                <span className={`text-[9px] font-mono font-bold uppercase px-1.5 py-0.5 rounded ${STATUS_STYLES[t.status]}`}>
+                <span className={`text-xs font-mono font-bold uppercase px-1.5 py-0.5 rounded ${STATUS_STYLES[t.status]}`}>
                   {t.status}
                 </span>
-                <span className="ml-auto text-[10px] font-mono text-gray-400">v{t.version}</span>
+                <span className="ml-auto text-xs font-mono text-gray-400">v{t.version}</span>
               </span>
-              <span className="block text-[13px] font-bold text-[#10151C] leading-snug">{t.title}</span>
-              <span className="block text-[11px] text-gray-500 mt-0.5 truncate">
+              <span className="block text-sm font-bold text-heading leading-snug">{t.title}</span>
+              <span className="block text-xs text-gray-500 mt-0.5 truncate">
                 {t.company_name || 'Generic'} · {t.role || 'Any role'} · {t.phase_count ?? 0} phases
               </span>
               {t.slug && (
-                <span className="block text-[10px] font-mono text-gray-400 truncate mt-0.5">/{t.slug}</span>
+                <span className="block text-xs font-mono text-gray-400 truncate mt-0.5">/{t.slug}</span>
               )}
             </button>
           ))}
@@ -387,11 +387,11 @@ export const StudyPlansTab: React.FC = () => {
               <div className="rounded-2xl border border-gray-200 bg-white p-4 space-y-3">
                 <div className="grid sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[10px] font-mono font-bold uppercase text-gray-500 mb-1">Title</label>
+                    <label className="block text-xs font-mono font-bold uppercase text-gray-500 mb-1">Title</label>
                     <input className={inputCls} value={meta.title} onChange={(e) => setMeta({ ...meta, title: e.target.value })} />
                   </div>
                   <div>
-                    <label htmlFor="plan-slug" className="block text-[10px] font-mono font-bold uppercase text-gray-500 mb-1">
+                    <label htmlFor="plan-slug" className="block text-xs font-mono font-bold uppercase text-gray-500 mb-1">
                       Slug
                     </label>
                     <div className="flex gap-1.5">
@@ -416,18 +416,18 @@ export const StudyPlansTab: React.FC = () => {
                             setSlugConflict('');
                           }}
                           title="Follow the title again"
-                          className="shrink-0 px-2.5 rounded-xl border border-gray-200 text-[10px] font-bold uppercase text-gray-500 hover:bg-gray-50 min-h-[2.5rem]"
+                          className="shrink-0 px-2.5 rounded-xl border border-gray-200 text-xs font-bold uppercase text-gray-500 hover:bg-gray-50 min-h-[2.5rem]"
                         >
                           Auto
                         </button>
                       )}
                     </div>
-                    <p id="plan-slug-preview" className="mt-1 text-[10px] font-mono text-gray-400 truncate">
+                    <p id="plan-slug-preview" className="mt-1 text-xs font-mono text-gray-400 truncate">
                       {slugTouched ? 'Saves as ' : 'Follows title: '}
                       <span className="text-gray-600">{slugPreview}</span>
                     </p>
                     {slugConflict && (
-                      <p className="mt-1.5 flex items-center gap-2 text-[10px] font-mono text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1.5">
+                      <p className="mt-1.5 flex items-center gap-2 text-xs font-mono text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1.5">
                         <span className="truncate">Taken — try “{slugConflict}”</span>
                         <button
                           type="button"
@@ -440,7 +440,7 @@ export const StudyPlansTab: React.FC = () => {
                     )}
                   </div>
                   <div>
-                    <label className="block text-[10px] font-mono font-bold uppercase text-gray-500 mb-1">Company</label>
+                    <label className="block text-xs font-mono font-bold uppercase text-gray-500 mb-1">Company</label>
                     <select className={inputCls} value={meta.company_id} onChange={(e) => setMeta({ ...meta, company_id: e.target.value })}>
                       <option value="">Generic (all companies)</option>
                       {companies.map((c) => (
@@ -449,7 +449,7 @@ export const StudyPlansTab: React.FC = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-mono font-bold uppercase text-gray-500 mb-1">Role</label>
+                    <label className="block text-xs font-mono font-bold uppercase text-gray-500 mb-1">Role</label>
                     <input
                       className={inputCls}
                       value={meta.role}
@@ -458,7 +458,7 @@ export const StudyPlansTab: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-mono font-bold uppercase text-gray-500 mb-1">Status</label>
+                    <label className="block text-xs font-mono font-bold uppercase text-gray-500 mb-1">Status</label>
                     <select className={inputCls} value={meta.status} onChange={(e) => setMeta({ ...meta, status: e.target.value })}>
                       <option value="draft">Draft</option>
                       <option value="published">Published</option>
@@ -488,7 +488,7 @@ export const StudyPlansTab: React.FC = () => {
                         : { title: patch.title, company_id: patch.company_id, company_name: patch.company_name, role: patch.role };
                       runSavingDetails(selectedId, patch, optimisticPatch, selected);
                     }}
-                    className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#1F3A5F] text-white text-[11px] font-bold uppercase tracking-wider min-h-[2.5rem] disabled:opacity-60"
+                    className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-brand-ink text-white text-xs font-bold uppercase tracking-wider min-h-[2.5rem] disabled:opacity-60"
                   >
                     {saveState === 'saving' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     {saveState === 'saving' ? 'Saving…' : saveState === 'saved' ? 'Saved' : 'Save details'}
@@ -500,7 +500,7 @@ export const StudyPlansTab: React.FC = () => {
                         type="button"
                         disabled={busy}
                         onClick={() => setPreviewOpen(true)}
-                        className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-gray-300 text-gray-700 text-[11px] font-bold uppercase tracking-wider min-h-[2.5rem]"
+                        className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-gray-300 text-gray-700 text-xs font-bold uppercase tracking-wider min-h-[2.5rem]"
                       >
                         <Eye className="w-4 h-4" /> Preview
                       </button>
@@ -525,7 +525,7 @@ export const StudyPlansTab: React.FC = () => {
                             },
                           });
                         }}
-                        className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-700 text-white text-[11px] font-bold uppercase tracking-wider min-h-[2.5rem] disabled:opacity-40"
+                        className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-700 text-white text-xs font-bold uppercase tracking-wider min-h-[2.5rem] disabled:opacity-40"
                       >
                         <Send className="w-4 h-4" /> Publish
                       </button>
@@ -553,7 +553,7 @@ export const StudyPlansTab: React.FC = () => {
                           },
                         });
                       }}
-                      className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-gray-300 text-gray-700 text-[11px] font-bold uppercase tracking-wider min-h-[2.5rem]"
+                      className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-gray-300 text-gray-700 text-xs font-bold uppercase tracking-wider min-h-[2.5rem]"
                     >
                       <FileEdit className="w-4 h-4" /> Unpublish
                     </button>
@@ -569,7 +569,7 @@ export const StudyPlansTab: React.FC = () => {
                         setSelectedId('');
                       }, 'Archived');
                     }}
-                    className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-gray-300 text-gray-700 text-[11px] font-bold uppercase tracking-wider min-h-[2.5rem] ml-auto"
+                    className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-gray-300 text-gray-700 text-xs font-bold uppercase tracking-wider min-h-[2.5rem] ml-auto"
                   >
                     <Archive className="w-4 h-4" /> Archive
                   </button>
@@ -584,7 +584,7 @@ export const StudyPlansTab: React.FC = () => {
                         setSelectedId('');
                       }, 'Deleted');
                     }}
-                    className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-red-200 text-red-700 text-[11px] font-bold uppercase tracking-wider min-h-[2.5rem]"
+                    className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-red-200 text-red-700 text-xs font-bold uppercase tracking-wider min-h-[2.5rem]"
                   >
                     <Trash2 className="w-4 h-4" /> Delete
                   </button>
@@ -618,10 +618,10 @@ export const StudyPlansTab: React.FC = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="sticky top-0 z-10 flex items-center gap-3 px-5 py-3.5 border-b border-gray-200 bg-white rounded-t-2xl">
-              <Eye className="w-4 h-4 text-[#0284C7]" />
+              <Eye className="w-4 h-4 text-signal" />
               <div className="min-w-0">
-                <p className="text-[13px] font-extrabold text-[#10151C] leading-tight">Student preview</p>
-                <p className="text-[10px] font-mono text-gray-500 truncate">{slugPreview || 'no-slug'}</p>
+                <p className="text-sm font-extrabold text-heading leading-tight">Student preview</p>
+                <p className="text-xs font-mono text-gray-500 truncate">{slugPreview || 'no-slug'}</p>
               </div>
               <button
                 type="button"
@@ -636,7 +636,7 @@ export const StudyPlansTab: React.FC = () => {
             <div className="px-5 py-4 space-y-4 max-h-[70vh] overflow-y-auto">
               {publishWarnings.length > 0 && (
                 <div className="rounded-xl bg-amber-50 border border-amber-200 px-3.5 py-3">
-                  <p className="text-[11px] font-bold uppercase text-amber-900 mb-1.5 flex items-center gap-1.5">
+                  <p className="text-xs font-bold uppercase text-amber-900 mb-1.5 flex items-center gap-1.5">
                     <AlertTriangle className="w-3.5 h-3.5" /> Before you publish
                   </p>
                   <ul className="list-disc pl-5 space-y-1">
@@ -648,7 +648,7 @@ export const StudyPlansTab: React.FC = () => {
               )}
 
               <div>
-                <h4 className="text-lg font-extrabold text-[#10151C]">{meta.title || 'Untitled Study Plan'}</h4>
+                <h4 className="text-lg font-extrabold text-heading">{meta.title || 'Untitled Study Plan'}</h4>
                 <p className="text-xs text-gray-500 mt-0.5">
                   {companies.find((c) => c.id === meta.company_id)?.name || selected.company_name || 'Generic'} ·{' '}
                   {meta.role || selected.role || 'Any role'}
@@ -663,13 +663,13 @@ export const StudyPlansTab: React.FC = () => {
                 phases.map((p) => (
                   <section key={p.id} className="border-t border-gray-100 pt-3">
                     <div className="flex items-baseline gap-2 mb-1">
-                      <span className="text-[10px] font-mono font-bold uppercase text-gray-400">
+                      <span className="text-xs font-mono font-bold uppercase text-gray-400">
                         {p.day_from === p.day_to || !p.day_to ? `Day ${p.day_from}` : `Days ${p.day_from}–${p.day_to}`}
                       </span>
-                      <h5 className="text-[15px] font-bold text-[#10151C]">{p.title || 'Untitled phase'}</h5>
+                      <h5 className="text-base font-bold text-heading">{p.title || 'Untitled phase'}</h5>
                     </div>
                     {p.summary && (
-                      <p className="text-[13px] text-gray-600 leading-relaxed mb-2 whitespace-pre-line">{p.summary}</p>
+                      <p className="text-sm text-gray-600 leading-relaxed mb-2 whitespace-pre-line">{p.summary}</p>
                     )}
                     {(p.blocks || []).length === 0 ? (
                       <p className="text-xs text-gray-400 italic">No content in this phase.</p>
@@ -691,7 +691,7 @@ export const StudyPlansTab: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setPreviewOpen(false)}
-                className="px-4 py-2.5 rounded-xl border border-gray-300 text-gray-700 text-[11px] font-bold uppercase tracking-wider min-h-[2.5rem]"
+                className="px-4 py-2.5 rounded-xl border border-gray-300 text-gray-700 text-xs font-bold uppercase tracking-wider min-h-[2.5rem]"
               >
                 Keep editing
               </button>
@@ -717,7 +717,7 @@ export const StudyPlansTab: React.FC = () => {
                       },
                     });
                   }}
-                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-700 text-white text-[11px] font-bold uppercase tracking-wider min-h-[2.5rem] disabled:opacity-40"
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-700 text-white text-xs font-bold uppercase tracking-wider min-h-[2.5rem] disabled:opacity-40"
                 >
                   <Send className="w-4 h-4" /> Publish from preview
                 </button>

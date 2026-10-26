@@ -144,8 +144,8 @@ export const AdminQuizEditor: React.FC<{
 
   if (!draft) {
     return (
-      <div className="rounded-xl border border-dashed border-[#E9E7E1] p-6 text-center">
-        <p className="text-[13px] text-[#6B7280] mb-3">
+      <div className="rounded-xl border border-dashed border-line p-6 text-center">
+        <p className="text-sm text-text-light mb-3">
           No quiz on this lesson. Learners who finish it will move straight on to the next lesson.
         </p>
         <Btn variant="primary" onClick={() => setDraft({ passing_percent: 70, questions: [blankQuestion()] })}>
@@ -181,7 +181,7 @@ export const AdminQuizEditor: React.FC<{
 
       {removing && (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 space-y-2.5">
-          <p className="text-[12.5px] text-red-800">
+          <p className="text-xs text-red-800">
             Remove this quiz? Learners lose the +{40} XP step and the lesson counts as read-only again.
           </p>
           <div className="flex gap-2">
@@ -197,10 +197,10 @@ export const AdminQuizEditor: React.FC<{
 
       <div className="space-y-3">
         {questions.map((q, qi) => (
-          <div key={qi} className="rounded-xl border border-[#E9E7E1] p-4 bg-[#FCFBF8]">
+          <div key={qi} className="rounded-xl border border-line p-4 bg-app-warm">
             <div className="flex items-center gap-2 mb-2.5">
-              <GripVertical className="w-3.5 h-3.5 text-[#9CA3AF]" />
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#6B7280]">Question {qi + 1}</span>
+              <GripVertical className="w-3.5 h-3.5 text-text-light" />
+              <span className="text-xs font-bold uppercase tracking-wider text-text-light">Question {qi + 1}</span>
               <div className="ml-auto flex gap-1.5">
                 <Btn onClick={() => moveQuestion(qi, -1)} disabled={qi === 0} title="Move up">
                   ↑

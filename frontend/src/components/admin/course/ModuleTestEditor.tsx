@@ -163,8 +163,8 @@ export const ModuleTestEditor: React.FC<{
 
   if (!draft) {
     return (
-      <div className="rounded-xl border border-dashed border-[#E9E7E1] p-5 text-center">
-        <p className="text-[13px] text-[#6B7280] mb-3">
+      <div className="rounded-xl border border-dashed border-line p-5 text-center">
+        <p className="text-sm text-text-light mb-3">
           No end-of-module test. Learners finish the module&apos;s lessons and move straight on.
         </p>
         <Btn variant="primary" onClick={() => setDraft(defaultTest())}>
@@ -213,14 +213,14 @@ export const ModuleTestEditor: React.FC<{
         </div>
       </div>
 
-      <p className="text-[12px] text-[#6B7280]">
+      <p className="text-xs text-text-light">
         Bank: {questions.length} question(s). The learner sees {Math.min(draft.question_count, questions.length)} drawn
         at random. Passing is final — a passed test cannot be re-sat.
       </p>
 
       {removing && (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 space-y-2.5">
-          <p className="text-[12.5px] text-red-800">
+          <p className="text-xs text-red-800">
             Remove this module test? Learners who have not passed it lose the checkpoint; passed
             results are kept in their progress history.
           </p>
@@ -237,10 +237,10 @@ export const ModuleTestEditor: React.FC<{
 
       <div className="space-y-3">
         {questions.map((q, qi) => (
-          <div key={qi} className="rounded-xl border border-[#E9E7E1] p-4 bg-[#FCFBF8]">
+          <div key={qi} className="rounded-xl border border-line p-4 bg-app-warm">
             <div className="flex items-center gap-2 mb-2.5">
-              <GripVertical className="w-3.5 h-3.5 text-[#9CA3AF]" />
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#6B7280]">Question {qi + 1}</span>
+              <GripVertical className="w-3.5 h-3.5 text-text-light" />
+              <span className="text-xs font-bold uppercase tracking-wider text-text-light">Question {qi + 1}</span>
               <div className="ml-auto flex gap-1.5">
                 <Btn onClick={() => moveQuestion(qi, -1)} disabled={qi === 0} title="Move up">
                   ↑

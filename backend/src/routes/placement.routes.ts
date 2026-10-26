@@ -12,6 +12,9 @@ import {
 import { isPlacementRole, PLACEMENT_ROLE_LABELS, PlacementRole } from '../placement/permissions';
 import { getPool } from '../db/client';
 import { driveAdminRouter } from './driveAdmin.routes';
+import { buildBatchReadiness } from '../lib/batchReadiness';
+import { campusPagesOf, campusSettings } from '../lib/campusPage';
+import { placementCan } from '../placement/permissions';
 
 export const placementRouter = Router();
 
@@ -346,4 +349,69 @@ placementRouter.get('/student/link', requireAuth, async (req: Request, res: Resp
     if (isConnectionFailure(err)) return pgUnavailable(res);
     throw err;
   }
+});
+
+// ---------------------------------------------------------------------------
+// Batch readiness — students × target companies (UI_REDESIGN_PLAN_V2 §7.2).
+//
+// Read-only. The roster comes from `student_profile` for the officer's active
+// college; readiness is computed from the same records each student sees on
+// their own Today screen (lib/batchReadiness). Names only with
+// `placement.students.pii`; otherwise roll numbers.
+// ---------------------------------------------------------------------------
+placementRouter.get(
+  '/readiness',
+  requirePlacementAuth,
+  requirePlacementScope('placement.analytics.read'),
+  async (req: Request, res: Response) => {
+    const auth = req.placement!;
+    try {
+      const r = await getPool().query(
+        `SELECT DISTINCT ON (user_id) user_id, roll_no, branch, batch
+           FROM student_profile
+          WHERE college_id = $1
+          ORDER BY user_id, updated_at DESC`,
+        [auth.collegeId]
+      );
+      const roster = (r.rows || []).map((row: any) => ({
+        user_id: String(row.user_id),
+        roll_no: String(row.roll_no),
+        branch: row.branch ?? null,
+        batch: row.batch ?? null,
+      }));
+      res.setHeader('Cache-Control', 'private, no-store');
+      return res.json(
+        buildBatchReadiness(loadDb(), roster, { withNames: placementCan(auth, 'placement.students.pii') })
+      );
+    } catch (err: any) {
+      if (isConnectionFailure(err)) return pgUnavailable(res);
+      throw err;
+    }
+  }
+);
+
+// ---------------------------------------------------------------------------
+// Campus page settings (lib/campusPage) — the officer turns the public page on
+// or off and writes its intro. Stored in the JSON store; nothing is written to
+// the placement database.
+// ---------------------------------------------------------------------------
+placementRouter.get('/campus-page', requirePlacementAuth, requirePlacementScope('placement.dashboard.read'), (req: Request, res: Response) => {
+  res.json(campusSettings(loadDb(), req.placement!.collegeId!));
+});
+
+placementRouter.put('/campus-page', requirePlacementAuth, requirePlacementScope('placement.settings.write'), (req: Request, res: Response) => {
+  const db = loadDb();
+  const collegeId = req.placement!.collegeId!;
+  const list = campusPagesOf(db);
+  let row = list.find((p) => p.college_id === collegeId);
+  if (!row) {
+    row = { college_id: collegeId, enabled: false, intro: '', updated_by: null, updated_at: null };
+    list.push(row);
+  }
+  if (typeof req.body?.enabled === 'boolean') row.enabled = req.body.enabled;
+  if (typeof req.body?.intro === 'string') row.intro = req.body.intro.trim().slice(0, 600);
+  row.updated_by = req.user!.id;
+  row.updated_at = new Date().toISOString();
+  saveDb(db);
+  res.json(row);
 });

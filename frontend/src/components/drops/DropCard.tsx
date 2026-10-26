@@ -181,7 +181,8 @@ export const DropCard: React.FC<DropCardProps> = ({
             src={apiAssetUrl(item.image_url)}
             alt={item.image_alt || item.headline}
             loading={eager ? 'eager' : 'lazy'}
-            fetchPriority={eager ? 'high' : 'auto'}
+            /* lowercase: React 18 warns on the camelCase prop (React 19 knows it) */
+            {...{ fetchpriority: eager ? 'high' : 'auto' }}
             decoding="async"
           />
         )}
@@ -191,7 +192,7 @@ export const DropCard: React.FC<DropCardProps> = ({
           <span className="drop-type-chip">{meta.label}</span>
           <div className="flex flex-col items-end gap-1.5">
             {item.sponsored && (
-              <span className="rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-[#10151C]">
+              <span className="rounded-full bg-white/90 px-2.5 py-1 text-xs font-extrabold uppercase tracking-wide text-heading">
                 {item.sponsor_name || 'Sponsored'}
               </span>
             )}
@@ -251,7 +252,7 @@ export const DropCard: React.FC<DropCardProps> = ({
           this the headline sits UNDER the gradient and washes out.
         */}
         <div className="absolute inset-x-0 bottom-0 z-[2] p-4 pr-[68px]">
-          <h2 className="drop-headline text-[19px] font-extrabold leading-snug text-white">
+          <h2 className="drop-headline text-xl font-extrabold leading-snug text-white">
             {item.headline}
           </h2>
           {item.bullets.length > 0 && (
@@ -259,7 +260,7 @@ export const DropCard: React.FC<DropCardProps> = ({
               {item.bullets.slice(0, 3).map((b) => (
                 <li
                   key={b}
-                  className="flex items-start gap-1.5 text-[13px] font-semibold leading-snug text-white"
+                  className="flex items-start gap-1.5 text-sm font-semibold leading-snug text-white"
                   style={{ textShadow: '0 1px 3px rgba(0, 0, 0, 0.75), 0 1px 8px rgba(0, 0, 0, 0.4)' }}
                 >
                   <Check size={14} strokeWidth={3} className="mt-1 flex-none text-white/85" aria-hidden />
@@ -270,7 +271,7 @@ export const DropCard: React.FC<DropCardProps> = ({
           )}
           {item.deadline_at && (
             <p
-              className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-black/45 px-2.5 py-1 text-[12px] font-bold text-white backdrop-blur-sm"
+              className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-black/45 px-2.5 py-1 text-xs font-bold text-white backdrop-blur-sm"
               style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.55)' }}
             >
               <CalendarClock size={14} strokeWidth={2.4} aria-hidden />

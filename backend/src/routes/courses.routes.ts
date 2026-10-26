@@ -16,6 +16,7 @@
 // ============================================================================
 
 import { Request, Response } from 'express';
+import { touchStreak } from '../lib/streak';
 import { Router } from 'express';
 import { loadDb, saveDb, Course, CourseLesson, Certificate, CourseFeedback, Instructor } from '../data/db';
 import { optionalAuth, requireAuth, rateLimit } from '../middleware/auth';
@@ -332,6 +333,8 @@ function settleCompletion(
 
   if (!progress.completed_lesson_ids.includes(lesson.id)) {
     progress.completed_lesson_ids.push(lesson.id);
+    // A finished lesson is a study day (lib/streak). Idempotent within a day.
+    touchStreak(db, userId);
     const res = awardAndCommit(db, {
       userId,
       key: `lesson:${lesson.id}:${userId}`,

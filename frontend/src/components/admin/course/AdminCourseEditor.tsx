@@ -107,13 +107,13 @@ export const AdminCourseEditor: React.FC<{
       <div className="space-y-4">
         <button
           onClick={() => setSelectedLesson(null)}
-          className="text-[12px] font-bold text-[#0284C7] hover:underline flex items-center gap-1"
+          className="text-xs font-bold text-signal hover:underline flex items-center gap-1"
         >
           <ChevronRight className="w-3.5 h-3.5" /> Back to {mod.title}
         </button>
         <div>
-          <h2 className="text-[17px] font-extrabold text-[#10151C] tracking-tight">{selected.lesson.title}</h2>
-          <p className="text-[12px] text-[#6B7280] font-mono mt-0.5">{selected.lesson.id}</p>
+          <h2 className="text-lg font-extrabold text-heading tracking-tight">{selected.lesson.title}</h2>
+          <p className="text-xs text-text-light font-mono mt-0.5">{selected.lesson.id}</p>
         </div>
         {error && <ErrorNote>{error}</ErrorNote>}
         <AdminLessonEditor lesson={selected.lesson} courseSlug={course.slug} onSaved={onChanged} />
@@ -125,10 +125,10 @@ export const AdminCourseEditor: React.FC<{
     <div className="space-y-5">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <button onClick={onBack} className="text-[12px] font-bold text-[#0284C7] hover:underline">
+          <button onClick={onBack} className="text-xs font-bold text-signal hover:underline">
             ← All courses
           </button>
-          <h2 className="text-[17px] font-extrabold text-[#10151C] tracking-tight mt-1">{course.title}</h2>
+          <h2 className="text-lg font-extrabold text-heading tracking-tight mt-1">{course.title}</h2>
           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
             {course.published ? <Pill tone="green">Published</Pill> : <Pill tone="amber">Draft</Pill>}
             <Pill>{course.level}</Pill>
@@ -171,11 +171,11 @@ export const AdminCourseEditor: React.FC<{
         {(course.modules || []).map((m, mi) => {
           const open = openModules[m.id];
           return (
-            <div key={m.id} className="rounded-xl border border-[#E9E7E1] bg-white overflow-hidden">
-              <div className="flex items-center gap-2 px-4 py-3 bg-[#F8F7F4] border-b border-[#EDEDEB]">
+            <div key={m.id} className="rounded-xl border border-line bg-white overflow-hidden">
+              <div className="flex items-center gap-2 px-4 py-3 bg-paper border-b border-line">
                 <button
                   onClick={() => setOpenModules({ ...openModules, [m.id]: !open })}
-                  className="text-[#6B7280] hover:text-[#10151C]"
+                  className="text-text-light hover:text-heading"
                 >
                   {open ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                 </button>
@@ -186,9 +186,9 @@ export const AdminCourseEditor: React.FC<{
                       const t = e.target.value.trim();
                       if (t && t !== m.title) run(() => updateModule(m.id, { title: t }));
                     }}
-                    className="w-full bg-transparent text-[14px] font-bold text-[#10151C] outline-none focus:bg-white focus:px-2 focus:py-0.5 focus:rounded"
+                    className="w-full bg-transparent text-sm font-bold text-heading outline-none focus:bg-white focus:px-2 focus:py-0.5 focus:rounded"
                   />
-                  <p className="text-[11px] text-[#6B7280] px-2">
+                  <p className="text-xs text-text-light px-2">
                     {m.lessons?.length || 0} lessons
                     {m.test ? ` · test (${m.test.bank?.length || 0} questions)` : ''}
                   </p>
@@ -212,20 +212,20 @@ export const AdminCourseEditor: React.FC<{
               {open && (
                 <div className="p-3 space-y-1.5">
                   {(m.lessons || []).length === 0 && (
-                    <p className="text-[12.5px] text-[#6B7280] px-2 py-2">No lessons in this module yet.</p>
+                    <p className="text-xs text-text-light px-2 py-2">No lessons in this module yet.</p>
                   )}
                   {(m.lessons || []).map((l, li) => (
                     <div
                       key={l.id}
-                      className="flex items-center gap-2.5 rounded-lg border border-[#EDEDEB] px-3 py-2 hover:border-[#0284C7]/40"
+                      className="flex items-center gap-2.5 rounded-lg border border-line px-3 py-2 hover:border-signal/40"
                     >
-                      <span className="text-[10px] font-mono text-[#9CA3AF] w-5">{li + 1}</span>
+                      <span className="text-xs font-mono text-text-light w-5">{li + 1}</span>
                       <button
                         onClick={() => setSelectedLesson({ moduleId: m.id, lesson: l })}
                         className="flex-1 text-left min-w-0"
                       >
-                        <span className="block text-[13px] font-bold text-[#10151C] truncate">{l.title}</span>
-                        <span className="block text-[11px] text-[#6B7280]">
+                        <span className="block text-sm font-bold text-heading truncate">{l.title}</span>
+                        <span className="block text-xs text-text-light">
                           {l.duration_minutes} min
                           {l.video ? ' · video' : ''}
                           {l.quiz ? ` · quiz (${l.quiz.questions?.length || 0})` : ''}
@@ -249,8 +249,8 @@ export const AdminCourseEditor: React.FC<{
                   {/* The end-of-module test. Saves through its own endpoint, so
                       a half-written bank never lands in the database and the
                       parent does not need a draft for it. */}
-                  <div className="mt-3 pt-3 border-t border-[#EDEDEB]">
-                    <p className="text-[11px] font-bold uppercase tracking-wider text-[#6B7280] px-2 mb-2">
+                  <div className="mt-3 pt-3 border-t border-line">
+                    <p className="text-xs font-bold uppercase tracking-wider text-text-light px-2 mb-2">
                       End-of-module test
                     </p>
                     <ModuleTestEditor

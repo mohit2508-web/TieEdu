@@ -6,6 +6,7 @@ import { isShellExcluded, isRootDepth } from '@/lib/navConfig';
 import { Header } from '@/components/layout/Header';
 import { MobileTabBar } from '@/components/layout/MobileTabBar';
 import { MobileNavDrawer } from '@/components/layout/MobileNavDrawer';
+import { SectionSubnav } from '@/components/layout/SectionSubnav';
 import { CartModal } from '@/components/checkout/CartModal';
 import { SearchModal } from '@/components/modals/SearchModal';
 import { LeaderboardModal } from '@/components/modals/LeaderboardModal';
@@ -113,6 +114,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
         state; the rule lives in `globals.css` next to the bar's own.
       */}
       <div className="page-body flex-1" data-tabbar={atRoot ? 'on' : 'off'}>
+        <SectionSubnav />
         {children}
       </div>
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Video, MapPin, CalendarClock, UserRound } from 'lucide-react';
-import { DriveShell } from '@/components/drives/DriveShell';
+import { DriveShell, withDriveAuth } from '@/components/drives/DriveShell';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { fetchDriveInterviewsApi } from '@/lib/drivesApi';
 import type { DriveInterview } from '@/types/drives';
@@ -16,7 +16,7 @@ const statusStyle = (s: string) => {
   }
 };
 
-export default function InterviewsScreen() {
+function InterviewsScreen() {
   const [rows, setRows] = useState<DriveInterview[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -42,12 +42,12 @@ export default function InterviewsScreen() {
         {loading ? (
           <div className="space-y-3">{[0, 1].map((i) => <Skeleton key={i} className="h-24 w-full" />)}</div>
         ) : error ? (
-          <p className="rounded-[10px] px-3 py-2 text-[13px]" style={{ background: 'var(--apple-red-soft)', color: 'var(--apple-red)' }}>{error}</p>
+          <p className="rounded-[10px] px-3 py-2 text-sm" style={{ background: 'var(--apple-red-soft)', color: 'var(--apple-red)' }}>{error}</p>
         ) : rows.length === 0 ? (
           <div className="rounded-[12px] border px-4 py-12 text-center" style={{ borderColor: 'var(--apple-separator)', background: 'var(--apple-surface)' }}>
-            <Video size={24} className="mx-auto" style={{ color: 'var(--apple-label-3)' }} />
-            <p className="mt-2 text-[14px] font-medium" style={{ color: 'var(--apple-label)' }}>No interviews scheduled</p>
-            <p className="mt-1 text-[13px]" style={{ color: 'var(--apple-label-2)' }}>
+            <Video size={24} className="mx-auto" style={{ color: 'var(--apple-label-2)' }} />
+            <p className="mt-2 text-sm font-medium" style={{ color: 'var(--apple-label)' }}>No interviews scheduled</p>
+            <p className="mt-1 text-sm" style={{ color: 'var(--apple-label-2)' }}>
               Interviews appear here after you clear a drive&apos;s assessment rounds.
             </p>
           </div>
@@ -64,14 +64,14 @@ export default function InterviewsScreen() {
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="truncate text-[15px] font-semibold" style={{ color: 'var(--apple-label)' }}>{iv.round_name}</p>
-                        <p className="truncate text-[13px]" style={{ color: 'var(--apple-label-2)' }}>{iv.company_name} · {iv.drive_title}</p>
+                        <p className="truncate text-base font-semibold" style={{ color: 'var(--apple-label)' }}>{iv.round_name}</p>
+                        <p className="truncate text-sm" style={{ color: 'var(--apple-label-2)' }}>{iv.company_name} · {iv.drive_title}</p>
                       </div>
-                      <span className="shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold capitalize" style={{ background: st.bg, color: st.fg }}>
+                      <span className="shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold capitalize" style={{ background: st.bg, color: st.fg }}>
                         {iv.status}
                       </span>
                     </div>
-                    <div className="mt-3 grid grid-cols-1 gap-1.5 text-[12px]" style={{ color: 'var(--apple-label-2)' }}>
+                    <div className="mt-3 grid grid-cols-1 gap-1.5 text-xs" style={{ color: 'var(--apple-label-2)' }}>
                       {iv.scheduled_at_ist && (
                         <span className="inline-flex items-center gap-1.5"><CalendarClock size={12} />{iv.scheduled_at_ist} · {iv.duration_minutes} min</span>
                       )}
@@ -81,7 +81,7 @@ export default function InterviewsScreen() {
                       )}
                     </div>
                     {iv.meeting_url && iv.status === 'scheduled' && (
-                      <span className="mt-3 inline-block rounded-[10px] px-3 py-1.5 text-[12px] font-semibold text-white" style={{ background: 'var(--apple-blue)' }}>
+                      <span className="mt-3 inline-block rounded-[10px] px-3 py-1.5 text-xs font-semibold text-white" style={{ background: 'var(--apple-blue)' }}>
                         Join meeting
                       </span>
                     )}
@@ -95,3 +95,5 @@ export default function InterviewsScreen() {
     </DriveShell>
   );
 }
+
+export default withDriveAuth(InterviewsScreen);

@@ -153,7 +153,7 @@ export const CourseSyllabusNav: React.FC<SyllabusNavProps> = ({
       <>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-semibold text-[var(--ink)]">{m.title}</span>
-          <span className="mt-0.5 block text-[11px] text-[var(--text-muted)]">
+          <span className="mt-0.5 block text-xs text-[var(--text-muted)]">
             {[
               `${lessons.length} ${lessons.length === 1 ? 'lesson' : 'lessons'}`,
               // Omitted entirely when the module has none, rather than shown as
@@ -217,20 +217,24 @@ export const CourseSyllabusNav: React.FC<SyllabusNavProps> = ({
    * keep each control doing exactly one thing.
    */
   const title = (
-    <span className="inline-flex min-w-0 items-center gap-2 text-sm font-bold text-[var(--ink)]">
-      <ListVideo size={16} aria-hidden="true" className="shrink-0 text-[var(--brand-sky)]" />
-      <span className="truncate">Course content</span>
-      <span className="shrink-0 font-normal text-[var(--text-muted)]">
-        ({[
-          `${lessonCount(modules)} ${lessonCount(modules) === 1 ? 'lesson' : 'lessons'}`,
-          totalQuizCount > 0
-            ? `${totalQuizCount} ${totalQuizCount === 1 ? 'quiz' : 'quizzes'}`
-            : null,
-          totalDuration,
-        ]
-          .filter(Boolean)
-          .join(' \u00b7 ')}
-        )
+    /* The counts sit on their own line: on one line they could not shrink, and
+       in the 300px sidebar they squeezed the title to nothing and ran under
+       "Expand all". */
+    <span className="inline-flex min-w-0 items-start gap-2 text-sm font-bold text-[var(--ink)]">
+      <ListVideo size={16} aria-hidden="true" className="mt-0.5 shrink-0 text-[var(--brand-sky)]" />
+      <span className="min-w-0">
+        <span className="block truncate">Course content</span>
+        <span className="block truncate text-xs font-normal text-[var(--text-muted)]">
+          {[
+            `${lessonCount(modules)} ${lessonCount(modules) === 1 ? 'lesson' : 'lessons'}`,
+            totalQuizCount > 0
+              ? `${totalQuizCount} ${totalQuizCount === 1 ? 'quiz' : 'quizzes'}`
+              : null,
+            totalDuration,
+          ]
+            .filter(Boolean)
+            .join(' \u00b7 ')}
+        </span>
       </span>
     </span>
   );

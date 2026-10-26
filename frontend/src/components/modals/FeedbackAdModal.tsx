@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, MessageSquarePlus, Award, ShieldCheck } from 'lucide-react';
+import { MessageSquarePlus, Award, ShieldCheck, Users } from 'lucide-react';
 import { Sheet } from '@/components/common/Sheet';
 
 interface FeedbackAdModalProps {
@@ -33,7 +33,7 @@ export const FeedbackAdModal: React.FC<FeedbackAdModalProps> = ({
           onClose();
           onOpenFeedbackForm();
         }}
-        className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#0284C7] py-3 text-sm font-bold text-white shadow-md transition-colors hover:bg-[#0369A1] active:bg-[#0369A1]"
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-signal py-3 text-sm font-bold text-white shadow-md transition-colors hover:bg-signal active:bg-signal"
       >
         <MessageSquarePlus className="h-4 w-4" /> Share Feedback &amp; Claim +50 XP
       </button>
@@ -44,8 +44,8 @@ export const FeedbackAdModal: React.FC<FeedbackAdModalProps> = ({
         <Award className="h-7 w-7" />
       </div>
 
-      <span className="inline-flex items-center gap-1 rounded-full border border-sky-100 bg-sky-50 px-3 py-1 text-xs font-bold text-[#0284C7]">
-        <Sparkles className="h-3.5 w-3.5" /> Community Intelligence Drive
+      <span className="inline-flex items-center gap-1 rounded-full border border-line bg-signal-soft px-3 py-1 text-xs font-bold text-signal">
+        <Users className="h-3.5 w-3.5" /> Help the next batch
       </span>
 
       <p className="mx-auto mt-1.5 max-w-xs text-sm leading-relaxed text-gray-600">
@@ -59,7 +59,7 @@ export const FeedbackAdModal: React.FC<FeedbackAdModalProps> = ({
           <ShieldCheck className="h-4 w-4 text-emerald-600" /> 100% Anonymous or Verified Name option
         </div>
         <div className="flex items-center gap-2 font-semibold text-gray-900">
-          <Sparkles className="h-4 w-4 text-amber-600" /> Unlock special placement contributor badges
+          <Award className="h-4 w-4 text-amber-600" /> Earn a contributor badge on your profile
         </div>
       </div>
 

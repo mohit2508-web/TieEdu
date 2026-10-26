@@ -5,7 +5,8 @@ import { useRouter } from 'next/router';
 import ReactMarkdown from 'react-markdown';
 import { ArrowUpRight, ChevronLeft, CalendarClock } from 'lucide-react';
 import type { GetServerSideProps } from 'next';
-import { API_BASE_URL, apiAssetUrl } from '@/lib/api';
+import { apiAssetUrl } from '@/lib/api';
+import { serverApiBase } from '@/lib/companyPagesApi';
 import { DROP_TYPE_META, fetchDropDetailApi, postDropEventApi, type DropDetail } from '@/lib/dropsApi';
 import { formatDay } from '@/lib/date';
 
@@ -35,7 +36,9 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
   let upstreamStatus: number | null = null;
 
   try {
-    const res = await fetch(`${API_BASE_URL}/drops/${encodeURIComponent(id)}`);
+    // Absolute on the server: a relative /api URL cannot be fetched there, so
+    // every drop used to fall through to the client (no OG tags, no real 404).
+    const res = await fetch(`${serverApiBase()}/drops/${encodeURIComponent(id)}`, { signal: AbortSignal.timeout(8000) });
     upstreamStatus = res.status;
     if (res.ok) {
       const data = await res.json();
@@ -82,6 +85,9 @@ export default function DropPage({ initialDrop, initialId }: { initialDrop: Drop
   if (!drop) {
     return (
       <main className="mx-auto flex min-h-[50vh] w-full max-w-[720px] flex-col items-center justify-center gap-3 px-5 text-center" data-test="drop-detail-loading">
+        <Head>
+          <title>Drop · TieEdu</title>
+        </Head>
         <p className="text-sm font-semibold text-[var(--text-body)]" role="status">
           {failed ? 'This drop could not be loaded.' : 'Loading drop…'}
         </p>
@@ -145,7 +151,7 @@ export default function DropPage({ initialDrop, initialId }: { initialDrop: Drop
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <span className="drop-type-chip">{meta?.label || drop.type}</span>
             {drop.sponsored && (
-              <span className="chip text-[11px]">{drop.sponsor_name || 'Sponsored'}</span>
+              <span className="chip text-xs">{drop.sponsor_name || 'Sponsored'}</span>
             )}
             {drop.publish_at && (
               <span className="text-xs font-semibold text-[var(--text-muted)]">{formatDay(drop.publish_at)}</span>
@@ -192,14 +198,14 @@ export default function DropPage({ initialDrop, initialId }: { initialDrop: Drop
             </div>
           )}
 
-          <div className="prose-article mt-6 text-[15px] leading-relaxed text-[var(--text-body)]">
+          <div className="prose-article mt-6 text-base leading-relaxed text-[var(--text-body)]">
             <ReactMarkdown>{drop.body_md}</ReactMarkdown>
           </div>
 
           {drop.tags.length > 0 && (
             <div className="mt-6 flex flex-wrap gap-1.5">
               {drop.tags.map((t) => (
-                <span key={t} className="chip text-[11px]">
+                <span key={t} className="chip text-xs">
                   #{t}
                 </span>
               ))}

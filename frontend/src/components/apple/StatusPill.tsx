@@ -25,7 +25,7 @@ export default function StatusPill(props: { label: string; tone?: PillTone; dot?
   const tone = props.tone ?? 'neutral';
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-[3px] text-[11px] font-semibold ${props.className ?? ''}`}
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-[3px] text-xs font-semibold ${props.className ?? ''}`}
       style={{ background: TONES[tone], color: TEXT[tone] }}
     >
       {props.dot ? <span className="h-1.5 w-1.5 rounded-full" style={{ background: TEXT[tone] }} /> : null}

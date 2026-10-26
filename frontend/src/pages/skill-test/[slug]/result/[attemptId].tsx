@@ -7,9 +7,10 @@ import {
 } from 'lucide-react';
 import { getResultApi, SkillTestAttempt, SkillTestCertificate, SkillTestRecommendation, TopicPerformance } from '@/lib/skillTestApi';
 
+import { nameFromSlug, withPageTitle } from '@/components/common/withPageTitle';
 function getLevel(score: number) {
   if (score >= 90) return { level: 'Expert', color: 'text-purple-600', bg: 'bg-purple-50', ring: 'border-purple-300' };
-  if (score >= 75) return { level: 'Advanced', color: 'text-blue-600', bg: 'bg-blue-50', ring: 'border-blue-300' };
+  if (score >= 75) return { level: 'Advanced', color: 'text-signal', bg: 'bg-signal-soft', ring: 'border-signal/30' };
   if (score >= 60) return { level: 'Intermediate', color: 'text-emerald-600', bg: 'bg-emerald-50', ring: 'border-emerald-300' };
   if (score >= 40) return { level: 'Developing', color: 'text-amber-600', bg: 'bg-amber-50', ring: 'border-amber-300' };
   return { level: 'Beginner', color: 'text-gray-600', bg: 'bg-gray-50', ring: 'border-gray-300' };
@@ -23,7 +24,7 @@ const LEVEL_DISPLAY: Record<string, ReturnType<typeof getLevel>> = {
   beginner: getLevel(20),
 };
 
-export default function ResultPage() {
+function ResultPage() {
   const router = useRouter();
   const { slug, attemptId } = router.query;
   const [attempt, setAttempt] = useState<SkillTestAttempt | null>(null);
@@ -62,7 +63,7 @@ export default function ResultPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#0F7BFF] border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-signal border-t-transparent" />
       </div>
     );
   }
@@ -72,7 +73,7 @@ export default function ResultPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="text-center">
           <p className="text-gray-600">{error || 'Result not found'}</p>
-          <Link href="/skill-test" className="mt-3 inline-block text-[#0F7BFF] font-medium">Back to Skill Test</Link>
+          <Link href="/skill-test" className="mt-3 inline-block text-signal font-medium">Back to Skill Test</Link>
         </div>
       </div>
     );
@@ -124,7 +125,7 @@ export default function ResultPage() {
         {/* Topic Performance */}
         <div className="mt-6 rounded-2xl bg-white border border-gray-200 p-6 shadow-sm">
           <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-[#0F7BFF]" /> Your Performance
+            <TrendingUp className="h-5 w-5 text-signal" /> Your Performance
           </h2>
           <div className="mt-4 space-y-4">
             {topicPerf.map((t) => (
@@ -132,13 +133,13 @@ export default function ResultPage() {
                 <div className="flex items-center justify-between text-sm mb-1.5">
                   <span className="text-gray-700 font-medium">{t.topicName}</span>
                   <span className={`font-semibold ${
-                    t.percentage >= 75 ? 'text-emerald-600' : t.percentage >= 60 ? 'text-blue-600' : 'text-red-500'
+                    t.percentage >= 75 ? 'text-emerald-600' : t.percentage >= 60 ? 'text-signal' : 'text-red-500'
                   }`}>{t.percentage}%</span>
                 </div>
                 <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all duration-1000 ${
-                      t.percentage >= 75 ? 'bg-emerald-500' : t.percentage >= 60 ? 'bg-blue-500' : 'bg-red-400'
+                      t.percentage >= 75 ? 'bg-emerald-500' : t.percentage >= 60 ? 'bg-signal' : 'bg-red-400'
                     }`}
                     style={{ width: animated ? `${t.percentage}%` : '0%' }}
                   />
@@ -193,7 +194,7 @@ export default function ResultPage() {
         {/* Recommended Learning */}
         <div className="mt-6 rounded-2xl bg-white border border-gray-200 p-6 shadow-sm">
           <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
-            <BookOpen className="h-5 w-5 text-[#0F7BFF]" /> Recommended Learning
+            <BookOpen className="h-5 w-5 text-signal" /> Recommended Learning
           </h2>
           <div className="mt-3 space-y-2">
             {(recommendation?.recommendedCourses?.length
@@ -211,13 +212,13 @@ export default function ResultPage() {
               <Link
                 key={item.key}
                 href="/courses"
-                className="flex items-center justify-between rounded-xl bg-gray-50 border border-gray-200 p-3 hover:border-blue-300 transition-colors group"
+                className="flex items-center justify-between rounded-xl bg-gray-50 border border-gray-200 p-3 hover:border-signal/30 transition-colors group"
               >
                 <div>
                   <p className="text-sm font-medium text-gray-900">{item.title}</p>
                   <p className="text-xs text-gray-500">{item.reason}</p>
                 </div>
-                <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-[#0F7BFF] flex-none" />
+                <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-signal flex-none" />
               </Link>
             ))}
             {weaknesses.length === 0 && !recommendation?.recommendedCourses?.length && (
@@ -228,14 +229,14 @@ export default function ResultPage() {
 
         {/* Certificate CTA */}
         {passed && certificate && (
-          <div className="mt-6 rounded-2xl bg-gradient-to-br from-[#0F7BFF] to-[#0C5AD9] p-6 text-center text-white shadow-sm">
+          <div className="mt-6 rounded-2xl bg-brand-ink p-6 text-center text-white shadow-sm">
             <Trophy className="mx-auto h-8 w-8" />
-            <p className="mt-2 text-lg font-bold">Congratulations!</p>
-            <p className="text-sm text-blue-100">You earned a verified certificate.</p>
+            <p className="mt-2 text-lg font-bold text-white">Congratulations!</p>
+            <p className="text-sm text-white/80">You earned a verified certificate.</p>
             <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-center">
               <Link
                 href={`/skill-test/certificates/${certificate.certificateId}`}
-                className="rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-[#0F7BFF] hover:bg-blue-50 transition-colors"
+                className="rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-signal hover:bg-signal-soft transition-colors"
               >
                 View Certificate
               </Link>
@@ -259,7 +260,7 @@ export default function ResultPage() {
           </Link>
           <Link
             href="/skill-test"
-            className="flex items-center justify-center gap-2 rounded-full bg-[#0F7BFF] py-3 text-sm font-semibold text-white hover:bg-[#0C5AD9] transition-colors"
+            className="flex items-center justify-center gap-2 rounded-full bg-signal py-3 text-sm font-semibold text-white hover:bg-signal transition-colors"
           >
             Explore More Skills
           </Link>
@@ -268,3 +269,5 @@ export default function ResultPage() {
     </div>
   );
 }
+
+export default withPageTitle(ResultPage, (q) => `Your ${nameFromSlug(q.slug)} result`);

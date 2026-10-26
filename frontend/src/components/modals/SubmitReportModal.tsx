@@ -90,7 +90,7 @@ export const SubmitReportModal: React.FC<SubmitReportModalProps> = ({
             type="submit"
             form={FORM_ID}
             disabled={isSubmitting}
-            className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#1F3A5F] py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#2A4D7E] disabled:opacity-60"
+            className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-brand-ink py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-ink disabled:opacity-60"
           >
             <Send className="h-4 w-4" /> Submit &amp; Claim +50 XP
           </button>
@@ -98,14 +98,14 @@ export const SubmitReportModal: React.FC<SubmitReportModalProps> = ({
       }
     >
       <div className="px-5 pb-5">
-        <p className="text-[13px] text-[color:var(--text-muted)]">
+        <p className="text-sm text-[color:var(--text-muted)]">
           Earn +50 XP once reviewed by admin content editors
         </p>
 
         {errorMsg && (
           <div
             role="alert"
-            className="p-3 mt-4 bg-red-50 border border-red-200 text-red-700 text-[13px] font-semibold rounded-lg"
+            className="p-3 mt-4 bg-red-50 border border-red-200 text-red-700 text-sm font-semibold rounded-lg"
           >
             {errorMsg}
           </div>
@@ -114,28 +114,28 @@ export const SubmitReportModal: React.FC<SubmitReportModalProps> = ({
         {submitted ? (
           <div className="py-8 text-center space-y-2">
             <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
-            <h4 className="font-bold text-base text-[#1A1A1A]">Report Submitted for Moderation!</h4>
-            <p className="text-[13px] text-[color:var(--text-muted)]">
+            <h4 className="font-bold text-base text-heading">Report Submitted for Moderation!</h4>
+            <p className="text-sm text-[color:var(--text-muted)]">
               +50 XP will be added to your account upon admin approval.
             </p>
           </div>
         ) : (
-          <form id={FORM_ID} onSubmit={handleSubmit} className="space-y-3 mt-4 text-[14px]">
+          <form id={FORM_ID} onSubmit={handleSubmit} className="space-y-3 mt-4 text-sm">
             {/*
               Static text, not a disabled input. The company is fixed by the page
               you opened this from, so an input implies it is editable and invites
               the question "why can't I change it?" (plan §11).
             */}
-            <div className="flex items-center gap-2 rounded-lg border border-[#EDEDEB] bg-[#FAFAF9] px-3 py-2.5">
+            <div className="flex items-center gap-2 rounded-lg border border-line bg-app-warm px-3 py-2.5">
               <Building2 className="h-4 w-4 shrink-0 text-[color:var(--text-muted)]" />
-              <span className="truncate text-[14px] font-semibold text-[color:var(--text-muted)]">
+              <span className="truncate text-sm font-semibold text-[color:var(--text-muted)]">
                 {companyName}
               </span>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label htmlFor="report-name" className="block text-[13px] font-semibold text-[#1A1A1A] mb-1">
+                <label htmlFor="report-name" className="block text-sm font-semibold text-heading mb-1">
                   Your Name
                 </label>
                 <input
@@ -148,12 +148,12 @@ export const SubmitReportModal: React.FC<SubmitReportModalProps> = ({
                   placeholder="e.g. Vikram Sethi"
                   value={userName}
                   onChange={(e) => setUserName(e.target.value)}
-                  className="w-full px-3 py-2.5 border rounded-lg text-base md:text-[14px] text-[#1A1A1A]"
+                  className="w-full px-3 py-2.5 border rounded-lg text-base md:text-sm text-heading"
                 />
               </div>
 
               <div>
-                <label htmlFor="report-outcome" className="block text-[13px] font-semibold text-[#1A1A1A] mb-1">
+                <label htmlFor="report-outcome" className="block text-sm font-semibold text-heading mb-1">
                   Interview Outcome
                 </label>
                 <select
@@ -161,7 +161,7 @@ export const SubmitReportModal: React.FC<SubmitReportModalProps> = ({
                   name="outcome"
                   value={outcome}
                   onChange={(e) => setOutcome(e.target.value as any)}
-                  className="w-full px-3 py-2.5 border rounded-lg text-base md:text-[14px] text-[#1A1A1A] bg-white"
+                  className="w-full px-3 py-2.5 border rounded-lg text-base md:text-sm text-heading bg-white"
                 >
                   <option value="selected">Selected</option>
                   <option value="in_process">In Process</option>
@@ -171,7 +171,7 @@ export const SubmitReportModal: React.FC<SubmitReportModalProps> = ({
             </div>
 
             <div>
-              <label htmlFor="report-summary" className="block text-[13px] font-semibold text-[#1A1A1A] mb-1">
+              <label htmlFor="report-summary" className="block text-sm font-semibold text-heading mb-1">
                 Round-by-Round Breakdown
               </label>
               <textarea
@@ -183,12 +183,12 @@ export const SubmitReportModal: React.FC<SubmitReportModalProps> = ({
                 placeholder="Detail the questions asked, difficulty, and whether TieEdu vault content matched your interview..."
                 value={roundSummary}
                 onChange={(e) => setRoundSummary(e.target.value)}
-                className="w-full p-3 border rounded-lg text-base md:text-[14px] text-[#1A1A1A]"
+                className="w-full p-3 border rounded-lg text-base md:text-sm text-heading"
               ></textarea>
             </div>
 
             <div>
-              <span className="block text-[13px] font-semibold text-[#1A1A1A] mb-1">
+              <span className="block text-sm font-semibold text-heading mb-1">
                 Content Accuracy Match (1-5 Stars)
               </span>
               <div className="flex gap-2 items-center" role="radiogroup" aria-label="Content accuracy match">
@@ -200,10 +200,10 @@ export const SubmitReportModal: React.FC<SubmitReportModalProps> = ({
                     aria-label={`${star} star${star > 1 ? 's' : ''}`}
                     key={star}
                     onClick={() => setAccuracyRating(star)}
-                    className={`min-w-[44px] min-h-[44px] rounded-lg border font-bold text-[13px] ${
+                    className={`min-w-[44px] min-h-[44px] rounded-lg border font-bold text-sm ${
                       accuracyRating === star
-                        ? 'bg-[#1F3A5F] text-white border-[#1F3A5F]'
-                        : 'bg-[#FAFAF9] text-[#4A4A4A]'
+                        ? 'bg-brand-ink text-white border-brand-ink'
+                        : 'bg-app-warm text-body'
                     }`}
                   >
                     ★ {star}
@@ -214,8 +214,8 @@ export const SubmitReportModal: React.FC<SubmitReportModalProps> = ({
           </form>
         )}
 
-        <div className="mt-4 flex items-start gap-1.5 text-[12px] text-[color:var(--text-muted)]">
-          <Award className="w-3.5 h-3.5 text-[#B45309] mt-0.5 shrink-0" />
+        <div className="mt-4 flex items-start gap-1.5 text-xs text-[color:var(--text-muted)]">
+          <Award className="w-3.5 h-3.5 text-amber-deep mt-0.5 shrink-0" />
           Reports appear on the company page only after verification by our content editors.
         </div>
       </div>

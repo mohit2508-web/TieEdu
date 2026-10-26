@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { AlertCircle, CheckCircle2, Loader2, Save, User } from 'lucide-react';
-import { DriveShell } from '@/components/drives/DriveShell';
+import { DriveShell, withDriveAuth } from '@/components/drives/DriveShell';
 import { Toggle } from '@/components/apple/Toggle';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { StudentProfileCard } from '@/components/account/StudentProfileCard';
@@ -16,7 +16,7 @@ const TOGGLES: { key: ToggleKey; label: string; sub: string }[] = [
   { key: 'drive_alerts', label: 'Drive alerts', sub: 'New drives opening for your college' },
 ];
 
-export default function SettingsScreen() {
+function SettingsScreen() {
   const [settings, setSettings] = useState<DriveSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -86,7 +86,7 @@ export default function SettingsScreen() {
     <DriveShell title="Settings">
       <div className="mx-auto w-full max-w-[720px] px-4 pb-8 pt-4">
         {error && (
-          <div className="mb-3 flex items-start gap-2 rounded-[10px] px-3 py-2 text-[13px]" style={{ background: 'var(--apple-red-soft)', color: 'var(--apple-red)' }}>
+          <div className="mb-3 flex items-start gap-2 rounded-[10px] px-3 py-2 text-sm" style={{ background: 'var(--apple-red-soft)', color: 'var(--apple-red)' }}>
             <AlertCircle size={14} className="mt-0.5 shrink-0" /> {error}
           </div>
         )}
@@ -99,12 +99,12 @@ export default function SettingsScreen() {
             <form onSubmit={saveAccount} className="mb-4 overflow-hidden rounded-[14px] border" style={{ background: 'var(--apple-surface)', borderColor: 'var(--apple-separator)' }}>
               <div className="flex items-center gap-2 px-4 pb-1 pt-3">
                 <User size={14} style={{ color: 'var(--apple-label-2)' }} />
-                <p className="text-[12px] font-semibold uppercase tracking-wide" style={{ color: 'var(--apple-label-2)' }}>Account</p>
+                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--apple-label-2)' }}>Account</p>
               </div>
               <div className="px-4 py-2.5">
-                <p className="text-[12px]" style={{ color: 'var(--apple-label-2)' }}>Full name</p>
+                <p className="text-xs" style={{ color: 'var(--apple-label-2)' }}>Full name</p>
                 <input
-                  className="mt-1 w-full rounded-[10px] px-3 py-2 text-[15px] outline-none"
+                  className="mt-1 w-full rounded-[10px] px-3 py-2 text-base outline-none"
                   style={{ background: 'var(--apple-fill)', color: 'var(--apple-label)' }}
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
@@ -113,9 +113,9 @@ export default function SettingsScreen() {
                 />
               </div>
               <div className="border-t px-4 py-2.5" style={{ borderColor: 'var(--apple-separator)' }}>
-                <p className="text-[12px]" style={{ color: 'var(--apple-label-2)' }}>College</p>
+                <p className="text-xs" style={{ color: 'var(--apple-label-2)' }}>College</p>
                 <input
-                  className="mt-1 w-full rounded-[10px] px-3 py-2 text-[15px] outline-none"
+                  className="mt-1 w-full rounded-[10px] px-3 py-2 text-base outline-none"
                   style={{ background: 'var(--apple-fill)', color: 'var(--apple-label)' }}
                   value={editCollege}
                   onChange={(e) => setEditCollege(e.target.value)}
@@ -124,20 +124,20 @@ export default function SettingsScreen() {
                 />
               </div>
               <div className="border-t px-4 py-3" style={{ borderColor: 'var(--apple-separator)' }}>
-                <p className="text-[12px]" style={{ color: 'var(--apple-label-2)' }}>Email</p>
-                <p className="text-[14px] font-medium" style={{ color: 'var(--apple-label)' }}>{settings?.email || '—'}</p>
+                <p className="text-xs" style={{ color: 'var(--apple-label-2)' }}>Email</p>
+                <p className="text-sm font-medium" style={{ color: 'var(--apple-label)' }}>{settings?.email || '—'}</p>
               </div>
               <div className="flex items-center gap-3 border-t px-4 py-3" style={{ borderColor: 'var(--apple-separator)' }}>
                 <button
                   type="submit"
                   disabled={acctBusy}
-                  className="flex items-center gap-1.5 rounded-[10px] px-4 py-2 text-[14px] font-semibold text-white disabled:opacity-50"
+                  className="flex items-center gap-1.5 rounded-[10px] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
                   style={{ background: 'var(--apple-blue)' }}
                 >
                   {acctBusy ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} Save
                 </button>
                 {acctMsg && (
-                  <span className="flex items-center gap-1 text-[13px] font-medium" style={{ color: acctMsg.kind === 'ok' ? 'var(--apple-green, #34C759)' : 'var(--apple-red)' }}>
+                  <span className="flex items-center gap-1 text-sm font-medium" style={{ color: acctMsg.kind === 'ok' ? 'var(--apple-green, #34C759)' : 'var(--apple-red)' }}>
                     {acctMsg.kind === 'ok' ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />} {acctMsg.text}
                   </span>
                 )}
@@ -146,7 +146,7 @@ export default function SettingsScreen() {
 
             {/* Placement profile — eligibility + admin roster data */}
             <div className="mb-4">
-              <p className="mb-2 px-1 text-[13px] leading-relaxed" style={{ color: 'var(--apple-label-2)' }}>
+              <p className="mb-2 px-1 text-sm leading-relaxed" style={{ color: 'var(--apple-label-2)' }}>
                 Drive registration ke liye ye profile zaroori hai — roll no, branch, batch, CGPA yahin se bharein, admin ko yahi data dikhega.
               </p>
               <StudentProfileCard initialCollege={settings?.college} />
@@ -159,8 +159,8 @@ export default function SettingsScreen() {
                 return (
                   <div key={t.key} className="flex items-center gap-3 px-4 py-3.5" style={{ borderTop: i === 0 ? 'none' : '0.5px solid var(--apple-separator)' }}>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[14px] font-medium" style={{ color: 'var(--apple-label)' }}>{t.label}</p>
-                      <p className="truncate text-[12px]" style={{ color: 'var(--apple-label-2)' }}>{t.sub}</p>
+                      <p className="text-sm font-medium" style={{ color: 'var(--apple-label)' }}>{t.label}</p>
+                      <p className="truncate text-xs" style={{ color: 'var(--apple-label-2)' }}>{t.sub}</p>
                     </div>
                     <Toggle
                       checked={on}
@@ -178,3 +178,5 @@ export default function SettingsScreen() {
     </DriveShell>
   );
 }
+
+export default withDriveAuth(SettingsScreen);

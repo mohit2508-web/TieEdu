@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { FileText, Star, Trash2, Upload, AlertCircle } from 'lucide-react';
-import { DriveShell } from '@/components/drives/DriveShell';
+import { DriveShell, withDriveAuth } from '@/components/drives/DriveShell';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { fetchResumesApi, uploadResumeApi, deleteResumeApi } from '@/lib/drivesApi';
 import type { StudentResume } from '@/types/drives';
@@ -11,7 +11,7 @@ const fmtSize = (bytes: number) => {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
-export default function ResumeScreen() {
+function ResumeScreen() {
   const [rows, setRows] = useState<StudentResume[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -57,7 +57,7 @@ export default function ResumeScreen() {
     <DriveShell title="My resumes">
       <div className="mx-auto w-full max-w-[720px] px-4 pb-8 pt-4">
         {error && (
-          <div className="mb-3 flex items-start gap-2 rounded-[10px] px-3 py-2 text-[13px]" style={{ background: 'var(--apple-red-soft)', color: 'var(--apple-red)' }}>
+          <div className="mb-3 flex items-start gap-2 rounded-[10px] px-3 py-2 text-sm" style={{ background: 'var(--apple-red-soft)', color: 'var(--apple-red)' }}>
             <AlertCircle size={14} className="mt-0.5 shrink-0" /> {error}
           </div>
         )}
@@ -71,15 +71,15 @@ export default function ResumeScreen() {
           style={{ borderColor: dragOver ? 'var(--apple-blue)' : 'var(--apple-separator)', background: dragOver ? 'var(--apple-blue-soft)' : 'var(--apple-surface)' }}
         >
           <Upload size={24} className="mx-auto" style={{ color: dragOver ? 'var(--apple-blue)' : 'var(--apple-label-3)' }} />
-          <p className="mt-2 text-[14px] font-medium" style={{ color: 'var(--apple-label)' }}>
+          <p className="mt-2 text-sm font-medium" style={{ color: 'var(--apple-label)' }}>
             {uploading ? (progress === null ? 'Uploading…' : `Uploading… ${progress}%`) : 'Drop a PDF here'}
           </p>
-          <p className="mt-0.5 text-[12px]" style={{ color: 'var(--apple-label-2)' }}>or</p>
+          <p className="mt-0.5 text-xs" style={{ color: 'var(--apple-label-2)' }}>or</p>
           <button
             type="button"
             disabled={uploading}
             onClick={() => inputRef.current?.click()}
-            className="mt-2 rounded-[10px] px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-50"
+            className="mt-2 rounded-[10px] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
             style={{ background: 'var(--apple-blue)' }}
           >
             Choose file
@@ -93,9 +93,9 @@ export default function ResumeScreen() {
             <div className="space-y-3">{[0, 1].map((i) => <Skeleton key={i} className="h-16 w-full" />)}</div>
           ) : rows.length === 0 ? (
             <div className="rounded-[12px] border px-4 py-10 text-center" style={{ borderColor: 'var(--apple-separator)', background: 'var(--apple-surface)' }}>
-              <FileText size={22} className="mx-auto" style={{ color: 'var(--apple-label-3)' }} />
-              <p className="mt-2 text-[14px] font-medium" style={{ color: 'var(--apple-label)' }}>No resumes yet</p>
-              <p className="mt-1 text-[13px]" style={{ color: 'var(--apple-label-2)' }}>Upload one to attach it when you register for a drive.</p>
+              <FileText size={22} className="mx-auto" style={{ color: 'var(--apple-label-2)' }} />
+              <p className="mt-2 text-sm font-medium" style={{ color: 'var(--apple-label)' }}>No resumes yet</p>
+              <p className="mt-1 text-sm" style={{ color: 'var(--apple-label-2)' }}>Upload one to attach it when you register for a drive.</p>
             </div>
           ) : (
             <ul className="space-y-2.5">
@@ -105,11 +105,11 @@ export default function ResumeScreen() {
                     <FileText size={16} />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[14px] font-medium" style={{ color: 'var(--apple-label)' }}>
+                    <p className="truncate text-sm font-medium" style={{ color: 'var(--apple-label)' }}>
                       {r.title}
                       {r.is_default && <Star size={12} className="ml-1.5 inline" fill="currentColor" style={{ color: 'var(--apple-yellow)' }} />}
                     </p>
-                    <p className="truncate text-[12px]" style={{ color: 'var(--apple-label-2)' }}>
+                    <p className="truncate text-xs" style={{ color: 'var(--apple-label-2)' }}>
                       {r.file_name} · {fmtSize(r.size_bytes)}
                     </p>
                   </div>
@@ -125,3 +125,5 @@ export default function ResumeScreen() {
     </DriveShell>
   );
 }
+
+export default withDriveAuth(ResumeScreen);

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import { ArrowRight, Award, Route, Sparkles } from 'lucide-react';
+import { ArrowRight, Award, Route } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { fetchTracks } from '@/lib/tracksApi';
 import type { LearningTrack } from '@/types';
@@ -21,7 +21,7 @@ function TrackCard({ track }: { track: LearningTrack }) {
           <Route size={20} aria-hidden />
         </div>
         {hasCert && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700">
+          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">
             <Award size={12} aria-hidden /> Certified
           </span>
         )}
@@ -132,7 +132,7 @@ export default function TracksPage() {
 
         {!loading && !error && tracks.length === 0 && (
           <div className="mt-16 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-10 text-center">
-            <Sparkles className="mx-auto h-8 w-8 text-[var(--brand-sky)]" aria-hidden />
+            <Route className="mx-auto h-8 w-8 text-[var(--brand-sky)]" aria-hidden />
             <p className="mt-3 text-sm text-[var(--text-body)]">
               No tracks are published yet. Check back soon.
             </p>

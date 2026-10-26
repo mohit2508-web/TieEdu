@@ -79,7 +79,7 @@ export const DropDetailSheet: React.FC<DropDetailSheetProps> = ({
               {meta.label}
             </span>
             {drop.sponsored && (
-              <span className="chip text-[11px]">{drop.sponsor_name || 'Sponsored'}</span>
+              <span className="chip text-xs">{drop.sponsor_name || 'Sponsored'}</span>
             )}
             {drop.publish_at && (
               <span className="text-xs font-semibold text-[var(--text-muted)]">
@@ -115,7 +115,7 @@ export const DropDetailSheet: React.FC<DropDetailSheetProps> = ({
           {drop.tags.length > 0 && (
             <div className="mt-4 flex flex-wrap gap-1.5">
               {drop.tags.map((t) => (
-                <span key={t} className="chip text-[11px]">
+                <span key={t} className="chip text-xs">
                   #{t}
                 </span>
               ))}

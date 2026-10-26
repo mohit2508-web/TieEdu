@@ -336,8 +336,10 @@ check('the drill bar inherits the search and cart the tab bar gave up', () => {
   ok(/'search'/.test(actions), 'the drill bar must keep the tab bar\'s search');
   ok(/'cart'/.test(actions), 'the drill bar must keep cart, which the tab bar no longer renders');
   const slots = /MOBILE_TAB_SLOTS[^=]*=\s*\[([^\]]*)\]/.exec(navConfig)?.[1] ?? '';
-  ok(/'search'/.test(slots), 'the tab bar still renders search as a slot');
-  ok(!/'cart'/.test(slots), 'the tab bar no longer renders cart');
+  // The five slots are the five sections (UI_REDESIGN_PLAN_V2 D4); search moved
+  // to the phone header row, which is what a root screen shows.
+  ok(!/'search'|'cart'/.test(slots), 'the tab bar renders sections only');
+  ok(/icon-btn lg:!hidden/.test(header), 'the phone header must carry search now the tab bar does not');
   ok(/MOBILE_TAB_SLOTS/.test(tabBar), 'the tab bar must render MOBILE_TAB_SLOTS');
   ok(/NAV_ACTIONS\[id\]/.test(header), 'the actions must resolve through NAV_ACTIONS');
 });

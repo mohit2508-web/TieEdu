@@ -2,7 +2,7 @@ import React from 'react';
 import type { ReactNode } from 'react';
 import {
   Award, Building2, CalendarClock, FileCheck2, FileText, Flame, Gauge,
-  HelpCircle, Layers, MapPin, MessageSquarePlus, ShieldCheck, Sparkles,
+  HelpCircle, Layers, MapPin, MessageSquarePlus, ShieldCheck,
   Target, Users,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -78,7 +78,7 @@ function editorial(
   }
   if (!prov) {
     return {
-      value: <span className="text-[#8A7B63]">{render('')}</span>,
+      value: <span className="text-text-light">{render('')}</span>,
       state: 'unverified',
       badge: 'Unverified',
       note: 'No source recorded for this figure. Treat it as an unconfirmed claim.',
@@ -86,7 +86,7 @@ function editorial(
   }
   const day = formatDay(prov.verified_at);
   return {
-    value: <span className="text-[#1A1A1A]">{render('')}</span>,
+    value: <span className="text-heading">{render('')}</span>,
     state: 'verified',
     badge: 'Sourced',
     note: `${prov.source}${day ? ` · checked ${day}` : ''}`,
@@ -103,11 +103,11 @@ const identityRow: RowDef = {
   cell: (c) => ({
     value: (
       <div className="min-w-0">
-        <div className="font-bold text-[#1A1A1A] leading-snug break-words">{c.name}</div>
+        <div className="font-bold text-heading leading-snug break-words">{c.name}</div>
         {c.tagline
-          ? <div className="text-[12px] text-[#4A4A4A] mt-1 leading-snug">{c.tagline}</div>
+          ? <div className="text-xs text-body mt-1 leading-snug">{c.tagline}</div>
           : null}
-        <div className="text-[11px] text-[--text-muted] mt-1">
+        <div className="text-xs text-[--text-muted] mt-1">
           {c.industry || 'Industry not recorded'}
         </div>
       </div>
@@ -123,21 +123,21 @@ const profileRows: RowDef[] = [
     label: 'Headquarters',
     hint: 'Where the company operates from.',
     cell: (c) => c.hq
-      ? { value: <span className="text-[#1A1A1A]">{c.hq}</span>, state: 'verified' }
+      ? { value: <span className="text-heading">{c.hq}</span>, state: 'verified' }
       : absent(),
   },
   {
     id: 'founded',
     label: 'Founded',
     cell: (c) => c.founded_year
-      ? { value: <span className="text-[#1A1A1A] font-mono">{c.founded_year}</span>, state: 'verified' }
+      ? { value: <span className="text-heading ">{c.founded_year}</span>, state: 'verified' }
       : absent(),
   },
   {
     id: 'headcount',
     label: 'Company size',
     cell: (c) => c.employee_band
-      ? { value: <span className="text-[#1A1A1A]">{c.employee_band}</span>, state: 'verified' }
+      ? { value: <span className="text-heading">{c.employee_band}</span>, state: 'verified' }
       : absent(),
   },
   {
@@ -152,7 +152,7 @@ const profileRows: RowDef[] = [
             href={href}
             target="_blank"
             rel="noopener noreferrer nofollow"
-            className="text-[#1F3A5F] font-semibold underline underline-offset-2 hover:text-[#2A4D7E] break-all"
+            className="text-brand-ink font-semibold underline underline-offset-2 hover:text-brand-ink break-all"
           >
             {c.careers_link.replace(/^https?:\/\//, '')}
           </a>
@@ -168,7 +168,7 @@ const profileRows: RowDef[] = [
       const day = formatDay(c.fact_checked_at);
       return {
         value: (
-          <span className={day ? 'text-[#1A1A1A] font-mono' : 'text-[--text-muted]'}>
+          <span className={day ? 'text-heading tabular-nums' : 'text-[--text-muted]'}>
             {day || 'Not fact-checked'}
           </span>
         ),
@@ -184,13 +184,13 @@ const profileRows: RowDef[] = [
     cell: (c) => ({
       value: (
         <div className="flex items-center gap-2">
-          <div className="h-1.5 w-16 rounded-full bg-[#E8E8E4] overflow-hidden">
+          <div className="h-1.5 w-16 rounded-full bg-line overflow-hidden">
             <div
-              className={`h-full rounded-full ${c.profile_completeness >= 70 ? 'bg-emerald-600' : c.profile_completeness >= 35 ? 'bg-amber-500' : 'bg-[#B45309]'}`}
+              className={`h-full rounded-full ${c.profile_completeness >= 70 ? 'bg-emerald-600' : c.profile_completeness >= 35 ? 'bg-amber-500' : 'bg-amber-deep'}`}
               style={{ width: `${Math.max(3, c.profile_completeness)}%` }}
             />
           </div>
-          <span className="font-mono text-[12px] font-bold text-[#1A1A1A]">{c.profile_completeness}%</span>
+          <span className="text-xs font-bold text-heading">{c.profile_completeness}%</span>
         </div>
       ),
       state: 'derived' as CellState,
@@ -205,7 +205,7 @@ const vaultRows: RowDef[] = [
     label: 'Modules in vault',
     hint: 'Counted from the database on every page load.',
     cell: (c) => ({
-      value: <span className="font-bold text-[#1A1A1A]">{c.derived.module_count}</span>,
+      value: <span className="font-bold text-heading">{c.derived.module_count}</span>,
       state: 'derived',
       note: `${c.derived.free_module_count} free · ${c.derived.premium_module_count} premium`,
     }),
@@ -214,7 +214,7 @@ const vaultRows: RowDef[] = [
     id: 'questions',
     label: 'Questions',
     cell: (c) => ({
-      value: <span className="font-bold text-[#1A1A1A]">{c.derived.question_count}</span>,
+      value: <span className="font-bold text-heading">{c.derived.question_count}</span>,
       state: 'derived',
     }),
   },
@@ -223,7 +223,7 @@ const vaultRows: RowDef[] = [
     label: 'High-frequency questions',
     hint: 'Questions an admin tagged as asked often.',
     cell: (c) => ({
-      value: <span className="font-bold text-[#1A1A1A]">{c.derived.high_freq_question_count}</span>,
+      value: <span className="font-bold text-heading">{c.derived.high_freq_question_count}</span>,
       state: 'derived',
       note: c.derived.question_count > 0
         ? `${Math.round((c.derived.high_freq_question_count / c.derived.question_count) * 100)}% of the vault`
@@ -235,7 +235,7 @@ const vaultRows: RowDef[] = [
     label: 'Free preview questions',
     hint: 'Readable without paying.',
     cell: (c) => ({
-      value: <span className="font-bold text-[#1E8E5A]">{c.derived.free_preview_question_count}</span>,
+      value: <span className="font-bold text-success">{c.derived.free_preview_question_count}</span>,
       state: 'derived',
     }),
   },
@@ -243,7 +243,7 @@ const vaultRows: RowDef[] = [
     id: 'pdfs',
     label: 'PDFs',
     cell: (c) => ({
-      value: <span className="font-bold text-[#1A1A1A]">{c.derived.pdf_count}</span>,
+      value: <span className="font-bold text-heading">{c.derived.pdf_count}</span>,
       state: 'derived',
     }),
   },
@@ -257,7 +257,7 @@ const vaultRows: RowDef[] = [
       const all = total > 0 && done === total;
       return {
         value: (
-          <span className={`font-bold ${all ? 'text-[#1E8E5A]' : 'text-[#B45309]'}`}>
+          <span className={`font-bold ${all ? 'text-success' : 'text-amber-deep'}`}>
             {done} / {total}
           </span>
         ),
@@ -274,30 +274,30 @@ const editorialRows: RowDef[] = [
     label: 'CTC range',
     hint: 'Editorial figure. Only trustworthy with a recorded source.',
     cell: (c) => editorial(c, 'ctc', c.ctc_min != null && c.ctc_max != null, () => (
-      <span className="font-bold text-[#1E8E5A]">₹{c.ctc_min} – {c.ctc_max} LPA</span>
+      <span className="font-bold text-success">₹{c.ctc_min} – {c.ctc_max} LPA</span>
     )),
   },
   {
     id: 'process_days',
     label: 'Avg process duration',
     cell: (c) => editorial(c, 'process_days', c.avg_process_days != null, () => (
-      <span className="font-bold text-[#1A1A1A]">{c.avg_process_days} days</span>
+      <span className="font-bold text-heading">{c.avg_process_days} days</span>
     )),
   },
   {
     id: 'rounds',
     label: 'Avg rounds',
     cell: (c) => editorial(c, 'rounds', c.avg_rounds != null, () => (
-      <span className="font-bold text-[#1A1A1A]">{c.avg_rounds} rounds</span>
+      <span className="font-bold text-heading">{c.avg_rounds} rounds</span>
     )),
   },
   {
     id: 'difficulty',
     label: 'Difficulty',
     cell: (c) => editorial(c, 'difficulty', c.difficulty_rating != null && c.difficulty_rating > 0, () => (
-      <span className="font-bold text-[#1A1A1A]">
+      <span className="font-bold text-heading">
         {c.difficulty_rating}/5
-        <span className="ml-1.5 text-[--brand-accent] tracking-tight">
+        <span className="ml-1.5 text-amber-deep tracking-tight">
           {'★'.repeat(Math.max(0, Math.min(5, Math.round(c.difficulty_rating || 0))))}
         </span>
       </span>
@@ -307,28 +307,28 @@ const editorialRows: RowDef[] = [
     id: 'note_oa',
     label: 'Round 1 · Online assessment',
     cell: (c) => editorial(c, 'round_1_oa', !!c.round_notes?.round_1_oa, () => (
-      <span className="text-[#4A4A4A] leading-relaxed">{c.round_notes?.round_1_oa}</span>
+      <span className="text-body leading-relaxed">{c.round_notes?.round_1_oa}</span>
     )),
   },
   {
     id: 'note_tech',
     label: 'Round 2 · Technical core',
     cell: (c) => editorial(c, 'round_2_tech', !!c.round_notes?.round_2_tech, () => (
-      <span className="text-[#4A4A4A] leading-relaxed">{c.round_notes?.round_2_tech}</span>
+      <span className="text-body leading-relaxed">{c.round_notes?.round_2_tech}</span>
     )),
   },
   {
     id: 'note_sd',
     label: 'Round 3 · System design',
     cell: (c) => editorial(c, 'round_3_system_design', !!c.round_notes?.round_3_system_design, () => (
-      <span className="text-[#4A4A4A] leading-relaxed">{c.round_notes?.round_3_system_design}</span>
+      <span className="text-body leading-relaxed">{c.round_notes?.round_3_system_design}</span>
     )),
   },
   {
     id: 'note_hr',
     label: 'Round 4 · HR & values',
     cell: (c) => editorial(c, 'round_4_hr', !!c.round_notes?.round_4_hr, () => (
-      <span className="text-[#4A4A4A] leading-relaxed">{c.round_notes?.round_4_hr}</span>
+      <span className="text-body leading-relaxed">{c.round_notes?.round_4_hr}</span>
     )),
   },
 ];
@@ -339,7 +339,7 @@ const communityRows: RowDef[] = [
     label: 'Published candidate reports',
     hint: 'Submitted by candidates, reviewed and published by an admin.',
     cell: (c) => ({
-      value: <span className="font-bold text-[#1A1A1A]">{c.derived.published_report_count}</span>,
+      value: <span className="font-bold text-heading">{c.derived.published_report_count}</span>,
       state: 'derived',
       note: c.derived.published_report_count === 0
         ? 'No report has cleared admin review for this company yet.'
@@ -360,7 +360,7 @@ const communityRows: RowDef[] = [
       }
       return {
         value: (
-          <span className="inline-block px-2.5 py-0.5 bg-emerald-50 text-emerald-800 rounded font-bold text-[12px] border border-emerald-200">
+          <span className="inline-block px-2.5 py-0.5 bg-emerald-50 text-emerald-800 rounded font-bold text-xs border border-emerald-200">
             {c.derived.accuracy_score}%
           </span>
         ),
@@ -393,7 +393,7 @@ const communityRows: RowDef[] = [
     cell: (c) => {
       const day = formatDay(c.derived.last_report_at);
       return {
-        value: <span className={day ? 'text-[#1A1A1A] font-mono' : 'text-[--text-muted]'}>{day || 'None yet'}</span>,
+        value: <span className={day ? 'text-heading tabular-nums' : 'text-[--text-muted]'}>{day || 'None yet'}</span>,
         state: (day ? 'derived' : 'absent') as CellState,
         note: day ? undefined : 'Freshness cannot be claimed until a report is published.',
       };
@@ -403,7 +403,7 @@ const communityRows: RowDef[] = [
     id: 'unlocks',
     label: 'Candidates unlocked',
     cell: (c) => ({
-      value: <span className="font-bold text-[#1A1A1A]">{c.derived.active_unlock_count}</span>,
+      value: <span className="font-bold text-heading">{c.derived.active_unlock_count}</span>,
       state: 'derived',
       note: c.derived.weekly_unlock_count > 0 ? `${c.derived.weekly_unlock_count} in the last 7 days` : 'None in the last 7 days',
     }),
@@ -448,7 +448,7 @@ export function buildRoundRows(matrix: ComparisonMatrix): RowDef[] {
         value: (
           <span className="inline-flex items-center gap-1.5">
             <FileCheck2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-            <span className="font-semibold text-[#1A1A1A]">
+            <span className="font-semibold text-heading">
               Covered · {hit.question_count} question{hit.question_count === 1 ? '' : 's'}
             </span>
           </span>
@@ -471,7 +471,7 @@ export function previewQuestionsRow(c: CompareCompany): Cell {
     value: (
       <ul className="space-y-1.5">
         {c.top_questions.map((q, i) => (
-          <li key={i} className="text-[12px] text-[#1A1A1A] leading-snug flex gap-1.5">
+          <li key={i} className="text-xs text-heading leading-snug flex gap-1.5">
             <span className="text-[--brand-accent] shrink-0">›</span>
             <span>{q}</span>
           </li>
@@ -483,4 +483,4 @@ export function previewQuestionsRow(c: CompareCompany): Cell {
   };
 }
 
-export { Flame, ShieldCheck, Sparkles, HelpCircle, FileText, Gauge, Award, MessageSquarePlus, MapPin };
+export { Flame, ShieldCheck, HelpCircle, FileText, Gauge, Award, MessageSquarePlus, MapPin };

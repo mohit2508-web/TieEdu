@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
+import Head from 'next/head';
 import Link from 'next/link';
 import { ChevronLeft, Bell } from 'lucide-react';
 import { DRIVE_TABS, resolveDriveTab, isDriveRootPath, driveBackHref } from '@/lib/mockDriveNav';
@@ -17,15 +18,15 @@ import { fetchUnreadCountApi } from '@/lib/drivesApi';
  */
 const SignInGate: React.FC<{ next: string }> = ({ next }) => (
   <div className="mock-drive-scope flex min-h-[100dvh] flex-col items-center justify-center px-6 text-center" style={{ background: 'var(--apple-bg)' }}>
-    <h1 className="text-[22px] font-bold tracking-tight" style={{ color: 'var(--apple-label)' }}>
+    <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--apple-label)' }}>
       Sign in to continue
     </h1>
-    <p className="mt-2 max-w-[320px] text-[14px] leading-relaxed" style={{ color: 'var(--apple-label-2)' }}>
+    <p className="mt-2 max-w-[320px] text-sm leading-relaxed" style={{ color: 'var(--apple-label-2)' }}>
       Mock Drives are tied to your student profile, so we need you signed in to show your drives, assessments and results.
     </p>
     <Link
       href={`/login?next=${encodeURIComponent(next)}`}
-      className="mt-6 inline-flex min-h-[44px] items-center justify-center rounded-[12px] px-7 text-[15px] font-semibold text-white transition-transform active:scale-[0.98]"
+      className="mt-6 inline-flex min-h-[44px] items-center justify-center rounded-[12px] px-7 text-base font-semibold text-white transition-transform active:scale-[0.98]"
       style={{ background: 'var(--apple-blue)' }}
     >
       Sign in
@@ -43,6 +44,13 @@ export const DriveShell: React.FC<{ children: React.ReactNode; title?: string; s
   const active = resolveDriveTab(router.pathname);
   const atRoot = isDriveRootPath(router.pathname);
   const heading = title ?? active.label;
+  // One <title> for every Mock Drive screen (the tab, history and screen readers all read it).
+  const head = (
+    <Head>
+      <title>{heading === 'Mock Drives' ? 'Mock Drives · TieEdu' : `${heading} · Mock Drives · TieEdu`}</title>
+      <meta name="description" content="Practise real placement drives on TieEdu: apply, take the assessment, sit the interview and see your result." />
+    </Head>
+  );
 
   // Badge refresh: on sign-in and on every tab change (reading notifications
   // on another screen should clear the dot when the student comes back).
@@ -57,7 +65,22 @@ export const DriveShell: React.FC<{ children: React.ReactNode; title?: string; s
   // Wait for the session probe rather than bouncing a signed-in student to
   // /login on the first paint, before `user` has hydrated.
   if (!loading && !user) {
-    return <SignInGate next={router.asPath} />;
+    return (
+      <>
+        {head}
+        <SignInGate next={router.asPath} />
+      </>
+    );
+  }
+  // Still probing with no cached student: hold the screens back, or each one
+  // fires its signed-in API calls into a 401 before the gate replaces it.
+  if (!user) {
+    return (
+      <>
+        {head}
+        <div className="mock-drive-scope min-h-[100dvh]" style={{ background: 'var(--apple-bg)' }} aria-busy="true" />
+      </>
+    );
   }
 
   return (
@@ -65,6 +88,7 @@ export const DriveShell: React.FC<{ children: React.ReactNode; title?: string; s
       className="mock-drive-scope flex min-h-[100dvh] flex-col"
       style={{ background: 'var(--apple-bg)' }}
     >
+      {head}
       {/* Top bar — identity, context, notifications. Nothing else. */}
       <header
         className="sticky top-0 z-40 border-b"
@@ -90,7 +114,7 @@ export const DriveShell: React.FC<{ children: React.ReactNode; title?: string; s
           )}
 
           <h1
-            className="min-w-0 flex-1 truncate text-[17px] font-semibold tracking-tight"
+            className="min-w-0 flex-1 truncate text-lg font-semibold tracking-tight"
             style={{ color: 'var(--apple-label)' }}
           >
             {heading}
@@ -149,10 +173,10 @@ export const DriveShell: React.FC<{ children: React.ReactNode; title?: string; s
                     href={tab.href}
                     aria-current={isActive ? 'page' : undefined}
                     className="flex min-h-[52px] flex-col items-center justify-center gap-[3px] px-1 py-1.5 transition-colors"
-                    style={{ color: isActive ? 'var(--apple-blue)' : 'var(--apple-label-3)' }}
+                    style={{ color: isActive ? 'var(--apple-blue)' : 'var(--apple-label-2)' }}
                   >
                     <Icon size={21} strokeWidth={isActive ? 2.3 : 1.9} />
-                    <span className={`text-[10px] leading-none ${isActive ? 'font-semibold' : 'font-medium'}`}>
+                    <span className={`text-xs leading-none ${isActive ? 'font-semibold' : 'font-medium'}`}>
                       {tab.shortLabel}
                     </span>
                   </Link>
@@ -165,5 +189,20 @@ export const DriveShell: React.FC<{ children: React.ReactNode; title?: string; s
     </div>
   );
 };
+
+/**
+ * Mounts a Mock Drive screen only once there is a student. Every screen loads
+ * its data in its own effect, so mounting one for a signed-out visitor sent
+ * signed-in API calls into a 401 before the shell's gate replaced it. Without
+ * a user this renders the bare shell, which shows the gate (or the wait).
+ */
+export function withDriveAuth<P extends object>(Screen: React.ComponentType<P>) {
+  const Gated = (props: P) => {
+    const { user } = useAuth();
+    return user ? <Screen {...props} /> : <DriveShell>{null}</DriveShell>;
+  };
+  Gated.displayName = `withDriveAuth(${Screen.displayName || Screen.name || 'Screen'})`;
+  return Gated;
+}
 
 export default DriveShell;

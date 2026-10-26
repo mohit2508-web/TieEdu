@@ -24,12 +24,16 @@ import {
   Droplets,
   Flame,
   GraduationCap,
+  House,
   LayoutGrid,
+  Newspaper,
+  Route,
   Search,
+  Target,
   ShieldCheck,
   ShoppingBag,
-  Sparkles,
   Tag,
+  Video,
   UserRound,
 } from 'lucide-react';
 
@@ -162,21 +166,42 @@ export interface NavItem {
 }
 
 /**
- * `vaults` is the product's word for a company intelligence vault, so it keeps
- * the "Vaults" label even though the route is `/`. The aliases let a student
- * type "companies" or "amazon" style queries and still land here.
+ * Items are destinations; `NAV_SECTIONS` (below) groups them into the five
+ * sections the student actually sees (UI_REDESIGN_PLAN_V2 §5). The company list
+ * moved from `/` to `/companies` so the home page can be a home page.
  */
 export const NAV_ITEMS: Record<string, NavItem> = {
-  vaults: {
-    id: 'vaults',
+  home: {
+    id: 'home',
     href: '/',
-    label: 'Vaults',
-    icon: LayoutGrid,
+    label: 'Home',
+    icon: House,
     match: 'exact',
-    description: 'Every company intelligence vault on TieEdu',
+    description: 'Start here: what to do next',
     primary: true,
     tab: true,
-    keywords: ['home', 'companies', 'browse', 'start', 'company vaults'],
+    keywords: ['home', 'start', 'today'],
+  },
+  companies: {
+    id: 'companies',
+    href: '/companies',
+    label: 'Companies',
+    icon: LayoutGrid,
+    match: 'exact',
+    description: 'Every company page: rounds, questions and packs',
+    primary: true,
+    tab: true,
+    keywords: ['companies', 'vaults', 'browse', 'company vaults', 'amazon', 'tcs', 'rounds'],
+  },
+  tracks: {
+    id: 'tracks',
+    href: '/tracks',
+    label: 'Tracks',
+    icon: Route,
+    match: 'prefix',
+    description: 'Course sequences for a goal, in order',
+    primary: true,
+    keywords: ['track', 'path', 'roadmap', 'sequence', 'learning path'],
   },
   compare: {
     id: 'compare',
@@ -236,7 +261,7 @@ export const NAV_ITEMS: Record<string, NavItem> = {
     id: 'freeCourse',
     href: '/interview-course',
     label: 'Free Course',
-    icon: Sparkles,
+    icon: Video,
     match: 'prefix',
     description: 'Free interview course — earn XP as you finish it',
     badge: 'free',
@@ -249,10 +274,10 @@ export const NAV_ITEMS: Record<string, NavItem> = {
     depth: 'detail',
     /*
       A detail at its own href, so there is no parent to infer from the path —
-      `/interview-course` has nothing below it to strip. It is a primary item and
-      not a tab, so the only sensible way out is the vault list it sits beside.
+      `/interview-course` has nothing below it to strip. It lives in Learn, so
+      back goes to Learn's landing page.
     */
-    parent: '/',
+    parent: '/courses',
     keywords: ['interview course', 'free', 'xp', 'practice'],
   },
   courses: {
@@ -275,9 +300,8 @@ export const NAV_ITEMS: Record<string, NavItem> = {
     description: 'Your phased preparation plan and progress',
     primary: true,
     /*
-      Drawer-only. The five tab slots are spoken for (vaults, skill test, drops,
-      search, courses), and a plan a student opens once a week does not outrank
-      a feed they open daily. Still on the desktop bar.
+      Reached through the Learn section's sub-tabs, like every item that is
+      not itself a section landing page.
     */
     keywords: ['plan', 'schedule', 'phases', 'progress', 'timeline'],
   },
@@ -351,22 +375,53 @@ export const NAV_ITEMS: Record<string, NavItem> = {
 
 export const ALL_NAV_ITEMS: NavItem[] = Object.values(NAV_ITEMS);
 
-/** Desktop bar order. The first entry is the home link. */
+/** Every student-facing destination, in config order (palette, footer). */
 export const PRIMARY_NAV: NavItem[] = ALL_NAV_ITEMS.filter((i) => i.primary);
 
-/**
- * Drawer sections. `campus` and `admin` are deliberately absent from the group
- * list and appended to the account block by `resolveNavGroups` — a B2B control
- * plane does not belong next to "Compare".
- */
-export const NAV_GROUPS: { id: string; label: string; itemIds: string[] }[] = [
-  { id: 'explore', label: 'Explore', itemIds: ['vaults', 'compare', 'skillTest', 'drives', 'drops', 'courses', 'freeCourse'] },
-  { id: 'plan', label: 'Plan & learn', itemIds: ['studyPlan', 'myCourses', 'myCertificates'] },
+// ---------------------------------------------------------------------------
+// SECTIONS — UI_REDESIGN_PLAN_V2 §5.
+//
+// Eight flat links became five sections, so the product is understandable in
+// five seconds: Home, Learn, Practise, Companies, Feed. The desktop bar and the
+// phone tab bar both show exactly these five; a section's other items appear as
+// sub-tabs (`SectionSubnav`) on that section's pages and as a drawer group.
+//
+// A section's first item is its landing page. Items keep their own matching,
+// depth and back-target rules — a section is only a grouping on top of them.
+// ---------------------------------------------------------------------------
+
+export interface NavSection {
+  id: 'home' | 'learn' | 'practise' | 'companies' | 'feed';
+  label: string;
+  icon: LucideIcon;
+  /** First entry is the landing page the section's tab opens. */
+  itemIds: string[];
+  /** Routes with no item of their own that still belong here (`/company/[slug]`). */
+  extraPrefixes?: string[];
+}
+
+export const NAV_SECTIONS: NavSection[] = [
+  { id: 'home', label: 'Home', icon: House, itemIds: ['home'] },
+  { id: 'learn', label: 'Learn', icon: BookOpen, itemIds: ['courses', 'tracks', 'freeCourse', 'studyPlan', 'myCourses', 'myCertificates'] },
+  { id: 'practise', label: 'Practise', icon: Target, itemIds: ['skillTest', 'drives'] },
+  { id: 'companies', label: 'Companies', icon: Building2, itemIds: ['companies', 'compare'], extraPrefixes: ['/company'] },
+  { id: 'feed', label: 'Feed', icon: Newspaper, itemIds: ['drops'] },
 ];
 
+export const sectionHref = (section: NavSection): string => NAV_ITEMS[section.itemIds[0]].href;
+
+/**
+ * Drawer groups: every section except Home (the logo already goes home).
+ * `campus` and `admin` are deliberately absent and appended to the account
+ * block by `resolveNavGroups` — a B2B control plane does not belong next to
+ * "Compare".
+ */
+export const NAV_GROUPS: { id: string; label: string; itemIds: string[] }[] = NAV_SECTIONS.filter(
+  (s) => s.id !== 'home'
+).map((s) => ({ id: s.id, label: s.label, itemIds: s.itemIds }));
+
 export const NAV_GROUP_LABELS: Record<string, string> = {
-  explore: 'Explore',
-  plan: 'Plan & learn',
+  ...Object.fromEntries(NAV_SECTIONS.map((s) => [s.id, s.label])),
   account: 'Account',
 };
 
@@ -407,28 +462,28 @@ export const NAV_ACTIONS: Record<NavActionItem['id'], NavActionItem> = {
 };
 
 /**
- * Bottom tab bar. Five slots is the practical ceiling before every target drops
- * below a 48px touch area. Everything else lives in the drawer.
+ * Section landing pages — the items a tab opens. Five slots is the practical
+ * ceiling before every target drops below a 48px touch area.
  */
 export const MOBILE_TABS: NavItem[] = ALL_NAV_ITEMS.filter((i) => i.tab);
 
 /**
- * The five slots, in render order: four routes and the search action.
+ * The five slots, in render order: one per section.
  *
- * The list is explicit rather than derived because the bar's order is a
- * product decision (and mixes routes with actions), while `MOBILE_TABS` stays
- * derived so a new `tab: true` item cannot silently fall off the bar — it shows
- * up in `MOBILE_TABS` and fails the ordering test until it is placed here.
+ * Explicit rather than derived because the order is a product decision, while
+ * `MOBILE_TABS` stays derived so a new `tab: true` item cannot silently fall off
+ * the bar — it fails the "every tab item is a section landing" test until it is
+ * placed in a section.
+ *
+ * Search left the bar for the phone header when the five sections took every
+ * slot (§5: "Global search becomes the power-user shortcut to everything").
  */
-export const MOBILE_TAB_SLOTS: string[] = ['vaults', 'skillTest', 'drops', 'search', 'courses'];
+export const MOBILE_TAB_SLOTS: NavSection['id'][] = ['home', 'learn', 'practise', 'companies', 'feed'];
 
 /**
- * The action set the mobile chrome offers: the tab bar renders `search` (via
- * `MOBILE_TAB_SLOTS`) and the drill-down header renders both.
- *
- * `cart` left the tab bar when Drops claimed the fifth slot — the cart stays
- * reachable in the drill header (the bar itself slides away on those routes,
- * so nothing is stranded there), in the drawer, and on the desktop bar.
+ * The action set the drill-down header offers. The cart is reachable there
+ * (the tab bar slides away on those routes, so nothing is stranded), in the
+ * drawer, and on the desktop bar.
  *
  * `.tab-slot` is `flex: 1 1 0` and `.tab-bar` is `space-around`, so the count is
  * derived rather than hard-coded: grow `MOBILE_TAB_SLOTS` and the bar re-spaces
@@ -500,6 +555,19 @@ export const resolveNavItem = (pathname: string): NavItem | null => {
 
   return matches.reduce((best, candidate) =>
     normalizePath(candidate.href).length > normalizePath(best.href).length ? candidate : best
+  );
+};
+
+/** The section a pathname belongs to, or null (account pages, /verify, …). */
+export const resolveSection = (pathname: string): NavSection | null => {
+  const current = normalizePath(pathname);
+  const item = resolveNavItem(current);
+  const owner = item ? NAV_SECTIONS.find((s) => s.itemIds.includes(item.id)) : undefined;
+  if (owner) return owner;
+  return (
+    NAV_SECTIONS.find((s) =>
+      (s.extraPrefixes ?? []).some((p) => current === p || current.startsWith(`${p}/`))
+    ) ?? null
   );
 };
 

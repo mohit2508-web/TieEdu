@@ -10,11 +10,7 @@ import { ContentBlockRenderer } from '@/components/blocks/ContentBlockRenderer';
 import { Sheet } from '@/components/common/Sheet';
 import { useAuth } from '@/context/AuthContext';
 import { StudyPlanView } from '@/types';
-import {
-  Calendar, CheckCircle2, Sparkles, Target, ChevronDown, Info, LogIn,
-  CircleDot, PartyPopper, AlertTriangle, CalendarRange, RefreshCw,
-  X, History, Circle, Loader2, Undo2,
-} from 'lucide-react';
+import { Calendar, CheckCircle2, Target, ChevronDown, Info, LogIn, CircleDot, PartyPopper, AlertTriangle, CalendarRange, RefreshCw, X, History, Circle, Loader2, Undo2, CalendarDays } from 'lucide-react';
 
 const ROLE_SUGGESTIONS = ['SDE', 'SDE-1', 'SDE-2', 'Frontend', 'Backend', 'Full Stack', 'Data Analyst', 'Product Manager'];
 
@@ -257,22 +253,22 @@ export default function StudyPlanPage() {
         <meta name="description" content="Generate a day-by-day prep plan based on your target company, role, and interview timeline." />
       </Head>
 
-      <div className="min-h-screen flex flex-col bg-[#FAFAF9]">
+      <div className="min-h-screen flex flex-col bg-app-warm">
 
         {/* Compact progress bar for small screens.
             The sidebar card is in normal flow on mobile, so scrolling a
             20-phase plan put progress permanently off-screen. This is the
             `lg:hidden` twin of the sidebar panel, pinned under the header. */}
         {showMobileBar && (
-          <div className="lg:hidden sticky top-[var(--header-total)] z-30 bg-white/95 backdrop-blur border-b border-[#EDEDEB] px-4 py-2.5">
+          <div className="lg:hidden sticky top-[var(--header-total)] z-30 bg-white/95 backdrop-blur border-b border-line px-4 py-2.5">
             <div className="flex items-center gap-3">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2 mb-1">
-                  <span className="text-[10px] font-mono font-bold uppercase text-gray-500">Progress</span>
-                  <span className="text-[11px] font-extrabold text-[#10151C] shrink-0">{pct}%</span>
+                  <span className="text-xs font-bold uppercase text-gray-500">Progress</span>
+                  <span className="text-xs font-extrabold text-heading shrink-0">{pct}%</span>
                 </div>
                 <div
-                  className="h-2 rounded-full bg-[#EDEDEB] overflow-hidden"
+                  className="h-2 rounded-full bg-surface-hover overflow-hidden"
                   role="progressbar"
                   aria-valuenow={pct}
                   aria-valuemin={0}
@@ -281,7 +277,7 @@ export default function StudyPlanPage() {
                 >
                   <div className="h-full rounded-full bg-emerald-600 transition-all duration-500" style={{ width: `${pct}%` }} />
                 </div>
-                <p className="text-[11px] text-[--text-muted] mt-1 flex items-center gap-1.5">
+                <p className="text-xs text-[--text-muted] mt-1 flex items-center gap-1.5">
                   {allDone
                     ? <><CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> All {plan?.progress.total} phases done</>
                     : <><CircleDot className="w-3.5 h-3.5" /> {plan?.progress.completed} of {plan?.progress.total} phases complete</>}
@@ -295,13 +291,13 @@ export default function StudyPlanPage() {
 
           {/* Intro */}
           <div className="mb-8">
-            <span className="inline-flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase bg-amber-100 text-amber-900 px-2.5 py-1 rounded">
-              <Sparkles className="w-3 h-3" /> Day-by-day roadmap
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase bg-amber-100 text-amber-900 px-2.5 py-1 rounded">
+              <CalendarDays className="w-3 h-3" /> Day-by-day roadmap
             </span>
-            <h1 className="mt-3 text-2xl sm:text-4xl font-extrabold text-[#10151C] tracking-tight">
+            <h1 className="mt-3 text-2xl sm:text-4xl font-extrabold text-heading tracking-tight">
               Your interview study plan
             </h1>
-            <p className="mt-2 text-[15px] sm:text-base text-[--text-muted] max-w-2xl leading-relaxed">
+            <p className="mt-2 text-base sm:text-base text-[--text-muted] max-w-2xl leading-relaxed">
               Pick your target company, role and interview date. We match you to a curated plan and track
               your progress across devices.
             </p>
@@ -310,16 +306,16 @@ export default function StudyPlanPage() {
           <div className="grid lg:grid-cols-[20rem_1fr] gap-6 items-start">
             {/* Controls */}
             <div className="space-y-4 lg:sticky lg:top-6">
-              <div className="bg-white border border-[#EDEDEB] rounded-2xl p-5 shadow-sm space-y-4">
+              <div className="bg-white border border-line rounded-2xl p-5 shadow-sm space-y-4">
                 <div>
-                  <label htmlFor="sp-company" className="block text-[11px] font-mono font-bold uppercase text-gray-500 mb-1.5">
+                  <label htmlFor="sp-company" className="block text-xs font-bold uppercase text-gray-500 mb-1.5">
                     Target company
                   </label>
                   <select
                     id="sp-company"
                     value={targetCompany}
                     onChange={(e) => setTargetCompany(e.target.value)}
-                    className="w-full p-3 border border-gray-200 rounded-xl bg-[#FAFAF9] text-[15px] focus:outline-none focus:ring-2 focus:ring-[#0284C7]"
+                    className="w-full p-3 border border-gray-200 rounded-xl bg-app-warm text-base focus:outline-none focus:ring-2 focus:ring-signal"
                   >
                     {companies.length === 0 && <option value="">Target Company</option>}
                     {companies.map((c) => (
@@ -329,7 +325,7 @@ export default function StudyPlanPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="sp-role" className="block text-[11px] font-mono font-bold uppercase text-gray-500 mb-1.5">
+                  <label htmlFor="sp-role" className="block text-xs font-bold uppercase text-gray-500 mb-1.5">
                     Target role
                   </label>
                   <input
@@ -338,7 +334,7 @@ export default function StudyPlanPage() {
                     value={targetRole}
                     onChange={(e) => setTargetRole(e.target.value)}
                     placeholder="e.g. SDE-1"
-                    className="w-full p-3 border border-gray-200 rounded-xl bg-[#FAFAF9] text-[15px] focus:outline-none focus:ring-2 focus:ring-[#0284C7]"
+                    className="w-full p-3 border border-gray-200 rounded-xl bg-app-warm text-base focus:outline-none focus:ring-2 focus:ring-signal"
                   />
                   <datalist id="sp-role-options">
                     {ROLE_SUGGESTIONS.map((r) => <option key={r} value={r} />)}
@@ -349,10 +345,10 @@ export default function StudyPlanPage() {
                         key={r}
                         type="button"
                         onClick={() => setTargetRole(r)}
-                        className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold min-h-[2.75rem] transition-colors focus-ring ${
+                        className={`px-2.5 py-1.5 rounded-lg text-xs font-bold min-h-[2.75rem] transition-colors focus-ring ${
                           targetRole === r
-                            ? 'bg-[#1F3A5F] text-white'
-                            : 'bg-[#F1F5F9] text-gray-600 hover:bg-gray-200'
+                            ? 'bg-brand-ink text-white'
+                            : 'bg-paper text-gray-600 hover:bg-gray-200'
                         }`}
                       >
                         {r}
@@ -362,7 +358,7 @@ export default function StudyPlanPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="sp-date" className="block text-[11px] font-mono font-bold uppercase text-gray-500 mb-1.5">
+                  <label htmlFor="sp-date" className="block text-xs font-bold uppercase text-gray-500 mb-1.5">
                     Interview date <span className="normal-case font-normal">(optional)</span>
                   </label>
                   <input
@@ -370,10 +366,10 @@ export default function StudyPlanPage() {
                     type="date"
                     value={interviewDate}
                     onChange={(e) => setInterviewDate(e.target.value)}
-                    className="w-full p-3 border border-gray-200 rounded-xl bg-[#FAFAF9] text-[15px] focus:outline-none focus:ring-2 focus:ring-[#0284C7]"
+                    className="w-full p-3 border border-gray-200 rounded-xl bg-app-warm text-base focus:outline-none focus:ring-2 focus:ring-signal"
                   />
                   {daysToInterview !== null && daysToInterview >= 0 && (
-                    <p className="mt-1.5 text-[11px] font-semibold text-[#0284C7] flex items-center gap-1">
+                    <p className="mt-1.5 text-xs font-semibold text-signal flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
                       {daysToInterview === 0 ? 'Interview is today' : `${daysToInterview} day${daysToInterview === 1 ? '' : 's'} to go`}
                     </p>
@@ -384,23 +380,23 @@ export default function StudyPlanPage() {
                   type="button"
                   onClick={generate}
                   disabled={loading}
-                  className="w-full inline-flex items-center justify-center gap-2 py-3.5 bg-[#1F3A5F] hover:bg-[#16293f] text-white text-[13px] font-bold uppercase tracking-wider rounded-xl shadow-md transition-colors min-h-[3rem] disabled:opacity-60 focus-ring"
+                  className="w-full inline-flex items-center justify-center gap-2 py-3.5 bg-brand-ink hover:bg-heading text-white text-sm font-bold uppercase tracking-wider rounded-xl shadow-md transition-colors min-h-[3rem] disabled:opacity-60 focus-ring"
                 >
                   <Target className="w-4 h-4" />
                   {loading ? 'Building your plan…' : plan ? 'Regenerate plan' : 'Generate study schedule'}
                 </button>
 
                 {error && (
-                  <p className="flex items-start gap-2 text-[12px] font-semibold text-red-700 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
+                  <p className="flex items-start gap-2 text-xs font-semibold text-red-700 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
                     <AlertTriangle className="w-4 h-4 shrink-0 mt-px" /> {error}
                   </p>
                 )}
 
                 {!user && (
-                  <p className="flex items-start gap-2 text-[12px] text-gray-600 bg-[#F1F5F9] rounded-xl px-3 py-2.5">
-                    <LogIn className="w-4 h-4 shrink-0 mt-px text-[#0284C7]" />
+                  <p className="flex items-start gap-2 text-xs text-gray-600 bg-paper rounded-xl px-3 py-2.5">
+                    <LogIn className="w-4 h-4 shrink-0 mt-px text-signal" />
                     <span>
-                      <Link href="/login" className="font-bold text-[#0284C7] underline focus-ring rounded">Sign in</Link> to save this plan
+                      <Link href="/login" className="font-bold text-signal underline focus-ring rounded">Sign in</Link> to save this plan
                       and track progress. You can preview without an account.
                     </span>
                   </p>
@@ -415,7 +411,7 @@ export default function StudyPlanPage() {
                     type="button"
                     onClick={startOver}
                     disabled={busyReset}
-                    className="w-full inline-flex items-center justify-center gap-1.5 py-2.5 border border-gray-200 rounded-xl text-[11px] font-bold uppercase tracking-wider text-gray-500 hover:text-red-700 hover:border-red-200 min-h-[2.75rem] disabled:opacity-50 focus-ring"
+                    className="w-full inline-flex items-center justify-center gap-1.5 py-2.5 border border-gray-200 rounded-xl text-xs font-bold uppercase tracking-wider text-gray-500 hover:text-red-700 hover:border-red-200 min-h-[2.75rem] disabled:opacity-50 focus-ring"
                   >
                     <RefreshCw className={`w-3.5 h-3.5 ${busyReset ? 'animate-spin' : ''}`} />
                     {busyReset ? 'Clearing…' : 'Start over'}
@@ -427,13 +423,13 @@ export default function StudyPlanPage() {
                   header already shows the same numbers — two progress readouts
                   on one screen is just noise. */}
               {plan && plan.progress.total > 0 && (
-                <div className="hidden lg:block bg-white border border-[#EDEDEB] rounded-2xl p-5 shadow-sm">
+                <div className="hidden lg:block bg-white border border-line rounded-2xl p-5 shadow-sm">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-[11px] font-mono font-bold uppercase text-gray-500">Progress</span>
-                    <span className="text-[13px] font-extrabold text-[#10151C]">{pct}%</span>
+                    <span className="text-xs font-bold uppercase text-gray-500">Progress</span>
+                    <span className="text-sm font-extrabold text-heading">{pct}%</span>
                   </div>
                   <div
-                    className="h-2.5 rounded-full bg-[#EDEDEB] overflow-hidden"
+                    className="h-2.5 rounded-full bg-surface-hover overflow-hidden"
                     role="progressbar"
                     aria-valuenow={pct}
                     aria-valuemin={0}
@@ -445,11 +441,11 @@ export default function StudyPlanPage() {
                       style={{ width: `${pct}%` }}
                     />
                   </div>
-                  <p className="mt-2 text-[12px] text-[--text-muted]">
+                  <p className="mt-2 text-xs text-[--text-muted]">
                     {plan.progress.completed} of {plan.progress.total} phases complete
                   </p>
                   {allDone && (
-                    <p className="mt-3 flex items-center gap-2 text-[12px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2">
+                    <p className="mt-3 flex items-center gap-2 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2">
                       <PartyPopper className="w-4 h-4 shrink-0" /> Plan complete. Go land it.
                     </p>
                   )}
@@ -466,12 +462,12 @@ export default function StudyPlanPage() {
                 <div
                   ref={headingRef}
                   role="status"
-                  className="mb-4 flex items-start gap-3 rounded-2xl border border-[#0284C7]/25 bg-[#E8F4FB] p-4"
+                  className="mb-4 flex items-start gap-3 rounded-2xl border border-signal/25 bg-signal-soft p-4"
                 >
-                  <History className="w-5 h-5 text-[#0284C7] shrink-0 mt-0.5" />
+                  <History className="w-5 h-5 text-signal shrink-0 mt-0.5" />
                   <div className="min-w-0 flex-1">
-                    <p className="text-[15px] font-extrabold text-[#10151C]">Welcome back — your plan is here</p>
-                    <p className="text-[14px] sm:text-[13px] text-[#1F3A5F] mt-0.5 leading-relaxed">
+                    <p className="text-base font-extrabold text-heading">Welcome back — your plan is here</p>
+                    <p className="text-sm sm:text-sm text-brand-ink mt-0.5 leading-relaxed">
                       Pick up at <span className="font-semibold">{resumedFrom}</span>.
                     </p>
                   </div>
@@ -479,7 +475,7 @@ export default function StudyPlanPage() {
                     type="button"
                     onClick={() => setDismissedResume(true)}
                     aria-label="Dismiss welcome back message"
-                    className="shrink-0 p-2 -m-1 rounded-lg text-[#0284C7] hover:bg-white/60 min-h-[2.75rem] min-w-[2.75rem] flex items-center justify-center"
+                    className="shrink-0 p-2 -m-1 rounded-lg text-signal hover:bg-white/60 min-h-[2.75rem] min-w-[2.75rem] flex items-center justify-center"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -487,27 +483,27 @@ export default function StudyPlanPage() {
               )}
 
               {loading && (
-                <div className="mb-4 flex items-center gap-2 rounded-2xl border border-[#EDEDEB] bg-white px-4 py-3 text-[14px] text-[--text-muted]" role="status">
-                  <Loader2 className="w-4 h-4 animate-spin text-[#0284C7]" /> Building your roadmap…
+                <div className="mb-4 flex items-center gap-2 rounded-2xl border border-line bg-white px-4 py-3 text-sm text-[--text-muted]" role="status">
+                  <Loader2 className="w-4 h-4 animate-spin text-signal" /> Building your roadmap…
                 </div>
               )}
 
               {!plan ? (
-                <div className="bg-white border border-[#EDEDEB] rounded-2xl p-10 sm:p-16 text-center">
+                <div className="bg-white border border-line rounded-2xl p-10 sm:p-16 text-center">
                   {resuming ? (
                     <>
-                      <Loader2 className="mx-auto w-8 h-8 text-[#0284C7] animate-spin mb-4" />
-                      <p className="text-[16px] sm:text-[15px] text-[--text-muted] max-w-sm mx-auto leading-relaxed">
+                      <Loader2 className="mx-auto w-8 h-8 text-signal animate-spin mb-4" />
+                      <p className="text-base sm:text-base text-[--text-muted] max-w-sm mx-auto leading-relaxed">
                         Loading your saved plan…
                       </p>
                     </>
                   ) : (
                     <>
-                      <div className="mx-auto w-14 h-14 rounded-full bg-[#1F3A5F]/5 flex items-center justify-center mb-4">
-                        <CalendarRange className="w-6 h-6 text-[#1F3A5F]" />
+                      <div className="mx-auto w-14 h-14 rounded-full bg-brand-ink/5 flex items-center justify-center mb-4">
+                        <CalendarRange className="w-6 h-6 text-brand-ink" />
                       </div>
-                      <p className="text-[16px] sm:text-[15px] font-semibold text-[#10151C] mb-1">No plan yet</p>
-                      <p className="text-[15px] sm:text-[14px] text-[--text-muted] max-w-sm mx-auto leading-relaxed">
+                      <p className="text-base sm:text-base font-semibold text-heading mb-1">No plan yet</p>
+                      <p className="text-base sm:text-sm text-[--text-muted] max-w-sm mx-auto leading-relaxed">
                         Choose your target company and hit Generate to build your roadmap.
                       </p>
                     </>
@@ -516,18 +512,18 @@ export default function StudyPlanPage() {
               ) : (
                 <div>
                   <div className="mb-4">
-                    <h2 className="text-lg sm:text-xl font-extrabold text-[#10151C]">
+                    <h2 className="text-lg sm:text-xl font-extrabold text-heading">
                       {plan.targetCompany} Preparation Roadmap
                     </h2>
-                    <p className="text-[13px] text-[--text-muted] mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
-                      <span className="font-semibold text-[#475569]">{plan.targetRole}</span>
+                    <p className="text-sm text-[--text-muted] mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+                      <span className="font-semibold text-muted">{plan.targetRole}</span>
                       <span className="inline-flex items-center gap-1">
                         <Calendar className="w-3.5 h-3.5" /> {plan.daysRemaining} day window
                       </span>
                       {plan.templateTitle && <span>{plan.templateTitle}</span>}
                     </p>
                     {plan.source === 'fallback' && (
-                      <p className="mt-3 flex items-start gap-2 text-[12px] text-amber-900 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+                      <p className="mt-3 flex items-start gap-2 text-xs text-amber-900 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
                         <Info className="w-4 h-4 shrink-0 mt-px" />
                         General preparation plan — a curated {plan.targetCompany}-specific plan is not published
                         yet. Content here is standard interview prep, not verified company intelligence.
@@ -536,7 +532,7 @@ export default function StudyPlanPage() {
                   </div>
 
                   <ol className="relative space-y-3">
-                    <span className="absolute left-[1.4rem] sm:left-[1.65rem] top-4 bottom-4 w-px bg-[#E2E8F0]" aria-hidden="true" />
+                    <span className="absolute left-[1.4rem] sm:left-[1.65rem] top-4 bottom-4 w-px bg-line" aria-hidden="true" />
 
                     {plan.phases.map((phase) => {
                       const open = !!openPhases[phase.id];
@@ -548,7 +544,7 @@ export default function StudyPlanPage() {
                         >
                           <div
                             className={`bg-white border rounded-2xl shadow-sm overflow-hidden transition-colors ${
-                              phase.completed ? 'border-emerald-200' : 'border-[#EDEDEB]'
+                              phase.completed ? 'border-emerald-200' : 'border-line'
                             }`}
                           >
                             <div className="flex items-start gap-3 sm:gap-4 p-4">
@@ -557,8 +553,8 @@ export default function StudyPlanPage() {
                                   phase.completed
                                     ? 'bg-emerald-600 border-emerald-600 text-white'
                                     : open
-                                      ? 'bg-[#1F3A5F] border-[#1F3A5F] text-white'
-                                      : 'bg-white border-[#E2E8F0] text-gray-400'
+                                      ? 'bg-brand-ink border-brand-ink text-white'
+                                      : 'bg-white border-line text-gray-400'
                                 }`}
                               >
                                 {phase.completed ? (
@@ -577,18 +573,18 @@ export default function StudyPlanPage() {
                                   className="w-full text-left flex items-start gap-2 min-h-[2.75rem] focus-ring rounded-lg"
                                 >
                                   <span className="min-w-0 flex-1">
-                                    <span className="block text-[10px] font-mono font-bold uppercase text-[#0284C7]">
+                                    <span className="block text-xs font-bold uppercase text-signal">
                                       {phase.dayLabel}
                                     </span>
                                     <span
-                                      className={`block text-[16px] sm:text-[15px] font-bold leading-snug mt-0.5 ${
-                                        phase.completed ? 'text-emerald-700' : 'text-[#10151C]'
+                                      className={`block text-base sm:text-base font-bold leading-snug mt-0.5 ${
+                                        phase.completed ? 'text-emerald-700' : 'text-heading'
                                       }`}
                                     >
                                       {phase.title}
                                     </span>
                                     {!open && phase.summary && (
-                                      <span className="block text-[15px] sm:text-[13px] text-[--text-muted] mt-1 line-clamp-2">
+                                      <span className="block text-base sm:text-sm text-[--text-muted] mt-1 line-clamp-2">
                                         {phase.summary}
                                       </span>
                                     )}
@@ -605,7 +601,7 @@ export default function StudyPlanPage() {
                                       /* 16px on mobile: 13px body copy on a
                                          phone is below readable size, and this is
                                          the long-form part of the page. */
-                                      <p className="text-[16px] sm:text-[14px] text-[--text-body] leading-relaxed mb-3 whitespace-pre-line">{phase.summary}</p>
+                                      <p className="text-base sm:text-sm text-[--text-body] leading-relaxed mb-3 whitespace-pre-line">{phase.summary}</p>
                                     )}
                                     <div className="space-y-1">
                                       {phase.blocks.map((b) => (
@@ -617,7 +613,7 @@ export default function StudyPlanPage() {
                                         />
                                       ))}
                                       {phase.blocks.length === 0 && (
-                                        <p className="text-[15px] sm:text-[13px] text-gray-500 border border-dashed border-gray-300 rounded-xl p-4 text-center">
+                                        <p className="text-base sm:text-sm text-gray-500 border border-dashed border-gray-300 rounded-xl p-4 text-center">
                                           Content for this phase is being written.
                                         </p>
                                       )}
@@ -625,7 +621,7 @@ export default function StudyPlanPage() {
                                   </div>
                                 )}
 
-                                <label className="mt-3 inline-flex items-center gap-2.5 cursor-pointer select-none min-h-[2.75rem] focus-within:ring-2 focus-within:ring-[#0284C7] focus-within:ring-offset-2 rounded-lg px-1">
+                                <label className="mt-3 inline-flex items-center gap-2.5 cursor-pointer select-none min-h-[2.75rem] focus-within:ring-2 focus-within:ring-signal focus-within:ring-offset-2 rounded-lg px-1">
                                   <input
                                     type="checkbox"
                                     checked={phase.completed}
@@ -633,7 +629,7 @@ export default function StudyPlanPage() {
                                     onChange={(e) => togglePhase(phase.id, e.target.checked)}
                                     className="w-5 h-5 rounded accent-emerald-600 shrink-0"
                                   />
-                                  <span className="text-[15px] sm:text-[13px] font-semibold text-[#475569]">
+                                  <span className="text-base sm:text-sm font-semibold text-muted">
                                     {toggling === phase.id
                                       ? 'Saving…'
                                       : phase.completed
@@ -647,7 +643,7 @@ export default function StudyPlanPage() {
                                     action belongs here rather than only in the
                                     form-level error banner. */}
                                 {failedToggle?.phaseId === phase.id && (
-                                  <p className="mt-2 flex items-center gap-2 text-[13px] text-red-700">
+                                  <p className="mt-2 flex items-center gap-2 text-sm text-red-700">
                                     <AlertTriangle className="w-4 h-4 shrink-0" />
                                     <span>Not saved.</span>
                                     <button
@@ -700,7 +696,7 @@ export default function StudyPlanPage() {
               <button
                 type="button"
                 onClick={doReset}
-                className="focus-ring flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-[#C1442D] px-4 text-sm font-bold text-white transition-colors active:opacity-90"
+                className="focus-ring flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-danger px-4 text-sm font-bold text-white transition-colors active:opacity-90"
               >
                 <RefreshCw size={15} />
                 Clear my plan and progress

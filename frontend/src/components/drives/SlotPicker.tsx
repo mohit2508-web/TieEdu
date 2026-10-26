@@ -71,10 +71,10 @@ export const SlotPicker: React.FC<{
       <div className="px-5 pb-5 pt-1">
         {booking ? (
           <div className="rounded-[12px] px-4 py-3" style={{ background: 'var(--apple-green-soft)' }}>
-            <p className="inline-flex items-center gap-1.5 text-[14px] font-semibold" style={{ color: 'var(--apple-green)' }}>
+            <p className="inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: 'var(--apple-green)' }}>
               <CheckCircle2 size={15} /> Slot booked
             </p>
-            <p className="mt-1 text-[13px]" style={{ color: 'var(--apple-label-2)' }}>
+            <p className="mt-1 text-sm" style={{ color: 'var(--apple-label-2)' }}>
               {booking.starts_at ? `${istDay(booking.starts_at)} · ${istTime(booking.starts_at)}` : ''}
               {' — '}
               {booking.link_active_at ? 'Your link is active.' : 'The link opens once the admin activates it. The countdown runs on your drive page.'}
@@ -82,7 +82,7 @@ export const SlotPicker: React.FC<{
             <button
               type="button"
               onClick={onClose}
-              className="mt-3.5 w-full rounded-[12px] py-2.5 text-[15px] font-semibold text-white"
+              className="mt-3.5 w-full rounded-[12px] py-2.5 text-base font-semibold text-white"
               style={{ background: 'var(--apple-blue)' }}
             >
               Done
@@ -90,21 +90,21 @@ export const SlotPicker: React.FC<{
           </div>
         ) : (
           <>
-            <p className="mb-3 text-[13px]" style={{ color: 'var(--apple-label-2)' }}>
+            <p className="mb-3 text-sm" style={{ color: 'var(--apple-label-2)' }}>
               Pick a slot — seats are limited per slot and the countdown starts as soon as you book.
             </p>
 
             {loading ? (
-              <p className="py-5 text-center text-[14px]" style={{ color: 'var(--apple-label-2)' }}>Loading slots…</p>
+              <p className="py-5 text-center text-sm" style={{ color: 'var(--apple-label-2)' }}>Loading slots…</p>
             ) : !slots.length ? (
               <div className="rounded-[12px] px-4 py-5 text-center" style={{ background: 'var(--apple-fill)' }}>
                 <CalendarDays size={20} className="mx-auto mb-1.5" style={{ color: 'var(--apple-label-2)' }} />
-                <p className="text-[13.5px]" style={{ color: 'var(--apple-label-2)' }}>
+                <p className="text-sm" style={{ color: 'var(--apple-label-2)' }}>
                   No slots are open yet — the admin will publish them soon.
                 </p>
               </div>
             ) : !canBook ? (
-              <div className="rounded-[12px] px-4 py-4 text-[13.5px]" style={{ background: 'var(--apple-orange-soft, rgba(255,149,0,.12))', color: 'var(--apple-label-2)' }}>
+              <div className="rounded-[12px] px-4 py-4 text-sm" style={{ background: 'var(--apple-orange-soft, rgba(255,149,0,.12))', color: 'var(--apple-label-2)' }}>
                 {booking ? 'You already have a slot booked.' : 'Slot booking opens after your payment is approved.'}
               </div>
             ) : (
@@ -121,15 +121,15 @@ export const SlotPicker: React.FC<{
                       style={{ borderColor: 'var(--apple-separator)', background: 'var(--apple-surface)' }}
                     >
                       <span>
-                        <span className="block text-[14px] font-semibold" style={{ color: 'var(--apple-label)' }}>
+                        <span className="block text-sm font-semibold" style={{ color: 'var(--apple-label)' }}>
                           {istDay(s.starts_at)} · {istTime(s.starts_at)}
                         </span>
-                        <span className="text-[12px]" style={{ color: 'var(--apple-label-2)' }}>
+                        <span className="text-xs" style={{ color: 'var(--apple-label-2)' }}>
                           ends {istTime(s.ends_at)}
                         </span>
                       </span>
                       <span
-                        className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11.5px] font-semibold"
+                        className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold"
                         style={{
                           background: full ? 'var(--apple-red-soft)' : (s.remaining ?? 0) <= 5 ? 'var(--apple-orange-soft, rgba(255,149,0,.12))' : 'var(--apple-green-soft)',
                           color: full ? 'var(--apple-red)' : (s.remaining ?? 0) <= 5 ? 'var(--apple-orange, #FF9500)' : 'var(--apple-green)',
@@ -145,7 +145,7 @@ export const SlotPicker: React.FC<{
             )}
 
             {error && (
-              <p className="mt-3 inline-flex items-start gap-1.5 rounded-[10px] px-3 py-2 text-[13px]" style={{ background: 'var(--apple-red-soft)', color: 'var(--apple-red)' }}>
+              <p className="mt-3 inline-flex items-start gap-1.5 rounded-[10px] px-3 py-2 text-sm" style={{ background: 'var(--apple-red-soft)', color: 'var(--apple-red)' }}>
                 <AlertCircle size={14} className="mt-0.5 shrink-0" /> {error}
               </p>
             )}

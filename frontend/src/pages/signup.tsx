@@ -44,6 +44,7 @@ export default function SignupPage() {
     <>
       <Head>
         <title>Create account — TieEdu</title>
+        <meta name="description" content="Create a free TieEdu account to save your placement prep: course progress, skill-test results, certificates and company packs." />
       </Head>
 
       <div className="min-h-screen hero-mesh flex flex-col items-center justify-center px-4 py-12">
@@ -55,19 +56,19 @@ export default function SignupPage() {
           <div className="vault-card p-8 shadow-raised">
             <span className="eyebrow">Join the Vault</span>
             <h1 className="display-2 mt-1 mb-1.5">Create your account</h1>
-            <p className="text-[15px] text-[--text-muted] mb-7">
+            <p className="text-base text-[--text-muted] mb-7">
               Free account — unlocks, purchases aur progress hamesha tumhare saath.
             </p>
 
             {error && (
-              <div className="mb-5 px-4 py-3 rounded-xl bg-[#FDEDE9] border border-[#F2C9BC] text-[#A63D28] text-[13px] font-semibold">
+              <div className="mb-5 px-4 py-3 rounded-xl bg-signal-soft border border-signal/30 text-danger text-sm font-semibold">
                 {error}
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-[12px] font-bold text-[#3E4754] mb-1.5 tracking-wide uppercase">Full name</label>
+                <label className="block text-xs font-bold text-body mb-1.5 tracking-wide uppercase">Full name</label>
                 <div className="relative">
                   <User className="w-4 h-4 text-[--text-muted] absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
@@ -81,13 +82,13 @@ export default function SignupPage() {
                     autoComplete="name"
                     enterKeyHint="next"
                     placeholder="Priya Sharma"
-                    className="w-full pl-10 pr-4 py-3 bg-white/90 border border-[#E9E7E1] rounded-xl text-sm text-[#10151C] placeholder:text-[#AEB6BE] focus:outline-none focus:border-[#0284C7] focus:ring-4 focus:ring-[#0284C7]/10 transition-shadow"
+                    className="w-full pl-10 pr-4 py-3 bg-white/90 border border-line rounded-xl text-sm text-heading placeholder:text-text-light focus:outline-none focus:border-signal focus:ring-4 focus:ring-signal/10 transition-shadow"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[12px] font-bold text-[#3E4754] mb-1.5 tracking-wide uppercase">Email</label>
+                <label className="block text-xs font-bold text-body mb-1.5 tracking-wide uppercase">Email</label>
                 <div className="relative">
                   <Mail className="w-4 h-4 text-[--text-muted] absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
@@ -98,13 +99,13 @@ export default function SignupPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@college.edu"
-                    className="w-full pl-10 pr-4 py-3 bg-white/90 border border-[#E9E7E1] rounded-xl text-sm text-[#10151C] placeholder:text-[#AEB6BE] focus:outline-none focus:border-[#0284C7] focus:ring-4 focus:ring-[#0284C7]/10 transition-shadow"
+                    className="w-full pl-10 pr-4 py-3 bg-white/90 border border-line rounded-xl text-sm text-heading placeholder:text-text-light focus:outline-none focus:border-signal focus:ring-4 focus:ring-signal/10 transition-shadow"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[12px] font-bold text-[#3E4754] mb-1.5 tracking-wide uppercase">College (optional)</label>
+                <label className="block text-xs font-bold text-body mb-1.5 tracking-wide uppercase">College (optional)</label>
                 <div className="relative">
                   <GraduationCap className="w-4 h-4 text-[--text-muted] absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
@@ -113,13 +114,13 @@ export default function SignupPage() {
                     autoComplete="organization"
                     enterKeyHint="next"
                     placeholder="IIT Delhi, NIT Trichy…"
-                    className="w-full pl-10 pr-4 py-3 bg-white/90 border border-[#E9E7E1] rounded-xl text-sm text-[#10151C] placeholder:text-[#AEB6BE] focus:outline-none focus:border-[#0284C7] focus:ring-4 focus:ring-[#0284C7]/10 transition-shadow"
+                    className="w-full pl-10 pr-4 py-3 bg-white/90 border border-line rounded-xl text-sm text-heading placeholder:text-text-light focus:outline-none focus:border-signal focus:ring-4 focus:ring-signal/10 transition-shadow"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[12px] font-bold text-[#3E4754] mb-1.5 tracking-wide uppercase">Password</label>
+                <label className="block text-xs font-bold text-body mb-1.5 tracking-wide uppercase">Password</label>
                 <div className="relative">
                   <Lock className="w-4 h-4 text-[--text-muted] absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
@@ -129,13 +130,13 @@ export default function SignupPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Min 6 characters"
-                    className="w-full pl-10 pr-4 py-3 bg-white/90 border border-[#E9E7E1] rounded-xl text-sm text-[#10151C] placeholder:text-[#AEB6BE] focus:outline-none focus:border-[#0284C7] focus:ring-4 focus:ring-[#0284C7]/10 transition-shadow"
+                    className="w-full pl-10 pr-4 py-3 bg-white/90 border border-line rounded-xl text-sm text-heading placeholder:text-text-light focus:outline-none focus:border-signal focus:ring-4 focus:ring-signal/10 transition-shadow"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[12px] font-bold text-[#3E4754] mb-1.5 tracking-wide uppercase">Confirm password</label>
+                <label className="block text-xs font-bold text-body mb-1.5 tracking-wide uppercase">Confirm password</label>
                 <div className="relative">
                   <Lock className="w-4 h-4 text-[--text-muted] absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
@@ -146,7 +147,7 @@ export default function SignupPage() {
                     value={confirm}
                     onChange={(e) => setConfirm(e.target.value)}
                     placeholder="Type again"
-                    className="w-full pl-10 pr-4 py-3 bg-white/90 border border-[#E9E7E1] rounded-xl text-sm text-[#10151C] placeholder:text-[#AEB6BE] focus:outline-none focus:border-[#0284C7] focus:ring-4 focus:ring-[#0284C7]/10 transition-shadow"
+                    className="w-full pl-10 pr-4 py-3 bg-white/90 border border-line rounded-xl text-sm text-heading placeholder:text-text-light focus:outline-none focus:border-signal focus:ring-4 focus:ring-signal/10 transition-shadow"
                   />
                 </div>
               </div>
@@ -157,10 +158,10 @@ export default function SignupPage() {
                   type="checkbox"
                   checked={acceptedTerms}
                   onChange={(e) => setAcceptedTerms(e.target.checked)}
-                  className="mt-0.5 w-4 h-4 rounded border-[#E9E7E1] text-[#0284C7] focus:ring-[#0284C7] shrink-0"
+                  className="mt-0.5 w-4 h-4 rounded border-line text-signal focus:ring-signal shrink-0"
                 />
-                <label htmlFor="tc-checkbox" className="text-[13px] text-[#3E4754] leading-snug cursor-pointer select-none">
-                  I agree to the <span className="font-semibold text-[#0284C7] underline underline-offset-2">Terms &amp; Conditions</span> and <span className="font-semibold text-[#0284C7] underline underline-offset-2">Privacy Policy</span>.
+                <label htmlFor="tc-checkbox" className="text-sm text-body leading-snug cursor-pointer select-none">
+                  I agree to the <span className="font-semibold text-signal underline underline-offset-2">Terms &amp; Conditions</span> and <span className="font-semibold text-signal underline underline-offset-2">Privacy Policy</span>.
                 </label>
               </div>
 
@@ -175,9 +176,9 @@ export default function SignupPage() {
               </button>
             </form>
 
-            <p className="mt-6 text-center text-[14px] text-[#3E4754]">
+            <p className="mt-6 text-center text-sm text-body">
               Already have account?{' '}
-              <Link href="/login" className="font-bold text-[#0284C7] hover:text-[#0271B5]">
+              <Link href="/login" className="font-bold text-signal hover:text-signal">
                 Sign in
               </Link>
             </p>

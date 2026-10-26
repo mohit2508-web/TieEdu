@@ -316,7 +316,7 @@ export const Sheet: React.FC<SheetProps> = ({
                 )}
                 onPointerDown={isDraggable ? (event) => dragControls.start(event) : undefined}
               >
-                <h2 className="text-[15px] font-semibold text-[color:var(--text-heading)]">{title}</h2>
+                <h2 className="text-base font-semibold text-[color:var(--text-heading)]">{title}</h2>
                 <button
                   type="button"
                   onClick={onClose}

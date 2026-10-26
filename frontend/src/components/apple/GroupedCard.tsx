@@ -11,7 +11,7 @@ export function GroupedCard(props: {
     <section className={props.className}>
       {(props.title || props.action) ? (
         <div className="mb-2 flex items-center justify-between px-1">
-          <h2 className="text-[20px] font-semibold tracking-tight" style={{ color: 'var(--apple-label)' }}>{props.title}</h2>
+          <h2 className="text-xl font-semibold tracking-tight" style={{ color: 'var(--apple-label)' }}>{props.title}</h2>
           {props.action}
         </div>
       ) : null}
@@ -41,13 +41,13 @@ export function AppleRow(props: {
         </span>
       ) : null}
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[15px]" style={{ color: 'var(--apple-label)' }}>{props.title}</span>
+        <span className="block truncate text-base" style={{ color: 'var(--apple-label)' }}>{props.title}</span>
         {props.sub ? (
-          <span className="block truncate text-[12px] leading-snug" style={{ color: 'var(--apple-label-2)' }}>{props.sub}</span>
+          <span className="block truncate text-xs leading-snug" style={{ color: 'var(--apple-label-2)' }}>{props.sub}</span>
         ) : null}
       </span>
       {props.value ? (
-        <span className="shrink-0 text-[15px]" style={{ color: 'var(--apple-label-3)' }}>{props.value}</span>
+        <span className="shrink-0 text-base" style={{ color: 'var(--apple-label-2)' }}>{props.value}</span>
       ) : null}
       {props.chevron !== false ? <ChevronChevron /> : null}
     </button>

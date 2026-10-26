@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { ArrowLeft, Clock, FileText, Award, AlertTriangle, PlayCircle, CheckCircle2 } from 'lucide-react';
 import { fetchSkillDetailApi, SkillTestSkill, SkillTestTopic, SkillTestAssessment } from '@/lib/skillTestApi';
 
-export default function AssessmentOverview() {
+import { nameFromSlug, withPageTitle } from '@/components/common/withPageTitle';
+function AssessmentOverview() {
   const router = useRouter();
   const { slug } = router.query;
   const [skill, setSkill] = useState<SkillTestSkill | null>(null);
@@ -32,7 +33,7 @@ export default function AssessmentOverview() {
 
         <div className="rounded-2xl bg-white shadow-sm border border-gray-200 p-6 sm:p-8">
           <div className="text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-[#0F7BFF]">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-signal-soft text-signal">
               <PlayCircle className="h-7 w-7" />
             </div>
             <h1 className="mt-4 text-2xl font-bold text-gray-900">{skillName} Skill Assessment</h1>
@@ -48,7 +49,7 @@ export default function AssessmentOverview() {
               const Icon = item.icon;
               return (
                 <div key={item.label} className="rounded-xl bg-gray-50 border border-gray-200 p-3 text-center">
-                  <Icon className="mx-auto h-5 w-5 text-[#0F7BFF]" />
+                  <Icon className="mx-auto h-5 w-5 text-signal" />
                   <p className="mt-1 text-xs text-gray-500">{item.label}</p>
                   <p className="text-sm font-semibold text-gray-900">{item.value}</p>
                 </div>
@@ -60,7 +61,7 @@ export default function AssessmentOverview() {
             <h2 className="text-sm font-semibold text-gray-900">Topics Covered</h2>
             <div className="mt-2 flex flex-wrap gap-2">
               {(topics.length > 0 ? topics.map((t) => t.name) : ['Fundamentals', 'Core Concepts', 'Practical Understanding', 'Scenario-based']).map((t) => (
-                <span key={t} className="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-[#0F7BFF]">
+                <span key={t} className="rounded-full bg-signal-soft px-3 py-1 text-xs font-medium text-signal">
                   {t}
                 </span>
               ))}
@@ -84,7 +85,7 @@ export default function AssessmentOverview() {
           <div className="mt-6 flex flex-col gap-3">
             <Link
               href={`/skill-test/${slug}/assessment`}
-              className="inline-flex items-center justify-center rounded-full bg-[#0F7BFF] px-8 py-3.5 text-sm font-semibold text-white shadow-sm hover:bg-[#0C5AD9] transition-colors"
+              className="inline-flex items-center justify-center rounded-full bg-signal px-8 py-3.5 text-sm font-semibold text-white shadow-sm hover:bg-signal transition-colors"
             >
               Start Assessment
             </Link>
@@ -100,3 +101,7 @@ export default function AssessmentOverview() {
     </div>
   );
 }
+
+export default withPageTitle(AssessmentOverview, (q) => `${nameFromSlug(q.slug)} test overview`,
+  (q) => `What the ${nameFromSlug(q.slug)} skill test covers, how long it takes and how it is scored, before you start.`
+);

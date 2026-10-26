@@ -67,7 +67,8 @@ check('a signed-out visitor cannot see admin destinations', () => {
   ok(!ids.includes('page:admin'), 'admin leaked to signed-out');
   ok(!ids.includes('page:campus'), 'campus leaked to signed-out');
   ok(ids.includes('page:pricing'), 'pricing is public');
-  ok(ids.includes('page:vaults'), 'vaults is public');
+  ok(ids.includes('page:companies'), 'the company list is public');
+  ok(ids.includes('page:home'), 'home is public');
 });
 
 check('a signed-in student gets the same list as a visitor', () => {

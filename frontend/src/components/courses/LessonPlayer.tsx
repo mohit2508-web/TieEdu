@@ -265,11 +265,11 @@ export const LessonPlayer: React.FC<{
           }}
         />
         {rejectedNote && (
-          <p className="mt-2 rounded-lg bg-[var(--bg-sky-soft)] px-3 py-2 text-[11px] leading-relaxed text-[var(--brand-sky-strong)]">
+          <p className="mt-2 rounded-lg bg-[var(--bg-sky-soft)] px-3 py-2 text-xs leading-relaxed text-[var(--brand-sky-strong)]">
             {rejectedNote}
           </p>
         )}
-        {beatError && <p className="mt-2 text-[11px] text-[var(--color-error)]">{beatError}</p>}
+        {beatError && <p className="mt-2 text-xs text-[var(--color-error)]">{beatError}</p>}
       </section>
     ) : null;
 
@@ -385,7 +385,7 @@ export const LessonPlayer: React.FC<{
       )}
 
       {readGated && (
-        <p className="mb-6 flex items-center gap-2 rounded-lg bg-[var(--bg-sky-soft)] px-3 py-2 text-[11px] leading-relaxed text-[var(--brand-sky-strong)]">
+        <p className="mb-6 flex items-center gap-2 rounded-lg bg-[var(--bg-sky-soft)] px-3 py-2 text-xs leading-relaxed text-[var(--brand-sky-strong)]">
           <FileText size={13} className="shrink-0" />
           {state.read_percent >= 90
             ? 'Nearly there — keep reading to finish this lesson.'
@@ -413,7 +413,7 @@ export const LessonPlayer: React.FC<{
               onClick={() => onNavigate(previousLesson.id)}
               className="focus-ring min-h-[2.75rem] rounded-lg border border-[var(--border-strong)] bg-[var(--bg-surface)] px-4 py-2 text-left text-sm font-semibold text-[var(--ink)] transition-colors hover:bg-[var(--bg-surface-hover)] sm:max-w-[48%]"
             >
-              <span className="block text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+              <span className="block text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">
                 Previous
               </span>
               <span className="mt-0.5 block truncate">{previousLesson.title}</span>
@@ -430,7 +430,7 @@ export const LessonPlayer: React.FC<{
               title={complete ? undefined : 'Finish this lesson to unlock the next one.'}
               className="focus-ring min-h-[2.75rem] rounded-lg border border-[var(--border-strong)] bg-[var(--bg-surface)] px-4 py-2 text-left text-sm font-semibold text-[var(--ink)] transition-colors hover:bg-[var(--bg-surface-hover)] disabled:cursor-not-allowed disabled:opacity-50 sm:max-w-[48%] sm:text-right"
             >
-              <span className="block text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+              <span className="block text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">
                 Next
               </span>
               <span className="mt-0.5 flex items-center justify-end gap-1.5 truncate">
@@ -502,7 +502,7 @@ export const LessonPlayer: React.FC<{
               ) : (
                 <>
                   {complete && nextLesson && (
-                    <p className="truncate text-[11px] font-semibold tracking-wide text-[var(--text-muted)] uppercase">
+                    <p className="truncate text-xs font-semibold tracking-wide text-[var(--text-muted)] uppercase">
                       Up next
                     </p>
                   )}
@@ -602,7 +602,7 @@ const QuizForm: React.FC<{
         <h3 className="text-base font-bold text-[var(--ink)]">
           {questions.length} questions
         </h3>
-        <span className="text-[11px] text-[var(--text-muted)]">
+        <span className="text-xs text-[var(--text-muted)]">
           {passingPercent}% to pass
         </span>
       </div>
@@ -664,7 +664,7 @@ const QuizForm: React.FC<{
         <div>
           {oneAtATime ? (
             <>
-              <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+              <p className="mb-3 text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">
                 Question {focusedQ + 1} of {questions.length}
               </p>
               {(() => {
@@ -734,7 +734,7 @@ const QuizForm: React.FC<{
                 )}
               </div>
               {focusedQ === questions.length - 1 && !answeredAll && (
-                <p className="mt-2 text-[11px] text-[var(--text-muted)]">
+                <p className="mt-2 text-xs text-[var(--text-muted)]">
                   Answer every question to submit — use Back to fill any you skipped.
                 </p>
               )}
@@ -787,7 +787,7 @@ const QuizForm: React.FC<{
                 {busy ? 'Marking…' : alreadyPassed ? 'Submit again' : 'Submit answers'}
               </button>
               {!answeredAll && (
-                <p className="mt-2 text-[11px] text-[var(--text-muted)]">Answer every question to submit.</p>
+                <p className="mt-2 text-xs text-[var(--text-muted)]">Answer every question to submit.</p>
               )}
             </>
           )}

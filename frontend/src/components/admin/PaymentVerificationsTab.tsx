@@ -58,14 +58,14 @@ export const PaymentVerificationsTab: React.FC = () => {
     <div className="space-y-5">
       <div>
         <p className="eyebrow">#09 — Payments</p>
-        <h2 className="text-xl font-extrabold text-[#10151C] mt-1">UPI payment verification</h2>
+        <h2 className="text-xl font-extrabold text-heading mt-1">UPI payment verification</h2>
         <p className="text-sm text-gray-500 mt-1 max-w-2xl">
           Students confirm their transfer after paying you via UPI. Check the amount against your UPI app, then verify to unlock. Only approve payments you can actually see in your bank/UPS account.
         </p>
       </div>
 
       <div className="flex items-center gap-2">
-        <button onClick={load} className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#1F3A5F] hover:bg-[#2b4d75] text-white rounded-xl text-xs font-bold">
+        <button onClick={load} className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-brand-ink hover:bg-brand-ink text-white rounded-xl text-xs font-bold">
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} /> Refresh queue
         </button>
         {!loading && (
@@ -83,7 +83,7 @@ export const PaymentVerificationsTab: React.FC = () => {
         <div className="flex items-center justify-center py-16 text-gray-400 text-sm">Loading pending payments…</div>
       ) : pending.length === 0 ? (
         <div className="bg-white border border-gray-200 rounded-3xl p-12 text-center text-sm text-gray-400 space-y-3">
-          <div className="mx-auto w-14 h-14 rounded-2xl bg-[#FAFAF9] text-gray-300 flex items-center justify-center">
+          <div className="mx-auto w-14 h-14 rounded-2xl bg-app-warm text-gray-300 flex items-center justify-center">
             <Wallet className="w-7 h-7" />
           </div>
           <p className="font-bold text-gray-500">No payments awaiting verification</p>
@@ -96,16 +96,16 @@ export const PaymentVerificationsTab: React.FC = () => {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full text-[10px] font-bold uppercase tracking-wide">Awaiting verification</span>
+                    <span className="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full text-xs font-bold uppercase tracking-wide">Awaiting verification</span>
                     <span className="text-xs font-mono text-gray-400">{p.id}</span>
                   </div>
-                  <p className="mt-1.5 font-extrabold text-[#10151C]">{p.user_name} <span className="text-sm font-semibold text-gray-400">· {p.user_email}</span></p>
+                  <p className="mt-1.5 font-extrabold text-heading">{p.user_name} <span className="text-sm font-semibold text-gray-400">· {p.user_email}</span></p>
                   <p className="text-xs text-gray-500 mt-0.5">Items: {p.item_names.join(', ') || '—'}{p.coupon_code ? ` · coupon ${p.coupon_code}` : ''}</p>
                   <p className="text-xs text-gray-400 mt-0.5">Confirmed {new Date(p.confirmed_at).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
                 </div>
                 <div className="text-right">
-                  <div className="text-2xl font-extrabold text-[#1F3A5F]">₹{p.amount_inr}</div>
-                  <div className="text-[11px] text-gray-400 flex items-center justify-end gap-1"><Hourglass className="w-3 h-3" /> Exact amount to check</div>
+                  <div className="text-2xl font-extrabold text-brand-ink">₹{p.amount_inr}</div>
+                  <div className="text-xs text-gray-400 flex items-center justify-end gap-1"><Hourglass className="w-3 h-3" /> Exact amount to check</div>
                 </div>
               </div>
 
@@ -115,7 +115,7 @@ export const PaymentVerificationsTab: React.FC = () => {
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
                     placeholder="Reason (shown to the student) — e.g. 'No matching transfer received'"
-                    className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0284C7]/30"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-signal/30"
                   />
                 </div>
               )}
@@ -141,8 +141,8 @@ export const PaymentVerificationsTab: React.FC = () => {
         </div>
       )}
 
-      <div className="bg-sky-50 border border-sky-100 rounded-2xl p-4 text-[13px] text-[#075985] flex items-start gap-2.5">
-        <CheckCircle2 className="w-4 h-4 text-[#0284C7] mt-0.5 shrink-0" />
+      <div className="bg-signal-soft border border-line rounded-2xl p-4 text-sm text-signal-hover flex items-start gap-2.5">
+        <CheckCircle2 className="w-4 h-4 text-signal mt-0.5 shrink-0" />
         <p>Verifying creates a real unlock record and increments revenue in Analytics. Every action is written to the audit ledger for transparency.</p>
       </div>
     </div>

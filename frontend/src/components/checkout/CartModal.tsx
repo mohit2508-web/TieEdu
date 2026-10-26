@@ -11,17 +11,13 @@ import { useCart } from '@/context/CartContext';
 import { useShell } from '@/context/ShellContext';
 import { PENDING_COUPON_KEY } from '@/components/home/OffersStrip';
 import { Sheet } from '@/components/common/Sheet';
-import {
-  X, ShoppingBag, Lock, ShieldCheck, CheckCircle2, Trash2,
-  Tag, ArrowRight, Sparkles, RefreshCw, PartyPopper, Layers, Zap,
-  Copy, ArrowLeft, Hourglass, AlertTriangle, QrCode
-} from 'lucide-react';
+import { X, ShoppingBag, Lock, ShieldCheck, CheckCircle2, Trash2, Tag, ArrowRight, RefreshCw, PartyPopper, Layers, Zap, Copy, ArrowLeft, Hourglass, AlertTriangle, QrCode } from 'lucide-react';
 
-const inputCls = "w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-[#FAFAF9] focus:outline-none focus:ring-2 focus:ring-[#0284C7] focus:bg-white";
+const inputCls = "w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-app-warm focus:outline-none focus:ring-2 focus:ring-signal focus:bg-white";
 
 const ROUND_CHIP: Record<string, string> = {
   OA: 'bg-amber-100 text-amber-800',
-  Technical: 'bg-blue-100 text-blue-700',
+  Technical: 'bg-signal-soft text-signal-hover',
   SystemDesign: 'bg-purple-100 text-purple-700',
   HR: 'bg-emerald-100 text-emerald-700',
   Managerial: 'bg-teal-100 text-teal-700',
@@ -379,20 +375,20 @@ export const CartModal: React.FC = () => {
       header={
         <div className="flex items-center justify-between px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200 shrink-0 bg-white">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#1F3A5F]/5 border border-[#1F3A5F]/10 text-[#1F3A5F] flex items-center justify-center shadow-sm">
-              <ShoppingBag className="w-5 h-5 text-[#B45309]" />
+            <div className="w-10 h-10 rounded-xl bg-brand-ink/5 border border-brand-ink/10 text-brand-ink flex items-center justify-center shadow-sm">
+              <ShoppingBag className="w-5 h-5 text-amber-deep" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-bold text-base text-[#1F3A5F]">Your Vault Cart</h3>
-                <span className="px-2 py-0.5 bg-amber-100 text-amber-800 border border-amber-200 rounded-full text-[11px] font-bold">
+                <h3 className="font-bold text-base text-brand-ink">Your Vault Cart</h3>
+                <span className="px-2 py-0.5 bg-amber-100 text-amber-800 border border-amber-200 rounded-full text-xs font-bold">
                   {items.length} {items.length === 1 ? 'item' : 'items'}
                 </span>
               </div>
-              <p className="text-[13px] text-[color:var(--text-muted)]">Combo pricing · server-validated coupons</p>
+              <p className="text-sm text-[color:var(--text-muted)]">Combo pricing · server-validated coupons</p>
             </div>
           </div>
-          <button onClick={onClose} aria-label="Close cart" className="w-10 h-10 rounded-full bg-[#FAFAF9] hover:bg-[#F0EFEC] text-[color:var(--text-muted)] flex items-center justify-center transition-colors">
+          <button onClick={onClose} aria-label="Close cart" className="w-10 h-10 rounded-full bg-app-warm hover:bg-surface-hover text-[color:var(--text-muted)] flex items-center justify-center transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -403,18 +399,18 @@ export const CartModal: React.FC = () => {
         {step === 'pay' && (
           /* UPI PAYMENT SCREEN */
           <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
-            <button onClick={resetToCart} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[--text-muted] hover:text-[#1F3A5F]">
+            <button onClick={resetToCart} className="inline-flex items-center gap-1.5 text-sm font-semibold text-[--text-muted] hover:text-brand-ink">
               <ArrowLeft className="w-4 h-4" /> Back to cart
             </button>
 
-            <div className="bg-gradient-to-br from-[#1F3A5F] to-[#2A4D7E] rounded-2xl text-white p-6 text-center space-y-4 shadow-md">
-              <div className="flex items-center justify-center gap-2 text-[#8AB9F1] text-xs font-bold uppercase tracking-widest">
+            <div className="bg-brand-ink rounded-2xl text-white p-6 text-center space-y-4 shadow-md">
+              <div className="flex items-center justify-center gap-2 text-white/80 text-xs font-bold uppercase tracking-widest">
                 <QrCode className="w-4 h-4" /> Pay via UPI
               </div>
               <div>
-                <div className="text-[13px] text-[#B8CCE4]">Amount to pay</div>
+                <div className="text-sm text-white/80">Amount to pay</div>
                 <div className="text-4xl font-extrabold mt-1">₹{finalTotal}</div>
-                <div className="text-[12px] text-[#8AB9F1] mt-1">Pay the exact amount — larger/smaller transfers delay verification</div>
+                <div className="text-xs text-white/80 mt-1">Pay the exact amount — larger/smaller transfers delay verification</div>
               </div>
 
               {upiQr ? (
@@ -440,31 +436,31 @@ export const CartModal: React.FC = () => {
                 </div>
               ) : upiId ? (
                 <div className="bg-white/10 border border-white/20 rounded-xl p-4">
-                  <div className="text-[12px] text-[#B8CCE4] mb-2">Pay to UPI ID</div>
-                  <button onClick={copyUpiId} className="inline-flex items-center gap-2 bg-white text-[#1F3A5F] font-mono font-bold px-4 py-2.5 rounded-lg text-sm hover:bg-[#F0EFEC] transition-colors">
+                  <div className="text-xs text-white/80 mb-2">Pay to UPI ID</div>
+                  <button onClick={copyUpiId} className="inline-flex items-center gap-2 bg-white text-brand-ink font-bold px-4 py-2.5 rounded-lg text-sm hover:bg-surface-hover transition-colors">
                     {upiId}
                     {copied ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
                   </button>
-                  <p className="text-[12px] text-[#B8CCE4] mt-2">Or {copied ? 'copied!' : 'tap to copy'} — open any UPI app and send the exact amount.</p>
+                  <p className="text-xs text-white/80 mt-2">Or {copied ? 'copied!' : 'tap to copy'} — open any UPI app and send the exact amount.</p>
                 </div>
               ) : (
-                <div className="bg-white/10 border border-white/20 rounded-xl p-4 text-[13px]">
-                  <p className="text-[#B8CCE4]">{merchantName} hasn&apos;t linked a UPI ID yet. Please contact support@tieedu.in to complete your purchase.</p>
+                <div className="bg-white/10 border border-white/20 rounded-xl p-4 text-sm">
+                  <p className="text-white/80">{merchantName} hasn&apos;t linked a UPI ID yet. Please contact support@tieedu.in to complete your purchase.</p>
                 </div>
               )}
 
               {upiInstructions && (
-                <p className="text-[13px] text-[#B8CCE4] leading-relaxed">{upiInstructions}</p>
+                <p className="text-sm text-white/80 leading-relaxed">{upiInstructions}</p>
               )}
             </div>
 
-            <div className="bg-[#FAFAF9] border border-gray-200 rounded-xl p-4 space-y-2 text-[13px] text-[#4A4A4A]">
+            <div className="bg-app-warm border border-gray-200 rounded-xl p-4 space-y-2 text-sm text-body">
               <div className="flex items-start gap-2">
-                <CheckCircle2 className="w-4 h-4 text-[#1E8E5A] mt-0.5 shrink-0" />
+                <CheckCircle2 className="w-4 h-4 text-success mt-0.5 shrink-0" />
                 <span>After transferring, tap <b>“I&apos;ve made the payment”</b>. Our team verifies every UPI payment manually before unlocking.</span>
               </div>
               <div className="flex items-start gap-2">
-                <Hourglass className="w-4 h-4 text-[#B45309] mt-0.5 shrink-0" />
+                <Hourglass className="w-4 h-4 text-amber-deep mt-0.5 shrink-0" />
                 <span>Verification usually takes a few minutes. Your vault unlocks automatically once approved.</span>
               </div>
             </div>
@@ -479,7 +475,7 @@ export const CartModal: React.FC = () => {
             </button>
 
             {payError && (
-              <div className="text-[12px] text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{payError}</div>
+              <div className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{payError}</div>
             )}
           </div>
         )}
@@ -491,20 +487,20 @@ export const CartModal: React.FC = () => {
               <div className="w-20 h-20 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center shadow-md">
                 <RefreshCw className="w-10 h-10 animate-spin" />
               </div>
-              <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#E8A33D] border-2 border-white" />
+              <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-money border-2 border-white" />
             </div>
-            <h4 className="font-bold text-xl text-[#1A1A1A]">Payment received — verification in progress</h4>
-            <p className="text-[13px] text-[#4A4A4A] max-w-sm leading-relaxed">
-              Order <b className="text-[#1F3A5F]">{order?.id}</b> is now with our team. We manually verify every UPI transfer; your vault unlocks automatically once approved. This page updates on its own.
+            <h4 className="font-bold text-xl text-heading">Payment received — verification in progress</h4>
+            <p className="text-sm text-body max-w-sm leading-relaxed">
+              Order <b className="text-brand-ink">{order?.id}</b> is now with our team. We manually verify every UPI transfer; your vault unlocks automatically once approved. This page updates on its own.
             </p>
-            <div className="flex items-center gap-2 text-[12px] text-[--text-muted]">
+            <div className="flex items-center gap-2 text-xs text-[--text-muted]">
               <Hourglass className="w-4 h-4" /> Usually approved within minutes
             </div>
-            <button onClick={onClose} className="mt-2 px-5 py-2.5 bg-[#FAFAF9] hover:bg-[#F0EFEC] border border-gray-200 text-[#4A4A4A] text-[13px] font-semibold rounded-xl transition-all">
+            <button onClick={onClose} className="mt-2 px-5 py-2.5 bg-app-warm hover:bg-surface-hover border border-gray-200 text-body text-sm font-semibold rounded-xl transition-all">
               Close & track later from your account
             </button>
             {payError && (
-              <div className="text-[12px] text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2 w-full">{payError}</div>
+              <div className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2 w-full">{payError}</div>
             )}
           </div>
         )}
@@ -515,16 +511,16 @@ export const CartModal: React.FC = () => {
             <div className="w-20 h-20 rounded-full bg-red-100 text-red-600 flex items-center justify-center shadow-md">
               <AlertTriangle className="w-10 h-10" />
             </div>
-            <h4 className="font-bold text-xl text-[#1A1A1A]">Payment couldn&apos;t be verified</h4>
-            <p className="text-[13px] text-[#4A4A4A] max-w-sm leading-relaxed">
+            <h4 className="font-bold text-xl text-heading">Payment couldn&apos;t be verified</h4>
+            <p className="text-sm text-body max-w-sm leading-relaxed">
               {payError || 'Our team could not match this payment to a transfer. If you did pay, share your screenshot with the UTR at support@tieedu.in.'}
             </p>
-            <div className="px-4 py-2.5 bg-[#FAFAF9] border border-gray-200 rounded-xl text-[13px] text-[#4A4A4A]">
-              Order <b className="text-[#1F3A5F]">{order?.id}</b>
+            <div className="px-4 py-2.5 bg-app-warm border border-gray-200 rounded-xl text-sm text-body">
+              Order <b className="text-brand-ink">{order?.id}</b>
             </div>
             <button
               onClick={resetToCart}
-              className="mt-2 px-5 py-2.5 bg-[#1F3A5F] hover:bg-[#2A4D7E] text-white text-[13px] font-bold rounded-xl transition-all"
+              className="mt-2 px-5 py-2.5 bg-brand-ink hover:bg-brand-ink text-white text-sm font-bold rounded-xl transition-all"
             >
               Try again with a new order
             </button>
@@ -534,14 +530,14 @@ export const CartModal: React.FC = () => {
         {step === 'cart' && items.length === 0 && (
           /* EMPTY STATE */
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
-            <div className="w-14 h-14 rounded-2xl bg-[#FAFAF9] text-[--text-muted] flex items-center justify-center border border-gray-200">
+            <div className="w-14 h-14 rounded-2xl bg-app-warm text-[--text-muted] flex items-center justify-center border border-gray-200">
               <ShoppingBag className="w-7 h-7" />
             </div>
-            <h4 className="font-bold text-lg text-[#1A1A1A]">Your cart is empty</h4>
-            <p className="text-[13px] text-[--text-muted] max-w-xs">
+            <h4 className="font-bold text-lg text-heading">Your cart is empty</h4>
+            <p className="text-sm text-[--text-muted] max-w-xs">
               Add a premium round pack or the full {companyName} Complete Pack to start.
             </p>
-            <button onClick={onClose} className="px-5 py-2.5 bg-[#1F3A5F] hover:bg-[#2A4D7E] text-white text-[14px] font-semibold rounded-xl transition-all shadow-sm">
+            <button onClick={onClose} className="px-5 py-2.5 bg-brand-ink hover:bg-brand-ink text-white text-sm font-semibold rounded-xl transition-all shadow-sm">
               Browse Vault Directory
             </button>
           </div>
@@ -556,14 +552,14 @@ export const CartModal: React.FC = () => {
               {missingModules.length > 0 && (
                 <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-4 space-y-3">
                   <div className="flex items-start gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-[#E8A33D] text-[#241A06] flex items-center justify-center shrink-0">
+                    <div className="w-9 h-9 rounded-xl bg-money text-money-ink flex items-center justify-center shrink-0">
                       <Layers className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="text-sm font-extrabold text-[#1F3A5F]">
+                      <h4 className="text-sm font-extrabold text-brand-ink">
                         Complete Pack for just ₹{Math.max(0, comboFillSavings)} more — unlock everything
                       </h4>
-                      <p className="text-[13px] text-[#4A4A4A] leading-relaxed mt-1">
+                      <p className="text-sm text-body leading-relaxed mt-1">
                         Missing {missingModules.map(m => m.round_type).filter(Boolean).join(', ') || 'rounds'} included — add them and save more with the combo. Compare: {summary.moduleCount} module{summary.moduleCount === 1 ? '' : 's'} = ₹{summary.subtotal}, the whole pack = ₹{filledSubtotal} only.
                       </p>
                     </div>
@@ -571,13 +567,13 @@ export const CartModal: React.FC = () => {
                   <div className="flex gap-2">
                     <button
                       onClick={() => onAddModules?.(missingModules)}
-                      className="flex-1 px-3 py-2 bg-white border-2 border-amber-300 hover:border-amber-400 text-amber-800 text-[13px] font-bold rounded-xl transition-all"
+                      className="flex-1 px-3 py-2 bg-white border-2 border-amber-300 hover:border-amber-400 text-amber-800 text-sm font-bold rounded-xl transition-all"
                     >
                       <Zap className="w-3.5 h-3.5 inline -mt-0.5 mr-1" /> Add remaining {missingModules.length}
                     </button>
                     <button
                       onClick={() => onAddCompletePack?.()}
-                      className="flex-1 px-3 py-2 bg-[#E8A33D] hover:bg-[#D4902C] text-[#241A06] text-[13px] font-bold rounded-xl transition-all"
+                      className="flex-1 px-3 py-2 bg-money hover:bg-money text-money-ink text-sm font-bold rounded-xl transition-all"
                     >
                       Complete Pack ₹{filledSubtotal}
                     </button>
@@ -608,7 +604,7 @@ export const CartModal: React.FC = () => {
                       : isCompanyLegacy ? 'Company vault unlock' : 'All-Access Placement Pass';
 
                   return (
-                    <div key={idx} className="flex items-center justify-between p-3.5 bg-[#FAFAF9] rounded-xl border border-gray-200 text-sm hover:border-[#0284C7]/40 transition-all">
+                    <div key={idx} className="flex items-center justify-between p-3.5 bg-app-warm rounded-xl border border-gray-200 text-sm hover:border-signal/40 transition-all">
                       <div className="flex items-center gap-3 min-w-0">
                         {logoUrl ? (
                           <Image
@@ -621,27 +617,27 @@ export const CartModal: React.FC = () => {
                             className="w-10 h-10 rounded-lg object-cover border bg-white p-0.5"
                           />
                         ) : (
-                          <div className="w-10 h-10 rounded-lg bg-[#1F3A5F] text-white flex items-center justify-center font-bold text-xs">
+                          <div className="w-10 h-10 rounded-lg bg-brand-ink text-white flex items-center justify-center font-bold text-xs">
                             {isModule ? 'PK' : isCourse ? 'CRS' : 'PRO'}
                           </div>
                         )}
                         <div className="min-w-0">
-                          <span className="font-bold text-[#1A1A1A] block truncate">{name}</span>
+                          <span className="font-bold text-heading block truncate">{name}</span>
                           <div className="flex items-center gap-1.5 mt-0.5">
-                            <span className="text-[13px] text-[--text-muted] truncate">{label}</span>
+                            <span className="text-sm text-[--text-muted] truncate">{label}</span>
                             {isModule && mi!.round_type && (
-                              <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded ${ROUND_CHIP[mi!.round_type] || 'bg-gray-100 text-gray-600'}`}>
+                              <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${ROUND_CHIP[mi!.round_type] || 'bg-gray-100 text-gray-600'}`}>
                                 {mi!.round_type}
                               </span>
                             )}
                             {isModule && mi!.module_ids && mi!.module_ids.length > 0 && (
-                              <span className="text-[11px] font-bold px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700">BEST DEAL</span>
+                              <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700">BEST DEAL</span>
                             )}
                           </div>
                         </div>
                       </div>
                       <div className="flex items-center gap-3 shrink-0">
-                        <span className="font-bold text-sm text-[#1F3A5F]">₹{price}</span>
+                        <span className="font-bold text-sm text-brand-ink">₹{price}</span>
                         <button onClick={() => remove(idx)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Remove item">
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -652,9 +648,9 @@ export const CartModal: React.FC = () => {
               </div>
 
               {/* Coupon Section */}
-              <div className="bg-[#FAFAF9] p-4 rounded-xl border border-gray-200 space-y-2.5">
-                <span className="text-[13px] font-bold text-[#4A4A4A] flex items-center gap-1.5">
-                  <Tag className="w-4 h-4 text-[#B45309]" /> Apply Discount Code <span className="text-[12px] font-semibold text-emerald-600">server-validated</span>
+              <div className="bg-app-warm p-4 rounded-xl border border-gray-200 space-y-2.5">
+                <span className="text-sm font-bold text-body flex items-center gap-1.5">
+                  <Tag className="w-4 h-4 text-amber-deep" /> Apply Discount Code <span className="text-xs font-semibold text-emerald-600">server-validated</span>
                 </span>
 
                 <div className="flex gap-2">
@@ -673,7 +669,7 @@ export const CartModal: React.FC = () => {
                 onChange={(e) => setCouponCode(e.target.value)}
                     className={inputCls}
                   />
-                  <button onClick={() => applyCouponHandler(couponCode)} disabled={applyingCoupon} className="px-4 py-2 bg-[#1F3A5F] hover:bg-[#2A4D7E] disabled:opacity-60 text-white text-[13px] font-bold rounded-xl transition-all inline-flex items-center gap-1.5">
+                  <button onClick={() => applyCouponHandler(couponCode)} disabled={applyingCoupon} className="px-4 py-2 bg-brand-ink hover:bg-brand-ink disabled:opacity-60 text-white text-sm font-bold rounded-xl transition-all inline-flex items-center gap-1.5">
                     {applyingCoupon ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Tag className="w-3.5 h-3.5" />} Apply
                   </button>
                 </div>
@@ -684,16 +680,16 @@ export const CartModal: React.FC = () => {
                       <button
                         key={c.id}
                         onClick={() => applyCouponHandler(c.code)}
-                        className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 text-[12px] font-bold rounded-md transition-all flex items-center gap-1"
+                        className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 text-xs font-bold rounded-md transition-all flex items-center gap-1"
                       >
-                        <Sparkles className="w-3 h-3 text-[#B45309]" /> {c.label || c.code}
+                        <Tag className="w-3 h-3 text-amber-deep" /> {c.label || c.code}
                       </button>
                     ))}
                   </div>
                 )}
 
                 {couponMessage && (
-                  <p className={`text-[13px] font-semibold ${couponMessage.type === 'success' ? 'text-emerald-700' : 'text-red-600'}`}>
+                  <p className={`text-sm font-semibold ${couponMessage.type === 'success' ? 'text-emerald-700' : 'text-red-600'}`}>
                     {couponMessage.text}
                   </p>
                 )}
@@ -701,9 +697,9 @@ export const CartModal: React.FC = () => {
 
               {/* Cross-sell */}
               {suggestedCompanies.length > 0 && (
-                <div className="bg-[#FAFAF9] p-4 rounded-xl border border-gray-200 space-y-2.5">
-                  <span className="text-[13px] font-bold text-[#4A4A4A] flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-[#B45309]" /> Students also add these packs
+                <div className="bg-app-warm p-4 rounded-xl border border-gray-200 space-y-2.5">
+                  <span className="text-sm font-bold text-body flex items-center gap-1.5">
+                    <Layers className="w-4 h-4 text-amber-deep" /> Students also add these packs
                   </span>
                   {suggestedCompanies.map(c => {
                     // Real, per-company pack price — a vault with one premium round is
@@ -714,20 +710,20 @@ export const CartModal: React.FC = () => {
                     <button
                       key={c.id}
                       onClick={() => onAddCompany?.(c)}
-                      className="w-full flex items-center justify-between gap-3 px-3 py-2.5 bg-white border border-gray-200 hover:border-[#0284C7]/40 rounded-xl transition-all group"
+                      className="w-full flex items-center justify-between gap-3 px-3 py-2.5 bg-white border border-gray-200 hover:border-signal/40 rounded-xl transition-all group"
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <BrandTile name={c.name} src={c.logo_url} className="w-8 h-8 rounded-lg p-0.5" />
                         <div className="text-left min-w-0">
-                          <span className="font-bold text-[13px] text-[#1A1A1A] block truncate">
+                          <span className="font-bold text-sm text-heading block truncate">
                             {c.name} {cRounds > 1 ? 'Complete Pack' : 'Round Pack'}
                           </span>
-                          <span className="text-[13px] text-[--text-muted]">
+                          <span className="text-sm text-[--text-muted]">
                             {c.accuracy_report_count ? `${c.accuracy_report_count} verified detail` : 'Full round-by-round detail'} · {cRounds} Round{cRounds === 1 ? '' : 's'}
                           </span>
                         </div>
                       </div>
-                      <span className="text-[13px] font-extrabold text-[#B45309] group-hover:underline">+ Add ₹{cPrice}</span>
+                      <span className="text-sm font-extrabold text-amber-deep group-hover:underline">+ Add ₹{cPrice}</span>
                     </button>
                     );
                   })}
@@ -735,8 +731,8 @@ export const CartModal: React.FC = () => {
               )}
 
               {/* Payment Method Note */}
-              <div className="bg-sky-50/70 border border-sky-100 rounded-xl p-3.5 text-[13px] text-[#075985] flex items-start gap-2">
-                <ShieldCheck className="w-4 h-4 text-[#0284C7] mt-0.5 shrink-0" />
+              <div className="bg-signal-soft/70 border border-line rounded-xl p-3.5 text-sm text-signal-hover flex items-start gap-2">
+                <ShieldCheck className="w-4 h-4 text-signal mt-0.5 shrink-0" />
                 <span>
                   {paymentMode === 'razorpay'
                     ? 'Checkout runs through Razorpay with card/UPI support — your vault unlocks instantly.'
@@ -746,7 +742,7 @@ export const CartModal: React.FC = () => {
             </div>
 
             {/* Sticky Footer */}
-            <div className="px-4 sm:px-6 py-4 sm:py-5 border-t border-gray-200 bg-[#FAFAF9] shrink-0 space-y-3">
+            <div className="px-4 sm:px-6 py-4 sm:py-5 border-t border-gray-200 bg-app-warm shrink-0 space-y-3">
               <div className="text-sm space-y-1.5">
                 <div className="flex justify-between text-gray-500">
                   <span>Subtotal{summary.savingsTotal > 0 ? ` (${summary.moduleCount} module pack)` : ''}</span><span>₹{summary.subtotal}</span>
@@ -761,12 +757,12 @@ export const CartModal: React.FC = () => {
                     <span>Coupon Discount ({appliedCouponCode})</span><span>-₹{discount}</span>
                   </div>
                 )}
-                <div className="flex justify-between font-bold text-lg text-[#1A1A1A] pt-2 border-t border-dashed border-gray-300">
-                  <span>Total Payable</span><span className="text-[#0284C7]">₹{finalTotal}</span>
+                <div className="flex justify-between font-bold text-lg text-heading pt-2 border-t border-dashed border-gray-300">
+                  <span>Total Payable</span><span className="text-signal">₹{finalTotal}</span>
                 </div>
               </div>
 
-              <button onClick={handlePay} disabled={isProcessing} className="w-full py-3.5 bg-[#E8A33D] hover:bg-[#D4902C] text-[#241A06] text-xs sm:text-sm font-bold rounded-xl flex items-center justify-center gap-2 shadow-md transition-all disabled:opacity-75">
+              <button onClick={handlePay} disabled={isProcessing} className="w-full py-3.5 bg-money hover:bg-money text-money-ink text-xs sm:text-sm font-bold rounded-xl flex items-center justify-center gap-2 shadow-md transition-all disabled:opacity-75">
                 {isProcessing ? (
                   <>
                     <RefreshCw className="w-4 h-4 animate-spin" />
@@ -782,11 +778,11 @@ export const CartModal: React.FC = () => {
               </button>
 
               {payError && (
-                <div className="mt-2 text-[12px] text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{payError}</div>
+                <div className="mt-2 text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{payError}</div>
               )}
 
-              <div className="flex items-center justify-center text-[12px] text-[color:var(--text-muted)] pt-1">
-                <div className="flex items-center gap-1"><ShieldCheck className="w-4 h-4 text-[#1E8E5A]" /> 256-Bit SSL Encrypted</div>
+              <div className="flex items-center justify-center text-xs text-[color:var(--text-muted)] pt-1">
+                <div className="flex items-center gap-1"><ShieldCheck className="w-4 h-4 text-success" /> 256-Bit SSL Encrypted</div>
               </div>
             </div>
           </>

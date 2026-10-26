@@ -16,7 +16,7 @@ export const FreeCourseBanner: React.FC = () => (
     <Reveal className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12">
       <Link
         href="/interview-course"
-        className="group flex flex-col gap-4 rounded-3xl border border-[#0B2439] bg-gradient-to-br from-[#0E2A44] via-[#0F3D63] to-[#0271B5] p-6 sm:flex-row sm:items-center sm:gap-6 sm:p-8 focus-ring relative overflow-hidden"
+        className="group flex flex-col gap-4 rounded-3xl border border-brand-ink bg-gradient-to-br from-brand-ink via-brand-ink to-signal p-6 sm:flex-row sm:items-center sm:gap-6 sm:p-8 focus-ring relative overflow-hidden"
       >
         {/* faint vault grid, decorative */}
         <span
@@ -31,17 +31,17 @@ export const FreeCourseBanner: React.FC = () => (
           }}
         />
         <div className="relative z-10 min-w-0 flex-1 space-y-2 text-left">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 border border-white/25 px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wide text-[#CFEFFF]">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 border border-white/25 px-2.5 py-1 text-xs font-extrabold uppercase tracking-wide text-white">
             100% Free
           </span>
           <h2 className="font-serif-heading text-2xl sm:text-3xl font-extrabold leading-tight text-white">
             The Interview Masterclass
           </h2>
-          <p className="text-[14px] text-white/80">
+          <p className="text-sm text-white/80">
             50 modules · STAR answers · mock interviews — start free, no payment.
           </p>
         </div>
-        <span className="relative z-10 inline-flex min-h-[48px] items-center justify-center gap-2 self-start rounded-2xl bg-white px-6 py-3 text-[15px] font-extrabold text-[#0E2A44] shadow-soft transition-transform group-hover:-translate-y-0.5 sm:self-auto">
+        <span className="relative z-10 inline-flex min-h-[48px] items-center justify-center gap-2 self-start rounded-2xl bg-white px-6 py-3 text-base font-extrabold text-brand-ink shadow-soft transition-transform group-hover:-translate-y-0.5 sm:self-auto">
           <PlayCircle className="w-4 h-4" /> Start free
           <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
         </span>

@@ -101,7 +101,7 @@ const BlockCard: React.FC<{
       : [];
 
   return (
-    <div className="rounded-xl border border-[#E9E7E1] bg-white p-3.5">
+    <div className="rounded-xl border border-line bg-white p-3.5">
       <div className="flex items-center gap-2 mb-2.5">
         <Select
           value={type}
@@ -112,7 +112,7 @@ const BlockCard: React.FC<{
             setType(next);
             onChange({ ...block, block_type: next as CourseLessonBlock['block_type'], payload: emptyPayload(next as BlockType) });
           }}
-          className="w-auto text-[12px] py-1"
+          className="w-auto text-xs py-1"
         >
           {BLOCK_TYPES.map((t) => (
             <option key={t.value} value={t.value}>
@@ -120,7 +120,7 @@ const BlockCard: React.FC<{
             </option>
           ))}
         </Select>
-        <span className="text-[10px] font-mono text-[#9CA3AF]">block {index + 1}</span>
+        <span className="text-xs font-mono text-text-light">block {index + 1}</span>
         <div className="ml-auto flex items-center gap-1.5">
           <Btn onClick={() => onMove(-1)} disabled={index === 0} title="Move up">
             <ArrowUp className="w-3.5 h-3.5" />
@@ -161,7 +161,7 @@ const BlockCard: React.FC<{
               ))}
             </Select>
           </div>
-          <TextArea rows={8} value={p.code || ''} onChange={(e) => set({ code: e.target.value })} className="text-[#E6EDF3] bg-[#1E1E1E]" />
+          <TextArea rows={8} value={p.code || ''} onChange={(e) => set({ code: e.target.value })} className="text-white bg-heading" />
         </div>
       )}
 
@@ -188,7 +188,7 @@ const BlockCard: React.FC<{
             placeholder={'flowchart TD\n  A[Input] --> B{Valid?}\n  B -->|yes| C[Accept]\n  B -->|no| D[Reject]'}
             onChange={(e) => set({ source: e.target.value })}
           />
-          <p className="text-[11px] text-[#9CA3AF]">Mermaid syntax. It is drawn live on the learner page.</p>
+          <p className="text-xs text-text-light">Mermaid syntax. It is drawn live on the learner page.</p>
         </div>
       )}
 
@@ -317,7 +317,7 @@ const BlockCard: React.FC<{
             placeholder="https://... (opens in a new tab)"
             onChange={(e) => set({ url: e.target.value })}
           />
-          <p className="text-[11px] text-[#9CA3AF]">
+          <p className="text-xs text-text-light">
             A plain link, not an embedded player. To make watching this count towards lesson completion, attach it
             as the lesson video instead.
           </p>
@@ -456,7 +456,7 @@ const BlockCard: React.FC<{
               ))}
             </Select>
           </div>
-          <TextArea rows={5} value={p.code || ''} placeholder="Starter code (optional)" onChange={(e) => set({ code: e.target.value })} className="text-[#E6EDF3] bg-[#1E1E1E]" />
+          <TextArea rows={5} value={p.code || ''} placeholder="Starter code (optional)" onChange={(e) => set({ code: e.target.value })} className="text-white bg-heading" />
         </div>
       )}
 
@@ -575,7 +575,7 @@ const BlockCard: React.FC<{
             <TextInput value={p.height ?? ''} placeholder="Height (px)" onChange={(e) => set({ height: Number(e.target.value) })} />
           </div>
           <TextInput value={p.url || ''} placeholder="https://... embed URL" onChange={(e) => set({ url: e.target.value })} />
-          <p className="text-[11px] text-[#9CA3AF]">Only https embeds render. Wokwi / Falstad share links work as iframe sources.</p>
+          <p className="text-xs text-text-light">Only https embeds render. Wokwi / Falstad share links work as iframe sources.</p>
         </div>
       )}
     </div>
@@ -723,19 +723,19 @@ export const AdminLessonEditor: React.FC<{
       )}
 
       {/* Video */}
-      <div className="rounded-xl border border-[#E9E7E1] p-4">
-        <h3 className="text-[12px] font-bold uppercase tracking-wider text-[#6B7280] mb-2.5 flex items-center gap-2">
-          <PlayCircle className="w-3.5 h-3.5 text-[#0284C7]" /> Video
+      <div className="rounded-xl border border-line p-4">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-text-light mb-2.5 flex items-center gap-2">
+          <PlayCircle className="w-3.5 h-3.5 text-signal" /> Video
         </h3>
 
         {lesson.video ? (
           <div className="space-y-2.5">
             <div className="flex items-center gap-2 flex-wrap">
               <Pill tone="green">{lesson.video.provider}</Pill>
-              <span className="text-[13px] font-bold text-[#10151C]">{lesson.video.title}</span>
+              <span className="text-sm font-bold text-heading">{lesson.video.title}</span>
             </div>
-            <div className="text-[12px] text-[#6B7280] font-mono break-all">{lesson.video.url}</div>
-            <p className="text-[12px] text-[#6B7280]">
+            <div className="text-xs text-text-light font-mono break-all">{lesson.video.url}</div>
+            <p className="text-xs text-text-light">
               {lesson.video.duration_minutes
                 ? `Author estimate ${lesson.video.duration_minutes} min. `
                 : ''}
@@ -771,7 +771,7 @@ export const AdminLessonEditor: React.FC<{
       {/* Blocks */}
       <div>
         <div className="flex items-center justify-between mb-2.5">
-          <h3 className="text-[12px] font-bold uppercase tracking-wider text-[#6B7280]">Content blocks</h3>
+          <h3 className="text-xs font-bold uppercase tracking-wider text-text-light">Content blocks</h3>
           <Btn
             onClick={() =>
               setBlocks([...blocks, { id: `new-${blocks.length}`, block_type: 'markdown', block_order: blocks.length + 1, payload: { text: '' } }])
@@ -782,7 +782,7 @@ export const AdminLessonEditor: React.FC<{
         </div>
 
         {blocks.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-[#E9E7E1] p-5 text-center text-[13px] text-[#6B7280]">
+          <p className="rounded-xl border border-dashed border-line p-5 text-center text-sm text-text-light">
             No blocks yet. Add prose, code, a diagram or a table.
           </p>
         ) : (
@@ -804,7 +804,7 @@ export const AdminLessonEditor: React.FC<{
 
       {/* Quiz */}
       <div>
-        <h3 className="text-[12px] font-bold uppercase tracking-wider text-[#6B7280] mb-2.5">Quiz</h3>
+        <h3 className="text-xs font-bold uppercase tracking-wider text-text-light mb-2.5">Quiz</h3>
         <AdminQuizEditor quiz={lesson.quiz} onSave={saveQuiz} onRemove={removeQuiz} />
       </div>
 
@@ -812,12 +812,12 @@ export const AdminLessonEditor: React.FC<{
         <Btn variant="primary" onClick={save} busy={busy}>
           <Save className="w-3.5 h-3.5" /> Save lesson
         </Btn>
-        {saved && <span className="text-[12px] text-emerald-700 font-semibold">Saved.</span>}
+        {saved && <span className="text-xs text-emerald-700 font-semibold">Saved.</span>}
         <a
           href={`/courses/${courseSlug}?lesson=${encodeURIComponent(lesson.id)}`}
           target="_blank"
           rel="noreferrer"
-          className="ml-auto inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-[#0284C7] hover:underline"
+          className="ml-auto inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-signal hover:underline"
         >
           <Eye className="w-3.5 h-3.5" /> Preview as learner
         </a>

@@ -380,7 +380,7 @@ export const TrackedVideoPlayer: React.FC<TrackedVideoPlayerProps> = ({
 
         {showResume && (
           <div className="absolute inset-x-0 bottom-3 flex justify-center px-3 pointer-events-none">
-            <span className="pointer-events-auto inline-flex items-center gap-2 rounded-full bg-black/75 px-3 py-1.5 text-[11px] font-bold text-white backdrop-blur">
+            <span className="pointer-events-auto inline-flex items-center gap-2 rounded-full bg-black/75 px-3 py-1.5 text-xs font-bold text-white backdrop-blur">
               <RotateCcw className="h-3 w-3" />
               Resumed at {formatClock(resumeTarget)}
             </span>
@@ -393,7 +393,7 @@ export const TrackedVideoPlayer: React.FC<TrackedVideoPlayerProps> = ({
       {/* ---- watch progress ---- */}
       <div className="mt-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3">
         <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-          <p className="text-[12px] font-bold text-[var(--ink)]">
+          <p className="text-xs font-bold text-[var(--ink)]">
             {isComplete ? (
               <span className="text-[var(--color-success)]">Watch requirement met</span>
             ) : (
@@ -403,7 +403,7 @@ export const TrackedVideoPlayer: React.FC<TrackedVideoPlayerProps> = ({
               </>
             )}
           </p>
-          <p className="text-[11px] text-[var(--text-muted)] font-mono">
+          <p className="text-xs text-[var(--text-muted)] ">
             {watchedSeconds > 0 ? `${formatClock(watchedSeconds)} of ${formatClock(durationSeconds)}` : 'Not started'}
           </p>
         </div>
@@ -432,7 +432,7 @@ export const TrackedVideoPlayer: React.FC<TrackedVideoPlayerProps> = ({
         </div>
 
         <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2">
-          <p className="text-[11px] text-[var(--text-muted)]">
+          <p className="text-xs text-[var(--text-muted)]">
             {apiState === 'live' && (isPlaying ? 'Recording your watch time…' : 'Play the video to record progress.')}
             {apiState === 'attaching' && 'Connecting to the video player…'}
             {apiState === 'manual' && 'The player API is unavailable here — use the button to record your watch time.'}
@@ -441,13 +441,13 @@ export const TrackedVideoPlayer: React.FC<TrackedVideoPlayerProps> = ({
           <div className="flex items-center gap-1.5">
             {apiState === 'live' && (
               <>
-                <span className="font-mono text-[11px] text-[var(--text-light)] tabular-nums">
+                <span className="text-xs text-[var(--text-light)] tabular-nums">
                   {formatClock(position)}{total > 0 ? ` / ${formatClock(total)}` : ''}
                 </span>
                 <button
                   type="button"
                   onClick={skipForward}
-                  className="focus-ring inline-flex min-h-[44px] items-center gap-1 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-2.5 py-1.5 text-[11px] font-bold text-[var(--ink)] hover:bg-[var(--bg-surface-hover)]"
+                  className="focus-ring inline-flex min-h-[44px] items-center gap-1 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-2.5 py-1.5 text-xs font-bold text-[var(--ink)] hover:bg-[var(--bg-surface-hover)]"
                 >
                   <SkipForward className="h-3.5 w-3.5" /> Skip {SKIP_SECONDS}s
                 </button>
@@ -458,7 +458,7 @@ export const TrackedVideoPlayer: React.FC<TrackedVideoPlayerProps> = ({
               <button
                 type="button"
                 onClick={toggleManual}
-                className="focus-ring inline-flex min-h-[44px] items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-bold transition-colors"
+                className="focus-ring inline-flex min-h-[44px] items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-colors"
                 style={{
                   background: isPlaying ? 'var(--brand-sky-soft)' : 'var(--brand-sky)',
                   color: isPlaying ? 'var(--brand-sky-strong)' : '#fff',
@@ -472,14 +472,14 @@ export const TrackedVideoPlayer: React.FC<TrackedVideoPlayerProps> = ({
         </div>
 
         {!canSubmit && (
-          <p className="mt-2 flex items-center gap-1.5 text-[11px] text-[var(--brand-sky-strong)]">
+          <p className="mt-2 flex items-center gap-1.5 text-xs text-[var(--brand-sky-strong)]">
             <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
             Sign in to save your watch progress.
           </p>
         )}
 
         {apiState === 'manual' && !isComplete && watchNeeded > 0 && (
-          <p className="mt-1.5 text-[11px] text-[var(--text-muted)]">
+          <p className="mt-1.5 text-xs text-[var(--text-muted)]">
             About {Math.ceil((watchNeeded / 100) * (durationSeconds || 0) / 60) || '<1'} min more to clear the{' '}
             {requiredPercent}% requirement.
           </p>

@@ -1,43 +1,104 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+/* Fonts are self-hosted through next/font (src/styles/fonts.ts). The Google
+   Fonts @import that used to sit here blocked rendering on every page. */
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* ============================================
-   CSS CUSTOM PROPERTIES
+   DESIGN TOKENS — "Route" design system
+   ============================================
+
+   Every colour is declared ONCE, as space-separated RGB channels
+   (`--rgb-*`). Tailwind reads them as `rgb(var(--rgb-x) / <alpha-value>)`,
+   so opacity modifiers (`bg-brand-primary/10`) keep working, and the named
+   variables below (`--brand-primary`, `--text-muted`, …) are derived from
+   the same channels — which is what lets the 700+ existing `var(--…)` uses
+   and every Tailwind class switch theme together.
+
+   Brand: the action colour is the LOGO ORANGE, tuned for contrast
+   (#CC3607: 5.1:1 under white text, 4.7:1 as link text on paper). Amber is
+   reserved for prices and buy buttons. Blue remains only as `info`/`train`.
    ============================================ */
 :root {
-  /* Vault OS — warm light surface system */
-  --bg-app: #F7F6F3;
-  --bg-app-warm: #FCFBF8;
-  --bg-surface: #FFFFFF;
-  --bg-surface-hover: #F3F2EE;
-  --bg-sky-soft: #EAF5FB;
-  --border-subtle: #E9E7E1;
-  --border-strong: #D6D2C8;
+  /* Surfaces */
+  --rgb-bg-app: 247 246 243;          /* paper  #F7F6F3 */
+  --rgb-bg-app-warm: 252 251 248;     /* #FCFBF8 */
+  --rgb-bg-surface: 255 255 255;      /* card   #FFFFFF */
+  --rgb-bg-surface-hover: 243 242 238;/* #F3F2EE */
+  --rgb-border-subtle: 233 231 225;   /* line   #E9E7E1 */
+  --rgb-border-strong: 214 210 200;   /* #D6D2C8 */
 
-  --ink: #10151C;
-  --ink-soft: #2A3340;
+  /* Ink & text */
+  --rgb-ink: 16 21 28;                /* #10151C — heading text */
+  --rgb-ink-soft: 42 51 64;           /* #2A3340 */
+  --rgb-brand-ink: 14 42 68;          /* #0E2A44 — the navy band */
+  --rgb-text-heading: 16 21 28;       /* #10151C */
+  --rgb-text-body: 62 71 84;          /* #3E4754 */
+  --rgb-text-muted: 90 100 112;       /* #5A6470 — 5.6:1 on paper */
+  --rgb-text-light: 100 108 120;        /* #646C78 — 4.9:1 on the page background */
 
-  --brand-sky: #0369A1;
-  --brand-sky-strong: #075985;
-  --brand-primary: #0369A1;
-  --brand-sky-soft: #E8F4FB;
-  --brand-ink: #0E2A44;
-  --brand-accent: #E8A33D;
-  --brand-accent-hover: #D4902C;
-  --brand-mint: #10A37F;
+  /* Brand action — logo orange */
+  --rgb-signal: 204 54 7;             /* #CC3607 */
+  --rgb-signal-hover: 184 48 6;       /* #B83006 */
+  --rgb-signal-soft: 255 244 238;     /* #FFF4EE */
+  --rgb-signal-ink: 154 45 5;         /* #9A2D05 — text on soft tint */
+  --rgb-logo: 248 65 9;               /* #F84109 — logo / decoration only */
 
-  --text-heading: #10151C;
-  --text-body: #3E4754;
-  --text-muted: #5A6470;
-  --text-light: #AEB6BE;
+  /* Money — prices and buy buttons only */
+  --rgb-money: 232 163 61;            /* #E8A33D */
+  --rgb-money-hover: 212 144 44;      /* #D4902C */
+  --rgb-money-ink: 36 26 6;           /* #241A06 — text on amber */
+  --rgb-amber-deep: 180 83 9;         /* #B45309 */
+  --rgb-brand-mint: 13 125 98;        /* #0D7D62 — 5.1:1 under white text (was #10A37F, 3.2:1) */
 
-  --color-success: #15803D;
-  --color-warning: #C77B12;
-  --color-error: #C1442D;
-  --color-info: #0284C7;
+  /* Meaning colours */
+  --rgb-train: 3 105 161;             /* #0369A1 */
+  --rgb-test: 194 65 12;              /* #C2410C */
+  --rgb-track: 15 118 110;            /* #0F766E */
+  --rgb-success: 21 122 59;           /* #157A3B — 4.8:1 even on tinted chips */
+  --rgb-success-soft: 230 244 236;    /* #E6F4EC */
+  --rgb-warning: 180 83 9;            /* #B45309 — 5.0:1 (was #C77B12, 3.1:1) */
+  --rgb-warning-soft: 254 243 199;    /* #FEF3C7 */
+  --rgb-danger: 180 35 24;            /* #B42318 */
+  --rgb-danger-soft: 253 236 234;     /* #FDECEA */
+  --rgb-info: 3 105 161;              /* #0369A1 */
+  --rgb-info-soft: 232 244 251;       /* #E8F4FB */
+  --rgb-purple: 109 40 217;           /* #6D28D9 */
+  --rgb-purple-soft: 245 240 255;
+  --rgb-on-accent: 255 255 255;       /* text on a filled accent */
+
+  /* Named variables (existing API — derived, do not hand-edit) */
+  --bg-app: rgb(var(--rgb-bg-app));
+  --bg-app-warm: rgb(var(--rgb-bg-app-warm));
+  --bg-surface: rgb(var(--rgb-bg-surface));
+  --bg-surface-hover: rgb(var(--rgb-bg-surface-hover));
+  --bg-sky-soft: rgb(var(--rgb-signal-soft));
+  --border-subtle: rgb(var(--rgb-border-subtle));
+  --border-strong: rgb(var(--rgb-border-strong));
+
+  --ink: rgb(var(--rgb-ink));
+  --ink-soft: rgb(var(--rgb-ink-soft));
+
+  --brand-sky: rgb(var(--rgb-signal));
+  --brand-sky-strong: rgb(var(--rgb-signal-hover));
+  --brand-primary: rgb(var(--rgb-signal));
+  --brand-primary-hover: rgb(var(--rgb-signal-hover));
+  --brand-sky-soft: rgb(var(--rgb-signal-soft));
+  --brand-ink: rgb(var(--rgb-brand-ink));
+  --brand-accent: rgb(var(--rgb-money));
+  --brand-accent-hover: rgb(var(--rgb-money-hover));
+  --brand-mint: rgb(var(--rgb-brand-mint));
+
+  --text-heading: rgb(var(--rgb-text-heading));
+  --text-body: rgb(var(--rgb-text-body));
+  --text-muted: rgb(var(--rgb-text-muted));
+  --text-light: rgb(var(--rgb-text-light));
+
+  --color-success: rgb(var(--rgb-success));
+  --color-warning: rgb(var(--rgb-warning));
+  --color-error: rgb(var(--rgb-danger));
+  --color-info: rgb(var(--rgb-info));
 
   /* Radius scale */
   --radius-xs: 6px;
@@ -108,8 +169,8 @@
      palette, so it now has a proper text-on-fill and text-on-white
      pair instead of literals scattered through the chrome.
      --------------------------------------------------------------- */
-  --accent-ink: #241A06;   /* text sitting on a --brand-accent fill */
-  --amber-deep: #B45309;   /* amber text sitting on white/sky-soft */
+  --accent-ink: rgb(var(--rgb-money-ink));   /* text sitting on a --brand-accent fill */
+  --amber-deep: rgb(var(--rgb-amber-deep));  /* amber text sitting on white/sky-soft */
 
   /* ---------------------------------------------------------------
      DROPS CHIP PALETTE
@@ -128,9 +189,9 @@
   --drop-course: #B45309;
   --drop-contest: #BE185D;
   --drop-selected: #15803D;
-  --drop-scholarship: #0284C7;
+  --drop-scholarship: #0277B6;  /* 4.9:1 under white (was #0284C7, 4.1:1) */
   --drop-college: #6D28D9;
-  --drop-tip: #C77B12;
+  --drop-tip: #A16207;          /* 4.9:1 under white (was #C77B12, 3.35:1) */
   --drop-tieedu: #0E2A44;
 
   /* ---------------------------------------------------------------
@@ -169,6 +230,55 @@
   --ease-out: cubic-bezier(0.32, 0.72, 0, 1);      /* iOS-style decelerate */
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   --ease-sheet: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* ============================================
+   DARK THEME — channel swap only
+   Opt-in via <html data-theme="dark">. Every surface, text and brand token
+   above re-derives from these channels; nothing else needs a dark variant.
+   ============================================ */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --rgb-bg-app: 11 21 32;             /* #0B1520 */
+  --rgb-bg-app-warm: 13 24 36;
+  --rgb-bg-surface: 17 30 43;         /* #111E2B */
+  --rgb-bg-surface-hover: 22 38 58;
+  --rgb-border-subtle: 31 48 66;
+  --rgb-border-strong: 43 63 85;
+
+  --rgb-ink: 232 238 245;
+  --rgb-ink-soft: 201 211 221;
+  --rgb-brand-ink: 7 20 34;           /* the navy band goes deeper, stays a band */
+  --rgb-text-heading: 232 238 245;
+  --rgb-text-body: 197 207 217;       /* 11.6:1 on the dark page */
+  --rgb-text-muted: 147 161 175;      /* 6.4:1 on dark cards */
+  --rgb-text-light: 125 139 153;
+
+  --rgb-signal: 255 122 77;           /* #FF7A4D — dark text on it, 7.5:1 */
+  --rgb-signal-hover: 255 150 112;
+  --rgb-signal-soft: 42 22 14;
+  --rgb-signal-ink: 255 181 155;
+  --rgb-logo: 255 94 46;              /* the logo orange, lifted for dark */
+  --rgb-money: 240 185 94;
+  --rgb-money-hover: 245 199 122;
+  --rgb-money-ink: 26 18 5;
+  --rgb-amber-deep: 251 191 36;
+  --rgb-brand-mint: 52 211 153;
+
+  --rgb-train: 56 189 248;
+  --rgb-test: 251 146 60;
+  --rgb-track: 45 212 191;
+  --rgb-success: 74 222 128;
+  --rgb-success-soft: 16 44 30;
+  --rgb-warning: 251 191 36;
+  --rgb-warning-soft: 51 38 8;
+  --rgb-danger: 248 113 113;
+  --rgb-danger-soft: 52 20 20;
+  --rgb-info: 56 189 248;
+  --rgb-info-soft: 12 36 52;
+  --rgb-purple: 196 167 255;
+  --rgb-purple-soft: 36 26 58;
+  --rgb-on-accent: 11 21 32;          /* accents are light in dark, so text on them goes dark */
 }
 
 /* ============================================
@@ -213,7 +323,7 @@ html {
 body {
   background-color: var(--bg-app);
   color: var(--text-body);
-  font-family: 'Calibre', 'Calibri', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: var(--font-body), system-ui, sans-serif;
   /* Phase 0 — density. 1.75 is web-article leading; native apps run tighter.
      Desktop is deliberately left at 1.75 (see MOBILE_APP_UI_PLAN.md
      non-goals), so this only tightens the phone. */
@@ -282,13 +392,16 @@ body {
 }
 
 /* Editorial section eyebrow label */
-.eyebrow {
-  font-family: 'Calibre', 'Calibri', 'Inter', sans-serif;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--brand-sky);
+@layer components {
+  /* Layered so a text-* utility can recolour it (e.g. on an ink band). */
+  .eyebrow {
+    font-family: var(--font-body), system-ui, sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--brand-sky);
+  }
 }
 
 /* Vault card surface */
@@ -927,9 +1040,9 @@ body {
   outline-offset: 3px;
 }
 
-/* Editorial display font (Calibre family on all platforms) */
+/* Editorial display font (Bricolage Grotesque) */
 .font-serif-heading {
-  font-family: 'Calibre', 'Calibri', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-display), system-ui, sans-serif;
   font-weight: 700;
   letter-spacing: -0.02em;
 }
@@ -943,14 +1056,23 @@ body {
 .stat-num { font-variant-numeric: tabular-nums; font-weight: 800; letter-spacing: -0.02em; }
 
 /* ============================================
-   TYPOGRAPHY — CALIBRE FIRST
+   TYPOGRAPHY — "Route" type roles
+   Page and section titles (h1, h2) use the display face; smaller headings
+   stay in the body face, which reads better at card-title sizes.
    ============================================ */
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Calibre', 'Calibri', 'Inter', -apple-system, sans-serif;
+  font-family: var(--font-body), system-ui, sans-serif;
   color: var(--text-heading);
   line-height: 1.3;
   font-weight: 700;
   letter-spacing: -0.015em;
+}
+h1, h2 {
+  font-family: var(--font-display), var(--font-body), system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+.font-display {
+  font-family: var(--font-display), var(--font-body), system-ui, sans-serif;
 }
 
 p {
@@ -960,7 +1082,7 @@ p {
 }
 
 code, pre, kbd, samp, .font-mono {
-  font-family: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
+  font-family: var(--font-mono), ui-monospace, monospace;
   font-size: 0.9em;
 }
 
@@ -968,11 +1090,12 @@ code, pre, kbd, samp, .font-mono {
    PROSE — ARTICLE BODY STYLES (GFG Style)
    Used inside ContentBlockRenderer markdown blocks
    ============================================ */
+/* Long-form reading (lessons, vault guides) is set in the serif. */
 .prose-article {
-  font-family: 'Calibre', 'Calibri', 'Inter', -apple-system, sans-serif;
+  font-family: var(--font-serif), Georgia, serif;
   font-size: 18px;
-  line-height: 1.85;
-  color: #1E293B;
+  line-height: 1.8;
+  color: var(--text-heading);
   max-width: 100%;
 }
 
@@ -1003,12 +1126,12 @@ code, pre, kbd, samp, .font-mono {
   max-width: 72ch;
 }
 
-.prose-article h1 { font-size: 2.25rem; font-weight: 800; margin: 2.25rem 0 1.25rem; color: #0F172A; }
-.prose-article h2 { font-size: 1.75rem; font-weight: 700; margin: 2rem 0 0.85rem; color: #0F172A; border-bottom: 2px solid #E2E8F0; padding-bottom: 0.4rem; }
-.prose-article h3 { font-size: 1.4rem;  font-weight: 700; margin: 1.75rem 0 0.65rem; color: #1E293B; }
-.prose-article h4 { font-size: 1.2rem;  font-weight: 600; margin: 1.5rem 0 0.5rem;   color: #1E293B; }
+.prose-article h1 { font-size: 2.25rem; font-weight: 800; margin: 2.25rem 0 1.25rem; color: var(--text-heading); }
+.prose-article h2 { font-size: 1.75rem; font-weight: 700; margin: 2rem 0 0.85rem; color: var(--text-heading); border-bottom: 2px solid var(--border-subtle); padding-bottom: 0.4rem; }
+.prose-article h3 { font-size: 1.4rem;  font-weight: 700; margin: 1.75rem 0 0.65rem; color: var(--text-heading); }
+.prose-article h4 { font-size: 1.2rem;  font-weight: 600; margin: 1.5rem 0 0.5rem;   color: var(--text-heading); }
 
-.prose-article p { margin: 1.2rem 0; font-size: 18px; line-height: 1.85; color: #334155; }
+.prose-article p { margin: 1.2rem 0; font-size: 18px; line-height: 1.85; color: var(--text-body); }
 
 .prose-article a {
   color: var(--brand-primary);
@@ -1018,7 +1141,7 @@ code, pre, kbd, samp, .font-mono {
 }
 .prose-article a:hover { color: var(--brand-accent); }
 
-.prose-article strong { font-weight: 700; color: #0F172A; }
+.prose-article strong { font-weight: 700; color: var(--text-heading); }
 .prose-article em { font-style: italic; }
 .prose-article del { text-decoration: line-through; color: var(--text-muted); }
 
@@ -1051,7 +1174,7 @@ code, pre, kbd, samp, .font-mono {
   border-radius: 4px;
   font-size: 0.88em;
   color: #C1442D;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), ui-monospace, monospace;
 }
 
 .prose-article pre {
@@ -1216,36 +1339,44 @@ code, pre, kbd, samp, .font-mono {
   .prose-article table tr:hover td { background: transparent; }
 }
 
+/* Code inside a block must not inherit the inline-code red (3.5:1 on #0F172A). */
+.prose-article pre code {
+  color: #E6EDF3;
+}
+
 .prose-article pre code.hljs {
   background: transparent;
   padding: 0;
 }
 
+/* Syntax colours for the DARK code background above (#0F172A). These were a
+   light-theme palette (#A626A4 keyword at 2.9:1) on a dark block; One Dark's
+   palette clears 4.5:1 for every token. */
 .prose-article .hljs-comment,
-.prose-article .hljs-quote { color: #8A8F98; font-style: italic; }
+.prose-article .hljs-quote { color: #8B93A1; font-style: italic; }
 .prose-article .hljs-keyword,
 .prose-article .hljs-selector-tag,
 .prose-article .hljs-literal,
-.prose-article .hljs-doctag { color: #A626A4; }
+.prose-article .hljs-doctag { color: #C678DD; }
 .prose-article .hljs-string,
 .prose-article .hljs-regexp,
-.prose-article .hljs-addition { color: #50A14F; }
+.prose-article .hljs-addition { color: #98C379; }
 .prose-article .hljs-number,
 .prose-article .hljs-symbol,
-.prose-article .hljs-bullet { color: #986801; }
+.prose-article .hljs-bullet { color: #D19A66; }
 .prose-article .hljs-title,
 .prose-article .hljs-name,
 .prose-article .hljs-section,
-.prose-article .hljs-title.function_ { color: #4078F2; }
+.prose-article .hljs-title.function_ { color: #61AFEF; }
 .prose-article .hljs-attr,
 .prose-article .hljs-attribute,
 .prose-article .hljs-variable,
-.prose-article .hljs-template-variable { color: #E45649; }
+.prose-article .hljs-template-variable { color: #E06C75; }
 .prose-article .hljs-type,
 .prose-article .hljs-class .hljs-title,
-.prose-article .hljs-built_in { color: #C18401; }
-.prose-article .hljs-meta { color: #0184BC; }
-.prose-article .hljs-deletion { color: #E45649; }
+.prose-article .hljs-built_in { color: #E5C07B; }
+.prose-article .hljs-meta { color: #56B6C2; }
+.prose-article .hljs-deletion { color: #E06C75; }
 .prose-article .hljs-emphasis { font-style: italic; }
 .prose-article .hljs-strong { font-weight: 700; }
 
@@ -2236,53 +2367,51 @@ body {
   --apple-separator: rgba(60, 60, 67, 0.11);
 
   --apple-label: #000000;
-  --apple-label-2: rgba(60, 60, 67, 0.72);
+  --apple-label-2: rgba(60, 60, 67, 0.76);  /* 5.0:1 on the grouped background (0.72 was 4.47) */
   --apple-label-3: rgba(60, 60, 67, 0.44);
   --apple-placeholder: rgba(60, 60, 67, 0.26);
 
-  --apple-blue: #007AFF;
-  --apple-blue-soft: rgba(0, 122, 255, 0.12);
-  --apple-green: #34C759;
+  --apple-blue: #0066CC;   /* 5.0:1 as text on the grouped background, 5.6:1 under white (was #0071E3, 4.2 / 4.7) */
+  --apple-blue-soft: rgba(0, 113, 227, 0.12);
+  --apple-green: #1E7A34;  /* accessible green; #34C759 was 2.0:1 as text */
   --apple-green-soft: rgba(52, 199, 89, 0.14);
-  --apple-orange: #FF9500;
+  --apple-orange: #C93400; /* accessible orange; #FF9500 was 2.0:1 as text */
   --apple-orange-soft: rgba(255, 149, 0, 0.14);
-  --apple-red: #FF3B30;
+  --apple-red: #D70015;    /* accessible red; #FF3B30 was 3.2:1 as text */
   --apple-red-soft: rgba(255, 59, 48, 0.12);
-  --apple-purple: #AF52DE;
+  --apple-purple: #8944AB;
   --apple-purple-soft: rgba(175, 82, 222, 0.14);
-  --apple-teal: #30B0C7;
+  --apple-teal: #00708C;
   --apple-teal-soft: rgba(48, 176, 199, 0.14);
   --apple-yellow: #FFCC00;
 
   --apple-sheet-max: 560px;
   --apple-tabbar-h: 76px;
 }
-@media (prefers-color-scheme: dark) {
-  :root {
-    --apple-bg: #000000;
-    --apple-surface: #1C1C1E;
-    --apple-surface-2: #242426;
-    --apple-fill: #3A3A3C;
-    --apple-separator: rgba(84, 84, 88, 0.6);
+:root[data-theme='dark'] {
+  --apple-bg: #000000;
+  --apple-surface: #1C1C1E;
+  --apple-surface-2: #242426;
+  --apple-fill: #3A3A3C;
+  --apple-separator: rgba(84, 84, 88, 0.6);
 
-    --apple-label: #FFFFFF;
-    --apple-label-2: rgba(235, 235, 245, 0.6);
-    --apple-label-3: rgba(235, 235, 245, 0.36);
-    --apple-placeholder: rgba(235, 235, 245, 0.16);
+  --apple-label: #FFFFFF;
+  --apple-label-2: rgba(235, 235, 245, 0.6);
+  --apple-label-3: rgba(235, 235, 245, 0.36);
+  --apple-placeholder: rgba(235, 235, 245, 0.16);
 
-    --apple-blue: #0A84FF;
-    --apple-blue-soft: rgba(10, 132, 255, 0.24);
-    --apple-green: #30D158;
-    --apple-green-soft: rgba(48, 209, 88, 0.22);
-    --apple-orange: #FF9F0A;
-    --apple-orange-soft: rgba(255, 159, 10, 0.22);
-    --apple-red: #FF453A;
-    --apple-red-soft: rgba(255, 69, 58, 0.22);
-    --apple-purple: #BF5AF2;
-    --apple-purple-soft: rgba(191, 90, 242, 0.22);
-    --apple-teal: #40C8E0;
-    --apple-teal-soft: rgba(64, 200, 224, 0.22);
-  }
+  --apple-blue: #0A84FF;
+  --apple-blue-soft: rgba(10, 132, 255, 0.24);
+  --apple-green: #30D158;
+  --apple-green-soft: rgba(48, 209, 88, 0.22);
+  --apple-orange: #FF9F0A;
+  --apple-orange-soft: rgba(255, 159, 10, 0.22);
+  --apple-red: #FF453A;
+  --apple-red-soft: rgba(255, 69, 58, 0.22);
+  --apple-purple: #BF5AF2;
+  --apple-purple-soft: rgba(191, 90, 242, 0.22);
+  --apple-teal: #40C8E0;
+  --apple-teal-soft: rgba(64, 200, 224, 0.22);
 }
 
 /* Mock Drive sub-app always renders in the light Apple palette, even when the
@@ -2298,21 +2427,21 @@ body {
   --apple-separator: rgba(60, 60, 67, 0.11);
 
   --apple-label: #000000;
-  --apple-label-2: rgba(60, 60, 67, 0.72);
+  --apple-label-2: rgba(60, 60, 67, 0.76);  /* 5.0:1 on the grouped background (0.72 was 4.47) */
   --apple-label-3: rgba(60, 60, 67, 0.44);
   --apple-placeholder: rgba(60, 60, 67, 0.26);
 
-  --apple-blue: #007AFF;
-  --apple-blue-soft: rgba(0, 122, 255, 0.12);
-  --apple-green: #34C759;
+  --apple-blue: #0066CC;   /* 5.0:1 as text on the grouped background, 5.6:1 under white (was #0071E3, 4.2 / 4.7) */
+  --apple-blue-soft: rgba(0, 113, 227, 0.12);
+  --apple-green: #1E7A34;  /* accessible green; #34C759 was 2.0:1 as text */
   --apple-green-soft: rgba(52, 199, 89, 0.14);
-  --apple-orange: #FF9500;
+  --apple-orange: #C93400; /* accessible orange; #FF9500 was 2.0:1 as text */
   --apple-orange-soft: rgba(255, 149, 0, 0.14);
-  --apple-red: #FF3B30;
+  --apple-red: #D70015;    /* accessible red; #FF3B30 was 3.2:1 as text */
   --apple-red-soft: rgba(255, 59, 48, 0.12);
-  --apple-purple: #AF52DE;
+  --apple-purple: #8944AB;
   --apple-purple-soft: rgba(175, 82, 222, 0.14);
-  --apple-teal: #30B0C7;
+  --apple-teal: #00708C;
   --apple-teal-soft: rgba(48, 176, 199, 0.14);
   --apple-yellow: #FFCC00;
 }
@@ -2323,9 +2452,8 @@ body {
   border-radius: 16px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
-@media (prefers-color-scheme: dark) {
-  .apple-card { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5); }
-}
+:root[data-theme='dark'] .apple-card { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5); }
+.mock-drive-scope .apple-card { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); }
 
 /* iOS grouped list row: full-bleed cell with hairline separator. */
 .apple-cell {
@@ -2384,4 +2512,156 @@ body {
   );
   background-size: 200% 100%;
   animation: appleSkeletonSweep 1.6s linear infinite;
+}
+
+/* ---- Route component motion (components/ui) ---------------------------------
+   §4.4: 150–320 ms, ease-out, only for state change and progress. */
+.route-fill {
+  transition: width 320ms ease-out, height 320ms ease-out, stroke-dashoffset 320ms ease-out;
+}
+@keyframes route-stamp-land {
+  0%   { transform: scale(1.6) rotate(-8deg); opacity: 0; }
+  60%  { transform: scale(0.94) rotate(-1deg); opacity: 1; }
+  100% { transform: scale(1) rotate(-2deg); opacity: 1; }
+}
+.route-stamp-land { animation: route-stamp-land 280ms ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .route-fill { transition: none; }
+  .route-stamp-land { animation: none; }
+}
+
+/* ---- Dark mode: legacy palette remap ----------------------------------------
+   §4.2 "a token swap, not a second design". ~1,500 older class uses name
+   Tailwind's fixed palette (bg-white, bg-red-50, text-gray-600 …) instead of a
+   token, so they would stay light-on-light in dark. Rather than rewrite every
+   file, the dark theme points those utilities at the tokens here. Light mode
+   is untouched: every rule is scoped to :root[data-theme='dark'].
+   Translucent white (bg-white/10–/30) is left alone: it is an overlay on the
+   navy band, which stays dark. New code should use the tokens directly. */
+
+/* Surfaces */
+:root[data-theme='dark'] :is(.bg-white, .bg-white\/95, .bg-white\/90, .bg-white\/85, .bg-white\/80,
+  .bg-white\/75, .bg-white\/70, .bg-white\/60, .bg-white\/55, .bg-gray-50, .bg-slate-50,
+  .focus\:bg-white:focus, .active\:bg-white:active) {
+  background-color: rgb(var(--rgb-bg-surface));
+}
+:root[data-theme='dark'] :is(.bg-gray-100, .bg-slate-100, .hover\:bg-white:hover, .hover\:bg-gray-50:hover,
+  .hover\:bg-white\/90:hover, .hover\:bg-white\/80:hover, .hover\:bg-white\/60:hover) {
+  background-color: rgb(var(--rgb-bg-surface-hover));
+}
+:root[data-theme='dark'] :is(.bg-gray-200, .hover\:bg-gray-100:hover, .hover\:bg-gray-200:hover) {
+  background-color: rgb(var(--rgb-border-subtle));
+}
+/* bg-heading is two things: an inverted chip (bg-heading text-card), which is
+   right as-is in dark, and a dark panel under light text (code, initials
+   tiles), which would turn light. Only the second goes to the band colour. */
+:root[data-theme='dark'] :is(.bg-heading.text-white, .bg-heading.text-gray-100, .bg-heading.text-emerald-300,
+  pre.bg-heading, textarea.bg-heading, .bg-heading.overflow-x-auto, .bg-heading .bg-heading,
+  .text-gray-100 .bg-heading) {
+  background-color: rgb(var(--rgb-brand-ink));
+}
+
+/* Hex literals elsewhere in this file */
+:root[data-theme='dark'] .compare-sticky-col { background-color: rgb(var(--rgb-bg-surface)); }
+:root[data-theme='dark'] .compare-sticky-col-alt { background-color: rgb(var(--rgb-bg-app-warm)); }
+:root[data-theme='dark'] .prose-article li { color: rgb(var(--rgb-text-body)); }
+/* Briefing cards tint by item (lib/briefing TONE). The tones are deep hues
+   chosen for white cards; in dark they are lifted toward the heading colour. */
+.briefing-tone { color: var(--tone); }
+:root[data-theme='dark'] .briefing-tone { color: color-mix(in srgb, var(--tone) 40%, rgb(var(--rgb-text-heading))); }
+
+/* Frosted chrome (header, tab bar, nav search): same glass, dark tint */
+:root[data-theme='dark'] .glass-surface {
+  background: rgb(var(--rgb-bg-app) / 0.78);
+  border-bottom-color: rgb(var(--rgb-border-subtle));
+}
+:root[data-theme='dark'] .tab-bar { background: rgb(var(--rgb-bg-app) / 0.88); }
+:root[data-theme='dark'] :is(.nav-search, .frosted-glass) { background: rgb(var(--rgb-bg-surface) / 0.72); }
+:root[data-theme='dark'] .hero-mesh {
+  background:
+    radial-gradient(52rem 26rem at 12% -8%, rgba(56, 189, 248, 0.10), transparent 55%),
+    radial-gradient(44rem 24rem at 92% 2%, rgba(240, 185, 94, 0.10), transparent 52%),
+    linear-gradient(180deg, rgb(var(--rgb-bg-surface)) 0%, rgb(var(--rgb-bg-app)) 100%);
+}
+:root[data-theme='dark'] .hero-mesh::after { background-image: radial-gradient(rgba(232, 238, 245, 0.05) 1px, transparent 1px); }
+:root[data-theme='dark'] .prose-article blockquote { background: rgb(var(--rgb-warning-soft)); color: rgb(var(--rgb-text-body)); }
+/* inline code only; code inside <pre> keeps the dark block's own colours */
+:root[data-theme='dark'] .prose-article :not(pre) > code { background: rgb(var(--rgb-bg-surface-hover)); color: rgb(var(--rgb-signal-ink)); }
+:root[data-theme='dark'] .prose-article table th { background: rgb(var(--rgb-bg-surface-hover)); }
+:root[data-theme='dark'] .prose-article table tr:hover td { background: rgb(var(--rgb-bg-app-warm)); }
+:root[data-theme='dark'] .sidebar-item:hover { background: rgb(var(--rgb-bg-surface-hover)); }
+:root[data-theme='dark'] .sidebar-item.active { background: rgb(var(--rgb-signal-soft)); }
+:root[data-theme='dark'] ::-webkit-scrollbar-thumb { background: rgb(var(--rgb-border-strong)); }
+:root[data-theme='dark'] ::-webkit-scrollbar-thumb:hover { background: rgb(var(--rgb-text-light)); }
+
+/* Gradient stops. Tailwind builds gradients from these variables, so only the
+   stop colour changes; positions and the other stops are untouched. */
+:root[data-theme='dark'] :is(.from-white, .from-amber-50\/30) { --tw-gradient-from: rgb(var(--rgb-bg-surface)) var(--tw-gradient-from-position); }
+:root[data-theme='dark'] :is(.from-amber-50) { --tw-gradient-from: rgb(var(--rgb-warning-soft)) var(--tw-gradient-from-position); }
+:root[data-theme='dark'] :is(.from-emerald-50) { --tw-gradient-from: rgb(var(--rgb-success-soft)) var(--tw-gradient-from-position); }
+:root[data-theme='dark'] .via-white {
+  --tw-gradient-stops: var(--tw-gradient-from), rgb(var(--rgb-bg-surface)) var(--tw-gradient-via-position), var(--tw-gradient-to);
+}
+:root[data-theme='dark'] .to-white { --tw-gradient-to: rgb(var(--rgb-bg-surface)) var(--tw-gradient-to-position); }
+:root[data-theme='dark'] :is(.to-orange-50, .to-amber-50) { --tw-gradient-to: rgb(var(--rgb-warning-soft)) var(--tw-gradient-to-position); }
+:root[data-theme='dark'] .to-emerald-50 { --tw-gradient-to: rgb(var(--rgb-success-soft)) var(--tw-gradient-to-position); }
+
+/* Tinted status fills */
+:root[data-theme='dark'] :is(.bg-red-50, .bg-red-100, .bg-rose-50, .hover\:bg-red-50:hover) {
+  background-color: rgb(var(--rgb-danger-soft));
+}
+:root[data-theme='dark'] :is(.bg-amber-50, .bg-amber-100, .bg-amber-200, .bg-orange-100, .bg-yellow-50, .bg-yellow-100) {
+  background-color: rgb(var(--rgb-warning-soft));
+}
+:root[data-theme='dark'] :is(.bg-emerald-50, .bg-emerald-100, .bg-green-50, .bg-green-100, .bg-teal-50, .bg-teal-100) {
+  background-color: rgb(var(--rgb-success-soft));
+}
+:root[data-theme='dark'] :is(.bg-indigo-50, .bg-indigo-100, .bg-blue-50, .bg-blue-100, .bg-sky-50, .bg-sky-100) {
+  background-color: rgb(var(--rgb-info-soft));
+}
+:root[data-theme='dark'] :is(.bg-purple-50, .bg-purple-100, .bg-violet-50, .bg-\[\#F1EBFE\], .bg-\[\#EFE8FB\]) {
+  background-color: rgb(var(--rgb-purple-soft));
+}
+
+/* Grey text */
+:root[data-theme='dark'] :is(.text-gray-900, .text-gray-800, .text-slate-900, .text-slate-800) { color: rgb(var(--rgb-text-heading)); }
+:root[data-theme='dark'] :is(.text-gray-700, .text-gray-600, .text-slate-700, .text-slate-600) { color: rgb(var(--rgb-text-body)); }
+:root[data-theme='dark'] :is(.text-gray-500, .text-slate-500) { color: rgb(var(--rgb-text-muted)); }
+/* brand-ink is a band colour; as text it would vanish into the dark page */
+:root[data-theme='dark'] :is(.text-brand-ink, .hover\:text-brand-ink:hover) { color: rgb(var(--rgb-text-heading)); }
+
+/* Status text */
+:root[data-theme='dark'] :is(.text-red-500, .text-red-600, .text-red-700, .text-red-800, .text-red-900, .text-rose-700,
+  .hover\:text-red-700:hover) { color: rgb(var(--rgb-danger)); }
+:root[data-theme='dark'] :is(.text-emerald-500, .text-emerald-600, .text-emerald-700, .text-emerald-800, .text-emerald-900,
+  .text-green-700, .hover\:text-emerald-800:hover) { color: rgb(var(--rgb-success)); }
+:root[data-theme='dark'] :is(.text-amber-500, .text-amber-600, .text-amber-700, .text-amber-800, .text-amber-900,
+  .text-orange-600) { color: rgb(var(--rgb-warning)); }
+:root[data-theme='dark'] :is(.text-indigo-600, .text-indigo-700, .text-indigo-900, .text-blue-600, .text-blue-700) { color: rgb(var(--rgb-info)); }
+:root[data-theme='dark'] :is(.text-purple-600, .text-purple-700, .text-purple-800, .text-violet-700) { color: rgb(var(--rgb-purple)); }
+:root[data-theme='dark'] :is(.text-teal-700) { color: rgb(var(--rgb-track)); }
+
+/* Borders */
+:root[data-theme='dark'] :is(.border-gray-50, .border-gray-100, .border-gray-200, .divide-gray-100 > * + *) { border-color: rgb(var(--rgb-border-subtle)); }
+:root[data-theme='dark'] .border-gray-300 { border-color: rgb(var(--rgb-border-strong)); }
+:root[data-theme='dark'] :is(.border-red-100, .border-red-200, .border-red-300) { border-color: rgb(var(--rgb-danger) / 0.35); }
+:root[data-theme='dark'] :is(.border-amber-200, .border-amber-300) { border-color: rgb(var(--rgb-warning) / 0.35); }
+:root[data-theme='dark'] :is(.border-emerald-200, .border-emerald-300) { border-color: rgb(var(--rgb-success) / 0.35); }
+:root[data-theme='dark'] :is(.border-indigo-100, .border-indigo-200) { border-color: rgb(var(--rgb-info) / 0.35); }
+:root[data-theme='dark'] :is(.border-purple-200, .border-purple-300) { border-color: rgb(var(--rgb-purple) / 0.35); }
+
+/* Filled accents get lighter in dark, so text on them goes dark */
+:root[data-theme='dark'] :is(.bg-signal, .bg-success, .bg-track, .bg-train, .bg-test, .bg-amber-deep, .bg-danger,
+  .bg-brand-mint, .bg-logo, .bg-\[var\(--brand-mint\)\], .bg-\[var\(--brand-sky\)\], .bg-\[var\(--brand-accent\)\],
+  .bg-\[var\(--brand-primary\)\], .bg-\[--brand-primary\], .bg-\[--brand-accent\]).text-white,
+:root[data-theme='dark'] :is(.bg-signal, .bg-success, .bg-track, .bg-train, .bg-test, .bg-amber-deep, .bg-danger,
+  .bg-brand-mint, .bg-logo, .bg-\[var\(--brand-mint\)\], .bg-\[var\(--brand-sky\)\], .bg-\[var\(--brand-accent\)\],
+  .bg-\[var\(--brand-primary\)\], .bg-\[--brand-primary\], .bg-\[--brand-accent\]) .text-white,
+:root[data-theme='dark'] .btn-primary {
+  color: rgb(var(--rgb-on-accent));
+}
+/* …and a bright fill keeps its dark text where the grey-text remap would lift it */
+:root[data-theme='dark'] :is(.bg-amber-400, .bg-amber-500, .bg-money, .bg-warning, .bg-\[var\(--brand-accent\)\], .bg-\[--brand-accent\]):is(.text-gray-900, .text-gray-800),
+:root[data-theme='dark'] :is(.bg-amber-400, .bg-amber-500, .bg-money, .bg-warning, .bg-\[var\(--brand-accent\)\], .bg-\[--brand-accent\]) :is(.text-gray-900, .text-gray-800) {
+  color: rgb(var(--rgb-money-ink));
 }

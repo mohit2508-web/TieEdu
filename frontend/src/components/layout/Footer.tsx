@@ -5,6 +5,7 @@ import { TieEduLogo } from '@/components/common/TieEduLogo';
 import { useAuth } from '@/context/AuthContext';
 import { ALL_NAV_ITEMS, type NavItem } from '@/lib/navConfig';
 import { SOCIAL_LINKS } from '@/lib/socialLinks';
+import { ThemeSwitch } from '@/components/common/ThemeSwitch';
 
 /**
  * Footer order, and the only two destinations it leaves out.
@@ -19,42 +20,42 @@ const FOOTER_ITEMS: NavItem[] = ALL_NAV_ITEMS.filter((item) => !FOOTER_EXCLUDED.
 
 export const Footer: React.FC = () => {
   return (
-    <footer className="bg-white border-t border-[#E9E7E1] mt-16 pt-12 pb-8">
+    <footer className="bg-white border-t border-line mt-16 pt-12 pb-8">
       <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12">
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pb-10 border-b border-[#E9E7E1]">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pb-10 border-b border-line">
           <div className="vault-card !shadow-none p-5 flex items-start gap-4">
-            <div className="w-11 h-11 rounded-2xl bg-[#E9F6EE] text-[#15803D] flex items-center justify-center shrink-0">
+            <div className="w-11 h-11 rounded-2xl bg-surface-hover text-success flex items-center justify-center shrink-0">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-[14px] font-bold text-[#10151C]">Candidate Verified</h3>
-              <p className="text-[13px] text-[--text-muted] mt-1 leading-relaxed">Real interview questions verified by candidates placed at top tech firms.</p>
+              <h2 className="text-sm font-bold text-heading">Sourced, or labelled</h2>
+              <p className="text-sm text-[--text-muted] mt-1 leading-relaxed">Every figure shows where it came from. Anything not yet confirmed says so.</p>
             </div>
           </div>
 
           <div className="vault-card !shadow-none p-5 flex items-start gap-4">
-            <div className="w-11 h-11 rounded-2xl bg-[#FBF1E1] text-[#C77B12] flex items-center justify-center shrink-0">
+            <div className="w-11 h-11 rounded-2xl bg-warning-soft text-amber-deep flex items-center justify-center shrink-0">
               <Lock className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-[14px] font-bold text-[#10151C]">View-Only PDF Security</h3>
-              <p className="text-[13px] text-[--text-muted] mt-1 leading-relaxed">Watermarked licensed PDFs, server-side unlock checks — no raw download paths.</p>
+              <h2 className="text-sm font-bold text-heading">View-Only PDF Security</h2>
+              <p className="text-sm text-[--text-muted] mt-1 leading-relaxed">Watermarked licensed PDFs, server-side unlock checks — no raw download paths.</p>
             </div>
           </div>
 
           <div className="vault-card !shadow-none p-5 flex items-start gap-4">
-            <div className="w-11 h-11 rounded-2xl bg-[#E8F4FB] text-[#0284C7] flex items-center justify-center shrink-0">
+            <div className="w-11 h-11 rounded-2xl bg-signal-soft text-signal flex items-center justify-center shrink-0">
               <Server className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-[14px] font-bold text-[#10151C]">Honest, Server-Driven</h3>
-              <p className="text-[13px] text-[--text-muted] mt-1 leading-relaxed">Pricing, coupons and unlocks are verified by the backend — no bypasses.</p>
+              <h2 className="text-sm font-bold text-heading">Honest, Server-Driven</h2>
+              <p className="text-sm text-[--text-muted] mt-1 leading-relaxed">Pricing, coupons and unlocks are verified by the backend — no bypasses.</p>
             </div>
           </div>
         </div>
 
-        <div className="pt-6 flex flex-col lg:flex-row items-center justify-between gap-5 text-[13px] text-[var(--text-muted)]">
+        <div className="pt-6 flex flex-col lg:flex-row items-center justify-between gap-5 text-sm text-[var(--text-muted)]">
           <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-center sm:gap-4">
             <div className="flex items-center gap-3">
               <TieEduLogo size="sm" />
@@ -68,7 +69,7 @@ export const Footer: React.FC = () => {
                   target="_blank"
                   rel="noreferrer noopener"
                   aria-label={social.label}
-                  className="flex h-8 w-8 items-center justify-center rounded-full border border-[#E9E7E1] text-[#3E4754] transition-all hover:-translate-y-0.5 hover:border-[var(--brand-sky)] hover:text-[var(--brand-sky)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand-sky)]"
+                  className="flex h-8 w-8 items-center justify-center rounded-full border border-line text-body transition-all hover:-translate-y-0.5 hover:border-[var(--brand-sky)] hover:text-[var(--brand-sky)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand-sky)]"
                 >
                   {social.icon}
                 </a>
@@ -81,7 +82,7 @@ export const Footer: React.FC = () => {
             account, and it pointed "Admin" at `/admin/login` while the header
             pointed at `/admin`. One list cannot drift.
           */}
-          <div className="flex flex-wrap items-center justify-center gap-4 text-[13px] font-bold text-[#3E4754]">
+          <div className="flex flex-wrap items-center justify-center gap-4 text-sm font-bold text-body">
             {FOOTER_ITEMS.map((item) => (
               <Link
                 key={item.id}
@@ -91,7 +92,15 @@ export const Footer: React.FC = () => {
                 {item.label}
               </Link>
             ))}
+            {/* Colleges get their own door, outside the student nav (§5). */}
+            <Link
+              href="/colleges"
+              className="transition-colors hover:text-[var(--brand-sky)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand-sky)]"
+            >
+              For colleges
+            </Link>
           </div>
+          <ThemeSwitch />
           <div className="flex items-center gap-1">
             <span>Built for placement season with</span>
             <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500" />
@@ -105,7 +114,7 @@ export const Footer: React.FC = () => {
           observed, auth pages never are, and one click of the unsubscribe
           link in any email stops both the mail and the tracking.
         */}
-        <p className="pt-4 text-[11px] text-gray-400 leading-relaxed">
+        <p className="pt-4 text-xs text-text-light leading-relaxed">
           Visitors who arrive through an email link are remembered with a first-party cookie so we can
           see which pages that mail led them to — never the other way round, never on login or admin
           pages, and never for anonymous visitors. Every email carries a one-click unsubscribe that

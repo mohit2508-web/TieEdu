@@ -149,9 +149,24 @@ check('the study-plan reset is confirmed in a sheet, not a dialog', () => {
 
 // ------------------------------------------------------ no print (§8) -------
 
+// The one sanctioned print: exam-prep revision sheets, a real student need, with
+// print styles behind it. It is offered in a browser only and hidden in the
+// installed app, where this rule's concern (printing the app shell) applies.
+const PRINT_EXEMPT: Record<string, string> = {
+  'src/components/courses/ExamPrepPanel.tsx': 'revision-sheet printing, browser only (hidden in standalone)',
+};
+
 check('no window.print anywhere in the app', () => {
-  const offenders = FILES.filter((f) => /window\.print/.test(read(f))).map(rel);
+  const offenders = FILES.filter((f) => /window\.print/.test(read(f)))
+    .map(rel)
+    .filter((r) => !PRINT_EXEMPT[r.replace(/\\/g, '/')]);
   eq(offenders.join(', '), '', 'window.print renders the browser chrome, not the app');
+});
+
+check('the sanctioned print stays out of the installed app', () => {
+  const panel = read(path.join(ROOT, 'src/components/courses/ExamPrepPanel.tsx'));
+  ok(/display-mode: standalone/.test(panel), 'ExamPrepPanel must detect the installed app');
+  ok(/\{canPrint && \(/.test(panel), 'the Print button must render only when canPrint');
 });
 
 // --------------------------------------------- hover scoping (§8) ----------
@@ -562,15 +577,11 @@ check('search appears once in the phone UI, not twice', () => {
   const drawer = read(path.join(ROOT, 'src/components/layout/MobileNavDrawer.tsx'));
   ok(/'search'/.test(drawer), 'the drawer must still reach search on mobile');
 
-  // The hero field filters the company grid and has no mobile counterpart, so it
-  // is hidden below md rather than removed: the state stays wired and the desktop
-  // layout is unchanged.
-  const hero = home.match(/<div className="[^"]*max-w-xl relative pt-2[^"]*">[\s\S]{0,2000}?<\/div>/);
-  ok(hero, 'the hero search wrapper must still exist');
-  ok(
-    /hidden md:block/.test(hero![0]),
-    'the hero search must be hidden below md so it does not double up with anything'
-  );
+  // The home hero's company finder is not a second site search: it is the page's
+  // one question ("Which company are you preparing for?", UI_REDESIGN_PLAN_V2 §7)
+  // and resolves to a company page, so it shows on every size. What must not
+  // happen is a second generic search *field* in the chrome - covered above.
+  ok(/<CompanyFinder/.test(home), 'the hero asks for a company, not a generic search');
   ok(/value=\{searchQuery\}/.test(home), 'the grid filter must stay wired to the query');
 });
 
@@ -609,16 +620,19 @@ check('a signed-out phone can reach both auth routes', () => {
 
 check('the phone header carries exactly the agreed inventory', () => {
   /*
-   * Top bar: logo, bell, leaderboard, profile (or Sign in).
-   * Bottom bar: vaults, skill test, drops, search, courses.
+   * Top bar: logo, search icon, leaderboard, bell, profile (or Sign in).
+   * Bottom bar: the five sections — home, learn, practise, companies, feed
+   * (UI_REDESIGN_PLAN_V2 D4).
    *
-   * Search belongs to the bottom bar on a phone and cart to the drill header
-   * (it gave up its tab slot to drops), so both must be absent from the top bar
-   * there - and `!` is load-bearing, because `.nav-search` and `.icon-btn` are
-   * unlayered and beat a bare `hidden`. See the cascade check.
+   * The wide search field and the cart are desktop-only in the top bar; on a
+   * phone search is an icon (its tab slot went to a section) and the cart lives
+   * in the drill header and the drawer. `!` is load-bearing, because
+   * `.nav-search` and `.icon-btn` are unlayered and beat a bare `hidden`. See
+   * the cascade check.
    */
   const header = read(path.join(ROOT, 'src/components/layout/Header.tsx'));
-  ok(/nav-search !hidden lg:flex/.test(header), 'top-bar search must be mobile-hidden');
+  ok(/nav-search !hidden lg:flex/.test(header), 'the wide search field must be mobile-hidden');
+  ok(/icon-btn lg:!hidden/.test(header), 'a phone gets search as a header icon');
   ok(/icon-btn !hidden lg:inline-flex/.test(header), 'top-bar cart must be mobile-hidden');
   ok(/<NotificationBell \/>/.test(header), 'the bell belongs in the top bar');
   ok(/chip chip--icon/.test(header), 'the leaderboard icon belongs in the top bar');
@@ -636,8 +650,7 @@ check('the phone header carries exactly the agreed inventory', () => {
   ok(slots, 'MOBILE_TAB_SLOTS must be a literal this test can read');
   const slotIds = (slots![1].match(/'[^']+'/g) ?? []).map((s) => s.slice(1, -1));
   eq(slotIds.length, 5, 'five slots - nothing else fits in 320px');
-  eq(slotIds.join(','), 'vaults,skillTest,drops,search,courses', 'the agreed slot order');
-  ok(slotIds.includes('search'), 'the tab bar must offer search on a phone');
+  eq(slotIds.join(','), 'home,learn,practise,companies,feed', 'the agreed slot order');
   ok(!slotIds.includes('cart'), 'cart moved to the drill header and the drawer');
 
   const actions = nav.match(/MOBILE_TAB_ACTIONS[^=]*=\s*\[([^\]]*)\]/);
@@ -654,8 +667,7 @@ check('the phone header carries exactly the agreed inventory', () => {
   // from a silent `slice` that would hide a sixth destination.
   const bar = read(path.join(ROOT, 'src/components/layout/MobileTabBar.tsx'));
   ok(/MOBILE_TAB_SLOTS\.map/.test(bar), 'the bar must render MOBILE_TAB_SLOTS');
-  ok(/NAV_ITEMS\[id\]/.test(bar), 'route slots must resolve through NAV_ITEMS');
-  ok(/NAV_ACTIONS/.test(bar), 'action slots must resolve through NAV_ACTIONS');
+  ok(/NAV_SECTIONS/.test(bar), 'slots must resolve through NAV_SECTIONS');
   ok(
     !/MOBILE_TABS\.slice\(0,/.test(bar),
     'the bar must not silently truncate the tab list'
@@ -684,10 +696,13 @@ check('a custom chrome class cannot silently beat `hidden`', () => {
   // `@layer components` and `!hidden` by string, and a raw match would read the
   // explanation of the rule as a violation of it.
   const css = stripComments(read(path.join(ROOT, 'src/styles/globals.css')));
-  ok(
-    !/@layer\s+(components|utilities)/.test(css),
-    'globals.css is assumed to be unlayered here; if it gains @layer, revisit this test'
-  );
+  // Layered rules sit before the utilities, so they cannot beat `hidden`; the
+  // invariant below is about the unlayered ones. A layered rule that set
+  // `display` would still be fine, but would make this reasoning harder to
+  // follow, so keep layers to typography/colour.
+  for (const m of css.matchAll(/@layer\s+(?:components|utilities)\s*\{([\s\S]*?)\n\}/g)) {
+    ok(!/\bdisplay\s*:/.test(m[1]), 'a @layer block sets display; revisit this test');
+  }
 
   // Custom classes that set `display`, from the stylesheet's own definitions.
   const displaySetters = new Set<string>();
@@ -747,7 +762,8 @@ check('the phone header carries the logo, bell, account and a bare leaderboard i
     'no header control may be hidden until xl any more'
   );
   ok(/chip chip--icon/.test(header), 'the leaderboard must use the icon-sized chip');
-  const lb = header.match(/<button[\s\S]{0,300}?aria-label="Leaderboard"[\s\S]{0,300}?<\/button>/);
+  // 600, not 300: the button carries a title, and the file has CRLF line endings.
+  const lb = header.match(/<button[\s\S]{0,600}?aria-label="Leaderboard"[\s\S]{0,600}?<\/button>/);
   ok(lb, 'the leaderboard button must exist');
   ok(
     /<span className="hidden font-bold xl:inline">Leaderboard<\/span>/.test(lb![0]),
@@ -771,7 +787,7 @@ check('the phone header carries the logo, bell, account and a bare leaderboard i
   const quick = drawer.match(/\(\[([^\]]*)\] as const\)\.map/);
   ok(quick, 'the drawer quick-action list must be readable');
   ok(!/leaderboard/.test(quick![1]), 'the leaderboard must not be in the drawer as well');
-  ok(/'search'/.test(quick![1]), 'search must still be reachable from the drawer');
+  ok(!/'search'/.test(quick![1]), 'search lives in the phone header now, not also in the drawer');
   ok(!/^export const MOBILE_TAB_ACTIONS[^\n]*'leaderboard'/m.test(nav), 'the tab bar must not duplicate the icon');
 });
 

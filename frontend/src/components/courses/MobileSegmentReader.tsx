@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ListChecks } from 'lucide-react';
 
 export interface LessonSegment {
   id: string;
@@ -87,7 +87,7 @@ export const MobileSegmentReader: React.FC<{
       {/* Step header: position, honest time estimate, revision shortcut. */}
       <div className="mb-3 flex items-center justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+          <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">
             Step {safeIndex + 1} of {total}
             {minutes ? <span className="ml-2 font-semibold normal-case tracking-normal">About {minutes} min</span> : null}
           </p>
@@ -111,7 +111,7 @@ export const MobileSegmentReader: React.FC<{
             onClick={() => go(summaryIndex)}
             className="focus-ring inline-flex min-h-[44px] flex-none items-center gap-1.5 rounded-xl border border-[var(--border-strong)] px-3 text-xs font-bold text-[var(--ink)] transition-colors active:bg-[var(--bg-surface-hover)]"
           >
-            <Sparkles size={14} className="text-[var(--brand-sky)]" />
+            <ListChecks size={14} className="text-[var(--brand-sky)]" />
             Summary
           </button>
         )}

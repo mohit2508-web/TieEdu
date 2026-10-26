@@ -3,10 +3,7 @@ import { ContentBlock, BlockType } from '@/types';
 import { ContentBlockRenderer } from '@/components/blocks/ContentBlockRenderer';
 import { MarkdownEditor, clearEditorDraft } from '@/components/editor/MarkdownEditor';
 import { addBlockApi } from '@/lib/api';
-import {
-  X, Plus, Save, Code, FileText, Image as ImageIcon, MessageSquare, Layers,
-  Play, Eye, Table2, Music, Video, Sparkles, ListChecks, Link2, Trash2
-} from 'lucide-react';
+import { X, Plus, Save, Code, FileText, Image as ImageIcon, MessageSquare, Layers, Play, Eye, Table2, Music, Video, ListChecks, Link2, Trash2, LayoutTemplate } from 'lucide-react';
 
 interface BlockEditorModalProps {
   isOpen: boolean;
@@ -17,7 +14,7 @@ interface BlockEditorModalProps {
   onSaved?: () => void;
 }
 
-const inputCls = "w-full p-2.5 border border-gray-200 rounded-xl bg-[#FAFAF9] text-sm focus:outline-none focus:ring-2 focus:ring-[#0284C7]";
+const inputCls = "w-full p-2.5 border border-gray-200 rounded-xl bg-app-warm text-sm focus:outline-none focus:ring-2 focus:ring-signal";
 
 const BLOCK_TYPES: { type: BlockType; label: string; icon: any }[] = [
   { type: 'markdown', label: 'Rich Text', icon: <FileText className="w-4 h-4" /> },
@@ -141,10 +138,10 @@ export const BlockEditorModal: React.FC<BlockEditorModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-gray-200 mb-4 shrink-0 px-4 sm:px-0 pt-4 sm:pt-0">
           <div className="min-w-0">
-            <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold uppercase bg-amber-100 text-amber-900 px-2 py-0.5 rounded">
-              <Sparkles className="w-3 h-3 text-[#B45309]" /> Live CMS Block Builder
+            <span className="inline-flex items-center gap-1 text-xs font-bold uppercase bg-amber-100 text-amber-900 px-2 py-0.5 rounded">
+              <LayoutTemplate className="w-3 h-3 text-amber-deep" /> Live CMS Block Builder
             </span>
-            <h3 className="text-lg sm:text-xl font-bold text-[#1E293B] pt-1">Add Content Block</h3>
+            <h3 className="text-lg sm:text-xl font-bold text-ink-soft pt-1">Add Content Block</h3>
             <p className="text-xs text-gray-500 truncate">{moduleTitle} · {companyName}</p>
           </div>
           <button onClick={onClose} aria-label="Close" className="p-2 text-gray-400 hover:text-gray-900 rounded-full hover:bg-gray-100 shrink-0">
@@ -155,11 +152,11 @@ export const BlockEditorModal: React.FC<BlockEditorModalProps> = ({
         {saved ? (
           <div className="py-12 text-center text-sm text-emerald-600 font-bold space-y-2">
             <p className="text-lg">✓ Block saved & published!</p>
-            <p className="text-xs text-gray-500 font-mono">Student views updated live.</p>
+            <p className="text-xs text-gray-500 ">Student views updated live.</p>
           </div>
         ) : (
           <>
-            <div className="lg:hidden flex gap-1 p-1 bg-[#F1F5F9] rounded-xl mb-3 shrink-0 mx-4 sm:mx-0" role="tablist" aria-label="Editor panes">
+            <div className="lg:hidden flex gap-1 p-1 bg-paper rounded-xl mb-3 shrink-0 mx-4 sm:mx-0" role="tablist" aria-label="Editor panes">
               {(['edit', 'preview'] as const).map((t) => (
                 <button
                   key={t}
@@ -167,7 +164,7 @@ export const BlockEditorModal: React.FC<BlockEditorModalProps> = ({
                   aria-selected={mobileTab === t}
                   onClick={() => setMobileTab(t)}
                   className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors min-h-[2.5rem] ${
-                    mobileTab === t ? 'bg-white text-[#0284C7] shadow-sm' : 'text-gray-500'
+                    mobileTab === t ? 'bg-white text-signal shadow-sm' : 'text-gray-500'
                   }`}
                 >
                   {t === 'edit' ? 'Edit' : 'Preview'}
@@ -182,7 +179,7 @@ export const BlockEditorModal: React.FC<BlockEditorModalProps> = ({
 
               {/* Block Type Selection */}
               <div>
-                <label className="block text-xs font-bold text-gray-500 mb-2 uppercase font-mono">Block Payload Type</label>
+                <label className="block text-xs font-bold text-gray-500 mb-2 uppercase ">Block Payload Type</label>
                 <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                   {BLOCK_TYPES.map((b) => (
                     <button
@@ -192,12 +189,12 @@ export const BlockEditorModal: React.FC<BlockEditorModalProps> = ({
                       aria-pressed={blockType === b.type}
                       className={`p-2.5 rounded-xl border text-center flex flex-col items-center justify-center gap-1 font-bold transition-all min-h-[3.25rem] ${
                         blockType === b.type
-                          ? 'bg-[#0284C7] text-white border-[#0284C7] shadow-sm'
-                          : 'bg-[#FAFAF9] text-gray-500 border-gray-200 hover:bg-white'
+                          ? 'bg-signal text-white border-signal shadow-sm'
+                          : 'bg-app-warm text-gray-500 border-gray-200 hover:bg-white'
                       }`}
                     >
                       {b.icon}
-                      <span className="text-[10px] font-mono leading-none">{b.label}</span>
+                      <span className="text-xs leading-none">{b.label}</span>
                     </button>
                   ))}
                 </div>
@@ -205,7 +202,7 @@ export const BlockEditorModal: React.FC<BlockEditorModalProps> = ({
 
               {blockType === 'markdown' && (
                 <div>
-                  <label className="block font-bold text-gray-500 mb-1.5 font-mono">Rich Text Content</label>
+                  <label className="block font-bold text-gray-500 mb-1.5 ">Rich Text Content</label>
                   <MarkdownEditor
                     value={blockText}
                     onChange={setBlockText}
@@ -219,10 +216,10 @@ export const BlockEditorModal: React.FC<BlockEditorModalProps> = ({
               {blockType === 'checklist' && (
                 <div className="space-y-2">
                   <div>
-                    <label className="block font-bold text-gray-500 mb-1 font-mono">Checklist Title</label>
+                    <label className="block font-bold text-gray-500 mb-1 ">Checklist Title</label>
                     <input className={inputCls} value={checklistTitle} onChange={(e) => setChecklistTitle(e.target.value)} placeholder="Before the interview" />
                   </div>
-                  <label className="block font-bold text-gray-500 mb-1 font-mono">Items</label>
+                  <label className="block font-bold text-gray-500 mb-1 ">Items</label>
                   {checklistItems.map((item, i) => (
                     <div key={i} className="flex gap-2">
                       <input
@@ -245,7 +242,7 @@ export const BlockEditorModal: React.FC<BlockEditorModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setChecklistItems((p) => [...p, ''])}
-                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-dashed border-gray-300 text-gray-500 hover:border-[#0284C7] hover:text-[#0284C7] font-bold min-h-[2.5rem]"
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-dashed border-gray-300 text-gray-500 hover:border-signal hover:text-signal font-bold min-h-[2.5rem]"
                   >
                     <Plus className="w-3.5 h-3.5" /> Add item
                   </button>
@@ -255,10 +252,10 @@ export const BlockEditorModal: React.FC<BlockEditorModalProps> = ({
               {blockType === 'resources' && (
                 <div className="space-y-2">
                   <div>
-                    <label className="block font-bold text-gray-500 mb-1 font-mono">Section Title</label>
+                    <label className="block font-bold text-gray-500 mb-1 ">Section Title</label>
                     <input className={inputCls} value={resourcesTitle} onChange={(e) => setResourcesTitle(e.target.value)} placeholder="Further reading" />
                   </div>
-                  <label className="block font-bold text-gray-500 mb-1 font-mono">Links</label>
+                  <label className="block font-bold text-gray-500 mb-1 ">Links</label>
                   {resourceLinks.map((r, i) => (
                     <div key={i} className="flex gap-2">
                       <input
@@ -287,7 +284,7 @@ export const BlockEditorModal: React.FC<BlockEditorModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setResourceLinks((p) => [...p, { label: '', url: '' }])}
-                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-dashed border-gray-300 text-gray-500 hover:border-[#0284C7] hover:text-[#0284C7] font-bold min-h-[2.5rem]"
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-dashed border-gray-300 text-gray-500 hover:border-signal hover:text-signal font-bold min-h-[2.5rem]"
                   >
                     <Plus className="w-3.5 h-3.5" /> Add link
                   </button>
@@ -297,13 +294,13 @@ export const BlockEditorModal: React.FC<BlockEditorModalProps> = ({
               {blockType === 'code' && (
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block font-bold text-gray-500 mb-1 font-mono">Language</label>
+                    <label className="block font-bold text-gray-500 mb-1 ">Language</label>
                     <select value={codeLang} onChange={(e) => setCodeLang(e.target.value)} className={inputCls + ' font-mono'}>
                       {['cpp', 'java', 'python', 'javascript', 'typescript', 'go', 'sql'].map((l) => <option key={l}>{l}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="block font-bold text-gray-500 mb-1 font-mono">Filename</label>
+                    <label className="block font-bold text-gray-500 mb-1 ">Filename</label>
                     <input className={inputCls} value={codeFilename} onChange={(e) => setCodeFilename(e.target.value)} placeholder="lru_cache.cpp" />
                   </div>
                 </div>
@@ -311,7 +308,7 @@ export const BlockEditorModal: React.FC<BlockEditorModalProps> = ({
 
               {blockType === 'callout' && (
                 <div>
-                  <label className="block font-bold text-gray-500 mb-1 font-mono">Callout Style</label>
+                  <label className="block font-bold text-gray-500 mb-1 ">Callout Style</label>
                   <select value={calloutStyle} onChange={(e) => setCalloutStyle(e.target.value as any)} className={inputCls}>
                     <option value="tip">💡 Golden Pro-Tip (Amber)</option>
                     <option value="warning">⚠️ Interviewer Trap Warning (Red)</option>
@@ -326,11 +323,11 @@ export const BlockEditorModal: React.FC<BlockEditorModalProps> = ({
                   {blockType === 'image' && (
                     <>
                       <div>
-                        <label className="block font-bold text-gray-500 mb-1 font-mono">Image URL</label>
+                        <label className="block font-bold text-gray-500 mb-1 ">Image URL</label>
                         <input type="text" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://..." className={inputCls} />
                       </div>
                       <div>
-                        <label className="block font-bold text-gray-500 mb-1 font-mono">Caption</label>
+                        <label className="block font-bold text-gray-500 mb-1 ">Caption</label>
                         <input type="text" value={imageCaption} onChange={(e) => setImageCaption(e.target.value)} className={inputCls} />
                       </div>
                     </>
@@ -338,11 +335,11 @@ export const BlockEditorModal: React.FC<BlockEditorModalProps> = ({
                   {blockType === 'video' && (
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block font-bold text-gray-500 mb-1 font-mono">Video URL</label>
+                        <label className="block font-bold text-gray-500 mb-1 ">Video URL</label>
                         <input type="text" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} className={inputCls} placeholder="https://youtube.com/watch?v=..." />
                       </div>
                       <div>
-                        <label className="block font-bold text-gray-500 mb-1 font-mono">Type</label>
+                        <label className="block font-bold text-gray-500 mb-1 ">Type</label>
                         <select value={videoType} onChange={(e) => setVideoType(e.target.value as any)} className={inputCls}>
                           <option value="youtube">YouTube</option>
                           <option value="mp4">MP4 Direct</option>
@@ -352,13 +349,13 @@ export const BlockEditorModal: React.FC<BlockEditorModalProps> = ({
                   )}
                   {blockType === 'audio' && (
                     <div>
-                      <label className="block font-bold text-gray-500 mb-1 font-mono">Audio URL (mp3)</label>
+                      <label className="block font-bold text-gray-500 mb-1 ">Audio URL (mp3)</label>
                       <input type="text" value={audioUrl} onChange={(e) => setAudioUrl(e.target.value)} className={inputCls} placeholder="https://..." />
                     </div>
                   )}
                   {blockType === 'diagram' && (
                     <div>
-                      <label className="block font-bold text-gray-500 mb-1 font-mono">Caption</label>
+                      <label className="block font-bold text-gray-500 mb-1 ">Caption</label>
                       <input type="text" value={imageCaption} onChange={(e) => setImageCaption(e.target.value)} className={inputCls} placeholder="Architecture Diagram" />
                     </div>
                   )}
@@ -368,11 +365,11 @@ export const BlockEditorModal: React.FC<BlockEditorModalProps> = ({
               {blockType === 'table' && (
                 <div className="space-y-2">
                   <div>
-                    <label className="block font-bold text-gray-500 mb-1 font-mono">Headers (comma separated)</label>
+                    <label className="block font-bold text-gray-500 mb-1 ">Headers (comma separated)</label>
                     <input className={inputCls} value={tableHeaders} onChange={(e) => setTableHeaders(e.target.value)} placeholder="Topic, Complexity" />
                   </div>
                   <div>
-                    <label className="block font-bold text-gray-500 mb-1 font-mono">Rows (one per line, comma separated)</label>
+                    <label className="block font-bold text-gray-500 mb-1 ">Rows (one per line, comma separated)</label>
                     <textarea rows={4} className={inputCls + ' font-mono'} value={tableRows} onChange={(e) => setTableRows(e.target.value)}
                       placeholder={'Insert, O(log N)\nSearch, O(log N)'} />
                   </div>
@@ -382,7 +379,7 @@ export const BlockEditorModal: React.FC<BlockEditorModalProps> = ({
               {/* Payload text area for non-rich-text types */}
               {blockType !== 'markdown' && blockType !== 'table' && blockType !== 'image' && blockType !== 'video' && blockType !== 'audio' && blockType !== 'checklist' && blockType !== 'resources' && (
                 <div>
-                  <label className="block font-bold text-gray-500 mb-1.5 font-mono">
+                  <label className="block font-bold text-gray-500 mb-1.5 ">
                     {blockType === 'diagram' ? 'Mermaid.js Code' : blockType === 'code' ? 'Code Snippet' : 'Text Payload'}
                   </label>
                   <textarea
@@ -396,7 +393,7 @@ export const BlockEditorModal: React.FC<BlockEditorModalProps> = ({
                           ? 'int main() { return 0; }'
                           : 'Add the callout text here...'
                     }
-                    className={'w-full p-3 font-mono text-xs border rounded-xl bg-[#FAFAF9] focus:bg-white focus:ring-2 focus:ring-[#0284C7] focus:outline-none'}
+                    className={'w-full p-3 text-xs border rounded-xl bg-app-warm focus:bg-white focus:ring-2 focus:ring-signal focus:outline-none'}
                   />
                 </div>
               )}
@@ -414,12 +411,12 @@ export const BlockEditorModal: React.FC<BlockEditorModalProps> = ({
             </div>
 
             {/* RIGHT: Live Student Preview */}
-            <div className={`bg-[#FAFAF9] p-4 rounded-2xl border border-gray-200 flex flex-col order-1 lg:order-2 ${mobileTab === 'preview' ? '' : 'hidden lg:flex'}`}>
-              <div className="flex items-center justify-between border-b border-gray-200 pb-2 text-xs font-mono font-bold text-[#1F3A5F]">
+            <div className={`bg-app-warm p-4 rounded-2xl border border-gray-200 flex flex-col order-1 lg:order-2 ${mobileTab === 'preview' ? '' : 'hidden lg:flex'}`}>
+              <div className="flex items-center justify-between border-b border-gray-200 pb-2 text-xs font-bold text-brand-ink">
                 <span className="flex items-center gap-1.5">
-                  <Eye className="w-4 h-4 text-[#0284C7]" /> Live Student Preview
+                  <Eye className="w-4 h-4 text-signal" /> Live Student Preview
                 </span>
-                <span className="text-[10px] text-gray-400">Calibre · 18px prose</span>
+                <span className="text-xs text-gray-400">Calibre · 18px prose</span>
               </div>
               <div className="flex-1 overflow-y-auto bg-white p-5 rounded-xl border border-gray-200 mt-3 max-h-[45vh]">
                 <ContentBlockRenderer block={previewBlock} isLocked={false} companyName={companyName} />

@@ -20,32 +20,32 @@ import {
  * real links, so `#companies` / `#pricing` keep the homepage's in-page jumps.
  */
 const ACTIONS = [
-  { icon: LibraryBig, label: 'Courses', href: '/courses', tint: 'text-[#0271B5] bg-[#E8F4FB]' },
+  { icon: LibraryBig, label: 'Courses', href: '/courses', tint: 'text-signal bg-signal-soft' },
   { icon: BrainCircuit, label: 'Skill Tests', href: '/skill-test', tint: 'text-[#7C3AED] bg-[#F1EBFE]' },
-  { icon: ClipboardList, label: 'Mock Drives', href: '/mock-drive', tint: 'text-[#0271B5] bg-[#E8F4FB]' },
-  { icon: GraduationCap, label: 'Free Course', href: '/interview-course', tint: 'text-[#B45309] bg-[#FBF1E1]' },
-  { icon: Building2, label: 'Vaults', href: '#companies', tint: 'text-[#0E2A44] bg-[#E8EEF4]' },
-  { icon: Zap, label: 'Drops', href: '/drops', tint: 'text-[#A63D28] bg-[#FDEDE9]' },
-  { icon: CalendarCheck, label: 'Study Plan', href: '/study-plan', tint: 'text-[#0271B5] bg-[#E9F6EE]' },
-  { icon: IndianRupee, label: 'Pricing', href: '#pricing', tint: 'text-[#92400E] bg-[#F7F6F3]' },
+  { icon: ClipboardList, label: 'Mock Drives', href: '/mock-drive', tint: 'text-signal bg-signal-soft' },
+  { icon: GraduationCap, label: 'Free Course', href: '/interview-course', tint: 'text-amber-deep bg-warning-soft' },
+  { icon: Building2, label: 'Companies', href: '/companies', tint: 'text-brand-ink bg-surface-hover' },
+  { icon: Zap, label: 'Drops', href: '/drops', tint: 'text-danger bg-signal-soft' },
+  { icon: CalendarCheck, label: 'Study Plan', href: '/study-plan', tint: 'text-signal bg-surface-hover' },
+  { icon: IndianRupee, label: 'Pricing', href: '#pricing', tint: 'text-amber-deep bg-paper' },
 ];
 
 export const QuickActions: React.FC = () => (
-  <section className="bg-white border-b border-[#E9E7E1]">
+  <section className="bg-white border-b border-line">
     <Reveal className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 py-4 sm:py-5">
       <nav aria-label="Quick links" className="grid grid-cols-4 sm:grid-cols-8 gap-1.5 sm:gap-2">
         {ACTIONS.map((a) => (
           <Link
             key={a.label}
             href={a.href}
-            className="flex min-h-[76px] flex-col items-center justify-center gap-1.5 rounded-2xl px-1 py-3 transition-colors hover:bg-[#F7F6F3] focus-ring"
+            className="flex min-h-[76px] flex-col items-center justify-center gap-1.5 rounded-2xl px-1 py-3 transition-colors hover:bg-paper focus-ring"
           >
             <span
               className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl ${a.tint}`}
             >
               <a.icon className="w-5 h-5" aria-hidden />
             </span>
-            <span className="text-center text-[12px] font-bold leading-tight text-[#3E4754]">
+            <span className="text-center text-xs font-bold leading-tight text-body">
               {a.label}
             </span>
           </Link>

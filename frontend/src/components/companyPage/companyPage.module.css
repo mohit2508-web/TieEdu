@@ -33,10 +33,31 @@
   --train: #0369a1;
   --test: #c2410c;
   --track: #0f766e;
-  --accent: #6d28d9;
+  --accent: var(--accent-l, #6d28d9); /* set inline from the studio accent */
+  --tint-track: #e6f4f1;
+  --tint-track-line: #cde8e2;
+  --tint-money: #fef3c7;
+  --tint-money-soft: #fef6e4;
+  --tint-money-line: #f6e0b0;
+  --tint-train: #e8f4fb;
+  --tint-neutral: #ecebe6;
+  --tint-paper: #fbfaf8;
+  --tint-test: #fde8e1;
+  --tint-test-soft: #fdf1ec;
+  --test-ink: #8a3412;
+  --test-ink-deep: #6b2a12;
+  --danger: #b42318;
+  --stamp-track-ink: #0f5f57;
+  --stamp-money-ink: #8a4b08;
+  --stamp-train-ink: #075985;
+  --stamp-neutral-ink: #4b5562;
+  --offer-ink: #0b3d37;
+  --offer-body: #24524c;
+  --track-hover: #0b5d56;
+  --on-fill: #ffffff;
   --display: var(--cp-display-font, 'Bricolage Grotesque'), 'Carlito', 'Calibri', 'Inter', system-ui, sans-serif;
   --body: 'Calibre', 'Calibri', 'Carlito', 'Inter', -apple-system, 'Segoe UI', sans-serif;
-  --mono: 'JetBrains Mono', 'Cascadia Code', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  --mono: var(--font-mono), 'Cascadia Code', ui-monospace, 'SFMono-Regular', Menlo, monospace;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --sticky-top: var(--header-total, 64px);
 
@@ -298,23 +319,23 @@
 }
 
 .stamp_verified {
-  background: #e6f4f1;
-  color: #0f5f57;
+  background: var(--tint-track);
+  color: var(--stamp-track-ink);
 }
 
 .stamp_being_verified {
-  background: #fef3c7;
-  color: #8a4b08;
+  background: var(--tint-money);
+  color: var(--stamp-money-ink);
 }
 
 .stamp_candidate_reports {
-  background: #e8f4fb;
-  color: #075985;
+  background: var(--tint-train);
+  color: var(--stamp-train-ink);
 }
 
 .stamp_confirm_notice {
   background: #f1f0ec;
-  color: #4b5562;
+  color: var(--stamp-neutral-ink);
 }
 
 .tChips {
@@ -390,7 +411,7 @@
 }
 
 .heroPaper .langToggle {
-  background: #ecebe6;
+  background: var(--tint-neutral);
   border-color: transparent;
 }
 
@@ -957,14 +978,14 @@
 
 .stationCleared .stationDot {
   border-color: var(--track);
-  background: #e6f4f1;
+  background: var(--tint-track);
   color: var(--track);
 }
 
 .stationActive .stationDot {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--on-fill);
   transform: scale(1.08);
 }
 
@@ -1071,7 +1092,7 @@
   font-weight: 700;
   padding: 2px 9px;
   border-radius: 999px;
-  background: #fde8e1;
+  background: var(--tint-test);
   color: #9a3412;
 }
 
@@ -1196,8 +1217,8 @@
   font-size: 13px;
   padding: 3px 10px;
   border-radius: 999px;
-  background: #fdf1ec;
-  color: #8a3412;
+  background: var(--tint-test-soft);
+  color: var(--test-ink);
 }
 
 .tip {
@@ -1345,7 +1366,7 @@
 }
 
 .stripSample .dayMock .dayFocus {
-  color: #8a3412; /* 5.9:1 on the sample cell — amber-deep was 4.2:1 at 12px */
+  color: var(--test-ink); /* 5.9:1 on the sample cell — amber-deep was 4.2:1 at 12px */
 }
 
 .day {
@@ -1372,14 +1393,14 @@
 }
 
 .dayFinal {
-  background: #e6f4f1;
-  border-color: #cde8e2;
+  background: var(--tint-track);
+  border-color: var(--tint-track-line);
 }
 
 .dayTest {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--on-fill);
 }
 
 .dayTest .dayWeek,
@@ -1443,7 +1464,7 @@
   display: inline-flex;
   padding: 4px;
   border-radius: 14px;
-  background: #ecebe6;
+  background: var(--tint-neutral);
   gap: 4px;
 }
 
@@ -1501,7 +1522,7 @@
 
 .colOn {
   box-shadow: inset 0 3px 0 var(--accent);
-  background: #fbfaf8;
+  background: var(--tint-paper);
 }
 
 .compare tbody .colOn {
@@ -1747,32 +1768,32 @@
   flex-wrap: wrap;
   padding: 22px 24px;
   border-radius: 18px;
-  background: #e6f4f1;
-  border: 1px solid #cde8e2;
+  background: var(--tint-track);
+  border: 1px solid var(--tint-track-line);
 }
 
 .offerTitle {
   font-size: 18px;
   font-weight: 700;
-  color: #0b3d37;
+  color: var(--offer-ink);
   margin: 0;
 }
 
 .offerBody {
   margin: 4px 0 0;
   font-size: 15px;
-  color: #24524c;
+  color: var(--offer-body);
   max-width: 640px;
 }
 
 .btnTeal {
   background: var(--track);
-  color: #fff;
+  color: var(--on-fill);
 }
 
 @media (hover: hover) {
   .btnTeal:hover {
-    background: #0b5d56;
+    background: var(--track-hover);
   }
 }
 
@@ -1969,15 +1990,15 @@
 /* --------------------------------------------------------------- comeback */
 
 .comeback {
-  background: #fdf1ec;
+  background: var(--tint-test-soft);
   border: 1px solid #f5d5c8;
   border-radius: 18px;
   padding: 22px;
-  color: #6b2a12;
+  color: var(--test-ink-deep);
 }
 
 .comeback .h3 {
-  color: #6b2a12;
+  color: var(--test-ink-deep);
 }
 
 .comeback p {
@@ -2059,7 +2080,7 @@
 .prose code {
   font-family: var(--mono);
   font-size: 0.9em;
-  background: #ecebe6;
+  background: var(--tint-neutral);
   padding: 1px 5px;
   border-radius: 5px;
 }
@@ -2086,18 +2107,18 @@
 }
 
 .tone_note {
-  background: #e8f4fb;
+  background: var(--tint-train);
   border-color: #cfe6f4;
 }
 
 .tone_tip {
-  background: #e6f4f1;
-  border-color: #cde8e2;
+  background: var(--tint-track);
+  border-color: var(--tint-track-line);
 }
 
 .tone_warning {
-  background: #fef6e4;
-  border-color: #f6e0b0;
+  background: var(--tint-money-soft);
+  border-color: var(--tint-money-line);
 }
 
 /* -------------------------------------------------------- also preparing */
@@ -2293,16 +2314,28 @@
 
 .noteErr {
   margin: 12px 0 0;
-  color: #b42318;
+  color: var(--danger);
   font-weight: 600;
 }
 
 /* ------------------------------------------------------------- third pass */
 
+/* Visually hidden until focused. It used to be parked at `top: -60px`, but the
+   page body starts under the 64px fixed header, so that put it on top of the
+   header for every visitor. */
+.skipLink:not(:focus) {
+  clip-path: inset(50%);
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  white-space: nowrap;
+  padding: 0;
+}
+
 .skipLink {
   position: absolute;
   left: 16px;
-  top: -60px;
+  top: calc(var(--sticky-top) + 8px);
   z-index: 50;
   padding: 10px 14px;
   border-radius: 10px;
@@ -2356,8 +2389,8 @@
   margin: 24px 0;
   padding: 16px 18px;
   border-radius: 14px;
-  background: #fef6e4;
-  border: 1px solid #f6e0b0;
+  background: var(--tint-money-soft);
+  border: 1px solid var(--tint-money-line);
   color: #6b4a07;
   font-size: 15px;
 }
@@ -2404,7 +2437,7 @@
 .ynYes {
   background: var(--track);
   border-color: var(--track);
-  color: #fff;
+  color: var(--on-fill);
 }
 
 .ynNo {
@@ -2424,7 +2457,7 @@
 }
 
 .resultNo {
-  color: #b42318;
+  color: var(--danger);
   font-weight: 700;
 }
 
@@ -2464,4 +2497,47 @@
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+}
+
+/* Dark theme (UI_REDESIGN_PLAN_V2 §4.2): the page is token-driven, so dark is
+   the same tokens with dark values. The ink band stays a band, one step deeper;
+   amber stays the only money colour. */
+:global(:root[data-theme='dark']) .root {
+  --ink: #0a1a2b;
+  --ink-deep: #07131f;
+  --paper: #0b1520;
+  --card: #111e2b;
+  --rule: #1f3042;
+  --rule-strong: #2b3f55;
+  --head: #e8eef5;
+  --text: #c5cfd9;
+  --muted: #93a1af;
+  --money: #f0b95e;
+  --money-hover: #f5c77a;
+  --money-ink: #1a1205;
+  --train: #38bdf8;
+  --test: #fb923c;
+  --track: #2dd4bf;
+  --accent: var(--accent-d, #c4a7ff);
+  --stamp-track-ink: #5eead4;
+  --stamp-money-ink: #f5c77a;
+  --stamp-train-ink: #7dd3fc;
+  --stamp-neutral-ink: #c5cfd9;
+  --offer-ink: #e8eef5;
+  --offer-body: #c5cfd9;
+  --track-hover: #5eead4;
+  --on-fill: #0b1520;
+  --tint-track: #0f2e2a;
+  --tint-track-line: #1d4a43;
+  --tint-money: #33260a;
+  --tint-money-soft: #2a200b;
+  --tint-money-line: #5a4512;
+  --tint-train: #0c2434;
+  --tint-neutral: #1a2735;
+  --tint-paper: #0f1b28;
+  --tint-test: #3a1c12;
+  --tint-test-soft: #2e1810;
+  --test-ink: #fdba74;
+  --test-ink-deep: #fdba74;
+  --danger: #f87171;
 }

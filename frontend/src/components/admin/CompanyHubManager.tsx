@@ -14,8 +14,8 @@ interface CompanyHubManagerProps {
   onSelect: (companyId: string) => void;
 }
 
-const inputCls = "w-full p-2.5 border border-gray-200 rounded-xl bg-[#FAFAF9] text-sm focus:outline-none focus:ring-2 focus:ring-[#0284C7]";
-const labelCls = "block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1";
+const inputCls = "w-full p-2.5 border border-gray-200 rounded-xl bg-app-warm text-sm focus:outline-none focus:ring-2 focus:ring-signal";
+const labelCls = "block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1";
 
 /** Matches the RoundType union the compare pipeline normalises to. */
 const ROUND_TYPE_OPTIONS = ['OA', 'Technical', 'System Design', 'HR'] as const;
@@ -188,8 +188,8 @@ export const CompanyHubManager: React.FC<CompanyHubManagerProps> = ({ companies,
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
-          <h3 className="text-base font-extrabold text-[#1E293B] flex items-center gap-2">
-            <Building className="w-5 h-5 text-[#0284C7]" /> Company Hub Directory
+          <h3 className="text-base font-extrabold text-ink-soft flex items-center gap-2">
+            <Building className="w-5 h-5 text-signal" /> Company Hub Directory
           </h3>
           <p className="text-xs text-gray-500">
             {companies.length} companies · every profile field and editorial metric is yours to write
@@ -202,7 +202,7 @@ export const CompanyHubManager: React.FC<CompanyHubManagerProps> = ({ companies,
 
       <div className="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-xs overflow-x-auto">
         <table className="w-full text-left text-xs min-w-[820px]">
-          <thead className="bg-[#FAFAF9] border-b border-gray-200 text-gray-500 uppercase font-mono text-[10px]">
+          <thead className="bg-app-warm border-b border-gray-200 text-gray-500 uppercase font-mono text-xs">
             <tr>
               <th className="p-4">Company Hub</th>
               <th className="p-4">Profile</th>
@@ -212,7 +212,7 @@ export const CompanyHubManager: React.FC<CompanyHubManagerProps> = ({ companies,
               <th className="p-4 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#EDEDEB]">
+          <tbody className="divide-y divide-line">
             {companies.map((c) => {
               const profileFilled = ['tagline', 'about', 'hq', 'founded_year', 'employee_band', 'careers_link']
                 .filter((f) => {
@@ -221,36 +221,36 @@ export const CompanyHubManager: React.FC<CompanyHubManagerProps> = ({ companies,
                 }).length;
               const sourced = coverageOf(c);
               return (
-                <tr key={c.id} className="hover:bg-[#FAFAF9]">
+                <tr key={c.id} className="hover:bg-app-warm">
                   <td className="p-4">
                     <div className="flex items-center gap-3">
                       <BrandTile name={c.name} src={c.logo_url} className="w-9 h-9 rounded-xl p-1" />
                       <div>
-                        <span className="font-bold text-[#1E293B] text-sm block">{c.name}</span>
-                        <span className="text-[10px] text-gray-400 font-mono">/{c.slug} · {c.modules?.length || 0} modules</span>
+                        <span className="font-bold text-ink-soft text-sm block">{c.name}</span>
+                        <span className="text-xs text-gray-400 font-mono">/{c.slug} · {c.modules?.length || 0} modules</span>
                       </div>
                     </div>
                   </td>
                   <td className="p-4">
                     <div className="flex items-center gap-1.5">
                       <div className="h-1.5 w-14 rounded-full bg-gray-200 overflow-hidden">
-                        <div className="h-full bg-sky-600" style={{ width: `${Math.max(4, (profileFilled / 6) * 100)}%` }} />
+                        <div className="h-full bg-signal" style={{ width: `${Math.max(4, (profileFilled / 6) * 100)}%` }} />
                       </div>
-                      <span className="font-mono text-[10px] text-gray-500">{profileFilled}/6</span>
+                      <span className="font-mono text-xs text-gray-500">{profileFilled}/6</span>
                     </div>
                   </td>
                   <td className="p-4 text-emerald-700 font-bold font-mono">
                     {c.ctc_min != null && c.ctc_max != null ? `₹${c.ctc_min}–${c.ctc_max}L` : '—'}
                   </td>
                   <td className="p-4">
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold font-mono ${
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-bold font-mono ${
                       sourced === METRIC_KEYS.length ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
                     }`}>
                       {sourced}/{METRIC_KEYS.length}
                     </span>
                   </td>
                   <td className="p-4">
-                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
                       c.status === 'published' ? 'bg-emerald-100 text-emerald-800' : c.status === 'draft' ? 'bg-gray-200 text-gray-600' : 'bg-gray-100 text-gray-400'
                     }`}>
                       {c.status.toUpperCase()}
@@ -258,15 +258,15 @@ export const CompanyHubManager: React.FC<CompanyHubManagerProps> = ({ companies,
                   </td>
                   <td className="p-4 text-right">
                     <div className="inline-flex items-center gap-1.5">
-                      <button onClick={() => openEdit(c)} className="p-1.5 text-gray-500 hover:text-[#0284C7] hover:bg-sky-50 rounded-lg" title="Edit company profile">
+                      <button onClick={() => openEdit(c)} className="p-1.5 text-gray-500 hover:text-signal hover:bg-signal-soft rounded-lg" title="Edit company profile">
                         <Edit3 className="w-4 h-4" />
                       </button>
-                      <button onClick={() => onSelect(c.id)} className="px-3 py-1 bg-[#0284C7] hover:bg-[#0369A1] text-white rounded-lg text-xs font-bold" title="Manage content">
+                      <button onClick={() => onSelect(c.id)} className="px-3 py-1 bg-signal hover:bg-signal text-white rounded-lg text-xs font-bold" title="Manage content">
                         Manage
                       </button>
                       <button
                         onClick={() => setStudioFor(c)}
-                        className="inline-flex items-center gap-1 px-3 py-1 border border-gray-300 hover:border-[#0284C7] hover:text-[#0284C7] text-gray-700 rounded-lg text-xs font-bold"
+                        className="inline-flex items-center gap-1 px-3 py-1 border border-gray-300 hover:border-signal hover:text-signal text-gray-700 rounded-lg text-xs font-bold"
                         title="Design the redesigned company page"
                       >
                         <LayoutTemplate className="w-3.5 h-3.5" /> Design page
@@ -290,7 +290,7 @@ export const CompanyHubManager: React.FC<CompanyHubManagerProps> = ({ companies,
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-start sm:items-center justify-center p-3 sm:p-4 overflow-y-auto">
           <div className="bg-white rounded-3xl max-w-3xl w-full p-5 sm:p-6 shadow-2xl border border-gray-200 space-y-5 my-4">
             <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-              <h3 className="font-bold text-base text-[#1E293B]">
+              <h3 className="font-bold text-base text-ink-soft">
                 {editing ? `Edit ${editing.name}` : 'Add New Company'}
               </h3>
               <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-900"><X className="w-5 h-5" /></button>
@@ -360,7 +360,7 @@ export const CompanyHubManager: React.FC<CompanyHubManagerProps> = ({ companies,
               title="Hiring metrics"
               blurb="These are your claims, not measured facts. Record where each number came from and it becomes sourced; leave the source empty and the public page labels it unverified."
               right={
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold font-mono ${
+                <span className={`px-2 py-0.5 rounded-full text-xs font-bold font-mono ${
                   sourcedCount === METRIC_KEYS.length ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
                 }`}>
                   {sourcedCount}/{METRIC_KEYS.length} sourced
@@ -426,7 +426,7 @@ export const CompanyHubManager: React.FC<CompanyHubManagerProps> = ({ companies,
 
               {/* ------- Round-by-round notes ------- */}
               <div className="space-y-3 mt-4">
-                <p className="text-[11px] text-gray-500 leading-relaxed">
+                <p className="text-xs text-gray-500 leading-relaxed">
                   Round notes are compared side by side on the compare page. A note with no source is shown in
                   muted text and badged &ldquo;Unverified&rdquo; — it is never presented as a confirmed format.
                 </p>
@@ -462,7 +462,7 @@ export const CompanyHubManager: React.FC<CompanyHubManagerProps> = ({ companies,
             >
               <div className="space-y-3">
                 {form.rounds_pipeline.length === 0 && (
-                  <p className="rounded-xl border border-dashed border-gray-200 bg-gray-50/60 px-3 py-3 text-[11.5px] text-gray-500">
+                  <p className="rounded-xl border border-dashed border-gray-200 bg-gray-50/60 px-3 py-3 text-xs text-gray-500">
                     No custom pipeline. The public page will derive steps from the vault&apos;s own modules, so the
                     stepper can never claim a round the vault does not contain.
                   </p>
@@ -471,7 +471,7 @@ export const CompanyHubManager: React.FC<CompanyHubManagerProps> = ({ companies,
                 {form.rounds_pipeline.map((step, i) => (
                   <div key={i} className="rounded-xl border border-gray-200 bg-white p-2.5 space-y-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-[11px] font-extrabold text-[#1E293B] uppercase tracking-wider shrink-0">
+                      <span className="text-xs font-extrabold text-ink-soft uppercase tracking-wider shrink-0">
                         Step {i + 1}
                       </span>
                       <select
@@ -538,7 +538,7 @@ export const CompanyHubManager: React.FC<CompanyHubManagerProps> = ({ companies,
                     ...form,
                     rounds_pipeline: [...form.rounds_pipeline, { round_type: '', title: '', subtitle: '', module_count: '' }],
                   })}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-dashed border-gray-300 text-[11.5px] font-bold text-gray-600 hover:border-gray-400 hover:text-gray-900 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-dashed border-gray-300 text-xs font-bold text-gray-600 hover:border-gray-400 hover:text-gray-900 transition-colors"
                 >
                   <Plus className="w-3.5 h-3.5" /> Add pipeline step
                 </button>
@@ -563,7 +563,7 @@ export const CompanyHubManager: React.FC<CompanyHubManagerProps> = ({ companies,
                     <option value="archived">Archived — hidden</option>
                   </select>
                 </div>
-                <p className="text-[11px] text-gray-500 flex items-start gap-1.5 leading-relaxed">
+                <p className="text-xs text-gray-500 flex items-start gap-1.5 leading-relaxed">
                   <ShieldAlert className="w-3.5 h-3.5 shrink-0 mt-0.5 text-amber-600" />
                   Accuracy, rating and unlock counts cannot be set here. They are counted from real candidate
                   reports and orders on every request.
@@ -599,8 +599,8 @@ const Section: React.FC<{ title: string; blurb?: string; right?: React.ReactNode
   <div className="space-y-3">
     <div className="flex items-start justify-between gap-3">
       <div>
-        <h4 className="text-[13px] font-extrabold text-[#1E293B]">{title}</h4>
-        {blurb && <p className="text-[11px] text-gray-500 leading-relaxed mt-0.5 max-w-xl">{blurb}</p>}
+        <h4 className="text-sm font-extrabold text-ink-soft">{title}</h4>
+        {blurb && <p className="text-xs text-gray-500 leading-relaxed mt-0.5 max-w-xl">{blurb}</p>}
       </div>
       {right}
     </div>
@@ -622,18 +622,18 @@ const MetricField: React.FC<{
   if (!hasValue) {
     return (
       <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50/60 px-3 py-2.5">
-        <p className="text-[11px] font-bold text-gray-500">{label} — no value entered</p>
-        <p className="text-[10.5px] text-gray-400 mt-0.5">The public page will say &ldquo;not recorded&rdquo; for this.</p>
+        <p className="text-xs font-bold text-gray-500">{label} — no value entered</p>
+        <p className="text-xs text-gray-400 mt-0.5">The public page will say &ldquo;not recorded&rdquo; for this.</p>
       </div>
     );
   }
   return (
     <div className="rounded-xl border border-amber-200 bg-amber-50/40 px-3 py-2.5 space-y-2">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-[11px] font-extrabold text-[#1E293B] uppercase tracking-wider">{label} · source</span>
+        <span className="text-xs font-extrabold text-ink-soft uppercase tracking-wider">{label} · source</span>
         {value?.source
-          ? <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700"><ShieldCheck className="w-3 h-3" /> Sourced</span>
-          : <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700"><ShieldAlert className="w-3 h-3" /> Unverified</span>}
+          ? <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700"><ShieldCheck className="w-3 h-3" /> Sourced</span>
+          : <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-700"><ShieldAlert className="w-3 h-3" /> Unverified</span>}
       </div>
       <input
         className={inputCls}
@@ -667,7 +667,7 @@ const NoteField: React.FC<{
   onProv: (patch: Partial<MetricProvenance> | null) => void;
 }> = ({ label, value, onChange, prov, onProv }) => (
   <div className="rounded-xl border border-gray-200 p-2.5 space-y-2 bg-white">
-    <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider">{label}</label>
+    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider">{label}</label>
     <textarea
       rows={3}
       className={inputCls}
@@ -678,10 +678,10 @@ const NoteField: React.FC<{
     {value.trim() !== '' && (
       <div className="space-y-1.5">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-[10px] font-extrabold text-gray-500 uppercase tracking-wider">Source</span>
+          <span className="text-xs font-extrabold text-gray-500 uppercase tracking-wider">Source</span>
           {prov?.source
-            ? <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700"><ShieldCheck className="w-3 h-3" /> Sourced</span>
-            : <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700"><ShieldAlert className="w-3 h-3" /> Unverified</span>}
+            ? <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700"><ShieldCheck className="w-3 h-3" /> Sourced</span>
+            : <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-700"><ShieldAlert className="w-3 h-3" /> Unverified</span>}
         </div>
         <input
           className={inputCls}

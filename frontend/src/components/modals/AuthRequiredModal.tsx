@@ -73,7 +73,7 @@ export const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({
           type="submit"
           form={FORM_ID}
           disabled={loading}
-          className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-[#0284C7] py-3 text-sm font-bold text-white shadow-md transition-colors hover:bg-[#0369A1] disabled:opacity-60"
+          className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-signal py-3 text-sm font-bold text-white shadow-md transition-colors hover:bg-signal disabled:opacity-60"
         >
           {loading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -88,10 +88,10 @@ export const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({
     >
       <div className="px-5 pb-5">
         <div className="text-center space-y-3">
-          <div className="w-14 h-14 mx-auto rounded-2xl bg-sky-50 border border-sky-200 text-[#0284C7] flex items-center justify-center shadow-xs">
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-signal-soft border border-signal/30 text-signal flex items-center justify-center shadow-xs">
             <Lock className="w-7 h-7" />
           </div>
-          <p className="text-[13px] text-[color:var(--text-muted)] max-w-xs mx-auto">
+          <p className="text-sm text-[color:var(--text-muted)] max-w-xs mx-auto">
             {targetTitle
               ? `Please sign in to view "${targetTitle}" and access official company vault guides.`
               : 'Sign in or create a free student account to read company guides, DSA banks, and official PDFs.'}
@@ -106,7 +106,7 @@ export const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({
             aria-selected={tab === 'signup'}
             onClick={() => { setTab('signup'); setError(null); }}
             className={`flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-lg text-xs font-bold transition-colors ${
-              tab === 'signup' ? 'bg-white text-[#0284C7] shadow-xs' : 'text-gray-500'
+              tab === 'signup' ? 'bg-white text-signal shadow-xs' : 'text-gray-500'
             }`}
           >
             <UserPlus className="w-3.5 h-3.5" /> Create Free Account
@@ -117,7 +117,7 @@ export const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({
             aria-selected={tab === 'login'}
             onClick={() => { setTab('login'); setError(null); }}
             className={`flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-lg text-xs font-bold transition-colors ${
-              tab === 'login' ? 'bg-white text-[#0284C7] shadow-xs' : 'text-gray-500'
+              tab === 'login' ? 'bg-white text-signal shadow-xs' : 'text-gray-500'
             }`}
           >
             <LogIn className="w-3.5 h-3.5" /> Sign In
@@ -137,7 +137,7 @@ export const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({
         <form id={FORM_ID} onSubmit={handleSubmit} className="space-y-3.5 mt-4">
           {tab === 'signup' && (
             <div>
-              <label htmlFor="auth-name" className="block text-xs font-bold text-[#1E293B] mb-1">Full Name</label>
+              <label htmlFor="auth-name" className="block text-xs font-bold text-ink-soft mb-1">Full Name</label>
               <input
                 id="auth-name"
                 name="name"
@@ -148,13 +148,13 @@ export const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({
                 placeholder="e.g. Mohit Jadon"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-[#0284C7] focus:bg-white transition-all"
+                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-signal focus:bg-white transition-all"
               />
             </div>
           )}
 
           <div>
-            <label htmlFor="auth-email" className="block text-xs font-bold text-[#1E293B] mb-1">Email Address</label>
+            <label htmlFor="auth-email" className="block text-xs font-bold text-ink-soft mb-1">Email Address</label>
             <input
               id="auth-email"
               name="email"
@@ -169,12 +169,12 @@ export const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({
               placeholder="name@college.edu.in"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-[#0284C7] focus:bg-white transition-all"
+              className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-signal focus:bg-white transition-all"
             />
           </div>
 
           <div>
-            <label htmlFor="auth-password" className="block text-xs font-bold text-[#1E293B] mb-1">Password</label>
+            <label htmlFor="auth-password" className="block text-xs font-bold text-ink-soft mb-1">Password</label>
             <input
               id="auth-password"
               name="password"
@@ -186,7 +186,7 @@ export const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-[#0284C7] focus:bg-white transition-all"
+              className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-signal focus:bg-white transition-all"
             />
           </div>
 
@@ -197,10 +197,10 @@ export const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({
                 type="checkbox"
                 checked={acceptedTerms}
                 onChange={(e) => setAcceptedTerms(e.target.checked)}
-                className="mt-0.5 w-4 h-4 rounded border-gray-300 text-[#0284C7] focus:ring-[#0284C7] shrink-0"
+                className="mt-0.5 w-4 h-4 rounded border-gray-300 text-signal focus:ring-signal shrink-0"
               />
               <label htmlFor="modal-tc-checkbox" className="text-xs text-gray-600 leading-tight cursor-pointer select-none py-2">
-                I agree to the <span className="font-semibold text-[#0284C7] underline underline-offset-2">Terms &amp; Conditions</span> and <span className="font-semibold text-[#0284C7] underline underline-offset-2">Privacy Policy</span>.
+                I agree to the <span className="font-semibold text-signal underline underline-offset-2">Terms &amp; Conditions</span> and <span className="font-semibold text-signal underline underline-offset-2">Privacy Policy</span>.
               </label>
             </div>
           )}

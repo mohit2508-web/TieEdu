@@ -33,8 +33,8 @@ const hasLocalizable = (fields: CpFieldDef[] = []): boolean =>
   fields.some((f) => LOCALIZABLE.has(f.kind) || (f.kind === 'list' && hasLocalizable(f.item)));
 
 const inputCls =
-  'w-full px-3 py-2 border border-gray-200 rounded-lg bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-sky-600 focus:border-sky-600';
-const labelCls = 'block text-[13px] font-semibold text-gray-700 mb-1';
+  'w-full px-3 py-2 border border-gray-200 rounded-lg bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-signal focus:border-signal';
+const labelCls = 'block text-sm font-semibold text-gray-700 mb-1';
 const helpCls = 'mt-1 text-xs text-gray-500';
 
 export const newRowId = () => `r-${Math.random().toString(16).slice(2, 10)}`;
@@ -45,7 +45,7 @@ function Counter({ value, max }: { value: string; max?: number }) {
   if (!max) return null;
   const n = value.length;
   return (
-    <span className={`text-[11px] tabular-nums ${n > max * 0.9 ? 'text-amber-700' : 'text-gray-400'}`}>
+    <span className={`text-xs tabular-nums ${n > max * 0.9 ? 'text-amber-700' : 'text-gray-400'}`}>
       {n}/{max}
     </span>
   );
@@ -80,7 +80,7 @@ function TagsInput({ value, onChange, max }: { value: string[]; onChange: (v: st
       {value.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mb-2">
           {value.map((tag, i) => (
-            <span key={tag} className="inline-flex items-center gap-1 pl-2.5 pr-1 py-0.5 rounded-full bg-gray-100 text-[13px] text-gray-800">
+            <span key={tag} className="inline-flex items-center gap-1 pl-2.5 pr-1 py-0.5 rounded-full bg-gray-100 text-sm text-gray-800">
               {tag}
               {i > 0 && (
                 <button
@@ -150,7 +150,7 @@ function RefPicker({
             />
             <span className="flex-1 text-gray-900">{o.label}</span>
             {o.meta && <span className="text-xs text-gray-500">{o.meta}</span>}
-            {on && <span className="text-xs font-semibold text-sky-700">#{value.indexOf(o.id) + 1}</span>}
+            {on && <span className="text-xs font-semibold text-signal-hover">#{value.indexOf(o.id) + 1}</span>}
           </label>
         );
       })}
@@ -191,7 +191,7 @@ function ImageField({ value, onChange, ctx }: { value: string; onChange: (v: str
           type="button"
           disabled={busy}
           onClick={() => input.current?.click()}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-300 text-sm font-semibold hover:border-sky-600 disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-300 text-sm font-semibold hover:border-signal disabled:opacity-50"
         >
           {busy && <Loader2 className="w-4 h-4 animate-spin" />} {value ? 'Replace image' : 'Upload image'}
         </button>
@@ -232,7 +232,7 @@ function ListField({
   };
 
   return (
-    <FieldShell field={field} right={field.max ? <span className="text-[11px] text-gray-400">{value.length}/{field.max}</span> : undefined}>
+    <FieldShell field={field} right={field.max ? <span className="text-xs text-gray-400">{value.length}/{field.max}</span> : undefined}>
       <div className="space-y-2">
         {value.map((row, i) => {
           const id = row.id || `idx-${i}`;
@@ -287,7 +287,7 @@ function ListField({
             onChange([...value, row]);
             setOpen(row.id);
           }}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-dashed border-gray-300 text-sm font-semibold text-gray-700 hover:border-sky-600 hover:text-sky-700 disabled:opacity-40"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-dashed border-gray-300 text-sm font-semibold text-gray-700 hover:border-signal hover:text-signal-hover disabled:opacity-40"
         >
           {/* "Rounds (stations)" → "Add round" */}
           <Plus className="w-4 h-4" /> Add {field.label.replace(/\s*\(.*\)\s*$/, '').toLowerCase().replace(/s$/, '')}
@@ -392,7 +392,7 @@ function Field({ field, value, onChange, ctx }: { field: CpFieldDef; value: any;
       );
     case 'tags':
       return (
-        <FieldShell field={field} right={field.max ? <span className="text-[11px] text-gray-400">{(value || []).length}/{field.max}</span> : undefined}>
+        <FieldShell field={field} right={field.max ? <span className="text-xs text-gray-400">{(value || []).length}/{field.max}</span> : undefined}>
           <TagsInput value={Array.isArray(value) ? value : []} onChange={onChange} max={field.max} />
         </FieldShell>
       );

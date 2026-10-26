@@ -43,20 +43,20 @@ export default function DrivesPage() {
       </Head>
       <main className="mx-auto w-full max-w-3xl px-4 pb-28 pt-8 sm:px-6" style={{ background: 'var(--apple-bg)' }}>
         <header className="px-1">
-          <h1 className="text-[32px] font-bold tracking-tight" style={{ color: 'var(--apple-label)' }}>Mock drives</h1>
-          <p className="mt-1 text-[14px]" style={{ color: 'var(--apple-label-2)' }}>
+          <h1 className="text-3xl font-bold tracking-tight" style={{ color: 'var(--apple-label)' }}>Mock drives</h1>
+          <p className="mt-1 text-sm" style={{ color: 'var(--apple-label-2)' }}>
             Company mock tests and assessments. Register, launch and see your results.
           </p>
         </header>
 
         {!authLoading && !user && (
           <div className="apple-card mt-8 px-6 py-10 text-center">
-            <ClipboardList className="mx-auto h-8 w-8" style={{ color: 'var(--apple-label-3)' }} />
-            <p className="mt-3 text-[14px] font-medium" style={{ color: 'var(--apple-label)' }}>Sign in to see upcoming mock drives.</p>
+            <ClipboardList className="mx-auto h-8 w-8" style={{ color: 'var(--apple-label-2)' }} />
+            <p className="mt-3 text-sm font-medium" style={{ color: 'var(--apple-label)' }}>Sign in to see upcoming mock drives.</p>
             <button
               type="button"
               onClick={() => router.push('/login?next=/drives')}
-              className="mt-4 rounded-[12px] px-5 py-2.5 text-[14px] font-semibold text-white transition-transform active:scale-[0.98]"
+              className="mt-4 rounded-[12px] px-5 py-2.5 text-sm font-semibold text-white transition-transform active:scale-[0.98]"
               style={{ background: 'var(--apple-blue)' }}
             >
               Sign in
@@ -64,10 +64,10 @@ export default function DrivesPage() {
           </div>
         )}
 
-        {loading && user && <p className="mt-10 px-2 text-[14px]" style={{ color: 'var(--apple-label-2)' }}>Loading…</p>}
+        {loading && user && <p className="mt-10 px-2 text-sm" style={{ color: 'var(--apple-label-2)' }}>Loading…</p>}
 
         {error && user && (
-          <div className="mt-6 rounded-2xl px-4 py-3 text-[13px] font-medium" style={{ background: 'var(--apple-red-soft)', color: 'var(--apple-red)' }}>{error}</div>
+          <div className="mt-6 rounded-2xl px-4 py-3 text-sm font-medium" style={{ background: 'var(--apple-red-soft)', color: 'var(--apple-red)' }}>{error}</div>
         )}
 
         {!loading && user && drives.length === 0 && !error && (
@@ -88,12 +88,12 @@ export default function DrivesPage() {
               </span>
               <span className="min-w-0 flex-1">
                 <span className="flex items-center justify-between gap-2">
-                  <span className="truncate text-[16px] font-semibold" style={{ color: 'var(--apple-label)' }}>{d.title}</span>
+                  <span className="truncate text-base font-semibold" style={{ color: 'var(--apple-label)' }}>{d.title}</span>
                 </span>
                 {d.company_name ? (
-                  <span className="block truncate text-[13px]" style={{ color: 'var(--apple-label-2)' }}>{d.company_name}</span>
+                  <span className="block truncate text-sm" style={{ color: 'var(--apple-label-2)' }}>{d.company_name}</span>
                 ) : null}
-                <span className="mt-1 flex items-center gap-3 text-[12px]" style={{ color: 'var(--apple-label-2)' }}>
+                <span className="mt-1 flex items-center gap-3 text-xs" style={{ color: 'var(--apple-label-2)' }}>
                   <span className="flex items-center gap-1"><CalendarClock size={12.5} />{d.ends_at ? `Ends ${formatDate(d.ends_at)}` : 'Open'}</span>
                   <span className="font-medium capitalize">{d.drive_type}</span>
                 </span>

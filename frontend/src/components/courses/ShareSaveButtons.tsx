@@ -36,8 +36,13 @@ export const ShareSaveButtons: React.FC<{ courseSlug: string; courseTitle: strin
   const [saved, setSaved] = useState(false);
   const [message, setMessage] = useState('');
 
+  // Read after mount: the server has no navigator, and an icon chosen during
+  // render made the server and client HTML differ (a hydration error that threw
+  // away the whole server-rendered course page).
+  const [canShare, setCanShare] = useState(false);
   useEffect(() => {
     setSaved(readSaved().includes(courseSlug));
+    setCanShare(typeof navigator.share === 'function');
   }, [courseSlug]);
 
   const pageUrl = typeof window !== 'undefined' ? window.location.href : `https://tieedu.com/courses/${courseSlug}`;
@@ -84,7 +89,7 @@ export const ShareSaveButtons: React.FC<{ courseSlug: string; courseTitle: strin
         aria-label={copied ? 'Link copied to clipboard' : `Share ${courseTitle}`}
         className="focus-ring inline-flex min-h-[40px] items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 text-sm font-bold text-[var(--text-body)] hover:border-[var(--brand-sky)]"
       >
-        {copied ? <Check size={15} className="text-[var(--color-success)]" /> : typeof navigator !== 'undefined' && typeof navigator.share === 'function' ? <Share2 size={15} /> : <Link2 size={15} />}
+        {copied ? <Check size={15} className="text-[var(--color-success)]" /> : canShare ? <Share2 size={15} /> : <Link2 size={15} />}
         {copied ? 'Copied' : 'Share'}
       </button>
       <button

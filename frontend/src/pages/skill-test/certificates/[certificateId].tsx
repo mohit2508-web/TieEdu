@@ -8,6 +8,7 @@ import {
 import { verifyCertificateApi } from '@/lib/skillTestApi';
 import { API_BASE_URL } from '@/lib/api';
 
+import { withPageTitle } from '@/components/common/withPageTitle';
 interface VerifyResult {
   verified: boolean;
   status: 'valid' | 'revoked';
@@ -41,7 +42,7 @@ const fmtLong = (iso: string) => {
   }
 };
 
-export default function CertificatePage() {
+function CertificatePage() {
   const router = useRouter();
   const { certificateId } = router.query;
   const [cert, setCert] = useState<VerifyResult | null>(null);
@@ -77,7 +78,7 @@ export default function CertificatePage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-[#0F7BFF]" />
+        <Loader2 className="h-8 w-8 animate-spin text-signal" />
       </div>
     );
   }
@@ -91,7 +92,7 @@ export default function CertificatePage() {
           </div>
           <h1 className="mt-4 text-xl font-bold text-red-600">Certificate Not Found</h1>
           <p className="mt-2 text-sm text-gray-600">No certificate exists with ID {certId}.</p>
-          <Link href="/skill-test" className="mt-4 inline-block text-sm font-medium text-[#0F7BFF]">
+          <Link href="/skill-test" className="mt-4 inline-block text-sm font-medium text-signal">
             Back to Skill Test
           </Link>
         </div>
@@ -137,46 +138,46 @@ export default function CertificatePage() {
         {/* Certificate Preview */}
         <div className="rounded-2xl bg-white border border-gray-200 shadow-sm overflow-hidden">
           <div className="border-4 border-double border-gray-200 m-3 rounded-xl p-6 sm:p-8 text-center relative">
-            <div className="absolute top-2 left-2 h-6 w-6 border-t-2 border-l-2 border-[#0F7BFF]" />
-            <div className="absolute top-2 right-2 h-6 w-6 border-t-2 border-r-2 border-[#0F7BFF]" />
-            <div className="absolute bottom-2 left-2 h-6 w-6 border-b-2 border-l-2 border-[#0F7BFF]" />
-            <div className="absolute bottom-2 right-2 h-6 w-6 border-b-2 border-r-2 border-[#0F7BFF]" />
+            <div className="absolute top-2 left-2 h-6 w-6 border-t-2 border-l-2 border-signal" />
+            <div className="absolute top-2 right-2 h-6 w-6 border-t-2 border-r-2 border-signal" />
+            <div className="absolute bottom-2 left-2 h-6 w-6 border-b-2 border-l-2 border-signal" />
+            <div className="absolute bottom-2 right-2 h-6 w-6 border-b-2 border-r-2 border-signal" />
 
             <div className="flex items-center justify-center gap-2 mb-4">
-              <Award className="h-6 w-6 text-[#0F7BFF]" />
-              <span className="text-lg font-bold text-[#0F7BFF] tracking-wider">TieEdu</span>
+              <Award className="h-6 w-6 text-signal" />
+              <span className="text-lg font-bold text-signal tracking-wider">TieEdu</span>
             </div>
 
             <p className="text-xs font-medium tracking-[0.3em] text-gray-400 uppercase">Certificate of Skill Proficiency</p>
             <p className="mt-4 text-sm text-gray-500">This certifies that</p>
             <h2 className="mt-2 text-2xl font-bold text-gray-900">{cert.studentName}</h2>
             <p className="mt-3 text-sm text-gray-500">has successfully demonstrated proficiency in</p>
-            <h3 className="mt-2 text-xl font-bold text-[#0F7BFF]">{cert.skillName}</h3>
+            <h3 className="mt-2 text-xl font-bold text-signal">{cert.skillName}</h3>
             <p className="mt-1 text-sm font-medium text-gray-600">{cert.skillLevelText} Level</p>
 
             <div className="mt-5 inline-flex items-center gap-4 rounded-full bg-gray-50 border border-gray-200 px-6 py-2.5">
               <div>
-                <p className="text-[10px] text-gray-400 uppercase tracking-wider">Score</p>
+                <p className="text-xs text-gray-400 uppercase tracking-wider">Score</p>
                 <p className="text-lg font-bold text-gray-900">{cert.score}<span className="text-sm text-gray-400">/100</span></p>
               </div>
               <div className="h-8 w-px bg-gray-200" />
               <div>
-                <p className="text-[10px] text-gray-400 uppercase tracking-wider">Issued</p>
+                <p className="text-xs text-gray-400 uppercase tracking-wider">Issued</p>
                 <p className="text-sm font-semibold text-gray-700">{fmtMonth(cert.issueDate)}</p>
               </div>
             </div>
 
             <div className="mt-5 pt-4 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-3">
               <div className="text-left">
-                <p className="text-[10px] text-gray-400 uppercase tracking-wider">Certificate ID</p>
-                <p className="text-xs font-mono font-semibold text-gray-700">{cert.certificateId}</p>
+                <p className="text-xs text-gray-400 uppercase tracking-wider">Certificate ID</p>
+                <p className="text-xs font-semibold text-gray-700">{cert.certificateId}</p>
               </div>
               <div className="flex items-center gap-2">
                 <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-gray-100 border border-gray-200">
                   <QrCode className="h-8 w-8 text-gray-400" />
                 </div>
                 <div className="text-left">
-                  <p className="text-[10px] text-gray-400 uppercase tracking-wider">Verified by</p>
+                  <p className="text-xs text-gray-400 uppercase tracking-wider">Verified by</p>
                   <p className="text-sm font-semibold text-gray-700">TieEdu</p>
                 </div>
               </div>
@@ -209,7 +210,7 @@ export default function CertificatePage() {
         <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
           <button
             onClick={shareLinkedIn}
-            className="flex items-center justify-center gap-2 rounded-full bg-[#0A66C2] py-3 text-sm font-semibold text-white hover:bg-[#0854a0] transition-colors min-h-[48px]"
+            className="flex items-center justify-center gap-2 rounded-full bg-[#0A66C2] py-3 text-sm font-semibold text-white hover:bg-signal transition-colors min-h-[48px]"
           >
             <Linkedin className="h-4 w-4" /> Share on LinkedIn
           </button>
@@ -230,7 +231,7 @@ export default function CertificatePage() {
         </div>
 
         <div className="mt-4 text-center">
-          <Link href="/skill-test/skill-passport" className="text-sm font-medium text-[#0F7BFF] hover:underline">
+          <Link href="/skill-test/skill-passport" className="text-sm font-medium text-signal hover:underline">
             View Skill Passport →
           </Link>
         </div>
@@ -238,3 +239,5 @@ export default function CertificatePage() {
     </div>
   );
 }
+
+export default withPageTitle(CertificatePage, () => 'Skill certificate');

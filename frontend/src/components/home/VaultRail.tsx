@@ -26,10 +26,10 @@ const VaultRailCard: React.FC<{ company: Company }> = ({ company }) => (
         className="h-11 w-11 shrink-0 rounded-2xl p-1"
       />
       <div className="min-w-0 flex-1">
-        <h3 className="truncate font-serif-heading text-[17px] font-extrabold text-[#10151C] transition-colors group-hover:text-[#0271B5]">
+        <h3 className="truncate font-serif-heading text-lg font-extrabold text-heading transition-colors group-hover:text-signal">
           {company.name}
         </h3>
-        <p className="truncate text-[12px] font-semibold text-[var(--text-muted)]">
+        <p className="truncate text-xs font-semibold text-[var(--text-muted)]">
           {company.industry || 'Interview vault'}
         </p>
       </div>
@@ -40,27 +40,27 @@ const VaultRailCard: React.FC<{ company: Company }> = ({ company }) => (
     </div>
 
     <div className="flex flex-wrap gap-1.5">
-      <span className="inline-flex items-center gap-1 rounded-full bg-[#FDEDE9] border border-[#F2C9BC] px-2 py-1 text-[12px] font-bold text-[#A63D28]">
+      <span className="inline-flex items-center gap-1 rounded-full bg-signal-soft border border-signal/30 px-2 py-1 text-xs font-bold text-danger">
         <Flame className="w-3.5 h-3.5" aria-hidden />
-        {company.unlock_count} unlocks
+        {company.unlock_count} {company.unlock_count === 1 ? 'unlock' : 'unlocks'}
       </span>
       {company.accuracy_score != null && (
-        <span className="inline-flex items-center rounded-full bg-[#E9F6EE] border border-[#CDE9D4] px-2 py-1 text-[12px] font-bold text-[#15803D]">
+        <span className="inline-flex items-center rounded-full bg-surface-hover border border-line px-2 py-1 text-xs font-bold text-success">
           {company.accuracy_score}% accuracy
         </span>
       )}
       {company.ctc_min != null && company.ctc_max != null && (
-        <span className="inline-flex items-center rounded-full bg-[#F1F3F5] px-2 py-1 text-[12px] font-bold text-[#3E4754]">
+        <span className="inline-flex items-center rounded-full bg-paper px-2 py-1 text-xs font-bold text-body">
           ₹{company.ctc_min}–{company.ctc_max}L
         </span>
       )}
     </div>
 
-    <div className="mt-auto flex items-center justify-between border-t border-[#EFEEE9] pt-2.5 text-[12px] font-semibold text-[var(--text-muted)]">
+    <div className="mt-auto flex items-center justify-between border-t border-line pt-2.5 text-xs font-semibold text-[var(--text-muted)]">
       <span>Updated {company.last_updated_days_ago || 1}d ago</span>
       {company.difficulty_rating > 0 && (
-        <span className="inline-flex items-center gap-1 font-bold text-[#92400E]">
-          <Star className="w-3.5 h-3.5 fill-[#E8A33D] text-[#B45309]" aria-hidden />
+        <span className="inline-flex items-center gap-1 font-bold text-amber-deep">
+          <Star className="w-3.5 h-3.5 fill-money text-amber-deep" aria-hidden />
           {company.difficulty_rating}/5
         </span>
       )}
@@ -99,7 +99,9 @@ export const VaultRail: React.FC<{
       id="companies"
       eyebrow="Trending"
       title="Company vaults"
-      meta={!loading && total > 0 ? `${total} verified vaults` : undefined}
+      meta={!loading && total > 0 ? `${total} companies` : undefined}
+      seeAllHref="/companies"
+      seeAllLabel="All companies"
       loading={loading}
       skeletonWidth={CARD_W}
       skeletonHeight="h-[212px]"
@@ -114,8 +116,8 @@ export const VaultRail: React.FC<{
       {filtered.length > 0 ? (
         filtered.slice(0, 12).map((c) => <VaultRailCard key={c.id} company={c} />)
       ) : (
-        <div className="flex w-full items-center justify-center rounded-2xl border border-dashed border-[#E9E7E1] bg-white px-6 py-10 text-center">
-          <p className="text-[15px] text-[var(--text-muted)]">
+        <div className="flex w-full items-center justify-center rounded-2xl border border-dashed border-line bg-white px-6 py-10 text-center">
+          <p className="text-base text-[var(--text-muted)]">
             No company matched — try another keyword or chip.
           </p>
         </div>

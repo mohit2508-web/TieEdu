@@ -33,8 +33,8 @@ const CenterCard: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 
 const GuardSpinner: React.FC<{ label: string }> = ({ label }) => (
   <CenterCard>
-    <div className="w-9 h-9 border-[3px] border-[#FBF1E1] border-t-[#0284C7] rounded-full animate-spin" />
-    <p className="text-[13px] font-semibold text-[--text-muted] tracking-wide">{label}</p>
+    <div className="w-9 h-9 border-[3px] border-money/40 border-t-signal rounded-full animate-spin" />
+    <p className="text-sm font-semibold text-[--text-muted] tracking-wide">{label}</p>
   </CenterCard>
 );
 
@@ -56,11 +56,11 @@ const PlacementGate: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   if (status === 'denied') {
     return (
       <CenterCard>
-        <div className="w-12 h-12 rounded-2xl bg-[#FDEDE9] border border-[#F2C9BC] flex items-center justify-center">
-          <Lock className="w-6 h-6 text-[#A63D28]" />
+        <div className="w-12 h-12 rounded-2xl bg-signal-soft border border-signal/30 flex items-center justify-center">
+          <Lock className="w-6 h-6 text-danger" />
         </div>
         <h1 className="display-2">No Campus TPO access</h1>
-        <p className="text-[15px] text-[--text-muted] max-w-[420px]">
+        <p className="text-base text-[--text-muted] max-w-[420px]">
           {errorMessage || 'Your account does not have placement portal access yet.'} Ask your Training &
           Placement Head to invite you from the admin console.
         </p>
@@ -69,7 +69,7 @@ const PlacementGate: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             Go to TieEdu home
           </button>
         </div>
-        <p className="text-[13px] text-[--text-muted]">
+        <p className="text-sm text-[--text-muted]">
           Signed in as <span className="font-semibold">{user?.email}</span>
         </p>
       </CenterCard>
@@ -79,11 +79,11 @@ const PlacementGate: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   if (status === 'error') {
     return (
       <CenterCard>
-        <div className="w-12 h-12 rounded-2xl bg-[#FEF3C7] border border-[#F5E0A3] flex items-center justify-center">
-          <ServerCrash className="w-6 h-6 text-[#92400E]" />
+        <div className="w-12 h-12 rounded-2xl bg-warning-soft border border-money/40 flex items-center justify-center">
+          <ServerCrash className="w-6 h-6 text-amber-deep" />
         </div>
         <h1 className="display-2">Placement service unavailable</h1>
-        <p className="text-[15px] text-[--text-muted] max-w-[440px]">
+        <p className="text-base text-[--text-muted] max-w-[440px]">
           {errorMessage ||
             'The placement data store is not responding. This is infrastructure, not your account — your access is unchanged.'}
         </p>
@@ -105,17 +105,17 @@ export const RequirePlacement: React.FC<{ children: React.ReactNode }> = ({ chil
 
 /** Inline badge for screens that want to show a permission state without a full guard. */
 export const PermissionDeniedNote: React.FC<{ permission: string }> = ({ permission }) => (
-  <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-[#FEF3C7] border border-[#F5E0A3] text-[#92400E] text-[13px] font-semibold">
+  <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-warning-soft border border-money/40 text-amber-deep text-sm font-semibold">
     <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
     <span>
-      You do not have <code className="font-mono">{permission}</code> — ask your T&amp;P Head if you need it.
+      You do not have <code className="">{permission}</code> — ask your T&amp;P Head if you need it.
     </span>
   </div>
 );
 
 /** Loading row for data sections inside an already-guarded page. */
 export const InlineSpinner: React.FC<{ label?: string }> = ({ label = 'Loading…' }) => (
-  <div className="flex items-center gap-2 text-[13px] font-semibold text-[--text-muted]">
+  <div className="flex items-center gap-2 text-sm font-semibold text-[--text-muted]">
     <Loader2 className="w-4 h-4 animate-spin" /> {label}
   </div>
 );

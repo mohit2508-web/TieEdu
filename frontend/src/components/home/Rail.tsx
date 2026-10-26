@@ -74,23 +74,23 @@ export const Rail: React.FC<{
   };
 
   const arrowCls =
-    'hidden lg:inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#E9E7E1] bg-white text-[#3E4754] shadow-soft transition-all hover:text-[#0271B5] hover:border-[#0284C7]/40 disabled:opacity-0 disabled:pointer-events-none focus-ring';
+    'hidden lg:inline-flex h-10 w-10 items-center justify-center rounded-full border border-line bg-white text-body shadow-soft transition-all hover:text-signal hover:border-signal/40 disabled:opacity-0 disabled:pointer-events-none focus-ring';
 
   return (
     <section
       id={id}
-      className={`py-10 sm:py-12 ${tone === 'white' ? 'bg-white border-b border-[#E9E7E1]' : ''}`}
+      className={`py-10 sm:py-12 ${tone === 'white' ? 'bg-white border-b border-line' : ''}`}
     >
       <Reveal className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12">
         <div className="flex items-end justify-between gap-4 mb-5">
           <div className="min-w-0">
             {eyebrow && <span className="eyebrow">{eyebrow}</span>}
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <h2 className="font-serif-heading text-2xl sm:text-3xl font-extrabold text-[#10151C] leading-tight">
+              <h2 className="font-serif-heading text-2xl sm:text-3xl font-extrabold text-heading leading-tight">
                 {title}
               </h2>
               {meta && (
-                <span className="text-[12px] font-bold text-[#15803D] bg-[#E9F6EE] border border-[#CDE9D4] px-2.5 py-1 rounded-full whitespace-nowrap">
+                <span className="text-xs font-bold text-success bg-surface-hover border border-line px-2.5 py-1 rounded-full whitespace-nowrap">
                   {meta}
                 </span>
               )}
@@ -121,7 +121,7 @@ export const Rail: React.FC<{
             {seeAllHref && (
               <Link
                 href={seeAllHref}
-                className="inline-flex items-center gap-1.5 min-h-[44px] px-3 rounded-xl text-[14px] font-bold text-[#0271B5] hover:text-[#025a95] transition-colors focus-ring"
+                className="inline-flex items-center gap-1.5 min-h-[44px] px-3 rounded-xl text-sm font-bold text-signal hover:text-signal-hover transition-colors focus-ring"
               >
                 {seeAllLabel} <ArrowRight className="w-4 h-4" aria-hidden />
               </Link>
@@ -137,7 +137,7 @@ export const Rail: React.FC<{
                 <div
                   key={i}
                   aria-hidden="true"
-                  className={`flex-none snap-start animate-pulse rounded-2xl bg-[#F0EFEC] ${skeletonWidth} ${skeletonHeight}`}
+                  className={`flex-none snap-start animate-pulse rounded-2xl bg-surface-hover ${skeletonWidth} ${skeletonHeight}`}
                 />
               ))
             : children}

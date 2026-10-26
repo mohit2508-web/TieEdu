@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import { touchStreak } from '../lib/streak';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
@@ -46,6 +47,7 @@ import {
   startStreakReminderScheduler,
   updateProfile,
 } from '../lib/companyPageStudent';
+import { studentPage } from '../lib/companyPageDerive';
 
 // Evening streak reminders for live pages that opt in. Idempotent; unref'd.
 startStreakReminderScheduler();
@@ -101,14 +103,22 @@ companyPagesRouter.get('/media/:name', (req: Request, res: Response) => {
   res.sendFile(file);
 });
 
-/** The live company + page for a slug, or null. Promotes a due schedule first. */
-function live(db: any, slug: string): { company: any; doc: CompanyPageDoc; page: PageContent } | null {
+/**
+ * The live company + page for a slug, or null. Promotes a due schedule first.
+ *
+ * Three cases:
+ *  - an admin published a page and it is on   -> that page
+ *  - an admin published one and switched it off -> null (the old layout, by choice)
+ *  - nothing published yet (no doc, or a draft) -> a page derived from the
+ *    company's own data (`companyPageDerive`), so every company gets the new
+ *    layout without waiting on the Studio. `doc` is null for these.
+ */
+function live(db: any, slug: string): { company: any; doc: CompanyPageDoc | null; page: PageContent; derived: boolean } | null {
   const company = (db.companies || []).find((c: any) => c.slug === slug);
   if (!company || company.status !== 'published') return null;
   if (promoteDue(db, company.id)) saveDb(db);
-  const doc = findPage(db, company.id);
-  if (!doc || !doc.enabled || !doc.published) return null;
-  return { company, doc, page: doc.published };
+  const hit = studentPage(db, company);
+  return hit ? { company, ...hit } : null;
 }
 
 companyPagesRouter.get('/:slug', (req: Request, res: Response) => {
@@ -120,7 +130,8 @@ companyPagesRouter.get('/:slug', (req: Request, res: Response) => {
   res.json({
     enabled: true,
     page: hit.page,
-    published_at: hit.doc.published_at,
+    derived: hit.derived,
+    published_at: hit.doc?.published_at ?? null,
     pack_price_cap: companyPackCap(db, hit.company.id),
     radar: publicRadar(db, hit.company.id, hit.page, null),
   });
@@ -166,6 +177,7 @@ companyPagesRouter.post('/:slug/me/daily', requireAuth, (req: Request, res: Resp
   const ctx = liveOr404(req, res);
   if (!ctx) return;
   recordDaily(ctx.db, req.userId!, ctx.company.id);
+  touchStreak(ctx.db, req.userId!);
   saveDb(ctx.db);
   res.json(meView(ctx.db, req.userId!, ctx.company.id, ctx.page));
 });

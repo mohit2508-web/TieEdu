@@ -7,7 +7,10 @@ import { PricingSection } from '@/components/checkout/PricingSection';
 import { DropsStrip } from '@/components/drops/DropsStrip';
 import { HeroVaultMock } from '@/components/home/HeroVaultMock';
 import { FinalCta } from '@/components/home/FinalCta';
-import { QuickActions } from '@/components/home/QuickActions';
+import { CompanyFinder } from '@/components/home/CompanyFinder';
+import { YearRoutes } from '@/components/home/YearRoutes';
+import { RouteBand } from '@/components/home/RouteBand';
+import { HomeFaq } from '@/components/home/HomeFaq';
 import { BranchGoalBand } from '@/components/home/BranchGoalBand';
 import { OffersStrip } from '@/components/home/OffersStrip';
 import { FirstWinStrip } from '@/components/home/FirstWinStrip';
@@ -19,8 +22,10 @@ import { MockDriveRail } from '@/components/home/MockDriveRail';
 import { FreeCourseBanner } from '@/components/home/FreeCourseBanner';
 import { fetchCompanies, fetchHeroPostersApi } from '@/lib/api';
 import { useCartScope } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
+import { TodayScreen } from '@/components/today/TodayScreen';
 import { Company, HeroPoster } from '@/types';
-import { Search, ArrowRight, ShieldCheck, FileDown, Layers, BadgeCheck } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 const HeroPosterCarousel = dynamic(() => import('@/components/common/HeroPosterCarousel'), {
   ssr: false,
@@ -33,19 +38,8 @@ const JoinChannelsPopup = dynamic(
 
 const INDUSTRIES = ['All', 'Big Tech', 'IT Services', 'Cybersecurity', 'Fintech', 'SaaS', 'Consulting'];
 
-/*
- * The thin closing band. The old four-tile feature section with paragraph
- * bodies is gone — nobody reads prose on a feed — so its facts compressed into
- * four chips that survive a single glance.
- */
-const TRUST_FACTS = [
-  { icon: ShieldCheck, text: 'Round-by-round verified', cls: 'text-[#0284C7]' },
-  { icon: FileDown, text: 'PDFs you can download', cls: 'text-[#15803D]' },
-  { icon: Layers, text: 'Packs always cheaper', cls: 'text-[#B45309]' },
-  { icon: BadgeCheck, text: 'New vaults monthly', cls: 'text-[#0E2A44]' },
-];
-
 export default function Home() {
+  const { user, loading: authLoading } = useAuth();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [selectedIndustry, setSelectedIndustry] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -96,55 +90,68 @@ export default function Home() {
     )
   );
 
+  // Signed in: the Today screen (UI_REDESIGN_PLAN_V2 §6.1). Guests keep the
+  // public home, which is what the server renders for crawlers.
+  if (user) {
+    return (
+      <>
+        <Head>
+          <title>Today · TieEdu</title>
+        </Head>
+        <div className="flex min-h-screen flex-col bg-paper">
+          <TodayScreen ready={!authLoading} />
+          <Footer />
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <Head>
-        <title>TieEdu — Verified Company Recruitment Intelligence & Placement Portal</title>
-        <meta name="description" content="Verified round-by-round recruitment intelligence, DSA banks, system design flowcharts, and STAR model answers for 2026 hiring drives." />
+        <title>TieEdu — Placement preparation for engineering students</title>
+        <meta name="description" content="Company-by-company placement prep for engineering students: round patterns, practice questions, free skill tests and courses, and a plan for your test date." />
       </Head>
 
       <div className="min-h-screen flex flex-col bg-[var(--bg-app)]">
         <main className="flex-grow w-full overflow-x-clip">
-          {/* ===== HERO — compact: headline, one line, two CTAs, search ===== */}
-          <section className="hero-mesh">
-            <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 pt-8 pb-9 sm:pt-12 sm:pb-14 lg:grid lg:grid-cols-12 lg:gap-10 lg:items-center relative z-10">
-              <div className="lg:col-span-7 space-y-5 text-center lg:text-left">
-                <h1 className="display-1">
-                  Crack your dream drive with <span className="gradient-sky">verified vaults</span>
+          {/* ===== HERO — one question, one sentence of proof (UI_REDESIGN_PLAN_V2 §7) =====
+              The finder is the page's primary action on every screen size; it
+              also drives the vault rail filter below through `searchQuery`. */}
+          <section className="border-b border-line bg-paper">
+            <div className="mx-auto grid w-full max-w-[1200px] gap-10 px-4 pb-12 pt-10 sm:px-6 sm:pb-16 sm:pt-14 lg:grid-cols-12 lg:items-center">
+              <div className="min-w-0 lg:col-span-7">
+                <p className="eyebrow text-signal-ink">Placement prep for engineering students</p>
+                <h1 className="mt-3 font-display text-4xl font-bold leading-[1.05] tracking-tight text-heading sm:text-5xl lg:text-6xl">
+                  Know every round before you walk into it.
                 </h1>
-
-                <p className="text-base sm:text-lg text-[#3E4754] max-w-2xl mx-auto lg:mx-0 leading-relaxed">
-                  Company vaults, courses &amp; free tests — everything one app.
+                <p className="mt-5 max-w-xl text-lg leading-relaxed text-body">
+                  Each company&apos;s rounds in order, the questions asked, and what it pays — with every figure marked as
+                  checked or still being verified.
                 </p>
 
-                <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center justify-center lg:justify-start gap-3">
-                  <Link href="#companies" className="btn btn-primary w-full sm:w-auto min-h-[48px] justify-center px-6 py-3.5 text-[15px] focus-ring">
-                    Explore vaults <ArrowRight className="w-4 h-4" />
+                <CompanyFinder companies={companies} value={searchQuery} onChange={setSearchQuery} className="mt-8 max-w-xl" />
+
+                <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <Link href="/companies" className="pressable focus-ring inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl border border-line-strong bg-card px-5 text-base font-semibold text-heading transition-colors hover:bg-surface-hover">
+                    Browse companies <ArrowRight className="h-4 w-4" aria-hidden />
                   </Link>
-                  <Link href="/courses?src=hero" className="btn btn-ghost w-full sm:w-auto min-h-[48px] justify-center px-6 py-3.5 text-[15px] focus-ring">
-                    Start free — get certified
+                  <Link href="/skill-test" className="focus-ring inline-flex min-h-[48px] items-center justify-center px-2 text-base font-semibold text-signal hover:underline">
+                    Or take a free skill test
                   </Link>
                 </div>
 
-                <div className="hidden md:block max-w-xl relative pt-2 mx-auto lg:mx-0 w-full">
-                  <Search className="w-4 h-4 text-[var(--text-muted)] absolute left-4 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    placeholder="Search company — Google, TCS, Zscaler…"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-11 pr-4 sm:pr-24 py-3.5 bg-white/90 border border-[#E9E7E1] shadow-soft rounded-2xl text-sm text-[#10151C] placeholder:text-[#AEB6BE] focus:outline-none focus:border-[#0284C7] focus:ring-4 focus:ring-[#0284C7]/10 transition-shadow"
-                  />
-                  <span className="absolute right-3.5 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-black/[0.05] text-[11px] font-bold text-[var(--text-muted)]">⌘K</span>
-                </div>
+                {!loading && companies.length > 0 && (
+                  <p className="mt-6 text-sm text-muted">
+                    <span className="font-semibold tabular-nums text-heading">{companies.length}</span> companies so far, and every skill test is free.
+                  </p>
+                )}
               </div>
 
-              {/* ===== HERO CREATIVE SLOT =====
-                  Admin posters own this slot on every size. Without one, the
-                  static vault mock stands in — but only from `md` up: on a
-                  phone the next screenful is Quick Actions, and a decorative
-                  card above them would just push the real product down. */}
-              <div className="lg:col-span-5 flex items-center justify-center pt-2 lg:pt-0">
+              {/* Admin posters own this slot; without one the static vault mock
+                  stands in from `md` up. On a phone the next screenful is the
+                  routes, so a decorative card would only push them down. */}
+              <div className="flex items-center justify-center lg:col-span-5">
                 {posters.length > 0 ? (
                   <HeroPosterCarousel posters={posters} />
                 ) : (
@@ -157,16 +164,16 @@ export default function Home() {
           </section>
 
           {dataError && (
-            <div className="w-full border-b border-[#F2C9BC] bg-[#FDEDE9] px-4 py-2.5 text-center">
-              <p className="text-[13px] font-bold text-[#A63D28]">{dataError}</p>
+            <div className="w-full border-b border-signal/30 bg-signal-soft px-4 py-2.5 text-center">
+              <p className="text-sm font-bold text-danger">{dataError}</p>
             </div>
           )}
 
-          {/* ===== BRANCH / GOAL BAND — the capture lever, directly below the hero ===== */}
-          <BranchGoalBand />
+          {/* ===== THREE ROUTES BY YEAR — where are you on the route? ===== */}
+          <YearRoutes />
 
-          {/* ===== QUICK ACTIONS — the product in one glance ===== */}
-          <QuickActions />
+          {/* ===== BRANCH / GOAL BAND — narrows the catalogue in one tap ===== */}
+          <BranchGoalBand />
 
           {/* Renders nothing when there are no live offers */}
           <OffersStrip />
@@ -178,6 +185,10 @@ export default function Home() {
           <MockDriveRail />
           <SkillRail />
           <FreeCourseBanner />
+
+          {/* ===== THE PAGE'S ONE INK BAND — how a company page works ===== */}
+          <RouteBand />
+
           <VaultRail
             companies={companies}
             loading={loading}
@@ -193,17 +204,7 @@ export default function Home() {
 
           <PricingSection />
 
-          {/* ===== THIN TRUST BAND ===== */}
-          <section className="border-t border-[#E9E7E1] bg-white py-3.5">
-            <ul className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 flex flex-wrap items-center justify-center gap-x-7 gap-y-2.5">
-              {TRUST_FACTS.map((f, i) => (
-                <li key={i} className="inline-flex items-center gap-2 text-[13px] font-bold text-[#3E4754]">
-                  <f.icon className={`w-4 h-4 shrink-0 ${f.cls}`} aria-hidden />
-                  {f.text}
-                </li>
-              ))}
-            </ul>
-          </section>
+          <HomeFaq />
 
           {/* ===== CLOSING CTA ===== */}
           <FinalCta />

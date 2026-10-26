@@ -1,6 +1,6 @@
 import React from 'react';
 import { ContentModule } from '@/types';
-import { Sparkles, BookOpen, Lock, FileText, CheckCircle2 } from 'lucide-react';
+import { BookOpen, Lock, FileText, CheckCircle2 } from 'lucide-react';
 import { COMPLETE_PACK_PRICE } from '@/lib/packPricing';
 
 interface Props {
@@ -14,7 +14,7 @@ interface Props {
 }
 
 const SECTION_CHIPS = [
-  ['Cheatsheets', 'bg-sky-50 text-[#0369A1] border-sky-200'],
+  ['Cheatsheets', 'bg-signal-soft text-signal border-signal/30'],
   ['DSA topic-wise', 'bg-indigo-50 text-indigo-700 border-indigo-200'],
   ['Core + PYQs', 'bg-violet-50 text-violet-700 border-violet-200'],
   ['Interview Q&A', 'bg-amber-50 text-amber-800 border-amber-200'],
@@ -27,19 +27,19 @@ export const FeaturedFreeModuleCard: React.FC<Props> = ({ module, companyName, o
   const itemCount = module.items?.length || 0;
 
   return (
-    <section className="relative overflow-hidden rounded-3xl border border-[#0284C7]/30 bg-white shadow-md p-6 sm:p-8">
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#0284C7] via-[#38BDF8] to-[#E8A33D]" />
+    <section className="relative overflow-hidden rounded-3xl border border-signal/30 bg-white shadow-md p-6 sm:p-8">
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-signal via-signal to-money" />
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div className="flex items-start gap-4 min-w-0">
-          <div className="w-14 h-14 rounded-2xl bg-[#0284C7] text-white flex items-center justify-center shrink-0 shadow-sm">
-            <Sparkles className="w-7 h-7" />
+          <div className="w-14 h-14 rounded-2xl bg-signal text-white flex items-center justify-center shrink-0 shadow-sm">
+            <BookOpen className="w-7 h-7" />
           </div>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2 mb-1.5">
-              <span className="text-xs font-mono font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+              <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
                 FREE — Everything in one module
               </span>
-              <span className="text-xs font-mono font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-[#1F3A5F]/10 text-[#1F3A5F] border border-[#1F3A5F]/20">
+              <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-brand-ink/10 text-brand-ink border border-brand-ink/20">
                 {itemCount} questions
               </span>
             </div>
@@ -81,7 +81,7 @@ export const FeaturedFreeModuleCard: React.FC<Props> = ({ module, companyName, o
           ) : (
           <button
             onClick={onUnlockClick}
-            className="inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-[#E8A33D] hover:bg-[#D4902C] text-[#241A06] text-sm font-bold rounded-xl shadow-md transition-all"
+            className="inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-money hover:bg-money text-money-ink text-sm font-bold rounded-xl shadow-md transition-all"
           >
             <Lock className="w-4 h-4" />{' '}
             {typeof unlockPrice === 'number' && unlockPrice < COMPLETE_PACK_PRICE

@@ -1,57 +1,74 @@
 /** @type {import('tailwindcss').Config} */
 
-// The design system's real home is `:root` in src/styles/globals.css. These
-// values are duplicated here on purpose: Tailwind can only apply an opacity
-// modifier (`bg-brand-orange/10`) if the colour is a literal it can parse. A
-// config entry of `var(--brand-accent)` compiles, but every `/NN` variant of it
-// silently produces nothing — which is the same class of bug this file was
-// missing.
+// The design system's single home is `:root` in src/styles/globals.css, where
+// every colour is declared once as RGB channels (`--rgb-*`). Each entry here is
+// `rgb(var(--rgb-x) / <alpha-value>)`, which keeps opacity modifiers working
+// (`bg-brand-primary/10`) AND lets the dark theme swap every class at once —
+// a hex literal here would be frozen in light mode.
 //
-// `scripts/design-tokens.test.ts` asserts that every hex below still matches its
-// CSS variable, so the duplication cannot drift.
+// `scripts/design-tokens.test.ts` asserts every channel referenced here exists
+// in both the light and the dark theme.
+const c = (name) => `rgb(var(--rgb-${name}) / <alpha-value>)`;
+
 const tokens = {
-  // Surfaces
-  app: '#F7F6F3',
-  'app-warm': '#FCFBF8',
-  surface: '#FFFFFF',
-  'surface-hover': '#F3F2EE',
-  'sky-soft': '#EAF5FB',
+  // ---- "Route" semantic names (use these in new code) ----
+  paper: c('bg-app'),
+  card: c('bg-surface'),
+  line: { DEFAULT: c('border-subtle'), strong: c('border-strong') },
+  heading: c('text-heading'),
+  body: c('text-body'),
+  muted: c('text-muted'),
+  signal: { DEFAULT: c('signal'), hover: c('signal-hover'), soft: c('signal-soft'), ink: c('signal-ink') },
+  logo: c('logo'),
+  money: { DEFAULT: c('money'), hover: c('money-hover'), ink: c('money-ink') },
+  train: c('train'),
+  test: c('test'),
+  track: c('track'),
+  'success-soft': c('success-soft'),
+  'warning-soft': c('warning-soft'),
+  danger: { DEFAULT: c('danger'), soft: c('danger-soft') },
+  'info-soft': c('info-soft'),
 
-  // Lines
-  border: { subtle: '#E9E7E1', strong: '#D6D2C8' },
+  // ---- Existing names (kept so current markup keeps working) ----
+  app: c('bg-app'),
+  'app-warm': c('bg-app-warm'),
+  surface: c('bg-surface'),
+  'surface-hover': c('bg-surface-hover'),
+  'sky-soft': c('signal-soft'),
 
-  // Ink
-  ink: { DEFAULT: '#10151C', soft: '#2A3340' },
+  border: { subtle: c('border-subtle'), strong: c('border-strong') },
 
-  // Brand. `orange`/`navy` are ALIASES the interview feature was already written
-  // against: there is no --brand-orange or --brand-navy variable, so
-  // `bg-brand-orange/10` and `to-brand-navy` had nothing to resolve to and
-  // compiled to no rule at all. They point at accent and ink respectively.
+  ink: { DEFAULT: c('ink'), soft: c('ink-soft') },
+
+  // Brand. `primary`/`sky` are the action colour (logo orange); `accent` is
+  // money. `orange`/`navy` are aliases the interview feature was written
+  // against — they point at accent and the navy band respectively.
   brand: {
-    sky: '#0369A1',
-    'sky-strong': '#075985',
-    'sky-soft': '#E8F4FB',
-    primary: '#0369A1',
-    ink: '#0E2A44',
-    accent: '#E8A33D',
-    'accent-hover': '#D4902C',
-    mint: '#10A37F',
-    orange: '#E8A33D', // alias of `accent`
-    navy: '#0E2A44', // alias of `ink`
+    sky: c('signal'),
+    'sky-strong': c('signal-hover'),
+    'sky-soft': c('signal-soft'),
+    primary: c('signal'),
+    'primary-hover': c('signal-hover'),
+    ink: c('brand-ink'),
+    accent: c('money'),
+    'accent-hover': c('money-hover'),
+    mint: c('brand-mint'),
+    orange: c('money'), // alias of `accent`
+    navy: c('brand-ink'), // alias of `ink`
   },
 
   // Text
-  text: { heading: '#10151C', body: '#3E4754', muted: '#5A6470', light: '#AEB6BE' },
+  text: { heading: c('text-heading'), body: c('text-body'), muted: c('text-muted'), light: c('text-light') },
 
   // Status
-  success: '#15803D',
-  warning: '#C77B12',
-  error: '#C1442D',
-  info: '#0284C7',
+  success: c('success'),
+  warning: c('warning'),
+  error: c('danger'),
+  info: c('info'),
 
   // Text sitting on an accent fill
-  'accent-ink': '#241A06',
-  'amber-deep': '#B45309',
+  'accent-ink': c('money-ink'),
+  'amber-deep': c('amber-deep'),
 };
 
 const boxShadow = {
@@ -93,20 +110,28 @@ module.exports = {
     extend: {
       colors: tokens,
       boxShadow,
+      // The four families are self-hosted via next/font (src/styles/fonts.ts)
+      // and published as :root variables by _app.
       fontFamily: {
-        // Calibre is the design intent. It is not redistributable, so Carlito
-        // (the metric-compatible Calibre clone, OFL) is bundled locally as the
-        // first real fallback. Loaded in src/pages/_app.tsx via @fontsource.
-        sans: ['Calibre', 'Carlito', 'Calibri', 'Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
-        serif: ['Georgia', 'serif'],
-        mono: ['JetBrains Mono', 'Cascadia Code', 'monospace'],
+        sans: ['var(--font-body)', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Arial', 'sans-serif'],
+        display: ['var(--font-display)', 'var(--font-body)', 'system-ui', 'sans-serif'],
+        serif: ['var(--font-serif)', 'Georgia', 'serif'],
+        mono: ['var(--font-mono)', 'Cascadia Code', 'ui-monospace', 'monospace'],
+      },
+      // One type scale: 12 · 14 · 16 · 18 · 20 · 24 · 32 · 40 · 48 · 64.
+      // Nothing below 12px. The small steps keep Tailwind's defaults.
+      fontSize: {
+        '3xl': ['2rem', { lineHeight: '2.375rem' }],
+        '4xl': ['2.5rem', { lineHeight: '2.875rem' }],
+        '5xl': ['3rem', { lineHeight: '3.25rem' }],
+        '6xl': ['4rem', { lineHeight: '4.125rem' }],
       },
     },
   },
   plugins: [],
 };
 
-// Exported for scripts/design-tokens.test.ts, which compares these against the
-// CSS variables in globals.css.
+// Exported for scripts/design-tokens.test.ts, which checks every channel these
+// reference exists in globals.css for both themes.
 module.exports.tokens = tokens;
 module.exports.boxShadow = boxShadow;

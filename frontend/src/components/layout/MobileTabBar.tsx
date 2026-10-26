@@ -6,24 +6,26 @@ import { useRouter } from 'next/router';
 import { Menu, ShoppingBag } from 'lucide-react';
 import {
   MOBILE_TAB_SLOTS,
-  NAV_ACTIONS,
-  NAV_ITEMS,
-  isNavActive,
+  NAV_SECTIONS,
   isRootDepth,
+  resolveSection,
+  sectionHref,
 } from '@/lib/navConfig';
-import type { NavActionItem } from '@/lib/navConfig';
 import { useShell } from '@/context/ShellContext';
+import { useAuth } from '@/context/AuthContext';
 import { formatBadgeCount } from '@/lib/notifications';
 
 /**
  * The mobile navigation bar.
  *
- * Five slots, in the order the product chose: vaults, skill test, drops,
- * search, courses. Cart gave up its slot to Drops and now lives in the drill
- * header (which takes over exactly when this bar slides away), the drawer and
- * the desktop bar — a sixth route would drop every target under 48px on a
- * 320px screen, and a nav bar whose targets are too small to hit is worse than
- * one with fewer entries, since it looks like it works.
+ * Five slots, one per section (UI_REDESIGN_PLAN_V2 §5): Home, Learn, Practise,
+ * Companies, Feed — the same five as the desktop bar, so a student learns the
+ * product once. A tab is active anywhere inside its section (`/tracks` lights
+ * Learn), which is what makes five slots enough. Search moved to the phone
+ * header; the cart lives in the drill header, the drawer and the desktop bar.
+ * A sixth slot would drop every target under 48px on a 320px screen, and a nav
+ * bar whose targets are too small to hit is worse than one with fewer entries,
+ * since it looks like it works.
  *
  * The bar is not scrollable and does not reflow. It is `position: fixed` and
  * `height: var(--tabbar-total)` (not `--tabbar-h`: the box-sizing reset would
@@ -34,7 +36,6 @@ import { formatBadgeCount } from '@/lib/notifications';
  */
 export const MobileTabBar: React.FC = () => {
   const router = useRouter();
-  const { isOpen, toggleOverlay } = useShell();
 
   /*
    * Phase 1 — MOBILE_APP_UI_PLAN.md §1.2.
@@ -47,7 +48,9 @@ export const MobileTabBar: React.FC = () => {
    * padding, so the bar and the space reserved for it agree by construction
    * rather than by two copies of a route list.
    */
+  const { user } = useAuth();
   const atRoot = isRootDepth(router.pathname);
+  const current = resolveSection(router.pathname);
 
   return (
     <nav
@@ -56,40 +59,20 @@ export const MobileTabBar: React.FC = () => {
       data-depth={atRoot ? 'root' : 'detail'}
     >
       {MOBILE_TAB_SLOTS.map((id) => {
-        const route = NAV_ITEMS[id];
-        if (route) {
-          const active = isNavActive(router.pathname, route.href);
-          const Icon = route.icon;
-          return (
-            <Link
-              key={id}
-              href={route.href}
-              aria-current={active ? 'page' : undefined}
-              className="tab-slot"
-            >
-              <Icon size={20} strokeWidth={active ? 2.5 : 2} aria-hidden />
-              <span>{route.label}</span>
-            </Link>
-          );
-        }
-
-        const action = (NAV_ACTIONS as Record<string, NavActionItem | undefined>)[id];
-        if (!action) return null;
-        const Icon = action.icon;
-        const active = isOpen(action.id);
+        const section = NAV_SECTIONS.find((s) => s.id === id);
+        if (!section) return null;
+        const active = current?.id === id;
+        const Icon = section.icon;
         return (
-          <button
+          <Link
             key={id}
-            type="button"
-            onClick={() => toggleOverlay(action.id)}
-            data-active={active || undefined}
-            aria-expanded={active}
-            aria-haspopup="dialog"
+            href={sectionHref(section)}
+            aria-current={active ? 'page' : undefined}
             className="tab-slot"
           >
             <Icon size={20} strokeWidth={active ? 2.5 : 2} aria-hidden />
-            <span>{action.shortLabel}</span>
-          </button>
+            <span>{section.id === 'home' && user ? 'Today' : section.label}</span>
+          </Link>
         );
       })}
     </nav>

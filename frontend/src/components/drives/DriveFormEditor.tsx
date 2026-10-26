@@ -2,7 +2,7 @@ import React from 'react';
 import { AdminDrive } from '@/lib/drivesApi';
 
 export const field =
-  'w-full rounded-[10px] border-0 bg-[var(--apple-fill)] px-3 py-2.5 text-[14px] text-[var(--apple-label)] placeholder:text-[var(--apple-placeholder)] focus:outline-none';
+  'w-full rounded-[10px] border-0 bg-[var(--apple-fill)] px-3 py-2.5 text-sm text-[var(--apple-label)] placeholder:text-[var(--apple-placeholder)] focus:outline-none';
 
 /** `2026-10-12T09:00` <-> ISO helpers so datetime-local inputs round-trip cleanly. */
 export const toLocalInput = (iso: string | null): string => {
@@ -128,7 +128,7 @@ export function DriveFormFields(props: {
   const { form, setForm } = props;
   const set = (k: keyof DriveFormState) => (e: any) => setForm({ ...form, [k]: e.target.value });
   const t = (k: keyof DriveFormState) => form[k] as string;
-  const lbl = 'text-[12px] font-medium';
+  const lbl = 'text-xs font-medium';
   const input = `${field} mt-1`;
   return (
     <div className="mt-3 grid gap-2.5 sm:grid-cols-2">

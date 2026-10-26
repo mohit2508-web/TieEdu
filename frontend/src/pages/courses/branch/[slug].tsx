@@ -7,6 +7,7 @@ import { ArrowRight, Compass } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
 import { CourseRowCard, CourseRowSkeleton } from '@/components/courses/CourseUi';
 import { API_BASE_URL } from '@/lib/api';
+import { serverApiBase } from '@/lib/companyPagesApi';
 import { fetchCourseCatalog } from '@/lib/coursesApi';
 import { parseCatalogQuery } from '@/lib/catalogState';
 import type { CourseCatalogResponse } from '@/types';
@@ -169,7 +170,7 @@ export default function BranchPage({ initialData, branch }: { initialData: Cours
             <Link
               key={s}
               href={`/courses/branch/${s}?src=branch`}
-              className="min-h-[40px] flex flex-none snap-start items-center rounded-full border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3.5 text-[13px] font-bold text-[var(--text-body)] transition-colors hover:border-[var(--brand-sky)]/50 focus-ring"
+              className="min-h-[40px] flex flex-none snap-start items-center rounded-full border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3.5 text-sm font-bold text-[var(--text-body)] transition-colors hover:border-[var(--brand-sky)]/50 focus-ring"
             >
               {BRANCH_META[s].short}
             </Link>
@@ -178,16 +179,16 @@ export default function BranchPage({ initialData, branch }: { initialData: Cours
 
         {/* Buckets within this branch, counted against this branch's courses. */}
         {bucketFacets.length > 0 && (
-          <div className="mt-4 flex flex-wrap gap-2" aria-label="Filter by course bucket">
+          <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label="Filter by course bucket">
             {bucketFacets.map((o) => {
               const selected = bucket.includes(o.key);
               return (
                 <Link
                   key={o.key}
                   href={selected ? `/courses/branch/${branch}?src=branch` : `/courses/branch/${branch}?bucket=${o.key}&src=branch`}
-                  aria-pressed={selected}
+                  aria-current={selected ? 'true' : undefined}
                   className={[
-                    'inline-flex min-h-[40px] items-center gap-1.5 rounded-full border px-3.5 text-[13px] font-bold transition-colors focus-ring',
+                    'inline-flex min-h-[40px] items-center gap-1.5 rounded-full border px-3.5 text-sm font-bold transition-colors focus-ring',
                     selected
                       ? 'border-[var(--brand-sky)] bg-[var(--brand-sky)] text-white'
                       : 'border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-body)]',
@@ -204,7 +205,7 @@ export default function BranchPage({ initialData, branch }: { initialData: Cours
         {status === 'loading' ? (
           <div className="mt-8 space-y-4">
             {Array.from({ length: 4 }, (_, i) => (
-              <div key={i} aria-hidden="true" className="h-[140px] animate-pulse rounded-[var(--radius-lg)] bg-[#F0EFEC]" />
+              <div key={i} aria-hidden="true" className="h-[140px] animate-pulse rounded-[var(--radius-lg)] bg-surface-hover" />
             ))}
           </div>
         ) : courses.length === 0 ? (
@@ -230,11 +231,13 @@ export default function BranchPage({ initialData, branch }: { initialData: Cours
           </div>
         ) : (
           <div className="mt-8 space-y-4">
+            {/* Keeps the outline h1 → h2 → card h3. */}
+            <h2 className="sr-only">Courses</h2>
             {courses.map((c) => (
               <CourseRowCard key={c.id} course={c} />
             ))}
             {status === 'loadingMore' && (
-              <div aria-hidden="true" className="h-[140px] animate-pulse rounded-[var(--radius-lg)] bg-[#F0EFEC]" />
+              <div aria-hidden="true" className="h-[140px] animate-pulse rounded-[var(--radius-lg)] bg-surface-hover" />
             )}
             {hasMore && status !== 'loadingMore' && (
               <div className="pt-2 text-center">
@@ -266,7 +269,7 @@ export const getServerSideProps: GetServerSideProps = async ({ query, params }) 
     const qs = new URLSearchParams();
     qs.set('branch', branch);
     for (const b of parsed.bucket) qs.append('bucket', b);
-    const res = await fetch(`${API_BASE_URL}/courses?${qs.toString()}`);
+    const res = await fetch(`${serverApiBase()}/courses?${qs.toString()}`);
     if (res.ok) initialData = await res.json();
   } catch {
     // Backend unreachable at SSR time — the client effect fetches and retries.

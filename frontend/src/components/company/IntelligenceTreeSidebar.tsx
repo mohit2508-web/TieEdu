@@ -40,8 +40,8 @@ function TreeContent({
       <div className="px-4 pt-4 pb-3 border-b border-[--border-subtle] shrink-0">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-[--brand-accent]">{companyName}</p>
-            <h3 className="text-[13px] font-bold text-[--text-heading]">Topics</h3>
+            <p className="text-xs font-bold uppercase tracking-widest text-amber-deep">{companyName}</p>
+            <h3 className="text-sm font-bold text-[--text-heading]">Topics</h3>
           </div>
           <button
             onClick={onBackToModules}
@@ -63,7 +63,7 @@ function TreeContent({
               autoComplete="off"
               onChange={e => onSearchChange(e.target.value)}
             placeholder="Search topics..."
-            className="w-full pl-8 pr-3 py-1.5 text-[13px] bg-[#F4F4F2] rounded-lg border border-[--border-subtle] focus:outline-none focus:ring-2 focus:ring-[--brand-accent]/40 placeholder-[--text-light]"
+            className="w-full pl-8 pr-3 py-1.5 text-sm bg-paper rounded-lg border border-[--border-subtle] focus:outline-none focus:ring-2 focus:ring-[--brand-accent]/40 placeholder-[--text-light]"
           />
           {searchQuery && (
             <button onClick={() => onSearchChange('')} className="absolute right-2 top-1/2 -translate-y-1/2">
@@ -89,22 +89,22 @@ function TreeContent({
               {/* Module Header */}
               <button
                 onClick={() => toggleModule(mod.id)}
-                className="w-full flex items-center justify-between px-4 py-2 hover:bg-[#F4F4F2] transition-colors group"
+                className="w-full flex items-center justify-between px-4 py-2 hover:bg-paper transition-colors group"
               >
                 <div className="flex items-center gap-2 min-w-0">
                   <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
                     mod.round_type === 'OA' ? 'bg-amber-400' :
-                    mod.round_type === 'Technical' ? 'bg-blue-500' :
+                    mod.round_type === 'Technical' ? 'bg-signal' :
                     mod.round_type === 'SystemDesign' ? 'bg-purple-500' :
                     mod.round_type === 'HR' ? 'bg-emerald-500' :
                     'bg-gray-400'
                   }`} />
-                  <span className="text-[12px] font-semibold text-[--text-heading] leading-snug text-left">
+                  <span className="text-xs font-semibold text-[--text-heading] leading-snug text-left">
                     {mod.title}
                   </span>
                 </div>
                 <div className="flex items-center gap-1 shrink-0 ml-2">
-                  <span className="text-[10px] text-[--text-muted]">{filteredItems.length}</span>
+                  <span className="text-xs text-[--text-muted]">{filteredItems.length}</span>
                   {isCollapsed
                     ? <ChevronRight className="w-3.5 h-3.5 text-[--text-muted]" />
                     : <ChevronDown className="w-3.5 h-3.5 text-[--text-muted]" />
@@ -146,11 +146,11 @@ function TreeContent({
                         {/* Badges */}
                         <div className="flex flex-col items-end gap-1 shrink-0 ml-1">
                           {item.is_free_preview && !isSelected && (
-                            <span className="text-[9px] font-bold uppercase tracking-wide bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded">
+                            <span className="text-xs font-bold uppercase tracking-wide bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded">
                               Free
                             </span>
                           )}
-                          <span className={`text-[9px] font-semibold capitalize ${
+                          <span className={`text-xs font-semibold capitalize ${
                             item.difficulty === 'hard' ? 'text-red-500' :
                             item.difficulty === 'medium' ? 'text-amber-500' :
                             'text-emerald-500'

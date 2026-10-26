@@ -81,9 +81,9 @@ export default function TpoDrivesPage() {
 
   const panel = (
     <>
-      {error ? <div className="mb-4 rounded-2xl px-4 py-3 text-[13px] font-medium" style={{ background: 'var(--apple-red-soft)', color: 'var(--apple-red)' }}>{error}</div> : null}
+      {error ? <div className="mb-4 rounded-2xl px-4 py-3 text-sm font-medium" style={{ background: 'var(--apple-red-soft)', color: 'var(--apple-red)' }}>{error}</div> : null}
       {notice ? (
-        <div className="mb-4 rounded-2xl px-4 py-3 text-[13px] font-medium" style={{ background: 'var(--apple-green-soft)', color: 'var(--apple-green)' }}>{notice}</div>
+        <div className="mb-4 rounded-2xl px-4 py-3 text-sm font-medium" style={{ background: 'var(--apple-green-soft)', color: 'var(--apple-green)' }}>{notice}</div>
       ) : null}
 
       {tab === 'drives' ? (
@@ -118,13 +118,13 @@ export default function TpoDrivesPage() {
           {/* Desktop rail */}
           <aside className="hidden w-[232px] shrink-0 border-r md:block" style={{ borderColor: 'var(--apple-separator)', background: 'var(--apple-bg)' }}>
             <div className="sticky top-24 px-4 py-6">
-              <Link href="/tpo" className="mb-6 inline-flex items-center gap-1.5 text-[13px] font-medium" style={{ color: 'var(--apple-blue)' }}>
+              <Link href="/tpo" className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium" style={{ color: 'var(--apple-blue)' }}>
                 <ArrowLeft size={14} /> TPO portal
               </Link>
-              <p className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--apple-label-3)' }}>Mock drives</p>
+              <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--apple-label-2)' }}>Mock drives</p>
               <div className="mt-3">
-                <p className="text-[15px] font-semibold" style={{ color: 'var(--apple-label)' }}>{grant?.role_label ?? 'TPO'}</p>
-                <p className="text-[12px] tabular-nums" style={{ color: 'var(--apple-label-2)' }}>{grant?.college_id ?? 'loading…'}</p>
+                <p className="text-base font-semibold" style={{ color: 'var(--apple-label)' }}>{grant?.role_label ?? 'TPO'}</p>
+                <p className="text-xs tabular-nums" style={{ color: 'var(--apple-label-2)' }}>{grant?.college_id ?? 'loading…'}</p>
               </div>
               <nav className="mt-6 space-y-1">
                 {TABS.map((t) => {
@@ -134,7 +134,7 @@ export default function TpoDrivesPage() {
                       key={t.value}
                       type="button"
                       onClick={() => setTab(t.value)}
-                      className="flex w-full items-center gap-3 rounded-[10px] px-3 py-2.5 text-[14px] font-medium transition-colors"
+                      className="flex w-full items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm font-medium transition-colors"
                       style={
                         active
                           ? { background: 'var(--apple-surface)', color: 'var(--apple-label)', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }
@@ -157,8 +157,8 @@ export default function TpoDrivesPage() {
                 <ClipboardList size={22} strokeWidth={2} />
               </span>
               <div className="min-w-0">
-                <h1 className="text-[24px] font-bold tracking-tight" style={{ color: 'var(--apple-label)' }}>Mock Drives</h1>
-                <p className="text-[13px]" style={{ color: 'var(--apple-label-2)' }}>{drives.length} drive{drives.length === 1 ? '' : 's'} · live analytics</p>
+                <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--apple-label)' }}>Mock Drives</h1>
+                <p className="text-sm" style={{ color: 'var(--apple-label-2)' }}>{drives.length} drive{drives.length === 1 ? '' : 's'} · live analytics</p>
               </div>
             </header>
 
@@ -172,7 +172,7 @@ export default function TpoDrivesPage() {
                       key={d.drive_id}
                       type="button"
                       onClick={() => { setNotice(null); setSelectedId(d.drive_id); }}
-                      className="flex shrink-0 items-center gap-2 rounded-full px-3.5 py-2 text-[13px] font-medium transition-all active:scale-[0.97]"
+                      className="flex shrink-0 items-center gap-2 rounded-full px-3.5 py-2 text-sm font-medium transition-all active:scale-[0.97]"
                       style={
                         active
                           ? { background: 'var(--apple-blue)', color: '#fff' }

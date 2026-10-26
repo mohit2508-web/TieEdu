@@ -111,10 +111,10 @@ function SearchSnippet({ title, description, slug }: { title: string; descriptio
   const cut = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1).trimEnd() + '…' : s);
   return (
     <div className="mb-5 rounded-xl border border-gray-200 p-3.5 bg-white" aria-label="Search result preview">
-      <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">Google preview</div>
+      <div className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Google preview</div>
       <div className="text-xs text-gray-600">tieedu.com › company › {slug}</div>
-      <div className="text-[18px] leading-snug text-[#1a0dab] mt-0.5">{cut(title || 'Untitled page', 60)}</div>
-      <div className="text-[13px] leading-snug text-gray-700 mt-0.5">{cut(description || 'No description — Google will pick text from the page.', 158)}</div>
+      <div className="text-lg leading-snug text-[#1a0dab] mt-0.5">{cut(title || 'Untitled page', 60)}</div>
+      <div className="text-sm leading-snug text-gray-700 mt-0.5">{cut(description || 'No description — Google will pick text from the page.', 158)}</div>
     </div>
   );
 }
@@ -634,7 +634,7 @@ export default function CompanyPageStudio({
           <button onClick={() => setMenu(menu === 'radar' ? '' : 'radar')} className="relative p-2 rounded-lg border border-gray-200 hover:bg-gray-50" title="Drive Radar reports from students">
             <Radio className="w-4 h-4" />
             {pendingRadar > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-amber-500 text-white text-[11px] font-bold grid place-items-center">
+              <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-amber-500 text-white text-xs font-bold grid place-items-center">
                 {pendingRadar}
               </span>
             )}
@@ -666,7 +666,7 @@ export default function CompanyPageStudio({
           <button
             onClick={() => setMenu(menu === 'publish' ? '' : 'publish')}
             disabled={!!busy || saveState === 'conflict'}
-            className="px-3.5 py-2 rounded-lg bg-sky-700 hover:bg-sky-800 text-white text-sm font-bold disabled:opacity-50 inline-flex items-center gap-1.5"
+            className="px-3.5 py-2 rounded-lg bg-signal-hover hover:bg-signal-hover text-white text-sm font-bold disabled:opacity-50 inline-flex items-center gap-1.5"
           >
             {busy === 'publish' && <Loader2 className="w-4 h-4 animate-spin" />} Publish
           </button>
@@ -704,7 +704,7 @@ export default function CompanyPageStudio({
         </div>
       )}
       {doc.scheduled && (
-        <div className="bg-sky-50 border-b border-sky-200 px-4 py-2 text-sm text-sky-900 flex items-center gap-3 flex-wrap">
+        <div className="bg-signal-soft border-b border-signal/30 px-4 py-2 text-sm text-brand-ink flex items-center gap-3 flex-wrap">
           <CalendarClock className="w-4 h-4 shrink-0" />
           <span>Scheduled to go live {fmtTime(doc.scheduled.at)}. Edits made after scheduling are not included.</span>
           <button onClick={() => void cancelSchedule()} className="font-bold underline">
@@ -770,7 +770,7 @@ export default function CompanyPageStudio({
                     <span>
                       {fmtTime(h.at)} <span className="text-gray-500">· {h.sections} sections</span>
                     </span>
-                    <button disabled={!!busy} onClick={() => void restore(h.index)} className="text-xs font-bold text-sky-700 hover:underline">
+                    <button disabled={!!busy} onClick={() => void restore(h.index)} className="text-xs font-bold text-signal-hover hover:underline">
                       Restore to draft
                     </button>
                   </div>
@@ -824,7 +824,7 @@ export default function CompanyPageStudio({
                     <ul className="text-sm space-y-1 px-1 max-h-60 overflow-y-auto">
                       {changes.map((c, i) => (
                         <li key={i} className="flex gap-2">
-                          <span className={`shrink-0 w-16 text-[11px] font-bold uppercase ${c.kind === 'added' ? 'text-emerald-700' : c.kind === 'removed' ? 'text-red-700' : 'text-sky-700'}`}>{c.kind}</span>
+                          <span className={`shrink-0 w-16 text-xs font-bold uppercase ${c.kind === 'added' ? 'text-emerald-700' : c.kind === 'removed' ? 'text-red-700' : 'text-signal-hover'}`}>{c.kind}</span>
                           <span>{c.text}</span>
                         </li>
                       ))}
@@ -847,7 +847,7 @@ export default function CompanyPageStudio({
                     setMenu('');
                     void publish();
                   }}
-                  className="w-full px-3 py-2 rounded-lg bg-sky-700 hover:bg-sky-800 text-white text-sm font-bold disabled:opacity-50"
+                  className="w-full px-3 py-2 rounded-lg bg-signal-hover hover:bg-signal-hover text-white text-sm font-bold disabled:opacity-50"
                 >
                   Publish now{doc.enabled ? ' (the live page updates)' : ''}
                 </button>
@@ -869,7 +869,7 @@ export default function CompanyPageStudio({
                 <button
                   disabled={!scheduleAt || !!busy}
                   onClick={() => void schedule()}
-                  className="w-full px-3 py-2 rounded-lg bg-sky-700 hover:bg-sky-800 text-white text-sm font-bold disabled:opacity-50"
+                  className="w-full px-3 py-2 rounded-lg bg-signal-hover hover:bg-signal-hover text-white text-sm font-bold disabled:opacity-50"
                 >
                   Schedule publish
                 </button>
@@ -880,14 +880,14 @@ export default function CompanyPageStudio({
               <div className="space-y-2">
                 <div className="text-sm font-bold px-1">Drive Radar — student reports</div>
                 {suggestion?.status && (
-                  <div className="rounded-lg bg-sky-50 border border-sky-200 p-2.5 text-sm text-sky-900">
+                  <div className="rounded-lg bg-signal-soft border border-signal/30 p-2.5 text-sm text-brand-ink">
                     Recent updates suggest the drive is <strong>{suggestion.status}</strong>
                     {suggestion.basis && (
-                      <span className="block text-xs text-sky-800 mt-0.5">
+                      <span className="block text-xs text-signal-hover mt-0.5">
                         Newest: “{suggestion.basis.text}” ({suggestion.basis.date}) · {suggestion.count} update{suggestion.count === 1 ? '' : 's'} in the last 3 weeks
                       </span>
                     )}
-                    <button onClick={() => applySuggestion(suggestion.status!)} className="mt-2 px-2.5 py-1 rounded-md bg-sky-700 text-white text-xs font-bold">
+                    <button onClick={() => applySuggestion(suggestion.status!)} className="mt-2 px-2.5 py-1 rounded-md bg-signal-hover text-white text-xs font-bold">
                       Set drive status to {suggestion.status}
                     </button>
                   </div>
@@ -899,9 +899,9 @@ export default function CompanyPageStudio({
                 {radarReports.map((r) => (
                   <div key={r.id} className="border border-gray-200 rounded-lg p-2.5 text-sm">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-gray-500">{r.kind}</span>
+                      <span className="text-xs font-bold uppercase tracking-wider text-gray-500">{r.kind}</span>
                       <span
-                        className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                        className={`text-xs font-bold px-2 py-0.5 rounded-full ${
                           r.status === 'approved' ? 'bg-emerald-100 text-emerald-800' : r.status === 'rejected' ? 'bg-gray-100 text-gray-500' : 'bg-amber-100 text-amber-800'
                         }`}
                       >
@@ -943,7 +943,7 @@ export default function CompanyPageStudio({
                           <span
                             key={p.day}
                             title={`${p.day}: ${p.views} views`}
-                            className="flex-1 rounded-sm bg-sky-600/80"
+                            className="flex-1 rounded-sm bg-signal/80"
                             style={{ height: `${Math.max(2, (p.views / max) * 100)}%` }}
                           />
                         ));
@@ -999,7 +999,7 @@ export default function CompanyPageStudio({
           <button
             key={tab}
             onClick={() => setMobileTab(tab)}
-            className={`py-2.5 capitalize ${mobileTab === tab ? 'text-sky-700 border-b-2 border-sky-700' : 'text-gray-500'}`}
+            className={`py-2.5 capitalize ${mobileTab === tab ? 'text-signal-hover border-b-2 border-signal-hover' : 'text-gray-500'}`}
           >
             {tab}
           </button>
@@ -1014,12 +1014,12 @@ export default function CompanyPageStudio({
             <button
               onClick={() => select('settings')}
               className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-sm font-semibold ${
-                selected === 'settings' ? 'bg-sky-50 text-sky-800' : 'hover:bg-gray-50'
+                selected === 'settings' ? 'bg-signal-soft text-signal-hover' : 'hover:bg-gray-50'
               }`}
             >
               <Settings2 className="w-4 h-4" /> Page settings
             </button>
-            <div className="px-2.5 pt-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-gray-400">Sections</div>
+            <div className="px-2.5 pt-3 pb-1 text-xs font-bold uppercase tracking-wider text-gray-400">Sections</div>
             {sections.map((sec, i) => {
               const def = defs.get(sec.type);
               const count = issuesBySection.get(sec.id) || 0;
@@ -1028,11 +1028,11 @@ export default function CompanyPageStudio({
                 <div
                   key={sec.id}
                   className={`group flex items-center gap-1 pl-2.5 pr-1 py-1.5 rounded-lg ${
-                    selected === sec.id ? 'bg-sky-50' : 'hover:bg-gray-50'
+                    selected === sec.id ? 'bg-signal-soft' : 'hover:bg-gray-50'
                   } ${sec.visible ? '' : 'opacity-50'}`}
                 >
                   <button onClick={() => select(sec.id)} className="flex-1 min-w-0 text-left">
-                    <div className={`text-sm font-semibold truncate ${selected === sec.id ? 'text-sky-800' : ''}`}>
+                    <div className={`text-sm font-semibold truncate ${selected === sec.id ? 'text-signal-hover' : ''}`}>
                       {def?.label || sec.type}
                       {count > 0 && <span className="ml-1.5 inline-block w-1.5 h-1.5 rounded-full bg-amber-500 align-middle" />}
                     </div>
@@ -1057,7 +1057,7 @@ export default function CompanyPageStudio({
             <button
               onClick={() => setMenu('add')}
               disabled={sections.length >= schema.limits.max_sections}
-              className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-dashed border-gray-300 text-sm font-semibold text-gray-700 hover:border-sky-600 hover:text-sky-700 disabled:opacity-40"
+              className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-dashed border-gray-300 text-sm font-semibold text-gray-700 hover:border-signal hover:text-signal-hover disabled:opacity-40"
             >
               <Plus className="w-4 h-4" /> Add section
             </button>

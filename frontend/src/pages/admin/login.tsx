@@ -59,24 +59,24 @@ export default function AdminLoginPage() {
             <TieEduLogo size="sm" />
           </div>
 
-          <div className="vault-card p-8 shadow-float border-[#E8CFA7]">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0E2A44] text-white text-[11px] font-extrabold uppercase tracking-widest mb-4">
-              <ShieldCheck className="w-3.5 h-3.5 text-[#B45309]" /> Restricted
+          <div className="vault-card p-8 shadow-float border-money/40">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-ink text-white text-xs font-extrabold uppercase tracking-widest mb-4">
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-deep" /> Restricted
             </div>
             <h1 className="display-2 mb-1.5">Platform admin portal</h1>
-            <p className="text-[15px] text-[--text-muted] mb-7">
+            <p className="text-base text-[--text-muted] mb-7">
               This surface is only for TieEdu platform owners. Guest access is not allowed.
             </p>
 
             {error && (
-              <div className="mb-5 px-4 py-3 rounded-xl bg-[#FDEDE9] border border-[#F2C9BC] text-[#A63D28] text-[13px] font-semibold">
+              <div className="mb-5 px-4 py-3 rounded-xl bg-signal-soft border border-signal/30 text-danger text-sm font-semibold">
                 {error}
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label htmlFor="admin-email" className="block text-[12px] font-bold text-[#3E4754] mb-1.5 tracking-wide uppercase">
+                <label htmlFor="admin-email" className="block text-xs font-bold text-body mb-1.5 tracking-wide uppercase">
                   Admin email
                 </label>
                 <div className="relative">
@@ -88,13 +88,13 @@ export default function AdminLoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="admin@tieedu.in"
-                    className="w-full pl-10 pr-4 py-3 bg-white/90 border border-[#E9E7E1] rounded-xl text-sm text-[#10151C] placeholder:text-[#AEB6BE] focus:outline-none focus:border-[#0284C7] focus:ring-4 focus:ring-[#0284C7]/10 transition-shadow"
+                    className="w-full pl-10 pr-4 py-3 bg-white/90 border border-line rounded-xl text-sm text-heading placeholder:text-text-light focus:outline-none focus:border-signal focus:ring-4 focus:ring-signal/10 transition-shadow"
                   />
                 </div>
               </div>
 
               <div>
-                <label htmlFor="admin-password" className="block text-[12px] font-bold text-[#3E4754] mb-1.5 tracking-wide uppercase">
+                <label htmlFor="admin-password" className="block text-xs font-bold text-body mb-1.5 tracking-wide uppercase">
                   Password
                 </label>
                 <div className="relative">
@@ -106,7 +106,7 @@ export default function AdminLoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full pl-10 pr-4 py-3 bg-white/90 border border-[#E9E7E1] rounded-xl text-sm text-[#10151C] placeholder:text-[#AEB6BE] focus:outline-none focus:border-[#0284C7] focus:ring-4 focus:ring-[#0284C7]/10 transition-shadow"
+                    className="w-full pl-10 pr-4 py-3 bg-white/90 border border-line rounded-xl text-sm text-heading placeholder:text-text-light focus:outline-none focus:border-signal focus:ring-4 focus:ring-signal/10 transition-shadow"
                   />
                 </div>
               </div>
@@ -122,9 +122,9 @@ export default function AdminLoginPage() {
               </button>
             </form>
 
-            <p className="mt-6 text-center text-[14px] text-[#3E4754]">
+            <p className="mt-6 text-center text-sm text-body">
               Student ho?{' '}
-              <Link href="/login" className="font-bold text-[#0284C7] hover:text-[#0271B5]">
+              <Link href="/login" className="font-bold text-signal hover:text-signal">
                 User sign in
               </Link>
             </p>

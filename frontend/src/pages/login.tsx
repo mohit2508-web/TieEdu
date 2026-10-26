@@ -41,6 +41,7 @@ export default function LoginPage() {
     <>
       <Head>
         <title>Sign in — TieEdu</title>
+        <meta name="description" content="Sign in to TieEdu to pick up your placement prep: your courses, skill tests, company packs and progress." />
       </Head>
 
       <div className="min-h-screen hero-mesh flex flex-col items-center justify-center px-4 py-12">
@@ -52,19 +53,19 @@ export default function LoginPage() {
           <div className="vault-card p-8 shadow-raised">
             <span className="eyebrow">Account Access</span>
             <h1 className="display-2 mt-1 mb-1.5">Sign in to TieEdu</h1>
-            <p className="text-[15px] text-[--text-muted] mb-7">
+            <p className="text-base text-[--text-muted] mb-7">
               Your purchased vaults, unlocks and progress all live here.
             </p>
 
             {error && (
-              <div className="mb-5 px-4 py-3 rounded-xl bg-[#FDEDE9] border border-[#F2C9BC] text-[#A63D28] text-[13px] font-semibold">
+              <div className="mb-5 px-4 py-3 rounded-xl bg-signal-soft border border-signal/30 text-danger text-sm font-semibold">
                 {error}
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label htmlFor="email" className="block text-[12px] font-bold text-[#3E4754] mb-1.5 tracking-wide uppercase">
+                <label htmlFor="email" className="block text-xs font-bold text-body mb-1.5 tracking-wide uppercase">
                   Email
                 </label>
                 <div className="relative">
@@ -81,13 +82,13 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@college.edu"
-                    className="w-full pl-10 pr-4 py-3 bg-white/90 border border-[#E9E7E1] rounded-xl text-sm text-[#10151C] placeholder:text-[#AEB6BE] focus:outline-none focus:border-[#0284C7] focus:ring-4 focus:ring-[#0284C7]/10 transition-shadow"
+                    className="w-full pl-10 pr-4 py-3 bg-white/90 border border-line rounded-xl text-sm text-heading placeholder:text-text-light focus:outline-none focus:border-signal focus:ring-4 focus:ring-signal/10 transition-shadow"
                   />
                 </div>
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-[12px] font-bold text-[#3E4754] mb-1.5 tracking-wide uppercase">
+                <label htmlFor="password" className="block text-xs font-bold text-body mb-1.5 tracking-wide uppercase">
                   Password
                 </label>
                 <div className="relative">
@@ -102,7 +103,7 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full pl-10 pr-4 py-3 bg-white/90 border border-[#E9E7E1] rounded-xl text-sm text-[#10151C] placeholder:text-[#AEB6BE] focus:outline-none focus:border-[#0284C7] focus:ring-4 focus:ring-[#0284C7]/10 transition-shadow"
+                    className="w-full pl-10 pr-4 py-3 bg-white/90 border border-line rounded-xl text-sm text-heading placeholder:text-text-light focus:outline-none focus:border-signal focus:ring-4 focus:ring-signal/10 transition-shadow"
                   />
                 </div>
               </div>
@@ -118,9 +119,9 @@ export default function LoginPage() {
               </button>
             </form>
 
-            <p className="mt-6 text-center text-[14px] text-[#3E4754]">
+            <p className="mt-6 text-center text-sm text-body">
               Naya ho?{' '}
-              <Link href="/signup" className="font-bold text-[#0284C7] hover:text-[#0271B5]">
+              <Link href="/signup" className="font-bold text-signal hover:text-signal">
                 Create account
               </Link>
             </p>
@@ -129,7 +130,7 @@ export default function LoginPage() {
           <div className="mt-6 text-center">
             <Link
               href="/admin/login"
-              className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[--text-muted] hover:text-[#0284C7] transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-[--text-muted] hover:text-signal transition-colors"
             >
               <ShieldCheck className="w-3.5 h-3.5" /> Platform owner? Admin portal
             </Link>

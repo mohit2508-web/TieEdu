@@ -41,7 +41,7 @@ export const CompareCompanyCards: React.FC<{
   return (
     <div className="space-y-3">
       {/* Sticky company switcher */}
-      <div className="sticky top-[var(--header-total)] z-30 -mx-4 px-4 py-2 bg-[#FAFAF9]/95 backdrop-blur border-b border-[#EDEDEB]">
+      <div className="sticky top-[var(--header-total)] z-30 -mx-4 px-4 py-2 bg-app-warm/95 backdrop-blur border-b border-line">
         <div className="flex gap-1.5 overflow-x-auto no-scrollbar" role="tablist" aria-label="Company to compare">
           {companies.map((c) => {
             const on = c.slug === active.slug;
@@ -51,10 +51,10 @@ export const CompareCompanyCards: React.FC<{
                 role="tab"
                 aria-selected={on}
                 onClick={() => onActiveSlugChange(c.slug)}
-                className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-bold border transition-colors ${
+                className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${
                   on
-                    ? 'bg-[#1F3A5F] text-white border-[#1F3A5F]'
-                    : 'bg-white text-[#1F3A5F] border-[#1F3A5F]/20'
+                    ? 'bg-brand-ink text-white border-brand-ink'
+                    : 'bg-white text-brand-ink border-brand-ink/20'
                 }`}
               >
                 <BrandTile name={c.name} src={c.logo_url} className="w-4 h-4 rounded-full p-0 shrink-0" />
@@ -66,21 +66,21 @@ export const CompareCompanyCards: React.FC<{
       </div>
 
       {/* Company identity */}
-      <div className="bg-white border border-[#EDEDEB] rounded-2xl p-4 shadow-sm">
+      <div className="bg-white border border-line rounded-2xl p-4 shadow-sm">
         <div className="flex items-start gap-3">
           <BrandTile name={active.name} src={active.logo_url} className="w-12 h-12 rounded-2xl p-1 shrink-0" />
           <div className="min-w-0 flex-1">
-            <h2 className="text-[17px] font-extrabold text-[#1A1A1A] leading-tight break-words">
+            <h2 className="text-lg font-extrabold text-heading leading-tight break-words">
               {active.name}
             </h2>
             {active.tagline ? (
-              <p className="text-[12.5px] text-[#4A4A4A] leading-snug mt-1">{active.tagline}</p>
+              <p className="text-xs text-body leading-snug mt-1">{active.tagline}</p>
             ) : (
-              <p className="text-[11.5px] text-[--text-muted] leading-snug mt-1 italic">
+              <p className="text-xs text-[--text-muted] leading-snug mt-1 italic">
                 No tagline written by an admin yet.
               </p>
             )}
-            <p className="text-[11.5px] text-[--text-muted] mt-1.5">
+            <p className="text-xs text-[--text-muted] mt-1.5">
               {active.industry || 'Industry not recorded'}
             </p>
           </div>
@@ -95,7 +95,7 @@ export const CompareCompanyCards: React.FC<{
       </div>
 
       {/* Actions — above the fold on mobile */}
-      <div className="bg-white border border-[#EDEDEB] rounded-2xl p-4 shadow-sm">
+      <div className="bg-white border border-line rounded-2xl p-4 shadow-sm">
         <CompanyActions
           company={active}
           onUnlock={onUnlock}
@@ -111,16 +111,16 @@ export const CompareCompanyCards: React.FC<{
         if (rows.length === 0) return null;
         const Icon = group.icon;
         return (
-          <details key={group.id} open className="bg-white border border-[#EDEDEB] rounded-2xl shadow-sm overflow-hidden group">
+          <details key={group.id} open className="bg-white border border-line rounded-2xl shadow-sm overflow-hidden group">
             <summary className="flex items-start gap-2.5 px-4 py-3.5 list-none [&::-webkit-details-marker]:hidden">
-              <Icon className="w-4 h-4 text-[#1F3A5F] shrink-0 mt-0.5" />
+              <Icon className="w-4 h-4 text-brand-ink shrink-0 mt-0.5" />
               <div className="min-w-0 flex-1">
-                <h3 className="text-[13px] font-extrabold text-[#1A1A1A] leading-tight">{group.title}</h3>
-                <p className="text-[11px] text-[--text-muted] leading-snug mt-0.5">{group.blurb}</p>
+                <h3 className="text-sm font-extrabold text-heading leading-tight">{group.title}</h3>
+                <p className="text-xs text-[--text-muted] leading-snug mt-0.5">{group.blurb}</p>
               </div>
               <ChevronDown className="w-4 h-4 text-[--text-muted] shrink-0 mt-0.5 transition-transform group-open:rotate-180" />
             </summary>
-            <div className="border-t border-[#EDEDEB] divide-y divide-[#EDEDEB]">
+            <div className="border-t border-line divide-y divide-line">
               {rows.map((row) => (
                 <MobileRow key={row.id} row={row} cell={row.cell(active)} />
               ))}
@@ -130,18 +130,18 @@ export const CompareCompanyCards: React.FC<{
       })}
 
       {/* Free preview questions */}
-      <details open className="bg-white border border-[#EDEDEB] rounded-2xl shadow-sm overflow-hidden group">
+      <details open className="bg-white border border-line rounded-2xl shadow-sm overflow-hidden group">
         <summary className="flex items-start gap-2.5 px-4 py-3.5 list-none [&::-webkit-details-marker]:hidden">
-          <FileText className="w-4 h-4 text-[#1F3A5F] shrink-0 mt-0.5" />
+          <FileText className="w-4 h-4 text-brand-ink shrink-0 mt-0.5" />
           <div className="min-w-0 flex-1">
-            <h3 className="text-[13px] font-extrabold text-[#1A1A1A] leading-tight">Free preview questions</h3>
-            <p className="text-[11px] text-[--text-muted] leading-snug mt-0.5">
+            <h3 className="text-sm font-extrabold text-heading leading-tight">Free preview questions</h3>
+            <p className="text-xs text-[--text-muted] leading-snug mt-0.5">
               Real titles from this vault. Locked content is never included.
             </p>
           </div>
           <ChevronDown className="w-4 h-4 text-[--text-muted] shrink-0 mt-0.5 transition-transform group-open:rotate-180" />
         </summary>
-        <div className="border-t border-[#EDEDEB] px-4 py-3.5">
+        <div className="border-t border-line px-4 py-3.5">
           {previewQuestionsRow(active).value}
         </div>
       </details>
@@ -150,11 +150,11 @@ export const CompareCompanyCards: React.FC<{
 };
 
 const Stat: React.FC<{ label: string; value: number; accent?: boolean }> = ({ label, value, accent }) => (
-  <div className="rounded-xl bg-[#FAFAF9] border border-[#EDEDEB] px-2.5 py-2 text-center">
-    <div className={`text-[16px] font-extrabold leading-none ${accent ? 'text-emerald-700' : 'text-[#1A1A1A]'}`}>
+  <div className="rounded-xl bg-app-warm border border-line px-2.5 py-2 text-center">
+    <div className={`text-base font-extrabold leading-none ${accent ? 'text-emerald-700' : 'text-heading'}`}>
       {value}
     </div>
-    <div className="text-[9.5px] font-mono uppercase tracking-wide text-[--text-muted] mt-1">{label}</div>
+    <div className="text-xs uppercase tracking-wide text-[--text-muted] mt-1">{label}</div>
   </div>
 );
 
@@ -162,12 +162,12 @@ const Stat: React.FC<{ label: string; value: number; accent?: boolean }> = ({ la
 const MobileRow: React.FC<{ row: RowDef; cell: Cell }> = ({ row, cell }) => (
   <div className="px-4 py-3">
     <div className="flex items-baseline justify-between gap-3">
-      <span className="text-[12px] font-bold text-[#1A1A1A] leading-snug">{row.label}</span>
+      <span className="text-xs font-bold text-heading leading-snug">{row.label}</span>
       {cell.badge && (
         <span
-          className={`shrink-0 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide ${
+          className={`shrink-0 px-1.5 py-0.5 rounded text-xs font-bold uppercase tracking-wide ${
             cell.state === 'verified'
-              ? 'bg-sky-50 text-sky-700 border border-sky-200'
+              ? 'bg-signal-soft text-signal-hover border border-signal/30'
               : 'bg-amber-50 text-amber-800 border border-amber-200'
           }`}
         >
@@ -175,10 +175,10 @@ const MobileRow: React.FC<{ row: RowDef; cell: Cell }> = ({ row, cell }) => (
         </span>
       )}
     </div>
-    <div className="text-[13px] leading-snug mt-1.5 break-words">{cell.value}</div>
-    {cell.note && <p className="text-[10.5px] text-[--text-muted] leading-snug mt-1">{cell.note}</p>}
+    <div className="text-sm leading-snug mt-1.5 break-words">{cell.value}</div>
+    {cell.note && <p className="text-xs text-[--text-muted] leading-snug mt-1">{cell.note}</p>}
     {row.hint && (
-      <p className="text-[10.5px] text-[--text-muted] leading-snug mt-1 italic md:hidden">{row.hint}</p>
+      <p className="text-xs text-[--text-muted] leading-snug mt-1 italic md:hidden">{row.hint}</p>
     )}
   </div>
 );

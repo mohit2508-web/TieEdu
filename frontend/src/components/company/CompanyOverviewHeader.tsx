@@ -2,10 +2,7 @@ import React from 'react';
 import { Company, RoundStep, RoundType } from '@/types';
 import { BrandTile } from '@/components/common/BrandTile';
 import { ProvenanceChip, ProvenanceNote, formatDay } from '@/lib/provenance';
-import {
-  Briefcase, DollarSign, Layers, Calendar, Star, Sparkles, CheckCircle2,
-  ExternalLink, FileText, MapPin, Building2
-} from 'lucide-react';
+import { Briefcase, DollarSign, Layers, Calendar, Star, CheckCircle2, ExternalLink, FileText, MapPin, Building2, ShoppingBag } from 'lucide-react';
 import { COMPLETE_PACK_PRICE, COMPLETE_PACK_COUNT, packSizeLabel } from '@/lib/packPricing';
 
 interface CompanyOverviewHeaderProps {
@@ -73,13 +70,13 @@ export const CompanyOverviewHeader: React.FC<CompanyOverviewHeaderProps> = ({
   if (company.employee_band) profileFacts.push({ icon: Building2, text: `${company.employee_band} employees` });
 
   return (
-    <div className="w-full bg-white border border-[#EDEDEB] rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-xs space-y-6 overflow-hidden">
+    <div className="w-full bg-white border border-line rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-xs space-y-6 overflow-hidden">
 
       {/* Top Banner: Logo + Company Info + Unlock Badge */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 sm:gap-6 pb-5 sm:pb-6 border-b border-[#EDEDEB]">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 sm:gap-6 pb-5 sm:pb-6 border-b border-line">
 
         <div className="flex items-start gap-3.5 sm:gap-5 min-w-0">
-          <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-2xl border border-[#EDEDEB] p-1.5 sm:p-2 bg-[#FAFAF9] shadow-inner flex items-center justify-center shrink-0 overflow-hidden">
+          <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-2xl border border-line p-1.5 sm:p-2 bg-app-warm shadow-inner flex items-center justify-center shrink-0 overflow-hidden">
             <BrandTile
               name={company.name}
               src={company.logo_url}
@@ -90,9 +87,9 @@ export const CompanyOverviewHeader: React.FC<CompanyOverviewHeaderProps> = ({
 
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2 mb-1">
-              <h1 className="text-xl sm:text-3xl font-extrabold text-[#1A1A1A] tracking-tight truncate">{company.name} Intelligence Hub</h1>
+              <h1 className="text-xl sm:text-3xl font-extrabold text-heading tracking-tight truncate">{company.name} placement prep</h1>
               {company.status === 'published' && (
-                <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold text-[11px] sm:text-xs border border-emerald-200">
+                <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold text-xs sm:text-xs border border-emerald-200">
                   Active Vault
                 </span>
               )}
@@ -105,14 +102,14 @@ export const CompanyOverviewHeader: React.FC<CompanyOverviewHeaderProps> = ({
             </p>
 
             {company.tagline && (
-              <p className="text-[13px] sm:text-[15px] text-[#1F3A5F] font-semibold leading-snug mb-2.5 max-w-xl">
+              <p className="text-sm sm:text-base text-brand-ink font-semibold leading-snug mb-2.5 max-w-xl">
                 {company.tagline}
               </p>
             )}
 
             <div className="flex flex-wrap gap-1.5 sm:gap-2">
               {(company.tags || []).map((tag, idx) => (
-                <span key={idx} className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-[#FAFAF9] border border-[#EDEDEB] text-[#1F3A5F] font-mono text-[11px] sm:text-xs font-semibold">
+                <span key={idx} className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-app-warm border border-line text-brand-ink text-xs sm:text-xs font-semibold">
                   #{tag}
                 </span>
               ))}
@@ -127,7 +124,7 @@ export const CompanyOverviewHeader: React.FC<CompanyOverviewHeaderProps> = ({
             : 'bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200'
         }">
           <div className="text-left sm:text-right mb-3">
-            <span className={`text-xs font-mono uppercase font-bold tracking-wider ${isUnlocked ? 'text-emerald-800' : 'text-amber-800'}`}>
+            <span className={`text-xs uppercase font-bold tracking-wider ${isUnlocked ? 'text-emerald-800' : 'text-amber-800'}`}>
               {isUnlocked ? 'Placement Vault — Unlocked' : 'Placement Vault Price'}
             </span>
             {isUnlocked ? (
@@ -137,7 +134,7 @@ export const CompanyOverviewHeader: React.FC<CompanyOverviewHeaderProps> = ({
               </div>
             ) : (
               <div className="flex items-baseline gap-2 justify-start sm:justify-end">
-                <span className="text-2xl font-black text-[#1F3A5F]">
+                <span className="text-2xl font-black text-brand-ink">
                   {typeof unlockPrice === 'number' ? `₹${unlockPrice}` : '—'}
                 </span>
                 <span className="text-xs text-gray-500">
@@ -159,13 +156,13 @@ export const CompanyOverviewHeader: React.FC<CompanyOverviewHeaderProps> = ({
           ) : (
           <button
             onClick={onUnlockClick}
-            className="w-full px-5 py-2.5 bg-[#E8A33D] hover:bg-[#D4902C] text-[#241A06] text-xs sm:text-sm font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 uppercase tracking-wide"
+            className="w-full px-5 py-2.5 bg-money hover:bg-money text-money-ink text-xs sm:text-sm font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 uppercase tracking-wide"
           >
-            <Sparkles className="w-4 h-4 fill-white" />
+            <ShoppingBag className="w-4 h-4 fill-white" />
             <span>
               {typeof unlockPrice === 'number' && unlockPrice < COMPLETE_PACK_PRICE
                 ? `Finish Pack — ₹${unlockPrice}`
-                : `Unlock ${packLabel === 'pack' ? 'Intelligence Hub' : packLabel}`}
+                : `Get the ${packLabel === 'pack' ? 'full pack' : packLabel}`}
             </span>
           </button>
           )}
@@ -174,19 +171,19 @@ export const CompanyOverviewHeader: React.FC<CompanyOverviewHeaderProps> = ({
 
       {/* About + profile facts — all admin-written, gaps shown honestly */}
       {(company.about || profileFacts.length > 0 || careersHref || factCheckedDay) && (
-        <div className="rounded-2xl border border-[#EDEDEB] bg-[#FAFAF9] p-4 sm:p-5 space-y-3">
+        <div className="rounded-2xl border border-line bg-app-warm p-4 sm:p-5 space-y-3">
           {company.about && (
             <div>
-              <h2 className="text-[11px] font-bold uppercase tracking-wider text-[--text-muted] mb-1.5 flex items-center gap-1.5">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-[--text-muted] mb-1.5 flex items-center gap-1.5">
                 <FileText className="w-3.5 h-3.5" /> About {company.name}
               </h2>
-              <p className="text-[13px] sm:text-sm text-[#1F3A5F] leading-relaxed whitespace-pre-line">
+              <p className="text-sm sm:text-sm text-brand-ink leading-relaxed whitespace-pre-line">
                 {company.about}
               </p>
             </div>
           )}
 
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[11.5px] text-[#4A4A4A]">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-body">
             {profileFacts.map((f, i) => (
               <span key={i} className="inline-flex items-center gap-1.5">
                 <f.icon className="w-3.5 h-3.5 text-[--text-muted] shrink-0" />
@@ -198,7 +195,7 @@ export const CompanyOverviewHeader: React.FC<CompanyOverviewHeaderProps> = ({
                 href={careersHref}
                 target="_blank"
                 rel="noopener noreferrer nofollow"
-                className="inline-flex items-center gap-1.5 font-semibold text-[#1F3A5F] hover:underline"
+                className="inline-flex items-center gap-1.5 font-semibold text-brand-ink hover:underline"
               >
                 <ExternalLink className="w-3.5 h-3.5 shrink-0" />
                 Official careers page
@@ -206,7 +203,7 @@ export const CompanyOverviewHeader: React.FC<CompanyOverviewHeaderProps> = ({
             )}
           </div>
 
-          <p className="text-[11px] text-[--text-muted]">
+          <p className="text-xs text-[--text-muted]">
             {factCheckedDay
               ? `Profile last fact-checked by an admin on ${factCheckedDay}.`
               : 'This profile has not been fact-checked by an admin yet — treat the figures below as unconfirmed.'}
@@ -217,12 +214,12 @@ export const CompanyOverviewHeader: React.FC<CompanyOverviewHeaderProps> = ({
       {/* Overview Metadata Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4">
 
-        <div className="p-4 bg-[#FAFAF9] rounded-2xl border border-[#EDEDEB] space-y-1">
+        <div className="p-4 bg-app-warm rounded-2xl border border-line space-y-1">
           <div className="flex items-center gap-2 text-sm font-semibold text-gray-500">
             <DollarSign className="w-4 h-4 text-emerald-600 shrink-0" />
             <span className="truncate">CTC Package Range</span>
           </div>
-          <p className="text-base sm:text-lg font-bold text-[#1F3A5F]">{ctcText}</p>
+          <p className="text-base sm:text-lg font-bold text-brand-ink">{ctcText}</p>
           <ProvenanceChip sources={company.metric_sources} metricKey="ctc" hasValue={hasCtc} className="mt-1" />
           <ProvenanceNote
             sources={company.metric_sources}
@@ -233,16 +230,16 @@ export const CompanyOverviewHeader: React.FC<CompanyOverviewHeaderProps> = ({
         </div>
 
         {/* Counted from the vault — cannot be fabricated */}
-        <div className="p-4 bg-[#FAFAF9] rounded-2xl border border-[#EDEDEB] space-y-1">
+        <div className="p-4 bg-app-warm rounded-2xl border border-line space-y-1">
           <div className="flex items-center gap-2 text-sm font-semibold text-gray-500">
             <Layers className="w-4 h-4 text-indigo-600 shrink-0" />
             <span className="truncate">Questions in Vault</span>
           </div>
-          <p className="text-base sm:text-lg font-bold text-[#1F3A5F]">
+          <p className="text-base sm:text-lg font-bold text-brand-ink">
             {questionCount}
             <span className="text-xs font-semibold text-[--text-muted]"> / {moduleCount} modules</span>
           </p>
-          <p className="text-[10.5px] text-[--text-muted] leading-snug">
+          <p className="text-xs text-[--text-muted] leading-snug">
             {authoredPacks === moduleCount && moduleCount > 0
               ? 'Every module has a written pack.'
               : `${authoredPacks} of ${moduleCount} modules have a written pack.`}
@@ -250,12 +247,12 @@ export const CompanyOverviewHeader: React.FC<CompanyOverviewHeaderProps> = ({
         </div>
 
         {/* Real process figure, not a hardcoded drive-window claim */}
-        <div className="p-4 bg-[#FAFAF9] rounded-2xl border border-[#EDEDEB] space-y-1">
+        <div className="p-4 bg-app-warm rounded-2xl border border-line space-y-1">
           <div className="flex items-center gap-2 text-sm font-semibold text-gray-500">
             <Calendar className="w-4 h-4 text-amber-600 shrink-0" />
             <span className="truncate">Avg Process Duration</span>
           </div>
-          <p className="text-base sm:text-lg font-bold text-[#1F3A5F]">
+          <p className="text-base sm:text-lg font-bold text-brand-ink">
             {company.avg_process_days != null ? `${company.avg_process_days} days` : 'Not recorded'}
           </p>
           <ProvenanceChip sources={company.metric_sources} metricKey="process_days" hasValue={company.avg_process_days != null} className="mt-1" />
@@ -267,7 +264,7 @@ export const CompanyOverviewHeader: React.FC<CompanyOverviewHeaderProps> = ({
           />
         </div>
 
-        <div className="p-4 bg-[#FAFAF9] rounded-2xl border border-[#EDEDEB] space-y-1">
+        <div className="p-4 bg-app-warm rounded-2xl border border-line space-y-1">
           <div className="flex items-center gap-2 text-sm font-semibold text-gray-500">
             <Briefcase className="w-4 h-4 text-orange-600 shrink-0" />
             <span className="truncate">Difficulty Rating</span>
@@ -296,13 +293,13 @@ export const CompanyOverviewHeader: React.FC<CompanyOverviewHeaderProps> = ({
       {defaultRounds.length > 0 && (
       <div className="pt-2">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm sm:text-base font-bold uppercase tracking-wider text-[#1F3A5F] flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#E8A33D]"></span>
+          <h2 className="text-sm sm:text-base font-bold uppercase tracking-wider text-brand-ink flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-money"></span>
             Recruitment Process Pipeline (Click to filter round modules)
           </h2>
           <button
             onClick={() => onSelectRoundTab('all')}
-            className={`text-xs sm:text-sm font-semibold font-mono ${activeRoundTab === 'all' ? 'text-[#B45309] underline' : 'text-gray-500 hover:text-gray-900'}`}
+            className={`text-xs sm:text-sm font-semibold ${activeRoundTab === 'all' ? 'text-amber-deep underline' : 'text-gray-500 hover:text-gray-900'}`}
           >
             Show All Rounds
           </button>
@@ -317,17 +314,17 @@ export const CompanyOverviewHeader: React.FC<CompanyOverviewHeaderProps> = ({
                 onClick={() => onSelectRoundTab(r.round_type)}
                 className={`p-3.5 rounded-2xl border text-left transition-all relative overflow-hidden group ${
                   isActive
-                    ? 'bg-[#1F3A5F] text-white border-[#1F3A5F] shadow-md'
-                    : 'bg-[#FAFAF9] hover:bg-white text-gray-800 border-[#EDEDEB] hover:border-gray-300'
+                    ? 'bg-brand-ink text-white border-brand-ink shadow-md'
+                    : 'bg-app-warm hover:bg-white text-gray-800 border-line hover:border-gray-300'
                 }`}
               >
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className={`text-xs font-mono font-bold uppercase px-2 py-0.5 rounded-md ${
-                    isActive ? 'bg-amber-400 text-[#1F3A5F]' : 'bg-gray-200 text-gray-700'
+                  <span className={`text-xs font-bold uppercase px-2 py-0.5 rounded-md ${
+                    isActive ? 'bg-amber-400 text-brand-ink' : 'bg-gray-200 text-gray-700'
                   }`}>
                     Step {r.step_number}
                   </span>
-                  <span className={`text-xs font-mono font-semibold ${isActive ? 'text-amber-300' : 'text-gray-500'}`}>
+                  <span className={`text-xs font-semibold ${isActive ? 'text-amber-300' : 'text-gray-500'}`}>
                     {r.module_count > 0 ? `${r.module_count} Modules` : ''}
                   </span>
                 </div>

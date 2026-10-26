@@ -43,8 +43,8 @@ export function Donut(props: {
       </svg>
       {(props.centerLabel || props.centerSub) ? (
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-          <span className="text-[20px] font-semibold tabular-nums" style={{ color: 'var(--apple-label)' }}>{props.centerLabel}</span>
-          {props.centerSub ? <span className="text-[10px] font-medium uppercase tracking-wide" style={{ color: 'var(--apple-label-3)' }}>{props.centerSub}</span> : null}
+          <span className="text-xl font-semibold tabular-nums" style={{ color: 'var(--apple-label)' }}>{props.centerLabel}</span>
+          {props.centerSub ? <span className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--apple-label-2)' }}>{props.centerSub}</span> : null}
         </div>
       ) : null}
     </div>
@@ -73,11 +73,11 @@ export function Bars(props: { data: { label: string; value: number }[]; height?:
   return (
     <div className="flex h-full w-full items-end gap-[4px]" style={{ height: h }}>
       {props.data.length === 0 ? (
-        <div className="flex h-full w-full items-center justify-center text-xs" style={{ color: 'var(--apple-label-3)' }}>No registrations yet</div>
+        <div className="flex h-full w-full items-center justify-center text-xs" style={{ color: 'var(--apple-label-2)' }}>No registrations yet</div>
       ) : null}
       {props.data.map((d) => (
         <div key={d.label} className="group relative flex min-w-[8px] flex-1 flex-col items-center gap-1">
-          <span className="pointer-events-none absolute -top-5 text-[10px] font-medium tabular-nums opacity-0 transition-opacity group-hover:opacity-100" style={{ color: 'var(--apple-label-2)' }}>
+          <span className="pointer-events-none absolute -top-5 text-xs font-medium tabular-nums opacity-0 transition-opacity group-hover:opacity-100" style={{ color: 'var(--apple-label-2)' }}>
             {d.value}
           </span>
           <span
@@ -85,7 +85,7 @@ export function Bars(props: { data: { label: string; value: number }[]; height?:
             style={{ height: `${Math.max(2, (d.value / max) * 100)}%`, background: color, opacity: 0.85 }}
             title={`${d.label}: ${d.value}`}
           />
-          <span className="text-[9px] text-[var(--apple-label-3)]">{d.label}</span>
+          <span className="text-xs text-[var(--apple-label-2)]">{d.label}</span>
         </div>
       ))}
     </div>

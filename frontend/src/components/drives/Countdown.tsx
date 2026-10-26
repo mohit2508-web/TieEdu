@@ -43,7 +43,7 @@ export const Countdown: React.FC<{
   const t = useCountdown(targetIso, serverNowIso);
   if (!t) return null;
   return (
-    <span className={`font-mono tabular-nums ${className || ''}`} style={style}>
+    <span className={`tabular-nums ${className || ''}`} style={style}>
       {t.label}
     </span>
   );

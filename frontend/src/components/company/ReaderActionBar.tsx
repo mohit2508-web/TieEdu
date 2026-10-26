@@ -65,7 +65,7 @@ export const ReaderActionBar: React.FC<ReaderActionBarProps> = ({
           <button
             type="button"
             onClick={onUnlockClick}
-            className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-[#E8A33D] px-4 text-sm font-bold text-[#241A06] transition-colors active:bg-[#D4902C]"
+            className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-money px-4 text-sm font-bold text-money-ink transition-colors active:bg-money"
           >
             <ShoppingCart className="h-4 w-4" /> Unlock full vault{unlockPriceSuffix}
           </button>
@@ -83,11 +83,11 @@ export const ReaderActionBar: React.FC<ReaderActionBarProps> = ({
           </button>
 
           <div className="min-w-0 flex-1 px-1">
-            <p className="truncate text-[13px] font-bold text-[#10151C]">
+            <p className="truncate text-sm font-bold text-heading">
               {sectionLabel.replace(/^\d+\.\s*/, '')}
             </p>
             {solvedCount !== null && (
-              <p className="truncate text-[11px] text-[color:var(--text-muted)]">
+              <p className="truncate text-xs text-[color:var(--text-muted)]">
                 {solvedCount} solved
               </p>
             )}
@@ -101,7 +101,7 @@ export const ReaderActionBar: React.FC<ReaderActionBarProps> = ({
             className={cn(
               'flex h-12 w-12 flex-none items-center justify-center rounded-xl border transition-colors active:bg-black/5',
               bookmarked
-                ? 'border-[#0284C7]/30 bg-[#0284C7]/10 text-[#0284C7]'
+                ? 'border-signal/30 bg-signal/10 text-signal'
                 : 'border-gray-200 text-gray-500'
             )}
           >
@@ -124,7 +124,7 @@ export const ReaderActionBar: React.FC<ReaderActionBarProps> = ({
             onClick={onNext}
             disabled={!hasNext}
             aria-label="Next section"
-            className="flex h-12 w-12 flex-none items-center justify-center rounded-xl bg-[#0284C7] text-white transition-colors active:bg-[#0369A1] disabled:opacity-30"
+            className="flex h-12 w-12 flex-none items-center justify-center rounded-xl bg-signal text-white transition-colors active:bg-signal disabled:opacity-30"
           >
             <ChevronRight className="h-5 w-5" />
           </button>

@@ -13,11 +13,12 @@ import { useCart } from '@/context/CartContext';
 import {
   MOBILE_TAB_ACTIONS,
   NAV_ACTIONS,
-  PRIMARY_NAV,
-  isNavActive,
+  NAV_SECTIONS,
   isRootDepth,
   resolveBackHref,
   resolveNavTitle,
+  resolveSection,
+  sectionHref,
 } from '@/lib/navConfig';
 import {
   initialHeaderScrollState,
@@ -83,6 +84,7 @@ export const Header: React.FC = () => {
   // keeps an override from leaking into the next pushed screen.
   const drillTitle = drillTitleOverride || (router.isReady ? resolveNavTitle(router.pathname) : '');
   const backHref = router.isReady ? resolveBackHref(router.pathname) : '/';
+  const currentSection = resolveSection(router.pathname);
 
   /*
     History first, href as the safety net. `history.length` is 1 for a deep link
@@ -275,7 +277,7 @@ export const Header: React.FC = () => {
             is the normal case, and without them the title pushes the two actions
             off the right edge of a 320px screen instead of ellipsising.
           */}
-          <span className="min-w-0 flex-1 truncate text-[15px] font-bold text-[#10151C]">
+          <span className="min-w-0 flex-1 truncate text-base font-bold text-heading">
             {drillTitle}
           </span>
 
@@ -334,18 +336,20 @@ export const Header: React.FC = () => {
             <TieEduLogo size="sm" />
           </Link>
 
+          {/* The five sections (§5). A section is active anywhere inside it; its
+              other pages are the sub-tabs `SectionSubnav` draws under the bar. */}
           <nav aria-label="Primary" className="hidden items-center gap-0.5 md:flex">
-            {PRIMARY_NAV.map((item) => {
-              const active = isNavActive(router.pathname, item.href);
+            {NAV_SECTIONS.map((section) => {
+              const active = currentSection?.id === section.id;
               return (
                 <Link
-                  key={item.id}
-                  href={item.href}
+                  key={section.id}
+                  href={sectionHref(section)}
                   aria-current={active ? 'page' : undefined}
                   className="nav-link"
                 >
-                  {item.label}
-                  {item.badge === 'free' && <span className="nav-link-badge">Free</span>}
+                  {/* Signed in, home is the Today screen (§5). */}
+                  {section.id === 'home' && user ? 'Today' : section.label}
                 </Link>
               );
             })}
@@ -364,11 +368,22 @@ export const Header: React.FC = () => {
             className="nav-search !hidden lg:flex"
           >
             <Search size={16} strokeWidth={2.2} aria-hidden />
-            <span className="flex-1 text-left text-[13px] font-medium">Search vaults…</span>
+            <span className="flex-1 text-left text-sm font-medium">Search vaults…</span>
             <kbd className="inline-flex items-center gap-0.5">
               <Command size={11} strokeWidth={2.5} aria-hidden />
               K
             </kbd>
+          </button>
+          {/* Below `lg` the field collapses to an icon. On phones this is search's
+              only home since the tab bar's five slots became the five sections. */}
+          <button
+            type="button"
+            onClick={() => toggleOverlay('search')}
+            aria-haspopup="dialog"
+            aria-label="Search vaults"
+            className="icon-btn lg:!hidden"
+          >
+            <Search size={19} strokeWidth={2} aria-hidden />
           </button>
 
           {/*

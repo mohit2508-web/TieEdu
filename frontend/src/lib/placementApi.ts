@@ -88,7 +88,8 @@ const fail = async (res: Response): Promise<never> => {
   let message = `Request failed (${res.status})`;
   try {
     const body = await res.json();
-    if (body?.error) message = body.error;
+    // Bridge endpoints send a code in `error` and the sentence in `message`.
+    if (body?.error) message = typeof body.message === 'string' && body.message ? body.message : body.error;
   } catch {
     /* non-JSON error body — the status line is all we know */
   }
@@ -141,3 +142,59 @@ export const placementAcceptInvite = async (
 
 /** True when the bearer token is already in memory (post-login calls). */
 export const hasSessionToken = (): boolean => Boolean(getAccessToken());
+
+/** Mirrors backend/src/lib/batchReadiness.ts `BatchReadiness`. */
+export type ReadinessSegment = 'not_started' | 'at_risk' | 'in_progress' | 'ready';
+export interface BatchReadiness {
+  generated_at: string;
+  companies: Array<{ id: string; name: string; slug: string; targeted_by: number }>;
+  students: Array<{
+    user_id: string;
+    label: string;
+    roll_no: string;
+    branch: string | null;
+    batch: string | null;
+    readiness: Record<string, number | null>;
+    average: number | null;
+    tests: number;
+    lessons: number;
+    last_active: string | null;
+    segment: ReadinessSegment;
+  }>;
+  segments: Record<ReadinessSegment, number>;
+}
+
+/** GET /api/placement/readiness for the active college (read-only). */
+export const placementReadiness = async (collegeId?: string | null): Promise<BatchReadiness> => {
+  const res = await apiFetch(`${API_BASE_URL}/placement/readiness`, { headers: collegeHeader(collegeId) });
+  if (!res.ok) return fail(res);
+  return res.json();
+};
+
+export interface CampusPageSettings {
+  college_id: string;
+  enabled: boolean;
+  intro: string;
+  updated_by: string | null;
+  updated_at: string | null;
+}
+
+/** The public campus page switch for the active college (stored outside the placement DB). */
+export const getCampusPageSettings = async (collegeId?: string | null): Promise<CampusPageSettings> => {
+  const res = await apiFetch(`${API_BASE_URL}/placement/campus-page`, { headers: collegeHeader(collegeId) });
+  if (!res.ok) return fail(res);
+  return res.json();
+};
+
+export const saveCampusPageSettings = async (
+  patch: { enabled?: boolean; intro?: string },
+  collegeId?: string | null
+): Promise<CampusPageSettings> => {
+  const res = await apiFetch(`${API_BASE_URL}/placement/campus-page`, {
+    method: 'PUT',
+    headers: collegeHeader(collegeId),
+    body: JSON.stringify(patch),
+  });
+  if (!res.ok) return fail(res);
+  return res.json();
+};

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Building2, BookOpen, Lightbulb, FileSpreadsheet, Flame, Zap, UserCheck,
-  Download, ChevronRight, CheckCircle2, Copy, Sparkles, Filter, Lock, ArrowLeft,
+  Download, ChevronRight, CheckCircle2, Copy, Filter, Lock, ArrowLeft,
   ShoppingCart, Rocket, FileText, Eye
 } from 'lucide-react';
 import { ContentModule, ModuleSectionData, ModulePdf } from '@/types';
@@ -223,11 +223,11 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
         </div>
         <div>
           <p className="font-bold text-gray-900">{label} is part of the premium pack</p>
-          <p className="text-base text-gray-500 mt-1">Unlock the vault to read the complete verified guide.</p>
+          <p className="text-base text-gray-500 mt-1">Get the pack to read the complete guide.</p>
         </div>
         <button
           onClick={onUnlockClick}
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#E8A33D] hover:bg-[#D4902C] text-[#241A06] text-sm font-bold rounded-xl transition-colors"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-money hover:bg-money text-money-ink text-sm font-bold rounded-xl transition-colors"
         >
           <ShoppingCart className="w-4 h-4" /> Unlock Full Vault{priceSuffix}
         </button>
@@ -279,7 +279,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
   if (nothingPublished) {
     return (
       <div
-        className="min-h-screen bg-[#F8FAFC] text-[#1E293B] flex flex-col font-sans"
+        className="min-h-screen bg-app-warm text-ink-soft flex flex-col font-sans"
         style={{ fontFamily: "'Calibre', 'Calibri', 'Inter', -apple-system, sans-serif" }}
       >
         <header className="sticky top-[var(--header-total)] z-30 bg-white border-b border-gray-200 px-4 sm:px-8 py-4 flex items-center justify-between shadow-xs">
@@ -295,7 +295,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
               <div className="flex items-center gap-2 text-sm text-gray-500 font-medium truncate">
                 <span>{companyName}</span>
                 <span>/</span>
-                <span className="text-[#0284C7] font-semibold truncate">{module.title}</span>
+                <span className="text-signal font-semibold truncate">{module.title}</span>
               </div>
               <h1 className="text-lg sm:text-xl font-extrabold text-gray-900 truncate tracking-tight">
                 {module.title}
@@ -319,7 +319,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
             <div className="flex flex-col sm:flex-row gap-2.5 justify-center pt-1">
               <button
                 onClick={onBack}
-                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#0284C7] hover:bg-[#0369A1] text-white text-sm font-bold rounded-xl transition-colors"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-signal hover:bg-signal text-white text-sm font-bold rounded-xl transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" /> Back to {companyName}
               </button>
@@ -343,7 +343,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
 
   return (
     <div
-      className="min-h-screen bg-[#F8FAFC] text-[#1E293B] flex flex-col font-sans"
+      className="min-h-screen bg-app-warm text-ink-soft flex flex-col font-sans"
       style={{ fontFamily: "'Calibre', 'Calibri', 'Inter', -apple-system, sans-serif" }}
     >
       {/* Top Header Bar */}
@@ -360,7 +360,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
             <div className="flex items-center gap-2 text-sm text-gray-500 font-medium truncate">
               <span>{companyName}</span>
               <span>/</span>
-              <span className="text-[#0284C7] font-semibold truncate">{module.title}</span>
+              <span className="text-signal font-semibold truncate">{module.title}</span>
             </div>
             <h1 className="text-lg sm:text-xl font-extrabold text-gray-900 truncate tracking-tight">
               {module.title}
@@ -378,7 +378,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
           {module.is_premium && !isModuleUnlocked && (
             <button
               onClick={onUnlockClick}
-              className="inline-flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 bg-[#E8A33D] hover:bg-[#D4902C] text-[#241A06] rounded-xl text-xs sm:text-sm font-bold shadow-xs transition-colors"
+              className="inline-flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 bg-money hover:bg-money text-money-ink rounded-xl text-xs sm:text-sm font-bold shadow-xs transition-colors"
             >
               <ShoppingCart className="w-4 h-4 shrink-0" />
               <span className="whitespace-nowrap">Unlock{priceSuffix}</span>
@@ -394,7 +394,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
 
           <button
             onClick={() => setActiveSection('pdfs')}
-            className="inline-flex items-center justify-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 bg-[#0284C7] hover:bg-[#0369A1] text-white rounded-xl text-xs sm:text-sm font-bold shadow-xs transition-all"
+            className="inline-flex items-center justify-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 bg-signal hover:bg-signal text-white rounded-xl text-xs sm:text-sm font-bold shadow-xs transition-all"
           >
             <FileText className="w-4 h-4 shrink-0" />
             <span>PDF Guide</span>
@@ -422,7 +422,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
         aria-valuenow={Math.round(progress * 100)}
       >
         <div
-          className="h-full bg-[#0284C7] transition-[width] duration-150 ease-out"
+          className="h-full bg-signal transition-[width] duration-150 ease-out"
           style={{ width: progressWidth(progress) }}
         />
       </div>
@@ -446,11 +446,11 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                   onClick={() => setActiveSection(item.id)}
                   className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-bold transition-all text-left ${
                     isActive
-                      ? 'bg-[#0284C7]/10 text-[#0284C7] border-l-4 border-[#0284C7] shadow-xs'
+                      ? 'bg-signal/10 text-signal border-l-4 border-signal shadow-xs'
                       : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   }`}
                 >
-                  <Icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-[#0284C7]' : 'text-gray-400'}`} />
+                  <Icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-signal' : 'text-gray-400'}`} />
                   <span className="truncate">{item.label}</span>
                 </button>
               );
@@ -470,10 +470,10 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                     <button
                       key={m.id}
                       onClick={() => onSwitchModule(m)}
-                      className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all ${
+                      className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
                         active
-                          ? 'bg-[#0284C7] text-white shadow-xs'
-                          : 'bg-gray-100 text-gray-600 hover:bg-[#0284C7]/10 hover:text-[#0284C7]'
+                          ? 'bg-signal text-white shadow-xs'
+                          : 'bg-gray-100 text-gray-600 hover:bg-signal/10 hover:text-signal'
                       }`}
                     >
                       {m.round_type || (m.is_premium ? 'Premium' : 'Free')}
@@ -501,7 +501,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
             <div className="space-y-8 animate-fade-in">
               <div className="border-b border-gray-200 pb-5">
                 <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 flex items-center gap-3 tracking-tight">
-                  <Building2 className="w-7 h-7 text-[#0284C7]" />
+                  <Building2 className="w-7 h-7 text-signal" />
                   Company Overview & Recruitment Blueprint
                 </h2>
                 <p className="text-base text-gray-600 mt-2">
@@ -511,9 +511,9 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
 
               {sectionData.overview ? (
                 <div className="space-y-6 text-base sm:text-lg leading-relaxed text-gray-800">
-                  <div className="p-5 sm:p-6 bg-sky-50/70 border border-sky-200 rounded-2xl">
-                    <h3 className="font-bold text-sky-950 text-lg sm:text-xl mb-2">Company Profile & Target Roles</h3>
-                    <MarkdownContent className="text-sky-900">{sectionData.overview.companyInfo}</MarkdownContent>
+                  <div className="p-5 sm:p-6 bg-signal-soft/70 border border-signal/30 rounded-2xl">
+                    <h3 className="font-bold text-brand-ink text-lg sm:text-xl mb-2">Company Profile & Target Roles</h3>
+                    <MarkdownContent className="text-brand-ink">{sectionData.overview.companyInfo}</MarkdownContent>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -535,7 +535,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                           <div key={idx} className="p-5 bg-gray-50 border border-gray-200 rounded-2xl text-base space-y-2">
                             <div className="flex items-center justify-between font-bold text-gray-900">
                               <span>{rev.name} ({rev.role})</span>
-                              <span className="text-amber-500 font-mono text-lg">★ {rev.rating}/5</span>
+                              <span className="text-amber-500 text-lg">★ {rev.rating}/5</span>
                             </div>
                             <blockquote className="text-gray-700 italic leading-relaxed">
                               <MarkdownContent compact>{`"${rev.text}"`}</MarkdownContent>
@@ -558,7 +558,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
               <div className="border-b border-gray-200 pb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 flex items-center gap-3 tracking-tight">
-                    <BookOpen className="w-7 h-7 text-[#0284C7]" />
+                    <BookOpen className="w-7 h-7 text-signal" />
                     Core Subjects & Past Year Questions (PYQs)
                   </h2>
                   <p className="text-base text-gray-600 mt-2">
@@ -575,7 +575,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                       onClick={() => setSelectedYear(yr)}
                       className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                         selectedYear === yr
-                          ? 'bg-white text-[#0284C7] shadow-xs'
+                          ? 'bg-white text-signal shadow-xs'
                           : 'text-gray-600 hover:text-gray-900'
                       }`}
                     >
@@ -589,7 +589,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                 <div className="space-y-8">
                   {sectionData.core_subjects.map((sub, sIdx) => (
                     <div key={sIdx} className="space-y-5">
-                      <h3 className="text-xl sm:text-2xl font-bold text-gray-900 border-l-4 border-[#0284C7] pl-4 py-1">
+                      <h3 className="text-xl sm:text-2xl font-bold text-gray-900 border-l-4 border-signal pl-4 py-1">
                         {sub.subject}
                       </h3>
 
@@ -612,7 +612,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                                   .map((pyq, pIdx) => (
                                     <div key={pIdx} className="p-4 bg-white border border-gray-200 rounded-xl text-base space-y-2 shadow-2xs">
                                       <div className="flex flex-wrap items-center gap-2">
-                                        <span className="px-2.5 py-0.5 bg-sky-100 text-sky-800 rounded font-bold text-xs">
+                                        <span className="px-2.5 py-0.5 bg-signal-soft text-signal-hover rounded font-bold text-xs">
                                           Year {pyq.year}
                                         </span>
                                         {pyq.frequency && (
@@ -625,7 +625,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                                         {pyq.question}
                                       </MarkdownContent>
                                       <div className="text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100 text-base leading-relaxed">
-                                        <span className="block text-[11px] font-bold uppercase tracking-wider text-gray-900 mb-1">Answer</span>
+                                        <span className="block text-xs font-bold uppercase tracking-wider text-gray-900 mb-1">Answer</span>
                                         <MarkdownContent className="text-gray-700">{pyq.answer}</MarkdownContent>
                                       </div>
                                     </div>
@@ -649,7 +649,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
             <div className="space-y-8 animate-fade-in">
               <div className="border-b border-gray-200 pb-5">
                 <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 flex items-center gap-3 tracking-tight">
-                  <Lightbulb className="w-7 h-7 text-[#0284C7]" />
+                  <Lightbulb className="w-7 h-7 text-signal" />
                   Technical & Coding Interview Questions
                 </h2>
                 <p className="text-base text-gray-600 mt-2">
@@ -672,7 +672,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-center gap-2.5 min-w-0">
                           <span className={`shrink-0 px-3 py-0.5 rounded-md text-xs font-bold uppercase tracking-wider ${
-                            q.category === 'Coding' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                            q.category === 'Coding' ? 'bg-purple-100 text-purple-800' : 'bg-signal-soft text-signal-hover'
                           }`}>
                             {q.category}
                           </span>
@@ -700,14 +700,14 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                       </div>
 
                       <div>
-                        <span className="block text-[11px] font-bold uppercase tracking-wider text-sky-900 mb-1">Question</span>
+                        <span className="block text-xs font-bold uppercase tracking-wider text-brand-ink mb-1">Question</span>
                         <MarkdownContent className="text-base sm:text-lg text-gray-900 font-bold">
                           {q.question}
                         </MarkdownContent>
                       </div>
 
                       <div className="p-4 bg-white border border-gray-200 rounded-xl text-base sm:text-lg text-gray-800 leading-relaxed">
-                        <span className="block text-[11px] font-bold uppercase tracking-wider text-sky-900 mb-1">Solution</span>
+                        <span className="block text-xs font-bold uppercase tracking-wider text-brand-ink mb-1">Solution</span>
                         <MarkdownContent className="text-gray-800">{q.solution}</MarkdownContent>
                       </div>
 
@@ -731,7 +731,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
             <div className="space-y-8 animate-fade-in">
               <div className="border-b border-gray-200 pb-5">
                 <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 flex items-center gap-3 tracking-tight">
-                  <FileSpreadsheet className="w-7 h-7 text-[#0284C7]" />
+                  <FileSpreadsheet className="w-7 h-7 text-signal" />
                   Quick Cheatsheets & Reference Cards
                 </h2>
                 <p className="text-base text-gray-600 mt-2">
@@ -750,7 +750,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                           columns lined up. `overflow-x-auto` was already here, but with no
                           affordance and no way out of a wide chart on a phone. */}
                       <div className="overflow-x-auto rounded-xl border border-amber-200 bg-white text-base leading-relaxed" style={{ WebkitOverflowScrolling: 'touch' }}>
-                        <div className="whitespace-pre-line p-4 font-mono text-gray-800">
+                        <div className="whitespace-pre-line p-4 text-gray-800">
                           {sheet.content}
                         </div>
                       </div>
@@ -839,7 +839,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
             <div className="space-y-8 animate-fade-in">
               <div className="border-b border-gray-200 pb-5">
                 <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 flex items-center gap-3 tracking-tight">
-                  <UserCheck className="w-7 h-7 text-[#0284C7]" />
+                  <UserCheck className="w-7 h-7 text-signal" />
                   HR & Behavioral Interview Blueprint
                 </h2>
                 <p className="text-base text-gray-600 mt-2">
@@ -850,10 +850,10 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
               {sectionData.hr_round && sectionData.hr_round.length > 0 ? (
                 <div className="space-y-6">
                   {sectionData.hr_round.map((hr, idx) => (
-                    <div key={idx} className="p-6 bg-sky-50/60 border border-sky-200 rounded-2xl space-y-4">
-                      <h3 className="font-bold text-sky-950 text-lg sm:text-xl">Q: {hr.question}</h3>
-                      <div className="p-4 bg-white border border-sky-100 rounded-xl text-base sm:text-lg text-gray-800 leading-relaxed">
-                        <span className="block text-[11px] font-bold uppercase tracking-wider text-sky-950 mb-1">Sample STAR answer</span>
+                    <div key={idx} className="p-6 bg-signal-soft/60 border border-signal/30 rounded-2xl space-y-4">
+                      <h3 className="font-bold text-brand-ink text-lg sm:text-xl">Q: {hr.question}</h3>
+                      <div className="p-4 bg-white border border-line rounded-xl text-base sm:text-lg text-gray-800 leading-relaxed">
+                        <span className="block text-xs font-bold uppercase tracking-wider text-brand-ink mb-1">Sample STAR answer</span>
                         <MarkdownContent className="text-gray-800">{hr.answer}</MarkdownContent>
                       </div>
                       {hr.tips && hr.tips.length > 0 && (
@@ -882,7 +882,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
             <div className="space-y-8 animate-fade-in">
               <div className="border-b border-gray-200 pb-5">
                 <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 flex items-center gap-3 tracking-tight">
-                  <FileText className="w-7 h-7 text-[#0284C7]" />
+                  <FileText className="w-7 h-7 text-signal" />
                   PDF Library — Official Study Guides
                 </h2>
                 <p className="text-base text-gray-600 mt-2">
@@ -901,7 +901,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                   <p className="text-base text-gray-600 max-w-md mx-auto leading-relaxed">
                     {companyName}&apos;s full vault includes this PDF guide: <strong>{module.pdf ? module.pdf.title + ' — view & download' : 'round-wise guides, cheat sheets, and last-minute revision'}</strong>. Unlock once, and the entire company vault is yours.
                   </p>
-                  <button onClick={onUnlockClick} className="inline-flex items-center gap-2 px-6 py-3 bg-[#E8A33D] hover:bg-[#D4902C] text-[#241A06] text-sm font-bold rounded-xl shadow-md transition-all">
+                  <button onClick={onUnlockClick} className="inline-flex items-center gap-2 px-6 py-3 bg-money hover:bg-money text-money-ink text-sm font-bold rounded-xl shadow-md transition-all">
                     <ShoppingCart className="w-4 h-4" /> Unlock Full Vault{priceSuffix}
                   </button>
                 </div>
@@ -922,9 +922,9 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                 return (
                   <div className="space-y-4">
                     {pdfList.map((pdfItem) => (
-                      <div key={pdfItem.id} className="p-6 bg-sky-50/60 border border-sky-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div key={pdfItem.id} className="p-6 bg-signal-soft/60 border border-signal/30 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="flex items-center gap-4 min-w-0">
-                          <div className="w-12 h-12 rounded-2xl bg-[#0284C7] text-white flex items-center justify-center shrink-0">
+                          <div className="w-12 h-12 rounded-2xl bg-signal text-white flex items-center justify-center shrink-0">
                             <FileText className="w-6 h-6" />
                           </div>
                           <div className="min-w-0">
@@ -937,14 +937,14 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                         <div className="flex flex-wrap items-center gap-2 shrink-0">
                           <button
                             onClick={() => setViewerPdf(pdfItem)}
-                            className="inline-flex items-center gap-2 px-5 py-3 bg-[#0284C7] hover:bg-[#0369A1] text-white text-sm font-bold rounded-xl shadow-md transition-all"
+                            className="inline-flex items-center gap-2 px-5 py-3 bg-signal hover:bg-signal text-white text-sm font-bold rounded-xl shadow-md transition-all"
                           >
                             <Eye className="w-4 h-4" /> Open Viewer
                           </button>
                           <button
                             onClick={() => downloadPdfApi(pdfItem.stored_name, pdfItem.file_name)
                               .catch(() => setDlNote(`Could not download "${pdfItem.title}". Please try again.`))}
-                            className="inline-flex items-center gap-2 px-4 py-3 bg-white border border-[#0284C7]/30 hover:border-[#0284C7] text-[#0284C7] text-sm font-bold rounded-xl shadow-sm transition-all"
+                            className="inline-flex items-center gap-2 px-4 py-3 bg-white border border-signal/30 hover:border-signal text-signal text-sm font-bold rounded-xl shadow-sm transition-all"
                           >
                             <Download className="w-4 h-4" /> Download PDF
                           </button>
@@ -984,8 +984,8 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
               </div>
             </div>
           ) : (
-            <div className="mt-10 rounded-3xl border-2 border-dashed border-[#0284C7]/40 bg-gradient-to-r from-sky-50 via-white to-amber-50 p-6 sm:p-8 text-center space-y-4 animate-fade-in">
-              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#0284C7] text-white shadow-md mb-1">
+            <div className="mt-10 rounded-3xl border-2 border-dashed border-signal/40 bg-gradient-to-r from-signal-soft via-white to-amber-50 p-6 sm:p-8 text-center space-y-4 animate-fade-in">
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-signal text-white shadow-md mb-1">
                 <Rocket className="w-7 h-7" />
               </div>
               <div>
@@ -999,13 +999,13 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
               <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
                 <button
                   onClick={onUnlockClick}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-[#E8A33D] hover:bg-[#D4902C] text-[#241A06] text-sm font-bold rounded-xl shadow-md transition-all"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-money hover:bg-money text-money-ink text-sm font-bold rounded-xl shadow-md transition-all"
                 >
                   <ShoppingCart className="w-4 h-4" /> Unlock Full Vault{priceSuffix}
                 </button>
                 <button
                   onClick={onBack}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-white border border-gray-200 hover:border-[#0284C7] text-[#0284C7] text-sm font-bold rounded-xl transition-all"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-white border border-gray-200 hover:border-signal text-signal text-sm font-bold rounded-xl transition-all"
                 >
                   <BookOpen className="w-4 h-4" /> Browse All Modules
                 </button>

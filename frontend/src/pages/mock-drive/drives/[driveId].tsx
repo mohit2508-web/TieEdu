@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { MapPin, Building2, Clock, IndianRupee, FileText, AlertCircle, Play } from 'lucide-react';
-import { DriveShell } from '@/components/drives/DriveShell';
+import { DriveShell, withDriveAuth } from '@/components/drives/DriveShell';
 import { DriveStatusLine } from '@/components/drives/DriveStatusLine';
 import { WorkflowStepper } from '@/components/drives/WorkflowStepper';
 import { EligibilityTable } from '@/components/drives/EligibilityTable';
@@ -26,7 +26,7 @@ const ctcLabel = (min: number | null, max: number | null) => {
 
 type Tab = 'overview' | 'workflow' | 'eligibility';
 
-export default function DriveDetailScreen() {
+function DriveDetailScreen() {
   const router = useRouter();
   const driveId = typeof router.query.driveId === 'string' ? router.query.driveId : '';
 
@@ -83,11 +83,11 @@ export default function DriveDetailScreen() {
     return (
       <DriveShell title="Drive">
         <div className="mx-auto w-full max-w-[720px] px-4 pb-8 pt-10">
-          <div className="flex items-start gap-2.5 rounded-[12px] px-4 py-3 text-[13px]" style={{ background: 'var(--apple-red-soft)', color: 'var(--apple-red)' }}>
+          <div className="flex items-start gap-2.5 rounded-[12px] px-4 py-3 text-sm" style={{ background: 'var(--apple-red-soft)', color: 'var(--apple-red)' }}>
             <AlertCircle size={16} className="mt-0.5 shrink-0" />
             <span>{error}</span>
           </div>
-          <Link href="/mock-drive/drives" className="mt-4 inline-block text-[14px] font-medium" style={{ color: 'var(--apple-blue)' }}>
+          <Link href="/mock-drive/drives" className="mt-4 inline-block text-sm font-medium" style={{ color: 'var(--apple-blue)' }}>
             ← Back to drives
           </Link>
         </div>
@@ -114,26 +114,26 @@ export default function DriveDetailScreen() {
         <div className="rounded-[14px] border p-4" style={{ background: 'var(--apple-surface)', borderColor: 'var(--apple-separator)' }}>
           <div className="flex items-start gap-3">
             <span
-              className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-[12px] text-[15px] font-bold"
+              className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-[12px] text-base font-bold"
               style={{ background: 'var(--apple-blue-soft)', color: 'var(--apple-blue)' }}
             >
               {drive.company_logo_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
+                // eslint-disable-next-line @next/next/no-img-element -- company logo from any host an admin enters; the optimizer only serves allow-listed hosts
                 <img src={drive.company_logo_url} alt="" className="h-full w-full object-cover" />
               ) : (
                 <Building2 size={22} strokeWidth={1.9} />
               )}
             </span>
             <div className="min-w-0 flex-1">
-              <h1 className="text-[17px] font-semibold leading-tight" style={{ color: 'var(--apple-label)' }}>{drive.title}</h1>
-              <p className="mt-0.5 text-[13px]" style={{ color: 'var(--apple-label-2)' }}>{drive.company_name}</p>
+              <h1 className="text-lg font-semibold leading-tight" style={{ color: 'var(--apple-label)' }}>{drive.title}</h1>
+              <p className="mt-0.5 text-sm" style={{ color: 'var(--apple-label-2)' }}>{drive.company_name}</p>
               <div className="mt-2">
                 <DriveStatusLine statusLine={drive.status_line} registered={!!registration} registrationOpen={drive.registration_open} />
               </div>
             </div>
           </div>
 
-          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-[12px]" style={{ color: 'var(--apple-label-2)' }}>
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-xs" style={{ color: 'var(--apple-label-2)' }}>
             {drive.location && <span className="inline-flex items-center gap-1"><MapPin size={12} />{drive.location}</span>}
             {ctc && <span className="inline-flex items-center gap-1"><IndianRupee size={12} />{ctc}</span>}
             {drive.job_type && <span className="inline-flex items-center gap-1"><Clock size={12} />{drive.job_type}</span>}
@@ -142,14 +142,14 @@ export default function DriveDetailScreen() {
           {/* Register / registered action */}
           <div className="mt-4">
             {registration ? (
-              <div className="rounded-[10px] px-3 py-2.5 text-[13px] font-medium" style={{ background: 'var(--apple-green-soft)', color: 'var(--apple-green)' }}>
+              <div className="rounded-[10px] px-3 py-2.5 text-sm font-medium" style={{ background: 'var(--apple-green-soft)', color: 'var(--apple-green)' }}>
                 You&apos;re registered · {registration.status}
               </div>
             ) : can_register ? (
               <button
                 type="button"
                 onClick={() => setRegisterOpen(true)}
-                className="w-full rounded-[12px] py-3 text-[15px] font-semibold text-white transition-transform active:scale-[0.98]"
+                className="w-full rounded-[12px] py-3 text-base font-semibold text-white transition-transform active:scale-[0.98]"
                 style={{ background: 'var(--apple-blue)' }}
               >
                 Register for this drive
@@ -157,13 +157,13 @@ export default function DriveDetailScreen() {
             ) : !can_register && drive.registration_open && profileMissing ? (
               <Link
                 href="/mock-drive/settings"
-                className="block w-full rounded-[12px] py-3 text-center text-[15px] font-semibold text-white transition-transform active:scale-[0.98]"
+                className="block w-full rounded-[12px] py-3 text-center text-base font-semibold text-white transition-transform active:scale-[0.98]"
                 style={{ background: 'var(--apple-blue)' }}
               >
                 Complete your profile to register
               </Link>
             ) : (
-              <div className="rounded-[10px] px-3 py-2.5 text-[13px]" style={{ background: 'var(--apple-fill)', color: 'var(--apple-label-2)' }}>
+              <div className="rounded-[10px] px-3 py-2.5 text-sm" style={{ background: 'var(--apple-fill)', color: 'var(--apple-label-2)' }}>
                 {drive.registration_open ? 'Complete your profile to register.' : 'Registration is closed.'}
               </div>
             )}
@@ -171,7 +171,7 @@ export default function DriveDetailScreen() {
         </div>
 
         {error && (
-          <p className="mt-3 rounded-[10px] px-3 py-2 text-[13px]" style={{ background: 'var(--apple-red-soft)', color: 'var(--apple-red)' }}>
+          <p className="mt-3 rounded-[10px] px-3 py-2 text-sm" style={{ background: 'var(--apple-red-soft)', color: 'var(--apple-red)' }}>
             {error}
           </p>
         )}
@@ -195,7 +195,7 @@ export default function DriveDetailScreen() {
               key={t.id}
               type="button"
               onClick={() => setTab(t.id)}
-              className="flex-1 rounded-[8px] py-1.5 text-[13px] font-semibold transition-colors"
+              className="flex-1 rounded-[8px] py-1.5 text-sm font-semibold transition-colors"
               style={{
                 background: tab === t.id ? 'var(--apple-surface)' : 'transparent',
                 color: tab === t.id ? 'var(--apple-label)' : 'var(--apple-label-2)',
@@ -211,7 +211,7 @@ export default function DriveDetailScreen() {
           {tab === 'overview' && (
             <div className="space-y-4">
               {drive.description && (
-                <p className="text-[14px] leading-relaxed" style={{ color: 'var(--apple-label-2)' }}>{drive.description}</p>
+                <p className="text-sm leading-relaxed" style={{ color: 'var(--apple-label-2)' }}>{drive.description}</p>
               )}
 
               <div className="rounded-[12px] border" style={{ borderColor: 'var(--apple-separator)', background: 'var(--apple-surface)' }}>
@@ -225,11 +225,11 @@ export default function DriveDetailScreen() {
 
               {drive.documents?.length > 0 && (
                 <div className="rounded-[12px] border p-3" style={{ borderColor: 'var(--apple-separator)', background: 'var(--apple-surface)' }}>
-                  <p className="mb-2 text-[13px] font-semibold" style={{ color: 'var(--apple-label)' }}>Documents</p>
+                  <p className="mb-2 text-sm font-semibold" style={{ color: 'var(--apple-label)' }}>Documents</p>
                   <ul className="space-y-1.5">
                     {drive.documents.map((doc, i) => (
                       <li key={i}>
-                        <a href={doc.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-[13px]" style={{ color: 'var(--apple-blue)' }}>
+                        <a href={doc.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-sm" style={{ color: 'var(--apple-blue)' }}>
                           <FileText size={13} />{doc.title}
                         </a>
                       </li>
@@ -239,7 +239,7 @@ export default function DriveDetailScreen() {
               )}
 
               {drive.tpo_contact && (drive.tpo_contact.email || drive.tpo_contact.phone) && (
-                <div className="rounded-[12px] border p-3 text-[13px]" style={{ borderColor: 'var(--apple-separator)', background: 'var(--apple-surface)', color: 'var(--apple-label-2)' }}>
+                <div className="rounded-[12px] border p-3 text-sm" style={{ borderColor: 'var(--apple-separator)', background: 'var(--apple-surface)', color: 'var(--apple-label-2)' }}>
                   <p className="mb-1 font-semibold" style={{ color: 'var(--apple-label)' }}>TPO contact</p>
                   {drive.tpo_contact.name && <p>{drive.tpo_contact.name}</p>}
                   {drive.tpo_contact.email && <p>{drive.tpo_contact.email}</p>}
@@ -252,16 +252,16 @@ export default function DriveDetailScreen() {
           {tab === 'workflow' && (
             <div className="rounded-[12px] border p-4" style={{ borderColor: 'var(--apple-separator)', background: 'var(--apple-surface)' }}>
               {roundsList.length === 0 ? (
-                <p className="text-[13px]" style={{ color: 'var(--apple-label-2)' }}>No rounds published yet.</p>
+                <p className="text-sm" style={{ color: 'var(--apple-label-2)' }}>No rounds published yet.</p>
               ) : (
                 <>
                   <WorkflowStepper rounds={roundsList} registered={!!registration} />
                   {registration && (
                     <div className="mt-4 space-y-2 border-t pt-4" style={{ borderColor: 'var(--apple-separator)' }}>
                       {detail.booking?.access_code && (
-                        <p className="rounded-[10px] px-3 py-2 text-[13px]" style={{ background: 'var(--apple-fill)', color: 'var(--apple-label)' }}>
+                        <p className="rounded-[10px] px-3 py-2 text-sm" style={{ background: 'var(--apple-fill)', color: 'var(--apple-label)' }}>
                           Test access code:{' '}
-                          <span className="rounded-md px-1.5 py-0.5 font-mono font-bold" style={{ background: 'var(--apple-surface)' }}>
+                          <span className="rounded-md px-1.5 py-0.5 font-bold" style={{ background: 'var(--apple-surface)' }}>
                             {detail.booking.access_code}
                           </span>
                         </p>
@@ -274,11 +274,11 @@ export default function DriveDetailScreen() {
                             key={r.test_id}
                             type="button"
                             onClick={() => launch(r)}
-                            className="flex w-full items-center justify-between rounded-[10px] px-3 py-2.5 text-[13px] font-semibold"
+                            className="flex w-full items-center justify-between rounded-[10px] px-3 py-2.5 text-sm font-semibold"
                             style={{ background: 'var(--apple-blue-soft)', color: 'var(--apple-blue)' }}
                           >
                             <span className="inline-flex items-center gap-2"><Play size={13} fill="currentColor" />Start {r.round_name || r.name}</span>
-                            <span className="text-[11px] font-medium opacity-70">{r.attempts_used}/{r.max_attempts}</span>
+                            <span className="text-xs font-medium opacity-70">{r.attempts_used}/{r.max_attempts}</span>
                           </button>
                         );
                       })}
@@ -340,7 +340,7 @@ const Row: React.FC<{ label: string; value: string | null | undefined; last?: bo
   if (!value) return null;
   return (
     <div
-      className="flex items-center justify-between px-4 py-2.5 text-[13px]"
+      className="flex items-center justify-between px-4 py-2.5 text-sm"
       style={{ borderBottom: last ? 'none' : '0.5px solid var(--apple-separator)' }}
     >
       <span style={{ color: 'var(--apple-label-2)' }}>{label}</span>
@@ -348,3 +348,5 @@ const Row: React.FC<{ label: string; value: string | null | undefined; last?: bo
     </div>
   );
 };
+
+export default withDriveAuth(DriveDetailScreen);

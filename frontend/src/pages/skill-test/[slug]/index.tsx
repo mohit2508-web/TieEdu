@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { ArrowLeft, BrainCircuit, Award, Clock, FileText, ChevronRight } from 'lucide-react';
 import { fetchSkillDetailApi, SkillTestSkill, SkillTestTopic, SkillTestAssessment } from '@/lib/skillTestApi';
 
-export default function SkillDetail() {
+import { nameFromSlug, withPageTitle } from '@/components/common/withPageTitle';
+function SkillDetail() {
   const router = useRouter();
   const { slug } = router.query;
   const [skill, setSkill] = useState<SkillTestSkill | null>(null);
@@ -25,7 +26,7 @@ export default function SkillDetail() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#0F7BFF] border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-signal border-t-transparent" />
       </div>
     );
   }
@@ -35,7 +36,7 @@ export default function SkillDetail() {
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center px-4">
           <h1 className="text-2xl font-bold text-gray-900">Skill Not Found</h1>
-          <Link href="/skill-test" className="mt-4 inline-block text-[#0F7BFF] font-medium">
+          <Link href="/skill-test" className="mt-4 inline-block text-signal font-medium">
             Back to Skill Test
           </Link>
         </div>
@@ -52,7 +53,7 @@ export default function SkillDetail() {
         </Link>
 
         <div className="rounded-2xl bg-white shadow-sm border border-gray-200 overflow-hidden">
-          <div className="bg-gradient-to-br from-[#0F7BFF] to-[#0C5AD9] px-6 py-8 sm:px-8">
+          <div className="bg-brand-ink px-6 py-8 sm:px-8">
             <div className="flex items-start gap-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/20 text-white flex-none">
                 <BrainCircuit className="h-6 w-6" />
@@ -67,8 +68,8 @@ export default function SkillDetail() {
                   </span>
                 </div>
                 <h1 className="mt-3 text-2xl font-bold text-white sm:text-3xl">{skill.name}</h1>
-                <p className="mt-2 text-blue-100 text-sm sm:text-base">{skill.description}</p>
-                <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-blue-100">
+                <p className="mt-2 text-white/80 text-sm sm:text-base">{skill.description}</p>
+                <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-white/75">
                   <span className="flex items-center gap-1.5"><FileText className="h-4 w-4" />{skill.totalQuestions} Questions</span>
                   <span className="flex items-center gap-1.5"><Clock className="h-4 w-4" />{assessment?.durationMinutes ?? skill.avgCompletionTime} Minutes</span>
                 </div>
@@ -81,7 +82,7 @@ export default function SkillDetail() {
             <ul className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
               {topics.map((t) => (
                 <li key={t.id} className="flex items-center gap-2 text-gray-700 text-sm">
-                  <div className="h-1.5 w-1.5 rounded-full bg-[#0F7BFF] flex-none" />
+                  <div className="h-1.5 w-1.5 rounded-full bg-signal flex-none" />
                   {t.name}
                 </li>
               ))}
@@ -97,7 +98,7 @@ export default function SkillDetail() {
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <Link
                 href={`/skill-test/${slug}/overview`}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-[#0F7BFF] px-8 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[#0C5AD9] transition-colors"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-signal px-8 py-3 text-sm font-semibold text-white shadow-sm hover:bg-signal transition-colors"
               >
                 Start Assessment <ChevronRight className="h-4 w-4" />
               </Link>
@@ -114,3 +115,7 @@ export default function SkillDetail() {
     </div>
   );
 }
+
+export default withPageTitle(SkillDetail, (q) => `${nameFromSlug(q.slug)} skill test`,
+  (q) => `Take the free ${nameFromSlug(q.slug)} skill test on TieEdu: see where you stand topic by topic and earn a verifiable certificate.`
+);

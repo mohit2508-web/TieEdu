@@ -7,10 +7,7 @@ import {
 import { BlockEditorModal } from '@/components/modals/BlockEditorModal';
 import { ModulePdfManager } from '@/components/admin/ModulePdfManager';
 import { SINGLE_MODULE_PRICE, packPrice } from '@/lib/packPricing';
-import {
-  Plus, BookOpen, Lock, Edit3, Trash2, ChevronUp, ChevronDown,
-  X, Eye, Sparkles, Layers, Save, CheckCircle2, FileText
-} from 'lucide-react';
+import { Plus, BookOpen, Lock, Edit3, Trash2, ChevronUp, ChevronDown, X, Eye, Layers, Save, CheckCircle2, FileText, PenLine } from 'lucide-react';
 
 interface ContentBuilderProps {
   companies: Company[];
@@ -20,8 +17,8 @@ interface ContentBuilderProps {
   onRefresh: () => void;
 }
 
-const inputCls = "w-full p-2.5 border border-gray-200 rounded-xl bg-[#FAFAF9] text-sm focus:outline-none focus:ring-2 focus:ring-[#0284C7]";
-const labelCls = "block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1";
+const inputCls = "w-full p-2.5 border border-gray-200 rounded-xl bg-app-warm text-sm focus:outline-none focus:ring-2 focus:ring-signal";
+const labelCls = "block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1";
 
 const MODULE_TYPES = ['complete_pack', 'preparation_guide', 'technical_question', 'hr_question', 'dsa_question', 'system_design', 'cheat_sheet', 'salary_insight'];
 const ROUND_TYPES = ['OA', 'Technical', 'SystemDesign', 'HR', 'Managerial'];
@@ -126,7 +123,7 @@ export const ContentBuilder: React.FC<ContentBuilderProps> = ({ companies, selec
       <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <span className="text-xs font-bold font-mono text-gray-500 uppercase">Target Company:</span>
-          <select value={company?.id} onChange={(e) => onSelectCompany(e.target.value)} className={inputCls + ' w-auto font-mono font-bold text-[#1F3A5F]'}>
+          <select value={company?.id} onChange={(e) => onSelectCompany(e.target.value)} className={inputCls + ' w-auto font-mono font-bold text-brand-ink'}>
             {companies.map((c) => <option key={c.id} value={c.id}>{c.name} ({c.modules?.length || 0} modules)</option>)}
           </select>
         </div>
@@ -149,31 +146,31 @@ export const ContentBuilder: React.FC<ContentBuilderProps> = ({ companies, selec
                 {/* Module header */}
                 <div className="flex items-center justify-between gap-3 p-5 border-b border-gray-100">
                   <div className="flex items-center gap-3 min-w-0">
-                    <span className="w-8 h-8 rounded-xl bg-[#1F3A5F] text-white flex items-center justify-center font-mono font-bold text-xs shrink-0">#{idx + 1}</span>
+                    <span className="w-8 h-8 rounded-xl bg-brand-ink text-white flex items-center justify-center font-mono font-bold text-xs shrink-0">#{idx + 1}</span>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
-                        <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-900">{mod.round_type || 'Module'}</span>
-                        <span className="text-[10px] font-mono bg-gray-100 px-2 py-0.5 rounded text-gray-600 uppercase">{mod.module_type}</span>
-                        {mod.is_premium ? <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-indigo-50 text-[#1F3A5F]" title="Charged by the pack ladder, not per module">₹{SINGLE_MODULE_PRICE}+ ladder</span> : <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">FREE</span>}
+                        <span className="text-xs font-mono font-bold uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-900">{mod.round_type || 'Module'}</span>
+                        <span className="text-xs font-mono bg-gray-100 px-2 py-0.5 rounded text-gray-600 uppercase">{mod.module_type}</span>
+                        {mod.is_premium ? <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-indigo-50 text-brand-ink" title="Charged by the pack ladder, not per module">₹{SINGLE_MODULE_PRICE}+ ladder</span> : <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">FREE</span>}
                       </div>
-                      <h3 className="font-bold text-[#1E293B] truncate">{mod.title}</h3>
-                      <p className="text-[11px] text-gray-400 font-mono">{mod.items?.length || 0} questions · {blocksCount} blocks {mod.description ? `· ${mod.description}` : ''}</p>
+                      <h3 className="font-bold text-ink-soft truncate">{mod.title}</h3>
+                      <p className="text-xs text-gray-400 font-mono">{mod.items?.length || 0} questions · {blocksCount} blocks {mod.description ? `· ${mod.description}` : ''}</p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-1.5 shrink-0">
-                    <button onClick={() => handleReorder(idx, -1)} className="p-1.5 text-gray-400 hover:text-[#0284C7] hover:bg-sky-50 rounded-lg" title="Move up"><ChevronUp className="w-4 h-4" /></button>
-                    <button onClick={() => handleReorder(idx, 1)} className="p-1.5 text-gray-400 hover:text-[#0284C7] hover:bg-sky-50 rounded-lg" title="Move down"><ChevronDown className="w-4 h-4" /></button>
-                    <button onClick={() => onEditModule(mod)} className="px-3 py-1.5 bg-[#0284C7] hover:bg-[#0369A1] text-white rounded-xl text-xs font-bold flex items-center gap-1.5 ml-1">
-                      <Sparkles className="w-3.5 h-3.5" /> Pack Editor
+                    <button onClick={() => handleReorder(idx, -1)} className="p-1.5 text-gray-400 hover:text-signal hover:bg-signal-soft rounded-lg" title="Move up"><ChevronUp className="w-4 h-4" /></button>
+                    <button onClick={() => handleReorder(idx, 1)} className="p-1.5 text-gray-400 hover:text-signal hover:bg-signal-soft rounded-lg" title="Move down"><ChevronDown className="w-4 h-4" /></button>
+                    <button onClick={() => onEditModule(mod)} className="px-3 py-1.5 bg-signal hover:bg-signal text-white rounded-xl text-xs font-bold flex items-center gap-1.5 ml-1">
+                      <PenLine className="w-3.5 h-3.5" /> Pack Editor
                     </button>
-                    <button onClick={() => setPdfManagerModule(mod)} className="px-3 py-1.5 bg-[#1F3A5F] hover:bg-[#16304D] text-white rounded-xl text-xs font-bold flex items-center gap-1.5" title="Manage PDF library">
+                    <button onClick={() => setPdfManagerModule(mod)} className="px-3 py-1.5 bg-brand-ink hover:bg-brand-ink text-white rounded-xl text-xs font-bold flex items-center gap-1.5" title="Manage PDF library">
                       <FileText className="w-3.5 h-3.5" />
                       {mod.pdf ? 'PDF ✓' : 'PDF'}
                     </button>
-                    <button onClick={() => openModuleModal(mod)} className="p-1.5 text-gray-500 hover:text-[#0284C7] hover:bg-sky-50 rounded-lg" title="Edit module"><Edit3 className="w-4 h-4" /></button>
+                    <button onClick={() => openModuleModal(mod)} className="p-1.5 text-gray-500 hover:text-signal hover:bg-signal-soft rounded-lg" title="Edit module"><Edit3 className="w-4 h-4" /></button>
                     <button onClick={() => handleDeleteModule(mod)} className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg" title="Delete module"><Trash2 className="w-4 h-4" /></button>
-                    <button onClick={() => setExpandedId(isExpanded ? null : mod.id)} className={`p-1.5 rounded-lg transition-colors ${isExpanded ? 'text-[#0284C7] bg-sky-50' : 'text-gray-400 hover:bg-gray-100'}`} title="Toggle questions">
+                    <button onClick={() => setExpandedId(isExpanded ? null : mod.id)} className={`p-1.5 rounded-lg transition-colors ${isExpanded ? 'text-signal bg-signal-soft' : 'text-gray-400 hover:bg-gray-100'}`} title="Toggle questions">
                       <ChevronDown className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                     </button>
                   </div>
@@ -181,10 +178,10 @@ export const ContentBuilder: React.FC<ContentBuilderProps> = ({ companies, selec
 
                 {/* Items */}
                 {isExpanded && (
-                  <div className="p-4 bg-[#FAFAF9]">
+                  <div className="p-4 bg-app-warm">
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-[11px] font-bold font-mono uppercase text-gray-500">Questions & Blocks ({mod.items?.length || 0})</span>
-                      <button onClick={() => setItemModal({ moduleId: mod.id, item: null, open: true })} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#0284C7] hover:bg-[#0369A1] text-white rounded-lg text-xs font-bold">
+                      <span className="text-xs font-bold font-mono uppercase text-gray-500">Questions & Blocks ({mod.items?.length || 0})</span>
+                      <button onClick={() => setItemModal({ moduleId: mod.id, item: null, open: true })} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-signal hover:bg-signal text-white rounded-lg text-xs font-bold">
                         <Plus className="w-3.5 h-3.5" /> Add Question
                       </button>
                     </div>
@@ -196,9 +193,9 @@ export const ContentBuilder: React.FC<ContentBuilderProps> = ({ companies, selec
                             <div className="min-w-0">
                               <div className="flex items-center gap-2">
                                 {item.is_free_preview ? <Eye className="w-3.5 h-3.5 text-emerald-500" /> : <Lock className="w-3.5 h-3.5 text-gray-300" />}
-                                <span className="text-sm font-semibold text-[#1E293B] truncate">{item.question_text}</span>
+                                <span className="text-sm font-semibold text-ink-soft truncate">{item.question_text}</span>
                               </div>
-                              <div className="flex items-center gap-2 mt-1 text-[10px] font-mono text-gray-400">
+                              <div className="flex items-center gap-2 mt-1 text-xs font-mono text-gray-400">
                                 <span className={`capitalize ${item.difficulty === 'hard' ? 'text-red-500' : item.difficulty === 'medium' ? 'text-amber-500' : 'text-emerald-500'}`}>{item.difficulty}</span>
                                 <span>· {item.role_tag}</span>
                                 <span>· {item.frequency_tag}</span>
@@ -207,10 +204,10 @@ export const ContentBuilder: React.FC<ContentBuilderProps> = ({ companies, selec
                             </div>
 
                             <div className="flex items-center gap-1.5 shrink-0">
-                              <button onClick={() => setBlockTarget({ itemId: item.id, module: mod })} className="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-[#1F3A5F] rounded-lg text-xs font-bold flex items-center gap-1">
+                              <button onClick={() => setBlockTarget({ itemId: item.id, module: mod })} className="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-brand-ink rounded-lg text-xs font-bold flex items-center gap-1">
                                 <Layers className="w-3.5 h-3.5" /> Add Block
                               </button>
-                              <button onClick={() => setItemModal({ moduleId: mod.id, item, open: true })} className="p-1.5 text-gray-500 hover:text-[#0284C7] hover:bg-sky-50 rounded-lg"><Edit3 className="w-4 h-4" /></button>
+                              <button onClick={() => setItemModal({ moduleId: mod.id, item, open: true })} className="p-1.5 text-gray-500 hover:text-signal hover:bg-signal-soft rounded-lg"><Edit3 className="w-4 h-4" /></button>
                               <button onClick={() => handleDeleteItem(mod.id, item.id)} className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg"><Trash2 className="w-4 h-4" /></button>
                             </div>
                           </div>
@@ -226,7 +223,7 @@ export const ContentBuilder: React.FC<ContentBuilderProps> = ({ companies, selec
       ) : (
         <div className="p-12 text-center bg-white border border-gray-200 rounded-3xl space-y-3">
           <BookOpen className="w-8 h-8 text-gray-300 mx-auto" />
-          <p className="text-sm font-bold text-[#1F3A5F]">No modules for {company?.name} yet.</p>
+          <p className="text-sm font-bold text-brand-ink">No modules for {company?.name} yet.</p>
           <button onClick={() => openModuleModal()} className="px-4 py-2 bg-emerald-700 text-white text-xs font-bold rounded-xl">+ Create First Module</button>
         </div>
       )}
@@ -236,7 +233,7 @@ export const ContentBuilder: React.FC<ContentBuilderProps> = ({ companies, selec
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-gray-200 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-              <h3 className="font-bold text-base text-[#1E293B]">{editingModule ? 'Edit Module' : `New Module for ${company?.name}`}</h3>
+              <h3 className="font-bold text-base text-ink-soft">{editingModule ? 'Edit Module' : `New Module for ${company?.name}`}</h3>
               <button onClick={() => setShowModuleModal(false)} className="text-gray-400 hover:text-gray-900"><X className="w-5 h-5" /></button>
             </div>
             <div className="space-y-3">
@@ -265,12 +262,12 @@ export const ContentBuilder: React.FC<ContentBuilderProps> = ({ companies, selec
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex items-end pb-2">
                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-600">
-                    <input type="checkbox" checked={moduleForm.is_premium} onChange={(e) => setModuleForm({ ...moduleForm, is_premium: e.target.checked })} className="accent-[#0284C7] w-4 h-4" />
+                    <input type="checkbox" checked={moduleForm.is_premium} onChange={(e) => setModuleForm({ ...moduleForm, is_premium: e.target.checked })} className="accent-signal w-4 h-4" />
                     Premium (locked)
                   </label>
                 </div>
               </div>
-              <div className="rounded-xl border border-[#BFDBFE] bg-blue-50/60 p-3 text-[11px] text-blue-900 leading-relaxed">
+              <div className="rounded-xl border border-signal/30 bg-signal-soft/60 p-3 text-xs text-brand-ink leading-relaxed">
                 <span className="font-bold">Pricing is set by the pack ladder, not per module.</span>{' '}
                 A round bought alone costs ₹{SINGLE_MODULE_PRICE}; the price falls as more rounds of the
                 same company are added ({COMPANY_PREMIUM_ROUNDS.map((n) => `${n}→₹${packPrice(n)}`).join(' · ')}).
@@ -291,7 +288,7 @@ export const ContentBuilder: React.FC<ContentBuilderProps> = ({ companies, selec
           <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-gray-200 space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-                <h3 className="font-bold text-base text-[#1E293B]">{item ? 'Edit Question' : 'New Interview Question'}</h3>
+                <h3 className="font-bold text-base text-ink-soft">{item ? 'Edit Question' : 'New Interview Question'}</h3>
                 <button onClick={() => setItemModal({ moduleId: '', item: null, open: false })} className="text-gray-400 hover:text-gray-900"><X className="w-5 h-5" /></button>
               </div>
 
@@ -324,7 +321,7 @@ export const ContentBuilder: React.FC<ContentBuilderProps> = ({ companies, selec
                   <div className="flex items-end pb-2">
                     <label className="flex items-center gap-2 text-sm font-semibold text-gray-600">
                       <input type="checkbox" checked={item?.is_free_preview || false}
-                        onChange={(e) => item && setItemModal({ ...itemModal, item: { ...item, is_free_preview: e.target.checked } })} className="accent-[#0284C7] w-4 h-4" />
+                        onChange={(e) => item && setItemModal({ ...itemModal, item: { ...item, is_free_preview: e.target.checked } })} className="accent-signal w-4 h-4" />
                       Free preview
                     </label>
                   </div>

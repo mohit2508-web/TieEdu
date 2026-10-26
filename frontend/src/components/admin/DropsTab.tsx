@@ -22,8 +22,8 @@ import {
  */
 
 const MAX_SIZE = 6 * 1024 * 1024;
-const inputCls = "w-full p-2.5 border border-gray-200 rounded-xl bg-[#FAFAF9] text-sm focus:outline-none focus:ring-2 focus:ring-[#0284C7]";
-const labelCls = "block text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-1";
+const inputCls = "w-full p-2.5 border border-gray-200 rounded-xl bg-app-warm text-sm focus:outline-none focus:ring-2 focus:ring-signal";
+const labelCls = "block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1";
 
 const EMPTY_FORM = {
   type: 'company' as DropType,
@@ -282,8 +282,8 @@ export const DropsTab: React.FC = () => {
       <div className="bg-white border border-gray-200 rounded-3xl p-5 shadow-xs">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h3 className="text-base font-extrabold text-[#1E293B] flex items-center gap-2">
-              <Zap className="w-5 h-5 text-[#B45309]" /> Drops — Career Feed
+            <h3 className="text-base font-extrabold text-ink-soft flex items-center gap-2">
+              <Zap className="w-5 h-5 text-amber-deep" /> Drops — Career Feed
             </h3>
             <p className="text-xs text-gray-500 mt-1 leading-relaxed max-w-3xl">
               Vertical swipe cards on <code>/drops</code>. The feed shows at most{' '}
@@ -292,7 +292,7 @@ export const DropsTab: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <Link href="/drops" target="_blank" className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-[#0284C7] border border-[#B8E3F7] bg-white hover:bg-[#E8F4FB]">
+            <Link href="/drops" target="_blank" className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-signal border border-signal/30 bg-white hover:bg-signal-soft">
               <ExternalLink className="w-3.5 h-3.5" /> Open the feed
             </Link>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 text-xs font-bold font-mono">
@@ -302,7 +302,7 @@ export const DropsTab: React.FC = () => {
         </div>
 
         {msg && (
-          <div className={`mt-4 px-4 py-2.5 rounded-xl text-[13px] font-semibold flex items-center gap-2 ${msg.type === 'ok' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+          <div className={`mt-4 px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 ${msg.type === 'ok' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
             {msg.type === 'ok' ? <CheckCircle2 className="w-4 h-4" /> : <ShieldAlert className="w-4 h-4" />}
             {msg.text}
           </div>
@@ -312,8 +312,8 @@ export const DropsTab: React.FC = () => {
       {/* ===== ANALYTICS ===== */}
       {analytics && (
         <div className="bg-white border border-gray-200 rounded-3xl p-5 shadow-xs">
-          <h4 className="text-sm font-extrabold text-[#1E293B] flex items-center gap-2">
-            <BarChart3 className="w-4 h-4 text-[#0284C7]" /> Feed analytics
+          <h4 className="text-sm font-extrabold text-ink-soft flex items-center gap-2">
+            <BarChart3 className="w-4 h-4 text-signal" /> Feed analytics
           </h4>
           <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
             {[
@@ -324,16 +324,16 @@ export const DropsTab: React.FC = () => {
               ['Shares', analytics.totals.shares],
               ['Avg dwell (s)', analytics.totals.views ? Math.round(analytics.totals.dwell_ms_total / analytics.totals.views / 1000) : 0],
             ].map(([label, value]) => (
-              <div key={String(label)} className="rounded-xl bg-[#FAFAF9] border border-gray-100 px-3 py-2.5">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400">{label}</p>
-                <p className="text-lg font-extrabold text-[#1E293B] font-mono">{value}</p>
+              <div key={String(label)} className="rounded-xl bg-app-warm border border-gray-100 px-3 py-2.5">
+                <p className="text-xs font-bold uppercase tracking-wide text-gray-400">{label}</p>
+                <p className="text-lg font-extrabold text-ink-soft font-mono">{value}</p>
               </div>
             ))}
           </div>
           {analytics.top_drops.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-1.5">
               {analytics.top_drops.slice(0, 5).map((t) => (
-                <span key={t.id} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#E8F4FB] text-[11px] font-bold text-[#0271B5]">
+                <span key={t.id} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-signal-soft text-xs font-bold text-signal">
                   <span className="truncate max-w-[220px]">{t.headline}</span>
                   <span className="font-mono">{t.views}v · {t.ctr}%</span>
                 </span>
@@ -347,12 +347,12 @@ export const DropsTab: React.FC = () => {
         {/* ===== EDITOR ===== */}
         <div className="xl:col-span-2 bg-white border border-gray-200 rounded-3xl p-5 shadow-xs space-y-4">
           <div className="flex items-center justify-between gap-3">
-            <h4 className="text-sm font-extrabold text-[#1E293B] flex items-center gap-2">
-              {editingId ? <Pencil className="w-4 h-4 text-[#0284C7]" /> : <Plus className="w-4 h-4 text-[#0284C7]" />}
+            <h4 className="text-sm font-extrabold text-ink-soft flex items-center gap-2">
+              {editingId ? <Pencil className="w-4 h-4 text-signal" /> : <Plus className="w-4 h-4 text-signal" />}
               {editingId ? 'Edit Drop' : 'New Drop'}
             </h4>
             {editingId && (
-              <button onClick={resetForm} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-gray-500 hover:bg-gray-100">
+              <button onClick={resetForm} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold text-gray-500 hover:bg-gray-100">
                 <X className="w-3 h-3" /> Cancel
               </button>
             )}
@@ -381,7 +381,7 @@ export const DropsTab: React.FC = () => {
           <div>
             <label className={labelCls}>Headline (10–100 chars)</label>
             <input className={inputCls} maxLength={100} placeholder="Zscaler off-campus drive opens for 2026 grads" value={form.headline} onChange={(e) => setForm({ ...form, headline: e.target.value })} />
-            <p className={`text-[11px] mt-1 ${form.headline.length > 0 && form.headline.length < 10 ? 'text-red-600 font-semibold' : 'text-gray-500'}`}>
+            <p className={`text-xs mt-1 ${form.headline.length > 0 && form.headline.length < 10 ? 'text-red-600 font-semibold' : 'text-gray-500'}`}>
               {form.headline.length}/100
             </p>
           </div>
@@ -408,7 +408,7 @@ export const DropsTab: React.FC = () => {
               onDragLeave={() => setDragOver(false)}
               onDrop={(e) => { e.preventDefault(); setDragOver(false); pickFile(e.dataTransfer.files?.[0]); }}
               onClick={() => inputRef.current?.click()}
-              className={`relative rounded-2xl border-2 border-dashed text-center transition-all cursor-pointer overflow-hidden ${dragOver ? 'border-[#0284C7] bg-sky-50' : 'border-gray-300 bg-white hover:border-[#0284C7]/50'}`}
+              className={`relative rounded-2xl border-2 border-dashed text-center transition-all cursor-pointer overflow-hidden ${dragOver ? 'border-signal bg-signal-soft' : 'border-gray-300 bg-white hover:border-signal/50'}`}
             >
               <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={(e) => pickFile(e.target.files?.[0])} />
               {previewSrc ? (
@@ -416,16 +416,16 @@ export const DropsTab: React.FC = () => {
                   {/* eslint-disable-next-line @next/next/no-img-element -- local preview / API asset */}
                   <img src={previewSrc} alt="Drop preview" className="w-full aspect-[4/5] object-cover" />
                   <span className="absolute bottom-2 inset-x-0 flex justify-center">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/65 text-white text-[11px] font-bold backdrop-blur">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/65 text-white text-xs font-bold backdrop-blur">
                       {pendingImage ? pendingImage.file.name : form.image_file_name || 'Current image'} — click to replace
                     </span>
                   </span>
                 </>
               ) : (
                 <div className="py-8 px-4">
-                  <ImageIcon className="w-7 h-7 text-[#0284C7] mx-auto mb-2" />
-                  <p className="text-sm font-bold text-[#1E293B]">Drag & drop, or click to choose</p>
-                  <p className="text-[12px] text-gray-500 mt-1">JPG / PNG / WEBP / AVIF · 6MB max</p>
+                  <ImageIcon className="w-7 h-7 text-signal mx-auto mb-2" />
+                  <p className="text-sm font-bold text-ink-soft">Drag & drop, or click to choose</p>
+                  <p className="text-xs text-gray-500 mt-1">JPG / PNG / WEBP / AVIF · 6MB max</p>
                 </div>
               )}
             </div>
@@ -478,7 +478,7 @@ export const DropsTab: React.FC = () => {
               <input type="datetime-local" className={inputCls} value={form.deadline_at} onChange={(e) => setForm({ ...form, deadline_at: e.target.value })} />
             </div>
           </div>
-          <p className="text-[11px] text-gray-500 -mt-2">
+          <p className="text-xs text-gray-500 -mt-2">
             Past deadlines and expired windows are hidden automatically — no manual unpublish needed.
           </p>
 
@@ -501,28 +501,28 @@ export const DropsTab: React.FC = () => {
               <input className={inputCls} placeholder="IIT-B, NIT-T" value={form.colleges} onChange={(e) => setForm({ ...form, colleges: e.target.value })} />
             </div>
           </div>
-          <p className="text-[11px] text-gray-500 -mt-2">Blank = everyone. Audience narrows the feed per viewer.</p>
+          <p className="text-xs text-gray-500 -mt-2">Blank = everyone. Audience narrows the feed per viewer.</p>
 
           <div className="flex flex-wrap items-center gap-4 pt-1">
-            <label className="flex items-center gap-2 text-[13px] font-semibold text-gray-700">
-              <input type="checkbox" checked={form.pinned} onChange={(e) => setForm({ ...form, pinned: e.target.checked })} className="accent-[#0284C7] w-4 h-4" />
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+              <input type="checkbox" checked={form.pinned} onChange={(e) => setForm({ ...form, pinned: e.target.checked })} className="accent-signal w-4 h-4" />
               Pin to top
             </label>
-            <label className="flex items-center gap-2 text-[13px] font-semibold text-gray-700">
-              <input type="number" className="w-20 p-1.5 border border-gray-200 rounded-lg bg-[#FAFAF9] text-sm" placeholder="pri" value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })} />
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+              <input type="number" className="w-20 p-1.5 border border-gray-200 rounded-lg bg-app-warm text-sm" placeholder="pri" value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })} />
               Priority
             </label>
-            <label className="flex items-center gap-2 text-[13px] font-semibold text-gray-700">
-              <input type="checkbox" checked={form.sponsored} onChange={(e) => setForm({ ...form, sponsored: e.target.checked })} className="accent-[#B45309] w-4 h-4" />
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+              <input type="checkbox" checked={form.sponsored} onChange={(e) => setForm({ ...form, sponsored: e.target.checked })} className="accent-amber-deep w-4 h-4" />
               Sponsored
             </label>
             {form.sponsored && (
-              <input className="w-40 p-1.5 border border-gray-200 rounded-lg bg-[#FAFAF9] text-sm" placeholder="Sponsor name" maxLength={40} value={form.sponsor_name} onChange={(e) => setForm({ ...form, sponsor_name: e.target.value })} />
+              <input className="w-40 p-1.5 border border-gray-200 rounded-lg bg-app-warm text-sm" placeholder="Sponsor name" maxLength={40} value={form.sponsor_name} onChange={(e) => setForm({ ...form, sponsor_name: e.target.value })} />
             )}
             <button
               onClick={handleSubmit}
               disabled={busy}
-              className="ml-auto inline-flex items-center gap-2 px-4 py-2.5 bg-[#0284C7] hover:bg-[#0369A1] text-white rounded-xl text-xs font-bold transition-colors disabled:opacity-60"
+              className="ml-auto inline-flex items-center gap-2 px-4 py-2.5 bg-signal hover:bg-signal text-white rounded-xl text-xs font-bold transition-colors disabled:opacity-60"
             >
               {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
               {editingId ? 'Save Changes' : 'Create Drop'}
@@ -539,8 +539,8 @@ export const DropsTab: React.FC = () => {
           ) : drops.length === 0 ? (
             <div className="bg-white border border-gray-200 rounded-3xl p-12 text-center space-y-2">
               <Zap className="w-8 h-8 text-gray-300 mx-auto" />
-              <p className="text-sm font-bold text-[#1E293B]">No drops yet</p>
-              <p className="text-[13px] text-gray-500 max-w-md mx-auto">
+              <p className="text-sm font-bold text-ink-soft">No drops yet</p>
+              <p className="text-sm text-gray-500 max-w-md mx-auto">
                 Create the first card — a company update, an application deadline, a contest.
                 Published drops appear on <code>/drops</code> immediately.
               </p>
@@ -550,22 +550,22 @@ export const DropsTab: React.FC = () => {
               const st = statusPill(d);
               const meta = DROP_TYPE_META[d.type];
               return (
-                <div key={d.id} className={`bg-white border rounded-3xl p-4 shadow-xs flex flex-col sm:flex-row gap-4 ${editingId === d.id ? 'border-[#0284C7] ring-2 ring-[#0284C7]/15' : 'border-gray-200'}`}>
+                <div key={d.id} className={`bg-white border rounded-3xl p-4 shadow-xs flex flex-col sm:flex-row gap-4 ${editingId === d.id ? 'border-signal ring-2 ring-signal/15' : 'border-gray-200'}`}>
                   <div className="relative w-full sm:w-24 h-32 sm:h-auto shrink-0 rounded-2xl overflow-hidden flex items-center justify-center" style={{ background: meta.chip }}>
-                    <span className="text-white text-[11px] font-extrabold uppercase tracking-wide px-2 text-center">{meta.label}</span>
+                    <span className="text-white text-xs font-extrabold uppercase tracking-wide px-2 text-center">{meta.label}</span>
                   </div>
 
                   <div className="flex-1 min-w-0 space-y-2">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold tracking-wide ${st.cls}`}>{st.text}</span>
-                      {d.pinned && <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 text-[10px] font-bold"><Pin className="w-3 h-3" /> PINNED</span>}
-                      {d.sponsored && <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold">AD</span>}
-                      {d.source?.kind === 'auto' && <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 text-[10px] font-bold">AUTO</span>}
+                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-extrabold tracking-wide ${st.cls}`}>{st.text}</span>
+                      {d.pinned && <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-signal-soft text-signal-hover text-xs font-bold"><Pin className="w-3 h-3" /> PINNED</span>}
+                      {d.sponsored && <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-xs font-bold">AD</span>}
+                      {d.source?.kind === 'auto' && <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 text-xs font-bold">AUTO</span>}
                     </div>
-                    <p className="font-extrabold text-[#1E293B] text-sm mt-1">{d.headline}</p>
-                    {d.bullets[0] && <p className="text-[12px] text-gray-500 line-clamp-1">{d.bullets[0]}</p>}
+                    <p className="font-extrabold text-ink-soft text-sm mt-1">{d.headline}</p>
+                    {d.bullets[0] && <p className="text-xs text-gray-500 line-clamp-1">{d.bullets[0]}</p>}
 
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-gray-500 font-mono">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500 font-mono">
                       <span className="inline-flex items-center gap-1"><Eye className="w-3 h-3" /> {d.stats?.views || 0}</span>
                       <span>CTR {d.stats?.views ? Math.round(((d.stats?.cta_clicks || 0) / d.stats.views) * 100) : 0}%</span>
                       <span>{d.stats?.saves || 0} saves</span>
@@ -577,20 +577,20 @@ export const DropsTab: React.FC = () => {
                     <div className="flex flex-wrap items-center gap-1.5 pt-1">
                       <button
                         onClick={() => patch(d, { status: d.status === 'published' ? 'draft' : 'published' })}
-                        className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-colors ${d.status === 'published' ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                        className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors ${d.status === 'published' ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
                       >
                         {d.status === 'published' ? 'Unpublish' : 'Publish'}
                       </button>
                       <button
                         onClick={() => patch(d, { pinned: !d.pinned })}
-                        className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-colors ${d.pinned ? 'bg-sky-50 text-sky-700' : 'bg-gray-100 text-gray-500 hover:bg-sky-50 hover:text-sky-700'}`}
+                        className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors ${d.pinned ? 'bg-signal-soft text-signal-hover' : 'bg-gray-100 text-gray-500 hover:bg-signal-soft hover:text-signal-hover'}`}
                       >
                         {d.pinned ? 'Unpin' : 'Pin'}
                       </button>
-                      <Link href={`/drops/${d.id}`} target="_blank" className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-gray-100 text-gray-500 hover:bg-sky-50 hover:text-sky-700">
+                      <Link href={`/drops/${d.id}`} target="_blank" className="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-gray-100 text-gray-500 hover:bg-signal-soft hover:text-signal-hover">
                         View
                       </Link>
-                      <button onClick={() => startEdit(d)} className="p-1.5 text-gray-500 hover:text-[#0284C7] hover:bg-sky-50 rounded-lg" title="Edit">
+                      <button onClick={() => startEdit(d)} className="p-1.5 text-gray-500 hover:text-signal hover:bg-signal-soft rounded-lg" title="Edit">
                         <Pencil className="w-4 h-4" />
                       </button>
                       <button onClick={() => remove(d)} className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg ml-auto" title="Delete">

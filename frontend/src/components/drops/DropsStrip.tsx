@@ -36,17 +36,17 @@ export const DropsStrip: React.FC = () => {
   if (drops.length === 0) return null;
 
   return (
-    <section className="border-b border-[#E9E7E1] bg-[#FBFAF7] py-10">
+    <section className="border-b border-line bg-app-warm py-10">
       <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div className="space-y-1.5">
             <span className="eyebrow inline-flex items-center gap-1.5">
               <Zap className="w-3.5 h-3.5" aria-hidden /> Drops
             </span>
-            <h2 className="font-serif-heading text-2xl sm:text-3xl font-extrabold text-[#10151C] leading-tight">
+            <h2 className="font-serif-heading text-2xl sm:text-3xl font-extrabold text-heading leading-tight">
               Fresh off the career feed
             </h2>
-            <p className="text-[14px] text-[var(--text-muted)] max-w-xl">
+            <p className="text-sm text-[var(--text-muted)] max-w-xl">
               Hiring drives, deadlines, contests and tips — one swipe each.
             </p>
           </div>
@@ -62,26 +62,26 @@ export const DropsStrip: React.FC = () => {
               <Link
                 key={d.id}
                 href={`/drops/${d.id}`}
-                className="vault-card group flex w-[260px] flex-none snap-start flex-col gap-2.5 p-4 transition-colors hover:border-[#0284C7]"
+                className="vault-card group flex w-[260px] flex-none snap-start flex-col gap-2.5 p-4 transition-colors hover:border-signal"
               >
-                <span className="inline-flex items-center gap-1.5 self-start rounded-full bg-[#F1F3F5] px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-[#3E4754]">
+                <span className="inline-flex items-center gap-1.5 self-start rounded-full bg-paper px-2.5 py-1 text-xs font-extrabold uppercase tracking-wide text-body">
                   <span
                     className="h-1.5 w-1.5 rounded-full"
                     style={{ background: meta.chip }}
                     aria-hidden
                   />
                   {meta.label}
-                  {d.sponsored && <span className="text-[#AEB6BE]">· Ad</span>}
+                  {d.sponsored && <span className="text-text-light">· Ad</span>}
                 </span>
-                <h3 className="text-[15px] font-extrabold leading-snug text-[#10151C] drop-headline">
+                <h3 className="text-base font-extrabold leading-snug text-heading drop-headline">
                   {d.headline}
                 </h3>
                 {d.bullets[0] && (
-                  <p className="text-[13px] leading-relaxed text-[var(--text-muted)] line-clamp-2">
+                  <p className="text-sm leading-relaxed text-[var(--text-muted)] line-clamp-2">
                     {d.bullets[0]}
                   </p>
                 )}
-                <span className="mt-auto inline-flex items-center gap-1 pt-1 text-[13px] font-bold text-[#0284C7]">
+                <span className="mt-auto inline-flex items-center gap-1 pt-1 text-sm font-bold text-signal">
                   {d.cta_label}
                   <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden />
                 </span>

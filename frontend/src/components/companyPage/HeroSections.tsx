@@ -49,7 +49,7 @@ export function Hero({
         <div>
           <div className={s.heroTop}>
             <nav className={s.crumbs} aria-label="Breadcrumb">
-              <CpLink href="/">Companies</CpLink> <span aria-hidden>/</span> {company.name}
+              <CpLink href="/companies">Companies</CpLink> <span aria-hidden>/</span> {company.name}
             </nav>
             {langToggle && (
               <div className={s.langToggle} role="radiogroup" aria-label="Language">

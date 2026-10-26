@@ -34,7 +34,7 @@ export const ProvenanceChip: React.FC<{
   if (!prov) {
     return (
       <span
-        className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9.5px] font-bold uppercase tracking-wide bg-amber-50 text-amber-800 border border-amber-200 ${className}`}
+        className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-bold uppercase tracking-wide bg-amber-50 text-amber-800 border border-amber-200 ${className}`}
         title="No source recorded. Treat this figure as an unconfirmed claim."
       >
         <ShieldAlert className="w-2.5 h-2.5" /> Unverified
@@ -44,7 +44,7 @@ export const ProvenanceChip: React.FC<{
 
   return (
     <span
-      className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9.5px] font-bold uppercase tracking-wide bg-sky-50 text-sky-700 border border-sky-200 ${className}`}
+      className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-bold uppercase tracking-wide bg-signal-soft text-signal-hover border border-signal/30 ${className}`}
       title={`Source: ${prov.source}${day ? ` · checked ${day}` : ''}`}
     >
       <ShieldCheck className="w-2.5 h-2.5" /> Sourced
@@ -60,19 +60,19 @@ export const ProvenanceNote: React.FC<{
   absentText?: string;
 }> = ({ sources, metricKey, hasValue, absentText }) => {
   if (!hasValue) {
-    return absentText ? <p className="text-[10.5px] text-[--text-muted] leading-snug">{absentText}</p> : null;
+    return absentText ? <p className="text-xs text-[--text-muted] leading-snug">{absentText}</p> : null;
   }
   const prov = getProvenance(sources, metricKey);
   if (!prov) {
     return (
-      <p className="text-[10.5px] text-[#8A7B63] leading-snug">
+      <p className="text-xs text-text-light leading-snug">
         No source recorded — unconfirmed claim.
       </p>
     );
   }
   const day = formatDay(prov.verified_at);
   return (
-    <p className="text-[10.5px] text-[--text-muted] leading-snug break-words">
+    <p className="text-xs text-[--text-muted] leading-snug break-words">
       {prov.source}
       {day ? ` · checked ${day}` : ''}
     </p>

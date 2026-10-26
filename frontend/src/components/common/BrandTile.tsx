@@ -1,14 +1,14 @@
 import React from 'react';
 
 const TILE_COLORS = [
-  'bg-[#1F3A5F]',
-  'bg-[#0369A1]',
-  'bg-[#115E59]',
-  'bg-[#92400E]',
+  'bg-brand-ink',
+  'bg-signal',
+  'bg-track',
+  'bg-amber-deep',
   'bg-[#6D28D9]',
-  'bg-[#BE123C]',
-  'bg-[#3F6212]',
-  'bg-[#334155]',
+  'bg-danger',
+  'bg-success',
+  'bg-heading',
 ];
 
 const isRealUrl = (src?: string | null): boolean => {
@@ -63,7 +63,7 @@ export const BrandTile: React.FC<BrandTileProps> = ({ name, src, className = 'w-
         title={title || safeName}
         loading="lazy"
         decoding="async"
-        className={`object-cover border border-[#E9E7E1] bg-white ${className}`}
+        className={`object-cover border border-line bg-white ${className}`}
       />
     );
   }

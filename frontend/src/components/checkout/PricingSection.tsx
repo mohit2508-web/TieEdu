@@ -4,9 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { PricingCatalog, RoundType } from '@/types';
 import { fetchPricingCatalogApi } from '@/lib/api';
-import {
-  Check, Sparkles, ShieldCheck, LayoutGrid, ListTree, AlertTriangle, ArrowRight, FileText, BadgeCheck
-} from 'lucide-react';
+import { Check, ShieldCheck, LayoutGrid, ListTree, AlertTriangle, ArrowRight, FileText, BadgeCheck } from 'lucide-react';
 
 /**
  * Pricing is rendered from GET /api/pricing/catalog — the same packPrice() the
@@ -17,7 +15,7 @@ import {
 
 const ROUND_META: Record<RoundType, { label: string; cls: string; dot: string }> = {
   OA: { label: 'Online Assessment', cls: 'bg-amber-50 text-amber-800 border-amber-200', dot: 'bg-amber-400' },
-  Technical: { label: 'Technical Round', cls: 'bg-blue-50 text-blue-700 border-blue-200', dot: 'bg-blue-500' },
+  Technical: { label: 'Technical Round', cls: 'bg-signal-soft text-signal-hover border-signal/30', dot: 'bg-signal' },
   SystemDesign: { label: 'System Design', cls: 'bg-purple-50 text-purple-700 border-purple-200', dot: 'bg-purple-500' },
   HR: { label: 'HR Round', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
   Managerial: { label: 'Managerial', cls: 'bg-teal-50 text-teal-700 border-teal-200', dot: 'bg-teal-500' },
@@ -52,10 +50,10 @@ const CompanyMark: React.FC<{ name: string; logo_url?: string; size?: string }> 
       // otherwise makes it serve a bigger file for no visible gain.
       sizes={`${px}px`}
       loading="lazy"
-      className={`${size} rounded-xl object-contain bg-white border border-[#EDEDEB] shrink-0`}
+      className={`${size} rounded-xl object-contain bg-white border border-line shrink-0`}
     />
   ) : (
-    <span className={`${size} rounded-xl bg-[#1F3A5F] text-white font-black text-sm flex items-center justify-center shrink-0`}>
+    <span className={`${size} rounded-xl bg-brand-ink text-white font-black text-sm flex items-center justify-center shrink-0`}>
       {name.slice(0, 2).toUpperCase()}
     </span>
   );
@@ -106,15 +104,15 @@ export const PricingSection: React.FC = () => {
   };
 
   return (
-    <section id="pricing" className="py-16 border-t border-[#EDEDEB] bg-white">
+    <section id="pricing" className="py-16 border-t border-line bg-white">
       <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12">
 
         <div className="text-center max-w-2xl mx-auto mb-10">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-[#1F3A5F] border border-indigo-100 mb-3">
-            <Sparkles className="w-3.5 h-3.5 text-[#B45309]" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-brand-ink border border-indigo-100 mb-3">
+            <ShieldCheck className="w-3.5 h-3.5 text-amber-deep" />
             Server-Verified Pricing
           </span>
-          <h2 className="font-serif-heading text-2xl sm:text-3xl font-bold text-[#1A1A1A] mb-3">
+          <h2 className="font-serif-heading text-2xl sm:text-3xl font-bold text-heading mb-3">
             Every Company. Every Round. The Real Price.
           </h2>
           <p className="text-xs sm:text-sm text-[var(--text-muted)]">
@@ -128,14 +126,14 @@ export const PricingSection: React.FC = () => {
         ) : failed || !catalog ? (
           <div className="max-w-xl mx-auto text-center rounded-2xl border border-amber-200 bg-amber-50 p-8">
             <AlertTriangle className="w-7 h-7 text-amber-600 mx-auto mb-3" />
-            <h3 className="font-bold text-[#1A1A1A] mb-1.5">Pricing is temporarily unavailable</h3>
+            <h3 className="font-bold text-heading mb-1.5">Pricing is temporarily unavailable</h3>
             <p className="text-xs text-[var(--text-muted)] leading-relaxed">
               We will not show a price we cannot honour at checkout. Open any company vault to
               see its live pricing, or try again in a moment.
             </p>
             <Link
-              href="/#companies"
-              className="inline-flex items-center gap-2 mt-5 px-5 py-2.5 bg-[#1F3A5F] hover:bg-[#2A4D7E] text-white text-xs font-semibold rounded-lg transition-all"
+              href="/companies"
+              className="inline-flex items-center gap-2 mt-5 px-5 py-2.5 bg-brand-ink hover:bg-brand-ink text-white text-xs font-semibold rounded-lg transition-all"
             >
               Browse company vaults <ArrowRight className="w-3.5 h-3.5" />
             </Link>
@@ -143,12 +141,12 @@ export const PricingSection: React.FC = () => {
         ) : (
           <>
             {/* ===== THE LADDER — the actual pricing rule, straight from the server ===== */}
-            <div className="rounded-2xl border border-[#EDEDEB] bg-[#FAFAF9] p-5 sm:p-6 mb-10">
+            <div className="rounded-2xl border border-line bg-app-warm p-5 sm:p-6 mb-10">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
-                <h3 className="font-serif-heading font-bold text-base text-[#1A1A1A]">
+                <h3 className="font-serif-heading font-bold text-base text-heading">
                   The pricing rule
                 </h3>
-                <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-emerald-700">
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
                   <ShieldCheck className="w-3.5 h-3.5" />
                   Charged by the server at checkout
                 </span>
@@ -163,20 +161,20 @@ export const PricingSection: React.FC = () => {
                     <div
                       key={rung.module_count}
                       className={`rounded-xl p-4 border text-center ${
-                        isTop ? 'bg-[#1F3A5F] border-[#1F3A5F] text-white' : 'bg-white border-[#EDEDEB]'
+                        isTop ? 'bg-brand-ink border-brand-ink text-white' : 'bg-white border-line'
                       }`}
                     >
-                      <div className={`text-[12px] font-bold uppercase tracking-wider mb-1.5 ${isTop ? 'text-amber-300' : 'text-[var(--text-muted)]'}`}>
+                      <div className={`text-xs font-bold uppercase tracking-wider mb-1.5 ${isTop ? 'text-amber-300' : 'text-[var(--text-muted)]'}`}>
                         {rung.module_count === 1
                           ? '1 round'
                           : rung.module_count === catalog.complete_pack_count
                             ? 'All rounds'
                             : `${rung.module_count} rounds`}
                       </div>
-                      <div className={`font-serif-heading text-2xl font-black ${isTop ? 'text-white' : 'text-[#1A1A1A]'}`}>
+                      <div className={`font-serif-heading text-2xl font-black ${isTop ? 'text-white' : 'text-heading'}`}>
                         ₹{rung.price}
                       </div>
-                      <div className={`text-[12px] mt-1 ${isTop ? 'text-sky-200/80' : 'text-[var(--text-muted)]'}`}>
+                      <div className={`text-xs mt-1 ${isTop ? 'text-white/80' : 'text-[var(--text-muted)]'}`}>
                         {isTop ? 'Complete Pack' : save > 0 ? `saves ₹${save}` : 'one-time'}
                       </div>
                     </div>
@@ -184,7 +182,7 @@ export const PricingSection: React.FC = () => {
                 })}
               </div>
 
-              <p className="text-[12px] text-[var(--text-muted)] mt-4 leading-relaxed">
+              <p className="text-xs text-[var(--text-muted)] mt-4 leading-relaxed">
                 A company pack unlocks <strong>every round of that company</strong> — rounds are how
                 the pack is priced, not a promise of partial access. Coupons apply on top.
                 Payments are verified manually by our team after your UPI transfer.
@@ -196,7 +194,7 @@ export const PricingSection: React.FC = () => {
               <button
                 onClick={() => setView('company')}
                 className={`inline-flex items-center gap-2 min-h-[44px] px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                  view === 'company' ? 'bg-[#1F3A5F] text-white' : 'bg-[#F4F4F2] text-[var(--text-muted)] hover:bg-gray-200'
+                  view === 'company' ? 'bg-brand-ink text-white' : 'bg-paper text-[var(--text-muted)] hover:bg-gray-200'
                 }`}
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
@@ -205,7 +203,7 @@ export const PricingSection: React.FC = () => {
               <button
                 onClick={() => setView('module')}
                 className={`inline-flex items-center gap-2 min-h-[44px] px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                  view === 'module' ? 'bg-[#1F3A5F] text-white' : 'bg-[#F4F4F2] text-[var(--text-muted)] hover:bg-gray-200'
+                  view === 'module' ? 'bg-brand-ink text-white' : 'bg-paper text-[var(--text-muted)] hover:bg-gray-200'
                 }`}
               >
                 <ListTree className="w-3.5 h-3.5" />
@@ -222,21 +220,21 @@ export const PricingSection: React.FC = () => {
                 {companies.map((c) => (
                   <div
                     key={c.id}
-                    className="rounded-2xl bg-white border border-[#EDEDEB] hover:border-[#1F3A5F]/40 hover:shadow-md p-5 flex flex-col transition-all"
+                    className="rounded-2xl bg-white border border-line hover:border-brand-ink/40 hover:shadow-md p-5 flex flex-col transition-all"
                   >
                     <div className="flex items-start gap-3 mb-4">
                       <CompanyMark name={c.name} logo_url={c.logo_url} />
                       <div className="min-w-0 flex-1">
-                        <h3 className="font-serif-heading font-bold text-base text-[#1A1A1A] leading-tight truncate">
+                        <h3 className="font-serif-heading font-bold text-base text-heading leading-tight truncate">
                           {c.name}
                         </h3>
-                        <p className="text-[12px] text-[var(--text-muted)] mt-0.5">
+                        <p className="text-xs text-[var(--text-muted)] mt-0.5">
                           {c.premium_count} premium round{c.premium_count === 1 ? '' : 's'}
                           {c.industry ? ` · ${c.industry}` : ''}
                         </p>
                       </div>
                       {c.is_unlocked && (
-                        <span className="inline-flex items-center gap-1 text-[12px] font-bold uppercase tracking-wide px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+                        <span className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wide px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
                           <BadgeCheck className="w-3 h-3" /> Owned
                         </span>
                       )}
@@ -248,11 +246,11 @@ export const PricingSection: React.FC = () => {
                       </div>
                     ) : (
                       <div className="flex items-baseline gap-2 mb-1">
-                        <span className="font-serif-heading text-3xl font-black text-[#1A1A1A]">₹{c.pack_price}</span>
+                        <span className="font-serif-heading text-3xl font-black text-heading">₹{c.pack_price}</span>
                         {c.savings > 0 && (
                           <>
                             <span className="text-xs text-[var(--text-muted)] line-through">₹{c.list_total}</span>
-                            <span className="text-[12px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-md">
+                            <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-md">
                               {c.savings_percent}% OFF
                             </span>
                           </>
@@ -260,7 +258,7 @@ export const PricingSection: React.FC = () => {
                       </div>
                     )}
 
-                    <p className="text-[12px] text-[var(--text-muted)] mb-4">
+                    <p className="text-xs text-[var(--text-muted)] mb-4">
                       {c.is_unlocked
                         ? 'All rounds of this vault are in your account.'
                         : c.savings > 0
@@ -270,10 +268,10 @@ export const PricingSection: React.FC = () => {
                             : `All ${c.premium_count} rounds · one-time`}
                     </p>
 
-                    <ul className="space-y-1.5 mb-5 text-[12px] text-[#4A4A4A]">
+                    <ul className="space-y-1.5 mb-5 text-xs text-body">
                       {c.modules.slice(0, 4).map((m) => (
                         <li key={m.id} className="flex items-start gap-1.5">
-                          <Check className="w-3.5 h-3.5 text-[#1E8E5A] shrink-0 mt-0.5" />
+                          <Check className="w-3.5 h-3.5 text-success shrink-0 mt-0.5" />
                           <span className="truncate">{m.title}</span>
                         </li>
                       ))}
@@ -284,7 +282,7 @@ export const PricingSection: React.FC = () => {
                       className={`mt-auto w-full min-h-[44px] py-2.5 rounded-lg text-xs font-semibold transition-all shadow-sm ${
                         c.is_unlocked
                           ? 'bg-emerald-700 hover:bg-emerald-800 text-white'
-                          : 'bg-[#1F3A5F] hover:bg-[#2A4D7E] text-white'
+                          : 'bg-brand-ink hover:bg-brand-ink text-white'
                       }`}
                     >
                       {c.is_unlocked ? 'Open vault' : `View ${c.name} pricing`}
@@ -299,22 +297,22 @@ export const PricingSection: React.FC = () => {
                   return (
                       <div
                         key={`${c.id}-${m.id}`}
-                        className="rounded-2xl bg-white border border-[#EDEDEB] hover:border-[#1F3A5F]/40 hover:shadow-md p-5 flex flex-col transition-all"
+                        className="rounded-2xl bg-white border border-line hover:border-brand-ink/40 hover:shadow-md p-5 flex flex-col transition-all"
                       >
                         <div className="flex items-center gap-2 mb-3">
                           <CompanyMark name={c.name} logo_url={c.logo_url} size="w-8 h-8" />
-                          <span className="text-[12px] font-bold text-[#1F3A5F] truncate">{c.name}</span>
+                          <span className="text-xs font-bold text-brand-ink truncate">{c.name}</span>
                         </div>
 
                         <div className="flex flex-wrap items-center gap-1.5 mb-2">
                           {rm && (
-                            <span className={`inline-flex items-center gap-1.5 text-[12px] font-bold px-2 py-0.5 rounded-full border ${rm.cls}`}>
+                            <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-2 py-0.5 rounded-full border ${rm.cls}`}>
                               <span className={`w-1.5 h-1.5 rounded-full ${rm.dot}`} />
                               {rm.label}
                             </span>
                           )}
                           {m.has_pdf && (
-                            <span className="inline-flex items-center gap-1 text-[12px] font-bold px-2 py-0.5 rounded-full bg-[#E8F4FB] text-[#0271B5] border border-[#BFE0F5]">
+                            <span className="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full bg-signal-soft text-signal border border-signal/30">
                               <FileText className="w-3 h-3" /> PDF
                             </span>
                           )}
@@ -323,20 +321,20 @@ export const PricingSection: React.FC = () => {
                         <h3 className="text-sm font-bold text-gray-900 leading-snug mb-1.5 line-clamp-2">
                           {m.title}
                         </h3>
-                        <p className="text-[12px] text-[var(--text-muted)] mb-4">
+                        <p className="text-xs text-[var(--text-muted)] mb-4">
                           {m.item_count} question{m.item_count === 1 ? '' : 's'} · buy on its own
                         </p>
 
                         <div className="flex items-baseline gap-2 mb-4">
-                          <span className="font-serif-heading text-2xl font-black text-[#1A1A1A]">₹{m.price}</span>
-                          <span className="text-[12px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-md">
+                          <span className="font-serif-heading text-2xl font-black text-heading">₹{m.price}</span>
+                          <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-md">
                             One-Time
                           </span>
                         </div>
 
                         <button
                           onClick={() => openVault(c.slug, m.id)}
-                          className="mt-auto w-full min-h-[44px] py-2.5 rounded-lg text-xs font-semibold bg-[#1F3A5F] hover:bg-[#2A4D7E] text-white transition-all shadow-sm"
+                          className="mt-auto w-full min-h-[44px] py-2.5 rounded-lg text-xs font-semibold bg-brand-ink hover:bg-brand-ink text-white transition-all shadow-sm"
                         >
                           Open in {c.name}
                         </button>

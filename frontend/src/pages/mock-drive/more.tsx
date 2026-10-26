@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { UserRound, Bell, Settings, FileText, ChevronRight, LogOut, Phone, Mail, LifeBuoy } from 'lucide-react';
-import { DriveShell } from '@/components/drives/DriveShell';
+import { DriveShell, withDriveAuth } from '@/components/drives/DriveShell';
 import { useAuth } from '@/context/AuthContext';
 import { fetchDriveConfigApi, DriveConfig } from '@/lib/drivesApi';
 
@@ -12,7 +12,7 @@ const ITEMS = [
   { href: '/mock-drive/settings', icon: Settings, label: 'Settings', sub: 'Notification and account preferences' },
 ] as const;
 
-export default function MoreTab() {
+function MoreTab() {
   const { user, logout } = useAuth();
   const [config, setConfig] = useState<DriveConfig | null>(null);
 
@@ -30,14 +30,14 @@ export default function MoreTab() {
         {/* Account card */}
         <div className="flex items-center gap-3 rounded-[14px] border p-4" style={{ background: 'var(--apple-surface)', borderColor: 'var(--apple-separator)' }}>
           <span
-            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-[16px] font-bold"
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-base font-bold"
             style={{ background: 'var(--apple-blue-soft)', color: 'var(--apple-blue)' }}
           >
             {(user?.name || user?.email || '?').slice(0, 1).toUpperCase()}
           </span>
           <div className="min-w-0">
-            <p className="truncate text-[15px] font-semibold" style={{ color: 'var(--apple-label)' }}>{user?.name || '—'}</p>
-            <p className="truncate text-[12px]" style={{ color: 'var(--apple-label-2)' }}>{user?.email || ''}</p>
+            <p className="truncate text-base font-semibold" style={{ color: 'var(--apple-label)' }}>{user?.name || '—'}</p>
+            <p className="truncate text-xs" style={{ color: 'var(--apple-label-2)' }}>{user?.email || ''}</p>
           </div>
         </div>
 
@@ -56,10 +56,10 @@ export default function MoreTab() {
                   <Icon size={16} strokeWidth={1.9} />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[14px] font-medium" style={{ color: 'var(--apple-label)' }}>{item.label}</p>
-                  <p className="truncate text-[12px]" style={{ color: 'var(--apple-label-2)' }}>{item.sub}</p>
+                  <p className="text-sm font-medium" style={{ color: 'var(--apple-label)' }}>{item.label}</p>
+                  <p className="truncate text-xs" style={{ color: 'var(--apple-label-2)' }}>{item.sub}</p>
                 </div>
-                <ChevronRight size={16} style={{ color: 'var(--apple-label-3)' }} />
+                <ChevronRight size={16} style={{ color: 'var(--apple-label-2)' }} />
               </Link>
             );
           })}
@@ -73,8 +73,8 @@ export default function MoreTab() {
                 <LifeBuoy size={16} strokeWidth={1.9} />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-[14px] font-medium" style={{ color: 'var(--apple-label)' }}>Support &amp; Help</p>
-                <p className="truncate text-[12px]" style={{ color: 'var(--apple-label-2)' }}>Stuck on payment, slot or test? Reach us.</p>
+                <p className="text-sm font-medium" style={{ color: 'var(--apple-label)' }}>Support &amp; Help</p>
+                <p className="truncate text-xs" style={{ color: 'var(--apple-label-2)' }}>Stuck on payment, slot or test? Reach us.</p>
               </div>
             </div>
             <div className="px-4 pb-2 pt-1">
@@ -87,10 +87,10 @@ export default function MoreTab() {
                     <Phone size={15} strokeWidth={2} />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[14px] font-medium" style={{ color: 'var(--apple-label)' }}>{config.support_phone}</p>
-                    <p className="text-[12px]" style={{ color: 'var(--apple-label-2)' }}>Tap to call</p>
+                    <p className="text-sm font-medium" style={{ color: 'var(--apple-label)' }}>{config.support_phone}</p>
+                    <p className="text-xs" style={{ color: 'var(--apple-label-2)' }}>Tap to call</p>
                   </div>
-                  <ChevronRight size={16} style={{ color: 'var(--apple-label-3)' }} />
+                  <ChevronRight size={16} style={{ color: 'var(--apple-label-2)' }} />
                 </a>
               )}
               {config.support_email && (
@@ -103,10 +103,10 @@ export default function MoreTab() {
                     <Mail size={15} strokeWidth={2} />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[14px] font-medium" style={{ color: 'var(--apple-label)' }}>{config.support_email}</p>
-                    <p className="text-[12px]" style={{ color: 'var(--apple-label-2)' }}>Email us</p>
+                    <p className="truncate text-sm font-medium" style={{ color: 'var(--apple-label)' }}>{config.support_email}</p>
+                    <p className="text-xs" style={{ color: 'var(--apple-label-2)' }}>Email us</p>
                   </div>
-                  <ChevronRight size={16} style={{ color: 'var(--apple-label-3)' }} />
+                  <ChevronRight size={16} style={{ color: 'var(--apple-label-2)' }} />
                 </a>
               )}
             </div>
@@ -117,16 +117,18 @@ export default function MoreTab() {
         <button
           type="button"
           onClick={() => logout()}
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-[12px] border py-3 text-[14px] font-semibold"
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-[12px] border py-3 text-sm font-semibold"
           style={{ borderColor: 'var(--apple-separator)', background: 'var(--apple-surface)', color: 'var(--apple-red)' }}
         >
           <LogOut size={15} /> Sign out
         </button>
 
-        <p className="mt-4 text-center text-[11px]" style={{ color: 'var(--apple-label-3)' }}>
+        <p className="mt-4 text-center text-xs" style={{ color: 'var(--apple-label-2)' }}>
           Mock Drives · TieEdu
         </p>
       </div>
     </DriveShell>
   );
 }
+
+export default withDriveAuth(MoreTab);

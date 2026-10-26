@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, MapPin, CalendarClock, Play, Inbox, Bell, ChevronRight, IndianRupee, CreditCard, Link2, Zap, CalendarCheck, Clock3 } from 'lucide-react';
-import { DriveShell } from '@/components/drives/DriveShell';
+import { DriveShell, withDriveAuth } from '@/components/drives/DriveShell';
 import { DriveStatusLine } from '@/components/drives/DriveStatusLine';
 import { Countdown } from '@/components/drives/Countdown';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -36,7 +36,7 @@ const TONE_STYLE = {
   gray: { background: 'var(--apple-fill)', color: 'var(--apple-label-2)' },
 } as const;
 
-export default function HomeTab() {
+function HomeTab() {
   const { user } = useAuth();
   const [home, setHome] = useState<DriveHome | null>(null);
   const [loading, setLoading] = useState(true);
@@ -73,8 +73,8 @@ export default function HomeTab() {
           className="rounded-[18px] p-4 text-white shadow-sm"
           style={{ background: 'linear-gradient(135deg, var(--apple-blue) 0%, #5E5CE6 100%)' }}
         >
-          <h1 className="text-[22px] font-bold tracking-tight">Hi {firstName(user?.name)} 👋</h1>
-          <p className="mt-0.5 text-[13px] text-white/80">
+          <h1 className="text-2xl font-bold tracking-tight">Hi {firstName(user?.name)} 👋</h1>
+          <p className="mt-0.5 text-sm text-white/80">
             Everything happening with your mock drives, in one place.
           </p>
           <div className="mt-3.5 grid grid-cols-4 gap-2">
@@ -86,7 +86,7 @@ export default function HomeTab() {
         </div>
 
         {error && (
-          <p className="mt-3 rounded-[10px] px-3 py-2 text-[13px]" style={{ background: 'var(--apple-red-soft)', color: 'var(--apple-red)' }}>
+          <p className="mt-3 rounded-[10px] px-3 py-2 text-sm" style={{ background: 'var(--apple-red-soft)', color: 'var(--apple-red)' }}>
             {error}
           </p>
         )}
@@ -100,19 +100,19 @@ export default function HomeTab() {
           >
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] relative" style={{ background: 'var(--apple-surface)', color: 'var(--apple-red)' }}>
               <Bell size={16} strokeWidth={2} />
-              <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[10px] font-bold text-white" style={{ background: 'var(--apple-red)' }}>
+              <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-xs font-bold text-white" style={{ background: 'var(--apple-red)' }}>
                 {home.unread_notifications}
               </span>
             </span>
             <div className="min-w-0 flex-1">
-              <p className="text-[14px] font-semibold" style={{ color: 'var(--apple-label)' }}>
+              <p className="text-sm font-semibold" style={{ color: 'var(--apple-label)' }}>
                 {home.unread_notifications} new update{home.unread_notifications > 1 ? 's' : ''}
               </p>
-              <p className="truncate text-[12px]" style={{ color: 'var(--apple-label-2)' }}>
+              <p className="truncate text-xs" style={{ color: 'var(--apple-label-2)' }}>
                 {home.recent_notifications[0]?.title || 'Drive updates, reminders and results'}
               </p>
             </div>
-            <ChevronRight size={16} style={{ color: 'var(--apple-label-3)' }} />
+            <ChevronRight size={16} style={{ color: 'var(--apple-label-2)' }} />
           </Link>
         )}
 
@@ -125,18 +125,18 @@ export default function HomeTab() {
           >
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <p className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-white/60">
+                <p className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-white/60">
                   <Clock3 size={12} /> Your test starts in
                 </p>
-                <p className="mt-1 text-[27px] font-bold leading-none">
+                <p className="mt-1 text-2xl font-bold leading-none">
                   <Countdown targetIso={home.next_test.starts_at} serverNowIso={home.server_now} />
                 </p>
-                <p className="mt-1.5 truncate text-[12.5px] text-white/70">
+                <p className="mt-1.5 truncate text-xs text-white/70">
                   {home.next_test.title} · {home.next_test.company_name}
                 </p>
               </div>
               <span
-                className="flex-none rounded-full px-2.5 py-1 text-[11px] font-bold"
+                className="flex-none rounded-full px-2.5 py-1 text-xs font-bold"
                 style={
                   home.next_test.link_active_at
                     ? { background: 'rgba(52,199,89,.22)', color: '#30D158' }
@@ -153,8 +153,8 @@ export default function HomeTab() {
         {home && home.needs_action.length > 0 && (
           <section className="mt-4">
             <div className="mb-2.5 flex items-center justify-between">
-              <h2 className="text-[15px] font-bold tracking-tight" style={{ color: 'var(--apple-label)' }}>Needs you</h2>
-              <Link href="/mock-drive/drives" className="inline-flex items-center gap-0.5 text-[12px] font-semibold" style={{ color: 'var(--apple-blue)' }}>
+              <h2 className="text-base font-bold tracking-tight" style={{ color: 'var(--apple-label)' }}>Needs you</h2>
+              <Link href="/mock-drive/drives" className="inline-flex items-center gap-0.5 text-xs font-semibold" style={{ color: 'var(--apple-blue)' }}>
                 All drives<ArrowRight size={12} />
               </Link>
             </div>
@@ -168,10 +168,10 @@ export default function HomeTab() {
                   >
                     <NeedsIcon type={n.type} />
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-[13.5px] font-semibold" style={{ color: 'var(--apple-label)' }}>{n.title}</p>
-                      <p className="mt-0.5 text-[12.5px] leading-snug" style={{ color: 'var(--apple-label-2)' }}>{n.message}</p>
+                      <p className="truncate text-sm font-semibold" style={{ color: 'var(--apple-label)' }}>{n.title}</p>
+                      <p className="mt-0.5 text-xs leading-snug" style={{ color: 'var(--apple-label-2)' }}>{n.message}</p>
                     </div>
-                    <ChevronRight size={15} className="mt-1 shrink-0" style={{ color: 'var(--apple-label-3)' }} />
+                    <ChevronRight size={15} className="mt-1 shrink-0" style={{ color: 'var(--apple-label-2)' }} />
                   </Link>
                 </li>
               ))}
@@ -194,10 +194,10 @@ export default function HomeTab() {
                       <Play size={16} fill="currentColor" />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-[14px] font-semibold" style={{ color: 'var(--apple-label)' }}>{a.test_name || a.drive_title}</p>
-                      <p className="truncate text-[12px]" style={{ color: 'var(--apple-label-2)' }}>{a.company_name}</p>
+                      <p className="truncate text-sm font-semibold" style={{ color: 'var(--apple-label)' }}>{a.test_name || a.drive_title}</p>
+                      <p className="truncate text-xs" style={{ color: 'var(--apple-label-2)' }}>{a.company_name}</p>
                     </div>
-                    <span className="flex-none rounded-full px-2.5 py-1 text-[11px] font-bold" style={{ background: 'var(--apple-orange-soft)', color: 'var(--apple-orange)' }}>
+                    <span className="flex-none rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: 'var(--apple-orange-soft)', color: 'var(--apple-orange)' }}>
                       Resume
                     </span>
                   </Link>
@@ -226,17 +226,17 @@ export default function HomeTab() {
                         <CompanyLogo name={d.company_name} url={d.company_logo_url} />
                         <div className="min-w-0 flex-1">
                           <div className="flex items-start justify-between gap-2">
-                            <p className="min-w-0 truncate text-[14px] font-semibold" style={{ color: 'var(--apple-label)' }}>{d.title}</p>
+                            <p className="min-w-0 truncate text-sm font-semibold" style={{ color: 'var(--apple-label)' }}>{d.title}</p>
                             {left && (
-                              <span className="flex-none rounded-full px-2 py-0.5 text-[10px] font-bold" style={TONE_STYLE[left.tone]}>
+                              <span className="flex-none rounded-full px-2 py-0.5 text-xs font-bold" style={TONE_STYLE[left.tone]}>
                                 {left.label}
                               </span>
                             )}
                           </div>
-                          <p className="truncate text-[12px]" style={{ color: 'var(--apple-label-2)' }}>{d.company_name}</p>
+                          <p className="truncate text-xs" style={{ color: 'var(--apple-label-2)' }}>{d.company_name}</p>
                         </div>
                       </div>
-                      <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px]" style={{ color: 'var(--apple-label-2)' }}>
+                      <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs" style={{ color: 'var(--apple-label-2)' }}>
                         {d.location && <span className="inline-flex items-center gap-1"><MapPin size={11} />{d.location}</span>}
                         {ctc(d.ctc_min, d.ctc_max) && <span className="font-medium" style={{ color: 'var(--apple-green)' }}>{ctc(d.ctc_min, d.ctc_max)}</span>}
                         {d.registration_closes_at_ist && (
@@ -277,19 +277,19 @@ export default function HomeTab() {
                     >
                       {date ? (
                         <span className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-[11px] text-center leading-none" style={{ background: 'var(--apple-blue-soft)', color: 'var(--apple-blue)' }}>
-                          <span className="text-[13px] font-bold">{date}</span>
+                          <span className="text-sm font-bold">{date}</span>
                         </span>
                       ) : (
                         <CompanyLogo name={d.company_name} url={d.company_logo_url} />
                       )}
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-[14px] font-semibold" style={{ color: 'var(--apple-label)' }}>{d.title}</p>
-                        <p className="truncate text-[12px]" style={{ color: 'var(--apple-label-2)' }}>
+                        <p className="truncate text-sm font-semibold" style={{ color: 'var(--apple-label)' }}>{d.title}</p>
+                        <p className="truncate text-xs" style={{ color: 'var(--apple-label-2)' }}>
                           {d.company_name}{d.location ? ` · ${d.location}` : ''}
                         </p>
                       </div>
                       {opens ? (
-                        <span className="flex-none rounded-full px-2 py-0.5 text-[10px] font-bold" style={TONE_STYLE[opens.tone]}>
+                        <span className="flex-none rounded-full px-2 py-0.5 text-xs font-bold" style={TONE_STYLE[opens.tone]}>
                           Opens in {opens.label.replace(' left', '')}
                         </span>
                       ) : (
@@ -320,19 +320,19 @@ const HeroStat: React.FC<{ label: string; value: number | null; loading: boolean
     {loading ? (
       <Skeleton className="mx-auto h-5 w-7 bg-white/30" />
     ) : (
-      <p className="text-[18px] font-bold leading-none">{value ?? 0}</p>
+      <p className="text-lg font-bold leading-none">{value ?? 0}</p>
     )}
-    <p className="mt-1 text-[10px] font-medium text-white/75">{label}</p>
+    <p className="mt-1 text-xs font-medium text-white/75">{label}</p>
   </div>
 );
 
 const CompanyLogo: React.FC<{ name: string | null; url: string | null }> = ({ name, url }) => (
   <span
-    className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[12px] text-[15px] font-bold"
+    className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[12px] text-base font-bold"
     style={{ background: 'var(--apple-fill)', color: 'var(--apple-blue)' }}
   >
     {url ? (
-      // eslint-disable-next-line @next/next/no-img-element
+      // eslint-disable-next-line @next/next/no-img-element -- company logo from any host an admin enters; the optimizer only serves allow-listed hosts
       <img src={url} alt={name || 'Company'} className="h-full w-full object-cover" />
     ) : (
       (name || '?').slice(0, 1).toUpperCase()
@@ -363,8 +363,8 @@ const Section: React.FC<{ title: string; href: string; linkLabel: string; childr
 }) => (
   <section className="mt-5">
     <div className="mb-2.5 flex items-center justify-between">
-      <h2 className="text-[15px] font-bold tracking-tight" style={{ color: 'var(--apple-label)' }}>{title}</h2>
-      <Link href={href} className="inline-flex items-center gap-0.5 text-[12px] font-semibold" style={{ color: 'var(--apple-blue)' }}>
+      <h2 className="text-base font-bold tracking-tight" style={{ color: 'var(--apple-label)' }}>{title}</h2>
+      <Link href={href} className="inline-flex items-center gap-0.5 text-xs font-semibold" style={{ color: 'var(--apple-blue)' }}>
         {linkLabel}<ArrowRight size={12} />
       </Link>
     </div>
@@ -376,11 +376,13 @@ const Empty: React.FC<{ icon: React.ReactNode; title: string; body: string; href
   icon, title, body, href, cta,
 }) => (
   <div className="rounded-[14px] border px-4 py-8 text-center" style={{ borderColor: 'var(--apple-separator)', background: 'var(--apple-surface)' }}>
-    <span style={{ color: 'var(--apple-label-3)' }}>{icon}</span>
-    <p className="mt-2 text-[14px] font-medium" style={{ color: 'var(--apple-label)' }}>{title}</p>
-    <p className="mx-auto mt-1 max-w-[260px] text-[12px]" style={{ color: 'var(--apple-label-2)' }}>{body}</p>
-    <Link href={href} className="mt-3 inline-block rounded-[10px] px-4 py-2 text-[13px] font-semibold text-white" style={{ background: 'var(--apple-blue)' }}>
+    <span style={{ color: 'var(--apple-label-2)' }}>{icon}</span>
+    <p className="mt-2 text-sm font-medium" style={{ color: 'var(--apple-label)' }}>{title}</p>
+    <p className="mx-auto mt-1 max-w-[260px] text-xs" style={{ color: 'var(--apple-label-2)' }}>{body}</p>
+    <Link href={href} className="mt-3 inline-block rounded-[10px] px-4 py-2 text-sm font-semibold text-white" style={{ background: 'var(--apple-blue)' }}>
       {cta}
     </Link>
   </div>
 );
+
+export default withDriveAuth(HomeTab);

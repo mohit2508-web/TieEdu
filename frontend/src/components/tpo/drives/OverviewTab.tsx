@@ -66,7 +66,7 @@ export default function OverviewTab(props: { collegeId: string; driveId: string 
               <ScoreRing value={f.registered ? f.started / f.registered : 0} size={104} label={`${f.attendance_pct}%`} sublabel="attendance" />
             </div>
             <div className="flex-1">
-              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[13px]">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                 <FunnelRow label="Completed" value={f.completed} color="var(--apple-green)" />
                 <FunnelRow label="In progress" value={Math.max(0, f.started - f.completed)} color="var(--apple-blue)" />
                 <FunnelRow label="Absent" value={f.absent} color="var(--apple-red)" />
@@ -78,10 +78,10 @@ export default function OverviewTab(props: { collegeId: string; driveId: string 
             </div>
           </div>
           <div className="apple-divider" />
-          <div className="grid gap-2 px-4 py-4 text-[13px] sm:grid-cols-3">
-            <div><span className="text-[var(--apple-label-3)]">Avg score </span><span className="font-semibold tabular-nums">{s.avg_score?.toFixed(1) ?? '—'}%</span></div>
-            <div><span className="text-[var(--apple-label-3)]">Best score </span><span className="font-semibold tabular-nums">{s.best_score?.toFixed(1) ?? '—'}%</span></div>
-            <div><span className="text-[var(--apple-label-3)]">Attempts </span><span className="font-semibold tabular-nums">{s.attempts} ({s.attempts_completed} scored)</span></div>
+          <div className="grid gap-2 px-4 py-4 text-sm sm:grid-cols-3">
+            <div><span className="text-[var(--apple-label-2)]">Avg score </span><span className="font-semibold tabular-nums">{s.avg_score?.toFixed(1) ?? '—'}%</span></div>
+            <div><span className="text-[var(--apple-label-2)]">Best score </span><span className="font-semibold tabular-nums">{s.best_score?.toFixed(1) ?? '—'}%</span></div>
+            <div><span className="text-[var(--apple-label-2)]">Attempts </span><span className="font-semibold tabular-nums">{s.attempts} ({s.attempts_completed} scored)</span></div>
           </div>
         </GroupedCard>
 
@@ -95,7 +95,7 @@ export default function OverviewTab(props: { collegeId: string; driveId: string 
       <GroupedCard title="Status mix">
         <div className="flex items-center gap-5 px-4 py-5">
           <Donut segments={donut.length ? donut : [{ value: 1, color: 'var(--apple-surface-2)' }]} size={108} centerLabel={String(f.registered)} centerSub="total" />
-          <div className="grid flex-1 grid-cols-2 gap-y-2 text-[13px]">
+          <div className="grid flex-1 grid-cols-2 gap-y-2 text-sm">
             <Legend color="var(--apple-green)" label={`Completed · ${f.completed}`} />
             <Legend color="var(--apple-blue)" label={`In progress · ${Math.max(0, f.started - f.completed)}`} />
             <Legend color="var(--apple-red)" label={`Absent · ${f.absent}`} />
@@ -108,7 +108,7 @@ export default function OverviewTab(props: { collegeId: string; driveId: string 
             data={stats.score_histogram.map((h) => ({ label: `${h.bucket}%`, value: h.count }))}
             height={88}
           />
-          <p className="mt-2 text-center text-[11px] text-[var(--apple-label-3)]">Score histogram — % buckets of completed attempts</p>
+          <p className="mt-2 text-center text-xs text-[var(--apple-label-2)]">Score histogram — % buckets of completed attempts</p>
         </div>
       </GroupedCard>
 

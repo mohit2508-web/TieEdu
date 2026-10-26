@@ -92,7 +92,7 @@ export const UsersTab: React.FC<{ companies: Company[] }> = ({ companies }) => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <p className="eyebrow">#03 — Users</p>
-          <h2 className="text-xl font-extrabold text-[#10151C] mt-1">Accounts & access control</h2>
+          <h2 className="text-xl font-extrabold text-heading mt-1">Accounts & access control</h2>
           {meta && (
             <p className="text-xs text-gray-500 mt-1">{meta.total} accounts · {meta.active} active · {meta.disabled} disabled</p>
           )}
@@ -105,17 +105,17 @@ export const UsersTab: React.FC<{ companies: Company[] }> = ({ companies }) => {
               onChange={(e) => setQ(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && load(q.trim())}
               placeholder="Search name or email…"
-              className="pl-9 pr-3 py-2 border border-gray-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#0284C7]/30 w-56"
+              className="pl-9 pr-3 py-2 border border-gray-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-signal/30 w-56"
             />
           </div>
-          <button onClick={() => load(q.trim())} className="px-3 py-2 bg-[#0284C7] hover:bg-[#0369A1] text-white rounded-xl text-xs font-bold flex items-center gap-1.5">
+          <button onClick={() => load(q.trim())} className="px-3 py-2 bg-signal hover:bg-signal text-white rounded-xl text-xs font-bold flex items-center gap-1.5">
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} /> Refresh
           </button>
         </div>
       </div>
 
       {notice && (
-        <div className="px-4 py-3 rounded-2xl bg-[#E8F4FB] text-[#0271B5] text-xs font-semibold border border-[#B8E3F7]">{notice}</div>
+        <div className="px-4 py-3 rounded-2xl bg-signal-soft text-signal text-xs font-semibold border border-signal/30">{notice}</div>
       )}
 
       <div className="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-xs">
@@ -135,7 +135,7 @@ export const UsersTab: React.FC<{ companies: Company[] }> = ({ companies }) => {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-[#FAFAF9] text-gray-500 uppercase font-mono text-[10px]">
+                <tr className="bg-app-warm text-gray-500 uppercase font-mono text-xs">
                   <th className="text-left px-4 py-3">User</th>
                   <th className="text-left px-4 py-3">Role</th>
                   <th className="text-left px-4 py-3">XP / Streak</th>
@@ -147,32 +147,32 @@ export const UsersTab: React.FC<{ companies: Company[] }> = ({ companies }) => {
                   <th className="text-right px-4 py-3">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#EDEDEB]">
+              <tbody className="divide-y divide-line">
                 {users.map((u) => (
-                  <tr key={u.id} className={`hover:bg-[#FAFAF9] ${u.disabled ? 'opacity-60' : ''}`}>
+                  <tr key={u.id} className={`hover:bg-app-warm ${u.disabled ? 'opacity-60' : ''}`}>
                     <td className="px-4 py-3">
-                      <p className="font-semibold text-[#1E293B] flex items-center gap-2">
+                      <p className="font-semibold text-ink-soft flex items-center gap-2">
                         {u.name}
-                        {u.badge && <span className="text-[10px] font-mono bg-[#FBF1E1] text-[#B7791F] px-1.5 py-0.5 rounded-full">{u.badge}</span>}
+                        {u.badge && <span className="text-xs font-mono bg-warning-soft text-amber-deep px-1.5 py-0.5 rounded-full">{u.badge}</span>}
                       </p>
-                      <p className="text-[11px] text-gray-400">{u.email}{u.college ? ` · ${u.college}` : ''}</p>
+                      <p className="text-xs text-gray-400">{u.email}{u.college ? ` · ${u.college}` : ''}</p>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${u.role === 'admin' ? 'bg-[#1F3A5F] text-white' : 'bg-[#E8F4FB] text-[#0284C7]'}`}>{u.role}</span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-bold uppercase ${u.role === 'admin' ? 'bg-brand-ink text-white' : 'bg-signal-soft text-signal'}`}>{u.role}</span>
                     </td>
-                    <td className="px-4 py-3 font-mono text-[11px] text-gray-600">{u.xp} XP · {u.streak}🔥</td>
+                    <td className="px-4 py-3 font-mono text-xs text-gray-600">{u.xp} XP · {u.streak}🔥</td>
                     <td className="px-4 py-3 text-center font-semibold">{u.orders_count}</td>
-                    <td className="px-4 py-3 text-right font-extrabold text-[#10151C]">{fmtInr(u.revenue_inr)}</td>
+                    <td className="px-4 py-3 text-right font-extrabold text-heading">{fmtInr(u.revenue_inr)}</td>
                     <td className="px-4 py-3 text-center">{u.unlocks_count}</td>
                     <td className="px-4 py-3 text-center">{u.reports_count}</td>
-                    <td className="px-4 py-3 text-[11px] text-gray-400">{new Date(u.created_at).toLocaleDateString()}</td>
+                    <td className="px-4 py-3 text-xs text-gray-400">{new Date(u.created_at).toLocaleDateString()}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1.5">
                         {u.role !== 'admin' && (
                           <button
                             onClick={() => openModal(u)}
                             disabled={busy}
-                            className="px-2.5 py-1.5 bg-[#0284C7] hover:bg-[#0369A1] text-white rounded-lg text-[10px] font-bold flex items-center gap-1"
+                            className="px-2.5 py-1.5 bg-signal hover:bg-signal text-white rounded-lg text-xs font-bold flex items-center gap-1"
                             title="Grant / revoke vault unlock"
                           >
                             <KeyRound className="w-3 h-3" /> Access
@@ -182,7 +182,7 @@ export const UsersTab: React.FC<{ companies: Company[] }> = ({ companies }) => {
                           <button
                             onClick={() => toggleDisabled(u)}
                             disabled={busy}
-                            className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold flex items-center gap-1 border ${u.disabled ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-red-50 hover:bg-red-100 text-red-700 border-red-200'}`}
+                            className={`px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 border ${u.disabled ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-red-50 hover:bg-red-100 text-red-700 border-red-200'}`}
                           >
                             {u.disabled ? <ShieldCheck className="w-3 h-3" /> : <Ban className="w-3 h-3" />} {u.disabled ? 'Enable' : 'Disable'}
                           </button>
@@ -202,20 +202,20 @@ export const UsersTab: React.FC<{ companies: Company[] }> = ({ companies }) => {
           <div className="bg-white rounded-3xl shadow-float w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between p-6 pb-4">
               <div>
-                <h3 className="text-lg font-extrabold text-[#10151C]">Vault access — {modalUser.name}</h3>
+                <h3 className="text-lg font-extrabold text-heading">Vault access — {modalUser.name}</h3>
                 <p className="text-xs text-gray-500">{modalUser.email}</p>
               </div>
               <button onClick={() => setModalUser(null)} className="p-2 rounded-xl hover:bg-gray-100 text-gray-400"><X className="w-5 h-5" /></button>
             </div>
 
-            <div className="px-6 py-4 border-t border-[#EDEDEB]">
-              <p className="text-[11px] font-bold font-mono text-gray-400 uppercase tracking-wider mb-2">Unlocked ({unlockedFor.length})</p>
+            <div className="px-6 py-4 border-t border-line">
+              <p className="text-xs font-bold font-mono text-gray-400 uppercase tracking-wider mb-2">Unlocked ({unlockedFor.length})</p>
               <div className="flex flex-wrap gap-2 min-h-[32px]">
                 {unlockedFor.length === 0 && <span className="text-xs text-gray-400 italic">No unlocked vaults yet</span>}
                 {unlockedFor.map((cid) => {
                   const c = companies.find((x) => x.id === cid);
                   return (
-                    <span key={cid} className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full bg-[#E8F4FB] text-[#0271B5] text-xs font-bold border border-[#B8E3F7]">
+                    <span key={cid} className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full bg-signal-soft text-signal text-xs font-bold border border-signal/30">
                       {c?.name || cid}
                       <button onClick={() => revoke(cid)} disabled={busy} className="p-0.5 rounded-full hover:bg-red-100 text-red-500" title="Revoke"><X className="w-3 h-3" /></button>
                     </span>
@@ -223,22 +223,22 @@ export const UsersTab: React.FC<{ companies: Company[] }> = ({ companies }) => {
                 })}
               </div>
 
-              <p className="text-[11px] font-bold font-mono text-gray-400 uppercase tracking-wider mt-5 mb-2">Grant new unlock</p>
+              <p className="text-xs font-bold font-mono text-gray-400 uppercase tracking-wider mt-5 mb-2">Grant new unlock</p>
               <div className="flex items-center gap-2">
                 <select
                   value=""
                   onChange={(e) => e.target.value && grant(e.target.value)}
                   disabled={busy || notUnlocked.length === 0}
-                  className="flex-1 p-2.5 border border-gray-200 rounded-xl bg-[#FAFAF9] text-sm focus:outline-none focus:ring-2 focus:ring-[#0284C7]/30"
+                  className="flex-1 p-2.5 border border-gray-200 rounded-xl bg-app-warm text-sm focus:outline-none focus:ring-2 focus:ring-signal/30"
                 >
                   <option value="" disabled>Select vault…</option>
                   {notUnlocked.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
-                <span className="text-[11px] text-gray-400 flex items-center gap-1"><Unlock className="w-3.5 h-3.5 text-[#B45309]" /> admin grant</span>
+                <span className="text-xs text-gray-400 flex items-center gap-1"><Unlock className="w-3.5 h-3.5 text-amber-deep" /> admin grant</span>
               </div>
             </div>
-            <div className="px-6 py-4 border-t border-[#EDEDEB] flex items-center justify-between">
-              <p className="text-[11px] text-gray-400 font-mono">unlock grant/revoke → /api/unlocks (admin)</p>
+            <div className="px-6 py-4 border-t border-line flex items-center justify-between">
+              <p className="text-xs text-gray-400 font-mono">unlock grant/revoke → /api/unlocks (admin)</p>
               <button onClick={() => setModalUser(null)} className="btn btn-primary px-4 py-2 text-xs">Done</button>
             </div>
           </div>

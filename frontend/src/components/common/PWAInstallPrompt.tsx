@@ -2,11 +2,20 @@
 import { useRouter } from 'next/router';
 import { Download, X } from 'lucide-react';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
+import { claimInterruption, interruptionTaken, isReturningVisitor } from '@/lib/engagement';
 
 export const PWAInstallPrompt: React.FC = () => {
   const { isInstallable, isInstalled, promptInstall } = usePWAInstall();
   const [dismissed, setDismissed] = useState(false);
+  // Off on a first visit, and when another popup already interrupted this session.
+  const [allowed, setAllowed] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    if (isInstallable && !isInstalled && isReturningVisitor() && !interruptionTaken('pwa-install')) {
+      setAllowed(claimInterruption('pwa-install'));
+    }
+  }, [isInstallable, isInstalled]);
 
   useEffect(() => {
     const dismissedAt = localStorage.getItem('pwa-install-dismissed');
@@ -41,7 +50,7 @@ export const PWAInstallPrompt: React.FC = () => {
   )
     return null;
 
-  if (isInstalled || !isInstallable || dismissed) {
+  if (isInstalled || !isInstallable || dismissed || !allowed) {
     return null;
   }
 
@@ -55,21 +64,21 @@ export const PWAInstallPrompt: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-x-4 bottom-[calc(var(--tabbar-total)_+_16px)] z-50 mx-auto max-w-sm rounded-2xl border border-[#EDEDEB] bg-white/95 p-4 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-white/80 md:inset-x-auto md:right-4 md:bottom-4 md:left-auto">
+    <div className="fixed inset-x-4 bottom-[calc(var(--tabbar-total)_+_16px)] z-50 mx-auto max-w-sm rounded-2xl border border-line bg-white/95 p-4 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-white/80 md:inset-x-auto md:right-4 md:bottom-4 md:left-auto">
       <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-[#E0F2FE]">
-          <Download size={20} className="text-[#0284C7]" strokeWidth={2.2} />
+        <div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-signal-soft">
+          <Download size={20} className="text-signal" strokeWidth={2.2} />
         </div>
         <div className="min-w-0 flex-1">
-          <h3 className="text-sm font-bold text-[#10151C]">Get the TieEdu App</h3>
-          <p className="mt-0.5 text-xs text-[#6B7280]">
+          <h2 className="text-sm font-bold text-heading">Get the TieEdu App</h2>
+          <p className="mt-0.5 text-xs text-text-light">
             Install TieEdu for faster access, offline support & a native app experience.
           </p>
           <div className="mt-3 flex gap-2">
             <button
               type="button"
               onClick={handleInstall}
-              className="flex min-h-[40px] items-center justify-center gap-1.5 rounded-xl bg-[#0284C7] px-3 text-xs font-bold text-white transition-colors hover:bg-[#0369A1]"
+              className="flex min-h-[40px] items-center justify-center gap-1.5 rounded-xl bg-signal px-3 text-xs font-bold text-white transition-colors hover:bg-signal"
             >
               <Download size={16} strokeWidth={2.4} />
               Get App
@@ -77,7 +86,7 @@ export const PWAInstallPrompt: React.FC = () => {
             <button
               type="button"
               onClick={handleDismiss}
-              className="flex min-h-[40px] items-center justify-center rounded-xl border border-[#EDEDEB] bg-white px-3 text-xs font-semibold text-[#6B7280] transition-colors hover:bg-[#F5F5F4]"
+              className="flex min-h-[40px] items-center justify-center rounded-xl border border-line bg-white px-3 text-xs font-semibold text-text-light transition-colors hover:bg-paper"
             >
               Not now
             </button>
@@ -87,7 +96,7 @@ export const PWAInstallPrompt: React.FC = () => {
           type="button"
           onClick={handleDismiss}
           aria-label="Dismiss"
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-[#6B7280] transition-colors hover:bg-[#F5F5F4]"
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-text-light transition-colors hover:bg-paper"
         >
           <X size={18} strokeWidth={2.2} />
         </button>

@@ -55,7 +55,7 @@ export const HomeMobileCtaBar: React.FC = () => {
       <div className="mx-auto flex w-full max-w-[var(--reader-max)] items-center gap-3 pb-2.5">
         <Link
           href="/courses?src=mobilebar"
-          className="inline-flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl bg-[#0284C7] px-4 text-[15px] font-extrabold text-white transition-colors hover:bg-[#0369A1] focus-ring"
+          className="inline-flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl bg-signal px-4 text-base font-extrabold text-white transition-colors hover:bg-signal focus-ring"
         >
           <GraduationCap className="h-4 w-4" aria-hidden /> Start learning free
         </Link>

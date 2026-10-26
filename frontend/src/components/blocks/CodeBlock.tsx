@@ -48,7 +48,7 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ code, label = 'Code', clas
 
   const body = (
     <pre
-      className="m-0 overflow-x-auto px-4 py-3.5 text-[13px] leading-relaxed"
+      className="m-0 overflow-x-auto px-4 py-3.5 text-sm leading-relaxed"
       style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-x pan-y' }}
       tabIndex={0}
       // A scroll container that cannot be scrolled by keyboard is invisible to
@@ -62,10 +62,10 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ code, label = 'Code', clas
   return (
     <>
       <div
-        className={`relative overflow-hidden rounded-xl bg-[#0F172A] text-gray-100 ${className}`}
+        className={`relative overflow-hidden rounded-xl bg-heading text-gray-100 ${className}`}
       >
         <div className="flex items-center justify-between gap-2 border-b border-white/10 bg-black/25 px-3 py-1.5">
-          <span className="truncate text-[11px] font-bold uppercase tracking-wider text-gray-400">
+          <span className="truncate text-xs font-bold uppercase tracking-wider text-gray-400">
             {label}
           </span>
           <div className="flex shrink-0 items-center gap-1">
@@ -98,9 +98,9 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ code, label = 'Code', clas
           open={expanded}
           onClose={() => setExpanded(false)}
           title={label}
-          contentClassName="bg-[#0F172A]"
+          contentClassName="bg-heading"
         >
-          <pre className="m-0 overflow-x-auto p-4 text-[13px] leading-relaxed text-gray-100">
+          <pre className="m-0 overflow-x-auto p-4 text-sm leading-relaxed text-gray-100">
             <code className="font-mono">{code}</code>
           </pre>
         </Sheet>

@@ -1,8 +1,42 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowUpRight, BookOpen, Check, Plus } from 'lucide-react';
 import type { CpSection } from '@/types/companyPage';
-import { CpLink, Markdown, SectionHead, Stamp, cx, roundKey, stationsForRole, useCp, useLocalState } from './shared';
+import { CpLink, Markdown, RoundOffer, SectionHead, Stamp, cx, formatRupees, roundKey, stationsForRole, useCp, useLocalState } from './shared';
 import s from './companyPage.module.css';
+
+/**
+ * "Buy this round" — single-round purchase on the route line.
+ *
+ * The old vault page sold each premium round on its own (₹99); the redesign
+ * only offered the whole pack, so moving a company onto this layout would have
+ * quietly removed a way to pay. This keeps it: the round's premium modules
+ * that are not owned yet, at the single-round price. Rounds already in the cart
+ * say so instead of offering a duplicate; the cart itself dedupes and
+ * re-prices, so the button only ever quotes the sum of single rounds.
+ */
+const RoundBuy: React.FC<{
+  offers: Array<{ id: string; offer?: RoundOffer }>;
+  hidden: boolean;
+  onBuy: (ids: string[]) => void;
+}> = ({ offers, hidden, onBuy }) => {
+  if (hidden || offers.length === 0) return null;
+  const toAdd = offers.filter((o) => !o.offer!.inCart);
+  if (toAdd.length === 0) {
+    return (
+      <div className={s.loopActions}>
+        <span className={s.loopText}>This round is in your cart.</span>
+      </div>
+    );
+  }
+  const price = toAdd.reduce((sum, o) => sum + o.offer!.price, 0);
+  return (
+    <div className={s.loopActions}>
+      <button type="button" className={cx(s.btn, s.btnMoney)} onClick={() => onBuy(toAdd.map((o) => o.id))}>
+        Buy this round · {formatRupees(price)}
+      </button>
+    </div>
+  );
+};
 
 function formatDate(iso: string): string {
   const d = new Date(`${iso}T00:00:00`);
@@ -142,7 +176,7 @@ export function EligibilityApply({ section }: { section: CpSection }) {
 // ---------------------------------------------------------------------------
 
 export function RoundsRoute({ section }: { section: CpSection }) {
-  const { t, ui, anchorOf, company, onOpenModule, preview, stationTrack, event, selectedRole } = useCp();
+  const { t, ui, anchorOf, company, onOpenModule, preview, stationTrack, event, selectedRole, roundOffers, packOwned, onBuyModules } = useCp();
   const d = section.data;
   const allStations: any[] = d.stations || [];
   // Role-specific rounds (e.g. advanced coding for AASE) appear only for that role.
@@ -319,6 +353,16 @@ export function RoundsRoute({ section }: { section: CpSection }) {
                           ))}
                       </div>
                     )}
+                    <RoundBuy
+                      offers={(current.module_ids || [])
+                        .map((id: string) => ({ id, offer: roundOffers[id] }))
+                        .filter((o: { offer?: unknown }) => !!o.offer)}
+                      hidden={packOwned || preview || !onBuyModules}
+                      onBuy={(ids) => {
+                        event('round_buy');
+                        onBuyModules?.(ids);
+                      }}
+                    />
                   </div>
 
                   <div className={s.loopRow} style={{ ['--t' as any]: 'var(--test)' }}>

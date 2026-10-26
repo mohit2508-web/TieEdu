@@ -89,49 +89,55 @@ export function StudentProfileCard({ initialCollege }: { initialCollege?: string
     value: string,
     set: (v: string) => void,
     opts: { min?: number; max?: number; step?: string; placeholder?: string } = {}
-  ) => (
-    <div>
-      <label className="block text-[12px] font-bold text-[#10151C] mb-1">{label}</label>
+  ) => {
+    // Whole numbers get the numeric keypad. Decimals (CGPA, percentages) need a
+    // decimal point, which iOS's numeric keypad does not have, so they are text
+    // with the decimal keypad; save() parses them with Number() either way.
+    const whole = opts.step === '1';
+    return (
+    <label className="block">
+      <span className="block text-xs font-bold text-heading mb-1">{label}</span>
       <input
-        type="number"
-        inputMode="decimal"
+        {...(whole
+          ? { type: 'number', inputMode: 'numeric' as const, min: opts.min, max: opts.max, step: opts.step }
+          : { type: 'text', inputMode: 'decimal' as const, pattern: '[0-9]*[.]?[0-9]*' })}
         value={value}
         onChange={(e) => set(e.target.value)}
-        min={opts.min}
-        max={opts.max}
-        step={opts.step}
         placeholder={opts.placeholder}
-        className="w-full px-3.5 py-2.5 rounded-xl border border-[#E9E7E1] bg-white text-[13px] text-[#10151C] placeholder:text-[#A7AEBA] focus:border-[#0284C7] focus:ring-2 focus:ring-[#0284C7]/20 outline-none"
+        className="w-full px-3.5 py-2.5 rounded-xl border border-line bg-white text-sm text-heading placeholder:text-text-light focus:border-signal focus:ring-2 focus:ring-signal/20 outline-none"
       />
-    </div>
-  );
+    </label>
+    );
+  };
 
+  // The <label> wraps its input so a screen reader names the field (it was a
+  // sibling with no htmlFor, which announced every field as "edit text").
   const textField = (label: string, value: string, set: (v: string) => void, required = false, placeholder = '') => (
-    <div>
-      <label className="block text-[12px] font-bold text-[#10151C] mb-1">
-        {label}{required && <span className="text-[#C1442D]"> *</span>}
-      </label>
+    <label className="block">
+      <span className="block text-xs font-bold text-heading mb-1">
+        {label}{required && <span className="text-danger"> *</span>}
+      </span>
       <input
         value={value}
         onChange={(e) => set(e.target.value)}
         required={required}
         placeholder={placeholder}
-        className="w-full px-3.5 py-2.5 rounded-xl border border-[#E9E7E1] bg-white text-[13px] text-[#10151C] placeholder:text-[#A7AEBA] focus:border-[#0284C7] focus:ring-2 focus:ring-[#0284C7]/20 outline-none"
+        className="w-full px-3.5 py-2.5 rounded-xl border border-line bg-white text-sm text-heading placeholder:text-text-light focus:border-signal focus:ring-2 focus:ring-signal/20 outline-none"
       />
-    </div>
+    </label>
   );
 
   return (
     <div className="vault-card p-6">
-      <h3 className="text-[15px] font-extrabold text-[#10151C] flex items-center gap-2">
-        <GraduationCap className="w-4 h-4 text-[#0284C7]" /> Placement / student profile
+      <h3 className="text-base font-extrabold text-heading flex items-center gap-2">
+        <GraduationCap className="w-4 h-4 text-signal" /> Placement / student profile
       </h3>
-      <p className="text-[13px] text-[--text-muted] mt-2">
+      <p className="text-sm text-[--text-muted] mt-2">
         Drives check your roll number, branch, batch and CGPA to decide eligibility. Fill this once to unlock registration.
       </p>
 
       {loading ? (
-        <div className="mt-5 flex items-center gap-2 text-[13px] text-[--text-muted]">
+        <div className="mt-5 flex items-center gap-2 text-sm text-[--text-muted]">
           <Loader2 className="w-4 h-4 animate-spin" /> Loading your profile…
         </div>
       ) : (
@@ -150,12 +156,12 @@ export function StudentProfileCard({ initialCollege }: { initialCollege?: string
             <button
               type="submit"
               disabled={busy}
-              className="btn btn-primary px-4 py-2.5 text-[13px] disabled:opacity-60"
+              className="btn btn-primary px-4 py-2.5 text-sm disabled:opacity-60"
             >
               {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} {busy ? 'Saving…' : 'Save profile'}
             </button>
             {msg && (
-              <span className={`inline-flex items-center gap-1.5 text-[13px] font-bold ${msg.kind === 'ok' ? 'text-emerald-700' : 'text-[#A63D28]'}`}>
+              <span className={`inline-flex items-center gap-1.5 text-sm font-bold ${msg.kind === 'ok' ? 'text-emerald-700' : 'text-danger'}`}>
                 {msg.kind === 'ok' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />} {msg.text}
               </span>
             )}

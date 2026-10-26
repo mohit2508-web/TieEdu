@@ -1,4 +1,5 @@
 import { Html, Head, Main, NextScript } from 'next/document';
+import { THEME_BOOT } from '@/lib/theme';
 
 export default function Document() {
   return (
@@ -9,7 +10,7 @@ export default function Document() {
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
-        <meta name="theme-color" content="#1F3A5F" />
+        <meta name="theme-color" content="#0E2A44" />
 
         {/*
           No viewport tag here, on purpose. It used to live in this file, which put
@@ -37,15 +38,22 @@ export default function Document() {
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="format-detection" content="telephone=no" />
 
-        {/* Google Fonts Preconnect & Embed */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap"
-          rel="stylesheet"
+        {/*
+          Fonts are self-hosted through next/font (src/styles/fonts.ts); the old
+          Google Fonts stylesheet here was render-blocking and no longer used.
+
+          Theme before first paint. Reads the saved choice (lib/theme) and sets
+          data-theme on <html> synchronously, so a dark-mode visitor never sees a
+          white flash. 'system' follows the OS. Wrapped in try: private mode can
+          throw on localStorage, and the page must still render.
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: THEME_BOOT,
+          }}
         />
       </Head>
-      <body className="bg-[#FAFAF9] text-[#1A1A1A] antialiased">
+      <body className="bg-paper text-heading antialiased">
         <Main />
         <NextScript />
       </body>

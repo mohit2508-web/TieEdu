@@ -139,21 +139,21 @@ export default function TpoInvitePage() {
             <TieEduLogo size="sm" />
           </div>
 
-          <div className="vault-card p-8 shadow-float border-[#E8CFA7]">
+          <div className="vault-card p-8 shadow-float border-money/40">
             {state.kind === 'loading' && (
               <div className="flex flex-col items-center gap-3 py-6">
-                <div className="w-9 h-9 border-[3px] border-[#FBF1E1] border-t-[#0284C7] rounded-full animate-spin" />
-                <p className="text-[13px] font-semibold text-[--text-muted]">Checking your invite…</p>
+                <div className="w-9 h-9 border-[3px] border-money/40 border-t-signal rounded-full animate-spin" />
+                <p className="text-sm font-semibold text-[--text-muted]">Checking your invite…</p>
               </div>
             )}
 
             {state.kind === 'invalid' && (
               <div className="text-center py-2">
-                <div className="w-12 h-12 mx-auto mb-4 rounded-2xl bg-[#FDEDE9] border border-[#F2C9BC] flex items-center justify-center">
-                  <AlertTriangle className="w-6 h-6 text-[#A63D28]" />
+                <div className="w-12 h-12 mx-auto mb-4 rounded-2xl bg-signal-soft border border-signal/30 flex items-center justify-center">
+                  <AlertTriangle className="w-6 h-6 text-danger" />
                 </div>
                 <h1 className="display-2 mb-2">Invite unavailable</h1>
-                <p className="text-[15px] text-[--text-muted] mb-6">{state.message}</p>
+                <p className="text-base text-[--text-muted] mb-6">{state.message}</p>
                 <Link href="/tpo/login" className="btn btn-primary py-3 px-5 text-sm focus-ring">
                   Go to portal sign-in
                 </Link>
@@ -162,23 +162,23 @@ export default function TpoInvitePage() {
 
             {state.kind === 'ready' && (
               <>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0E2A44] text-white text-[11px] font-extrabold uppercase tracking-widest mb-4">
-                  <Mail className="w-3.5 h-3.5 text-[#B45309]" /> Invitation
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-ink text-white text-xs font-extrabold uppercase tracking-widest mb-4">
+                  <Mail className="w-3.5 h-3.5 text-amber-deep" /> Invitation
                 </div>
                 <h1 className="display-2 mb-1.5">Join {state.invite.college}</h1>
-                <p className="text-[15px] text-[--text-muted] mb-6">
-                  You have been invited as <span className="font-bold text-[#10151C]">{state.invite.role_label}</span>{' '}
-                  for <span className="font-bold text-[#10151C]">{state.invite.email}</span>.
+                <p className="text-base text-[--text-muted] mb-6">
+                  You have been invited as <span className="font-bold text-heading">{state.invite.role_label}</span>{' '}
+                  for <span className="font-bold text-heading">{state.invite.email}</span>.
                 </p>
 
                 {error && (
-                  <div className="mb-5 px-4 py-3 rounded-xl bg-[#FDEDE9] border border-[#F2C9BC] text-[#A63D28] text-[13px] font-semibold">
+                  <div className="mb-5 px-4 py-3 rounded-xl bg-signal-soft border border-signal/30 text-danger text-sm font-semibold">
                     {error}
                     {wrongAccount && (
                       <button
                         type="button"
                         onClick={handleSwitchAccount}
-                        className="mt-2 inline-flex items-center gap-1 font-bold text-[#A63D28] hover:underline"
+                        className="mt-2 inline-flex items-center gap-1 font-bold text-danger hover:underline"
                       >
                         Sign out and use the invited account <LogOut className="w-3 h-3" />
                       </button>
@@ -189,7 +189,7 @@ export default function TpoInvitePage() {
                 {state.invite.account_exists ? (
                   user ? (
                     <div className="space-y-4">
-                      <div className="px-4 py-3 rounded-xl bg-[#ECFDF3] border border-[#A9DFC4] text-[#067647] text-[13px] font-semibold flex items-start gap-2">
+                      <div className="px-4 py-3 rounded-xl bg-success-soft border border-success/30 text-success text-sm font-semibold flex items-start gap-2">
                         <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0" />
                         <span>
                           Signed in as {user.email}. Accepting will grant this account the {state.invite.role_label}{' '}
@@ -212,7 +212,7 @@ export default function TpoInvitePage() {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      <p className="text-[14px] text-[#3E4754]">
+                      <p className="text-sm text-body">
                         An account already exists for this email — sign in to confirm it is you, then the invite
                         applies automatically.
                       </p>
@@ -229,7 +229,7 @@ export default function TpoInvitePage() {
                     <div>
                       <label
                         htmlFor="invite-name"
-                        className="block text-[12px] font-bold text-[#3E4754] mb-1.5 tracking-wide uppercase"
+                        className="block text-xs font-bold text-body mb-1.5 tracking-wide uppercase"
                       >
                         Your name
                       </label>
@@ -242,7 +242,7 @@ export default function TpoInvitePage() {
                           value={name}
                           onChange={(e) => setName(e.target.value)}
                           placeholder="Priya Sharma"
-                          className="w-full pl-10 pr-4 py-3 bg-white/90 border border-[#E9E7E1] rounded-xl text-sm text-[#10151C] placeholder:text-[#AEB6BE] focus:outline-none focus:border-[#0284C7] focus:ring-4 focus:ring-[#0284C7]/10 transition-shadow"
+                          className="w-full pl-10 pr-4 py-3 bg-white/90 border border-line rounded-xl text-sm text-heading placeholder:text-text-light focus:outline-none focus:border-signal focus:ring-4 focus:ring-signal/10 transition-shadow"
                         />
                       </div>
                     </div>
@@ -250,7 +250,7 @@ export default function TpoInvitePage() {
                     <div>
                       <label
                         htmlFor="invite-password"
-                        className="block text-[12px] font-bold text-[#3E4754] mb-1.5 tracking-wide uppercase"
+                        className="block text-xs font-bold text-body mb-1.5 tracking-wide uppercase"
                       >
                         Choose a password
                       </label>
@@ -263,7 +263,7 @@ export default function TpoInvitePage() {
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           placeholder="Min 6 characters"
-                          className="w-full pl-10 pr-4 py-3 bg-white/90 border border-[#E9E7E1] rounded-xl text-sm text-[#10151C] placeholder:text-[#AEB6BE] focus:outline-none focus:border-[#0284C7] focus:ring-4 focus:ring-[#0284C7]/10 transition-shadow"
+                          className="w-full pl-10 pr-4 py-3 bg-white/90 border border-line rounded-xl text-sm text-heading placeholder:text-text-light focus:outline-none focus:border-signal focus:ring-4 focus:ring-signal/10 transition-shadow"
                         />
                       </div>
                     </div>
@@ -284,7 +284,7 @@ export default function TpoInvitePage() {
                   </form>
                 )}
 
-                <p className="mt-6 text-center text-[13px] text-[--text-muted]">
+                <p className="mt-6 text-center text-sm text-[--text-muted]">
                   Invite expires {new Date(state.invite.expires_at).toLocaleDateString()}
                 </p>
               </>

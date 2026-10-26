@@ -171,26 +171,26 @@ export const NotificationsTab: React.FC = () => {
       <div className={card}>
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="min-w-0">
-            <h3 className="text-sm font-extrabold text-[#10151C] flex items-center gap-2">
-              <BellRing className="w-4 h-4 text-[#B45309]" /> This device
+            <h3 className="text-sm font-extrabold text-heading flex items-center gap-2">
+              <BellRing className="w-4 h-4 text-amber-deep" /> This device
             </h3>
-            <p className="text-xs text-[#6B7280] mt-1.5 leading-relaxed max-w-2xl">
+            <p className="text-xs text-text-light mt-1.5 leading-relaxed max-w-2xl">
               Push only works from an installed app. Open the site in a browser tab and Chrome or Safari will
               refuse permission; add TieEdu to your Home Screen first. On iPhone this needs iOS 16.4 or newer.
             </p>
           </div>
           {!supported ? (
-            <span className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#EEF1F4] text-[#6B7280] text-[11px] font-bold">
+            <span className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-surface-hover text-text-light text-xs font-bold">
               <BellOff className="w-3.5 h-3.5" /> Not supported
             </span>
           ) : permission === 'denied' ? (
-            <span className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#FDF2E9] text-[#C77B12] text-[11px] font-bold">
+            <span className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-warning-soft text-amber-deep text-xs font-bold">
               <ShieldOff className="w-3.5 h-3.5" /> Blocked
             </span>
           ) : (
             <span
-              className={`shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-bold ${
-                subscribed ? 'bg-emerald-50 text-emerald-700' : 'bg-[#EEF1F4] text-[#6B7280]'
+              className={`shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold ${
+                subscribed ? 'bg-emerald-50 text-emerald-700' : 'bg-surface-hover text-text-light'
               }`}
             >
               {subscribed ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertTriangle className="w-3.5 h-3.5" />}
@@ -205,7 +205,7 @@ export const NotificationsTab: React.FC = () => {
               <button
                 onClick={onEnable}
                 disabled={loading}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#1F3A5F] hover:bg-[#2b4d75] disabled:opacity-60 text-white rounded-xl text-xs font-bold transition"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-brand-ink hover:bg-brand-ink disabled:opacity-60 text-white rounded-xl text-xs font-bold transition"
               >
                 {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <BellRing className="w-3.5 h-3.5" />}
                 Enable on this device
@@ -220,7 +220,7 @@ export const NotificationsTab: React.FC = () => {
                   ? 'Permission is blocked in browser settings.'
                   : 'Sends a real notification to your own registered devices'
               }
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#0284C7] hover:bg-[#0369a1] disabled:opacity-60 text-white rounded-xl text-xs font-bold transition"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-signal hover:bg-signal disabled:opacity-60 text-white rounded-xl text-xs font-bold transition"
             >
               {sending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
               Send test to my devices
@@ -229,7 +229,7 @@ export const NotificationsTab: React.FC = () => {
             <button
               onClick={load}
               disabled={loadingRows}
-              className="inline-flex items-center gap-1.5 px-3 py-2 border border-gray-200 hover:bg-gray-50 disabled:opacity-60 rounded-xl text-xs font-bold text-[#10151C] transition"
+              className="inline-flex items-center gap-1.5 px-3 py-2 border border-gray-200 hover:bg-gray-50 disabled:opacity-60 rounded-xl text-xs font-bold text-heading transition"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loadingRows ? 'animate-spin' : ''}`} /> Refresh
             </button>
@@ -238,8 +238,8 @@ export const NotificationsTab: React.FC = () => {
 
         {result && (
           <p
-            className={`mt-3.5 text-[11px] leading-relaxed flex items-start gap-1.5 ${
-              result.tone === 'ok' ? 'text-emerald-700' : result.tone === 'warn' ? 'text-[#C77B12]' : 'text-[#C1442D]'
+            className={`mt-3.5 text-xs leading-relaxed flex items-start gap-1.5 ${
+              result.tone === 'ok' ? 'text-emerald-700' : result.tone === 'warn' ? 'text-amber-deep' : 'text-danger'
             }`}
           >
             {result.tone === 'ok' ? (
@@ -256,29 +256,29 @@ export const NotificationsTab: React.FC = () => {
       <div className={card}>
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h3 className="text-sm font-extrabold text-[#10151C] flex items-center gap-2">
-              <Smartphone className="w-4 h-4 text-[#0284C7]" /> Registered endpoints
+            <h3 className="text-sm font-extrabold text-heading flex items-center gap-2">
+              <Smartphone className="w-4 h-4 text-signal" /> Registered endpoints
             </h3>
-            <p className="text-xs text-[#6B7280] mt-1.5 leading-relaxed max-w-2xl">
+            <p className="text-xs text-text-light mt-1.5 leading-relaxed max-w-2xl">
               Every browser your account has registered. A test notification goes to all {live.length} active
               endpoint{live.length === 1 ? '' : 's'}.
             </p>
           </div>
           {!loadingRows && (
-            <span className="shrink-0 text-[11px] font-bold text-[#6B7280]">
+            <span className="shrink-0 text-xs font-bold text-text-light">
               {live.length} active{blocked.length ? `, ${blocked.length} blocked` : ''}
             </span>
           )}
         </div>
 
         {loadError && (
-          <p className="mt-4 text-[11px] text-[#C1442D] flex items-start gap-1.5">
+          <p className="mt-4 text-xs text-danger flex items-start gap-1.5">
             <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-px" /> {loadError}
           </p>
         )}
 
         {!loadingRows && !loadError && rows.length === 0 && (
-          <p className="mt-4 text-xs text-[#6B7280] bg-[#FAFAF9] border border-gray-100 rounded-xl p-4">
+          <p className="mt-4 text-xs text-text-light bg-app-warm border border-gray-100 rounded-xl p-4">
             No endpoints registered for your account yet. Enable notifications on this device, then send a test.
           </p>
         )}
@@ -289,29 +289,29 @@ export const NotificationsTab: React.FC = () => {
               <div
                 key={r.id}
                 className={`border rounded-xl p-3.5 ${
-                  r.blocked ? 'border-[#F0D9CF] bg-[#FDF8F5]' : 'border-gray-100 bg-[#FAFAF9]'
+                  r.blocked ? 'border-line bg-app-warm' : 'border-gray-100 bg-app-warm'
                 }`}
               >
                 <div className="flex items-start justify-between gap-3 flex-wrap">
                   <div className="min-w-0">
-                    <p className="text-xs font-bold text-[#10151C] truncate">
+                    <p className="text-xs font-bold text-heading truncate">
                       {r.platform || r.user_agent || 'Unknown device'}
-                      {r.blocked && <span className="ml-2 text-[#C1442D]">blocked</span>}
+                      {r.blocked && <span className="ml-2 text-danger">blocked</span>}
                     </p>
-                    <p className="text-[10px] font-mono text-[#9CA3AF] mt-1 truncate">{r.endpoint_hint}</p>
+                    <p className="text-xs font-mono text-text-light mt-1 truncate">{r.endpoint_hint}</p>
                   </div>
                   <span
-                    className={`shrink-0 px-2 py-1 rounded-md text-[10px] font-bold ${
-                      r.blocked ? 'bg-[#FDEBE4] text-[#C1442D]' : 'bg-emerald-50 text-emerald-700'
+                    className={`shrink-0 px-2 py-1 rounded-md text-xs font-bold ${
+                      r.blocked ? 'bg-signal-soft text-danger' : 'bg-emerald-50 text-emerald-700'
                     }`}
                   >
                     {r.blocked ? r.disable_reason || 'blocked' : 'active'}
                   </span>
                 </div>
-                <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2.5 text-[10px] text-[#6B7280]">
+                <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2.5 text-xs text-text-light">
                   <span>Registered {fmt(r.created_at)}</span>
                   <span>Last success {fmt(r.last_success_at)}</span>
-                  {r.failure_count > 0 && <span className="text-[#C77B12]">{r.failure_count} failed send(s)</span>}
+                  {r.failure_count > 0 && <span className="text-amber-deep">{r.failure_count} failed send(s)</span>}
                 </div>
               </div>
             ))}

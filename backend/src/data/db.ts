@@ -20,6 +20,8 @@ export interface ReportItem {
   accuracy_rating: number | null;
   outcome: 'selected' | 'rejected' | 'pending' | null;
   status: 'pending_review' | 'published' | 'rejected';
+  /** Admin-attested proof of a selection (no document stored). */
+  verification?: { method: 'offer_letter' | 'college_email'; verified_at: string; verified_by: string } | null;
   salary_lpa?: number;
   created_at: string;
 }
@@ -86,6 +88,12 @@ export interface User {
   role: 'user' | 'admin';
   xp?: number;
   streak?: number;
+  /** Year the student graduates; drives the Today route and Drops audience targeting. */
+  grad_year?: number;
+  /** Placement Passport (lib/passport): off unless the student turns it on. */
+  passport?: { public: boolean; handle: string | null };
+  /** Private read-only link for a parent (lib/parentView); null when turned off. */
+  parent_link?: { token: string; created_at: string } | null;
   college?: string;
   badge?: string;
   avatar?: string;

@@ -15,7 +15,7 @@ import type { MyCoursesCourse, MyCertificate } from '@/types';
 /** Small colour-coded chip used for level, tier and distinction labels. */
 const Chip: React.FC<{ label: string; color?: string; soft?: string }> = ({ label, color, soft }) => (
   <span
-    className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide"
+    className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-bold uppercase tracking-wide"
     style={color ? { color, background: soft } : undefined}
   >
     {label}
@@ -94,7 +94,7 @@ export default function MyCoursesPage() {
           </div>
           {totalXp > 0 && (
             <div className="rounded-xl bg-[var(--brand-sky-soft)] px-4 py-2.5 text-center">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--brand-sky-strong)]">
+              <p className="text-xs font-bold uppercase tracking-wider text-[var(--brand-sky-strong)]">
                 Total XP
               </p>
               <p className="text-xl font-extrabold tabular-nums text-[var(--brand-sky-strong)]">
@@ -171,18 +171,18 @@ export default function MyCoursesPage() {
                           />
                         </div>
                         {course.last_activity_at && (
-                          <p className="mt-3 text-[11px] text-[var(--text-muted)]">
+                          <p className="mt-3 text-xs text-[var(--text-muted)]">
                             Last active {formatRelative(course.last_activity_at)}
                           </p>
                         )}
                         {left > 0 && course.certificate_eligible && (
-                          <p className="mt-1.5 text-[11px] font-semibold text-[var(--brand-sky)]">
+                          <p className="mt-1.5 text-xs font-semibold text-[var(--brand-sky)]">
                             {left} lesson{left === 1 ? '' : 's'} from your {tier.label} certificate
                             {gates.length > 0 ? ` + ${gates.join(' + ')}` : ''} →
                           </p>
                         )}
                         {course.perks && course.perks.length > 0 && (
-                          <p className="mt-2 flex items-center gap-1 text-[11px] text-[var(--text-muted)]">
+                          <p className="mt-2 flex items-center gap-1 text-xs text-[var(--text-muted)]">
                             <Gift size={12} className="shrink-0" />
                             {course.perks.map((p) => p.label).join(' · ')}
                           </p>
@@ -266,7 +266,7 @@ export default function MyCoursesPage() {
                 <div className="overflow-x-auto rounded-[var(--radius-md)] border border-[var(--border-subtle)]">
                   <table className="w-full text-left text-sm">
                     <thead>
-                      <tr className="bg-[var(--bg-surface-hover)] text-[11px] uppercase tracking-wider text-[var(--text-muted)]">
+                      <tr className="bg-[var(--bg-surface-hover)] text-xs uppercase tracking-wider text-[var(--text-muted)]">
                         <th className="px-4 py-2.5 font-bold">Serial</th>
                         <th className="px-4 py-2.5 font-bold">Course</th>
                         <th className="px-4 py-2.5 font-bold">Issued</th>
@@ -277,7 +277,7 @@ export default function MyCoursesPage() {
                     <tbody>
                       {certificates.map((c) => (
                         <tr key={c.serial} className="border-t border-[var(--border-subtle)]">
-                          <td className="px-4 py-2.5 font-mono text-xs">{c.serial}</td>
+                          <td className="px-4 py-2.5 text-xs">{c.serial}</td>
                           <td className="px-4 py-2.5 text-[var(--text-body)]">
                             <span className="flex flex-wrap items-center gap-1.5">
                               {c.course_title}
@@ -294,7 +294,7 @@ export default function MyCoursesPage() {
                           <td className="px-4 py-2.5">
                             <span
                               className={[
-                                'rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide',
+                                'rounded-full px-2 py-0.5 text-xs font-bold uppercase tracking-wide',
                                 c.status === 'active'
                                   ? 'bg-[var(--bg-sky-soft)] text-[var(--color-success)]'
                                   : 'bg-[var(--color-error)]/10 text-[var(--color-error)]',

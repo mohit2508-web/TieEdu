@@ -33,8 +33,8 @@ export const TrustBadgeBar: React.FC<TrustBadgeBarProps> = ({
   const hasReports = ratingCount > 0 && !!lastReportDay;
 
   return (
-    <div className={`w-full bg-[#FAFAF9] border border-[#EDEDEB] rounded-2xl p-4 sm:p-5 shadow-2xs ${className}`}>
-      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2.5 text-[13px]">
+    <div className={`w-full bg-app-warm border border-line rounded-2xl p-4 sm:p-5 shadow-2xs ${className}`}>
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2.5 text-sm">
 
         {/* Rating — real (0 until candidate reports are published) */}
         <div className="flex items-center gap-2">
@@ -44,8 +44,8 @@ export const TrustBadgeBar: React.FC<TrustBadgeBarProps> = ({
               <span>{rating.toFixed(1)}</span>
             </div>
           ) : (
-            <div className="flex items-center px-2.5 py-1 rounded-lg bg-[#EEF1F4] text-[--text-muted] font-semibold">
-              <Star className="w-4 h-4 text-[#AEB6BE] mr-1" />
+            <div className="flex items-center px-2.5 py-1 rounded-lg bg-surface-hover text-[--text-muted] font-semibold">
+              <Star className="w-4 h-4 text-text-light mr-1" />
               <span>No ratings yet</span>
             </div>
           )}
@@ -53,13 +53,13 @@ export const TrustBadgeBar: React.FC<TrustBadgeBarProps> = ({
         </div>
 
         {/* Weekly Unlocks — live ledger count */}
-        <div className="flex items-center gap-2 text-[#4A4A4A] font-medium">
+        <div className="flex items-center gap-2 text-body font-medium">
           <div className="w-7 h-7 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 shrink-0">
             <Flame className="w-4 h-4 fill-orange-500" />
           </div>
           <div>
-            <span className="font-bold text-[#1F3A5F]">{weeklyUnlocks} candidates</span>
-            <span className="text-[13px] text-[--text-muted]"> unlocked this week</span>
+            <span className="font-bold text-brand-ink">{weeklyUnlocks} candidates</span>
+            <span className="text-sm text-[--text-muted]"> unlocked this week</span>
           </div>
         </div>
 
@@ -67,33 +67,33 @@ export const TrustBadgeBar: React.FC<TrustBadgeBarProps> = ({
         {hasReports ? (
           <div className="flex items-center gap-2 bg-emerald-50/80 px-3 py-1.5 rounded-xl border border-emerald-200/80 text-emerald-900">
             <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span className="text-[13px] font-semibold">
+            <span className="text-sm font-semibold">
               {verifiedRole ? `Verified by ${verifiedRole}` : 'Verified candidate reports'}
             </span>
           </div>
         ) : (
-          <div className="flex items-center gap-2 bg-[#EEF1F4] px-3 py-1.5 rounded-xl border border-[#DCE1E6] text-[#4A4A4A]">
-            <ShieldCheck className="w-4 h-4 text-[#AEB6BE] shrink-0" />
-            <span className="text-[13px] font-semibold">Awaiting verified reports</span>
+          <div className="flex items-center gap-2 bg-surface-hover px-3 py-1.5 rounded-xl border border-line text-body">
+            <ShieldCheck className="w-4 h-4 text-text-light shrink-0" />
+            <span className="text-sm font-semibold">Awaiting verified reports</span>
           </div>
         )}
 
         {/* Freshness — derived from the newest published report, or an honest gap */}
         {hasReports ? (
-          <div className="flex items-center gap-1.5 text-[13px] text-indigo-900 bg-indigo-50/80 px-3 py-1.5 rounded-xl border border-indigo-200/80 font-medium">
+          <div className="flex items-center gap-1.5 text-sm text-indigo-900 bg-indigo-50/80 px-3 py-1.5 rounded-xl border border-indigo-200/80 font-medium">
             <Clock className="w-4 h-4 text-indigo-600 shrink-0" />
             <span>Last verified report {lastReportDay}</span>
           </div>
         ) : (
-          <div className="flex items-center gap-1.5 text-[13px] text-amber-900 bg-amber-50/80 px-3 py-1.5 rounded-xl border border-amber-200/80 font-medium">
+          <div className="flex items-center gap-1.5 text-sm text-amber-900 bg-amber-50/80 px-3 py-1.5 rounded-xl border border-amber-200/80 font-medium">
             <FileWarning className="w-4 h-4 text-amber-600 shrink-0" />
             <span>No candidate reports yet — freshness unknown</span>
           </div>
         )}
 
         {/* Accuracy score — real */}
-        <div className="flex items-center gap-1.5 bg-[#1F3A5F]/5 px-3 py-1.5 rounded-xl border border-[#1F3A5F]/15 font-bold text-[#1F3A5F] text-[13px]">
-          <Award className="w-4 h-4 text-[#B45309]" />
+        <div className="flex items-center gap-1.5 bg-brand-ink/5 px-3 py-1.5 rounded-xl border border-brand-ink/15 font-bold text-brand-ink text-sm">
+          <Award className="w-4 h-4 text-amber-deep" />
           <span>{accuracy > 0 ? `${accuracy}% Exam Match Score` : 'Match score pending reports'}</span>
         </div>
 

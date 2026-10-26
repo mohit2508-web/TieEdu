@@ -6,7 +6,7 @@ import EmptyState from '@/components/apple/EmptyState';
 import { GroupedCard } from '@/components/apple/GroupedCard';
 
 const field =
-  'rounded-[10px] border-0 bg-[var(--apple-fill)] px-3 py-2 text-[13px] text-[var(--apple-label)] placeholder:text-[var(--apple-placeholder)] focus:outline-none';
+  'rounded-[10px] border-0 bg-[var(--apple-fill)] px-3 py-2 text-sm text-[var(--apple-label)] placeholder:text-[var(--apple-placeholder)] focus:outline-none';
 
 const REG_STATUSES = ['registered', 'launched', 'in_progress', 'completed', 'absent', 'disqualified'];
 
@@ -76,7 +76,7 @@ export default function RegistrationsTab(props: { collegeId: string; driveId: st
     <div className="space-y-5">
       <GroupedCard title="Import roster">
         <div className="px-4 py-4">
-          <p className="text-[13px] text-[var(--apple-label-2)]">Paste roll numbers, one per line. They are matched against placement student links for this college — new registrations get rounds unlocked automatically.</p>
+          <p className="text-sm text-[var(--apple-label-2)]">Paste roll numbers, one per line. They are matched against placement student links for this college — new registrations get rounds unlocked automatically.</p>
           <textarea
             className={`${field} mt-3 h-24 w-full resize-none`}
             placeholder={'B21CS001\nB21CS002'}
@@ -87,7 +87,7 @@ export default function RegistrationsTab(props: { collegeId: string; driveId: st
             type="button"
             disabled={busy || !parseRosterText(roster).length}
             onClick={importRoster}
-            className="mt-2 inline-flex items-center rounded-[10px] px-4 py-2 text-[13px] font-semibold text-white transition-transform active:scale-[0.98] disabled:opacity-40"
+            className="mt-2 inline-flex items-center rounded-[10px] px-4 py-2 text-sm font-semibold text-white transition-transform active:scale-[0.98] disabled:opacity-40"
             style={{ background: 'var(--apple-blue)' }}
           >
             Import {parseRosterText(roster).length || ''} roll{parseRosterText(roster).length === 1 ? '' : 's'}
@@ -109,9 +109,9 @@ export default function RegistrationsTab(props: { collegeId: string; driveId: st
         {error ? <div className="px-4 py-6 text-sm text-[var(--apple-red)]">{error}</div> : null}
 
         <div className="apple-scroll mt-3 overflow-x-auto">
-          <table className="w-full min-w-[560px] text-left text-[13px]">
+          <table className="w-full min-w-[560px] text-left text-sm">
             <thead>
-              <tr className="text-[11px] uppercase tracking-wide" style={{ color: 'var(--apple-label-3)' }}>
+              <tr className="text-xs uppercase tracking-wide" style={{ color: 'var(--apple-label-2)' }}>
                 <th className="px-4 pb-2 font-semibold">Roll no</th>
                 <th className="px-4 pb-2 font-semibold">User</th>
                 <th className="px-4 pb-2 font-semibold">Status</th>
@@ -132,15 +132,15 @@ export default function RegistrationsTab(props: { collegeId: string; driveId: st
                 </tr>
               ))}
               {!busy && rows.length === 0 && (
-                <tr><td colSpan={5} className="px-4 py-8 text-center text-[var(--apple-label-3)]">No registrations match.</td></tr>
+                <tr><td colSpan={5} className="px-4 py-8 text-center text-[var(--apple-label-2)]">No registrations match.</td></tr>
               )}
             </tbody>
           </table>
         </div>
-        {busy ? <div className="py-4 text-center text-[13px] text-[var(--apple-label-2)]">Loading…</div> : null}
+        {busy ? <div className="py-4 text-center text-sm text-[var(--apple-label-2)]">Loading…</div> : null}
 
         <div className="flex items-center justify-between px-4 py-3">
-          <span className="text-[12px] tabular-nums text-[var(--apple-label-2)]">Page {page} of {totalPages}</span>
+          <span className="text-xs tabular-nums text-[var(--apple-label-2)]">Page {page} of {totalPages}</span>
           <div className="flex items-center gap-2">
             <PagerButton disabled={page <= 1 || busy} onClick={() => setPage((p) => Math.max(1, p - 1))}><ChevronLeft size={14} /></PagerButton>
             <PagerButton disabled={page >= totalPages || busy} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}><ChevronRight size={14} /></PagerButton>

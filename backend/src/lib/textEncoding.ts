@@ -94,3 +94,93 @@ export const repairMojibakeDeep = <T>(value: T): { value: T; changed: number } =
   };
   return { value: walk(value), changed };
 };
+
+// ---------------------------------------------------------------------------
+// Generic, per-character repair
+//
+// The audited map above covers the runs that existed when it was written. The
+// course and vault content imported later carries a different shape — mostly
+// DOUBLE-encoded punctuation ("â€”" re-encoded once more) — which the map does
+// not list, so ~4,900 sequences stayed broken on every Python/C lesson title.
+//
+// This repair is safe where a whole-string "decode N times" is not, because it
+// works one character at a time: a match must be exactly one UTF-8 lead byte
+// plus the right number of continuation bytes (each written as its cp1252
+// character), and it is only replaced if those bytes decode as valid UTF-8 to a
+// single character. Legitimate accented text ("café", "Zürich", "₹", "²") never
+// forms such a run, so it is never touched. Passes repeat until stable, which
+// unwinds double and triple encoding one layer at a time.
+// ---------------------------------------------------------------------------
+
+/** cp1252 bytes 0x80–0x9F; undefined bytes keep their C1 code point. */
+const CP1252_HIGH: Record<number, number> = {
+  0x80: 0x20ac, 0x82: 0x201a, 0x83: 0x0192, 0x84: 0x201e, 0x85: 0x2026, 0x86: 0x2020, 0x87: 0x2021,
+  0x88: 0x02c6, 0x89: 0x2030, 0x8a: 0x0160, 0x8b: 0x2039, 0x8c: 0x0152, 0x8e: 0x017d, 0x91: 0x2018,
+  0x92: 0x2019, 0x93: 0x201c, 0x94: 0x201d, 0x95: 0x2022, 0x96: 0x2013, 0x97: 0x2014, 0x98: 0x02dc,
+  0x99: 0x2122, 0x9a: 0x0161, 0x9b: 0x203a, 0x9c: 0x0153, 0x9e: 0x017e, 0x9f: 0x0178,
+};
+
+const CHAR_TO_BYTE = new Map<string, number>();
+for (let b = 0; b < 256; b++) CHAR_TO_BYTE.set(String.fromCharCode(CP1252_HIGH[b] ?? b), b);
+
+const CONT =
+  '[\u0080-\u00BF\u20AC\u201A\u0192\u201E\u2026\u2020\u2021\u02C6\u2030\u0160\u2039\u0152\u017D' +
+  '\u2018\u2019\u201C\u201D\u2022\u2013\u2014\u02DC\u2122\u0161\u203A\u0153\u017E\u0178]';
+const UTF8_AS_CP1252 = new RegExp(
+  `[\u00C2-\u00DF]${CONT}|[\u00E0-\u00EF]${CONT}{2}|[\u00F0-\u00F4]${CONT}{3}`,
+  'g'
+);
+const STRICT_UTF8 = new TextDecoder('utf-8', { fatal: true });
+
+function decodeOneLayer(input: string): string {
+  return input.replace(UTF8_AS_CP1252, (run) => {
+    const bytes = Array.from(run, (ch) => CHAR_TO_BYTE.get(ch));
+    if (bytes.some((b) => b === undefined)) return run;
+    try {
+      const decoded = STRICT_UTF8.decode(Uint8Array.from(bytes as number[]));
+      return Array.from(decoded).length === 1 ? decoded : run;
+    } catch {
+      return run;
+    }
+  });
+}
+
+/** Repairs UTF-8-read-as-cp1252 corruption, any depth. Leaves clean text unchanged. */
+export const repairMojibakeGeneric = (input: string): string => {
+  if (typeof input !== 'string' || !input) return input;
+  let cur = input;
+  for (let i = 0; i < 4; i++) {
+    const next = decodeOneLayer(cur);
+    if (next === cur) break;
+    cur = next;
+  }
+  return cur;
+};
+
+/**
+ * Deep repair over a JSON value — values AND object keys. Keys matter: quiz
+ * answer maps are keyed by option text, so repairing the options but not the
+ * keys would silently break every affected question's answer check.
+ */
+export const repairMojibakeGenericDeep = <T>(value: T): { value: T; changed: number } => {
+  let changed = 0;
+  const walk = (node: any): any => {
+    if (typeof node === 'string') {
+      const fixed = repairMojibakeGeneric(node);
+      if (fixed !== node) changed += 1;
+      return fixed;
+    }
+    if (Array.isArray(node)) return node.map(walk);
+    if (node && typeof node === 'object') {
+      const out: Record<string, unknown> = {};
+      for (const key of Object.keys(node)) {
+        const fixedKey = repairMojibakeGeneric(key);
+        if (fixedKey !== key) changed += 1;
+        out[fixedKey] = walk(node[key]);
+      }
+      return out;
+    }
+    return node;
+  };
+  return { value: walk(value) as T, changed };
+};

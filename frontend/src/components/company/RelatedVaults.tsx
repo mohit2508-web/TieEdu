@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Company } from '@/types';
 import { BrandTile } from '@/components/common/BrandTile';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight, Building2 } from 'lucide-react';
 
 interface RelatedVaultsProps {
   currentCompanySlug: string;
@@ -13,15 +13,15 @@ export const RelatedVaults: React.FC<RelatedVaultsProps> = ({ currentCompanySlug
   const related = companies.filter(c => c.slug !== currentCompanySlug).slice(0, 3);
 
   return (
-    <div className="w-full bg-[#FAFAF9] border border-[#EDEDEB] rounded-2xl p-6 sm:p-8 space-y-6">
+    <div className="w-full bg-app-warm border border-line rounded-2xl p-6 sm:p-8 space-y-6">
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h3 className="text-[15px] font-bold text-[#1F3A5F] flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-[#B45309]" />
+          <h3 className="text-base font-bold text-brand-ink flex items-center gap-2">
+            <Building2 className="w-5 h-5 text-amber-deep" />
             More Company Vaults
           </h3>
-          <p className="text-[13px] text-[--text-muted] mt-0.5">
+          <p className="text-sm text-[--text-muted] mt-0.5">
             Browse other company vaults to expand your prep coverage.
           </p>
         </div>
@@ -32,7 +32,7 @@ export const RelatedVaults: React.FC<RelatedVaultsProps> = ({ currentCompanySlug
           <Link
             key={company.id}
             href={`/company/${company.slug}`}
-            className="p-4 bg-white border border-[#EDEDEB] hover:border-[#E8A33D] rounded-2xl transition-all hover:shadow-md flex flex-col justify-between group"
+            className="p-4 bg-white border border-line hover:border-money rounded-2xl transition-all hover:shadow-md flex flex-col justify-between group"
           >
             <div className="flex items-center gap-3 mb-3">
               <BrandTile
@@ -41,8 +41,8 @@ export const RelatedVaults: React.FC<RelatedVaultsProps> = ({ currentCompanySlug
                 className="w-10 h-10 rounded-xl p-1"
               />
               <div>
-                <h4 className="font-bold text-[14px] text-[#1A1A1A] group-hover:text-[#B45309] transition-colors">{company.name} Vault</h4>
-                <p className="text-[13px] text-[--text-muted]">
+                <h4 className="font-bold text-sm text-heading group-hover:text-amber-deep transition-colors">{company.name} Vault</h4>
+                <p className="text-sm text-[--text-muted]">
                   {company.ctc_min != null && company.ctc_max != null
                     ? `₹${company.ctc_min} - ₹${company.ctc_max} LPA`
                     : 'CTC not disclosed'}
@@ -50,9 +50,9 @@ export const RelatedVaults: React.FC<RelatedVaultsProps> = ({ currentCompanySlug
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-3 border-t border-[#EDEDEB] text-[13px] font-semibold text-[#1F3A5F]">
+            <div className="flex items-center justify-between pt-3 border-t border-line text-sm font-semibold text-brand-ink">
               <span>{company.unlock_count ? `${company.unlock_count} Unlocks` : 'No unlocks yet'}</span>
-              <span className="flex items-center gap-1 group-hover:translate-x-1 transition-transform text-[#B45309]">
+              <span className="flex items-center gap-1 group-hover:translate-x-1 transition-transform text-amber-deep">
                 <span>Inspect Vault</span>
                 <ArrowRight className="w-4 h-4" />
               </span>

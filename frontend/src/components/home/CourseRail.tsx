@@ -38,6 +38,7 @@ const CourseRailCard: React.FC<{ course: CourseCard }> = ({ course }) => {
         <CourseCover
           slug={course.slug}
           title={course.title}
+          subject={course.category}
           thumbnailUrl={course.thumbnail_url}
           className="aspect-video w-full"
           sizes="(min-width: 1024px) 390px, (min-width: 640px) 384px, 82vw"
@@ -50,17 +51,17 @@ const CourseRailCard: React.FC<{ course: CourseCard }> = ({ course }) => {
       </div>
 
       <div className="flex flex-1 flex-col gap-2 p-4">
-        <h3 className="line-clamp-2 text-[15px] font-extrabold leading-snug text-[#10151C] transition-colors group-hover:text-[#0271B5]">
+        <h3 className="line-clamp-2 text-base font-extrabold leading-snug text-heading transition-colors group-hover:text-signal">
           {course.title}
         </h3>
-        <p className="text-[12px] font-semibold text-[var(--text-muted)]">
+        <p className="text-xs font-semibold text-[var(--text-muted)]">
           {formatLevel(course.level)} · {course.category}
         </p>
 
-        <div className="flex items-center gap-3 text-[12px] font-semibold text-[var(--text-muted)]">
+        <div className="flex items-center gap-3 text-xs font-semibold text-[var(--text-muted)]">
           {rating && (
             <span className="inline-flex items-center gap-1">
-              <Star className="w-3.5 h-3.5 text-[#E8A33D] fill-[#E8A33D]" aria-hidden />
+              <Star className="w-3.5 h-3.5 text-money fill-money" aria-hidden />
               {rating}
             </span>
           )}
@@ -74,13 +75,13 @@ const CourseRailCard: React.FC<{ course: CourseCard }> = ({ course }) => {
           </span>
         </div>
 
-        <div className="mt-auto flex items-center justify-between pt-2 border-t border-[#EFEEE9]">
+        <div className="mt-auto flex items-center justify-between pt-2 border-t border-line">
           {course.is_free || course.price_inr === 0 ? (
-            <span className="text-[15px] font-black text-[#15803D]">Free</span>
+            <span className="text-base font-black text-success">Free</span>
           ) : (
-            <span className="text-[15px] font-black text-[#10151C]">₹{course.price_inr}</span>
+            <span className="text-base font-black text-heading">₹{course.price_inr}</span>
           )}
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#F7F6F3] text-[#0271B5] transition-colors group-hover:bg-[#0284C7] group-hover:text-white">
+          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-paper text-signal transition-colors group-hover:bg-signal group-hover:text-white">
             <ArrowRight className="w-4 h-4" aria-hidden />
           </span>
         </div>

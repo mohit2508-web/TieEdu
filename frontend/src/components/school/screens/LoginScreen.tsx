@@ -87,6 +87,10 @@ const LoginScreen: React.FC = () => {
           <input
             value={rollNo}
             onChange={(e) => setRollNo(e.target.value)}
+            aria-label="Roll number"
+            autoComplete="username"
+            autoCapitalize="characters"
+            spellCheck={false}
             placeholder="Roll number (e.g. 2026-05-RS)"
             style={{
               padding: '12px 14px',
@@ -97,6 +101,8 @@ const LoginScreen: React.FC = () => {
           />
           <input
             type="password"
+            aria-label="Password"
+            autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Password"

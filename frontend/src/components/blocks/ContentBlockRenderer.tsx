@@ -126,16 +126,16 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
           <div className="h-24 bg-gray-100 rounded w-full mt-3" />
         </div>
         <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-white/75 backdrop-blur-sm">
-          <div className="w-11 h-11 rounded-full bg-[#1F3A5F]/10 flex items-center justify-center mb-3">
-            <Lock className="w-5 h-5 text-[#1F3A5F]" />
+          <div className="w-11 h-11 rounded-full bg-brand-ink/10 flex items-center justify-center mb-3">
+            <Lock className="w-5 h-5 text-brand-ink" />
           </div>
-          <h4 className="font-bold text-[#1F3A5F] mb-1">Unlock {companyName} Solution</h4>
+          <h4 className="font-bold text-brand-ink mb-1">Unlock {companyName} Solution</h4>
           <p className="text-sm text-gray-500 max-w-xs mb-4 leading-relaxed">
             Full code solutions, diagrams, and guided walkthroughs.
           </p>
           <button
             onClick={onUnlockClick}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#E8A33D] hover:bg-[#d6922e] text-[#241A06] text-sm font-bold rounded-xl transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-money hover:bg-money text-money-ink text-sm font-bold rounded-xl transition-colors"
           >
             Unlock Access{typeof unlockPrice === 'number' ? ` — ₹${unlockPrice}` : ''}
             <ChevronRight className="w-4 h-4" />
@@ -165,10 +165,10 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
       return (
         <div className="my-5 rounded-xl overflow-hidden border border-[--border-subtle] shadow-sm">
           {/* Toolbar */}
-          <div className="flex items-center justify-between flex-wrap gap-2 bg-[#F4F4F2] px-4 py-2.5 border-b border-[--border-subtle]">
+          <div className="flex items-center justify-between flex-wrap gap-2 bg-paper px-4 py-2.5 border-b border-[--border-subtle]">
             <div className="flex items-center gap-2">
               <Cpu className="w-3.5 h-3.5 text-[--brand-accent]" />
-              <span className="text-[12px] font-semibold text-[--text-heading] font-mono">
+              <span className="text-xs font-semibold text-[--text-heading] font-mono">
                 {payload.filename || 'Solution'}
               </span>
               {/*
@@ -179,7 +179,7 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
                 nobody checked.
               */}
               {payload.complexity ? (
-                <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-semibold">
+                <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-semibold">
                   {payload.complexity}
                 </span>
               ) : null}
@@ -190,7 +190,7 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
               <div
                 role="group"
                 aria-label="Code language"
-                className="flex bg-white border border-[--border-subtle] rounded-lg overflow-hidden text-[11px] font-mono"
+                className="flex bg-white border border-[--border-subtle] rounded-lg overflow-hidden text-xs font-mono"
               >
                 {CODE_LANGS.map(lang => (
                   <button
@@ -213,7 +213,7 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
               <button
                 onClick={runCode}
                 disabled={isRunning}
-                className="inline-flex items-center gap-1.5 px-3 py-1 bg-[--brand-accent] hover:bg-[--brand-accent-hover] text-[#241A06] text-[11px] font-bold rounded-lg transition-colors disabled:opacity-60 font-mono"
+                className="inline-flex items-center gap-1.5 px-3 py-1 bg-[--brand-accent] hover:bg-[--brand-accent-hover] text-money-ink text-xs font-bold rounded-lg transition-colors disabled:opacity-60 font-mono"
               >
                 {isRunning ? <Cpu className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5 fill-current" />}
                 {isRunning ? 'Running…' : 'Run'}
@@ -222,7 +222,7 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
               {/* Copy */}
               <button
                 onClick={() => copyCode(getCode(selectedLang))}
-                className="inline-flex items-center gap-1 px-2.5 py-1 bg-white border border-[--border-subtle] text-[11px] text-gray-500 hover:text-gray-800 rounded-lg transition-colors font-mono"
+                className="inline-flex items-center gap-1 px-2.5 py-1 bg-white border border-[--border-subtle] text-xs text-gray-500 hover:text-gray-800 rounded-lg transition-colors font-mono"
               >
                 {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
                 {copied ? 'Copied' : 'Copy'}
@@ -231,7 +231,7 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
           </div>
 
           {/* Code body */}
-          <div className="overflow-x-auto bg-white text-[13px]">
+          <div className="overflow-x-auto bg-white text-sm">
             <SyntaxHighlighter
               language={prismName(selectedLang)}
               style={oneLight}
@@ -244,8 +244,8 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
 
           {/* Terminal output */}
           {runOutput && (
-            <div className="bg-[#111] text-emerald-300 px-4 pt-3 pb-4 font-mono text-[12px]">
-              <div className="flex justify-between text-gray-500 mb-2 text-[11px]">
+            <div className="bg-heading text-emerald-300 px-4 pt-3 pb-4 font-mono text-xs">
+              <div className="flex justify-between text-gray-500 mb-2 text-xs">
                 <span className="flex items-center gap-1.5"><Cpu className="w-3 h-3 text-emerald-400" /> Output</span>
                 <button onClick={() => setRunOutput(null)}><X className="w-3.5 h-3.5 hover:text-white" /></button>
               </div>
@@ -260,9 +260,9 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
     case 'diagram': {
       return (
         <div className="my-5 border border-[--border-subtle] rounded-xl overflow-hidden">
-          <div className="flex items-center gap-2 bg-[#F4F4F2] px-4 py-2.5 border-b border-[--border-subtle]">
+          <div className="flex items-center gap-2 bg-paper px-4 py-2.5 border-b border-[--border-subtle]">
             <Layers className="w-3.5 h-3.5 text-[--brand-accent]" />
-            <span className="text-[12px] font-semibold text-[--text-heading]">
+            <span className="text-xs font-semibold text-[--text-heading]">
               {payload.title || 'Architecture Diagram'}
             </span>
           </div>
@@ -270,11 +270,11 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
             {mermaidSvg ? (
               <div dangerouslySetInnerHTML={{ __html: mermaidSvg }} className="w-full flex justify-center" />
             ) : mermaidError ? (
-              <pre className="text-[12px] font-mono text-gray-600 p-4 bg-gray-50 rounded-lg w-full whitespace-pre-wrap">
+              <pre className="text-xs font-mono text-gray-600 p-4 bg-gray-50 rounded-lg w-full whitespace-pre-wrap">
                 {payload.source}
               </pre>
             ) : (
-              <div className="text-[12px] text-gray-400 flex items-center gap-2">
+              <div className="text-xs text-gray-400 flex items-center gap-2">
                 <Cpu className="w-4 h-4 animate-spin" /> Rendering diagram…
               </div>
             )}
@@ -288,7 +288,7 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
       const src = payload.url || '';
       if (!src) {
         return (
-          <div className="my-5 p-6 rounded-xl border border-dashed border-[--border-subtle] bg-gray-50 text-center text-[13px] text-[--text-muted]">
+          <div className="my-5 p-6 rounded-xl border border-dashed border-[--border-subtle] bg-gray-50 text-center text-sm text-[--text-muted]">
             {payload.caption || payload.alt || 'No image uploaded for this block yet.'}
           </div>
         );
@@ -330,7 +330,7 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
             </div>
           </div>
           {payload.caption && (
-            <figcaption className="text-center text-[12px] text-[--text-muted] mt-2">{payload.caption}</figcaption>
+            <figcaption className="text-center text-xs text-[--text-muted] mt-2">{payload.caption}</figcaption>
           )}
 
           {/* Lightbox.
@@ -386,7 +386,7 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
       const style = payload.style || 'tip';
       const config = {
         warning: { bg: 'bg-red-50', border: 'border-red-300', text: 'text-red-800', Icon: AlertTriangle, iconColor: 'text-red-500' },
-        info:    { bg: 'bg-blue-50', border: 'border-blue-300', text: 'text-blue-800', Icon: Info, iconColor: 'text-blue-500' },
+        info:    { bg: 'bg-signal-soft', border: 'border-signal/30', text: 'text-signal-hover', Icon: Info, iconColor: 'text-signal' },
         tip:     { bg: 'bg-amber-50', border: 'border-amber-300', text: 'text-amber-900', Icon: Lightbulb, iconColor: 'text-amber-500' },
       }[style] || { bg: 'bg-amber-50', border: 'border-amber-300', text: 'text-amber-900', Icon: Lightbulb, iconColor: 'text-amber-500' };
 
@@ -413,17 +413,17 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
         .map((r) => r.map((cell) => (cell == null ? '' : String(cell))));
       return (
         <div className="my-5 border border-[--border-subtle] rounded-xl overflow-hidden">
-          <div className="flex items-center gap-2 bg-[#F4F4F2] px-4 py-2.5 border-b border-[--border-subtle]">
+          <div className="flex items-center gap-2 bg-paper px-4 py-2.5 border-b border-[--border-subtle]">
             <Table2 className="w-3.5 h-3.5 text-[--brand-accent]" />
-            <span className="text-[12px] font-semibold text-[--text-heading]">{payload.title || 'Reference Table'}</span>
+            <span className="text-xs font-semibold text-[--text-heading]">{payload.title || 'Reference Table'}</span>
           </div>
           <div className="overflow-x-auto bg-white">
             <table className="w-full text-sm">
               {headers.length > 0 && (
                 <thead>
-                  <tr className="border-b border-[--border-subtle] bg-[#FAFAF9]">
+                  <tr className="border-b border-[--border-subtle] bg-app-warm">
                     {headers.map((h, i) => (
-                      <th key={i} className="px-4 py-2.5 text-left text-[12px] font-bold text-[--text-heading] whitespace-nowrap">{h}</th>
+                      <th key={i} className="px-4 py-2.5 text-left text-xs font-bold text-[--text-heading] whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -431,13 +431,13 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
               <tbody>
                 {rows.length === 0 ? (
                   <tr>
-                    <td className="px-4 py-4 text-[13px] text-[--text-muted]">No rows in this table yet.</td>
+                    <td className="px-4 py-4 text-sm text-[--text-muted]">No rows in this table yet.</td>
                   </tr>
                 ) : (
                   rows.map((row, ri) => (
-                    <tr key={ri} className="border-b border-[--border-subtle]/60 last:border-b-0 hover:bg-[#FAFAF9]">
+                    <tr key={ri} className="border-b border-[--border-subtle]/60 last:border-b-0 hover:bg-app-warm">
                       {row.map((cell, ci) => (
-                        <td key={ci} className="px-4 py-2.5 text-[13px] text-[--text-body] whitespace-nowrap">{cell}</td>
+                        <td key={ci} className="px-4 py-2.5 text-sm text-[--text-body] whitespace-nowrap">{cell}</td>
                       ))}
                     </tr>
                   ))
@@ -467,9 +467,9 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
       }
       return (
         <div className="my-5 border border-[--border-subtle] rounded-xl overflow-hidden">
-          <div className="flex items-center gap-2 bg-[#F4F4F2] px-4 py-2.5 border-b border-[--border-subtle]">
+          <div className="flex items-center gap-2 bg-paper px-4 py-2.5 border-b border-[--border-subtle]">
             <Video className="w-3.5 h-3.5 text-[--brand-accent]" />
-            <span className="text-[12px] font-semibold text-[--text-heading]">{payload.title || 'Video Walkthrough'}</span>
+            <span className="text-xs font-semibold text-[--text-heading]">{payload.title || 'Video Walkthrough'}</span>
           </div>
           <div className="aspect-video bg-black">
             {type === 'youtube' ? (
@@ -507,11 +507,11 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
     case 'audio': {
       return (
         <div className="my-5 border border-[--border-subtle] rounded-xl overflow-hidden">
-          <div className="flex items-center gap-2 bg-[#F4F4F2] px-4 py-2.5 border-b border-[--border-subtle]">
+          <div className="flex items-center gap-2 bg-paper px-4 py-2.5 border-b border-[--border-subtle]">
             <Music className="w-3.5 h-3.5 text-[--brand-accent]" />
-            <span className="text-[12px] font-semibold text-[--text-heading]">{payload.title || 'Audio Guide'}</span>
+            <span className="text-xs font-semibold text-[--text-heading]">{payload.title || 'Audio Guide'}</span>
             {payload.duration_seconds && (
-              <span className="text-[10px] font-mono text-[--text-muted]">{Math.round(payload.duration_seconds / 60)} min</span>
+              <span className="text-xs font-mono text-[--text-muted]">{Math.round(payload.duration_seconds / 60)} min</span>
             )}
           </div>
           <div className="p-4 bg-white">
@@ -533,7 +533,7 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
         : [];
       if (items.length === 0) {
         return (
-          <div className="my-5 rounded-xl border border-dashed border-[--border-subtle] p-4 text-[13px] text-[--text-muted]">
+          <div className="my-5 rounded-xl border border-dashed border-[--border-subtle] p-4 text-sm text-[--text-muted]">
             Steps block with no steps.
           </div>
         );
@@ -541,7 +541,7 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
       return (
         <div className="my-5">
           {payload.title && (
-            <p className="text-[13px] font-bold text-[--text-heading] mb-3">{payload.title}</p>
+            <p className="text-sm font-bold text-[--text-heading] mb-3">{payload.title}</p>
           )}
           <ol className="space-y-3">
             {items.map((s, i) => (
@@ -549,20 +549,20 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
                 key={i}
                 className="flex gap-3.5 rounded-xl border border-[--border-subtle] bg-white p-3.5"
               >
-                <span className="shrink-0 w-6 h-6 rounded-full bg-[#E8F4FB] text-[#0271B5] text-[12px] font-extrabold flex items-center justify-center">
+                <span className="shrink-0 w-6 h-6 rounded-full bg-signal-soft text-signal text-xs font-extrabold flex items-center justify-center">
                   {i + 1}
                 </span>
                 <div className="min-w-0 flex-1">
                   {s.title && (
-                    <p className="text-[14px] font-semibold text-[--text-heading] mb-0.5">{s.title}</p>
+                    <p className="text-sm font-semibold text-[--text-heading] mb-0.5">{s.title}</p>
                   )}
                   {s.desc && (
-                    <p className="text-[14px] text-[--text-body] leading-relaxed whitespace-pre-line">
+                    <p className="text-sm text-[--text-body] leading-relaxed whitespace-pre-line">
                       {s.desc}
                     </p>
                   )}
                   {s.code_snippet && (
-                    <pre className="mt-2.5 rounded-lg bg-[#1E1E1E] text-[#E6EDF3] p-3 text-[12px] leading-relaxed overflow-x-auto font-mono">
+                    <pre className="mt-2.5 rounded-lg bg-heading text-white p-3 text-xs leading-relaxed overflow-x-auto font-mono">
                       <code>{s.code_snippet}</code>
                     </pre>
                   )}
@@ -579,21 +579,21 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
       const items: string[] = Array.isArray(payload.items) ? payload.items : [];
       return (
         <div className="my-5 border border-[--border-subtle] rounded-xl overflow-hidden bg-white">
-          <div className="flex items-center gap-2 bg-[#F4F4F2] px-4 py-2.5 border-b border-[--border-subtle]">
+          <div className="flex items-center gap-2 bg-paper px-4 py-2.5 border-b border-[--border-subtle]">
             <ListChecks className="w-3.5 h-3.5 text-[--brand-accent]" />
-            <span className="text-[12px] font-semibold text-[--text-heading]">
+            <span className="text-xs font-semibold text-[--text-heading]">
               {payload.title || 'Checklist'}
             </span>
-            <span className="ml-auto text-[10px] font-mono text-[--text-muted]">{items.length} items</span>
+            <span className="ml-auto text-xs font-mono text-[--text-muted]">{items.length} items</span>
           </div>
           {items.length === 0 ? (
-            <p className="px-4 py-4 text-[13px] text-[--text-muted]">No items in this checklist yet.</p>
+            <p className="px-4 py-4 text-sm text-[--text-muted]">No items in this checklist yet.</p>
           ) : (
             <ul className="divide-y divide-[--border-subtle]">
               {items.map((item, i) => (
                 <li key={i} className="flex items-start gap-3 px-4 py-2.5">
                   <span className="mt-0.5 w-4 h-4 rounded border-2 border-[--border-subtle] bg-white shrink-0" />
-                  <span className="text-[14px] text-[--text-body] leading-relaxed">{item}</span>
+                  <span className="text-sm text-[--text-body] leading-relaxed">{item}</span>
                 </li>
               ))}
             </ul>
@@ -607,14 +607,14 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
       const items: { label: string; url: string }[] = Array.isArray(payload.links) ? payload.links : [];
       return (
         <div className="my-5 border border-[--border-subtle] rounded-xl overflow-hidden bg-white">
-          <div className="flex items-center gap-2 bg-[#F4F4F2] px-4 py-2.5 border-b border-[--border-subtle]">
+          <div className="flex items-center gap-2 bg-paper px-4 py-2.5 border-b border-[--border-subtle]">
             <Link2 className="w-3.5 h-3.5 text-[--brand-accent]" />
-            <span className="text-[12px] font-semibold text-[--text-heading]">
+            <span className="text-xs font-semibold text-[--text-heading]">
               {payload.title || 'Resources'}
             </span>
           </div>
           {items.length === 0 ? (
-            <p className="px-4 py-4 text-[13px] text-[--text-muted]">No resources linked yet.</p>
+            <p className="px-4 py-4 text-sm text-[--text-muted]">No resources linked yet.</p>
           ) : (
             <ul className="divide-y divide-[--border-subtle]">
               {items.map((item, i) => (
@@ -623,10 +623,10 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
                     href={item.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-3 px-4 py-3 hover:bg-[#FAFAF9] transition-colors group"
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-app-warm transition-colors group"
                   >
                     <Link2 className="w-3.5 h-3.5 text-[--text-muted] shrink-0" />
-                    <span className="text-[14px] font-medium text-[--text-heading] group-hover:text-[--brand-primary] break-words">
+                    <span className="text-sm font-medium text-[--text-heading] group-hover:text-[--brand-primary] break-words">
                       {item.label || item.url}
                     </span>
                     <ChevronRight className="w-4 h-4 text-[--text-muted] ml-auto shrink-0" />
@@ -649,16 +649,16 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
       const url: string = payload.url || payload.video_url || '';
       if (!url) {
         return (
-          <div className="my-5 rounded-xl border border-dashed border-[--border-subtle] p-4 text-[13px] text-[--text-muted]">
+          <div className="my-5 rounded-xl border border-dashed border-[--border-subtle] p-4 text-sm text-[--text-muted]">
             Video link block with no URL.
           </div>
         );
       }
       return (
         <div className="my-5 rounded-xl border border-[--border-subtle] bg-white overflow-hidden">
-          <div className="flex items-center gap-2 bg-[#F4F4F2] px-4 py-2.5 border-b border-[--border-subtle]">
+          <div className="flex items-center gap-2 bg-paper px-4 py-2.5 border-b border-[--border-subtle]">
             <PlayCircle className="w-3.5 h-3.5 text-[--brand-accent]" />
-            <span className="text-[12px] font-semibold text-[--text-heading]">
+            <span className="text-xs font-semibold text-[--text-heading]">
               {payload.title || 'Related video'}
             </span>
           </div>
@@ -666,10 +666,10 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
             href={url}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-3 px-4 py-3 hover:bg-[#FAFAF9] transition-colors group"
+            className="flex items-center gap-3 px-4 py-3 hover:bg-app-warm transition-colors group"
           >
             <Link2 className="w-3.5 h-3.5 text-[--text-muted] shrink-0" />
-            <span className="text-[14px] font-medium text-[--text-heading] group-hover:text-[--brand-primary] break-words">
+            <span className="text-sm font-medium text-[--text-heading] group-hover:text-[--brand-primary] break-words">
               {payload.title ? `Watch: ${url}` : url}
             </span>
             <ChevronRight className="w-4 h-4 text-[--text-muted] ml-auto shrink-0" />
@@ -689,16 +689,16 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
         <div className="my-4 rounded-xl border border-emerald-200 bg-emerald-50/50 p-4">
           <div className="flex items-center gap-2 mb-2">
             <Target className="w-4 h-4 text-emerald-600" />
-            <span className="text-[12px] font-bold uppercase tracking-wide text-emerald-700">
+            <span className="text-xs font-bold uppercase tracking-wide text-emerald-700">
               {payload.title || 'What you will learn'}
             </span>
           </div>
           {items.length === 0 ? (
-            <p className="text-[13px] text-[--text-muted]">No objective set for this lesson yet.</p>
+            <p className="text-sm text-[--text-muted]">No objective set for this lesson yet.</p>
           ) : (
             <ul className="space-y-1.5">
               {items.map((it, i) => (
-                <li key={i} className="flex gap-2 text-[14px] text-[--text-body] leading-relaxed">
+                <li key={i} className="flex gap-2 text-sm text-[--text-body] leading-relaxed">
                   <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                   <span>{it}</span>
                 </li>
@@ -716,13 +716,13 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
         : [];
       return (
         <div className="my-5 rounded-xl border border-[--border-subtle] bg-white overflow-hidden">
-          <div className="flex items-center gap-2 bg-[#F4F4F2] px-4 py-2.5 border-b border-[--border-subtle]">
+          <div className="flex items-center gap-2 bg-paper px-4 py-2.5 border-b border-[--border-subtle]">
             <Hammer className="w-3.5 h-3.5 text-[--brand-accent]" />
-            <span className="text-[12px] font-semibold text-[--text-heading]">{payload.title || 'Worked example'}</span>
+            <span className="text-xs font-semibold text-[--text-heading]">{payload.title || 'Worked example'}</span>
           </div>
           <div className="p-4 space-y-3">
             {payload.problem && (
-              <div className="rounded-lg bg-[#FAFAF9] border border-[--border-subtle] p-3 text-[14px] text-[--text-body] leading-relaxed whitespace-pre-line">
+              <div className="rounded-lg bg-app-warm border border-[--border-subtle] p-3 text-sm text-[--text-body] leading-relaxed whitespace-pre-line">
                 {payload.problem}
               </div>
             )}
@@ -730,14 +730,14 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
               <ol className="space-y-3">
                 {steps.map((s, i) => (
                   <li key={i} className="flex gap-3">
-                    <span className="shrink-0 w-6 h-6 rounded-full bg-[#E8F4FB] text-[#0271B5] text-[12px] font-extrabold flex items-center justify-center">
+                    <span className="shrink-0 w-6 h-6 rounded-full bg-signal-soft text-signal text-xs font-extrabold flex items-center justify-center">
                       {i + 1}
                     </span>
                     <div className="min-w-0 flex-1">
-                      {s.title && <p className="text-[14px] font-semibold text-[--text-heading] mb-0.5">{s.title}</p>}
-                      {s.desc && <p className="text-[14px] text-[--text-body] leading-relaxed whitespace-pre-line">{s.desc}</p>}
+                      {s.title && <p className="text-sm font-semibold text-[--text-heading] mb-0.5">{s.title}</p>}
+                      {s.desc && <p className="text-sm text-[--text-body] leading-relaxed whitespace-pre-line">{s.desc}</p>}
                       {s.code_snippet && (
-                        <pre className="mt-2 rounded-lg bg-[#1E1E1E] text-[#E6EDF3] p-3 text-[12px] leading-relaxed overflow-x-auto font-mono">
+                        <pre className="mt-2 rounded-lg bg-heading text-white p-3 text-xs leading-relaxed overflow-x-auto font-mono">
                           <code>{s.code_snippet}</code>
                         </pre>
                       )}
@@ -748,8 +748,8 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
             )}
             {payload.solution && (
               <div className="rounded-lg border border-emerald-200 bg-emerald-50/50 p-3">
-                <p className="text-[12px] font-bold text-emerald-700 mb-1">Solution</p>
-                <p className="text-[14px] text-[--text-body] leading-relaxed whitespace-pre-line">{payload.solution}</p>
+                <p className="text-xs font-bold text-emerald-700 mb-1">Solution</p>
+                <p className="text-sm text-[--text-body] leading-relaxed whitespace-pre-line">{payload.solution}</p>
               </div>
             )}
           </div>
@@ -763,20 +763,20 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
         <div className="my-5 rounded-xl border border-indigo-200 bg-indigo-50/40 p-4">
           <div className="flex items-center gap-2 mb-2">
             <PenLine className="w-4 h-4 text-indigo-600" />
-            <span className="text-[12px] font-bold uppercase tracking-wide text-indigo-700">
+            <span className="text-xs font-bold uppercase tracking-wide text-indigo-700">
               {payload.title || 'Try it yourself'}
             </span>
           </div>
-          <p className="text-[14px] text-[--text-body] leading-relaxed whitespace-pre-line">
+          <p className="text-sm text-[--text-body] leading-relaxed whitespace-pre-line">
             {payload.prompt || 'Practise the idea above before moving on.'}
           </p>
           {payload.code && (
-            <pre className="mt-3 rounded-lg bg-[#1E1E1E] text-[#E6EDF3] p-3 text-[12px] leading-relaxed overflow-x-auto font-mono">
+            <pre className="mt-3 rounded-lg bg-heading text-white p-3 text-xs leading-relaxed overflow-x-auto font-mono">
               <code>{payload.code}</code>
             </pre>
           )}
           {payload.hint && (
-            <p className="mt-3 text-[13px] text-indigo-700 leading-relaxed">
+            <p className="mt-3 text-sm text-indigo-700 leading-relaxed">
               <strong>Hint:</strong> {payload.hint}
             </p>
           )}
@@ -791,16 +791,16 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
         <div className="my-5 rounded-xl border border-amber-300 bg-amber-50/40 overflow-hidden">
           <div className="flex items-center gap-2 bg-amber-100/70 px-4 py-2.5 border-b border-amber-200">
             <AlertOctagon className="w-3.5 h-3.5 text-amber-600" />
-            <span className="text-[12px] font-semibold text-amber-900">{payload.title || 'Common mistakes'}</span>
+            <span className="text-xs font-semibold text-amber-900">{payload.title || 'Common mistakes'}</span>
           </div>
           {items.length === 0 ? (
-            <p className="px-4 py-4 text-[13px] text-[--text-muted]">No mistakes listed yet.</p>
+            <p className="px-4 py-4 text-sm text-[--text-muted]">No mistakes listed yet.</p>
           ) : (
             <ul className="divide-y divide-amber-200/70">
               {items.map((m, i) => (
                 <li key={i} className="px-4 py-3">
-                  {m.mistake && <p className="text-[14px] font-semibold text-amber-900">{m.mistake}</p>}
-                  {m.fix && <p className="text-[13px] text-[--text-body] leading-relaxed mt-0.5">{m.fix}</p>}
+                  {m.mistake && <p className="text-sm font-semibold text-amber-900">{m.mistake}</p>}
+                  {m.fix && <p className="text-sm text-[--text-body] leading-relaxed mt-0.5">{m.fix}</p>}
                 </li>
               ))}
             </ul>
@@ -812,18 +812,18 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
     /* ---- EXAM / INTERVIEW ANGLE (PYQ or interview question) ---- */
     case 'exam_angle': {
       return (
-        <div className="my-5 rounded-xl border border-[#1F3A5F]/20 bg-[#1F3A5F]/[0.04] p-4">
+        <div className="my-5 rounded-xl border border-brand-ink/20 bg-brand-ink/[0.04] p-4">
           <div className="flex items-center gap-2 mb-2">
-            <GraduationCap className="w-4 h-4 text-[#1F3A5F]" />
-            <span className="text-[12px] font-bold uppercase tracking-wide text-[#1F3A5F]">
+            <GraduationCap className="w-4 h-4 text-brand-ink" />
+            <span className="text-xs font-bold uppercase tracking-wide text-brand-ink">
               {payload.title || 'Exam / interview angle'}
             </span>
           </div>
-          {payload.question && <p className="text-[14px] font-semibold text-[--text-heading] leading-relaxed">{payload.question}</p>}
+          {payload.question && <p className="text-sm font-semibold text-[--text-heading] leading-relaxed">{payload.question}</p>}
           {payload.answer && (
-            <p className="mt-2 text-[14px] text-[--text-body] leading-relaxed whitespace-pre-line">{payload.answer}</p>
+            <p className="mt-2 text-sm text-[--text-body] leading-relaxed whitespace-pre-line">{payload.answer}</p>
           )}
-          {payload.source && <p className="mt-2 text-[12px] text-[--text-muted]">Source: {payload.source}</p>}
+          {payload.source && <p className="mt-2 text-xs text-[--text-muted]">Source: {payload.source}</p>}
         </div>
       );
     }
@@ -832,20 +832,20 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
     case 'summary': {
       const points: string[] = Array.isArray(payload.points) ? payload.points : [];
       return (
-        <div className="my-5 rounded-xl border-2 border-[#1F3A5F]/15 bg-white p-4">
+        <div className="my-5 rounded-xl border-2 border-brand-ink/15 bg-white p-4">
           <div className="flex items-center gap-2 mb-2">
-            <ClipboardCheck className="w-4 h-4 text-[#0271B5]" />
-            <span className="text-[12px] font-bold uppercase tracking-wide text-[#1F3A5F]">
+            <ClipboardCheck className="w-4 h-4 text-signal" />
+            <span className="text-xs font-bold uppercase tracking-wide text-brand-ink">
               {payload.title || 'Lesson summary'}
             </span>
           </div>
           {points.length === 0 ? (
-            <p className="text-[13px] text-[--text-muted]">No summary yet.</p>
+            <p className="text-sm text-[--text-muted]">No summary yet.</p>
           ) : (
             <ul className="space-y-1.5">
               {points.map((pt, i) => (
-                <li key={i} className="flex gap-2 text-[14px] text-[--text-body] leading-relaxed">
-                  <Check className="w-4 h-4 text-[#0271B5] shrink-0 mt-0.5" />
+                <li key={i} className="flex gap-2 text-sm text-[--text-body] leading-relaxed">
+                  <Check className="w-4 h-4 text-signal shrink-0 mt-0.5" />
                   <span>{pt}</span>
                 </li>
               ))}
@@ -867,29 +867,29 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
         <div className="my-5 rounded-xl border border-purple-200 bg-purple-50/40 p-4">
           <div className="flex items-center gap-2 mb-2">
             <Calculator className="w-4 h-4 text-purple-600" />
-            <span className="text-[12px] font-bold uppercase tracking-wide text-purple-700">
+            <span className="text-xs font-bold uppercase tracking-wide text-purple-700">
               {payload.title || 'Numerical practice'}
             </span>
             {payload.unit && (
-              <span className="ml-auto text-[11px] font-mono bg-white border border-purple-200 rounded px-2 py-0.5 text-purple-700">
+              <span className="ml-auto text-xs font-mono bg-white border border-purple-200 rounded px-2 py-0.5 text-purple-700">
                 {payload.unit}
               </span>
             )}
           </div>
           {payload.template && (
-            <p className="text-[14px] text-[--text-body] leading-relaxed whitespace-pre-line">{payload.template}</p>
+            <p className="text-sm text-[--text-body] leading-relaxed whitespace-pre-line">{payload.template}</p>
           )}
           {vars.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-2">
               {vars.map((v, i) => (
-                <span key={i} className="text-[12px] font-mono bg-white border border-purple-200 rounded px-2 py-0.5 text-purple-700">
+                <span key={i} className="text-xs font-mono bg-white border border-purple-200 rounded px-2 py-0.5 text-purple-700">
                   {v.name}: {v.min}–{v.max}
                 </span>
               ))}
             </div>
           )}
-          {payload.hint && <p className="mt-3 text-[13px] text-purple-700 leading-relaxed"><strong>Hint:</strong> {payload.hint}</p>}
-          <p className="mt-3 text-[12px] text-purple-700">Values are randomized on every attempt and checked on the server — copying an answer will not work.</p>
+          {payload.hint && <p className="mt-3 text-sm text-purple-700 leading-relaxed"><strong>Hint:</strong> {payload.hint}</p>}
+          <p className="mt-3 text-xs text-purple-700">Values are randomized on every attempt and checked on the server — copying an answer will not work.</p>
         </div>
       );
     }
@@ -903,18 +903,18 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
       const safe = /^https:\/\//i.test(url);
       if (!safe) {
         return (
-          <div className="my-5 rounded-xl border border-dashed border-[--border-subtle] p-4 text-[13px] text-[--text-muted]">
+          <div className="my-5 rounded-xl border border-dashed border-[--border-subtle] p-4 text-sm text-[--text-muted]">
             Simulator block needs an https embed URL.
           </div>
         );
       }
       return (
         <div className="my-5 border border-[--border-subtle] rounded-xl overflow-hidden">
-          <div className="flex items-center gap-2 bg-[#F4F4F2] px-4 py-2.5 border-b border-[--border-subtle]">
+          <div className="flex items-center gap-2 bg-paper px-4 py-2.5 border-b border-[--border-subtle]">
             <FlaskConical className="w-3.5 h-3.5 text-[--brand-accent]" />
-            <span className="text-[12px] font-semibold text-[--text-heading]">{payload.title || 'Interactive simulator'}</span>
+            <span className="text-xs font-semibold text-[--text-heading]">{payload.title || 'Interactive simulator'}</span>
             {payload.provider && (
-              <span className="ml-auto text-[10px] font-mono text-[--text-muted]">{payload.provider}</span>
+              <span className="ml-auto text-xs font-mono text-[--text-muted]">{payload.provider}</span>
             )}
           </div>
           <iframe

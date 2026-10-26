@@ -1,6 +1,7 @@
 ﻿import { Router, Request, Response } from 'express';
 import crypto from 'crypto';
 import { loadDb, saveDb } from '../data/db';
+import { touchStreak } from '../lib/streak';
 import type { Skill, Topic, Question, Assessment, Attempt, AttemptAnswer, SkillCertificate, Recommendation } from '../data/skillTestTypes';
 import { requireAuth } from '../middleware/auth';
 import { buildSkillCertPdf } from '../lib/skillCertPdf';
@@ -281,6 +282,8 @@ skillTestRouter.post('/attempts/:attemptId/submit', requireAuth, (req: Request, 
   attempt.topicPerformance = topicPerf;
   attempt.difficultyPerformance = diffPerf;
   attempt.updated_at = new Date().toISOString();
+  // A submitted test is a study day (lib/streak).
+  touchStreak(db, req.userId!);
 
   // Certificate eligibility
   const certThresholds = assessment?.certificateThresholds || { pass: 60, proficient: 75, advanced: 85, expert: 90 };

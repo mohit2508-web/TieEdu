@@ -80,10 +80,10 @@ export const SkillTestTab: React.FC = () => {
             <button
               key={s.id}
               onClick={() => { setSection(s.id); setError(null); setNote(null); }}
-              className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider border transition-colors ${
+              className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider border transition-colors ${
                 section === s.id
-                  ? 'bg-[#1F3A5F] text-white border-[#1F3A5F]'
-                  : 'bg-white text-[#3E4754] border-gray-300 hover:bg-[#F3F2EE]'
+                  ? 'bg-brand-ink text-white border-brand-ink'
+                  : 'bg-white text-body border-gray-300 hover:bg-surface-hover'
               }`}
             >
               <Icon className="w-3.5 h-3.5" /> {s.label}
@@ -145,9 +145,9 @@ const AnalyticsSection: React.FC = () => {
     <div className="space-y-4">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {cards.map((c) => (
-          <div key={c.label} className="rounded-xl border border-[#E9E7E1] bg-white p-4">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#9CA3AF]">{c.label}</p>
-            <p className="text-2xl font-extrabold text-[#10151C] mt-1">{c.value}</p>
+          <div key={c.label} className="rounded-xl border border-line bg-white p-4">
+            <p className="text-xs font-bold uppercase tracking-wider text-text-light">{c.label}</p>
+            <p className="text-2xl font-extrabold text-heading mt-1">{c.value}</p>
           </div>
         ))}
       </div>
@@ -158,9 +158,9 @@ const AnalyticsSection: React.FC = () => {
         ) : (
           <div className="space-y-2">
             {Object.entries(data.skillAttempts).map(([skillId, count]) => (
-              <div key={skillId} className="flex items-center justify-between text-[12.5px] py-1.5 border-b border-[#F3F2EE] last:border-0">
-                <span className="font-mono text-[#6B7280]">{skillId}</span>
-                <span className="font-mono font-bold text-[#0E2A44]">{count}</span>
+              <div key={skillId} className="flex items-center justify-between text-xs py-1.5 border-b border-line last:border-0">
+                <span className="font-mono text-text-light">{skillId}</span>
+                <span className="font-mono font-bold text-brand-ink">{count}</span>
               </div>
             ))}
           </div>
@@ -217,8 +217,8 @@ const SkillsSection: React.FC<{ skills: SkillTestSkill[]; reload: () => Promise<
       actions={<Btn variant="primary" onClick={openCreate}><Plus className="w-3.5 h-3.5" /> New skill</Btn>}
     >
       {form && (
-        <div className="mb-5 rounded-xl border border-[#B8E3F7] bg-[#F7FBFE] p-4 space-y-3">
-          <p className="text-[12px] font-extrabold text-[#1F3A5F]">{editingId ? 'Edit skill' : 'New skill'}</p>
+        <div className="mb-5 rounded-xl border border-signal/30 bg-app-warm p-4 space-y-3">
+          <p className="text-xs font-extrabold text-brand-ink">{editingId ? 'Edit skill' : 'New skill'}</p>
           <div className="grid sm:grid-cols-2 gap-3">
             <Field label="Name"><TextInput value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value, slug: editingId ? form.slug : slugify(e.target.value) })} placeholder="Java Programming" /></Field>
             <Field label="Slug" hint="Unique — used in the public URL">
@@ -246,9 +246,9 @@ const SkillsSection: React.FC<{ skills: SkillTestSkill[]; reload: () => Promise<
         <Empty>No skills yet — create the first one.</Empty>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full text-[12.5px]">
+          <table className="w-full text-xs">
             <thead>
-              <tr className="text-left text-[10px] font-bold uppercase tracking-wider text-[#9CA3AF] border-b border-[#EDEDEB]">
+              <tr className="text-left text-xs font-bold uppercase tracking-wider text-text-light border-b border-line">
                 <th className="py-2 pr-3">Skill</th>
                 <th className="py-2 pr-3">Category</th>
                 <th className="py-2 pr-3">Slug</th>
@@ -258,12 +258,12 @@ const SkillsSection: React.FC<{ skills: SkillTestSkill[]; reload: () => Promise<
                 <th className="py-2" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#F3F2EE]">
+            <tbody className="divide-y divide-line">
               {skills.map((s) => (
                 <tr key={s.id}>
-                  <td className="py-2.5 pr-3 font-bold text-[#10151C]">{s.name}</td>
-                  <td className="py-2.5 pr-3 text-[#6B7280]">{s.category}</td>
-                  <td className="py-2.5 pr-3 font-mono text-[11px] text-[#9CA3AF]">{s.slug}</td>
+                  <td className="py-2.5 pr-3 font-bold text-heading">{s.name}</td>
+                  <td className="py-2.5 pr-3 text-text-light">{s.category}</td>
+                  <td className="py-2.5 pr-3 font-mono text-xs text-text-light">{s.slug}</td>
                   <td className="py-2.5 pr-3 text-right font-mono">{s.totalQuestions}</td>
                   <td className="py-2.5 pr-3"><Pill tone={s.status === 'active' ? 'green' : 'gray'}>{s.status}</Pill></td>
                   <td className="py-2.5 pr-3">{s.certificateAvailable ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <XCircle className="w-4 h-4 text-gray-300" />}</td>
@@ -329,12 +329,12 @@ const TopicsSection: React.FC<{ skills: SkillTestSkill[]; topics: SkillTestTopic
       {list.length === 0 ? (
         <Empty>No topics yet for this skill.</Empty>
       ) : (
-        <div className="divide-y divide-[#F3F2EE]">
+        <div className="divide-y divide-line">
           {list.map((t) => (
             <div key={t.id} className="flex items-center justify-between py-2.5">
               <div>
-                <p className="text-[13px] font-bold text-[#10151C]">{t.name}</p>
-                <p className="text-[11px] font-mono text-[#9CA3AF]">{t.slug}</p>
+                <p className="text-sm font-bold text-heading">{t.name}</p>
+                <p className="text-xs font-mono text-text-light">{t.slug}</p>
               </div>
               <div className="flex items-center gap-2">
                 <Pill tone={t.isActive ? 'green' : 'gray'}>{t.isActive ? 'active' : 'hidden'}</Pill>
@@ -488,14 +488,14 @@ const QuestionsSection: React.FC<{ skills: SkillTestSkill[]; topics: SkillTestTo
             {DIFFICULTIES.map((d) => <option key={d} value={d}>{d}</option>)}
           </Select>
           <div className="relative">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
+            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-text-light" />
             <TextInput value={search} placeholder="Search this page…" onChange={(e) => setSearch(e.target.value)} className="pl-8" />
           </div>
         </div>
 
         {editing && (
-          <div className="mb-5 rounded-xl border border-[#B8E3F7] bg-[#F7FBFE] p-4 space-y-3">
-            <p className="text-[12px] font-extrabold text-[#1F3A5F]">{editingId ? 'Edit question' : 'New question'}</p>
+          <div className="mb-5 rounded-xl border border-signal/30 bg-app-warm p-4 space-y-3">
+            <p className="text-xs font-extrabold text-brand-ink">{editingId ? 'Edit question' : 'New question'}</p>
             <div className="grid sm:grid-cols-2 gap-3">
               <Field label="Skill">
                 <Select value={editing.skillId} onChange={(e) => {
@@ -529,7 +529,7 @@ const QuestionsSection: React.FC<{ skills: SkillTestSkill[]; topics: SkillTestTo
             </Field>
 
             <div>
-              <span className="block text-[11px] font-bold uppercase tracking-wider text-[#6B7280] mb-1.5">
+              <span className="block text-xs font-bold uppercase tracking-wider text-text-light mb-1.5">
                 Options — check the correct one{editing.type === 'multiple_choice' ? 's' : ''}
               </span>
               <div className="space-y-2">
@@ -540,7 +540,7 @@ const QuestionsSection: React.FC<{ skills: SkillTestSkill[]; topics: SkillTestTo
                       name="correct-opt"
                       checked={!!o.isCorrect}
                       onChange={() => setOpt(i, { isCorrect: !o.isCorrect })}
-                      className="w-4 h-4 accent-[#0284C7]"
+                      className="w-4 h-4 accent-signal"
                       aria-label={`Option ${i + 1} correct`}
                     />
                     <TextInput value={o.text} placeholder={`Option ${i + 1}`} onChange={(e) => setOpt(i, { text: e.target.value })} />
@@ -572,9 +572,9 @@ const QuestionsSection: React.FC<{ skills: SkillTestSkill[]; topics: SkillTestTo
           <Empty>No questions match these filters.</Empty>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-[12.5px]">
+            <table className="w-full text-xs">
               <thead>
-                <tr className="text-left text-[10px] font-bold uppercase tracking-wider text-[#9CA3AF] border-b border-[#EDEDEB]">
+                <tr className="text-left text-xs font-bold uppercase tracking-wider text-text-light border-b border-line">
                   <th className="py-2 pr-3">Question</th>
                   <th className="py-2 pr-3">Topic</th>
                   <th className="py-2 pr-3">Type</th>
@@ -583,15 +583,15 @@ const QuestionsSection: React.FC<{ skills: SkillTestSkill[]; topics: SkillTestTo
                   <th className="py-2" />
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#F3F2EE]">
+              <tbody className="divide-y divide-line">
                 {visible.map((q) => (
                   <tr key={q.id}>
                     <td className="py-2.5 pr-3 max-w-[420px]">
-                      <p className="text-[#10151C] font-medium line-clamp-2">{q.question}</p>
-                      <p className="text-[10.5px] text-[#9CA3AF] font-mono">v{q.version} · {q.options.length} options</p>
+                      <p className="text-heading font-medium line-clamp-2">{q.question}</p>
+                      <p className="text-xs text-text-light font-mono">v{q.version} · {q.options.length} options</p>
                     </td>
-                    <td className="py-2.5 pr-3 text-[#6B7280]">{topicName(q.topicId)}</td>
-                    <td className="py-2.5 pr-3 text-[#6B7280] whitespace-nowrap">{q.type.replace(/_/g, ' ')}</td>
+                    <td className="py-2.5 pr-3 text-text-light">{topicName(q.topicId)}</td>
+                    <td className="py-2.5 pr-3 text-text-light whitespace-nowrap">{q.type.replace(/_/g, ' ')}</td>
                     <td className="py-2.5 pr-3"><Pill tone={q.difficulty === 'expert' ? 'amber' : 'gray'}>{q.difficulty}</Pill></td>
                     <td className="py-2.5 pr-3"><Pill tone={STATUS_TONES[q.status] || 'gray'}>{q.status}</Pill></td>
                     <td className="py-2.5 text-right whitespace-nowrap">
@@ -612,8 +612,8 @@ const QuestionsSection: React.FC<{ skills: SkillTestSkill[]; topics: SkillTestTo
         )}
 
         {pages > 1 && (
-          <div className="flex items-center justify-between mt-4 pt-3 border-t border-[#EDEDEB]">
-            <span className="text-[11px] text-[#9CA3AF]">Page {page} of {pages}</span>
+          <div className="flex items-center justify-between mt-4 pt-3 border-t border-line">
+            <span className="text-xs text-text-light">Page {page} of {pages}</span>
             <div className="flex gap-2">
               <Btn disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>Prev</Btn>
               <Btn disabled={page >= pages} onClick={() => setPage((p) => p + 1)}>Next</Btn>
@@ -688,8 +688,8 @@ const AssessmentsSection: React.FC<{ skills: SkillTestSkill[]; topics: SkillTest
       }
     >
       {form && (
-        <div className="mb-5 rounded-xl border border-[#B8E3F7] bg-[#F7FBFE] p-4 space-y-3">
-          <p className="text-[12px] font-extrabold text-[#1F3A5F]">{editingId ? 'Edit assessment' : 'New assessment'}</p>
+        <div className="mb-5 rounded-xl border border-signal/30 bg-app-warm p-4 space-y-3">
+          <p className="text-xs font-extrabold text-brand-ink">{editingId ? 'Edit assessment' : 'New assessment'}</p>
           <div className="grid sm:grid-cols-2 gap-3">
             <Field label="Title" className="sm:col-span-2"><TextInput value={form.title || ''} onChange={(e) => setForm({ ...form, title: e.target.value })} /></Field>
             <Field label="Duration (minutes)"><TextInput type="number" value={form.durationMinutes ?? 30} onChange={(e) => setForm({ ...form, durationMinutes: Number(e.target.value) })} /></Field>
@@ -713,14 +713,14 @@ const AssessmentsSection: React.FC<{ skills: SkillTestSkill[]; topics: SkillTest
       ) : list.length === 0 ? (
         <Empty>No assessments for this skill.</Empty>
       ) : (
-        <div className="divide-y divide-[#F3F2EE]">
+        <div className="divide-y divide-line">
           {list.map((a) => {
             const bpSum = (a.topicBlueprint || []).reduce((s, x) => s + x.questionCount, 0);
             return (
               <div key={a.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
                 <div className="min-w-0">
-                  <p className="text-[13px] font-bold text-[#10151C]">{a.title} {a.isDefault && <Pill tone="green">default</Pill>}</p>
-                  <p className="text-[11.5px] text-[#6B7280]">
+                  <p className="text-sm font-bold text-heading">{a.title} {a.isDefault && <Pill tone="green">default</Pill>}</p>
+                  <p className="text-xs text-text-light">
                     {a.totalQuestions} Q · {a.durationMinutes} min · pass {a.passingScore}% ·{' '}
                     blueprint {bpSum} Q · {topics.filter((t) => (a.topicBlueprint || []).some((b) => b.topicId === t.id)).length} topics
                   </p>
@@ -790,9 +790,9 @@ const CertificatesSection: React.FC<BaseProps> = ({ flash, fail }) => {
         <Empty>No certificates issued yet.</Empty>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full text-[12.5px]">
+          <table className="w-full text-xs">
             <thead>
-              <tr className="text-left text-[10px] font-bold uppercase tracking-wider text-[#9CA3AF] border-b border-[#EDEDEB]">
+              <tr className="text-left text-xs font-bold uppercase tracking-wider text-text-light border-b border-line">
                 <th className="py-2 pr-3">Certificate ID</th>
                 <th className="py-2 pr-3">Student</th>
                 <th className="py-2 pr-3">Skill</th>
@@ -803,15 +803,15 @@ const CertificatesSection: React.FC<BaseProps> = ({ flash, fail }) => {
                 <th className="py-2" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#F3F2EE]">
+            <tbody className="divide-y divide-line">
               {certs.map((c) => (
                 <tr key={c.id}>
-                  <td className="py-2.5 pr-3 font-mono text-[11px] text-[#0E2A44]">{c.certificateId}</td>
-                  <td className="py-2.5 pr-3 font-bold text-[#10151C]">{c.studentName}</td>
-                  <td className="py-2.5 pr-3 text-[#6B7280]">{c.skillName}</td>
+                  <td className="py-2.5 pr-3 font-mono text-xs text-brand-ink">{c.certificateId}</td>
+                  <td className="py-2.5 pr-3 font-bold text-heading">{c.studentName}</td>
+                  <td className="py-2.5 pr-3 text-text-light">{c.skillName}</td>
                   <td className="py-2.5 pr-3 text-right font-mono font-bold">{c.score}</td>
-                  <td className="py-2.5 pr-3 text-[#6B7280]">{c.skillLevelText || c.level}</td>
-                  <td className="py-2.5 pr-3 text-[#6B7280] whitespace-nowrap">{(c.issueDate || '').slice(0, 10)}</td>
+                  <td className="py-2.5 pr-3 text-text-light">{c.skillLevelText || c.level}</td>
+                  <td className="py-2.5 pr-3 text-text-light whitespace-nowrap">{(c.issueDate || '').slice(0, 10)}</td>
                   <td className="py-2.5 pr-3"><Pill tone={STATUS_TONES[c.status] || 'gray'}>{c.status}</Pill></td>
                   <td className="py-2.5 text-right whitespace-nowrap">
                     {c.status === 'valid' ? (

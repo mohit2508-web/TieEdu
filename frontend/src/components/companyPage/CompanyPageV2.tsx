@@ -14,7 +14,7 @@ import {
   trackCpEvent,
   updateCpMe,
 } from '@/lib/companyPagesApi';
-import { CpContextValue, CpHandlers, CpLang, CpLink, CpMeActions, CpProvider, buildAnchors, cx, formatRupees, localizeContent, makeT, makeUi } from './shared';
+import { CpContextValue, CpHandlers, CpLang, CpLink, CpMeActions, CpProvider, RoundOffer, buildAnchors, cx, formatRupees, localizeContent, makeT, makeUi } from './shared';
 import { SectionBoundary } from './SectionBoundary';
 import { Hero, SectionNav, StatStrip } from './HeroSections';
 import { AlsoPreparing, CommunityOffer, EligibilityApply, Experiences, Faq, RichText, RoleCompare, RoundsRoute } from './ContentSections';
@@ -36,6 +36,18 @@ const ACCENT_HEX: Record<string, string> = {
   rust: '#C2410C',
   crimson: '#BE123C',
   slate: '#334155',
+};
+
+/** The same accents lifted for the dark theme, where they sit on a dark page. */
+const ACCENT_HEX_DARK: Record<string, string> = {
+  violet: '#C4A7FF',
+  indigo: '#A5B4FC',
+  sky: '#7DD3FC',
+  teal: '#5EEAD4',
+  green: '#86EFAC',
+  rust: '#FDBA74',
+  crimson: '#FDA4AF',
+  slate: '#CBD5E1',
 };
 
 /**
@@ -105,7 +117,11 @@ export interface CompanyPageV2Props extends CpHandlers {
   initialRadar?: CpRadarItem[];
   /** Studio only: render in this language regardless of the visitor's choice. */
   forceLang?: CpLang;
+  /** Premium modules still for sale on their own, by module id (single-round buying). */
+  roundOffers?: Record<string, RoundOffer>;
 }
+
+const NO_OFFERS: Record<string, RoundOffer> = {};
 
 export function CompanyPageV2({
   content,
@@ -120,6 +136,7 @@ export function CompanyPageV2({
   signedIn = false,
   initialRadar = NO_RADAR,
   forceLang,
+  roundOffers = NO_OFFERS,
   ...handlers
 }: CompanyPageV2Props) {
   const slug = company.slug;
@@ -203,6 +220,7 @@ export function CompanyPageV2({
     share: !!handlers.onShareExperience,
     auth: !!handlers.onRequireAuth,
     openItem: !!handlers.onOpenItem,
+    buyModules: !!handlers.onBuyModules,
   };
   const stableHandlers = useMemo<CpHandlers>(
     () => ({
@@ -212,8 +230,9 @@ export function CompanyPageV2({
       onShareExperience: has.share ? () => handlersRef.current.onShareExperience?.() : undefined,
       onRequireAuth: has.auth ? () => handlersRef.current.onRequireAuth?.() : undefined,
       onOpenItem: has.openItem ? (id: string) => handlersRef.current.onOpenItem?.(id) : undefined,
+      onBuyModules: has.buyModules ? (ids: string[]) => handlersRef.current.onBuyModules?.(ids) : undefined,
     }),
-    [has.getPack, has.openModule, has.preview, has.share, has.auth, has.openItem]
+    [has.getPack, has.openModule, has.preview, has.share, has.auth, has.openItem, has.buyModules]
   );
   const onRequireAuth = stableHandlers.onRequireAuth;
   // Writes can overlap (two quick role changes). Only the reply to the newest
@@ -313,6 +332,7 @@ export function CompanyPageV2({
       preview,
       packPrice,
       packOwned,
+      roundOffers,
       anchorOf,
       sections: visible,
       signedIn: signedIn && !preview,
@@ -328,7 +348,7 @@ export function CompanyPageV2({
       retryMe,
       ...stableHandlers,
     }),
-    [company, companies, t, ui, lang, preview, packPrice, packOwned, anchorOf, visible, signedIn, me, actions, radar,
+    [company, companies, t, ui, lang, preview, packPrice, packOwned, roundOffers, anchorOf, visible, signedIn, me, actions, radar,
      stationTrack, event, selectedRole, setSelectedRole, meLoading, meError, retryMe, stableHandlers]
   );
 
@@ -502,7 +522,7 @@ export function CompanyPageV2({
   const skipTarget = skipSection ? anchorOf(skipSection) : '';
   const skipLabel = skipSection?.type === 'rounds_route' ? 'the rounds' : 'the content';
 
-  const accent = ACCENT_HEX[String(settings.accent)] || ACCENT_HEX.violet;
+  const accentKey = ACCENT_HEX[String(settings.accent)] ? String(settings.accent) : 'violet';
   const disclaimer = t(settings.disclaimer);
 
   const ogTitle = t(settings.seo_title);
@@ -560,7 +580,7 @@ export function CompanyPageV2({
         </Head>
       )}
 
-      <div className={cx(s.root, display.variable, preview && s.previewMode)} style={{ ['--accent' as any]: accent }}>
+      <div className={cx(s.root, display.variable, preview && s.previewMode)} style={{ ['--accent-l' as any]: ACCENT_HEX[accentKey], ['--accent-d' as any]: ACCENT_HEX_DARK[accentKey] }}>
         {!preview && skipTarget && (
           <a className={s.skipLink} href={`#${skipTarget}`}>
             Skip to {skipLabel}
@@ -583,7 +603,8 @@ export function CompanyPageV2({
                   <>
                     <span className={s.stickyText}>{t(hero?.data.card_title) || ui('start_check')}</span>
                     <CpLink href={readinessHref} className={cx(s.btn, s.btnMoney)} onClick={() => event('readiness_start')}>
-                      {ui('start_check')}
+                      {/* Same words as the hero card's button: one link, one label. */}
+                      {t(hero?.data.card_cta_label) || ui('start_check')}
                     </CpLink>
                   </>
                 ) : (

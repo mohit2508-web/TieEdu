@@ -101,11 +101,11 @@ export const MobileNavDrawer: React.FC = () => {
       scroll={false}
       closeOnEscape={false}
       blocksScroll={false}
-      className="w-[min(21rem,88vw)] max-w-[min(21rem,88vw)] border-l border-[#EDEDEB] shadow-none"
+      className="w-[min(21rem,88vw)] max-w-[min(21rem,88vw)] border-l border-line shadow-none"
       data-testid="nav-drawer"
       header={
-        <div className="flex items-center justify-between gap-2 border-b border-[#EDEDEB] px-4 py-3">
-          <p className="text-sm font-bold text-[#10151C]">Menu</p>
+        <div className="flex items-center justify-between gap-2 border-b border-line px-4 py-3">
+          <p className="text-sm font-bold text-heading">Menu</p>
           <button
             type="button"
             onClick={() => closeOverlay('drawer')}
@@ -140,9 +140,10 @@ export const MobileNavDrawer: React.FC = () => {
                 the header icon already is, so keeping it here put one action in
                 both places. Same one-surface-per-action rule that took search out
                 of the tab bar. The overlay itself is untouched, so the header icon
-                and the desktop chip open the same thing.
+                and the desktop chip open the same thing. Search left for the
+                same reason when it moved into the phone header.
               */}
-              {(['search', 'cart'] as const).map((id) => {
+              {(['cart'] as const).map((id) => {
                 const action = NAV_ACTIONS[id];
                 const Icon = action.icon;
                 return (
@@ -193,15 +194,15 @@ export const MobileNavDrawer: React.FC = () => {
           </section>
         </div>
 
-        <div className="border-t border-[#EDEDEB] px-3 py-3">
+        <div className="border-t border-line px-3 py-3">
           {signedIn ? (
             <div className="flex items-center gap-3">
-              <span className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-full bg-[#EAF4FB] text-[#0284C7]">
+              <span className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-full bg-signal-soft text-signal">
                 <UserRound size={17} strokeWidth={2.2} aria-hidden />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-semibold text-[#10151C]">{user?.name}</span>
-                <span className="block truncate text-xs text-[#6B7280]">{user?.email}</span>
+                <span className="block truncate text-sm font-semibold text-heading">{user?.name}</span>
+                <span className="block truncate text-xs text-text-light">{user?.email}</span>
               </span>
               <button
                 type="button"
@@ -223,7 +224,7 @@ export const MobileNavDrawer: React.FC = () => {
               <Link
                 href="/login"
                 onClick={() => closeOverlay('drawer')}
-                className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-[#0284C7] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0369A1]"
+                className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-signal px-4 text-sm font-bold text-white transition-colors hover:bg-signal"
               >
                 <LogIn size={17} strokeWidth={2.4} aria-hidden />
                 Sign in
@@ -231,7 +232,7 @@ export const MobileNavDrawer: React.FC = () => {
               <Link
                 href="/signup"
                 onClick={() => closeOverlay('drawer')}
-                className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border border-[#0284C7] bg-transparent px-4 text-sm font-bold text-[#0284C7] transition-colors hover:bg-[#E0F2FE]"
+                className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border border-signal bg-transparent px-4 text-sm font-bold text-signal transition-colors hover:bg-signal-soft"
               >
                 <UserPlus size={17} strokeWidth={2.4} aria-hidden />
                 Sign up
@@ -260,7 +261,7 @@ export const DrawerSearchHint: React.FC = () => {
     <button
       type="button"
       onClick={() => toggleOverlay('search')}
-      className={cn('nav-row', 'text-[#6B7280]')}
+      className={cn('nav-row', 'text-text-light')}
     >
       <span className="nav-row-icon" aria-hidden>
         <Icon size={18} strokeWidth={2.2} />

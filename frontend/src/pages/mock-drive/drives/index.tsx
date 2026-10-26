@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Search, SlidersHorizontal, MapPin, IndianRupee, CalendarDays, Building2 } from 'lucide-react';
-import { DriveShell } from '@/components/drives/DriveShell';
+import { DriveShell, withDriveAuth } from '@/components/drives/DriveShell';
 import { DriveStatusLine } from '@/components/drives/DriveStatusLine';
 import { fetchDriveListApi } from '@/lib/drivesApi';
 import type { DriveListItem } from '@/types/drives';
@@ -26,7 +26,7 @@ const deadlineTs = (d: DriveListItem) => {
   return t ? new Date(t).getTime() : Number.MAX_SAFE_INTEGER;
 };
 
-export default function DrivesListScreen() {
+function DrivesListScreen() {
   const [drives, setDrives] = useState<DriveListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -75,13 +75,13 @@ export default function DrivesListScreen() {
       <div className="mx-auto w-full max-w-[720px] px-4 pb-8 pt-3">
         {/* Search */}
         <div className="relative">
-          <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--apple-label-3)' }} />
+          <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--apple-label-2)' }} />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search company, role or drive"
             aria-label="Search drives"
-            className="w-full rounded-[12px] border py-2.5 pl-9 pr-10 text-[14px] outline-none"
+            className="w-full rounded-[12px] border py-2.5 pl-9 pr-10 text-sm outline-none"
             style={{ background: 'var(--apple-surface-2)', borderColor: 'var(--apple-separator)', color: 'var(--apple-label)' }}
           />
           <button
@@ -155,11 +155,11 @@ export default function DrivesListScreen() {
                     >
                       <div className="flex items-start gap-3">
                         <span
-                          className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[11px] text-[13px] font-bold"
+                          className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[11px] text-sm font-bold"
                           style={{ background: 'var(--apple-blue-soft)', color: 'var(--apple-blue)' }}
                         >
                           {d.company_logo_url ? (
-                            // eslint-disable-next-line @next/next/no-img-element
+                            // eslint-disable-next-line @next/next/no-img-element -- company logo from any host an admin enters; the optimizer only serves allow-listed hosts
                             <img src={d.company_logo_url} alt="" className="h-full w-full object-cover" />
                           ) : (
                             <Building2 size={20} strokeWidth={1.9} />
@@ -167,16 +167,16 @@ export default function DrivesListScreen() {
                         </span>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
-                            <h3 className="truncate text-[15px] font-semibold" style={{ color: 'var(--apple-label)' }}>{d.title}</h3>
+                            <h3 className="truncate text-base font-semibold" style={{ color: 'var(--apple-label)' }}>{d.title}</h3>
                           </div>
-                          <p className="truncate text-[13px]" style={{ color: 'var(--apple-label-2)' }}>{d.company_name}</p>
+                          <p className="truncate text-sm" style={{ color: 'var(--apple-label-2)' }}>{d.company_name}</p>
                           <div className="mt-1.5">
                             <DriveStatusLine statusLine={d.status_line} registered={d.registered} registrationOpen={d.registration_open} />
                           </div>
                         </div>
                       </div>
 
-                      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px]" style={{ color: 'var(--apple-label-2)' }}>
+                      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs" style={{ color: 'var(--apple-label-2)' }}>
                         {d.location && (
                           <span className="inline-flex items-center gap-1"><MapPin size={12} />{d.location}</span>
                         )}
@@ -198,3 +198,5 @@ export default function DrivesListScreen() {
     </DriveShell>
   );
 }
+
+export default withDriveAuth(DrivesListScreen);

@@ -22,11 +22,11 @@ export default function KpiCard(props: {
   return (
     <div className="apple-card px-4 py-4">
       <div className="flex items-center justify-between gap-2">
-        <div className="text-[13px] font-medium text-[var(--apple-label-2)]">{props.label}</div>
+        <div className="text-sm font-medium text-[var(--apple-label-2)]">{props.label}</div>
         <span className="h-2 w-2 rounded-full" style={{ background: t.dot }} />
       </div>
       <div className="mt-1.5 flex items-end justify-between gap-2">
-        <div className="text-[30px] font-semibold leading-none tracking-tight" style={{ color: 'var(--apple-label)' }}>
+        <div className="text-3xl font-semibold leading-none tracking-tight" style={{ color: 'var(--apple-label)' }}>
           {props.value}
         </div>
         {props.sparkline && props.sparkline.length > 1 ? (

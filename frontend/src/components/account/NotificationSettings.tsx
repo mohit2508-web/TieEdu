@@ -91,7 +91,7 @@ export default function NotificationSettings({ compact = false }: { compact?: bo
     return (
       <div className="vault-card p-4 flex items-start gap-3">
         <BellOff className="w-4 h-4 text-[--text-muted] shrink-0 mt-0.5" />
-        <p className="text-[12px] text-[--text-muted] leading-relaxed">
+        <p className="text-xs text-[--text-muted] leading-relaxed">
           This browser cannot show push notifications. Install TieEdu to your Home Screen or desktop to
           receive announcements. On iPhone this needs iOS 16.4 or newer.
         </p>
@@ -105,14 +105,14 @@ export default function NotificationSettings({ compact = false }: { compact?: bo
     <div className="vault-card p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[13px] font-extrabold text-[#10151C]">Announcements &amp; notifications</p>
-          <p className="text-[12px] text-[--text-muted] mt-1 leading-relaxed">
+          <p className="text-sm font-extrabold text-heading">Announcements &amp; notifications</p>
+          <p className="text-xs text-[--text-muted] mt-1 leading-relaxed">
             {on
               ? 'On. You will get new courses, new lessons in courses you are taking, new company material, and a weekly reminder if you have lessons left.'
               : 'Turn on to hear about new courses, new lessons in courses you are taking, new company material and announcements from TieEdu — even when the app is closed.'}
           </p>
           {on && (
-            <p className="text-[11px] text-[--text-muted] mt-1.5 leading-relaxed">
+            <p className="text-xs text-[--text-muted] mt-1.5 leading-relaxed">
               At most one reminder a week, and only if a course is genuinely unfinished. Nothing else
               repeats.
             </p>
@@ -122,8 +122,8 @@ export default function NotificationSettings({ compact = false }: { compact?: bo
           type="button"
           onClick={onToggle}
           disabled={loading || busy}
-          className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-extrabold transition disabled:opacity-60 ${
-            on ? 'bg-[#EEF1F4] text-[#10151C]' : 'bg-[#10151C] text-white'
+          className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-extrabold transition disabled:opacity-60 ${
+            on ? 'bg-surface-hover text-heading' : 'bg-heading text-white'
           }`}
         >
           {loading || busy ? (
@@ -139,12 +139,12 @@ export default function NotificationSettings({ compact = false }: { compact?: bo
 
       {message && (
         <p
-          className={`mt-3 text-[11px] leading-relaxed flex items-start gap-1.5 ${
+          className={`mt-3 text-xs leading-relaxed flex items-start gap-1.5 ${
             message.tone === 'ok'
               ? 'text-emerald-700'
               : message.tone === 'warn'
-                ? 'text-[#C77B12]'
-                : 'text-[#C1442D]'
+                ? 'text-amber-deep'
+                : 'text-danger'
           }`}
         >
           {message.tone === 'ok' ? (

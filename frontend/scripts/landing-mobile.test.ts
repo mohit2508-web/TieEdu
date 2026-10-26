@@ -46,15 +46,21 @@ const carousel = read('src/components/common/HeroPosterCarousel.tsx');
 
 console.log('\n--- the feed, not a document page ---');
 ok(!/animate-marquee/.test(home), 'no marquee');
-ok(/<QuickActions/.test(home), 'quick actions (Courses, Skill Tests, Free Course…) render above the fold');
+// Quick actions were retired when the nav became five sections (UI_REDESIGN_PLAN_V2
+// D4): they duplicated it. The three routes by year take their place below the hero.
+ok(/<YearRoutes/.test(home), 'the routes by year follow the hero');
+ok(/<CompanyFinder/.test(home), 'the hero asks which company you are preparing for');
 ok(/<CourseRail/.test(home), 'the homepage has the courses rail');
 ok(/<SkillRail/.test(home), 'the homepage has the skill-tests rail');
 ok(/<VaultRail/.test(home), 'the vault directory is a feed rail, not a grid');
 ok(/<FreeCourseBanner/.test(home), 'the free course gets its billboard');
 ok(/<FinalCta/.test(home), 'the landing closes on the free-entry CTA');
 const vaultRail = read('src/components/home/VaultRail.tsx');
-ok(/id="companies"/.test(vaultRail) && /href="#companies"/.test(home), 'the vault rail resolves the #companies anchor');
-ok(!/HowItWorks/.test(home), 'the How-it-works section stays cut');
+ok(/href="\/companies"/.test(home), 'the hero leads to the /companies directory');
+ok(/seeAllHref="\/companies"/.test(vaultRail), 'the vault rail links through to the full directory');
+// The old four-tile prose grid stays cut; how it works is now the route band.
+ok(!/HowItWorks/.test(home), 'the How-it-works prose grid stays cut');
+ok(/<RouteBand/.test(home), 'how it works is shown as the route, on the page\'s one ink band');
 ok(!/CompanyOrbitHero3D/.test(home), 'the 3D orbit stays retired from the homepage');
 
 console.log('\n--- rails are native snap scrollers ---');
@@ -70,8 +76,7 @@ ok(/hidden md:flex/.test(home), 'the mock stands aside on phones — Quick Actio
 ok(/min-h-\[48px\]/.test(home), 'the hero CTAs clear the 44px thumb floor at 48px');
 
 console.log('\n--- the pinned search contract (mirrors anti-web) ---');
-ok(/hidden md:block/.test(home), 'the hero search wrapper still hides below md');
-ok(/value=\{searchQuery\}/.test(home), 'the hero search still drives the vault rail filter');
+ok(/value=\{searchQuery\}/.test(home), 'the hero finder still drives the vault rail filter');
 
 console.log('\n--- thumb floor in globals ---');
 ok(

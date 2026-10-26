@@ -6,10 +6,7 @@ import { MarkdownEditor as MdEditor, clearEditorDraftsWithPrefix } from '@/compo
 import {
   pipeTextToMarkdownTable, RICH_TEXT_MAX, clampRichFields, overLimitRichTextPaths,
 } from '@/lib/richText';
-import {
-  Save, Building2, BookOpen, Lightbulb, FileSpreadsheet, Flame,
-  Zap, UserCheck, Plus, Trash2, CheckCircle2, Sparkles, ChevronDown, Eye
-} from 'lucide-react';
+import { Save, Building2, BookOpen, Lightbulb, FileSpreadsheet, Flame, Zap, UserCheck, Plus, Trash2, CheckCircle2, ChevronDown, Eye, PenLine } from 'lucide-react';
 
 interface SectionPackEditorProps {
   module: ContentModule;
@@ -39,8 +36,8 @@ const sections: { id: SectionId; label: string; icon: any; desc: string }[] = [
   { id: 'hr_round', label: '7. HR & Behavioral', icon: UserCheck, desc: 'STAR model answers + tips' },
 ];
 
-const inputCls = "w-full p-2.5 border border-gray-200 rounded-xl bg-[#FAFAF9] text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#0284C7]";
-const labelCls = "block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1";
+const inputCls = "w-full p-2.5 border border-gray-200 rounded-xl bg-app-warm text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-signal";
+const labelCls = "block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1";
 
 export const SectionPackEditor: React.FC<SectionPackEditorProps> = ({ module, companyName, onSaved }) => {
   const [draft, setDraft] = useState<ModuleSectionData>(module.section_data || emptySection());
@@ -95,10 +92,10 @@ export const SectionPackEditor: React.FC<SectionPackEditorProps> = ({ module, co
   const SectionCard = ({ title, onAdd, addLabel, children }: any) => (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-bold text-[#1E293B] flex items-center gap-2">{title}</h3>
+        <h3 className="text-sm font-bold text-ink-soft flex items-center gap-2">{title}</h3>
         <button
           onClick={onAdd}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#0284C7] hover:bg-[#0369A1] text-white rounded-lg text-xs font-bold transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-signal hover:bg-signal text-white rounded-lg text-xs font-bold transition-colors"
           type="button"
         >
           <Plus className="w-3.5 h-3.5" /> {addLabel}
@@ -143,7 +140,7 @@ export const SectionPackEditor: React.FC<SectionPackEditorProps> = ({ module, co
         <div className="flex items-center gap-2">
           {isDirty && (
             <span
-              className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5"
+              className="inline-flex items-center gap-1 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5"
               title="Edited but not saved yet"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-amber-500" aria-hidden="true" />
@@ -199,7 +196,7 @@ export const SectionPackEditor: React.FC<SectionPackEditorProps> = ({ module, co
               <div className="flex items-center justify-between mb-1">
                 <label className={labelCls + ' mb-0'}>Salary & CTC Breakdown</label>
                 <button type="button" onClick={() => set({ overview: { ...ov, salaryBreakdown: pipeTextToMarkdownTable(ov.salaryBreakdown) } })}
-                  className="text-[11px] font-bold text-[#0284C7] hover:underline" title="Turn a 'Label: value | Label: value' line into a table">
+                  className="text-xs font-bold text-signal hover:underline" title="Turn a 'Label: value | Label: value' line into a table">
                   Make it a table
                 </button>
               </div>
@@ -229,7 +226,7 @@ export const SectionPackEditor: React.FC<SectionPackEditorProps> = ({ module, co
         return (
           <SectionCard title={`Core Subjects (${subjects.length})`} onAdd={() => set({ core_subjects: [...subjects, { subject: '', topics: [] }] })} addLabel="Add Subject">
             {subjects.map((sub, sIdx) => (
-              <ItemShell key={sIdx} accent="border-sky-200 bg-sky-50/40">
+              <ItemShell key={sIdx} accent="border-signal/30 bg-signal-soft/40">
                 <input className={inputCls} placeholder="Subject (e.g. Database Management Systems)" value={sub.subject}
                   onChange={(e) => set({ core_subjects: subjects.map((x, i) => i === sIdx ? { ...x, subject: e.target.value } : x) })} />
 
@@ -237,7 +234,7 @@ export const SectionPackEditor: React.FC<SectionPackEditorProps> = ({ module, co
                   {sub.topics.map((topic, tIdx) => (
                     <div key={tIdx} className="p-3 bg-white border border-gray-200 rounded-xl space-y-2.5">
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-bold uppercase text-gray-400 tracking-wider">Topic #{tIdx + 1}</span>
+                        <span className="text-xs font-bold uppercase text-gray-400 tracking-wider">Topic #{tIdx + 1}</span>
                         <button type="button" className="text-xs text-red-500 hover:underline font-semibold"
                           onClick={() => set({ core_subjects: subjects.map((x, i) => i === sIdx ? { ...x, topics: x.topics.filter((_: any, j: number) => j !== tIdx) } : x) })}>
                           Remove Topic
@@ -250,8 +247,8 @@ export const SectionPackEditor: React.FC<SectionPackEditorProps> = ({ module, co
 
                       <div className="space-y-2 pt-1">
                         <div className="flex items-center justify-between">
-                          <span className="text-[11px] font-bold uppercase text-gray-400 tracking-wider">PYQs ({topic.pyqs?.length || 0})</span>
-                          <button type="button" className="inline-flex items-center gap-1 text-[11px] font-bold text-[#0284C7] hover:underline"
+                          <span className="text-xs font-bold uppercase text-gray-400 tracking-wider">PYQs ({topic.pyqs?.length || 0})</span>
+                          <button type="button" className="inline-flex items-center gap-1 text-xs font-bold text-signal hover:underline"
                             onClick={() => set({ core_subjects: subjects.map((x, i) => i === sIdx ? { ...x, topics: x.topics.map((t, j) => j === tIdx ? { ...t, pyqs: [...(t.pyqs || []), { year: 2026, question: '', answer: '', frequency: 'High' }] } : t) } : x) })}>
                             <Plus className="w-3 h-3" /> Add PYQ
                           </button>
@@ -284,7 +281,7 @@ export const SectionPackEditor: React.FC<SectionPackEditorProps> = ({ module, co
                       </div>
                     </div>
                   ))}
-                  <button type="button" className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0284C7] hover:underline"
+                  <button type="button" className="inline-flex items-center gap-1.5 text-xs font-bold text-signal hover:underline"
                     onClick={() => set({ core_subjects: subjects.map((x, i) => i === sIdx ? { ...x, topics: [...x.topics, { title: '', content: '', pyqs: [] }] } : x) })}>
                     <Plus className="w-3.5 h-3.5" /> Add Topic
                   </button>
@@ -301,7 +298,7 @@ export const SectionPackEditor: React.FC<SectionPackEditorProps> = ({ module, co
         return (
           <SectionCard title={`Interview Questions (${qs.length})`} onAdd={() => set({ interview_questions: [...qs, { category: 'Technical', title: '', question: '', solution: '', code: '', language: 'cpp' }] })} addLabel="Add Question">
             {qs.map((q, idx) => (
-              <ItemShell key={idx} accent="border-blue-200 bg-blue-50/30">
+              <ItemShell key={idx} accent="border-signal/30 bg-signal-soft/30">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <select className={inputCls} value={q.category}
                     onChange={(e) => set({ interview_questions: qs.map((x, i) => i === idx ? { ...x, category: e.target.value } : x) })}>
@@ -433,7 +430,7 @@ export const SectionPackEditor: React.FC<SectionPackEditorProps> = ({ module, co
         return (
           <SectionCard title={`HR Questions (${hrs.length})`} onAdd={() => set({ hr_round: [...hrs, { question: '', answer: '', tips: [] }] })} addLabel="Add HR Q">
             {hrs.map((hr, idx) => (
-              <ItemShell key={idx} accent="border-sky-200 bg-sky-50/30">
+              <ItemShell key={idx} accent="border-signal/30 bg-signal-soft/30">
                 <PackField path={`hr_round.${idx}.question`} minHeight={90} ariaLabel="HR question" value={hr.question} onChange={(v) => set({ hr_round: hrs.map((x, i) => i === idx ? { ...x, question: v } : x) })}
                   placeholder="Question (e.g. Why do you want to join us?)" />
                 <PackField path={`hr_round.${idx}.answer`} minHeight={190} ariaLabel="Sample STAR answer" value={hr.answer} onChange={(v) => set({ hr_round: hrs.map((x, i) => i === idx ? { ...x, answer: v } : x) })}
@@ -449,7 +446,7 @@ export const SectionPackEditor: React.FC<SectionPackEditorProps> = ({ module, co
                       </button>
                     </div>
                   ))}
-                  <button type="button" className="inline-flex items-center gap-1 text-xs font-bold text-sky-800 hover:underline"
+                  <button type="button" className="inline-flex items-center gap-1 text-xs font-bold text-signal-hover hover:underline"
                     onClick={() => set({ hr_round: hrs.map((x, i) => i === idx ? { ...x, tips: [...x.tips, ''] } : x) })}>
                     <Plus className="w-3.5 h-3.5" /> Add Tip
                   </button>
@@ -522,9 +519,9 @@ export const SectionPackEditor: React.FC<SectionPackEditorProps> = ({ module, co
       <div className="px-5 py-4 border-b border-gray-200 flex flex-wrap items-center justify-between gap-3 bg-gray-50/60">
         <div>
           <div className="flex items-center gap-2 text-xs font-mono text-gray-500">
-            <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Pack Editor
+            <PenLine className="w-3.5 h-3.5 text-amber-500" /> Pack Editor
           </div>
-          <h3 className="text-base font-extrabold text-[#1E293B]">{module.title}</h3>
+          <h3 className="text-base font-extrabold text-ink-soft">{module.title}</h3>
           <p className="text-xs text-gray-500">{filledCount} / 7 sections filled</p>
           {isDirty && (
             <p className="text-xs font-bold text-amber-700 mt-0.5">
@@ -555,8 +552,8 @@ export const SectionPackEditor: React.FC<SectionPackEditorProps> = ({ module, co
             const isActive = active === s.id;
             return (
               <button key={s.id} onClick={() => setActive(s.id)} type="button"
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all text-[13px] font-bold ${
-                  isActive ? 'bg-[#0284C7] text-white shadow-sm' : 'text-gray-600 hover:bg-white'
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all text-sm font-bold ${
+                  isActive ? 'bg-signal text-white shadow-sm' : 'text-gray-600 hover:bg-white'
                 }`}>
                 <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-gray-400'}`} />
                 <span className="flex-1 truncate">{s.label}</span>
@@ -568,7 +565,7 @@ export const SectionPackEditor: React.FC<SectionPackEditorProps> = ({ module, co
                   />
                 )}
                 {counts[s.id] > 0 && (
-                  <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded-full ${isActive ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-800'}`}>
+                  <span className={`text-xs font-mono px-1.5 py-0.5 rounded-full ${isActive ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-800'}`}>
                     {counts[s.id]}
                   </span>
                 )}
@@ -588,9 +585,9 @@ export const SectionPackEditor: React.FC<SectionPackEditorProps> = ({ module, co
       </div>
 
       {/* Live Preview */}
-      <div className="border-t border-gray-200 p-5 bg-[#F8FAFC]">
+      <div className="border-t border-gray-200 p-5 bg-app-warm">
         <div className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">
-          <Eye className="w-4 h-4 text-[#0284C7]" /> Live Student Preview — Calibre, 18px body
+          <Eye className="w-4 h-4 text-signal" /> Live Student Preview — Calibre, 18px body
         </div>
         {/* No prose-article here on purpose: each field below renders its own
             MarkdownContent, and nesting both would apply the prose rules twice. */}
@@ -609,15 +606,15 @@ export const SectionPackEditor: React.FC<SectionPackEditorProps> = ({ module, co
         <div className="flex items-center gap-3">
           <div className="min-w-0 flex-1">
             {error ? (
-              <p className="text-[12px] font-bold text-red-600 truncate">{error}</p>
+              <p className="text-xs font-bold text-red-600 truncate">{error}</p>
             ) : saved ? (
-              <p className="text-[12px] font-bold text-emerald-700 flex items-center gap-1"><CheckCircle2 className="w-4 h-4 shrink-0" /> Saved</p>
+              <p className="text-xs font-bold text-emerald-700 flex items-center gap-1"><CheckCircle2 className="w-4 h-4 shrink-0" /> Saved</p>
             ) : isDirty ? (
-              <p className="text-[12px] font-bold text-amber-700 truncate">
+              <p className="text-xs font-bold text-amber-700 truncate">
                 Unsaved in {dirtySections.length} section{dirtySections.length > 1 ? 's' : ''}
               </p>
             ) : (
-              <p className="text-[12px] text-gray-400 truncate">All changes saved</p>
+              <p className="text-xs text-gray-400 truncate">All changes saved</p>
             )}
           </div>
           <button
@@ -648,8 +645,8 @@ const PackPreview: React.FC<{ data: ModuleSectionData; active: SectionId; compan
       }
       return (
         <div className="space-y-5 text-base sm:text-lg leading-relaxed text-gray-800">
-          <SectionTitle><Building2 className="w-6 h-6 text-[#0284C7]" /> Company Overview</SectionTitle>
-          {ov.companyInfo && <div className="p-5 bg-sky-50/70 border border-sky-200 rounded-2xl"><h3 className="font-bold text-sky-950 text-lg mb-2">Company Profile & Target Roles</h3><MarkdownContent className="text-sky-900">{ov.companyInfo}</MarkdownContent></div>}
+          <SectionTitle><Building2 className="w-6 h-6 text-signal" /> Company Overview</SectionTitle>
+          {ov.companyInfo && <div className="p-5 bg-signal-soft/70 border border-signal/30 rounded-2xl"><h3 className="font-bold text-brand-ink text-lg mb-2">Company Profile & Target Roles</h3><MarkdownContent className="text-brand-ink">{ov.companyInfo}</MarkdownContent></div>}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             {ov.eligibility && <div className="p-4 bg-gray-50 border border-gray-200 rounded-2xl"><h4 className="font-bold text-gray-900 text-sm uppercase tracking-wider mb-2">Eligibility</h4><MarkdownContent className="text-base text-gray-700">{ov.eligibility}</MarkdownContent></div>}
             {ov.salaryBreakdown && <div className="p-4 bg-gray-50 border border-gray-200 rounded-2xl"><h4 className="font-bold text-gray-900 text-sm uppercase tracking-wider mb-2">CTC Package</h4><MarkdownContent className="text-base text-gray-700">{ov.salaryBreakdown}</MarkdownContent></div>}
@@ -668,10 +665,10 @@ const PackPreview: React.FC<{ data: ModuleSectionData; active: SectionId; compan
       if (subjects.length === 0) return <p className="text-base text-gray-400">No core subjects added yet.</p>;
       return (
         <div className="space-y-6">
-          <SectionTitle><BookOpen className="w-6 h-6 text-[#0284C7]" /> Core Subjects & PYQs</SectionTitle>
+          <SectionTitle><BookOpen className="w-6 h-6 text-signal" /> Core Subjects & PYQs</SectionTitle>
           {subjects.map((sub, sIdx) => (
             <div key={sIdx}>
-              <h3 className="text-xl font-bold text-gray-900 border-l-4 border-[#0284C7] pl-4 py-1">{sub.subject || 'Untitled'}</h3>
+              <h3 className="text-xl font-bold text-gray-900 border-l-4 border-signal pl-4 py-1">{sub.subject || 'Untitled'}</h3>
               <div className="mt-3 space-y-4">
                 {sub.topics.map((t, tIdx) => (
                   <div key={tIdx} className="p-4 bg-gray-50/80 border border-gray-200 rounded-2xl">
@@ -679,10 +676,10 @@ const PackPreview: React.FC<{ data: ModuleSectionData; active: SectionId; compan
                     <MarkdownContent className="text-base text-gray-800 mt-1">{t.content}</MarkdownContent>
                     {(t.pyqs || []).map((p, pIdx) => (
                       <div key={pIdx} className="mt-3 p-3 bg-white border border-gray-200 rounded-xl">
-                        <span className="px-2 py-0.5 bg-sky-100 text-sky-800 rounded font-bold text-xs mr-2">Year {p.year}</span>
+                        <span className="px-2 py-0.5 bg-signal-soft text-signal-hover rounded font-bold text-xs mr-2">Year {p.year}</span>
                         <span className="px-2 py-0.5 bg-purple-100 text-purple-800 rounded font-bold text-xs">{p.frequency}</span>
                         <MarkdownContent compact className="font-bold text-gray-900 text-base mt-1.5">{p.question}</MarkdownContent>
-                        <span className="block text-[11px] font-bold uppercase tracking-wider text-gray-900 mt-2">Answer</span>
+                        <span className="block text-xs font-bold uppercase tracking-wider text-gray-900 mt-2">Answer</span>
                         <MarkdownContent compact className="text-gray-700 text-base">{p.answer}</MarkdownContent>
                       </div>
                     ))}
@@ -699,19 +696,19 @@ const PackPreview: React.FC<{ data: ModuleSectionData; active: SectionId; compan
       if (qs.length === 0) return <p className="text-base text-gray-400">No interview questions yet.</p>;
       return (
         <div className="space-y-5">
-          <SectionTitle><Lightbulb className="w-6 h-6 text-[#0284C7]" /> Technical & Coding Questions</SectionTitle>
+          <SectionTitle><Lightbulb className="w-6 h-6 text-signal" /> Technical & Coding Questions</SectionTitle>
           {qs.map((q, idx) => (
             <div key={idx} className="p-5 bg-gray-50/80 border border-gray-200 rounded-2xl space-y-3">
               <div className="flex items-center gap-2.5">
-                <span className="px-3 py-0.5 rounded-md text-xs font-bold uppercase bg-blue-100 text-blue-800">{q.category}</span>
+                <span className="px-3 py-0.5 rounded-md text-xs font-bold uppercase bg-signal-soft text-signal-hover">{q.category}</span>
                 <h3 className="font-bold text-gray-900 text-lg">{q.title}</h3>
               </div>
               <MarkdownContent className="text-base text-gray-900 font-bold">{q.question}</MarkdownContent>
               <div className="p-3 bg-white border border-gray-200 rounded-xl text-base text-gray-800">
-                <span className="block text-[11px] font-bold uppercase tracking-wider text-sky-900 mb-1">Solution</span>
+                <span className="block text-xs font-bold uppercase tracking-wider text-brand-ink mb-1">Solution</span>
                 <MarkdownContent className="text-gray-800">{q.solution}</MarkdownContent>
               </div>
-              {q.code && <pre className="bg-[#0F172A] text-gray-100 rounded-xl p-4 font-mono text-sm overflow-x-auto">{q.code}</pre>}
+              {q.code && <pre className="bg-heading text-gray-100 rounded-xl p-4 font-mono text-sm overflow-x-auto">{q.code}</pre>}
             </div>
           ))}
         </div>
@@ -722,7 +719,7 @@ const PackPreview: React.FC<{ data: ModuleSectionData; active: SectionId; compan
       if (sheets.length === 0) return <p className="text-base text-gray-400">No cheatsheets yet.</p>;
       return (
         <div className="space-y-4">
-          <SectionTitle><FileSpreadsheet className="w-6 h-6 text-[#0284C7]" /> Quick Cheatsheets</SectionTitle>
+          <SectionTitle><FileSpreadsheet className="w-6 h-6 text-signal" /> Quick Cheatsheets</SectionTitle>
           {sheets.map((s, idx) => (
             <div key={idx} className="p-5 bg-amber-50/60 border border-amber-200 rounded-2xl">
               <h3 className="font-bold text-amber-950 text-xl">{s.title}</h3>
@@ -777,12 +774,12 @@ const PackPreview: React.FC<{ data: ModuleSectionData; active: SectionId; compan
       if (hrs.length === 0) return <p className="text-base text-gray-400">No HR round content yet.</p>;
       return (
         <div className="space-y-4">
-          <SectionTitle><UserCheck className="w-6 h-6 text-[#0284C7]" /> HR & Behavioral Blueprint</SectionTitle>
+          <SectionTitle><UserCheck className="w-6 h-6 text-signal" /> HR & Behavioral Blueprint</SectionTitle>
           {hrs.map((hr, idx) => (
-            <div key={idx} className="p-5 bg-sky-50/60 border border-sky-200 rounded-2xl">
-              <h3 className="font-bold text-sky-950 text-lg">Q: {hr.question}</h3>
-              <div className="p-3 bg-white border border-sky-100 rounded-xl text-base text-gray-800 mt-2">
-                <span className="block text-[11px] font-bold uppercase tracking-wider text-sky-950 mb-1">Sample STAR answer</span>
+            <div key={idx} className="p-5 bg-signal-soft/60 border border-signal/30 rounded-2xl">
+              <h3 className="font-bold text-brand-ink text-lg">Q: {hr.question}</h3>
+              <div className="p-3 bg-white border border-line rounded-xl text-base text-gray-800 mt-2">
+                <span className="block text-xs font-bold uppercase tracking-wider text-brand-ink mb-1">Sample STAR answer</span>
                 <MarkdownContent className="text-gray-800">{hr.answer}</MarkdownContent>
               </div>
               {hr.tips?.length > 0 && (

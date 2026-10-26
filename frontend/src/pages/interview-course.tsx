@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
+import dynamic from 'next/dynamic';
+import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import { Footer } from '@/components/layout/Footer';
 import { StarAnswerBuilder } from '@/components/interview/StarAnswerBuilder';
@@ -9,10 +11,9 @@ import {
   getInterviewCourseProgressApi,
   saveInterviewCourseProgressApi
 } from '@/lib/api';
-import {
-  Sparkles, CheckCircle2, Star, ShieldCheck, Trophy, Award, Search, ChevronDown, ChevronUp,
-  Play, BookOpen, Layers, Target, HelpCircle, Lock, ArrowRight, Check, ExternalLink, Zap
-} from 'lucide-react';
+import { CheckCircle2, Star, ShieldCheck, Trophy, Award, Search, ChevronDown, ChevronUp, Play, BookOpen, Layers, Target, HelpCircle, Lock, ArrowRight, Check, ExternalLink, Zap, GraduationCap } from 'lucide-react';
+
+const AuthRequiredModal = dynamic(() => import('@/components/modals/AuthRequiredModal').then((m) => m.AuthRequiredModal), { ssr: false });
 
 export default function InterviewCoursePage() {
   const [modules, setModules] = useState<any[]>([]);
@@ -30,24 +31,41 @@ export default function InterviewCoursePage() {
   // Cart Modal State for Premium Unlocks
 
   useEffect(() => {
-    async function loadData() {
-      const modRes = await fetchInterviewModulesApi();
-      if (modRes.success && modRes.data) {
-        setModules(modRes.data);
-      }
-      const progRes = await getInterviewCourseProgressApi();
-      if (progRes.progress) {
-        setUserProgress(progRes.progress);
-      }
-    }
-    loadData();
+    fetchInterviewModulesApi()
+      .then((modRes) => {
+        if (modRes.success && modRes.data) setModules(modRes.data);
+      })
+      .catch(() => { /* the static outline still renders; modules retry on next visit */ });
   }, []);
 
-  const handleToggleModule = async (moduleId: number) => {
-    const res = await saveInterviewCourseProgressApi(moduleId);
-    if (res.progress) {
-      setUserProgress(res.progress);
+  // Progress is per student. Anonymous visitors read the whole course; asking
+  // for their progress threw on every visit and left an unhandled rejection.
+  const { user } = useAuth();
+  useEffect(() => {
+    if (!user) return;
+    getInterviewCourseProgressApi()
+      .then((progRes) => {
+        if (progRes.progress) setUserProgress(progRes.progress);
+      })
+      .catch(() => { /* keep the local, empty progress */ });
+  }, [user]);
+
+  // Ticking a module needs an account to save to: sign in first, then save it.
+  const [pendingModuleId, setPendingModuleId] = useState<number | null>(null);
+  const saveProgress = async (moduleId: number) => {
+    try {
+      const res = await saveInterviewCourseProgressApi(moduleId);
+      if (res.progress) setUserProgress(res.progress);
+    } catch {
+      /* the tick stays as it was; the next tap retries */
     }
+  };
+  const handleToggleModule = (moduleId: number) => {
+    if (!user) {
+      setPendingModuleId(moduleId);
+      return;
+    }
+    void saveProgress(moduleId);
   };
 
   const categories = ['All', 'Modules 1 - 10', 'Modules 11 - 20', 'Modules 21 - 30', 'Modules 31 - 40', 'Modules 41 - 50'];
@@ -92,7 +110,7 @@ export default function InterviewCoursePage() {
         />
       </Head>
 
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-brand-orange selection:text-white">
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-signal selection:text-white">
 
         {/* Full-Page Canvas Container */}
         <main className="flex-1 w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 py-8 space-y-12">
@@ -105,7 +123,7 @@ export default function InterviewCoursePage() {
               {/* Hero Text Left */}
               <div className="lg:col-span-7 space-y-6">
                 <div className="inline-flex items-center gap-2 bg-brand-orange/15 border border-brand-orange/30 text-brand-orange px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide uppercase">
-                  <Sparkles className="w-4 h-4" /> Official 50-Module Masterclass Course
+                  <GraduationCap className="w-4 h-4" /> Official 50-Module Masterclass Course
                 </div>
 
                 <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white leading-tight tracking-tight">
@@ -130,7 +148,7 @@ export default function InterviewCoursePage() {
                 <div className="flex flex-wrap items-center gap-4 pt-4">
                   <a
                     href="#curriculum"
-                    className="bg-brand-orange hover:bg-brand-orange/90 text-white font-bold text-sm sm:text-base px-7 py-3.5 rounded-full shadow-lg shadow-brand-orange/25 transition-all flex items-center gap-2"
+                    className="bg-signal hover:bg-signal-hover text-white font-bold text-sm sm:text-base px-7 py-3.5 rounded-full shadow-lg shadow-brand-orange/25 transition-all flex items-center gap-2"
                   >
                     Start 50 Modules Now 👉
                   </a>
@@ -150,11 +168,11 @@ export default function InterviewCoursePage() {
                   <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-4">
                     <div>
                       <span className="text-xs text-slate-400 block font-medium">Your Learning Progress</span>
-                      <h4 className="text-lg font-bold text-white flex items-center gap-2">
+                      <p className="text-lg font-bold text-white flex items-center gap-2">
                         {userProgress.completed_module_ids.length} / {modules.length || 50} Modules Done
-                      </h4>
+                      </p>
                     </div>
-                    <span className="text-xl font-extrabold text-brand-orange font-mono">
+                    <span className="text-xl font-extrabold text-brand-orange ">
                       {completionPercentage}%
                     </span>
                   </div>
@@ -171,14 +189,14 @@ export default function InterviewCoursePage() {
                   <div className="grid grid-cols-2 gap-3 mb-6">
                     <div className="bg-slate-900 border border-slate-800 p-3.5 rounded-xl">
                       <span className="text-xs text-slate-400 block">Total XP Earned</span>
-                      <span className="text-lg font-bold text-amber-400 flex items-center gap-1 font-mono">
+                      <span className="text-lg font-bold text-amber-400 flex items-center gap-1 ">
                         <Trophy className="w-4 h-4" /> {userProgress.total_xp} XP
                       </span>
                     </div>
 
                     <div className="bg-slate-900 border border-slate-800 p-3.5 rounded-xl">
                       <span className="text-xs text-slate-400 block">Modules Completed</span>
-                      <span className="text-lg font-bold text-emerald-400 flex items-center gap-1 font-mono">
+                      <span className="text-lg font-bold text-emerald-400 flex items-center gap-1 ">
                         <Award className="w-4 h-4" /> {userProgress.completed_module_ids.length}/50
                       </span>
                     </div>
@@ -192,14 +210,14 @@ export default function InterviewCoursePage() {
             <p className="text-xs sm:text-sm font-semibold text-slate-200">
               Certificates now come from the course engine
             </p>
-            <p className="text-[11px] text-slate-400 leading-relaxed">
+            <p className="text-xs text-slate-400 leading-relaxed">
               These 50 interview modules still count for XP, but they no longer issue a certificate
               of their own. The old one was unsigned and its verification link pointed at a page
               that never existed, so anyone could have printed one by hand.
             </p>
             <Link
               href="/courses"
-              className="inline-flex items-center gap-1.5 text-[11px] font-bold text-brand-orange hover:text-amber-400"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-orange hover:text-amber-400"
             >
               Browse verifiable courses
               <ArrowRight className="w-3 h-3" />
@@ -227,7 +245,7 @@ export default function InterviewCoursePage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Pillar 1 */}
               <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 hover:border-slate-700 transition-all">
-                <div className="w-12 h-12 rounded-xl bg-blue-950/60 border border-blue-800/50 flex items-center justify-center text-blue-400 font-bold text-xl">
+                <div className="w-12 h-12 rounded-xl bg-brand-ink/60 border border-signal-hover/50 flex items-center justify-center text-logo font-bold text-xl">
                   1
                 </div>
                 <h3 className="text-lg font-bold text-white uppercase tracking-wide">
@@ -236,7 +254,7 @@ export default function InterviewCoursePage() {
                 <p className="text-sm text-slate-400 leading-relaxed">
                   Prepare systematically for your next job interview: understand how interviewers evaluate answers and walk in knowing the core question patterns.
                 </p>
-                <div className="pt-2 text-xs font-semibold text-blue-400 flex items-center gap-1">
+                <div className="pt-2 text-xs font-semibold text-logo flex items-center gap-1">
                   <Check className="w-4 h-4" /> Scoring criteria per module
                 </div>
               </div>
@@ -314,7 +332,7 @@ export default function InterviewCoursePage() {
                   onClick={() => setActiveCategory(cat)}
                   className={`text-xs sm:text-sm font-semibold px-4 py-2 rounded-xl whitespace-nowrap transition-all ${
                     activeCategory === cat
-                      ? 'bg-brand-orange text-white shadow-md shadow-brand-orange/20'
+                      ? 'bg-signal text-white shadow-md shadow-signal/20'
                       : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
                   }`}
                 >
@@ -374,15 +392,15 @@ export default function InterviewCoursePage() {
                         >
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 mb-0.5">
-                          <span className="text-[11px] font-mono font-bold text-slate-400 uppercase">
+                          <span className="text-xs font-bold text-slate-400 uppercase">
                             {mod.category}
                           </span>
                           {mod.is_free ? (
-                            <span className="text-[10px] bg-emerald-950/60 text-emerald-400 border border-emerald-800/50 px-2 py-0.5 rounded-full font-bold">
+                            <span className="text-xs bg-emerald-950/60 text-emerald-400 border border-emerald-800/50 px-2 py-0.5 rounded-full font-bold">
                               FREE PREVIEW
                             </span>
                           ) : (
-                            <span className="text-[10px] bg-slate-800 text-amber-400 border border-amber-900/30 px-2 py-0.5 rounded-full font-bold">
+                            <span className="text-xs bg-slate-800 text-amber-400 border border-amber-900/30 px-2 py-0.5 rounded-full font-bold">
                               FULL MODULE
                             </span>
                           )}
@@ -400,7 +418,7 @@ export default function InterviewCoursePage() {
                       {isExpanded ? (
                         <ChevronUp className="w-5 h-5 text-brand-orange" />
                       ) : (
-                        <ChevronDown className="w-5 h-5 text-slate-500" />
+                        <ChevronDown className="w-5 h-5 text-slate-400" />
                       )}
                     </div>
                         </button>
@@ -421,7 +439,7 @@ export default function InterviewCoursePage() {
                             </p>
                           </div>
                           <Link href="/login?next=/interview-course">
-                            <span className="inline-flex items-center gap-2 px-6 py-3 bg-brand-orange hover:opacity-90 text-[#1F3A5F] text-sm font-black rounded-xl transition-all">
+                            <span className="inline-flex items-center gap-2 px-6 py-3 bg-brand-orange hover:opacity-90 text-brand-ink text-sm font-black rounded-xl transition-all">
                               <ArrowRight className="w-4 h-4" /> Sign in — it&apos;s free
                             </span>
                           </Link>
@@ -445,16 +463,16 @@ export default function InterviewCoursePage() {
                         {/* STAR Breakdown Grid if available */}
                         {mod.star_breakdown && (
                           <div className="space-y-2">
-                            <span className="text-xs font-bold text-blue-400 uppercase tracking-wider block">
+                            <span className="text-xs font-bold text-logo uppercase tracking-wider block">
                               S.T.A.R. Breakdown Example
                             </span>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                              <div className="bg-blue-950/20 border border-blue-900/40 p-3 rounded-lg text-xs text-slate-300">
-                                <strong className="text-blue-400 block mb-0.5">S — Situation:</strong>
+                              <div className="bg-brand-ink/20 border border-brand-ink/40 p-3 rounded-lg text-xs text-slate-300">
+                                <strong className="text-logo block mb-0.5">S — Situation:</strong>
                                 {mod.star_breakdown.situation}
                               </div>
-                              <div className="bg-cyan-950/20 border border-cyan-900/40 p-3 rounded-lg text-xs text-slate-300">
-                                <strong className="text-cyan-400 block mb-0.5">T — Task:</strong>
+                              <div className="bg-brand-ink/20 border border-brand-ink/40 p-3 rounded-lg text-xs text-slate-300">
+                                <strong className="text-logo block mb-0.5">T — Task:</strong>
                                 {mod.star_breakdown.task}
                               </div>
                               <div className="bg-amber-950/20 border border-amber-900/40 p-3 rounded-lg text-xs text-slate-300">
@@ -542,6 +560,16 @@ export default function InterviewCoursePage() {
         }}
       />
 
+      <AuthRequiredModal
+        isOpen={pendingModuleId !== null}
+        targetTitle={modules.find((m) => m.id === pendingModuleId)?.title}
+        onClose={() => setPendingModuleId(null)}
+        onSuccess={() => {
+          const id = pendingModuleId;
+          setPendingModuleId(null);
+          if (id !== null) void saveProgress(id);
+        }}
+      />
     </>
   );
 }

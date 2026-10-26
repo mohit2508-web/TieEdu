@@ -153,24 +153,24 @@ export default function ComparePage() {
         />
       </Head>
 
-      <div className="min-h-screen flex flex-col bg-[#FAFAF9]">
+      <div className="min-h-screen flex flex-col bg-app-warm">
 
         <main className="flex-1 w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 py-6 sm:py-8">
           <Link
-            href="/"
-            className="inline-flex items-center gap-1 text-xs text-[--text-muted] hover:text-[#1A1A1A] mb-5 font-medium"
+            href="/companies"
+            className="inline-flex items-center gap-1 text-xs text-[--text-muted] hover:text-heading mb-5 font-medium"
           >
-            <ArrowLeft className="w-3.5 h-3.5" /> Back to Company Directory
+            <ArrowLeft className="w-3.5 h-3.5" /> All companies
           </Link>
 
           {/* Hero */}
           <div className="mb-6 flex flex-col lg:flex-row lg:items-end justify-between gap-4">
             <div className="min-w-0">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-[#1F3A5F] border border-indigo-100 mb-3 shadow-sm">
-                <Scale className="w-3.5 h-3.5 text-[#B45309]" />
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-brand-ink border border-indigo-100 mb-3 shadow-sm">
+                <Scale className="w-3.5 h-3.5 text-amber-deep" />
                 Comparison Matrix
               </div>
-              <h1 className="font-serif-heading text-2xl sm:text-4xl lg:text-5xl font-bold text-[#1A1A1A] mb-2 leading-tight">
+              <h1 className="font-serif-heading text-2xl sm:text-4xl lg:text-5xl font-bold text-heading mb-2 leading-tight">
                 Compare Company Interview Vaults
               </h1>
               <p className="text-xs sm:text-sm text-[--text-muted] max-w-3xl leading-relaxed">
@@ -181,7 +181,7 @@ export default function ComparePage() {
             </div>
 
             {totals && (
-              <div className="bg-white rounded-xl border border-[#EDEDEB] shadow-sm shrink-0 px-4 py-3 grid grid-cols-2 sm:grid-cols-4 gap-x-5 gap-y-2 text-xs">
+              <div className="bg-white rounded-xl border border-line shadow-sm shrink-0 px-4 py-3 grid grid-cols-2 sm:grid-cols-4 gap-x-5 gap-y-2 text-xs">
                 <Stat2 label="Vaults" value={String(totals.vaults)} />
                 <Stat2 label="Questions" value={String(totals.questions)} />
                 <Stat2 label="Reports" value={String(totals.reports)} />
@@ -195,14 +195,14 @@ export default function ComparePage() {
             <div className="mb-5">
               <button
                 onClick={() => setShowMethodology((v) => !v)}
-                className="inline-flex items-center gap-1.5 text-[11.5px] font-semibold text-[#1F3A5F] hover:text-[#2A4D7E]"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-ink hover:text-brand-ink"
               >
                 <Info className="w-3.5 h-3.5" />
                 How to read this matrix
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showMethodology ? 'rotate-180' : ''}`} />
               </button>
               {showMethodology && (
-                <ul className="mt-2 space-y-1.5 bg-white border border-[#EDEDEB] rounded-xl p-3.5 text-[11.5px] text-[#4A4A4A] leading-relaxed">
+                <ul className="mt-2 space-y-1.5 bg-white border border-line rounded-xl p-3.5 text-xs text-body leading-relaxed">
                   {matrix.methodology.map((m, i) => (
                     <li key={i} className="flex gap-2">
                       <span className="text-emerald-600 shrink-0">✓</span>
@@ -215,17 +215,17 @@ export default function ComparePage() {
           )}
 
           {/* Company picker */}
-          <div className="bg-white border border-[#EDEDEB] rounded-2xl shadow-sm p-3.5 sm:p-4 mb-5">
+          <div className="bg-white border border-line rounded-2xl shadow-sm p-3.5 sm:p-4 mb-5">
             <div className="flex items-center justify-between gap-3 mb-3">
               <div className="min-w-0">
-                <h2 className="text-[13px] font-extrabold text-[#1A1A1A]">Companies to compare</h2>
-                <p className="text-[11px] text-[--text-muted] mt-0.5">
+                <h2 className="text-sm font-extrabold text-heading">Companies to compare</h2>
+                <p className="text-xs text-[--text-muted] mt-0.5">
                   Pick up to {MAX_COLUMNS}. A round is only listed for a company whose vault actually has it.
                 </p>
               </div>
               <button
                 onClick={() => setPicking((v) => !v)}
-                className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#1F3A5F]/20 text-[12px] font-bold text-[#1F3A5F] hover:bg-[#1F3A5F]/5"
+                className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-brand-ink/20 text-xs font-bold text-brand-ink hover:bg-brand-ink/5"
               >
                 <ShieldCheck className="w-3.5 h-3.5" />
                 {picking ? 'Done' : 'Change'}
@@ -239,12 +239,12 @@ export default function ComparePage() {
                 return (
                   <span
                     key={s}
-                    className="inline-flex items-center gap-1.5 pl-1.5 pr-2 py-1 rounded-full bg-[#1F3A5F] text-white text-[12px] font-semibold"
+                    className="inline-flex items-center gap-1.5 pl-1.5 pr-2 py-1 rounded-full bg-brand-ink text-white text-xs font-semibold"
                   >
                     <BrandTile name={c?.name || s} src={c?.logo_url} className="w-4 h-4 rounded-full p-0" />
                     <span className="max-w-[120px] truncate">{c?.name || s}</span>
                     {cmp && cmp.premium_module_count === 0 && (
-                      <span className="text-[9.5px] font-bold uppercase bg-emerald-400/25 text-emerald-100 px-1 rounded">
+                      <span className="text-xs font-bold uppercase bg-emerald-400/25 text-emerald-100 px-1 rounded">
                         Free
                       </span>
                     )}
@@ -263,7 +263,7 @@ export default function ComparePage() {
             </div>
 
             {picking && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1.5 pt-3 border-t border-[#EDEDEB] max-h-64 overflow-y-auto">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1.5 pt-3 border-t border-line max-h-64 overflow-y-auto">
                 {companies.map((c) => {
                   const on = slugs.includes(c.slug);
                   const full = slugs.length >= MAX_COLUMNS && !on;
@@ -274,17 +274,17 @@ export default function ComparePage() {
                       onClick={() => toggleSlug(c.slug)}
                       className={`flex items-center gap-2 px-2.5 py-2 rounded-lg border text-left transition-colors disabled:opacity-40 ${
                         on
-                          ? 'border-[#1F3A5F] bg-[#1F3A5F]/5'
-                          : 'border-[#EDEDEB] hover:border-[#1F3A5F]/40'
+                          ? 'border-brand-ink bg-brand-ink/5'
+                          : 'border-line hover:border-brand-ink/40'
                       }`}
                     >
                       <BrandTile name={c.name} src={c.logo_url} className="w-6 h-6 rounded-lg p-0.5 shrink-0" />
-                      <span className="text-[12px] font-semibold text-[#1A1A1A] truncate min-w-0">{c.name}</span>
+                      <span className="text-xs font-semibold text-heading truncate min-w-0">{c.name}</span>
                     </button>
                   );
                 })}
                 {companies.length === 0 && (
-                  <p className="col-span-full text-[12px] text-[--text-muted] py-3 text-center">
+                  <p className="col-span-full text-xs text-[--text-muted] py-3 text-center">
                     No published company vaults available to compare.
                   </p>
                 )}
@@ -298,20 +298,20 @@ export default function ComparePage() {
               <RefreshCw className="w-4 h-4 animate-spin mr-2" /> Loading live vault data…
             </div>
           ) : matrixError ? (
-            <div className="bg-white border border-[#EDEDEB] rounded-2xl p-10 text-center">
-              <p className="text-sm font-bold text-[#1A1A1A] mb-1">Could not load the comparison</p>
+            <div className="bg-white border border-line rounded-2xl p-10 text-center">
+              <p className="text-sm font-bold text-heading mb-1">Could not load the comparison</p>
               <p className="text-xs text-[--text-muted] mb-4">
                 The comparison service did not respond. No fallback numbers are shown — that is the point.
               </p>
               <button
                 onClick={() => setSlugs((s) => [...s])}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#1F3A5F] text-white text-xs font-bold"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-brand-ink text-white text-xs font-bold"
               >
                 <RefreshCw className="w-3.5 h-3.5" /> Retry
               </button>
             </div>
           ) : !matrix || matrix.companies.length === 0 ? (
-            <div className="bg-white border border-[#EDEDEB] rounded-2xl p-10 text-center text-sm text-[--text-muted]">
+            <div className="bg-white border border-line rounded-2xl p-10 text-center text-sm text-[--text-muted]">
               No published company vaults to compare yet.
             </div>
           ) : (
@@ -344,7 +344,7 @@ export default function ComparePage() {
                   cartKeys={cartKeys}
                 />
                 {roundRows.length > 0 && (
-                  <p className="text-[11px] text-[--text-muted] text-center mt-4 px-4 leading-relaxed">
+                  <p className="text-xs text-[--text-muted] text-center mt-4 px-4 leading-relaxed">
                     {roundRows.length} hiring round{roundRows.length === 1 ? '' : 's'} compared. Rounds a company
                     does not cover are marked &ldquo;Not in this vault&rdquo;.
                   </p>
@@ -370,7 +370,7 @@ export default function ComparePage() {
 
 const Stat2: React.FC<{ label: string; value: string }> = ({ label, value }) => (
   <div>
-    <span className="text-[10px] text-[--text-muted] font-mono uppercase block">{label}</span>
-    <span className="font-bold text-[#1A1A1A] text-sm">{value}</span>
+    <span className="text-xs text-[--text-muted] uppercase block">{label}</span>
+    <span className="font-bold text-heading text-sm">{value}</span>
   </div>
 );

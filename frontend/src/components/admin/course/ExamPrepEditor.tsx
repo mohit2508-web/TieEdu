@@ -155,8 +155,8 @@ export const ExamPrepEditor: React.FC<{
 
   if (!draft) {
     return (
-      <div className="rounded-xl border border-dashed border-[#E9E7E1] p-5 text-center">
-        <p className="text-[13px] text-[#6B7280] mb-3">
+      <div className="rounded-xl border border-dashed border-line p-5 text-center">
+        <p className="text-sm text-text-light mb-3">
           No Semester Exam Mode yet. Add board-wise units, important questions and PYQs so
           students can revise here before their university exams.
         </p>
@@ -191,7 +191,7 @@ export const ExamPrepEditor: React.FC<{
 
       {removing && (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 space-y-2.5">
-          <p className="text-[12.5px] text-red-800">
+          <p className="text-xs text-red-800">
             Remove Semester Exam Mode from this course? Students lose the revision tabs until
             it is added again.
           </p>
@@ -227,9 +227,9 @@ export const ExamPrepEditor: React.FC<{
       {/* Units */}
       <div className="space-y-4">
         {units.map((unit, ui) => (
-          <div key={ui} className="rounded-xl border border-[#E9E7E1] bg-[#FCFBF8] p-4 space-y-3">
+          <div key={ui} className="rounded-xl border border-line bg-app-warm p-4 space-y-3">
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#6B7280]">
+              <span className="text-xs font-bold uppercase tracking-wider text-text-light">
                 Unit {ui + 1}
               </span>
               <div className="ml-auto">
@@ -269,7 +269,7 @@ export const ExamPrepEditor: React.FC<{
             </Field>
 
             <div className="space-y-2">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-[#6B7280]">
+              <p className="text-xs font-bold uppercase tracking-wider text-text-light">
                 Previous-year questions for this unit
               </p>
               {(unit.pyqs || []).map((pyq, pi) => (
@@ -323,7 +323,7 @@ export const ExamPrepEditor: React.FC<{
           />
         </Field>
         <div className="space-y-2">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-[#6B7280]">
+          <p className="text-xs font-bold uppercase tracking-wider text-text-light">
             Course-wide PYQs
           </p>
           {(draft.previous_year_questions || []).map((pyq, pi) => (

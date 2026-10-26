@@ -194,21 +194,21 @@ export const AdminCertificatesTab: React.FC = () => {
         subtitle="For learners who completed the work but never claimed it themselves."
       >
         {readiness && !readiness.ready && (
-          <div className="mb-4 rounded-lg border border-[#F0C9A6] bg-[#FDF4EC] px-3.5 py-3 text-[12.5px] leading-relaxed text-[#7A3E12]">
+          <div className="mb-4 rounded-lg border border-money/40 bg-warning-soft px-3.5 py-3 text-xs leading-relaxed text-amber-deep">
             <div className="font-bold">This server cannot sign certificates yet</div>
             <ul className="mt-1 list-disc pl-4 space-y-0.5">
               {readiness.problems.map((p) => (
                 <li key={p}>{p}</li>
               ))}
             </ul>
-            <div className="mt-1.5 text-[11.5px] text-[#8A5A2B]">
+            <div className="mt-1.5 text-xs text-amber-deep">
               Set it in the server environment and restart it. Every issue attempt — here and from a learner&apos;s
               course page — fails until then.
             </div>
           </div>
         )}
         {readiness?.ready && (
-          <div className="mb-4 text-[11.5px] text-[#6B7280]">
+          <div className="mb-4 text-xs text-text-light">
             Signing key <span className="font-mono">{readiness.key_id}</span> loaded from{' '}
             {readiness.key_source === 'file' ? 'a mounted secret file' : 'the environment'} · verification links
             point at <span className="font-mono">{readiness.site_url}</span>
@@ -251,22 +251,22 @@ export const AdminCertificatesTab: React.FC = () => {
               <Empty>Nobody has enrolled in this course yet.</Empty>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-[12.5px]">
+                <table className="w-full text-xs">
                   <thead>
-                    <tr className="text-left text-[10px] font-bold uppercase tracking-wider text-[#9CA3AF] border-b border-[#EDEDEB]">
+                    <tr className="text-left text-xs font-bold uppercase tracking-wider text-text-light border-b border-line">
                       <th className="py-2 pr-3">Learner</th>
                       <th className="py-2 pr-3">Progress</th>
                       <th className="py-2 text-right">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#F3F2EE]">
+                  <tbody className="divide-y divide-line">
                     {learners.map((l) => {
                       const eligible = isComplete(l);
                       return (
                         <tr key={l.user_id} className="align-top">
                           <td className="py-2.5 pr-3">
-                            <div className="font-bold text-[#10151C]">{l.name}</div>
-                            <div className="text-[11px] text-[#6B7280]">{l.email}</div>
+                            <div className="font-bold text-heading">{l.name}</div>
+                            <div className="text-xs text-text-light">{l.email}</div>
                           </td>
                           <td className="py-2.5 pr-3">
                             <div className="text-[--text-body]">
@@ -312,7 +312,7 @@ export const AdminCertificatesTab: React.FC = () => {
       >
         <div className="flex flex-col sm:flex-row gap-2 mb-4">
           <div className="relative flex-1 max-w-sm">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
+            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-text-light" />
             <TextInput
               value={q}
               placeholder="Search serial, name or course"
@@ -341,9 +341,9 @@ export const AdminCertificatesTab: React.FC = () => {
           <Empty>No certificates match. They appear here the moment a learner completes an eligible course.</Empty>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-[12.5px]">
+            <table className="w-full text-xs">
               <thead>
-                <tr className="text-left text-[10px] font-bold uppercase tracking-wider text-[#9CA3AF] border-b border-[#EDEDEB]">
+                <tr className="text-left text-xs font-bold uppercase tracking-wider text-text-light border-b border-line">
                   <th className="py-2 pr-3">Serial</th>
                   <th className="py-2 pr-3">Recipient</th>
                   <th className="py-2 pr-3">Course</th>
@@ -352,46 +352,46 @@ export const AdminCertificatesTab: React.FC = () => {
                   <th className="py-2 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#F3F2EE]">
+              <tbody className="divide-y divide-line">
                 {rows.map((c) => (
                   <tr key={c.serial} className="align-top">
                     <td className="py-2.5 pr-3">
                       <button
                         onClick={() => copy(c.serial)}
                         title="Copy serial"
-                        className="font-mono text-[11.5px] text-[#0284C7] hover:underline flex items-center gap-1"
+                        className="font-mono text-xs text-signal hover:underline flex items-center gap-1"
                       >
                         {copied === c.serial ? 'Copied' : c.serial}
                         <Copy className="w-3 h-3" />
                       </button>
-                      <div className="text-[10px] text-[#9CA3AF] font-mono mt-0.5" title={c.signature}>
+                      <div className="text-xs text-text-light font-mono mt-0.5" title={c.signature}>
                         sig {c.signature_prefix}…
                       </div>
                     </td>
                     <td className="py-2.5 pr-3">
-                      <div className="font-bold text-[#10151C]">{c.recipient_name}</div>
-                      <div className="text-[11px] text-[#6B7280]">{c.recipient_email}</div>
+                      <div className="font-bold text-heading">{c.recipient_name}</div>
+                      <div className="text-xs text-text-light">{c.recipient_email}</div>
                     </td>
                     <td className="py-2.5 pr-3">
                       <div className="text-[--text-body]">{c.course_title}</div>
                       {!c.course_still_exists && (
-                        <div className="text-[10px] text-amber-700 font-bold uppercase tracking-wider mt-0.5">
+                        <div className="text-xs text-amber-700 font-bold uppercase tracking-wider mt-0.5">
                           course deleted
                         </div>
                       )}
-                      <div className="text-[11px] text-[#6B7280]">
+                      <div className="text-xs text-text-light">
                         {c.lessons_completed}/{c.lessons_required} lessons · {c.xp_at_issue} XP
                       </div>
                     </td>
-                    <td className="py-2.5 pr-3 text-[11.5px] text-[#6B7280] whitespace-nowrap">{fmt(c.issued_at)}</td>
+                    <td className="py-2.5 pr-3 text-xs text-text-light whitespace-nowrap">{fmt(c.issued_at)}</td>
                     <td className="py-2.5 pr-3">
                       {c.cert_status === 'revoked' ? (
                         <>
                           <Pill tone="red">Revoked</Pill>
                           {c.revoked_reason && (
-                            <div className="text-[11px] text-red-700 mt-1 max-w-[200px]">{c.revoked_reason}</div>
+                            <div className="text-xs text-red-700 mt-1 max-w-[200px]">{c.revoked_reason}</div>
                           )}
-                          <div className="text-[10px] text-[#9CA3AF] mt-0.5">{fmt(c.revoked_at)}</div>
+                          <div className="text-xs text-text-light mt-0.5">{fmt(c.revoked_at)}</div>
                         </>
                       ) : (
                         <Pill tone="green">Active</Pill>
@@ -404,7 +404,7 @@ export const AdminCertificatesTab: React.FC = () => {
                           target="_blank"
                           rel="noreferrer"
                           title="Open the public verification page"
-                          className="inline-flex items-center px-2.5 py-1.5 rounded-lg border border-gray-300 text-[11px] font-bold uppercase tracking-wider text-[#3E4754] hover:bg-[#F3F2EE]"
+                          className="inline-flex items-center px-2.5 py-1.5 rounded-lg border border-gray-300 text-xs font-bold uppercase tracking-wider text-body hover:bg-surface-hover"
                         >
                           <ExternalLink className="w-3.5 h-3.5" />
                         </a>
@@ -428,8 +428,8 @@ export const AdminCertificatesTab: React.FC = () => {
       </Panel>
 
       <Panel title="How revocation works">
-        <p className="text-[12.5px] text-[#6B7280] leading-relaxed flex gap-2.5">
-          <ShieldCheck className="w-4 h-4 text-[#0284C7] shrink-0 mt-0.5" />
+        <p className="text-xs text-text-light leading-relaxed flex gap-2.5">
+          <ShieldCheck className="w-4 h-4 text-signal shrink-0 mt-0.5" />
           <span>
             Each certificate carries an Ed25519 signature computed over its claims at the moment it is issued,
             with a private key that never leaves the server — verifiers check it against the published public key

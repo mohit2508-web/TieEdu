@@ -110,8 +110,8 @@ const composerRef = useRef<HTMLTextAreaElement | null>(null);
   return (
     <div className="space-y-6">
       {/* Post Comment Input */}
-      <form onSubmit={handlePostComment} className="p-4 bg-[#FAFAF9] border border-[#EDEDEB] rounded-2xl space-y-3 shadow-2xs">
-        <label className="block text-xs font-bold font-mono text-[#1F3A5F] uppercase tracking-wide">
+      <form onSubmit={handlePostComment} className="p-4 bg-app-warm border border-line rounded-2xl space-y-3 shadow-2xs">
+        <label className="block text-xs font-bold text-brand-ink uppercase tracking-wide">
           Ask a doubt or share candidate experience
         </label>
 
@@ -121,21 +121,21 @@ const composerRef = useRef<HTMLTextAreaElement | null>(null);
           value={newCommentText}
           onChange={(e) => setNewCommentText(e.target.value)}
           placeholder="Write your question, test case doubt, or candidate insight..."
-          className="w-full p-3 text-base sm:text-sm bg-white border border-[#EDEDEB] rounded-xl focus:ring-2 focus:ring-[#E8A33D] focus:outline-none"
+          className="w-full p-3 text-base sm:text-sm bg-white border border-line rounded-xl focus:ring-2 focus:ring-money focus:outline-none"
         />
 
         {postError && (
-          <p className="text-[11px] font-semibold text-red-600">{postError}</p>
+          <p className="text-xs font-semibold text-red-600">{postError}</p>
         )}
 
         <div className="flex justify-between items-center">
-          <span className="text-[11px] text-gray-500 font-mono">
+          <span className="text-xs text-gray-500 ">
             {getAccessToken() ? 'Posted as your account' : 'Posted as TieEdu Student (sign in to use your name)'}
           </span>
           <button
             type="submit"
             disabled={loading || !newCommentText.trim()}
-            className="px-4 py-2 bg-[#1F3A5F] hover:bg-[#162A45] text-white text-xs font-bold rounded-xl transition-all disabled:opacity-50 flex items-center gap-1.5"
+            className="px-4 py-2 bg-brand-ink hover:bg-brand-ink text-white text-xs font-bold rounded-xl transition-all disabled:opacity-50 flex items-center gap-1.5"
           >
             <Send className="w-3.5 h-3.5" />
             <span>{loading ? 'Posting…' : 'Post Doubt'}</span>
@@ -177,7 +177,7 @@ const composerRef = useRef<HTMLTextAreaElement | null>(null);
             className={`p-4 rounded-2xl border transition-all ${
               comment.is_pinned
                 ? 'bg-amber-50/60 border-amber-200/80 shadow-2xs'
-                : 'bg-white border-[#EDEDEB]'
+                : 'bg-white border-line'
             }`}
           >
             <div className="flex items-start justify-between mb-2">
@@ -203,32 +203,32 @@ const composerRef = useRef<HTMLTextAreaElement | null>(null);
                     height={32}
                     loading="lazy"
                     decoding="async"
-                    className="w-8 h-8 rounded-full object-cover border border-[#EDEDEB]"
+                    className="w-8 h-8 rounded-full object-cover border border-line"
                   />
                 ) : (
-                  <div className="w-8 h-8 rounded-full bg-[#1F3A5F]/10 border border-[#EDEDEB] flex items-center justify-center text-[10px] font-bold text-[#1F3A5F]">
+                  <div className="w-8 h-8 rounded-full bg-brand-ink/10 border border-line flex items-center justify-center text-xs font-bold text-brand-ink">
                     {initials(comment.user_name)}
                   </div>
                 )}
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-bold text-[#1A1A1A]">{comment.user_name}</span>
+                    <span className="text-xs font-bold text-heading">{comment.user_name}</span>
                     {comment.is_pinned && (
-                      <span className="flex items-center gap-0.5 text-[10px] font-mono font-bold bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full">
+                      <span className="flex items-center gap-0.5 text-xs font-bold bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full">
                         <Pin className="w-3 h-3" /> Pinned Mentor Insight
                       </span>
                     )}
                   </div>
-                  <span className="text-[10px] text-gray-400 font-mono">{formatWhen(comment.created_at)}</span>
+                  <span className="text-xs text-gray-400 ">{formatWhen(comment.created_at)}</span>
                 </div>
               </div>
 
               {/* Upvote */}
               <button
                 onClick={() => handleUpvote(comment.id)}
-                className="flex items-center gap-1 text-xs font-mono font-semibold text-gray-600 hover:text-[#1F3A5F] bg-[#FAFAF9] px-2.5 py-1 rounded-lg border border-[#EDEDEB]"
+                className="flex items-center gap-1 text-xs font-semibold text-gray-600 hover:text-brand-ink bg-app-warm px-2.5 py-1 rounded-lg border border-line"
               >
-                <ThumbsUp className="w-3.5 h-3.5 text-[#B45309]" />
+                <ThumbsUp className="w-3.5 h-3.5 text-amber-deep" />
                 <span>{comment.upvotes}</span>
               </button>
             </div>

@@ -25,7 +25,7 @@ const CheckRow: React.FC<{ check: CourseHealthCheck }> = ({ check }) => {
       <span className={`text-sm ${check.pass ? 'text-[var(--text-body)]' : 'font-semibold text-[var(--ink)]'}`}>
         {check.label}
         {!check.pass && check.severity === 'blocker' && (
-          <span className="ml-2 text-[11px] font-bold uppercase tracking-wide text-[var(--color-error)]">
+          <span className="ml-2 text-xs font-bold uppercase tracking-wide text-[var(--color-error)]">
             blocks publish
           </span>
         )}

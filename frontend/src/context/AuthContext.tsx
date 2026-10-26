@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useLayoutEffect, useState, ReactNode } from 'react';
 import {
   AuthUser, apiLogin, apiSignup, apiLogout, setAuthSession, getUserId,
 } from '@/lib/auth';
@@ -18,17 +18,26 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+// useLayoutEffect warns during SSR; on the server there is nothing to read anyway.
+const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
+
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<AuthUser | null>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const cached = localStorage.getItem('tieedu_cached_user');
-        if (cached) return JSON.parse(cached);
-      } catch {}
-    }
-    return null;
-  });
+  /*
+   * The first client render must match the server's, which has no user, or
+   * React throws away the server HTML on every signed-in page view (the nav
+   * says "Home" on the server and "Today" on the client). So the cached user
+   * is read in a layout effect: after hydration but before the browser paints,
+   * so a returning student still never sees a signed-out frame.
+   */
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
+
+  useIsomorphicLayoutEffect(() => {
+    try {
+      const cached = localStorage.getItem('tieedu_cached_user');
+      if (cached) setUser((current) => current ?? JSON.parse(cached));
+    } catch {}
+  }, []);
 
   useEffect(() => {
     let active = true;

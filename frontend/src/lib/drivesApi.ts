@@ -124,10 +124,12 @@ const ERROR_MESSAGES: Record<string, string> = {
   subject_and_body_required: 'Subject and message are required.',
   registration_not_found: 'That registration was not found.',
   no_proof_file: 'Upload a PNG, JPG, WebP or PDF payment screenshot.',
+  drive_service_unavailable: 'Mock drives are temporarily unavailable. Please try again in a few minutes.',
 };
 
-const humanError = (raw: any): string =>
-  (typeof raw === 'string' && ERROR_MESSAGES[raw]) || raw || null;
+/** A known code's copy, else the server's own sentence, and only then the raw code. */
+const humanError = (raw: any, message?: any): string =>
+  (typeof raw === 'string' && ERROR_MESSAGES[raw]) || (typeof message === 'string' && message) || raw || null;
 
 const json = async <T>(res: Response): Promise<T> => {
   if (!res.ok) {
@@ -135,7 +137,7 @@ const json = async <T>(res: Response): Promise<T> => {
     let body: any = null;
     try {
       body = await res.json();
-      if (body?.error) msg = humanError(body.error);
+      if (body?.error) msg = humanError(body.error, body.message);
     } catch { /* keep default */ }
     const err: any = new Error(msg);
     err.status = res.status;
@@ -311,7 +313,7 @@ export const submitPaymentProofApi = async (
         try {
           const data = JSON.parse(xhr.responseText);
           if (xhr.status >= 200 && xhr.status < 300) resolve(data);
-          else reject(new Error(humanError(data.error) || `Upload failed (status ${xhr.status})`));
+          else reject(new Error(humanError(data.error, data.message) || `Upload failed (status ${xhr.status})`));
         } catch {
           reject(new Error(`Upload failed with server status ${xhr.status}`));
         }
@@ -363,7 +365,7 @@ export const uploadResumeApi = async (
         try {
           const data = JSON.parse(xhr.responseText);
           if (xhr.status >= 200 && xhr.status < 300) resolve(data);
-          else reject(new Error(data.error || `Upload failed (status ${xhr.status})`));
+          else reject(new Error(humanError(data.error, data.message) || `Upload failed (status ${xhr.status})`));
         } catch {
           reject(new Error(`Upload failed with server status ${xhr.status}`));
         }
@@ -442,7 +444,7 @@ const adminJson = async <T>(path: string, options?: RequestInit): Promise<T> => 
     let msg = `Request failed (${res.status})`;
     try {
       const body = await res.json();
-      if (body?.error) msg = humanError(body.error);
+      if (body?.error) msg = humanError(body.error, body.message);
     } catch { /* keep default */ }
     throw new Error(msg);
   }

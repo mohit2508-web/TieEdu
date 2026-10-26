@@ -28,7 +28,7 @@ export const EligibilityTable: React.FC<{
 
   if (profileMissing) {
     return (
-      <div className="rounded-[12px] border p-4 text-[13px]" style={{ borderColor: 'var(--apple-separator)', background: 'var(--apple-surface-2)', color: 'var(--apple-label-2)' }}>
+      <div className="rounded-[12px] border p-4 text-sm" style={{ borderColor: 'var(--apple-separator)', background: 'var(--apple-surface-2)', color: 'var(--apple-label-2)' }}>
         Add your student profile to see how you match this drive&apos;s eligibility.
       </div>
     );
@@ -36,7 +36,7 @@ export const EligibilityTable: React.FC<{
 
   if (rows.length === 0) {
     return (
-      <div className="rounded-[12px] border p-4 text-[13px]" style={{ borderColor: 'var(--apple-separator)', background: 'var(--apple-surface-2)', color: 'var(--apple-label-2)' }}>
+      <div className="rounded-[12px] border p-4 text-sm" style={{ borderColor: 'var(--apple-separator)', background: 'var(--apple-surface-2)', color: 'var(--apple-label-2)' }}>
         This drive has no specific eligibility criteria.
       </div>
     );
@@ -46,7 +46,7 @@ export const EligibilityTable: React.FC<{
 
   return (
     <div className="overflow-hidden rounded-[12px] border" style={{ borderColor: 'var(--apple-separator)', background: 'var(--apple-surface)' }}>
-      <table className="w-full text-[13px]">
+      <table className="w-full text-sm">
         <tbody>
           {rows.map((c, i) => {
             const failed = failedKeys.has(c.key);

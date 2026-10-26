@@ -88,11 +88,11 @@ export const CoursePreviewShell: React.FC<{
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           {course.category && (
-            <span className="rounded-full bg-[var(--brand-sky-soft)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--brand-sky-strong)]">
+            <span className="rounded-full bg-[var(--brand-sky-soft)] px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-[var(--brand-sky-strong)]">
               {course.category}
             </span>
           )}
-          <span className="rounded-full bg-[var(--bg-sky-soft)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--brand-sky)]">
+          <span className="rounded-full bg-[var(--bg-sky-soft)] px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-[var(--brand-sky)]">
             {course.is_free ? 'Free' : formatPrice(course.price_inr)}
           </span>
         </div>
@@ -171,7 +171,7 @@ export const CoursePreviewShell: React.FC<{
         {sample && (sample.blocks?.length || 0) > 0 && (
           <section aria-labelledby="preview-sample" className="mt-10 rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-success-soft, #E8F7EE)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--color-success)]">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-success-soft, #E8F7EE)] px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-[var(--color-success)]">
                 <PlayCircle size={12} /> Free sample
               </span>
               {sample.module_title && (
@@ -222,6 +222,7 @@ export const CoursePreviewShell: React.FC<{
           <CourseCover
             slug={course.slug}
             title={course.title}
+            subject={course.category}
             thumbnailUrl={course.thumbnail_url}
             className="mb-4 aspect-[4/3] w-full overflow-hidden rounded-[var(--radius-md)] border border-[var(--border-subtle)]"
             /* An `lg:sticky` aside: a third of the reader column once the two-column

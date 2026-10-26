@@ -53,7 +53,7 @@ export const CourseMobileActionBar: React.FC<{
   >
     <div className="mx-auto w-full max-w-[var(--reader-max)]">
       {note ? (
-        <p className="truncate text-[11px] font-semibold tracking-wide text-[var(--text-muted)] uppercase">
+        <p className="truncate text-xs font-semibold tracking-wide text-[var(--text-muted)] uppercase">
           {note}
         </p>
       ) : null}

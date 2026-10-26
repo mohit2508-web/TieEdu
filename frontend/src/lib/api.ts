@@ -460,6 +460,19 @@ export const fetchPublishedReportsApi = async (companyId: string) => {
   return await res.json();
 };
 
+/** Record how an admin verified a selection (null clears it). */
+export const updateReportVerificationApi = async (reportId: string, verification: 'offer_letter' | 'college_email' | null) => {
+  const res = await apiFetch(`${API_BASE_URL}/reports/${reportId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ verification }),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'Verification update failed');
+  }
+  return await res.json();
+};
+
 export const updateReportStatusApi = async (reportId: string, status: 'published' | 'rejected') => {
   const res = await apiFetch(`${API_BASE_URL}/reports/${reportId}`, {
     method: 'PATCH',

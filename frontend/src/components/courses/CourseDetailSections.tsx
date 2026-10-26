@@ -73,7 +73,7 @@ export const AboutCourseSection: React.FC<{ about?: string }> = ({ about }) => {
     <Section id="about" title="About this course" className="max-w-3xl">
       <div className="space-y-4">
         {paragraphs.map((p, i) => (
-          <p key={i} className="text-[15px] leading-7 text-[var(--text-body)]">
+          <p key={i} className="text-base leading-7 text-[var(--text-body)]">
             {p}
           </p>
         ))}

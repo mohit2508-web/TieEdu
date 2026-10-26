@@ -8,7 +8,7 @@ import EmptyState from '@/components/apple/EmptyState';
 import { GroupedCard, AppleRow } from '@/components/apple/GroupedCard';
 
 const actionBtn =
-  'inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-[12px] font-semibold transition-transform active:scale-[0.97]';
+  'inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold transition-transform active:scale-[0.97]';
 
 export default function DrivesTab(props: {
   collegeId: string;
@@ -74,13 +74,13 @@ export default function DrivesTab(props: {
   return (
     <div className="space-y-5">
       <section className="apple-card p-4">
-        <h2 className="text-[17px] font-semibold" style={{ color: 'var(--apple-label)' }}>New drive</h2>
+        <h2 className="text-lg font-semibold" style={{ color: 'var(--apple-label)' }}>New drive</h2>
         <DriveFormFields form={form} setForm={setForm} disabled={props.busy || creating} />
         <button
           type="button"
           disabled={props.busy || creating || !form.title.trim()}
           onClick={createDrive}
-          className="mt-3 inline-flex items-center gap-2 rounded-[10px] px-4 py-2.5 text-[14px] font-semibold text-white transition-transform active:scale-[0.98] disabled:opacity-40"
+          className="mt-3 inline-flex items-center gap-2 rounded-[10px] px-4 py-2.5 text-sm font-semibold text-white transition-transform active:scale-[0.98] disabled:opacity-40"
           style={{ background: 'var(--apple-blue)' }}
         >
           <Plus size={16} strokeWidth={2.4} /> Create drive
@@ -100,7 +100,7 @@ export default function DrivesTab(props: {
                   sub={d.company_name || 'No company'}
                   value={
                     <span className="flex items-center gap-2">
-                      <span className="hidden whitespace-nowrap text-[11px] tabular-nums sm:inline" style={{ color: 'var(--apple-label-3)' }}>
+                      <span className="hidden whitespace-nowrap text-xs tabular-nums sm:inline" style={{ color: 'var(--apple-label-2)' }}>
                         {d.registration_count ?? 0} registered · {d.test_count ?? 0} rounds
                       </span>
                       <StatusPill label={d.status} tone={driveStatusTone(d.status)} />
@@ -160,13 +160,13 @@ export default function DrivesTab(props: {
                     </div>
                     {editingId === d.drive_id ? (
                       <div className="mt-3 rounded-[12px] border p-3" style={{ borderColor: 'var(--apple-separator)', background: 'var(--apple-surface)' }}>
-                        <h3 className="text-[14px] font-semibold" style={{ color: 'var(--apple-label)' }}>Edit drive</h3>
+                        <h3 className="text-sm font-semibold" style={{ color: 'var(--apple-label)' }}>Edit drive</h3>
                         <DriveFormFields form={editForm} setForm={setEditForm} disabled={props.busy} />
                         <button
                           type="button"
                           disabled={props.busy || !editForm.title.trim()}
                           onClick={() => saveEdit(d.drive_id)}
-                          className="mt-3 inline-flex items-center gap-2 rounded-[10px] px-4 py-2 text-[13px] font-semibold text-white transition-transform active:scale-[0.98] disabled:opacity-40"
+                          className="mt-3 inline-flex items-center gap-2 rounded-[10px] px-4 py-2 text-sm font-semibold text-white transition-transform active:scale-[0.98] disabled:opacity-40"
                           style={{ background: 'var(--apple-blue)' }}
                         >
                           <Check size={15} strokeWidth={2.4} /> Save changes

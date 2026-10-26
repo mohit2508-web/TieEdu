@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
 import { fetchCompanies } from '@/lib/api';
 import { BrandTile } from '@/components/common/BrandTile';
-import { ArrowRight, ChevronLeft, Command, Search, Sparkles } from 'lucide-react';
+import { ArrowRight, ChevronLeft, Command, Search, SearchX } from 'lucide-react';
 import { useShell } from '@/context/ShellContext';
 import { useAuth } from '@/context/AuthContext';
 import {
@@ -58,9 +58,9 @@ const Results: React.FC<{
   >
     {empty ? (
       <div className="px-4 py-10 text-center">
-        <Sparkles size={18} className="mx-auto mb-2 text-[var(--amber-deep)]" aria-hidden />
-        <p className="text-sm font-semibold text-[#10151C]">Nothing matches “{query}”</p>
-        <p className="mt-1 text-[13px] text-[var(--text-muted)]">
+        <SearchX size={18} className="mx-auto mb-2 text-[var(--amber-deep)]" aria-hidden />
+        <p className="text-sm font-semibold text-heading">Nothing matches “{query}”</p>
+        <p className="mt-1 text-sm text-[var(--text-muted)]">
           Try a company name, or a page like pricing, compare or courses.
         </p>
       </div>
@@ -81,14 +81,14 @@ const Results: React.FC<{
                 onClick={() => go(i)}
                 className={cn(
                   'flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors',
-                  i === activeIndex ? 'bg-[var(--brand-sky-soft)]' : 'hover:bg-[#FAFAF8]'
+                  i === activeIndex ? 'bg-[var(--brand-sky-soft)]' : 'hover:bg-app-warm'
                 )}
               >
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[14px] font-semibold leading-snug text-[#10151C]">
+                  <span className="block text-sm font-semibold leading-snug text-heading">
                     {command.label}
                   </span>
-                  <span className="block truncate text-[12.5px] text-[var(--text-muted)]">
+                  <span className="block truncate text-xs text-[var(--text-muted)]">
                     {command.description}
                   </span>
                 </span>
@@ -119,7 +119,7 @@ const Results: React.FC<{
                   onClick={() => go(i)}
                   className={cn(
                     'flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors',
-                    i === activeIndex ? 'bg-[var(--brand-sky-soft)]' : 'hover:bg-[#FAFAF8]'
+                    i === activeIndex ? 'bg-[var(--brand-sky-soft)]' : 'hover:bg-app-warm'
                   )}
                 >
                   <BrandTile
@@ -128,10 +128,10 @@ const Results: React.FC<{
                     className="h-8 w-8 rounded-lg p-0.5"
                   />
                   <span className="min-w-0 flex-1">
-                    <span className="block text-[14px] font-semibold leading-snug text-[#10151C]">
+                    <span className="block text-sm font-semibold leading-snug text-heading">
                       {company.name}
                     </span>
-                    <span className="block truncate text-[12.5px] text-[var(--text-muted)]">
+                    <span className="block truncate text-xs text-[var(--text-muted)]">
                       {[company.industry, company.avg_rounds ? `${company.avg_rounds} rounds` : null]
                         .filter(Boolean)
                         .join(' · ') || 'Interview vault'}
@@ -315,7 +315,7 @@ export const SearchModal: React.FC = () => {
     >
       {/* No scrim on mobile: the page underneath is fully covered. */}
       <div
-        className="absolute inset-0 hidden bg-[#10151C]/40 md:block"
+        className="absolute inset-0 hidden bg-heading/40 md:block"
         onClick={() => closeOverlay('search')}
         aria-hidden
       />
@@ -325,19 +325,19 @@ export const SearchModal: React.FC = () => {
         // `aria-modal` would tell a screen reader the wrong thing about the
         // surface the rest of the app is still sitting on.
         <section aria-label="Search" className="relative flex h-full w-full flex-col overflow-hidden bg-white md:animate-slide-up-chrome">
-          <div className="flex items-center border-b border-[#EDEDEB] px-1 pt-[var(--safe-top)]">
+          <div className="flex items-center border-b border-line px-1 pt-[var(--safe-top)]">
             <button
               type="button"
               onClick={() => closeOverlay('search')}
-              className="-ml-1 flex min-h-[44px] items-center gap-0.5 rounded-lg px-3 text-[15px] font-semibold text-[#0284C7] transition-colors active:bg-black/5"
+              className="-ml-1 flex min-h-[44px] items-center gap-0.5 rounded-lg px-3 text-base font-semibold text-signal transition-colors active:bg-black/5"
             >
               <ChevronLeft size={20} aria-hidden />
               Back
             </button>
           </div>
 
-          <div className="flex items-center gap-3 border-b border-[#EDEDEB] px-4 py-3">
-            <Search size={18} className="flex-none text-[#0E2A44]" aria-hidden />
+          <div className="flex items-center gap-3 border-b border-line px-4 py-3">
+            <Search size={18} className="flex-none text-brand-ink" aria-hidden />
             <input
               ref={inputRef}
               type="search"
@@ -355,7 +355,7 @@ export const SearchModal: React.FC = () => {
               aria-activedescendant={flat[activeIndex] ? `palette-row-${activeIndex}` : undefined}
               aria-label="Search destinations and company vaults"
               placeholder="Company, page, or action…"
-              className="w-full bg-transparent text-base text-[#10151C] placeholder:text-[var(--text-muted)] focus:outline-none"
+              className="w-full bg-transparent text-base text-heading placeholder:text-[var(--text-muted)] focus:outline-none"
             />
           </div>
 
@@ -378,10 +378,10 @@ export const SearchModal: React.FC = () => {
           role="dialog"
           aria-modal="true"
           aria-label="Search"
-          className="relative flex max-h-[70vh] w-full max-w-xl flex-col overflow-hidden rounded-2xl border border-[#EDEDEB] bg-white shadow-[var(--shadow-float)] md:animate-slide-up-chrome"
+          className="relative flex max-h-[70vh] w-full max-w-xl flex-col overflow-hidden rounded-2xl border border-line bg-white shadow-[var(--shadow-float)] md:animate-slide-up-chrome"
         >
-          <div className="flex items-center gap-3 border-b border-[#EDEDEB] px-4 py-3">
-            <Search size={18} className="flex-none text-[#0E2A44]" aria-hidden />
+          <div className="flex items-center gap-3 border-b border-line px-4 py-3">
+            <Search size={18} className="flex-none text-brand-ink" aria-hidden />
             <input
               ref={inputRef}
               type="search"
@@ -401,9 +401,9 @@ export const SearchModal: React.FC = () => {
               aria-activedescendant={flat[activeIndex] ? `palette-row-${activeIndex}` : undefined}
               aria-label="Search destinations and company vaults"
               placeholder="Jump to a page, or find a company vault…"
-              className="w-full bg-transparent text-[15px] text-[#10151C] placeholder:text-[var(--text-muted)] focus:outline-none"
+              className="w-full bg-transparent text-base text-heading placeholder:text-[var(--text-muted)] focus:outline-none"
             />
-            <kbd className="flex-none rounded-md bg-black/[0.05] px-1.5 py-0.5 text-[11px] font-bold text-[var(--text-muted)]">
+            <kbd className="flex-none rounded-md bg-black/[0.05] px-1.5 py-0.5 text-xs font-bold text-[var(--text-muted)]">
               ESC
             </kbd>
           </div>
@@ -420,8 +420,8 @@ export const SearchModal: React.FC = () => {
             listRef={listRef}
           />
 
-          <div className="flex items-center justify-between gap-3 border-t border-[#EDEDEB] bg-[#FAFAF8] px-4 py-2">
-            <span className="flex items-center gap-3 text-[11px] text-[var(--text-muted)]">
+          <div className="flex items-center justify-between gap-3 border-t border-line bg-app-warm px-4 py-2">
+            <span className="flex items-center gap-3 text-xs text-[var(--text-muted)]">
               <span>
                 <kbd className="rounded bg-black/[0.05] px-1 py-0.5 font-bold">↑</kbd>{' '}
                 <kbd className="rounded bg-black/[0.05] px-1 py-0.5 font-bold">↓</kbd> to move
@@ -430,7 +430,7 @@ export const SearchModal: React.FC = () => {
                 <kbd className="rounded bg-black/[0.05] px-1 py-0.5 font-bold">↵</kbd> to open
               </span>
             </span>
-            <span className="flex items-center gap-1 text-[11px] font-semibold text-[var(--text-muted)]">
+            <span className="flex items-center gap-1 text-xs font-semibold text-[var(--text-muted)]">
               <Command size={11} strokeWidth={2.5} aria-hidden />
               K anywhere
             </span>

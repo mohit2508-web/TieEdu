@@ -1,25 +1,18 @@
 /**
- * Design-token sync — guards the `tailwind.config.js` <-> `globals.css` duplication.
+ * Design tokens — the "Route" system.
  *
- * WHY THIS TEST EXISTS
+ * Colours are declared once in `globals.css` as RGB channels (`--rgb-*`) and
+ * read by Tailwind as `rgb(var(--rgb-x) / <alpha-value>)`. That removes the old
+ * hex duplication (and its drift risk) but creates a different one: a channel
+ * referenced by Tailwind but missing from a theme compiles silently to an
+ * invalid colour. So this suite asserts:
  *
- * `theme.extend.colors` in `tailwind.config.js` has to repeat the hex values that
- * live in `:root` in `globals.css`. It cannot reference `var(--brand-accent)`
- * instead, because Tailwind can only apply an opacity modifier (`bg-brand-orange/10`)
- * to a colour it can parse as a literal. A `var()` entry compiles fine and then
- * silently breaks every `/NN` variant of itself.
- *
- * That duplication is a drift risk, and drift here is invisible: change a hex in
- * one file and the other keeps serving the old value with no error anywhere. So
- * the two are asserted equal.
- *
- * WHY THE brand ALIASES EXIST
- *
- * The interview feature was written against `brand-orange` and `brand-navy`,
- * classes for which no CSS variable has ever existed. The Tailwind theme had no
- * `colors` key at all, so all 47 of those usages compiled to no rule and the
- * interview page's orange accents simply did not render. They are now defined as
- * aliases of the tokens that were clearly intended.
+ *   - every Tailwind colour is channel-based (no frozen hex literals, which
+ *     would ignore the dark theme and break opacity modifiers);
+ *   - every channel it references exists in the light theme AND the dark theme;
+ *   - the brand aliases the interview feature relies on still resolve;
+ *   - the key text/background pairs meet WCAG AA in both themes;
+ *   - box shadows still mirror their CSS variables.
  */
 import * as fs from 'fs';
 import * as path from 'path';
@@ -35,14 +28,6 @@ function check(name: string, fn: () => void) {
     console.error(`FAIL  ${name}\n      ${err?.message}`);
   }
 }
-function eq(actual: unknown, expected: string | undefined, what: string) {
-  if (expected === undefined) {
-    throw new Error(`${what}: globals.css has no such variable, so the config entry has nothing to match`);
-  }
-  if (actual !== expected) {
-    throw new Error(`${what}: tailwind.config has ${JSON.stringify(actual)}, globals.css has ${JSON.stringify(expected)}`);
-  }
-}
 
 function findRoot(): string {
   let dir = __dirname;
@@ -56,85 +41,151 @@ function findRoot(): string {
 }
 
 const ROOT = findRoot();
-
-// The runner compiles every suite into `.test-build/emit`, so `__dirname` points
-// there and a relative `require('../tailwind.config.js')` resolves inside the
-// build output. The config has to be loaded from the real package root.
+// The runner compiles suites into `.test-build/emit`; load the config from the real root.
 const config = require(path.join(ROOT, 'tailwind.config.js'));
-
 const css = fs.readFileSync(path.join(ROOT, 'src/styles/globals.css'), 'utf8');
 
-/** Every `--token: value` declaration in the stylesheet. */
-const vars = new Map<string, string>();
-for (const m of css.matchAll(/^\s*--([a-z0-9-]+):\s*([^;]+);/gm)) {
-  vars.set(m[1], m[2].trim());
+/** `--name: value` declarations inside the first block matching `selector {`. */
+function block(selector: string): Map<string, string> {
+  const start = css.indexOf(selector + ' {');
+  if (start === -1) throw new Error(`globals.css has no "${selector}" block`);
+  const end = css.indexOf('\n}', start);
+  const body = css.slice(start, end);
+  const out = new Map<string, string>();
+  for (const m of body.matchAll(/--([a-z0-9-]+):\s*([^;]+);/g)) out.set(m[1], m[2].trim());
+  return out;
 }
 
-const colors = config.tokens;
+const light = block(':root');
+const dark = block(":root[data-theme='dark']");
 
-// family.sub -> the CSS variable it must match. `DEFAULT` entries are checked
-// against the bare family name.
-const MAPPING: Array<[string, string]> = [
-  ['app', 'bg-app'],
-  ['app-warm', 'bg-app-warm'],
-  ['surface', 'bg-surface'],
-  ['surface-hover', 'bg-surface-hover'],
-  ['sky-soft', 'bg-sky-soft'],
-  ['border.subtle', 'border-subtle'],
-  ['border.strong', 'border-strong'],
-  ['ink.DEFAULT', 'ink'],
-  ['ink.soft', 'ink-soft'],
-  ['brand.sky', 'brand-sky'],
-  ['brand.sky-strong', 'brand-sky-strong'],
-  ['brand.sky-soft', 'brand-sky-soft'],
-  ['brand.primary', 'brand-primary'],
-  ['brand.ink', 'brand-ink'],
-  ['brand.accent', 'brand-accent'],
-  ['brand.accent-hover', 'brand-accent-hover'],
-  ['brand.mint', 'brand-mint'],
-  ['text.heading', 'text-heading'],
-  ['text.body', 'text-body'],
-  ['text.muted', 'text-muted'],
-  ['text.light', 'text-light'],
-  ['success', 'color-success'],
-  ['warning', 'color-warning'],
-  ['error', 'color-error'],
-  ['info', 'color-info'],
-  ['accent-ink', 'accent-ink'],
-  ['amber-deep', 'amber-deep'],
-];
+/** Flattens the Tailwind colour tree to [path, value] pairs. */
+function leaves(node: any, prefix = ''): Array<[string, string]> {
+  if (typeof node === 'string') return [[prefix, node]];
+  return Object.entries(node).flatMap(([k, v]) => leaves(v, prefix ? `${prefix}.${k}` : k));
+}
 
-for (const [configPath, cssVar] of MAPPING) {
-  check(`colors.${configPath} matches --${cssVar}`, () => {
-    const value = configPath
-      .split('.')
-      .reduce<any>((acc, key) => (acc == null ? acc : acc[key]), colors);
-    if (value === undefined) {
-      throw new Error(`colors.${configPath} is missing from tailwind.config.js`);
-    }
-    eq(value, vars.get(cssVar), `colors.${configPath} vs --${cssVar}`);
+const CHANNEL_RE = /^rgb\(var\(--(rgb-[a-z0-9-]+)\) \/ <alpha-value>\)$/;
+
+for (const [name, value] of leaves(config.tokens)) {
+  check(`colors.${name} is channel-based`, () => {
+    if (!CHANNEL_RE.test(value)) throw new Error(`expected rgb(var(--rgb-…) / <alpha-value>), got ${value}`);
+  });
+  const channel = value.match(CHANNEL_RE)?.[1];
+  if (!channel) continue;
+  check(`colors.${name}: --${channel} exists in the light theme`, () => {
+    if (!light.has(channel)) throw new Error(`--${channel} is not declared in :root`);
+  });
+  check(`colors.${name}: --${channel} exists in the dark theme`, () => {
+    if (!dark.has(channel)) throw new Error(`--${channel} is not declared in :root[data-theme='dark']`);
   });
 }
 
-// The two aliases that fixed the interview page. They intentionally have no CSS
-// variable of their own, so they are asserted against the tokens they mirror.
 check('brand.orange aliases brand.accent', () => {
-  eq(colors.brand.orange, colors.brand.accent, 'brand.orange vs brand.accent');
+  if (config.tokens.brand.orange !== config.tokens.brand.accent) throw new Error('brand.orange drifted from brand.accent');
 });
 check('brand.navy aliases brand.ink', () => {
-  eq(colors.brand.navy, colors.brand.ink, 'brand.navy vs brand.ink');
+  if (config.tokens.brand.navy !== config.tokens.brand.ink) throw new Error('brand.navy drifted from brand.ink');
 });
 
-check('the interview aliases are actually reachable as classes', () => {
-  // The regression that prompted all of this: these two class names were used 47
-  // times and resolved to nothing. Assert the theme exposes them.
-  if (typeof colors.brand?.orange !== 'string') throw new Error('bg-brand-orange would compile to nothing');
-  if (typeof colors.brand?.navy !== 'string') throw new Error('to-brand-navy would compile to nothing');
+// ---- contrast ---------------------------------------------------------------
+function rgbOf(theme: Map<string, string>, name: string): number[] {
+  const v = theme.get(name) ?? light.get(name);
+  if (!v) throw new Error(`--${name} missing`);
+  return v.split(/\s+/).map(Number);
+}
+function lum([r, g, b]: number[]): number {
+  const f = (x: number) => {
+    const s = x / 255;
+    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+  };
+  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+}
+function ratio(a: number[], b: number[]): number {
+  const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p);
+  return (x + 0.05) / (y + 0.05);
+}
+
+const PAIRS: Array<[string, string, number]> = [
+  ['rgb-text-body', 'rgb-bg-app', 4.5],
+  ['rgb-text-muted', 'rgb-bg-surface', 4.5],
+  ['rgb-text-light', 'rgb-bg-app', 4.5], // captions, footer fine print
+  ['rgb-text-heading', 'rgb-bg-app', 4.5],
+  ['rgb-signal', 'rgb-bg-surface', 4.5], // links
+  ['rgb-signal-ink', 'rgb-signal-soft', 4.5],
+  ['rgb-money-ink', 'rgb-money', 4.5],
+  ['rgb-success', 'rgb-bg-surface', 4.5],
+  ['rgb-success', 'rgb-bg-surface-hover', 4.5], // green chips on tinted backgrounds
+  ['rgb-warning', 'rgb-bg-surface', 4.5],
+  ['rgb-danger', 'rgb-bg-surface', 4.5],
+];
+for (const [fg, bg, min] of PAIRS) {
+  for (const [label, theme] of [['light', light], ['dark', dark]] as const) {
+    check(`contrast ${fg} on ${bg} (${label}) ≥ ${min}`, () => {
+      const r = ratio(rgbOf(theme, fg), rgbOf(theme, bg));
+      if (r < min) throw new Error(`${r.toFixed(2)}:1`);
+    });
+  }
+}
+check('white text on the light action colour ≥ 4.5', () => {
+  const r = ratio([255, 255, 255], rgbOf(light, 'rgb-signal'));
+  if (r < 4.5) throw new Error(`${r.toFixed(2)}:1`);
+});
+// The dark palette remap in globals.css: status text on its tint, and
+// on-accent text on the fills that turn light in dark.
+const DARK_PAIRS: Array<[string, string]> = [
+  ['rgb-danger', 'rgb-danger-soft'],
+  ['rgb-success', 'rgb-success-soft'],
+  ['rgb-warning', 'rgb-warning-soft'],
+  ['rgb-info', 'rgb-info-soft'],
+  ['rgb-purple', 'rgb-purple-soft'],
+  ['rgb-on-accent', 'rgb-signal'],
+  ['rgb-on-accent', 'rgb-success'],
+  ['rgb-on-accent', 'rgb-track'],
+  ['rgb-on-accent', 'rgb-brand-mint'],
+  ['rgb-on-accent', 'rgb-amber-deep'],
+  ['rgb-on-accent', 'rgb-danger'],
+  ['rgb-text-heading', 'rgb-brand-ink'], // bg-heading code blocks remap to the band
+];
+for (const [fg, bg] of DARK_PAIRS) {
+  check(`contrast ${fg} on ${bg} (dark remap) ≥ 4.5`, () => {
+    const r = ratio(rgbOf(dark, fg), rgbOf(dark, bg));
+    if (r < 4.5) throw new Error(`${r.toFixed(2)}:1`);
+  });
+}
+check('dark remap rules are all scoped to the dark theme', () => {
+  const start = css.indexOf('/* ---- Dark mode: legacy palette remap');
+  if (start === -1) throw new Error('remap section missing');
+  const bad = css
+    .slice(start)
+    .split('\n')
+    .filter((l) => /^[^\s/*].*[{,]\s*$/.test(l) && !l.startsWith(":root[data-theme='dark']"));
+  if (bad.length) throw new Error(`unscoped selector(s): ${bad.join(' | ')}`);
+});
+// Drop type chips are white text on a per-type hex, the same in both themes.
+const drops = [...light].filter(([k]) => k.startsWith('drop-'));
+check('drop chip colours are declared', () => {
+  if (drops.length < 10) throw new Error(`found ${drops.length} --drop-* colours`);
+});
+for (const [name, hex] of drops) {
+  check(`white text on --${name} ≥ 4.5`, () => {
+    const m = hex.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+    if (!m) throw new Error(`expected #rrggbb, got ${hex}`);
+    const r = ratio([255, 255, 255], m.slice(1).map((x) => parseInt(x, 16)));
+    if (r < 4.5) throw new Error(`${r.toFixed(2)}:1`);
+  });
+}
+check('white text on the mint badge ≥ 4.5', () => {
+  const r = ratio([255, 255, 255], rgbOf(light, 'rgb-brand-mint'));
+  if (r < 4.5) throw new Error(`${r.toFixed(2)}:1`);
 });
 
+// ---- shadows still mirror their variables -----------------------------------
 for (const name of Object.keys(config.boxShadow)) {
   check(`boxShadow.${name} matches --shadow-${name}`, () => {
-    eq(config.boxShadow[name], vars.get(`shadow-${name}`), `boxShadow.${name} vs --shadow-${name}`);
+    if (config.boxShadow[name] !== light.get(`shadow-${name}`)) {
+      throw new Error(`tailwind ${JSON.stringify(config.boxShadow[name])} vs css ${JSON.stringify(light.get(`shadow-${name}`))}`);
+    }
   });
 }
 

@@ -128,7 +128,7 @@ interface EditorToolbarProps {
 // costs a swipe rather than a layout break), compact 36px from `sm` up where
 // there is a real pointer.
 const btn =
-  'shrink-0 inline-flex items-center justify-center w-11 h-11 sm:w-9 sm:h-9 rounded-lg text-[#475569] hover:bg-[#0284C7]/10 hover:text-[#0284C7] transition-colors focus-ring disabled:opacity-30 disabled:pointer-events-none';
+  'shrink-0 inline-flex items-center justify-center w-11 h-11 sm:w-9 sm:h-9 rounded-lg text-muted hover:bg-signal/10 hover:text-signal transition-colors focus-ring disabled:opacity-30 disabled:pointer-events-none';
 
 export const EditorToolbar: React.FC<EditorToolbarProps> = ({
   onCommand,
@@ -149,12 +149,12 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
               <Redo2 className="w-4 h-4" />
             </button>
           </div>
-          <span className="shrink-0 w-px h-5 bg-[#E2E8F0] mx-1" />
+          <span className="shrink-0 w-px h-5 bg-line mx-1" />
         </>
       )}
       {GROUPS.map((group, gi) => (
         <React.Fragment key={group.label}>
-          {gi > 0 && <span className="shrink-0 w-px h-5 bg-[#E2E8F0] mx-1" />}
+          {gi > 0 && <span className="shrink-0 w-px h-5 bg-line mx-1" />}
           <div className="flex items-center gap-0.5 shrink-0" role="group" aria-label={group.label}>
             {group.items.map((item) => (
               <button
@@ -171,7 +171,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
           </div>
         </React.Fragment>
       ))}
-      <span className="shrink-0 ml-auto inline-flex items-center gap-1 text-[10px] font-mono uppercase text-gray-400 pl-2">
+      <span className="shrink-0 ml-auto inline-flex items-center gap-1 text-xs font-mono uppercase text-gray-400 pl-2">
         <Eye className="w-3 h-3" /> Live preview
       </span>
     </div>

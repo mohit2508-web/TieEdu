@@ -11,10 +11,10 @@ import {
   IntentSections,
   CourseWizard,
   MobileFilterChips,
-  shouldAutoOpenWizard,
   dismissWizard,
 } from '@/components/courses/CatalogHelpers';
 import { API_BASE_URL } from '@/lib/api';
+import { serverApiBase } from '@/lib/companyPagesApi';
 import { fetchCourseCatalog } from '@/lib/coursesApi';
 import {
   PAGE_SIZE,
@@ -75,19 +75,9 @@ export default function CoursesPage({ initialData }: { initialData: CourseCatalo
   const [sheetOpen, setSheetOpen] = useState(false);
   const [wizardOpen, setWizardOpen] = useState(false);
 
-  // First-visit wizard: auto-opens only for a truly fresh catalogue visit — a
-  // bare `/courses` URL, never dismissed. Decided after mount so SSR and the
-  // first client paint agree (no hydration flash), and skipped when a band,
-  // intent or shared link already chose the filters.
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const hasSelection = ['q', 'branch', 'bucket', 'category', 'tag', 'type', 'level'].some((k) =>
-      params.get(k)
-    );
-    if (!hasSelection && shouldAutoOpenWizard()) {
-      setWizardOpen(true);
-    }
-  }, []);
+  // The wizard no longer opens by itself: a "Step 1 of 5" modal over the
+  // catalogue was the first thing a new visitor saw. It opens from the
+  // "Help me choose" button only.
 
   const facets = data?.facets || EMPTY_FACETS;
   const sorts = data?.sorts?.length
@@ -366,7 +356,7 @@ export default function CoursesPage({ initialData }: { initialData: CourseCatalo
               <SlidersHorizontal size={15} />
               Filters
               {activeCount > 0 && (
-                <span className="rounded-full bg-[var(--brand-sky)] px-1.5 text-[11px] leading-[18px] text-white">
+                <span className="rounded-full bg-[var(--brand-sky)] px-1.5 text-xs leading-[18px] text-white">
                   {activeCount}
                 </span>
               )}
@@ -496,6 +486,8 @@ export default function CoursesPage({ initialData }: { initialData: CourseCatalo
               </div>
             )}
 
+            {/* Names the list for screen readers and keeps the outline h1 → h2 → card h3. */}
+            <h2 className="sr-only">Courses</h2>
             <div className="space-y-4">
               {status === 'loading'
                 ? Array.from({ length: 6 }, (_, i) => <CourseRowSkeleton key={i} />)
@@ -648,7 +640,7 @@ export const getServerSideProps: GetServerSideProps = async ({ query }) => {
   try {
     // No Authorization header is sent on purpose: the catalogue is public, and
     // per-learner progress is layered on by the client effect after hydration.
-    const url = `${API_BASE_URL}/courses${catalogQueryFor(parseCatalogQuery(query))}`;
+    const url = `${serverApiBase()}/courses${catalogQueryFor(parseCatalogQuery(query))}`;
     const res = await fetch(url);
     if (res.ok) initialData = await res.json();
   } catch {

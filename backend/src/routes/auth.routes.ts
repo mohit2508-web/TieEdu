@@ -149,7 +149,10 @@ authRouter.put('/profile', requireAuth, (req: Request, res: Response) => {
 authRouter.post('/refresh', (req: Request, res: Response) => {
   const db = loadDb();
   const token = req.cookies?.[COOKIE_NAME];
-  if (!token) return res.status(401).json({ error: 'No session' });
+  // No cookie at all is the ordinary anonymous visit, not a failure: answering
+  // 401 put a red network error in every visitor's console. The client reads
+  // "no accessToken" as signed out either way. A bad cookie below stays a 401.
+  if (!token) return res.status(200).json({ session: null });
 
   const hash = hashRefresh(token);
   const session = (db.sessions || []).find((s: Session) => s.token_hash === hash);

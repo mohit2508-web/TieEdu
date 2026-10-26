@@ -81,7 +81,7 @@ export const AccountMenu: React.FC<{ onOpenChange?: (open: boolean) => void }> =
        * usable width at 320px - and "Sign in" is the affordance that matters.
        * "Sign up" is one tap further, in the drawer.
        */
-      <Link href="/login" className="btn btn-primary px-3 text-[12.5px] focus-ring sm:px-4 sm:text-[13px]">
+      <Link href="/login" className="btn btn-primary px-3 text-xs focus-ring sm:px-4 sm:text-sm">
         Sign in
       </Link>
     );
@@ -95,7 +95,7 @@ export const AccountMenu: React.FC<{ onOpenChange?: (open: boolean) => void }> =
         aria-haspopup="menu"
         aria-expanded={menuOpen}
         aria-label={`Account menu for ${user.name}`}
-        className="flex items-center gap-1.5 rounded-xl border border-[#E9E7E1] bg-white/70 py-1 pl-1 pr-1.5 transition-colors hover:border-[#D6D2C8] focus-ring sm:pr-2"
+        className="flex items-center gap-1.5 rounded-xl border border-line bg-white/70 py-1 pl-1 pr-1.5 transition-colors hover:border-line-strong focus-ring sm:pr-2"
       >
         {user.avatar ? (
           /*
@@ -115,11 +115,11 @@ export const AccountMenu: React.FC<{ onOpenChange?: (open: boolean) => void }> =
           // eslint-disable-next-line @next/next/no-img-element -- base64 data-URL avatar, see above
           <img src={user.avatar} alt="" width={28} height={28} decoding="async" className="h-7 w-7 rounded-lg object-cover" />
         ) : (
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#0284C7] text-[13px] font-extrabold uppercase text-white">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-signal text-sm font-extrabold uppercase text-white">
             {user.name.charAt(0)}
           </span>
         )}
-        <span className="hidden max-w-[140px] truncate text-[13px] font-bold text-[#10151C] lg:block">
+        <span className="hidden max-w-[140px] truncate text-sm font-bold text-heading lg:block">
           {user.name.split(' ')[0]}
         </span>
         <ChevronDown
@@ -134,12 +134,12 @@ export const AccountMenu: React.FC<{ onOpenChange?: (open: boolean) => void }> =
           role="menu"
           className="animate-slide-up-chrome absolute right-0 top-[calc(100%+8px)] z-50 w-64 rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-white p-2 shadow-[var(--shadow-raised)]"
         >
-          <div className="border-b border-[#E9E7E1] px-3 py-2.5">
-            <p className="truncate text-[13px] font-bold text-[#10151C]">{user.name}</p>
+          <div className="border-b border-line px-3 py-2.5">
+            <p className="truncate text-sm font-bold text-heading">{user.name}</p>
             <p className="truncate text-xs text-[var(--text-muted)]">{user.email}</p>
             <span
-              className={`mt-1 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-extrabold uppercase tracking-wide ${
-                isAdmin ? 'bg-[#0E2A44] text-[#E8A33D]' : 'bg-[#E8F4FB] text-[#0271B5]'
+              className={`mt-1 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-extrabold uppercase tracking-wide ${
+                isAdmin ? 'bg-brand-ink text-money' : 'bg-signal-soft text-signal'
               }`}
             >
               {isAdmin ? 'Platform Admin' : 'Student'}
@@ -152,9 +152,9 @@ export const AccountMenu: React.FC<{ onOpenChange?: (open: boolean) => void }> =
                 href="/admin"
                 onClick={() => setMenuOpen(false)}
                 role="menuitem"
-                className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-semibold text-[#3E4754] hover:bg-[#F3F2EE]"
+                className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-body hover:bg-surface-hover"
               >
-                <ShieldCheck size={16} className="text-[#0E2A44]" aria-hidden />
+                <ShieldCheck size={16} className="text-brand-ink" aria-hidden />
                 Admin console
               </Link>
             )}
@@ -162,25 +162,25 @@ export const AccountMenu: React.FC<{ onOpenChange?: (open: boolean) => void }> =
               href="/my-courses"
               onClick={() => setMenuOpen(false)}
               role="menuitem"
-              className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-semibold text-[#3E4754] hover:bg-[#F3F2EE]"
+              className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-body hover:bg-surface-hover"
             >
-              <Award size={16} className="text-[#0E2A44]" aria-hidden />
+              <Award size={16} className="text-brand-ink" aria-hidden />
               My courses
             </Link>
             <Link
               href="/account"
               onClick={() => setMenuOpen(false)}
               role="menuitem"
-              className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-semibold text-[#3E4754] hover:bg-[#F3F2EE]"
+              className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-body hover:bg-surface-hover"
             >
-              <UserRound size={16} className="text-[#0284C7]" aria-hidden />
+              <UserRound size={16} className="text-signal" aria-hidden />
               My account
             </Link>
             <button
               type="button"
               onClick={handleLogout}
               role="menuitem"
-              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-semibold text-[#C1442D] hover:bg-[#FDEDE9]"
+              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-danger hover:bg-signal-soft"
             >
               <LogOut size={16} aria-hidden />
               Sign out

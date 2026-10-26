@@ -288,6 +288,8 @@ export interface InterviewReport {
   accuracy_rating: number | null;
   outcome: 'selected' | 'rejected' | 'pending' | null;
   status: 'pending_review' | 'published' | 'rejected';
+  /** Admin-attested proof of a selection; the public API never includes who verified it. */
+  verification?: { method: 'offer_letter' | 'college_email'; verified_at: string } | null;
   salary_lpa?: number;
   created_at: string;
 }

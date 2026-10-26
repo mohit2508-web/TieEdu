@@ -339,11 +339,11 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   const words = wordCount(value);
 
   return (
-    <div className={`rounded-xl border border-[#E2E8F0] bg-white focus-within:ring-2 focus-within:ring-[#0284C7]/40 focus-within:border-[#0284C7] transition-shadow overflow-hidden ${compact ? 'group' : ''}`}>
+    <div className={`rounded-xl border border-line bg-white focus-within:ring-2 focus-within:ring-signal/40 focus-within:border-signal transition-shadow overflow-hidden ${compact ? 'group' : ''}`}>
       {/* In compact mode the toolbar only appears while the editor has focus. The pack
           form stacks a dozen editors, and a permanently visible toolbar on each one
           buries the fields themselves. */}
-      <div className={`px-2 py-1.5 border-b border-[#E2E8F0] bg-[#FAFAF9] ${compact ? 'hidden group-focus-within:block' : ''}`}>
+      <div className={`px-2 py-1.5 border-b border-line bg-app-warm ${compact ? 'hidden group-focus-within:block' : ''}`}>
         <EditorToolbar
           onCommand={runCommand}
           onUndo={undo}
@@ -365,7 +365,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
           placeholder={placeholder}
           aria-label={ariaLabel}
           spellCheck
-          className="w-full px-4 py-3 font-mono text-[13.5px] leading-6 text-[#1E293B] bg-transparent focus:outline-none resize-y"
+          className="w-full px-4 py-3 font-mono text-sm leading-6 text-ink-soft bg-transparent focus:outline-none resize-y"
           style={{ minHeight }}
         />
 
@@ -380,7 +380,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
         )}
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2 border-t border-[#E2E8F0] bg-[#FAFAF9] text-[10.5px] font-mono text-[--text-muted]">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2 border-t border-line bg-app-warm text-xs font-mono text-[--text-muted]">
         <span>{words} words</span>
         <span aria-hidden="true">·</span>
         <span>{readingMinutes(value)} min read</span>
@@ -405,7 +405,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
         </span>
         {showHint && value === '' && (
           <span className="text-[--brand-primary]">
-            Type <kbd className="px-1 rounded bg-white border border-[#E2E8F0]">/</kbd> for blocks
+            Type <kbd className="px-1 rounded bg-white border border-line">/</kbd> for blocks
           </span>
         )}
       </div>

@@ -15,9 +15,9 @@ import { cn } from '@/lib/cn';
  * by something other than hue — hence the icon on every row.
  */
 const TONE_STYLE: Record<NotificationTone, { chip: string; icon: React.ReactNode }> = {
-  info: { chip: 'bg-blue-50 text-blue-700', icon: <Bell size={13} strokeWidth={2.5} aria-hidden /> },
+  info: { chip: 'bg-signal-soft text-signal-hover', icon: <Bell size={13} strokeWidth={2.5} aria-hidden /> },
   success: { chip: 'bg-emerald-50 text-emerald-700', icon: <Check size={13} strokeWidth={3} aria-hidden /> },
-  warning: { chip: 'bg-amber-50 text-[#B45309]', icon: <Loader2 size={13} strokeWidth={2.5} aria-hidden /> },
+  warning: { chip: 'bg-amber-50 text-amber-deep', icon: <Loader2 size={13} strokeWidth={2.5} aria-hidden /> },
   error: { chip: 'bg-red-50 text-red-700', icon: <Bell size={13} strokeWidth={2.5} aria-hidden /> },
 };
 
@@ -102,12 +102,12 @@ export const NotificationBell: React.FC = () => {
           ref={panelRef}
           role="dialog"
           aria-label="Notifications"
-          className="animate-slide-up-chrome absolute right-0 top-[calc(100%+10px)] z-50 w-[min(23rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-[#EDEDEB] bg-white shadow-[var(--shadow-float)]"
+          className="animate-slide-up-chrome absolute right-0 top-[calc(100%+10px)] z-50 w-[min(23rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-line bg-white shadow-[var(--shadow-float)]"
         >
-          <div className="flex items-center justify-between gap-3 border-b border-[#EDEDEB] px-4 py-3">
-            <h2 className="text-sm font-bold text-[#10151C]">Notifications</h2>
+          <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
+            <h2 className="text-sm font-bold text-heading">Notifications</h2>
             {loading && (
-              <span className="text-xs text-[#6B7280]">
+              <span className="text-xs text-text-light">
                 <Loader2 size={12} className="mr-1 inline animate-spin" aria-hidden />
                 Checking
               </span>
@@ -116,8 +116,8 @@ export const NotificationBell: React.FC = () => {
 
           {notifications.length === 0 ? (
             <div className="px-4 py-10 text-center">
-              <p className="text-sm font-semibold text-[#10151C]">Nothing to report</p>
-              <p className="mt-1 text-[13px] leading-relaxed text-[#6B7280]">
+              <p className="text-sm font-semibold text-heading">Nothing to report</p>
+              <p className="mt-1 text-sm leading-relaxed text-text-light">
                 Payment updates, interview report decisions and XP awards all show up here.
               </p>
             </div>
@@ -126,14 +126,14 @@ export const NotificationBell: React.FC = () => {
               {notifications.map((item) => {
                 const tone = TONE_STYLE[item.tone];
                 return (
-                  <li key={item.id} className="border-b border-[#F4F4F2] last:border-b-0">
+                  <li key={item.id} className="border-b border-line last:border-b-0">
                     <button
                       type="button"
                       onClick={() => {
                         closeOverlay('notifications');
                         router.push(item.href);
                       }}
-                      className="flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-[#FAFAF8] focus:bg-[#FAFAF8] focus:outline-none"
+                      className="flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-app-warm focus:bg-app-warm focus:outline-none"
                     >
                       <span
                         className={cn(
@@ -146,14 +146,14 @@ export const NotificationBell: React.FC = () => {
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="flex items-baseline justify-between gap-2">
-                          <span className="text-[13.5px] font-semibold leading-snug text-[#10151C]">
+                          <span className="text-sm font-semibold leading-snug text-heading">
                             {item.title}
                           </span>
-                          <span className="flex-none text-[11px] font-semibold uppercase tracking-wide text-[#6B7280]">
+                          <span className="flex-none text-xs font-semibold uppercase tracking-wide text-text-light">
                             {TONE_LABEL[item.tone]}
                           </span>
                         </span>
-                        <span className="mt-0.5 block text-[13px] leading-relaxed text-[#5B6470]">
+                        <span className="mt-0.5 block text-sm leading-relaxed text-muted">
                           {item.body}
                         </span>
                       </span>
@@ -165,8 +165,8 @@ export const NotificationBell: React.FC = () => {
           )}
 
           {notifications.length > 0 && (
-            <div className="border-t border-[#EDEDEB] bg-[#FAFAF8] px-4 py-2.5">
-              <p className="text-[11px] leading-relaxed text-[#6B7280]">
+            <div className="border-t border-line bg-app-warm px-4 py-2.5">
+              <p className="text-xs leading-relaxed text-text-light">
                 Seen on this device. Signing in on another device will show them again.
               </p>
             </div>

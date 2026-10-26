@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { FileCheck2, Clock, CheckCircle2, Loader2 } from 'lucide-react';
-import { DriveShell } from '@/components/drives/DriveShell';
+import { DriveShell, withDriveAuth } from '@/components/drives/DriveShell';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { fetchDriveAssessmentsApi } from '@/lib/drivesApi';
 import type { DriveAssessment } from '@/types/drives';
@@ -24,7 +24,7 @@ const fmt = (iso: string | null) => {
   });
 };
 
-export default function AssessmentsScreen() {
+function AssessmentsScreen() {
   const [tab, setTab] = useState<TabId>('all');
   const [rows, setRows] = useState<DriveAssessment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,7 +54,7 @@ export default function AssessmentsScreen() {
               key={t.id}
               type="button"
               onClick={() => setTab(t.id)}
-              className="flex-1 rounded-[8px] py-1.5 text-[13px] font-semibold transition-colors"
+              className="flex-1 rounded-[8px] py-1.5 text-sm font-semibold transition-colors"
               style={{
                 background: tab === t.id ? 'var(--apple-surface)' : 'transparent',
                 color: tab === t.id ? 'var(--apple-label)' : 'var(--apple-label-2)',
@@ -71,12 +71,12 @@ export default function AssessmentsScreen() {
               {[0, 1, 2].map((i) => <Skeleton key={i} className="h-[72px] w-full" />)}
             </div>
           ) : error ? (
-            <p className="rounded-[10px] px-3 py-2 text-[13px]" style={{ background: 'var(--apple-red-soft)', color: 'var(--apple-red)' }}>{error}</p>
+            <p className="rounded-[10px] px-3 py-2 text-sm" style={{ background: 'var(--apple-red-soft)', color: 'var(--apple-red)' }}>{error}</p>
           ) : rows.length === 0 ? (
             <div className="rounded-[12px] border px-4 py-10 text-center" style={{ borderColor: 'var(--apple-separator)', background: 'var(--apple-surface)' }}>
-              <FileCheck2 size={26} className="mx-auto" style={{ color: 'var(--apple-label-3)' }} />
-              <p className="mt-2 text-[14px] font-medium" style={{ color: 'var(--apple-label)' }}>No assessments yet</p>
-              <p className="mt-1 text-[13px]" style={{ color: 'var(--apple-label-2)' }}>
+              <FileCheck2 size={26} className="mx-auto" style={{ color: 'var(--apple-label-2)' }} />
+              <p className="mt-2 text-sm font-medium" style={{ color: 'var(--apple-label)' }}>No assessments yet</p>
+              <p className="mt-1 text-sm" style={{ color: 'var(--apple-label-2)' }}>
                 {tab === 'active' ? 'Nothing in progress right now.' : 'Register for a drive to start an assessment.'}
               </p>
             </div>
@@ -97,11 +97,11 @@ export default function AssessmentsScreen() {
                         <FileCheck2 size={18} strokeWidth={1.9} />
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-[14px] font-semibold" style={{ color: 'var(--apple-label)' }}>
+                        <p className="truncate text-sm font-semibold" style={{ color: 'var(--apple-label)' }}>
                           {a.test_name || a.drive_title}
                         </p>
-                        <p className="truncate text-[12px]" style={{ color: 'var(--apple-label-2)' }}>{a.company_name}</p>
-                        <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px]" style={{ color: 'var(--apple-label-2)' }}>
+                        <p className="truncate text-xs" style={{ color: 'var(--apple-label-2)' }}>{a.company_name}</p>
+                        <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs" style={{ color: 'var(--apple-label-2)' }}>
                           {a.duration_minutes != null && <span className="inline-flex items-center gap-1"><Clock size={11} />{a.duration_minutes} min</span>}
                           {a.submitted_at && <span>{fmt(a.submitted_at)}</span>}
                           {a.started_at && !a.submitted_at && <span>Started {fmt(a.started_at)}</span>}
@@ -109,15 +109,15 @@ export default function AssessmentsScreen() {
                       </div>
                       <div className="shrink-0 text-right">
                         {a.status === 'in_progress' ? (
-                          <span className="inline-flex items-center gap-1 text-[12px] font-semibold" style={{ color: 'var(--apple-blue)' }}>
+                          <span className="inline-flex items-center gap-1 text-xs font-semibold" style={{ color: 'var(--apple-blue)' }}>
                             <Loader2 size={12} className="animate-spin" />Resume
                           </span>
                         ) : a.passed != null ? (
-                          <span className="inline-flex items-center gap-1 text-[12px] font-semibold" style={{ color: a.passed ? 'var(--apple-green)' : 'var(--apple-red)' }}>
+                          <span className="inline-flex items-center gap-1 text-xs font-semibold" style={{ color: a.passed ? 'var(--apple-green)' : 'var(--apple-red)' }}>
                             <CheckCircle2 size={12} />{pct(a) ?? (a.passed ? 'Pass' : 'Fail')}
                           </span>
                         ) : (
-                          <span className="text-[12px]" style={{ color: 'var(--apple-label-3)' }}>{a.status}</span>
+                          <span className="text-xs" style={{ color: 'var(--apple-label-2)' }}>{a.status}</span>
                         )}
                       </div>
                     </div>
@@ -131,3 +131,5 @@ export default function AssessmentsScreen() {
     </DriveShell>
   );
 }
+
+export default withDriveAuth(AssessmentsScreen);

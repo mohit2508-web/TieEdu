@@ -70,9 +70,9 @@ export const TieEduLoader: React.FC = () => {
      * useful pixel on the screen was the one being repainted during a
      * navigation.
      */
-    <div className="fixed top-0 left-0 right-0 z-[100] h-1 bg-[#EDEDEB]" aria-hidden="true">
+    <div className="fixed top-0 left-0 right-0 z-[100] h-1 bg-surface-hover" aria-hidden="true">
       <div
-        className="h-full bg-gradient-to-r from-[#E8A33D] via-amber-400 to-[#1F3A5F] transition-all duration-150 ease-out shadow-[0_0_10px_#E8A33D]"
+        className="h-full bg-gradient-to-r from-money via-amber-400 to-brand-ink transition-all duration-150 ease-out shadow-[0_0_10px_#E8A33D]"
         style={{ width: `${progress}%` }}
       />
     </div>

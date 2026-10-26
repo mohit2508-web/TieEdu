@@ -158,16 +158,16 @@ export default function BroadcastTab() {
   };
 
   const input =
-    'px-3 py-2 border border-gray-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#0284C7]/30';
+    'px-3 py-2 border border-gray-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-signal/30';
 
   return (
     <div className="space-y-5">
       <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
         <div className="flex items-start gap-3">
-          <Megaphone className="w-5 h-5 text-[#1F3A5F] mt-0.5" />
+          <Megaphone className="w-5 h-5 text-brand-ink mt-0.5" />
           <div>
             <p className="eyebrow">Messaging</p>
-            <h2 className="text-xl font-extrabold text-[#10151C] mt-1">Broadcast to students</h2>
+            <h2 className="text-xl font-extrabold text-heading mt-1">Broadcast to students</h2>
             <p className="text-sm text-gray-600 mt-1">
               Sends a notification to the phones of students who have added TieEdu to their
               Home Screen and allowed notifications. Students who have not cannot be reached —
@@ -190,12 +190,12 @@ export default function BroadcastTab() {
       )}
 
       {result && (
-        <div className="rounded-2xl border border-[#EDEDEB] bg-[#FAFAF9] p-4 text-sm">
-          <div className="flex items-center gap-2 font-bold text-[#10151C]">
+        <div className="rounded-2xl border border-line bg-app-warm p-4 text-sm">
+          <div className="flex items-center gap-2 font-bold text-heading">
             {result.sent > 0 ? (
               <CheckCircle2 className="w-4 h-4 text-emerald-700" />
             ) : (
-              <AlertTriangle className="w-4 h-4 text-[#C77B12]" />
+              <AlertTriangle className="w-4 h-4 text-amber-deep" />
             )}
             Last send
           </div>
@@ -208,8 +208,8 @@ export default function BroadcastTab() {
               ['No device', result.skipped],
             ].map(([label, value]) => (
               <div key={String(label)}>
-                <dt className="text-[10px] uppercase font-mono text-gray-500">{label}</dt>
-                <dd className="text-lg font-extrabold text-[#10151C]">{String(value)}</dd>
+                <dt className="text-xs uppercase font-mono text-gray-500">{label}</dt>
+                <dd className="text-lg font-extrabold text-heading">{String(value)}</dd>
               </div>
             ))}
           </dl>
@@ -224,8 +224,8 @@ export default function BroadcastTab() {
               onClick={() => { setAudience('all'); setAcknowledged(false); }}
               className={`px-3.5 py-2 rounded-xl text-xs font-bold transition ${
                 audience === 'all'
-                  ? 'bg-[#1F3A5F] text-white'
-                  : 'border border-gray-200 hover:bg-gray-50 text-[#10151C]'
+                  ? 'bg-brand-ink text-white'
+                  : 'border border-gray-200 hover:bg-gray-50 text-heading'
               }`}
             >
               All students ({students.length})
@@ -234,8 +234,8 @@ export default function BroadcastTab() {
               onClick={() => { setAudience('selected'); setAcknowledged(false); }}
               className={`px-3.5 py-2 rounded-xl text-xs font-bold transition ${
                 audience === 'selected'
-                  ? 'bg-[#1F3A5F] text-white'
-                  : 'border border-gray-200 hover:bg-gray-50 text-[#10151C]'
+                  ? 'bg-brand-ink text-white'
+                  : 'border border-gray-200 hover:bg-gray-50 text-heading'
               }`}
             >
               Selected ({selected.size})
@@ -244,15 +244,15 @@ export default function BroadcastTab() {
               onClick={() => { setAudience('course'); setAcknowledged(false); }}
               className={`px-3.5 py-2 rounded-xl text-xs font-bold transition ${
                 audience === 'course'
-                  ? 'bg-[#1F3A5F] text-white'
-                  : 'border border-gray-200 hover:bg-gray-50 text-[#10151C]'
+                  ? 'bg-brand-ink text-white'
+                  : 'border border-gray-200 hover:bg-gray-50 text-heading'
               }`}
             >
               One course
             </button>
           </div>
           {audience === 'all' && (
-            <p className="mt-2 text-xs text-[#B45309] font-semibold">
+            <p className="mt-2 text-xs text-amber-deep font-semibold">
               Sending to every student needs the super-admin permission. Without it the server
               refuses, whatever this screen shows.
             </p>
@@ -280,7 +280,7 @@ export default function BroadcastTab() {
 
         {audience === 'selected' && (
           <div className="border border-gray-200 rounded-xl overflow-hidden">
-            <div className="p-3 border-b border-gray-200 bg-[#FAFAF9] flex items-center gap-2">
+            <div className="p-3 border-b border-gray-200 bg-app-warm flex items-center gap-2">
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
@@ -291,12 +291,12 @@ export default function BroadcastTab() {
                 onClick={() =>
                   setSelected(new Set(visible.length === selected.size ? [] : visible.map((u) => u.id)))
                 }
-                className="px-3 py-2 border border-gray-200 hover:bg-gray-50 rounded-xl text-xs font-bold text-[#10151C] transition"
+                className="px-3 py-2 border border-gray-200 hover:bg-gray-50 rounded-xl text-xs font-bold text-heading transition"
               >
                 {visible.length === selected.size && selected.size > 0 ? 'Clear' : 'Select shown'}
               </button>
             </div>
-            <div className="max-h-64 overflow-y-auto divide-y divide-[#EDEDEB]">
+            <div className="max-h-64 overflow-y-auto divide-y divide-line">
               {loading ? (
                 <div className="p-4 text-sm text-gray-500 flex items-center gap-2">
                   <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading students…
@@ -305,10 +305,10 @@ export default function BroadcastTab() {
                 <div className="p-4 text-sm text-gray-500">No students match that search.</div>
               ) : (
                 visible.map((u) => (
-                  <label key={u.id} className="flex items-center gap-3 px-3 py-2 hover:bg-[#FAFAF9] cursor-pointer">
+                  <label key={u.id} className="flex items-center gap-3 px-3 py-2 hover:bg-app-warm cursor-pointer">
                     <input type="checkbox" checked={selected.has(u.id)} onChange={() => toggle(u.id)} />
                     <div className="min-w-0">
-                      <div className="text-sm font-semibold text-[#10151C] truncate">{u.name}</div>
+                      <div className="text-sm font-semibold text-heading truncate">{u.name}</div>
                       <div className="text-xs text-gray-500 truncate">{u.email}</div>
                     </div>
                   </label>
@@ -327,7 +327,7 @@ export default function BroadcastTab() {
             placeholder="New course is live"
             className={`${input} w-full`}
           />
-          <p className="mt-1 text-[10px] text-gray-400">{title.length}/80</p>
+          <p className="mt-1 text-xs text-gray-400">{title.length}/80</p>
         </div>
 
         <div>
@@ -340,7 +340,7 @@ export default function BroadcastTab() {
             placeholder="Say what is new and why it is worth opening."
             className={`${input} w-full`}
           />
-          <p className="mt-1 text-[10px] text-gray-400">{body.length}/200</p>
+          <p className="mt-1 text-xs text-gray-400">{body.length}/200</p>
         </div>
 
         <div>
@@ -351,7 +351,7 @@ export default function BroadcastTab() {
             placeholder="/courses"
             className={`${input} w-full`}
           />
-          <p className="mt-1 text-[10px] text-gray-400">
+          <p className="mt-1 text-xs text-gray-400">
             Must be a path starting with <code>/</code>. External links are rejected.
           </p>
         </div>
@@ -381,7 +381,7 @@ export default function BroadcastTab() {
                 className={`${input} w-full`}
               />
               {typedTitle.trim() && typedTitle.trim() !== title.trim() && (
-                <p className="mt-1 text-[10px] font-semibold text-[#C1442D]">
+                <p className="mt-1 text-xs font-semibold text-danger">
                   Does not match the title yet.
                 </p>
               )}
@@ -392,13 +392,13 @@ export default function BroadcastTab() {
         <button
           onClick={send}
           disabled={!canSend}
-          className="px-4 py-2 bg-[#C1442D] hover:bg-[#a53a26] disabled:opacity-50 text-white rounded-xl text-xs font-bold flex items-center gap-2 transition"
+          className="px-4 py-2 bg-danger hover:bg-danger disabled:opacity-50 text-white rounded-xl text-xs font-bold flex items-center gap-2 transition"
         >
           {sending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
           Send to {targetCount} student{targetCount === 1 ? '' : 's'}
         </button>
 
-        <p className="text-[10px] text-gray-500 flex items-start gap-1.5">
+        <p className="text-xs text-gray-500 flex items-start gap-1.5">
           <Users className="w-3 h-3 mt-0.5 shrink-0" />
           Sending is recorded in the audit ledger with the count of students reached.
         </p>

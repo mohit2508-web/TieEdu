@@ -6,7 +6,7 @@ import EmptyState from '@/components/apple/EmptyState';
 import { GroupedCard } from '@/components/apple/GroupedCard';
 
 const field =
-  'rounded-[10px] border-0 bg-[var(--apple-fill)] px-3 py-2 text-[13px] text-[var(--apple-label)] focus:outline-none';
+  'rounded-[10px] border-0 bg-[var(--apple-fill)] px-3 py-2 text-sm text-[var(--apple-label)] focus:outline-none';
 
 const RESULTS = [
   { value: '', label: 'All results' },
@@ -72,7 +72,7 @@ export default function ResultsTab(props: {
         </select>
         <button
           type="button"
-          className="inline-flex items-center gap-1.5 rounded-[10px] px-3.5 py-2 text-[13px] font-semibold text-white transition-transform active:scale-[0.98]"
+          className="inline-flex items-center gap-1.5 rounded-[10px] px-3.5 py-2 text-sm font-semibold text-white transition-transform active:scale-[0.98]"
           style={{ background: 'var(--apple-blue)' }}
           onClick={async () => {
             props.setBusy(true);
@@ -91,7 +91,7 @@ export default function ResultsTab(props: {
         </button>
         <button
           type="button"
-          className="inline-flex items-center gap-1.5 rounded-[10px] px-3.5 py-2 text-[13px] font-semibold transition-transform active:scale-[0.98]"
+          className="inline-flex items-center gap-1.5 rounded-[10px] px-3.5 py-2 text-sm font-semibold transition-transform active:scale-[0.98]"
           style={{ background: 'var(--apple-fill)', color: 'var(--apple-label)' }}
           onClick={() => tpoDownloadCsv(props.collegeId, props.driveId!)}
         >
@@ -101,9 +101,9 @@ export default function ResultsTab(props: {
 
       <GroupedCard title={`Attempts · ${total}`}>
         <div className="apple-scroll overflow-x-auto">
-          <table className="w-full min-w-[680px] text-left text-[13px]">
+          <table className="w-full min-w-[680px] text-left text-sm">
             <thead>
-              <tr className="text-[11px] uppercase tracking-wide" style={{ color: 'var(--apple-label-3)' }}>
+              <tr className="text-xs uppercase tracking-wide" style={{ color: 'var(--apple-label-2)' }}>
                 <th className="px-4 pb-2 font-semibold">Round</th>
                 <th className="px-4 pb-2 font-semibold">Roll no</th>
                 <th className="px-4 pb-2 font-semibold">Status</th>
@@ -134,13 +134,13 @@ export default function ResultsTab(props: {
                 </tr>
               ))}
               {rows.length === 0 && (
-                <tr><td colSpan={7} className="px-4 py-8 text-center text-[var(--apple-label-3)]">No attempts match.</td></tr>
+                <tr><td colSpan={7} className="px-4 py-8 text-center text-[var(--apple-label-2)]">No attempts match.</td></tr>
               )}
             </tbody>
           </table>
         </div>
         <div className="flex items-center justify-between px-4 py-3">
-          <span className="text-[12px] tabular-nums text-[var(--apple-label-2)]">Page {page} of {totalPages}</span>
+          <span className="text-xs tabular-nums text-[var(--apple-label-2)]">Page {page} of {totalPages}</span>
           <div className="flex items-center gap-2">
             <button type="button" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))} className="inline-flex h-8 w-8 items-center justify-center rounded-full disabled:opacity-30" style={{ background: 'var(--apple-fill)', color: 'var(--apple-label)' }}>
               <ChevronLeft size={14} />

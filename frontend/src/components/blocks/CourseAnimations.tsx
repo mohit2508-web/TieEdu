@@ -46,25 +46,25 @@ type Tone =
  * colour rather than a low-opacity wash.
  */
 const TONE: Record<Tone, string> = {
-  int:    'bg-[#E8F0FE] text-[#1A3D7C] border-[#B9CCF2]',
-  ptr:    'bg-[#FDF0D8] text-[#7A4E05] border-[#F0D3A0]',
-  char:   'bg-[#E3F6EE] text-[#0A5C42] border-[#B0E2D0]',
+  int:    'bg-signal-soft text-brand-ink border-signal/30',
+  ptr:    'bg-warning-soft text-amber-deep border-money/40',
+  char:   'bg-success-soft text-track border-success/30',
   float:  'bg-[#EFE8FB] text-[#4B2A80] border-[#D2C2F0]',
-  pad:    'bg-[#F0EFEC] text-[#8A8579] border-[#DEDBD3]',
-  code:   'bg-[#E4F2F5] text-[#0D5563] border-[#B4DCE5]',
-  data:   'bg-[#E9EEF3] text-[#2B3A4A] border-[#C6D2DE]',
-  heap:   'bg-[#FDEAE0] text-[#8A4310] border-[#F5C9A9]',
-  stack:  'bg-[#E3F6EE] text-[#0A5C42] border-[#B0E2D0]',
-  auto:   'bg-[#E8F0FE] text-[#1A3D7C] border-[#B9CCF2]',
-  static: 'bg-[#E9EEF3] text-[#2B3A4A] border-[#C6D2DE]',
-  free:   'bg-white text-[#B4B0A6] border-dashed border-[#DEDBD3]',
-  null:   'bg-[#F0EFEC] text-[#8A8579] border-[#DEDBD3]',
-  warn:   'bg-[#FDF0D8] text-[#7A4E05] border-[#F0D3A0]',
-  ok:     'bg-[#E3F6EE] text-[#0A5C42] border-[#B0E2D0]',
-  bad:    'bg-[#FCE4E1] text-[#8C1D18] border-[#F3BDB8]',
-  text:   'bg-[#E4F2F5] text-[#0D5563] border-[#B4DCE5]',
+  pad:    'bg-surface-hover text-text-light border-line-strong',
+  code:   'bg-signal-soft text-brand-ink border-signal/30',
+  data:   'bg-surface-hover text-ink-soft border-line-strong',
+  heap:   'bg-signal-soft text-amber-deep border-money/40',
+  stack:  'bg-success-soft text-track border-success/30',
+  auto:   'bg-signal-soft text-brand-ink border-signal/30',
+  static: 'bg-surface-hover text-ink-soft border-line-strong',
+  free:   'bg-white text-text-light border-dashed border-line-strong',
+  null:   'bg-surface-hover text-text-light border-line-strong',
+  warn:   'bg-warning-soft text-amber-deep border-money/40',
+  ok:     'bg-success-soft text-track border-success/30',
+  bad:    'bg-danger-soft text-danger border-danger/30',
+  text:   'bg-signal-soft text-brand-ink border-signal/30',
   bss:    'bg-[#EFE8FB] text-[#4B2A80] border-[#D2C2F0]',
-  io:     'bg-[#E8F0FE] text-[#1A3D7C] border-[#B9CCF2]',
+  io:     'bg-signal-soft text-brand-ink border-signal/30',
 };
 
 const tone = (t?: string): string => TONE[(t as Tone) ?? 'int'] ?? TONE.int;
@@ -112,18 +112,18 @@ function Frame({
   return (
     <figure className="my-6 rounded-2xl border border-[--border-subtle] bg-white overflow-hidden shadow-sm">
       {(title || badge) && (
-        <div className="flex items-center gap-2.5 bg-[#F4F4F2] px-4 py-2.5 border-b border-[--border-subtle] flex-wrap">
+        <div className="flex items-center gap-2.5 bg-paper px-4 py-2.5 border-b border-[--border-subtle] flex-wrap">
           {icon}
           {title && (
-            <figcaption className="text-[12.5px] font-bold text-[--text-heading]">{title}</figcaption>
+            <figcaption className="text-xs font-bold text-[--text-heading]">{title}</figcaption>
           )}
           {badge && (
-            <span className="text-[10px] font-mono uppercase tracking-wide px-1.5 py-0.5 rounded bg-white border border-[--border-subtle] text-[--text-muted]">
+            <span className="text-xs font-mono uppercase tracking-wide px-1.5 py-0.5 rounded bg-white border border-[--border-subtle] text-[--text-muted]">
               {badge}
             </span>
           )}
           {stepCount > 1 && (
-            <span className="ml-auto text-[11px] font-mono text-[--text-muted] tabular-nums">
+            <span className="ml-auto text-xs font-mono text-[--text-muted] tabular-nums">
               {step + 1} / {stepCount}
             </span>
           )}
@@ -163,10 +163,10 @@ function Transport({
   if (stepCount <= 1) return null;
   const atEnd = step >= stepCount - 1;
   const btn =
-    'inline-flex items-center justify-center rounded-lg border border-[--border-subtle] bg-white text-[--text-body] hover:bg-[#F3F2EE] disabled:opacity-35 disabled:cursor-not-allowed transition-colors focus-ring';
+    'inline-flex items-center justify-center rounded-lg border border-[--border-subtle] bg-white text-[--text-body] hover:bg-surface-hover disabled:opacity-35 disabled:cursor-not-allowed transition-colors focus-ring';
 
   return (
-    <div className="flex items-center gap-2 px-4 py-2.5 border-t border-[--border-subtle] bg-[#FCFBF8]">
+    <div className="flex items-center gap-2 px-4 py-2.5 border-t border-[--border-subtle] bg-app-warm">
       <button
         type="button"
         onClick={onPrev}
@@ -215,7 +215,7 @@ function Transport({
             aria-current={i === step}
             className={`h-1.5 rounded-full transition-all focus-ring ${
               compact ? 'w-4' : 'w-5'
-            } ${i === step ? 'bg-[--brand-primary] w-7' : i < step ? 'bg-[#B9CCF2]' : 'bg-[--border-subtle] hover:bg-[#D6D2C8]'}`}
+            } ${i === step ? 'bg-[--brand-primary] w-7' : i < step ? 'bg-signal-soft' : 'bg-[--border-subtle] hover:bg-line-strong'}`}
           />
         ))}
       </div>
@@ -229,15 +229,15 @@ function Caption({ text, note }: { text?: string; note?: string }) {
   return (
     <figcaption className="px-4 py-3 border-t border-[--border-subtle] bg-white">
       {text && (
-        <p className="text-[13.5px] leading-relaxed text-[--text-body]">
-          <span className="font-mono text-[11px] text-[--brand-primary] mr-1.5">
+        <p className="text-sm leading-relaxed text-[--text-body]">
+          <span className="font-mono text-xs text-[--brand-primary] mr-1.5">
             {String(0).padStart(2, '0')}
           </span>
           {text}
         </p>
       )}
       {note && (
-        <p className="mt-1.5 text-[12.5px] leading-relaxed text-[--text-muted] border-l-2 border-[--brand-accent] pl-2.5">
+        <p className="mt-1.5 text-xs leading-relaxed text-[--text-muted] border-l-2 border-[--brand-accent] pl-2.5">
           {note}
         </p>
       )}
@@ -320,14 +320,14 @@ export function MemoryLab({ payload }: { payload: any }) {
       stepCount={steps.length}
     >
       {/* Address ruler + cells */}
-      <div className="px-4 py-4 bg-[#FCFBF8]">
+      <div className="px-4 py-4 bg-app-warm">
         <div className="overflow-x-auto pb-1">
           <div className="inline-flex flex-col min-w-full" style={{ minWidth: cells.length * 46 }}>
             <div className="flex mb-1">
               {cells.map((c, i) => (
                 <div
                   key={i}
-                  className="flex-1 min-w-[44px] text-center font-mono text-[9.5px] text-[--text-light] leading-none"
+                  className="flex-1 min-w-[44px] text-center font-mono text-xs text-[--text-light] leading-none"
                 >
                   {hex(base, i, width)}
                 </div>
@@ -346,11 +346,11 @@ export function MemoryLab({ payload }: { payload: any }) {
                     )} ${isTarget ? 'anim-target-ring' : ''} ${isHot && !isTarget ? 'ring-2 ring-[--brand-accent]' : ''}`}
                   >
                     {c.label && (
-                      <div className="text-[9px] font-bold uppercase tracking-wide opacity-70 leading-none mb-0.5">
+                      <div className="text-xs font-bold uppercase tracking-wide opacity-70 leading-none mb-0.5">
                         {c.label}
                       </div>
                     )}
-                    <div className="font-mono text-[11.5px] font-bold leading-tight">
+                    <div className="font-mono text-xs font-bold leading-tight">
                       {(c.bytes || []).join(' ')}
                     </div>
                   </div>
@@ -359,15 +359,15 @@ export function MemoryLab({ payload }: { payload: any }) {
             </div>
           </div>
         </div>
-        <p className="mt-2 font-mono text-[9.5px] text-[--text-light]">
+        <p className="mt-2 font-mono text-xs text-[--text-light]">
           each cell = {width} {width === 1 ? 'byte' : 'bytes'} · addresses step by {width}
         </p>
       </div>
 
       {/* Variables */}
       {vars.length > 0 && (
-        <div className="px-4 pb-4 bg-[#FCFBF8]">
-          <p className="font-mono text-[10px] uppercase tracking-wide text-[--text-muted] mb-1.5">
+        <div className="px-4 pb-4 bg-app-warm">
+          <p className="font-mono text-xs uppercase tracking-wide text-[--text-muted] mb-1.5">
             variables
           </p>
           <div className="flex flex-wrap gap-2">
@@ -380,15 +380,15 @@ export function MemoryLab({ payload }: { payload: any }) {
                     : tone(v.tone)
                 }`}
               >
-                <div className="font-mono text-[11.5px] font-bold text-[--text-heading] leading-tight">
+                <div className="font-mono text-xs font-bold text-[--text-heading] leading-tight">
                   {v.type ? <span className="opacity-55 mr-1">{v.type}</span> : null}
                   {v.name}
                 </div>
-                <div className="font-mono text-[11px] text-[--text-body] leading-tight">
+                <div className="font-mono text-xs text-[--text-body] leading-tight">
                   {v.value}
                 </div>
                 {v.pointsTo !== undefined && (
-                  <div className="font-mono text-[10px] text-[--color-warning] leading-tight">
+                  <div className="font-mono text-xs text-[--color-warning] leading-tight">
                     → {hex(base, v.pointsTo, width)}
                   </div>
                 )}
@@ -443,11 +443,11 @@ function PassingLab({ payload }: { payload: any }) {
       <div className="grid gap-px bg-[--border-subtle] sm:grid-cols-2">
         {panes.map((p, i) => (
           <div key={i} className="bg-white p-4">
-            <p className="text-[12.5px] font-bold text-[--text-heading]">{p.title}</p>
-            {p.sub && <p className="text-[11.5px] text-[--text-muted] mt-0.5 mb-2.5 font-mono">{p.sub}</p>}
+            <p className="text-xs font-bold text-[--text-heading]">{p.title}</p>
+            {p.sub && <p className="text-xs text-[--text-muted] mt-0.5 mb-2.5 font-mono">{p.sub}</p>}
             {!p.sub && <div className="mb-2.5" />}
             {p.call && (
-              <pre className="mb-2.5 rounded-md bg-[#1E1E1E] text-[#E6EDF3] px-2.5 py-1.5 text-[11px] font-mono overflow-x-auto">
+              <pre className="mb-2.5 rounded-md bg-heading text-white px-2.5 py-1.5 text-xs font-mono overflow-x-auto">
                 {p.call}
               </pre>
             )}
@@ -457,8 +457,8 @@ function PassingLab({ payload }: { payload: any }) {
                   key={j}
                   className={`rounded-md border px-2.5 py-1.5 anim-pop-in ${tone(c.tone)}`}
                 >
-                  <span className="font-mono text-[11.5px] font-bold">{c.label}</span>
-                  <span className="font-mono text-[11.5px] float-right">{c.value}</span>
+                  <span className="font-mono text-xs font-bold">{c.label}</span>
+                  <span className="font-mono text-xs float-right">{c.value}</span>
                 </div>
               ))}
             </div>
@@ -516,9 +516,9 @@ export function CallStack({ payload }: { payload: any }) {
       step={step}
       stepCount={steps.length}
     >
-      <div className="px-4 py-4 bg-[#FCFBF8]">
+      <div className="px-4 py-4 bg-app-warm">
         <div className="flex items-center gap-2 mb-2">
-          <span className="font-mono text-[9.5px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-white border border-[--border-subtle] text-[--text-muted]">
+          <span className="font-mono text-xs uppercase tracking-wide px-1.5 py-0.5 rounded bg-white border border-[--border-subtle] text-[--text-muted]">
             high address
           </span>
           <div className="flex-1 h-px bg-[--border-subtle]" />
@@ -533,20 +533,20 @@ export function CallStack({ payload }: { payload: any }) {
                 key={`${step}-${i}-${f.fn}`}
                 className={`rounded-lg border px-3 py-2 anim-frame-push ${
                   returning
-                    ? 'anim-frame-pop bg-[#FDF0D8] border-[#F0D3A0]'
+                    ? 'anim-frame-pop bg-warning-soft border-money/40'
                     : i === frames.length - 1
-                    ? 'bg-[#E8F0FE] border-[#B9CCF2]'
+                    ? 'bg-signal-soft border-signal/30'
                     : 'bg-white border-[--border-subtle]'
                 }`}
               >
                 <div className="flex items-baseline gap-2 flex-wrap">
-                  <span className="font-mono text-[12px] font-bold text-[--text-heading]">
+                  <span className="font-mono text-xs font-bold text-[--text-heading]">
                     {returning ? '↩ ' : ''}
                     {f.fn}
                   </span>
-                  {f.args && <span className="font-mono text-[11px] text-[--text-muted]">({f.args})</span>}
+                  {f.args && <span className="font-mono text-xs text-[--text-muted]">({f.args})</span>}
                   {f.line && (
-                    <span className="font-mono text-[10px] text-[--brand-primary] ml-auto">{f.line}</span>
+                    <span className="font-mono text-xs text-[--brand-primary] ml-auto">{f.line}</span>
                   )}
                 </div>
                 {(f.locals?.length || f.note) && (
@@ -554,13 +554,13 @@ export function CallStack({ payload }: { payload: any }) {
                     {(f.locals || []).map((l, k) => (
                       <span
                         key={k}
-                        className="font-mono text-[10.5px] rounded bg-[#F3F2EE] border border-[--border-subtle] px-1.5 py-0.5 text-[--text-body]"
+                        className="font-mono text-xs rounded bg-surface-hover border border-[--border-subtle] px-1.5 py-0.5 text-[--text-body]"
                       >
                         {l}
                       </span>
                     ))}
                     {f.note && (
-                      <span className="font-mono text-[10.5px] text-[--color-warning]">{f.note}</span>
+                      <span className="font-mono text-xs text-[--color-warning]">{f.note}</span>
                     )}
                   </div>
                 )}
@@ -568,7 +568,7 @@ export function CallStack({ payload }: { payload: any }) {
             );
           })}
           {frames.length === 0 && (
-            <div className="rounded-lg border border-dashed border-[--border-subtle] py-6 text-center text-[12px] text-[--text-muted]">
+            <div className="rounded-lg border border-dashed border-[--border-subtle] py-6 text-center text-xs text-[--text-muted]">
               stack is empty
             </div>
           )}
@@ -576,7 +576,7 @@ export function CallStack({ payload }: { payload: any }) {
 
         <div className="flex items-center gap-2 mt-2">
           <div className="flex-1 h-px bg-[--border-subtle]" />
-          <span className="font-mono text-[9.5px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-white border border-[--border-subtle] text-[--text-muted]">
+          <span className="font-mono text-xs uppercase tracking-wide px-1.5 py-0.5 rounded bg-white border border-[--border-subtle] text-[--text-muted]">
             low address · stack pointer
           </span>
         </div>
@@ -642,19 +642,19 @@ export function Tracer({ payload }: { payload: any }) {
       stepCount={steps.length}
     >
       <div className="grid lg:grid-cols-[1.35fr_1fr] gap-px bg-[--border-subtle]">
-        <div className="bg-[#1E1E1E] overflow-x-auto">
-          <pre className="text-[12px] leading-[1.65] font-mono py-3 min-w-full">
+        <div className="bg-heading overflow-x-auto">
+          <pre className="text-xs leading-[1.65] font-mono py-3 min-w-full">
             {lines.map((l, i) => {
               const n = i + 1;
               const active = n === cur.line;
               return (
                 <div
                   key={n}
-                  className={`flex px-3 ${active ? 'bg-[#2D2D2D] anim-line-breathe' : ''}`}
+                  className={`flex px-3 ${active ? 'bg-heading anim-line-breathe' : ''}`}
                 >
-                  <span className="w-8 shrink-0 text-right pr-3 text-[#5A6270] select-none">{n}</span>
-                  <span className={`whitespace-pre ${active ? 'text-[#FFD479]' : 'text-[#E6EDF3]'}`}>
-                    {active && <span className="text-[#E8A33D] mr-1.5">▸</span>}
+                  <span className="w-8 shrink-0 text-right pr-3 text-muted select-none">{n}</span>
+                  <span className={`whitespace-pre ${active ? 'text-money' : 'text-white'}`}>
+                    {active && <span className="text-money mr-1.5">▸</span>}
                     {l || ' '}
                   </span>
                 </div>
@@ -665,11 +665,11 @@ export function Tracer({ payload }: { payload: any }) {
 
         <div className="bg-white flex flex-col">
           <div className="p-3 border-b border-[--border-subtle]">
-            <p className="font-mono text-[9.5px] uppercase tracking-wide text-[--text-muted] mb-1.5">
+            <p className="font-mono text-xs uppercase tracking-wide text-[--text-muted] mb-1.5">
               variables
             </p>
             {vars.length === 0 ? (
-              <p className="font-mono text-[11.5px] text-[--text-light]">—</p>
+              <p className="font-mono text-xs text-[--text-light]">—</p>
             ) : (
               <div className="space-y-1">
                 {vars.map((v) => (
@@ -677,18 +677,18 @@ export function Tracer({ payload }: { payload: any }) {
                     key={v.name}
                     className={`rounded border px-2 py-1 anim-pop-in ${tone(v.tone)}`}
                   >
-                    <span className="font-mono text-[11.5px] font-bold">{v.name}</span>
-                    <span className="font-mono text-[11.5px] float-right">{v.value}</span>
+                    <span className="font-mono text-xs font-bold">{v.name}</span>
+                    <span className="font-mono text-xs float-right">{v.value}</span>
                   </div>
                 ))}
               </div>
             )}
           </div>
           <div className="p-3 flex-1 min-h-[92px]">
-            <p className="font-mono text-[9.5px] uppercase tracking-wide text-[--text-muted] mb-1.5">
+            <p className="font-mono text-xs uppercase tracking-wide text-[--text-muted] mb-1.5">
               terminal
             </p>
-            <div className="font-mono text-[11.5px] leading-relaxed text-[#0F766E]">
+            <div className="font-mono text-xs leading-relaxed text-track">
               {output.length === 0 ? (
                 <span className="text-[--text-light]">—</span>
               ) : (
@@ -761,7 +761,7 @@ export function TypesLab({ payload }: { payload: any }) {
   if (!demo) {
     return (
       <Frame title={payload.title} step={0} stepCount={0}>
-        <p className="px-4 py-4 text-[13px] text-[--text-muted]">No type data supplied.</p>
+        <p className="px-4 py-4 text-sm text-[--text-muted]">No type data supplied.</p>
       </Frame>
     );
   }
@@ -806,9 +806,9 @@ export function TypesLab({ payload }: { payload: any }) {
     <Frame title={payload.title} badge={payload.badge || 'inspect'} step={0} stepCount={0}>
       {types.length > 0 && (
         <div className="overflow-x-auto border-b border-[--border-subtle]">
-          <table className="w-full text-[12.5px] min-w-[520px]">
+          <table className="w-full text-xs min-w-[520px]">
             <thead>
-              <tr className="bg-[#F4F4F2] text-left text-[11px] uppercase tracking-wide text-[--text-muted]">
+              <tr className="bg-paper text-left text-xs uppercase tracking-wide text-[--text-muted]">
                 <th className="px-4 py-2 font-semibold">Type</th>
                 <th className="px-3 py-2 font-semibold">Typical size</th>
                 <th className="px-3 py-2 font-semibold">Signed range</th>
@@ -841,10 +841,10 @@ export function TypesLab({ payload }: { payload: any }) {
                 type="button"
                 onClick={() => setActive(i)}
                 aria-pressed={i === active}
-                className={`px-2.5 py-1 rounded-lg text-[11.5px] font-mono border transition-colors ${
+                className={`px-2.5 py-1 rounded-lg text-xs font-mono border transition-colors ${
                   i === active
                     ? 'bg-[--brand-primary] text-white border-[--brand-primary]'
-                    : 'bg-white text-[--text-body] border-[--border-subtle] hover:bg-[#F3F2EE]'
+                    : 'bg-white text-[--text-body] border-[--border-subtle] hover:bg-surface-hover'
                 }`}
               >
                 {d.title}
@@ -853,7 +853,7 @@ export function TypesLab({ payload }: { payload: any }) {
           </div>
         )}
 
-        <p className="font-mono text-[11px] text-[--text-muted] mb-2">
+        <p className="font-mono text-xs text-[--text-muted] mb-2">
           nudge the value past its limit and watch the bits
         </p>
 
@@ -861,7 +861,7 @@ export function TypesLab({ payload }: { payload: any }) {
           {groups.map((g, i) => (
             <span
               key={i}
-              className="font-mono text-[19px] font-bold tracking-tight text-[--text-heading] anim-pop-in"
+              className="font-mono text-xl font-bold tracking-tight text-[--text-heading] anim-pop-in"
               style={{ animationDelay: `${i * 28}ms` }}
             >
               {g}
@@ -871,14 +871,14 @@ export function TypesLab({ payload }: { payload: any }) {
 
         <div className="flex flex-wrap items-center gap-2.5">
           <div className="flex items-baseline gap-2">
-            <span className="font-mono text-[10.5px] text-[--text-muted]">decimal</span>
-            <span key={`d${clamped}`} className="font-mono text-[15px] font-bold text-[--brand-primary] anim-pop-in">
+            <span className="font-mono text-xs text-[--text-muted]">decimal</span>
+            <span key={`d${clamped}`} className="font-mono text-base font-bold text-[--brand-primary] anim-pop-in">
               {fmt(clamped)}
             </span>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="font-mono text-[10.5px] text-[--text-muted]">hex</span>
-            <span className="font-mono text-[13px] text-[--text-body]">
+            <span className="font-mono text-xs text-[--text-muted]">hex</span>
+            <span className="font-mono text-sm text-[--text-body]">
               0x{shown.toString(16).toUpperCase().padStart(Math.ceil(W / 4), '0')}
             </span>
           </div>
@@ -887,7 +887,7 @@ export function TypesLab({ payload }: { payload: any }) {
             type="button"
             onClick={() => bump(BigInt(-1))}
             aria-label="Decrease by one"
-            className="px-2.5 h-8 rounded-lg border border-[--border-subtle] bg-white text-[--text-body] hover:bg-[#F3F2EE] transition-colors"
+            className="px-2.5 h-8 rounded-lg border border-[--border-subtle] bg-white text-[--text-body] hover:bg-surface-hover transition-colors"
           >
             −1
           </button>
@@ -895,7 +895,7 @@ export function TypesLab({ payload }: { payload: any }) {
             type="button"
             onClick={() => bump(BigInt(1))}
             aria-label="Increase by one"
-            className="px-2.5 h-8 rounded-lg border border-[--border-subtle] bg-white text-[--text-body] hover:bg-[#F3F2EE] transition-colors"
+            className="px-2.5 h-8 rounded-lg border border-[--border-subtle] bg-white text-[--text-body] hover:bg-surface-hover transition-colors"
           >
             +1
           </button>
@@ -903,20 +903,20 @@ export function TypesLab({ payload }: { payload: any }) {
             type="button"
             onClick={() => bump(BigInt(5))}
             aria-label="Increase by five"
-            className="px-2.5 h-8 rounded-lg border border-[--border-subtle] bg-white text-[--text-body] hover:bg-[#F3F2EE] transition-colors"
+            className="px-2.5 h-8 rounded-lg border border-[--border-subtle] bg-white text-[--text-body] hover:bg-surface-hover transition-colors"
           >
             +5
           </button>
           <button
             type="button"
             onClick={() => { setSpin((s) => s + 1); setRaw(maxB.toString()); }}
-            className="px-2.5 h-8 rounded-lg border border-[--brand-accent] bg-[#FDF0D8] text-[#7A4E05] hover:bg-[#F8E2B8] transition-colors font-semibold"
+            className="px-2.5 h-8 rounded-lg border border-[--brand-accent] bg-warning-soft text-amber-deep hover:bg-warning-soft transition-colors font-semibold"
           >
             overflow →
           </button>
         </div>
 
-        <p className="mt-2.5 text-[12.5px] text-[--text-muted] leading-relaxed">
+        <p className="mt-2.5 text-xs text-[--text-muted] leading-relaxed">
           Range for <span className="font-mono text-[--text-body]">{demo.title}</span>:{' '}
           <span className="font-mono text-[--text-body]">{fmt(minB)}</span> to{' '}
           <span className="font-mono text-[--text-body]">{fmt(maxB)}</span>. The wrap is not a bug in C — it is
@@ -954,13 +954,13 @@ export function BitView({ payload }: { payload: any }) {
 
   return (
     <Frame title={payload.title} badge={payload.badge || 'bit layout'} step={step} stepCount={steps.length}>
-      <div className="px-4 py-4 bg-[#FCFBF8] overflow-x-auto">
+      <div className="px-4 py-4 bg-app-warm overflow-x-auto">
         {totalBits % 8 === 0 && (
           <div className="flex mb-1 min-w-[440px]">
             {Array.from({ length: totalBits / 8 }).map((_, i) => (
               <div
                 key={i}
-                className="flex-1 text-center font-mono text-[9.5px] text-[--text-light]"
+                className="flex-1 text-center font-mono text-xs text-[--text-light]"
                 style={{ minWidth: 30 }}
               >
                 b{7 - i}…b{8 - i}
@@ -976,20 +976,20 @@ export function BitView({ payload }: { payload: any }) {
               style={{ flexGrow: f.bits, minWidth: f.bits * 11 }}
               className={`rounded-md border px-1 py-1.5 text-center anim-pop-in ${tone(f.tone)}`}
             >
-              <div className="font-mono text-[9px] opacity-70 leading-none">
+              <div className="font-mono text-xs opacity-70 leading-none">
                 {typeof f.value === 'number' ? toBits(f.value, f.bits) : '·'.repeat(f.bits)}
               </div>
-              <div className="font-mono text-[9.5px] font-bold leading-tight mt-0.5 truncate">{f.label}</div>
+              <div className="font-mono text-xs font-bold leading-tight mt-0.5 truncate">{f.label}</div>
             </div>
           ))}
           {used < totalBits &&
             Array.from({ length: totalBits - used }).map((_, i) => (
               <div
                 key={`gap${i}`}
-                className="rounded-md border border-dashed border-[#DEDBD3] bg-white px-1 py-1.5 text-center"
+                className="rounded-md border border-dashed border-line-strong bg-white px-1 py-1.5 text-center"
                 style={{ flexGrow: 1, minWidth: 11 }}
               >
-                <div className="font-mono text-[9px] text-[#B4B0A6] leading-none">·</div>
+                <div className="font-mono text-xs text-text-light leading-none">·</div>
               </div>
             ))}
         </div>
@@ -998,13 +998,13 @@ export function BitView({ payload }: { payload: any }) {
           <div className="flex flex-wrap gap-1.5 mt-2.5 min-w-[440px]">
             {fields.map((f, i) => (
               <div key={i} className={`rounded border px-2 py-1 ${tone(f.tone)}`}>
-                <div className="font-mono text-[10.5px] font-bold">{f.label}</div>
+                <div className="font-mono text-xs font-bold">{f.label}</div>
                 {typeof f.value === 'number' && (
-                  <div className="font-mono text-[10px] opacity-80">
+                  <div className="font-mono text-xs opacity-80">
                     {f.value} · {f.bits} {f.bits === 1 ? 'bit' : 'bits'}
                   </div>
                 )}
-                {f.note && <div className="text-[10.5px] opacity-70 max-w-[220px]">{f.note}</div>}
+                {f.note && <div className="text-xs opacity-70 max-w-[220px]">{f.note}</div>}
               </div>
             ))}
           </div>
@@ -1045,9 +1045,9 @@ function ExprTree({ node, depth = 0 }: { node: ExprNode; depth?: number }) {
           }`}
           style={{ animationDelay: `${depth * 60}ms` }}
         >
-          <div className="font-mono text-[12px] font-bold text-[--text-heading] leading-tight">{node.label}</div>
+          <div className="font-mono text-xs font-bold text-[--text-heading] leading-tight">{node.label}</div>
           {node.op && (
-            <div className="font-mono text-[9.5px] uppercase tracking-wide text-[--text-muted] leading-none mt-0.5">
+            <div className="font-mono text-xs uppercase tracking-wide text-[--text-muted] leading-none mt-0.5">
               {node.op}
             </div>
           )}
@@ -1088,22 +1088,22 @@ export function ExpressionLab({ payload }: { payload: any }) {
   return (
     <Frame title={payload.title} badge={payload.badge || 'precedence'} step={step} stepCount={steps.length}>
       {payload.expression && (
-        <div className="px-4 pt-4 bg-[#FCFBF8]">
-          <p className="font-mono text-[9.5px] uppercase tracking-wide text-[--text-muted] mb-1">expression</p>
-          <pre className="rounded-md bg-[#1E1E1E] text-[#E6EDF3] px-3 py-2 text-[12.5px] font-mono overflow-x-auto">
+        <div className="px-4 pt-4 bg-app-warm">
+          <p className="font-mono text-xs uppercase tracking-wide text-[--text-muted] mb-1">expression</p>
+          <pre className="rounded-md bg-heading text-white px-3 py-2 text-xs font-mono overflow-x-auto">
             {payload.expression}
           </pre>
         </div>
       )}
-      <div className="px-4 py-4 bg-[#FCFBF8] overflow-x-auto">
+      <div className="px-4 py-4 bg-app-warm overflow-x-auto">
         {cur.node ? (
           <ExprTree node={cur.node} />
         ) : (
-          <p className="text-[13px] text-[--text-muted] text-center py-4">No tree supplied.</p>
+          <p className="text-sm text-[--text-muted] text-center py-4">No tree supplied.</p>
         )}
         {cur.result !== undefined && (
           <div className="mt-3 text-center">
-            <span className="inline-block rounded-lg bg-[--brand-primary] text-white px-3 py-1.5 font-mono text-[13px] font-bold anim-pop-in">
+            <span className="inline-block rounded-lg bg-[--brand-primary] text-white px-3 py-1.5 font-mono text-sm font-bold anim-pop-in">
               = {cur.result}
             </span>
           </div>
@@ -1152,7 +1152,7 @@ export function Pipeline({ payload }: { payload: any }) {
       stepCount={stages.length}
     >
       {/* Rail */}
-      <div className="px-4 py-3 bg-[#FCFBF8] border-b border-[--border-subtle] overflow-x-auto">
+      <div className="px-4 py-3 bg-app-warm border-b border-[--border-subtle] overflow-x-auto">
         <div className="flex items-stretch gap-1 min-w-fit">
           {stages.map((s, i) => (
             <div key={i} className="flex items-center gap-1">
@@ -1160,7 +1160,7 @@ export function Pipeline({ payload }: { payload: any }) {
                 type="button"
                 onClick={() => { setPlaying(false); setStep(i); }}
                 aria-current={i === step}
-                className={`px-2.5 py-1.5 rounded-lg border text-[11px] font-mono whitespace-nowrap transition-all ${
+                className={`px-2.5 py-1.5 rounded-lg border text-xs font-mono whitespace-nowrap transition-all ${
                   i === step
                     ? 'bg-[--brand-primary] text-white border-[--brand-primary] font-bold'
                     : i < step
@@ -1179,26 +1179,26 @@ export function Pipeline({ payload }: { payload: any }) {
       {cur && (
         <div key={step} className="grid sm:grid-cols-[1fr_auto_1fr] gap-3 p-4 items-start anim-stage-flow">
           <div className="min-w-0">
-            <p className="font-mono text-[9.5px] uppercase tracking-wide text-[--text-muted] mb-1">input</p>
-            <p className="text-[12.5px] text-[--text-body] leading-relaxed mb-2">{cur.in}</p>
+            <p className="font-mono text-xs uppercase tracking-wide text-[--text-muted] mb-1">input</p>
+            <p className="text-xs text-[--text-body] leading-relaxed mb-2">{cur.in}</p>
             {cur.in && artifacts[cur.in] && <Artifact text={artifacts[cur.in]} />}
           </div>
           <div className="self-center flex flex-col items-center gap-1 px-1">
             <div className={`rounded-lg border px-2.5 py-1.5 text-center ${tone(cur.tone || 'code')}`}>
-              <div className="font-mono text-[11px] font-bold text-[--text-heading]">{cur.tool || cur.name}</div>
+              <div className="font-mono text-xs font-bold text-[--text-heading]">{cur.tool || cur.name}</div>
             </div>
             <span className="text-[--brand-primary] text-lg leading-none">→</span>
           </div>
           <div className="min-w-0">
-            <p className="font-mono text-[9.5px] uppercase tracking-wide text-[--text-muted] mb-1">output</p>
-            <p className="text-[12.5px] text-[--text-body] leading-relaxed mb-2">{cur.out}</p>
+            <p className="font-mono text-xs uppercase tracking-wide text-[--text-muted] mb-1">output</p>
+            <p className="text-xs text-[--text-body] leading-relaxed mb-2">{cur.out}</p>
             {cur.out && artifacts[cur.out] && <Artifact text={artifacts[cur.out]} />}
           </div>
         </div>
       )}
 
       {cur?.detail && (
-        <p className="px-4 pb-4 text-[12.5px] text-[--text-muted] leading-relaxed">{cur.detail}</p>
+        <p className="px-4 pb-4 text-xs text-[--text-muted] leading-relaxed">{cur.detail}</p>
       )}
 
       <Transport
@@ -1217,7 +1217,7 @@ export function Pipeline({ payload }: { payload: any }) {
 
 function Artifact({ text }: { text: string }) {
   return (
-    <pre className="rounded-md bg-[#1E1E1E] text-[#E6EDF3] px-2.5 py-2 text-[10.5px] leading-relaxed font-mono overflow-x-auto max-h-[190px]">
+    <pre className="rounded-md bg-heading text-white px-2.5 py-2 text-xs leading-relaxed font-mono overflow-x-auto max-h-[190px]">
       {text}
     </pre>
   );
@@ -1255,7 +1255,7 @@ export function StackHeap({ payload }: { payload: any }) {
   const freeUnits = maxUnits - heap.reduce((n, h) => n + (h.size || 1), 0) - stack.reduce((n, s) => n + (s.size || 1), 0);
 
   const gapTone =
-    cur.highlight === 'gap' ? 'ring-2 ring-[#C1442D]' : cur.highlight === 'heap' || cur.highlight === 'stack' ? '' : '';
+    cur.highlight === 'gap' ? 'ring-2 ring-danger' : cur.highlight === 'heap' || cur.highlight === 'stack' ? '' : '';
 
   return (
     <Frame
@@ -1264,10 +1264,10 @@ export function StackHeap({ payload }: { payload: any }) {
       step={step}
       stepCount={steps.length}
     >
-      <div className="px-4 py-4 bg-[#FCFBF8] flex justify-center">
+      <div className="px-4 py-4 bg-app-warm flex justify-center">
         <div className="w-full max-w-[380px]">
           {stack.length > 0 && (
-            <p className="font-mono text-[9.5px] uppercase tracking-wide text-[--text-muted] mb-1 text-right">
+            <p className="font-mono text-xs uppercase tracking-wide text-[--text-muted] mb-1 text-right">
               stack grows down ↓
             </p>
           )}
@@ -1279,15 +1279,15 @@ export function StackHeap({ payload }: { payload: any }) {
                 s.tone || 'stack'
               )} ${cur.highlight === 'stack' ? 'ring-2 ring-[--brand-accent]' : ''}`}
             >
-              <span className="font-mono text-[10.5px] font-bold leading-none">{s.label}</span>
+              <span className="font-mono text-xs font-bold leading-none">{s.label}</span>
             </div>
           ))}
 
           <div
             style={{ height: `${(freeUnits / maxUnits) * 100}%`, minHeight: 30 }}
-            className={`rounded-md border border-dashed border-[#C6D2DE] bg-white/60 my-1 flex items-center justify-center anim-bar-grow anim-bar-grow-y ${gapTone}`}
+            className={`rounded-md border border-dashed border-line-strong bg-white/60 my-1 flex items-center justify-center anim-bar-grow anim-bar-grow-y ${gapTone}`}
           >
-            <span className="font-mono text-[10px] text-[--text-muted] text-center px-2 leading-tight">
+            <span className="font-mono text-xs text-[--text-muted] text-center px-2 leading-tight">
               free space
               <br />
               {freeUnits} units
@@ -1302,11 +1302,11 @@ export function StackHeap({ payload }: { payload: any }) {
                 h.tone || 'heap'
               )} ${cur.highlight === 'heap' ? 'ring-2 ring-[--brand-accent]' : ''}`}
             >
-              <span className="font-mono text-[10.5px] font-bold leading-none">{h.label}</span>
+              <span className="font-mono text-xs font-bold leading-none">{h.label}</span>
             </div>
           ))}
 
-          <p className="font-mono text-[9.5px] uppercase tracking-wide text-[--text-muted] mb-1">
+          <p className="font-mono text-xs uppercase tracking-wide text-[--text-muted] mb-1">
             {heap.length > 0 ? 'heap grows up ↑' : 'program break'}
           </p>
           {[
@@ -1319,7 +1319,7 @@ export function StackHeap({ payload }: { payload: any }) {
               style={{ minHeight: 26 }}
               className={`rounded-md border px-2 py-1 mb-1 ${tone(r.t)}`}
             >
-              <span className="font-mono text-[10.5px] font-bold leading-none">{r.l}</span>
+              <span className="font-mono text-xs font-bold leading-none">{r.l}</span>
             </div>
           ))}
         </div>
@@ -1364,12 +1364,12 @@ export function NodeGraph({ payload }: { payload: any }) {
 
   return (
     <Frame title={payload.title} badge={payload.badge || 'struct graph'} step={step} stepCount={steps.length}>
-      <div className="px-4 py-4 bg-[#FCFBF8] overflow-x-auto">
+      <div className="px-4 py-4 bg-app-warm overflow-x-auto">
         <div className="flex items-center gap-0 min-w-fit">
           {cur.tail && (
             <div className="shrink-0 rounded-md border border-[--border-subtle] bg-white px-2 py-2 mr-1.5">
-              <div className="font-mono text-[10px] text-[--text-muted]">head</div>
-              <div className="font-mono text-[11.5px] font-bold text-[--text-heading]">{cur.tail}</div>
+              <div className="font-mono text-xs text-[--text-muted]">head</div>
+              <div className="font-mono text-xs font-bold text-[--text-heading]">{cur.tail}</div>
             </div>
           )}
           {nodes.map((n, i) => {
@@ -1381,15 +1381,15 @@ export function NodeGraph({ payload }: { payload: any }) {
                     dangling ? 'opacity-60' : ''
                   }`}
                 >
-                  <div className="font-mono text-[11.5px] font-bold text-[--text-heading] leading-tight">
+                  <div className="font-mono text-xs font-bold text-[--text-heading] leading-tight">
                     {n.data}
                   </div>
-                  <div className="font-mono text-[9.5px] text-[--text-muted] leading-tight">
+                  <div className="font-mono text-xs text-[--text-muted] leading-tight">
                     {n.note || n.id}
                   </div>
                 </div>
                 <div
-                  className={`shrink-0 px-1.5 font-mono text-[11px] ${
+                  className={`shrink-0 px-1.5 font-mono text-xs ${
                     dangling ? 'text-[--color-error]' : 'text-[--text-light]'
                   }`}
                 >
@@ -1402,14 +1402,14 @@ export function NodeGraph({ payload }: { payload: any }) {
 
         {freeList.length > 0 && (
           <div className="mt-3 pt-3 border-t border-dashed border-[--border-subtle]">
-            <p className="font-mono text-[9.5px] uppercase tracking-wide text-[--text-muted] mb-1.5">
+            <p className="font-mono text-xs uppercase tracking-wide text-[--text-muted] mb-1.5">
               free list (nodes malloc gave back)
             </p>
             <div className="flex items-center gap-1.5 flex-wrap">
               {freeList.map((f, i) => (
                 <span
                   key={i}
-                  className="rounded-md border border-dashed border-[#F3BDB8] bg-[#FCE4E1] px-2 py-1 font-mono text-[10.5px] text-[#8C1D18] anim-node-in"
+                  className="rounded-md border border-dashed border-danger/30 bg-danger-soft px-2 py-1 font-mono text-xs text-danger anim-node-in"
                 >
                   {f}
                 </span>
@@ -1460,7 +1460,7 @@ export function StepTrace({ payload }: { payload: any }) {
             type="button"
             onClick={() => setActive(i)}
             aria-current={i === active}
-            className={`shrink-0 px-3 py-1.5 text-[12px] font-semibold rounded-lg transition-colors border ${
+            className={`shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors border ${
               i === active
                 ? 'bg-[--brand-primary] text-white border-[--brand-primary]'
                 : 'bg-white text-gray-600 border-[--border-subtle] hover:border-gray-300'
@@ -1471,10 +1471,10 @@ export function StepTrace({ payload }: { payload: any }) {
         ))}
       </div>
       <div className="bg-white px-5 py-4 space-y-2">
-        <h5 className="font-semibold text-[14px] text-[--text-heading]">{steps[active]?.title}</h5>
+        <h5 className="font-semibold text-sm text-[--text-heading]">{steps[active]?.title}</h5>
         <p className="text-sm text-[--text-body] leading-relaxed">{steps[active]?.desc}</p>
         {steps[active]?.code_snippet && (
-          <pre className="mt-2 p-3 bg-[#F4F4F2] rounded-lg text-[12px] font-mono text-[--brand-primary] overflow-x-auto">
+          <pre className="mt-2 p-3 bg-paper rounded-lg text-xs font-mono text-[--brand-primary] overflow-x-auto">
             {steps[active].code_snippet}
           </pre>
         )}

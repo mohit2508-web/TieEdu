@@ -22,8 +22,8 @@ import {
  */
 
 const MAX_SIZE = 6 * 1024 * 1024;
-const inputCls = "w-full p-2.5 border border-gray-200 rounded-xl bg-[#FAFAF9] text-sm focus:outline-none focus:ring-2 focus:ring-[#0284C7]";
-const labelCls = "block text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-1";
+const inputCls = "w-full p-2.5 border border-gray-200 rounded-xl bg-app-warm text-sm focus:outline-none focus:ring-2 focus:ring-signal";
+const labelCls = "block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1";
 
 /** Fastest in-app destinations an admin usually points a poster at. */
 const LINK_PRESETS = [
@@ -271,8 +271,8 @@ export const PostersTab: React.FC = () => {
       <div className="bg-white border border-gray-200 rounded-3xl p-5 shadow-xs">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h3 className="text-base font-extrabold text-[#1E293B] flex items-center gap-2">
-              <Megaphone className="w-5 h-5 text-[#B45309]" /> Hero Posters — Landing Page Big Banners
+            <h3 className="text-base font-extrabold text-ink-soft flex items-center gap-2">
+              <Megaphone className="w-5 h-5 text-amber-deep" /> Hero Posters — Landing Page Big Banners
             </h3>
             <p className="text-xs text-gray-500 mt-1 leading-relaxed max-w-3xl">
               Yehi creatives homepage ke hero mein 3D orbit ki jagah rotate hoti hain. Image + text + link —
@@ -280,7 +280,7 @@ export const PostersTab: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <Link href="/" target="_blank" className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-[#0284C7] border border-[#B8E3F7] bg-white hover:bg-[#E8F4FB]">
+            <Link href="/" target="_blank" className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-signal border border-signal/30 bg-white hover:bg-signal-soft">
               <ExternalLink className="w-3.5 h-3.5" /> Homepage par dekhein
             </Link>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 text-xs font-bold font-mono">
@@ -290,7 +290,7 @@ export const PostersTab: React.FC = () => {
         </div>
 
         {msg && (
-          <div className={`mt-4 px-4 py-2.5 rounded-xl text-[13px] font-semibold flex items-center gap-2 ${msg.type === 'ok' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+          <div className={`mt-4 px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 ${msg.type === 'ok' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
             {msg.type === 'ok' ? <CheckCircle2 className="w-4 h-4" /> : <ShieldAlert className="w-4 h-4" />}
             {msg.text}
           </div>
@@ -301,12 +301,12 @@ export const PostersTab: React.FC = () => {
         {/* ===== EDITOR ===== */}
         <div className="xl:col-span-2 bg-white border border-gray-200 rounded-3xl p-5 shadow-xs space-y-4">
           <div className="flex items-center justify-between gap-3">
-            <h4 className="text-sm font-extrabold text-[#1E293B] flex items-center gap-2">
-              {editingId ? <Pencil className="w-4 h-4 text-[#0284C7]" /> : <Plus className="w-4 h-4 text-[#0284C7]" />}
+            <h4 className="text-sm font-extrabold text-ink-soft flex items-center gap-2">
+              {editingId ? <Pencil className="w-4 h-4 text-signal" /> : <Plus className="w-4 h-4 text-signal" />}
               {editingId ? 'Edit Poster' : 'New Poster'}
             </h4>
             {editingId && (
-              <button onClick={resetForm} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-gray-500 hover:bg-gray-100">
+              <button onClick={resetForm} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold text-gray-500 hover:bg-gray-100">
                 <X className="w-3 h-3" /> Cancel
               </button>
             )}
@@ -320,7 +320,7 @@ export const PostersTab: React.FC = () => {
               onDragLeave={() => setDragOver(false)}
               onDrop={(e) => { e.preventDefault(); setDragOver(false); pickFile(e.dataTransfer.files?.[0]); }}
               onClick={() => inputRef.current?.click()}
-              className={`relative rounded-2xl border-2 border-dashed text-center transition-all cursor-pointer overflow-hidden ${dragOver ? 'border-[#0284C7] bg-sky-50' : 'border-gray-300 bg-white hover:border-[#0284C7]/50'}`}
+              className={`relative rounded-2xl border-2 border-dashed text-center transition-all cursor-pointer overflow-hidden ${dragOver ? 'border-signal bg-signal-soft' : 'border-gray-300 bg-white hover:border-signal/50'}`}
             >
               <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={(e) => pickFile(e.target.files?.[0])} />
               {previewSrc ? (
@@ -335,26 +335,26 @@ export const PostersTab: React.FC = () => {
                   {/* eslint-disable-next-line @next/next/no-img-element -- local data-URL file preview, see above */}
                   <img src={previewSrc} alt="Poster preview" width={640} height={800} className="w-full aspect-[4/5] object-cover" />
                   <span className="absolute bottom-2 inset-x-0 flex justify-center">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/65 text-white text-[11px] font-bold backdrop-blur">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/65 text-white text-xs font-bold backdrop-blur">
                       {pendingImage ? `${pendingImage.file.name} (${fmtSize(pendingImage.file.size)})` : form.image_file_name || 'Current image'} — click to replace
                     </span>
                   </span>
                 </>
               ) : (
                 <div className="py-10 px-4">
-                  <ImageIcon className="w-7 h-7 text-[#0284C7] mx-auto mb-2" />
-                  <p className="text-sm font-bold text-[#1E293B]">Drag & drop, ya click karke choose karein</p>
-                  <p className="text-[12px] text-gray-500 mt-1">JPG / PNG / WEBP / AVIF • 6MB max</p>
+                  <ImageIcon className="w-7 h-7 text-signal mx-auto mb-2" />
+                  <p className="text-sm font-bold text-ink-soft">Drag & drop, ya click karke choose karein</p>
+                  <p className="text-xs text-gray-500 mt-1">JPG / PNG / WEBP / AVIF • 6MB max</p>
                 </div>
               )}
             </div>
-            <p className="text-[11px] text-gray-500 mt-1.5 leading-relaxed">
+            <p className="text-xs text-gray-500 mt-1.5 leading-relaxed">
               Recommended: <strong>1200 × 1500 px (4:5)</strong>. Mobile par 16:10 crop hota hai — important text
               frame ke beech-middle mein rakhein, corners par nahi.
             </p>
             {progress !== null && (
               <div className="h-2 rounded-full bg-gray-100 overflow-hidden mt-2">
-                <div className="h-full bg-[#0284C7] transition-all" style={{ width: `${progress}%` }} />
+                <div className="h-full bg-signal transition-all" style={{ width: `${progress}%` }} />
               </div>
             )}
           </div>
@@ -390,13 +390,13 @@ export const PostersTab: React.FC = () => {
                   key={preset.href}
                   type="button"
                   onClick={() => setForm({ ...form, href: preset.href })}
-                  className="px-2 py-1 rounded-lg bg-[#FAFAF9] border border-gray-200 text-[11px] font-bold text-gray-600 hover:border-[#0284C7] hover:text-[#0284C7]"
+                  className="px-2 py-1 rounded-lg bg-app-warm border border-gray-200 text-xs font-bold text-gray-600 hover:border-signal hover:text-signal"
                 >
                   {preset.label}
                 </button>
               ))}
             </div>
-            <p className="text-[11px] text-gray-500 mt-1.5">
+            <p className="text-xs text-gray-500 mt-1.5">
               Link khaali chhodne par poster click nahi hoga. External link naya tab mein khulta hai.
             </p>
           </div>
@@ -421,21 +421,21 @@ export const PostersTab: React.FC = () => {
               <input type="number" className={inputCls} placeholder="auto" value={form.sort_order} onChange={(e) => setForm({ ...form, sort_order: e.target.value })} />
             </div>
           </div>
-          <p className="text-[11px] text-gray-500 -mt-2">Chhota number = pehle dikhta hai. Date khaali = koi limit nahi.</p>
+          <p className="text-xs text-gray-500 -mt-2">Chhota number = pehle dikhta hai. Date khaali = koi limit nahi.</p>
 
           <div className="flex flex-wrap items-center gap-4 pt-1">
-            <label className="flex items-center gap-2 text-[13px] font-semibold text-gray-700">
-              <input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} className="accent-[#0284C7] w-4 h-4" />
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+              <input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} className="accent-signal w-4 h-4" />
               Active
             </label>
-            <label className="flex items-center gap-2 text-[13px] font-semibold text-gray-700" title="Featured on = sirf yehi poster rotate hoga">
-              <input type="checkbox" checked={form.is_featured} onChange={(e) => setForm({ ...form, is_featured: e.target.checked })} className="accent-[#E8A33D] w-4 h-4" />
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700" title="Featured on = sirf yehi poster rotate hoga">
+              <input type="checkbox" checked={form.is_featured} onChange={(e) => setForm({ ...form, is_featured: e.target.checked })} className="accent-money w-4 h-4" />
               Featured only
             </label>
             <button
               onClick={handleSubmit}
               disabled={busy}
-              className="ml-auto inline-flex items-center gap-2 px-4 py-2.5 bg-[#0284C7] hover:bg-[#0369A1] text-white rounded-xl text-xs font-bold transition-colors disabled:opacity-60"
+              className="ml-auto inline-flex items-center gap-2 px-4 py-2.5 bg-signal hover:bg-signal text-white rounded-xl text-xs font-bold transition-colors disabled:opacity-60"
             >
               {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
               {editingId ? 'Save Changes' : (pendingImage ? 'Upload & Publish' : 'Publish Poster')}
@@ -452,8 +452,8 @@ export const PostersTab: React.FC = () => {
           ) : posters.length === 0 ? (
             <div className="bg-white border border-gray-200 rounded-3xl p-12 text-center space-y-2">
               <Megaphone className="w-8 h-8 text-gray-300 mx-auto" />
-              <p className="text-sm font-bold text-[#1E293B]">Abhi koi poster nahi hai</p>
-              <p className="text-[13px] text-gray-500 max-w-md mx-auto">
+              <p className="text-sm font-bold text-ink-soft">Abhi koi poster nahi hai</p>
+              <p className="text-sm text-gray-500 max-w-md mx-auto">
                 Left side se image upload karke pehla poster publish karein. Jab tak koi LIVE poster nahi hoga,
                 homepage par 3D orbit fallback chalega.
               </p>
@@ -462,7 +462,7 @@ export const PostersTab: React.FC = () => {
             posters.map((p, i) => {
               const st = statusOf(p);
               return (
-                <div key={p.id} className={`bg-white border rounded-3xl p-4 shadow-xs flex flex-col sm:flex-row gap-4 ${editingId === p.id ? 'border-[#0284C7] ring-2 ring-[#0284C7]/15' : 'border-gray-200'}`}>
+                <div key={p.id} className={`bg-white border rounded-3xl p-4 shadow-xs flex flex-col sm:flex-row gap-4 ${editingId === p.id ? 'border-signal ring-2 ring-signal/15' : 'border-gray-200'}`}>
                   {/*
                    * The height lives on THIS div now, and it has to.
                    *
@@ -473,7 +473,7 @@ export const PostersTab: React.FC = () => {
                    * collapsing to a 0px sliver. `relative` is what makes `fill` have
                    * something to measure against.
                    */}
-                  <div className="relative w-full sm:w-28 h-40 sm:h-full shrink-0 rounded-2xl overflow-hidden bg-[#0E2A44]">
+                  <div className="relative w-full sm:w-28 h-40 sm:h-full shrink-0 rounded-2xl overflow-hidden bg-brand-ink">
                     {/*
                      * Optimised after all. The old comment here said "not an
                      * optimisable next/image source", which was only true while
@@ -501,23 +501,23 @@ export const PostersTab: React.FC = () => {
                     <div className="flex items-start justify-between gap-3 flex-wrap">
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold tracking-wide ${st.cls}`}>{st.text}</span>
+                          <span className={`px-2.5 py-0.5 rounded-full text-xs font-extrabold tracking-wide ${st.cls}`}>{st.text}</span>
                           {p.is_featured && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-xs font-bold">
                               <Star className="w-3 h-3 fill-amber-500 text-amber-600" /> FEATURED
                             </span>
                           )}
-                          <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 text-[10px] font-mono font-bold">#{i + 1}</span>
+                          <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 text-xs font-mono font-bold">#{i + 1}</span>
                         </div>
-                        <p className="font-extrabold text-[#1E293B] text-sm mt-1.5 truncate">
-                          {p.badge && <span className="text-[#B45309] mr-1.5">{p.badge}</span>}
+                        <p className="font-extrabold text-ink-soft text-sm mt-1.5 truncate">
+                          {p.badge && <span className="text-amber-deep mr-1.5">{p.badge}</span>}
                           {p.title || <span className="text-gray-400 italic">No headline</span>}
                         </p>
-                        {p.subtitle && <p className="text-[12px] text-gray-500 line-clamp-1 mt-0.5">{p.subtitle}</p>}
+                        {p.subtitle && <p className="text-xs text-gray-500 line-clamp-1 mt-0.5">{p.subtitle}</p>}
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-gray-500 font-mono">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500 font-mono">
                       <span className="inline-flex items-center gap-1 max-w-full">
                         <Eye className="w-3 h-3 shrink-0" />
                         <span className="truncate">{p.href || 'no link'}</span>
@@ -531,24 +531,24 @@ export const PostersTab: React.FC = () => {
                     <div className="flex flex-wrap items-center gap-1.5 pt-1">
                       <button
                         onClick={() => patch(p, { is_active: !p.is_active })}
-                        className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-colors ${p.is_active ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                        className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors ${p.is_active ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
                       >
                         {p.is_active ? 'Pause' : 'Activate'}
                       </button>
                       <button
                         onClick={() => patch(p, { is_featured: !p.is_featured })}
                         title="Sirf is poster ko homepage par dikhayein"
-                        className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-colors ${p.is_featured ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-500 hover:bg-amber-50 hover:text-amber-700'}`}
+                        className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors ${p.is_featured ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-500 hover:bg-amber-50 hover:text-amber-700'}`}
                       >
                         {p.is_featured ? 'Unfeature' : 'Feature only'}
                       </button>
-                      <button onClick={() => startEdit(p)} className="p-1.5 text-gray-500 hover:text-[#0284C7] hover:bg-sky-50 rounded-lg" title="Edit">
+                      <button onClick={() => startEdit(p)} className="p-1.5 text-gray-500 hover:text-signal hover:bg-signal-soft rounded-lg" title="Edit">
                         <Pencil className="w-4 h-4" />
                       </button>
-                      <button onClick={() => move(p, -1)} disabled={i === 0} className="p-1.5 text-gray-500 hover:text-[#0284C7] hover:bg-sky-50 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent" title="Move up">
+                      <button onClick={() => move(p, -1)} disabled={i === 0} className="p-1.5 text-gray-500 hover:text-signal hover:bg-signal-soft rounded-lg disabled:opacity-30 disabled:hover:bg-transparent" title="Move up">
                         <ArrowUp className="w-4 h-4" />
                       </button>
-                      <button onClick={() => move(p, 1)} disabled={i === posters.length - 1} className="p-1.5 text-gray-500 hover:text-[#0284C7] hover:bg-sky-50 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent" title="Move down">
+                      <button onClick={() => move(p, 1)} disabled={i === posters.length - 1} className="p-1.5 text-gray-500 hover:text-signal hover:bg-signal-soft rounded-lg disabled:opacity-30 disabled:hover:bg-transparent" title="Move down">
                         <ArrowDown className="w-4 h-4" />
                       </button>
                       <button onClick={() => remove(p)} className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg ml-auto" title="Delete">

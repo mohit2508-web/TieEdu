@@ -86,11 +86,11 @@ export default function DriveDetailPage() {
   if (!authLoading && !user) {
     return (
       <main className="mx-auto w-full max-w-3xl px-4 py-16 text-center" style={{ background: 'var(--apple-bg)' }}>
-        <p className="text-[14px]" style={{ color: 'var(--apple-label-2)' }}>Sign in to view this mock drive.</p>
+        <p className="text-sm" style={{ color: 'var(--apple-label-2)' }}>Sign in to view this mock drive.</p>
         <button
           type="button"
           onClick={() => router.push(`/login?next=/drives/${driveId}`)}
-          className="mt-4 rounded-[12px] px-5 py-2.5 text-[14px] font-semibold text-white transition-transform active:scale-[0.98]"
+          className="mt-4 rounded-[12px] px-5 py-2.5 text-sm font-semibold text-white transition-transform active:scale-[0.98]"
           style={{ background: 'var(--apple-blue)' }}
         >
           Sign in
@@ -100,16 +100,16 @@ export default function DriveDetailPage() {
   }
 
   if (loading) {
-    return <main className="mx-auto w-full max-w-3xl px-4 py-16 text-[14px] text-[var(--apple-label-2)]" style={{ background: 'var(--apple-bg)' }}>Loading…</main>;
+    return <main className="mx-auto w-full max-w-3xl px-4 py-16 text-sm text-[var(--apple-label-2)]" style={{ background: 'var(--apple-bg)' }}>Loading…</main>;
   }
 
   if (!detail) {
     return (
       <main className="mx-auto w-full max-w-3xl px-4 py-16" style={{ background: 'var(--apple-bg)' }}>
-        <div className="rounded-2xl px-4 py-3 text-[13px] font-medium" style={{ background: 'var(--apple-red-soft)', color: 'var(--apple-red)' }}>
+        <div className="rounded-2xl px-4 py-3 text-sm font-medium" style={{ background: 'var(--apple-red-soft)', color: 'var(--apple-red)' }}>
           {error || 'Drive not found.'}
         </div>
-        <Link href="/drives" className="mt-6 inline-flex items-center gap-1.5 text-[14px] font-medium" style={{ color: 'var(--apple-blue)' }}>
+        <Link href="/drives" className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium" style={{ color: 'var(--apple-blue)' }}>
           <ArrowLeft className="h-4 w-4" /> Back to drives
         </Link>
       </main>
@@ -130,7 +130,7 @@ export default function DriveDetailPage() {
       </Head>
       <main className="min-h-screen w-full px-4 pb-28 pt-8 sm:px-6" style={{ background: 'var(--apple-bg)' }}>
         <div className="mx-auto max-w-3xl">
-          <Link href="/drives" className="inline-flex items-center gap-1.5 text-[14px] font-medium" style={{ color: 'var(--apple-blue)' }}>
+          <Link href="/drives" className="inline-flex items-center gap-1.5 text-sm font-medium" style={{ color: 'var(--apple-blue)' }}>
             <ArrowLeft className="h-4 w-4" /> All drives
           </Link>
 
@@ -144,8 +144,8 @@ export default function DriveDetailPage() {
                   <StatusPill label={drive.drive_type} tone="blue" />
                   <StatusPill label={drive.status} tone={driveStatusTone(drive.status)} />
                 </div>
-                <h1 className="mt-1 text-[24px] font-bold tracking-tight" style={{ color: 'var(--apple-label)' }}>{drive.title}</h1>
-                {drive.company_name && <p className="text-[13px]" style={{ color: 'var(--apple-label-2)' }}>{drive.company_name}</p>}
+                <h1 className="mt-1 text-2xl font-bold tracking-tight" style={{ color: 'var(--apple-label)' }}>{drive.title}</h1>
+                {drive.company_name && <p className="text-sm" style={{ color: 'var(--apple-label-2)' }}>{drive.company_name}</p>}
               </div>
               {completedTests.length > 0 ? (
                 <div className="hidden sm:block">
@@ -153,11 +153,11 @@ export default function DriveDetailPage() {
                 </div>
               ) : null}
             </div>
-            {drive.description && <p className="mt-3 text-[13px] leading-relaxed" style={{ color: 'var(--apple-label-2)' }}>{drive.description}</p>}
+            {drive.description && <p className="mt-3 text-sm leading-relaxed" style={{ color: 'var(--apple-label-2)' }}>{drive.description}</p>}
           </header>
 
           {error && (
-            <div className="mt-4 flex items-start gap-2 rounded-2xl px-4 py-3 text-[13px] font-medium" style={{ background: 'var(--apple-red-soft)', color: 'var(--apple-red)' }}>
+            <div className="mt-4 flex items-start gap-2 rounded-2xl px-4 py-3 text-sm font-medium" style={{ background: 'var(--apple-red-soft)', color: 'var(--apple-red)' }}>
               <AlertCircle className="mt-0.5 h-4 w-4 flex-none" /> {error}
             </div>
           )}
@@ -169,35 +169,35 @@ export default function DriveDetailPage() {
                 <span className="flex h-8 w-8 items-center justify-center rounded-full" style={{ background: 'var(--apple-green-soft)', color: 'var(--apple-green)' }}>
                   <CheckCircle2 size={16} strokeWidth={2.4} />
                 </span>
-                <span className="text-[14px]" style={{ color: 'var(--apple-label)' }}>
+                <span className="text-sm" style={{ color: 'var(--apple-label)' }}>
                   You are registered. <b className="capitalize">{registration.status}</b>
                 </span>
                 <StatusPill label={registration.status} tone={driveStatusTone(registration.status)} className="ml-auto" />
               </div>
             ) : eligibility_blockers.length > 0 ? (
               <div className="px-4 py-4">
-                <p className="flex items-center gap-2 text-[14px] font-semibold" style={{ color: 'var(--apple-orange)' }}>
+                <p className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--apple-orange)' }}>
                   <AlertCircle className="h-4 w-4" /> Not eligible for this drive yet
                 </p>
-                <ul className="mt-2 space-y-1 pl-7 text-[12.5px]" style={{ color: 'var(--apple-label-2)' }}>
+                <ul className="mt-2 space-y-1 pl-7 text-xs" style={{ color: 'var(--apple-label-2)' }}>
                   {eligibility_blockers.map((b) => (
                     <li key={b} className="list-disc">{humanizeBlocker(b)}</li>
                   ))}
                 </ul>
-                <Link href="/account" className="mt-3 inline-block text-[13px] font-medium" style={{ color: 'var(--apple-blue)' }}>
+                <Link href="/account" className="mt-3 inline-block text-sm font-medium" style={{ color: 'var(--apple-blue)' }}>
                   Update your student profile
                 </Link>
               </div>
             ) : (
               <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-4">
-                <p className="text-[14px]" style={{ color: 'var(--apple-label-2)' }}>
+                <p className="text-sm" style={{ color: 'var(--apple-label-2)' }}>
                   {drive.window_open ? 'Registration is open.' : 'Registration is currently closed.'}
                 </p>
                 <button
                   type="button"
                   disabled={!can_register || busy === 'register'}
                   onClick={register}
-                  className="rounded-[12px] px-5 py-2.5 text-[14px] font-semibold text-white transition-transform active:scale-[0.98] disabled:opacity-40"
+                  className="rounded-[12px] px-5 py-2.5 text-sm font-semibold text-white transition-transform active:scale-[0.98] disabled:opacity-40"
                   style={{ background: 'var(--apple-blue)' }}
                 >
                   {busy === 'register' ? 'Registering…' : 'Register for this drive'}
@@ -208,7 +208,7 @@ export default function DriveDetailPage() {
 
           {/* Rounds */}
           <section className="mt-8">
-            <h2 className="px-1 text-[20px] font-semibold tracking-tight" style={{ color: 'var(--apple-label)' }}>Rounds</h2>
+            <h2 className="px-1 text-xl font-semibold tracking-tight" style={{ color: 'var(--apple-label)' }}>Rounds</h2>
             <div className="mt-3 space-y-4">
               {tests.map((t) => {
                 const locked = t.my_status === 'locked' || t.my_status === 'not_shortlisted';
@@ -223,13 +223,13 @@ export default function DriveDetailPage() {
                       </span>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-start justify-between gap-2">
-                          <h3 className="text-[15px] font-semibold" style={{ color: 'var(--apple-label)' }}>{t.name}</h3>
+                          <h3 className="text-base font-semibold" style={{ color: 'var(--apple-label)' }}>{t.name}</h3>
                           {canLaunch && (
                             <button
                               type="button"
                               disabled={busy === t.test_id}
                               onClick={() => launch(t.test_id)}
-                              className="inline-flex shrink-0 items-center gap-1.5 rounded-[12px] px-4 py-2 text-[13px] font-semibold text-white transition-transform active:scale-[0.98] disabled:opacity-40"
+                              className="inline-flex shrink-0 items-center gap-1.5 rounded-[12px] px-4 py-2 text-sm font-semibold text-white transition-transform active:scale-[0.98] disabled:opacity-40"
                               style={{ background: 'var(--apple-blue)' }}
                             >
                               <PlayCircle size={14} />
@@ -238,12 +238,12 @@ export default function DriveDetailPage() {
                             </button>
                           )}
                           {locked && (
-                            <span className="shrink-0 text-[12px] font-medium" style={{ color: 'var(--apple-label-3)' }}>
+                            <span className="shrink-0 text-xs font-medium" style={{ color: 'var(--apple-label-2)' }}>
                               {t.my_status === 'not_shortlisted' ? 'Not shortlisted' : 'Locked'}
                             </span>
                           )}
                         </div>
-                        <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px]" style={{ color: 'var(--apple-label-2)' }}>
+                        <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs" style={{ color: 'var(--apple-label-2)' }}>
                           {t.duration_minutes != null && (
                             <span className="flex items-center gap-1"><Clock size={12} />{t.duration_minutes} min</span>
                           )}
@@ -263,7 +263,7 @@ export default function DriveDetailPage() {
                           ) : (
                             <Award size={16} strokeWidth={2} style={{ color: 'var(--apple-blue)' }} />
                           )}
-                          <div className="text-[13px]">
+                          <div className="text-sm">
                             <span className="font-semibold" style={{ color: 'var(--apple-label)' }}>Latest result</span>
                             <div className="flex items-center gap-2">
                               {result.passed != null && (
@@ -273,7 +273,7 @@ export default function DriveDetailPage() {
                             </div>
                           </div>
                           {registration?.status === 'completed' && results?.visible === false ? (
-                            <span className="ml-auto text-[12px]" style={{ color: 'var(--apple-label-3)' }}>Results pending review</span>
+                            <span className="ml-auto text-xs" style={{ color: 'var(--apple-label-2)' }}>Results pending review</span>
                           ) : null}
                         </div>
                       </>
@@ -282,7 +282,7 @@ export default function DriveDetailPage() {
                 );
               })}
               {tests.length === 0 && (
-                <div className="apple-card px-6 py-10 text-center text-[14px]" style={{ color: 'var(--apple-label-2)' }}>
+                <div className="apple-card px-6 py-10 text-center text-sm" style={{ color: 'var(--apple-label-2)' }}>
                   No rounds have been published for this drive yet.
                 </div>
               )}

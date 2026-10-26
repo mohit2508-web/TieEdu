@@ -202,6 +202,15 @@ export const ExamPrepPanel: React.FC<{
   const hasImportant = important.length > 0;
   const hasPyqs = pyqs.length > 0;
 
+  // Printing is offered in a browser only. In the installed app there is no
+  // browser print path worth trusting (iOS standalone ignores it, others print
+  // the app shell), which is what the anti-web "no print" rule guards against.
+  // Decided after mount so the server and client HTML agree.
+  const [canPrint, setCanPrint] = useState(false);
+  useEffect(() => {
+    const standalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true;
+    setCanPrint(!standalone && typeof window.print === 'function');
+  }, []);
   const print = () => window.print();
 
   return (
@@ -213,7 +222,7 @@ export const ExamPrepPanel: React.FC<{
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="text-lg font-extrabold tracking-tight text-[var(--ink)]">Semester exam prep</h2>
             {prep.target && (
-              <span className="rounded-full bg-[var(--brand-sky-soft)] px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-[var(--brand-sky-strong)]">
+              <span className="rounded-full bg-[var(--brand-sky-soft)] px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-[var(--brand-sky-strong)]">
                 {prep.target}
               </span>
             )}
@@ -236,7 +245,7 @@ export const ExamPrepPanel: React.FC<{
               aria-selected={active}
               onClick={() => setTab(key)}
               className={[
-                'focus-ring inline-flex min-h-[40px] flex-none items-center gap-1.5 rounded-full px-3.5 text-[13px] font-bold transition-colors',
+                'focus-ring inline-flex min-h-[40px] flex-none items-center gap-1.5 rounded-full px-3.5 text-sm font-bold transition-colors',
                 active
                   ? 'bg-[var(--brand-sky)] text-white'
                   : 'bg-[var(--bg-surface-hover)] text-[var(--text-body)] hover:bg-[var(--border-subtle)]',
@@ -311,7 +320,7 @@ export const ExamPrepPanel: React.FC<{
                     onClick={() => setPyqFilter(y)}
                     aria-pressed={pyqFilter === y}
                     className={[
-                      'focus-ring inline-flex min-h-[40px] flex-none items-center rounded-full border px-3 text-[13px] font-bold transition-colors',
+                      'focus-ring inline-flex min-h-[40px] flex-none items-center rounded-full border px-3 text-sm font-bold transition-colors',
                       pyqFilter === y
                         ? 'border-[var(--brand-sky)] bg-[var(--brand-sky)] text-white'
                         : 'border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-body)]',
@@ -326,7 +335,7 @@ export const ExamPrepPanel: React.FC<{
               {filteredPyqs.map((p, i) => (
                 <li key={i} className="rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="rounded-full bg-[var(--brand-sky-soft)] px-2 py-0.5 text-[11px] font-bold text-[var(--brand-sky-strong)]">
+                    <span className="rounded-full bg-[var(--brand-sky-soft)] px-2 py-0.5 text-xs font-bold text-[var(--brand-sky-strong)]">
                       {p.year}
                     </span>
                     {p.unitTitle && <span className="text-xs text-[var(--text-light)]">{p.unitTitle}</span>}
@@ -359,6 +368,7 @@ export const ExamPrepPanel: React.FC<{
             <p className="text-sm text-[var(--text-muted)]">
               Everything in one scroll — summaries, important questions and PYQs, unit by unit.
             </p>
+            {canPrint && (
             <button
               type="button"
               onClick={print}
@@ -367,6 +377,7 @@ export const ExamPrepPanel: React.FC<{
               <Printer size={15} />
               Print / PDF
             </button>
+            )}
           </div>
 
           {(prep.target || prep.important_questions?.length || prep.previous_year_questions?.length) ? (

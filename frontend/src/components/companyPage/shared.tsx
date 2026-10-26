@@ -174,6 +174,21 @@ export interface CpHandlers {
   onRequireAuth?: () => void;
   /** Opens one question in the existing reader. */
   onOpenItem?: (itemId: string) => void;
+  /** Adds these premium modules to the cart as single rounds and opens it. */
+  onBuyModules?: (moduleIds: string[]) => void;
+}
+
+/**
+ * A premium module the student can still buy on its own. Keyed by module id in
+ * `roundOffers`; owned and free modules are simply absent, so a round with no
+ * entry has nothing to sell. The price is the page's single-round price — the
+ * cart re-prices combinations, so the button never quotes a discount it cannot
+ * guarantee.
+ */
+export interface RoundOffer {
+  title: string;
+  price: number;
+  inCart: boolean;
 }
 
 /** Writes on the signed-in student's state; each updates `me` on success. */
@@ -200,6 +215,8 @@ export interface CpContextValue extends CpHandlers {
   /** Price of the remaining pack in rupees, or null when nothing is for sale. */
   packPrice: number | null;
   packOwned: boolean;
+  /** Premium modules still for sale one round at a time, by module id. */
+  roundOffers: Record<string, RoundOffer>;
   anchorOf: (section: CpSection) => string;
   sections: CpSection[];
   signedIn: boolean;

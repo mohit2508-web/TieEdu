@@ -1,13 +1,13 @@
 import type { AppProps } from 'next/app';
 import Head from 'next/head';
 import { useEffect } from 'react';
+import { recordVisit } from '@/lib/engagement';
+import { watchSystemTheme } from '@/lib/theme';
 import { useRouter } from 'next/router';
 import '@/styles/globals.css';
-// Carlito is the self-hosted, metric-compatible stand-in for Calibre (OFL, so
-// it can ship with the product). Self-hosting keeps the reading experience
-// intact offline and avoids depending on a font CDN.
-import '@fontsource/carlito/400.css';
-import '@fontsource/carlito/700.css';
+// The type system (body, display, serif, mono), self-hosted via next/font.
+// Replaces Carlito, the Calibri clone the whole site used to render in.
+import { fontVariablesCss } from '@/styles/fonts';
 import { TieEduLoader } from '@/components/common/TieEduLoader';
 import { AuthProvider } from '@/context/AuthContext';
 import { CartProvider } from '@/context/CartContext';
@@ -32,6 +32,11 @@ export default function App({ Component, pageProps }: AppProps) {
   // Email identity + page-view beacons (EMAIL_MARKETING_PLAN.md Phase 3).
   // Server decides what is actually recorded — no cookie, no tracking.
   useLeadTracking(router);
+
+  // Counts this browser session as one visit; popups only appear to returning visitors.
+  useEffect(() => recordVisit(), []);
+  // Follow OS light/dark changes on every page, not only where the footer switch is.
+  useEffect(() => watchSystemTheme(), []);
 
   // Every full page navigation must land at the TOP — not at the middle/bottom
   // of the previous scroll. Shallow route changes (?m/?q in-page syncs) are
@@ -73,7 +78,9 @@ export default function App({ Component, pageProps }: AppProps) {
 
   return (
     <AuthProvider>
-<Head>
+      {/* Font families as :root variables, so portalled overlays share them too. */}
+      <style dangerouslySetInnerHTML={{ __html: fontVariablesCss }} />
+      <Head>
         <link
           key="m$manifest"
           rel="manifest"

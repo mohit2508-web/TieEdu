@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 
 const inputCls =
-  'w-full p-2.5 border border-gray-200 rounded-xl bg-[#FAFAF9] text-sm focus:outline-none focus:ring-2 focus:ring-[#0284C7]';
+  'w-full p-2.5 border border-gray-200 rounded-xl bg-app-warm text-sm focus:outline-none focus:ring-2 focus:ring-signal';
 
 const BLOCK_TYPES: { type: BlockType; label: string; icon: any }[] = [
   { type: 'markdown', label: 'Rich Text', icon: FileText },
@@ -111,9 +111,9 @@ const BlockForm: React.FC<{
   };
 
   return (
-    <div className="rounded-2xl border border-[#E2E8F0] bg-white overflow-hidden">
-      <div className="flex flex-wrap items-center gap-1.5 px-3 py-2.5 bg-[#FAFAF9] border-b border-[#E2E8F0]">
-        <span className="text-[10px] font-mono font-bold uppercase text-gray-500 mr-1">
+    <div className="rounded-2xl border border-line bg-white overflow-hidden">
+      <div className="flex flex-wrap items-center gap-1.5 px-3 py-2.5 bg-app-warm border-b border-line">
+        <span className="text-xs font-mono font-bold uppercase text-gray-500 mr-1">
           {block ? 'Edit block' : 'New block'}
         </span>
         {BLOCK_TYPES.map((b) => (
@@ -122,9 +122,9 @@ const BlockForm: React.FC<{
             type="button"
             onClick={() => setType(b.type)}
             aria-pressed={type === b.type}
-            className={`inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-bold transition-colors min-h-[2rem] ${
+            className={`inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-bold transition-colors min-h-[2rem] ${
               type === b.type
-                ? 'bg-[#0284C7] text-white'
+                ? 'bg-signal text-white'
                 : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-300'
             }`}
           >
@@ -171,7 +171,7 @@ const BlockForm: React.FC<{
               <button
                 type="button"
                 onClick={() => setItems((p) => [...p, ''])}
-                className="inline-flex items-center gap-1 px-3 py-2 rounded-xl border border-dashed border-gray-300 text-gray-500 font-bold text-[11px]"
+                className="inline-flex items-center gap-1 px-3 py-2 rounded-xl border border-dashed border-gray-300 text-gray-500 font-bold text-xs"
               >
                 <Plus className="w-3.5 h-3.5" /> Add item
               </button>
@@ -209,7 +209,7 @@ const BlockForm: React.FC<{
               <button
                 type="button"
                 onClick={() => setLinks((p) => [...p, { label: '', url: '' }])}
-                className="inline-flex items-center gap-1 px-3 py-2 rounded-xl border border-dashed border-gray-300 text-gray-500 font-bold text-[11px]"
+                className="inline-flex items-center gap-1 px-3 py-2 rounded-xl border border-dashed border-gray-300 text-gray-500 font-bold text-xs"
               >
                 <Plus className="w-3.5 h-3.5" /> Add link
               </button>
@@ -238,7 +238,7 @@ const BlockForm: React.FC<{
                 onChange={(e) => setTableText(e.target.value)}
                 placeholder={'Topic, Complexity\nBinary search, O(log N)'}
               />
-              <p className="text-[10px] text-gray-400 font-mono">First line = headers, one row per line after that.</p>
+              <p className="text-xs text-gray-400 font-mono">First line = headers, one row per line after that.</p>
             </div>
           )}
 
@@ -279,7 +279,7 @@ const BlockForm: React.FC<{
                 await onSave(type, buildPayload());
                 if (!block) clearEditorDraft(draftKey);
               }}
-              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-bold uppercase tracking-wider min-h-[2.5rem]"
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold uppercase tracking-wider min-h-[2.5rem]"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               {block ? 'Save block' : 'Add block'}
@@ -287,16 +287,16 @@ const BlockForm: React.FC<{
             <button
               type="button"
               onClick={onCancel}
-              className="px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-[11px] font-bold min-h-[2.5rem]"
+              className="px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-xs font-bold min-h-[2.5rem]"
             >
               Cancel
             </button>
           </div>
         </div>
 
-        <div className="bg-[#FAFAF9] border border-gray-200 rounded-2xl p-3 min-w-0">
-          <div className="flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase text-[#1F3A5F] pb-2 mb-2 border-b border-gray-200">
-            <Eye className="w-3.5 h-3.5 text-[#0284C7]" /> Student preview
+        <div className="bg-app-warm border border-gray-200 rounded-2xl p-3 min-w-0">
+          <div className="flex items-center gap-1.5 text-xs font-mono font-bold uppercase text-brand-ink pb-2 mb-2 border-b border-gray-200">
+            <Eye className="w-3.5 h-3.5 text-signal" /> Student preview
           </div>
           <div className="bg-white rounded-xl border border-gray-200 p-4 max-h-[28rem] overflow-y-auto">
             <ContentBlockRenderer block={preview} isLocked={false} companyName="Target Company" />
@@ -380,7 +380,7 @@ export const StudyPlanPhaseEditor: React.FC<Props> = ({ templateId, phases, onCh
               setSelectedId(res.phase.id);
             })
           }
-          className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#0284C7] text-white text-xs font-bold min-h-[2.5rem]"
+          className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-signal text-white text-xs font-bold min-h-[2.5rem]"
         >
           <Plus className="w-4 h-4" /> Add first phase
         </button>
@@ -396,7 +396,7 @@ export const StudyPlanPhaseEditor: React.FC<Props> = ({ templateId, phases, onCh
         </p>
       )}
 
-      <div className="lg:hidden flex gap-1 p-1 bg-[#F1F5F9] rounded-xl" role="tablist">
+      <div className="lg:hidden flex gap-1 p-1 bg-paper rounded-xl" role="tablist">
         {(['list', 'detail'] as const).map((t) => (
           <button
             key={t}
@@ -404,7 +404,7 @@ export const StudyPlanPhaseEditor: React.FC<Props> = ({ templateId, phases, onCh
             aria-selected={mobilePane === t}
             onClick={() => setMobilePane(t)}
             className={`flex-1 py-2 text-xs font-bold rounded-lg min-h-[2.5rem] ${
-              mobilePane === t ? 'bg-white text-[#0284C7] shadow-sm' : 'text-gray-500'
+              mobilePane === t ? 'bg-white text-signal shadow-sm' : 'text-gray-500'
             }`}
           >
             {t === 'list' ? 'Phases' : 'Content'}
@@ -418,26 +418,26 @@ export const StudyPlanPhaseEditor: React.FC<Props> = ({ templateId, phases, onCh
             <div
               key={p.id}
               className={`rounded-xl border p-3 transition-colors ${
-                p.id === selected?.id ? 'border-[#0284C7] bg-[#0284C7]/5' : 'border-gray-200 bg-white'
+                p.id === selected?.id ? 'border-signal bg-signal/5' : 'border-gray-200 bg-white'
               }`}
             >
               <button type="button" onClick={() => { setSelectedId(p.id); setMobilePane('detail'); }} className="w-full text-left">
-                <span className="block text-[10px] font-mono uppercase text-gray-500">
+                <span className="block text-xs font-mono uppercase text-gray-500">
                   {p.day_to ? `Day ${p.day_from}–${p.day_to}` : `Day ${p.day_from}+`}
                 </span>
-                <span className="block text-[13px] font-bold text-[#10151C] mt-0.5 leading-snug">{p.title}</span>
-                <span className="block text-[11px] text-gray-500 mt-0.5">
+                <span className="block text-sm font-bold text-heading mt-0.5 leading-snug">{p.title}</span>
+                <span className="block text-xs text-gray-500 mt-0.5">
                   {p.blocks.length} block{p.blocks.length === 1 ? '' : 's'}
                 </span>
               </button>
               {!readOnly && (
                 <div className="flex gap-1 mt-2 pt-2 border-t border-gray-100">
                   <button type="button" aria-label="Move up" disabled={i === 0 || busy} onClick={() => move(i, -1)}
-                    className="p-2 rounded-lg border border-gray-200 text-gray-500 hover:text-[#0284C7] disabled:opacity-30">
+                    className="p-2 rounded-lg border border-gray-200 text-gray-500 hover:text-signal disabled:opacity-30">
                     <ChevronUp className="w-3.5 h-3.5" />
                   </button>
                   <button type="button" aria-label="Move down" disabled={i === phases.length - 1 || busy} onClick={() => move(i, 1)}
-                    className="p-2 rounded-lg border border-gray-200 text-gray-500 hover:text-[#0284C7] disabled:opacity-30">
+                    className="p-2 rounded-lg border border-gray-200 text-gray-500 hover:text-signal disabled:opacity-30">
                     <ChevronDown className="w-3.5 h-3.5" />
                   </button>
                   <button
@@ -477,7 +477,7 @@ export const StudyPlanPhaseEditor: React.FC<Props> = ({ templateId, phases, onCh
                   setMobilePane('detail');
                 })
               }
-              className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-dashed border-gray-300 text-gray-500 font-bold text-[11px] min-h-[2.5rem] hover:border-[#0284C7] hover:text-[#0284C7]"
+              className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-dashed border-gray-300 text-gray-500 font-bold text-xs min-h-[2.5rem] hover:border-signal hover:text-signal"
             >
               <Plus className="w-3.5 h-3.5" /> Add phase
             </button>
@@ -490,12 +490,12 @@ export const StudyPlanPhaseEditor: React.FC<Props> = ({ templateId, phases, onCh
               <div className="rounded-2xl border border-gray-200 bg-white p-4 space-y-3">
                 <div className="grid sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[10px] font-mono font-bold uppercase text-gray-500 mb-1">Phase title</label>
+                    <label className="block text-xs font-mono font-bold uppercase text-gray-500 mb-1">Phase title</label>
                     <input className={inputCls} value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[10px] font-mono font-bold uppercase text-gray-500 mb-1">From day</label>
+                      <label className="block text-xs font-mono font-bold uppercase text-gray-500 mb-1">From day</label>
                       <input
                         type="number"
                         min={1}
@@ -505,7 +505,7 @@ export const StudyPlanPhaseEditor: React.FC<Props> = ({ templateId, phases, onCh
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-mono font-bold uppercase text-gray-500 mb-1">To day</label>
+                      <label className="block text-xs font-mono font-bold uppercase text-gray-500 mb-1">To day</label>
                       <input
                         type="number"
                         min={1}
@@ -518,7 +518,7 @@ export const StudyPlanPhaseEditor: React.FC<Props> = ({ templateId, phases, onCh
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-mono font-bold uppercase text-gray-500 mb-1">Summary</label>
+                  <label className="block text-xs font-mono font-bold uppercase text-gray-500 mb-1">Summary</label>
                   <textarea
                     rows={2}
                     className={inputCls}
@@ -541,7 +541,7 @@ export const StudyPlanPhaseEditor: React.FC<Props> = ({ templateId, phases, onCh
                       onChanged(res.phases);
                     })
                   }
-                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#1F3A5F] text-white text-[11px] font-bold uppercase tracking-wider min-h-[2.5rem]"
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-brand-ink text-white text-xs font-bold uppercase tracking-wider min-h-[2.5rem]"
                 >
                   <Save className="w-4 h-4" /> Save phase
                 </button>
@@ -557,8 +557,8 @@ export const StudyPlanPhaseEditor: React.FC<Props> = ({ templateId, phases, onCh
 
               {selected.blocks.map((b) => (
                 <div key={b.id} className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
-                  <div className="flex items-center gap-2 px-3 py-2 bg-[#FAFAF9] border-b border-gray-200">
-                    <span className="text-[10px] font-mono font-bold uppercase text-gray-500">
+                  <div className="flex items-center gap-2 px-3 py-2 bg-app-warm border-b border-gray-200">
+                    <span className="text-xs font-mono font-bold uppercase text-gray-500">
                       {b.block_type} · #{b.block_order}
                     </span>
                     <div className="ml-auto flex gap-1">
@@ -568,7 +568,7 @@ export const StudyPlanPhaseEditor: React.FC<Props> = ({ templateId, phases, onCh
                             type="button"
                             aria-label="Edit block"
                             onClick={() => { setEditingBlockId(b.id); setMobilePane('detail'); }}
-                            className="p-2 rounded-lg border border-gray-200 text-gray-500 hover:text-[#0284C7]"
+                            className="p-2 rounded-lg border border-gray-200 text-gray-500 hover:text-signal"
                           >
                             <Pencil className="w-3.5 h-3.5" />
                           </button>
@@ -619,7 +619,7 @@ export const StudyPlanPhaseEditor: React.FC<Props> = ({ templateId, phases, onCh
                 <button
                   type="button"
                   onClick={() => { setEditingBlockId('__new__'); setMobilePane('detail'); }}
-                  className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-3 rounded-2xl border border-dashed border-gray-300 text-gray-500 font-bold text-xs min-h-[3rem] hover:border-[#0284C7] hover:text-[#0284C7]"
+                  className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-3 rounded-2xl border border-dashed border-gray-300 text-gray-500 font-bold text-xs min-h-[3rem] hover:border-signal hover:text-signal"
                 >
                   <Plus className="w-4 h-4" /> Add content block
                 </button>

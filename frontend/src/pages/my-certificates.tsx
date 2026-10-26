@@ -132,7 +132,7 @@ export default function MyCertificatesPage() {
                       <Award size={18} />
                     </div>
                     <div>
-                      <p className="text-xs font-mono text-[var(--text-muted)]">{c.serial}</p>
+                      <p className="text-xs text-[var(--text-muted)]">{c.serial}</p>
                       <h3 className="mt-0.5 text-base font-bold leading-snug text-[var(--ink)]">
                         {c.course_title}
                       </h3>
@@ -140,7 +140,7 @@ export default function MyCertificatesPage() {
                   </div>
                   <span
                     className={[
-                      'rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide',
+                      'rounded-full px-2 py-0.5 text-xs font-bold uppercase tracking-wide',
                       c.status === 'active'
                         ? 'bg-[var(--bg-sky-soft)] text-[var(--color-success)]'
                         : 'bg-[var(--color-error)]/10 text-[var(--color-error)]',

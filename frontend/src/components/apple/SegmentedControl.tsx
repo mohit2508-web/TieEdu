@@ -30,7 +30,7 @@ export function SegmentedControl<T extends string>(props: {
             key={o.value}
             type="button"
             onClick={() => onChange(o.value)}
-            className={`relative z-10 whitespace-nowrap rounded-[8px] px-3 py-[6px] text-[13px] font-medium transition-colors duration-200 ${
+            className={`relative z-10 whitespace-nowrap rounded-[8px] px-3 py-[6px] text-sm font-medium transition-colors duration-200 ${
               active ? 'text-[var(--apple-label)]' : 'text-[var(--apple-label-2)]'
             }`}
           >

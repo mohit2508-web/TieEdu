@@ -100,14 +100,14 @@ export const BriefingCard: React.FC<BriefingCardProps> = ({
     >
       <span
         aria-hidden="true"
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
-        style={{ background: `${item.tone}1A`, color: item.tone }}
+        className="briefing-tone flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
+        style={{ background: `${item.tone}1A`, ['--tone' as any]: item.tone }}
       >
         <Icon size={17} strokeWidth={2.2} />
       </span>
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[13px] font-semibold leading-tight text-[var(--text-heading)]">
+        <p className="truncate text-sm font-semibold leading-tight text-[var(--text-heading)]">
           {item.title}
         </p>
         <p className="mt-0.5 line-clamp-2 text-xs leading-snug text-[var(--text-muted)]">
@@ -116,8 +116,8 @@ export const BriefingCard: React.FC<BriefingCardProps> = ({
         {item.cta && (
           <Pressable
             onPress={handleCta}
-            className="mt-2 inline-flex h-7 items-center gap-1 rounded-full px-2.5 text-xs font-bold"
-            style={{ background: `${item.tone}14`, color: item.tone }}
+            className="briefing-tone mt-2 inline-flex h-7 items-center gap-1 rounded-full px-2.5 text-xs font-bold"
+            style={{ background: `${item.tone}14`, ['--tone' as any]: item.tone }}
           >
             {item.cta}
             <ArrowRight size={12} strokeWidth={2.6} aria-hidden="true" />

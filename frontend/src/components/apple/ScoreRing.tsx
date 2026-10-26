@@ -37,10 +37,10 @@ export default function ScoreRing(props: {
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         {props.label
-          ? <span className="text-center text-[15px] font-semibold tabular-nums" style={{ color: 'var(--apple-label)' }}>{props.label}</span>
-          : <span className="text-center text-[22px] font-semibold tabular-nums" style={{ color: 'var(--apple-label)' }}>{Math.round(clamped * 100)}%</span>}
+          ? <span className="text-center text-base font-semibold tabular-nums" style={{ color: 'var(--apple-label)' }}>{props.label}</span>
+          : <span className="text-center text-2xl font-semibold tabular-nums" style={{ color: 'var(--apple-label)' }}>{Math.round(clamped * 100)}%</span>}
         {props.sublabel ? (
-          <span className="text-[10px] font-medium uppercase tracking-wide" style={{ color: 'var(--apple-label-3)' }}>{props.sublabel}</span>
+          <span className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--apple-label-2)' }}>{props.sublabel}</span>
         ) : null}
       </div>
     </div>

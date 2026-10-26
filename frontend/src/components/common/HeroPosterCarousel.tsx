@@ -116,7 +116,7 @@ export const HeroPosterCarousel: React.FC<HeroPosterCarouselProps> = ({ posters,
       onKeyDown={handleKeyDown}
     >
       <div
-        className="relative w-full aspect-[16/10] sm:aspect-[4/3] lg:aspect-[4/5] rounded-[var(--radius-lg)] overflow-hidden bg-[#0E2A44] shadow-raised"
+        className="relative w-full aspect-[16/10] sm:aspect-[4/3] lg:aspect-[4/5] rounded-[var(--radius-lg)] overflow-hidden bg-brand-ink shadow-raised"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
@@ -162,7 +162,7 @@ export const HeroPosterCarousel: React.FC<HeroPosterCarouselProps> = ({ posters,
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/5" />
 
               {poster.badge && (
-                <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-[#E8A33D] px-3 py-1 text-[11px] font-extrabold uppercase tracking-wide text-[#10151C] shadow-soft">
+                <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-money px-3 py-1 text-xs font-extrabold uppercase tracking-wide text-heading shadow-soft">
                   {poster.badge}
                 </span>
               )}
@@ -174,12 +174,12 @@ export const HeroPosterCarousel: React.FC<HeroPosterCarouselProps> = ({ posters,
                   </h2>
                 )}
                 {poster.subtitle && (
-                  <p className="mt-1.5 text-white/85 text-[13px] sm:text-sm leading-relaxed line-clamp-2">
+                  <p className="mt-1.5 text-white/85 text-sm sm:text-sm leading-relaxed line-clamp-2">
                     {poster.subtitle}
                   </p>
                 )}
                 {poster.cta_label && (
-                  <span className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-white px-4 py-2.5 text-[13px] font-extrabold text-[#10151C] shadow-soft">
+                  <span className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-white px-4 py-2.5 text-sm font-extrabold text-heading shadow-soft">
                     {poster.cta_label} <ArrowRight className="w-3.5 h-3.5" />
                   </span>
                 )}
@@ -235,7 +235,7 @@ export const HeroPosterCarousel: React.FC<HeroPosterCarouselProps> = ({ posters,
               type="button"
               onClick={() => goTo(index - 1)}
               aria-label="Previous offer"
-              className="absolute left-3 top-1/2 -translate-y-1/2 z-20 grid h-11 w-11 place-items-center rounded-full bg-white/85 text-[#10151C] shadow-soft backdrop-blur hover:bg-white focus-ring opacity-0 sm:opacity-100 transition-opacity group-hover/carousel:opacity-100"
+              className="absolute left-3 top-1/2 -translate-y-1/2 z-20 grid h-11 w-11 place-items-center rounded-full bg-white/85 text-heading shadow-soft backdrop-blur hover:bg-white focus-ring opacity-0 sm:opacity-100 transition-opacity group-hover/carousel:opacity-100"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
@@ -243,7 +243,7 @@ export const HeroPosterCarousel: React.FC<HeroPosterCarouselProps> = ({ posters,
               type="button"
               onClick={() => goTo(index + 1)}
               aria-label="Next offer"
-              className="absolute right-3 top-1/2 -translate-y-1/2 z-20 grid h-11 w-11 place-items-center rounded-full bg-white/85 text-[#10151C] shadow-soft backdrop-blur hover:bg-white focus-ring opacity-0 sm:opacity-100 transition-opacity group-hover/carousel:opacity-100"
+              className="absolute right-3 top-1/2 -translate-y-1/2 z-20 grid h-11 w-11 place-items-center rounded-full bg-white/85 text-heading shadow-soft backdrop-blur hover:bg-white focus-ring opacity-0 sm:opacity-100 transition-opacity group-hover/carousel:opacity-100"
             >
               <ChevronRight className="w-5 h-5" />
             </button>

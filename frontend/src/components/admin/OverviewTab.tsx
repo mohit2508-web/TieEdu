@@ -6,17 +6,17 @@ const fmtInr = (n: number) => `₹${n.toLocaleString('en-IN', { maximumFractionD
 
 const StatCard: React.FC<{ label: string; value: string; sub?: string; icon: any; tone?: string }> = ({ label, value, sub, icon: Icon, tone = 'sky' }) => {
   const tones: Record<string, string> = {
-    sky: 'bg-[#E8F4FB] text-[#0284C7]',
-    amber: 'bg-[#FBF1E1] text-[#B7791F]',
+    sky: 'bg-signal-soft text-signal',
+    amber: 'bg-warning-soft text-amber-deep',
     emerald: 'bg-emerald-50 text-emerald-700',
-    navy: 'bg-[#1F3A5F] text-white',
+    navy: 'bg-brand-ink text-white',
   };
   return (
     <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-xs flex items-start justify-between gap-3">
       <div className="min-w-0">
-        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">{label}</p>
-        <p className="text-2xl font-extrabold text-[#10151C] mt-1.5 truncate">{value}</p>
-        {sub && <p className="text-[11px] text-gray-400 mt-1 truncate">{sub}</p>}
+        <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">{label}</p>
+        <p className="text-2xl font-extrabold text-heading mt-1.5 truncate">{value}</p>
+        {sub && <p className="text-xs text-gray-400 mt-1 truncate">{sub}</p>}
       </div>
       <span className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${tones[tone]}`}>
         <Icon className="w-5 h-5" />
@@ -36,15 +36,15 @@ const RevenueBars: React.FC<{ series: RevenuePoint[] }> = ({ series }) => {
         <div className="flex items-end gap-2 h-36">
           {data.map((d) => (
             <div key={d.date} className="flex-1 flex flex-col items-center gap-1 group" title={`${d.date} · ${fmtInr(d.revenue_inr)} · ${d.orders} orders`}>
-              <span className="text-[10px] font-mono font-bold text-[#0284C7] opacity-0 group-hover:opacity-100 transition-opacity">{d.revenue_inr.toFixed(0)}</span>
-              <div className="w-full rounded-t-md bg-gradient-to-t from-[#0284C7] to-[#38BDF8] transition-all hover:from-[#0271B5]"
+              <span className="text-xs font-mono font-bold text-signal opacity-0 group-hover:opacity-100 transition-opacity">{d.revenue_inr.toFixed(0)}</span>
+              <div className="w-full rounded-t-md bg-signal transition-all hover:bg-signal-hover"
                 style={{ height: `${Math.max(4, (d.revenue_inr / max) * 100)}%` }} />
-              <span className="text-[9px] font-mono text-gray-400 rotate-0 whitespace-nowrap">{d.date.slice(5)}</span>
+              <span className="text-xs font-mono text-gray-400 rotate-0 whitespace-nowrap">{d.date.slice(5)}</span>
             </div>
           ))}
         </div>
       )}
-      <p className="text-[11px] text-gray-400 mt-2">Daily revenue (paid orders) — sirf real transactions se.</p>
+      <p className="text-xs text-gray-400 mt-2">Daily revenue (paid orders) — sirf real transactions se.</p>
     </div>
   );
 };
@@ -83,8 +83,8 @@ export const OverviewTab: React.FC<{ companiesCount: number; pendingReportsCount
   if (!analytics) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
-        <div className="w-9 h-9 border-[3px] border-[#FBF1E1] border-t-[#0284C7] rounded-full animate-spin" />
-        <p className="text-[13px] font-semibold text-[--text-muted]">Loading honest KPIs…</p>
+        <div className="w-9 h-9 border-[3px] border-money/40 border-t-signal rounded-full animate-spin" />
+        <p className="text-sm font-semibold text-[--text-muted]">Loading honest KPIs…</p>
       </div>
     );
   }
@@ -99,9 +99,9 @@ export const OverviewTab: React.FC<{ companiesCount: number; pendingReportsCount
       <div className="flex items-center justify-between">
         <div>
           <p className="eyebrow">#00 — Overview</p>
-          <h2 className="text-xl font-extrabold text-[#10151C] mt-1">Live platform health & commerce</h2>
+          <h2 className="text-xl font-extrabold text-heading mt-1">Live platform health & commerce</h2>
         </div>
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold font-mono bg-emerald-50 text-emerald-700 border border-emerald-200">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold font-mono bg-emerald-50 text-emerald-700 border border-emerald-200">
           <BadgeCheck className="w-3.5 h-3.5" /> {analytics.honest ? 'HONEST DATA' : 'LIVE'}
         </span>
       </div>
@@ -117,10 +117,10 @@ export const OverviewTab: React.FC<{ companiesCount: number; pendingReportsCount
         <div className="lg:col-span-2 bg-white border border-gray-200 rounded-3xl p-6 shadow-xs">
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-[#0284C7]" />
-              <h3 className="text-sm font-extrabold text-[#1E293B]">Revenue — last {revenue.length} paid days</h3>
+              <TrendingUp className="w-5 h-5 text-signal" />
+              <h3 className="text-sm font-extrabold text-ink-soft">Revenue — last {revenue.length} paid days</h3>
             </div>
-            <span className="text-[11px] font-mono font-bold text-gray-400">series: /analytics/revenue</span>
+            <span className="text-xs font-mono font-bold text-gray-400">series: /analytics/revenue</span>
           </div>
           <RevenueBars series={revenue} />
         </div>
@@ -129,8 +129,8 @@ export const OverviewTab: React.FC<{ companiesCount: number; pendingReportsCount
           <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-xs">
             <p className="eyebrow">Commerce</p>
             <div className="mt-3 space-y-2.5 text-sm">
-              <div className="flex justify-between items-center"><span className="text-gray-500 flex items-center gap-1.5"><TicketCheck className="w-4 h-4 text-[#B45309]" />Coupon redemptions</span><strong>{c.coupon_redemptions}</strong></div>
-              <div className="flex justify-between items-center"><span className="text-gray-500 flex items-center gap-1.5"><Coins className="w-4 h-4 text-[#B45309]" />Paid orders with coupon</span><strong>{c.coupons_applied}</strong></div>
+              <div className="flex justify-between items-center"><span className="text-gray-500 flex items-center gap-1.5"><TicketCheck className="w-4 h-4 text-amber-deep" />Coupon redemptions</span><strong>{c.coupon_redemptions}</strong></div>
+              <div className="flex justify-between items-center"><span className="text-gray-500 flex items-center gap-1.5"><Coins className="w-4 h-4 text-amber-deep" />Paid orders with coupon</span><strong>{c.coupons_applied}</strong></div>
             </div>
           </div>
           <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-xs">
@@ -152,9 +152,9 @@ export const OverviewTab: React.FC<{ companiesCount: number; pendingReportsCount
         </div>
       </div>
 
-      <div className="bg-[#1F3A5F] text-white rounded-3xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-md">
+      <div className="bg-brand-ink text-white rounded-3xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-md">
         <div className="flex items-center gap-3">
-          <Database className="w-6 h-6 text-[#B45309]" />
+          <Database className="w-6 h-6 text-amber-deep" />
           <div>
             <p className="text-sm font-extrabold">Storage: {analytics.system.storage}</p>
             <p className="text-xs text-gray-300">Uptime {Math.floor(analytics.system.uptime_seconds / 60)} min · snapshot {new Date(analytics.system.time).toLocaleString()}</p>

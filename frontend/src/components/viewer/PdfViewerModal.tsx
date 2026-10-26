@@ -277,7 +277,7 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex flex-col bg-[#111827] text-gray-100 animate-in fade-in duration-200"
+      className="fixed inset-0 z-[60] flex flex-col bg-heading text-gray-100 animate-in fade-in duration-200"
       role="dialog"
       aria-label={`PDF viewer: ${pdf.title}`}
       onContextMenu={(e) => e.preventDefault()}
@@ -289,8 +289,8 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
             <X className="w-5 h-5" />
           </button>
           <div className="min-w-0">
-            <h2 className="text-[15px] font-bold text-white truncate">{pdf.title}</h2>
-            <p className="text-[12px] text-gray-400 truncate">{moduleTitle} • {pdf.file_name} • {fmtSize(pdf.size_bytes)}{dateLabel}</p>
+            <h2 className="text-base font-bold text-white truncate">{pdf.title}</h2>
+            <p className="text-xs text-gray-400 truncate">{moduleTitle} • {pdf.file_name} • {fmtSize(pdf.size_bytes)}{dateLabel}</p>
           </div>
         </div>
 
@@ -298,7 +298,7 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
           <button onClick={() => handleZoom(-0.25)} className="p-2 rounded-lg hover:bg-white/10 text-gray-300 transition-colors" title="Zoom out">
             <ZoomOut className="w-4 h-4" />
           </button>
-          <span className="text-[12px] text-gray-400 w-12 text-center">{Math.round(zoom * 100)}%</span>
+          <span className="text-xs text-gray-400 w-12 text-center">{Math.round(zoom * 100)}%</span>
           <button onClick={() => handleZoom(0.25)} className="p-2 rounded-lg hover:bg-white/10 text-gray-300 transition-colors" title="Zoom in">
             <ZoomIn className="w-4 h-4" />
           </button>
@@ -328,18 +328,18 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
         {/* loading */}
         {status === 'loading' && (
           <div className="flex flex-col items-center gap-3 text-center w-full max-w-xs">
-            <Loader2 className="w-8 h-8 text-[#B45309] animate-spin" />
-            <p className="text-[13px] text-gray-400">Rendering PDF — this can take a moment…</p>
+            <Loader2 className="w-8 h-8 text-amber-deep animate-spin" />
+            <p className="text-sm text-gray-400">Rendering PDF — this can take a moment…</p>
             <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
               <div
-                className={`h-full rounded-full transition-[width] duration-200 ${progress === null ? 'bg-[#E8A33D]/80 animate-pulse' : 'bg-[#E8A33D]'}`}
+                className={`h-full rounded-full transition-[width] duration-200 ${progress === null ? 'bg-money/80 animate-pulse' : 'bg-money'}`}
                 style={{ width: progress !== null ? `${Math.min(100, Math.max(4, Math.round(progress * 100)))}%` : '35%' }}
               />
             </div>
             {progress !== null && (
-              <p className="text-[11px] text-gray-500">{Math.min(100, Math.round(progress * 100))}%</p>
+              <p className="text-xs text-gray-500">{Math.min(100, Math.round(progress * 100))}%</p>
             )}
-            <p className="text-[11px] text-gray-500">Secure view-only · watermark licensed</p>
+            <p className="text-xs text-gray-500">Secure view-only · watermark licensed</p>
           </div>
         )}
 
@@ -347,10 +347,10 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
         {status === 'error' && (
           <div className="flex flex-col items-center gap-3 text-center max-w-sm">
             <FileWarning className="w-9 h-9 text-red-400" />
-            <p className="text-[14px] text-gray-300 font-semibold">{errorMsg}</p>
+            <p className="text-sm text-gray-300 font-semibold">{errorMsg}</p>
             <button
               onClick={() => { setStatus('loading'); setErrorMsg(''); }}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#0284C7] hover:bg-[#0369A1] text-white text-[13px] font-bold rounded-xl transition-colors"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-signal hover:bg-signal text-white text-sm font-bold rounded-xl transition-colors"
             >
               <RefreshCw className="w-4 h-4" /> Retry
             </button>
@@ -370,7 +370,7 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
               {Array.from({ length: 9 }).map((_, i) => (
                 <div
                   key={i}
-                  className="absolute text-[11px] tracking-widest text-gray-100/10 font-bold whitespace-nowrap select-none flex flex-col items-center gap-0.5"
+                  className="absolute text-xs tracking-widest text-gray-100/10 font-bold whitespace-nowrap select-none flex flex-col items-center gap-0.5"
                   style={{
                     transform: `rotate(-28deg)`,
                     top: `${(i % 3) * 34 + 8}%`,
@@ -378,11 +378,11 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
                   }}
                 >
                   <span>{watermarkLine1}</span>
-                  <span className="text-[10px] text-amber-300/20">{watermarkLine2}</span>
+                  <span className="text-xs text-amber-300/20">{watermarkLine2}</span>
                 </div>
               ))}
             </div>
-            <p className="absolute bottom-3 left-1/2 -translate-x-1/2 text-[11px] text-gray-500 flex items-center gap-1.5 bg-black/40 px-3 py-1 rounded-full">
+            <p className="absolute bottom-3 left-1/2 -translate-x-1/2 text-xs text-gray-500 flex items-center gap-1.5 bg-black/40 px-3 py-1 rounded-full">
               <Eye className="w-3.5 h-3.5" /> View only — plain download disabled
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 ml-1" />
             </p>
@@ -398,7 +398,7 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
           </button>
 
           <div className="flex items-center gap-3">
-            <span className="text-[13px] text-gray-300">
+            <span className="text-sm text-gray-300">
               Page <strong>{page}</strong> / {numPages}
             </span>
             <input
@@ -407,7 +407,7 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
               max={numPages}
               value={page}
               onChange={(e) => goTo(Number(e.target.value))}
-              className="w-40 sm:w-64 accent-[#E8A33D]"
+              className="w-40 sm:w-64 accent-money"
               aria-label="Page slider"
             />
           </div>

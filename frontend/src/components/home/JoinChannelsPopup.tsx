@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { claimInterruption, isReturningVisitor } from '@/lib/engagement';
 import { Users, Megaphone } from 'lucide-react';
 import { Sheet } from '@/components/common/Sheet';
 import { SOCIAL_LINKS } from '@/lib/socialLinks';
@@ -45,8 +46,11 @@ export const JoinChannelsPopup: React.FC = () => {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    if (!canShowPopup()) return;
-    const timer = window.setTimeout(() => setOpen(true), SHOW_DELAY_MS);
+    // Never on a first visit, and only if nothing else has interrupted this session.
+    if (!canShowPopup() || !isReturningVisitor()) return;
+    const timer = window.setTimeout(() => {
+      if (claimInterruption('join-channels')) setOpen(true);
+    }, SHOW_DELAY_MS);
     return () => window.clearTimeout(timer);
   }, []);
 
@@ -72,11 +76,11 @@ export const JoinChannelsPopup: React.FC = () => {
       }
     >
       <div className="space-y-4 px-5 pb-5 pt-1 text-center">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-sky-100 bg-sky-50 text-[#0284C7] shadow-xs">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-line bg-signal-soft text-signal shadow-xs">
           <Users className="h-7 w-7" />
         </div>
 
-        <span className="inline-flex items-center gap-1 rounded-full border border-sky-100 bg-sky-50 px-3 py-1 text-xs font-bold text-[#0284C7]">
+        <span className="inline-flex items-center gap-1 rounded-full border border-line bg-signal-soft px-3 py-1 text-xs font-bold text-signal">
           <Megaphone className="h-3.5 w-3.5" /> Stay in the loop
         </span>
 
@@ -92,13 +96,13 @@ export const JoinChannelsPopup: React.FC = () => {
               href={social.href}
               target="_blank"
               rel="noreferrer noopener"
-              className="flex w-full items-center gap-3 rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 text-left text-sm font-bold text-gray-900 transition-colors hover:border-[#0284C7]/30 hover:bg-sky-50"
+              className="flex w-full items-center gap-3 rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 text-left text-sm font-bold text-gray-900 transition-colors hover:border-signal/30 hover:bg-signal-soft"
             >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-100 bg-white text-[#3E4754]">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-100 bg-white text-body">
                 {social.icon}
               </span>
               <span className="min-w-0 flex-1 truncate">{social.label}</span>
-              <span className="text-xs font-semibold text-[#0284C7]">Follow →</span>
+              <span className="text-xs font-semibold text-signal">Follow →</span>
             </a>
           ))}
         </div>

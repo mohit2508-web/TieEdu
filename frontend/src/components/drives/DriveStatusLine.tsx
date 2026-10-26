@@ -36,7 +36,7 @@ export const DriveStatusLine: React.FC<{
   const tone = TONES[toneFor(statusLine, registered, registrationOpen)];
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-[3px] text-[11px] font-semibold ${className ?? ''}`}
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-[3px] text-xs font-semibold ${className ?? ''}`}
       style={{ background: tone.bg, color: tone.fg }}
     >
       <span className="h-1.5 w-1.5 rounded-full" style={{ background: tone.fg }} />

@@ -4,20 +4,7 @@ import React, { useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
 import { usePlacement } from '@/context/PlacementContext';
-import {
-  LayoutDashboard,
-  Building2,
-  CalendarCheck,
-  Users,
-  Upload,
-  GraduationCap,
-  BellRing,
-  BarChart3,
-  LogOut,
-  Home,
-  ChevronDown,
-  Sparkles,
-} from 'lucide-react';
+import { LayoutDashboard, Building2, CalendarCheck, Users, Upload, GraduationCap, BellRing, BarChart3, LogOut, Home, ChevronDown } from 'lucide-react';
 
 /**
  * Chrome for every `/tpo/*` screen — the placement portal's equivalent of
@@ -50,7 +37,7 @@ export interface TpoNavItem {
 
 export const TPO_NAV_ITEMS: TpoNavItem[] = [
   { id: 'dashboard', href: '/tpo', label: 'Dashboard', icon: LayoutDashboard, permission: 'placement.dashboard.read' },
-  { id: 'analytics', href: '/tpo/analytics', label: 'Analytics', icon: BarChart3, permission: 'placement.analytics.read', soon: true },
+  { id: 'analytics', href: '/tpo/analytics', label: 'Batch readiness', icon: BarChart3, permission: 'placement.analytics.read' },
   { id: 'companies', href: '/tpo/companies', label: 'Companies', icon: Building2, permission: 'placement.companies.read', soon: true },
   { id: 'drives', href: '/tpo/drives', label: 'Drives', icon: CalendarCheck, permission: 'placement.drives.read', soon: true },
   { id: 'students', href: '/tpo/students', label: 'Students', icon: Users, permission: 'placement.dashboard.read', soon: true },
@@ -73,7 +60,7 @@ const CollegeSwitcher: React.FC = () => {
       <select
         value={activeCollegeId || ''}
         onChange={(e) => e.target.value && setActiveCollegeId(e.target.value)}
-        className="appearance-none max-w-[190px] truncate pl-3 pr-8 py-1.5 rounded-xl bg-white/80 border border-[#E4E1DA] text-[13px] font-bold text-[#10151C] focus:outline-none focus:border-[#0284C7] focus:ring-4 focus:ring-[#0284C7]/10"
+        className="appearance-none max-w-[190px] truncate pl-3 pr-8 py-1.5 rounded-xl bg-white/80 border border-line text-sm font-bold text-heading focus:outline-none focus:border-signal focus:ring-4 focus:ring-signal/10"
       >
         <option value="" disabled>
           {activeCollegeId ? 'College…' : 'Select college'}
@@ -84,7 +71,7 @@ const CollegeSwitcher: React.FC = () => {
           </option>
         ))}
       </select>
-      <ChevronDown className="w-3.5 h-3.5 text-[#6B7280] absolute right-2.5 pointer-events-none" />
+      <ChevronDown className="w-3.5 h-3.5 text-text-light absolute right-2.5 pointer-events-none" />
     </label>
   );
 };
@@ -97,11 +84,11 @@ const CollegePickerCard: React.FC = () => {
   return (
     <div className="max-w-[720px] mx-auto py-16 px-4">
       <div className="vault-card p-7">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#E8F1FA] text-[#0E2A44] text-[11px] font-extrabold uppercase tracking-widest mb-4">
-          <Sparkles className="w-3.5 h-3.5" /> Choose a college
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-signal-soft text-brand-ink text-xs font-extrabold uppercase tracking-widest mb-4">
+          <Building2 className="w-3.5 h-3.5" /> Choose a college
         </div>
         <h1 className="display-2 mb-2">Which college are you reviewing?</h1>
-        <p className="text-[15px] text-[--text-muted] mb-6">
+        <p className="text-base text-[--text-muted] mb-6">
           You hold platform-wide placement access, so the portal needs to know which college&apos;s data to show.
           Every dashboard, import and offer stays scoped to the college you pick.
         </p>
@@ -110,18 +97,18 @@ const CollegePickerCard: React.FC = () => {
             <button
               key={c.college_id}
               onClick={() => setActiveCollegeId(c.college_id)}
-              className="text-left px-4 py-4 rounded-2xl border border-[#E4E1DA] bg-white hover:border-[#0284C7] hover:ring-4 hover:ring-[#0284C7]/10 transition-all focus-ring"
+              className="text-left px-4 py-4 rounded-2xl border border-line bg-white hover:border-signal hover:ring-4 hover:ring-signal/10 transition-all focus-ring"
             >
               <div className="flex items-center gap-3">
                 <span
-                  className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-[13px] font-black shrink-0"
+                  className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-black shrink-0"
                   style={{ background: c.theme_color }}
                 >
                   {(c.short_name || c.name).slice(0, 2).toUpperCase()}
                 </span>
                 <span className="min-w-0">
-                  <span className="block text-[14px] font-bold text-[#10151C] truncate">{c.name}</span>
-                  <span className="block text-[12px] text-[--text-muted] uppercase tracking-wide">
+                  <span className="block text-sm font-bold text-heading truncate">{c.name}</span>
+                  <span className="block text-xs text-[--text-muted] uppercase tracking-wide">
                     {c.slug}
                   </span>
                 </span>
@@ -129,7 +116,7 @@ const CollegePickerCard: React.FC = () => {
             </button>
           ))}
           {colleges.length === 0 && (
-            <p className="text-[14px] text-[--text-muted] sm:col-span-2">
+            <p className="text-sm text-[--text-muted] sm:col-span-2">
               No colleges exist yet — create one from the admin console&apos;s Colleges &amp; Placement tab.
             </p>
           )}
@@ -160,35 +147,35 @@ export const TpoShell: React.FC<{ children: React.ReactNode; title?: string }> =
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FAFAF9]">
+    <div className="min-h-screen flex flex-col bg-app-warm">
       {/* Header — identity, context, account. Nothing else. */}
-      <header className="sticky top-0 z-40 border-b border-[#E9E7E1] bg-white/85 backdrop-blur-xl supports-[backdrop-filter]:bg-white/70">
+      <header className="sticky top-0 z-40 border-b border-line bg-white/85 backdrop-blur-xl supports-[backdrop-filter]:bg-white/70">
         <div className="mx-auto max-w-[1180px] px-4 h-12 flex items-center gap-3">
           <button
             onClick={() => router.push('/')}
             aria-label="Back to TieEdu"
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-[#3E4754] hover:bg-[#F1EEE7] focus-ring shrink-0"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-body hover:bg-surface-hover focus-ring shrink-0"
           >
             <Home className="w-4 h-4" />
           </button>
           <div className="flex items-baseline gap-2 min-w-0">
-            <span className="text-[15px] font-black tracking-tight text-[#0E2A44] whitespace-nowrap">
+            <span className="text-base font-black tracking-tight text-brand-ink whitespace-nowrap">
               Campus TPO
             </span>
             {title && (
-              <span className="text-[13px] font-semibold text-[--text-muted] truncate hidden sm:inline">
+              <span className="text-sm font-semibold text-[--text-muted] truncate hidden sm:inline">
                 / {title}
               </span>
             )}
           </div>
           <div className="flex-1" />
           <CollegeSwitcher />
-          <div className="hidden sm:flex items-center gap-2 pl-2 border-l border-[#E9E7E1] min-w-0">
-            <span className="text-[12px] font-bold text-[#3E4754] truncate max-w-[140px]">
+          <div className="hidden sm:flex items-center gap-2 pl-2 border-l border-line min-w-0">
+            <span className="text-xs font-bold text-body truncate max-w-[140px]">
               {user?.name || user?.email}
             </span>
             {activeRole && (
-              <span className="px-2 py-0.5 rounded-full bg-[#E8F1FA] text-[#0E2A44] text-[10px] font-extrabold uppercase tracking-wider whitespace-nowrap">
+              <span className="px-2 py-0.5 rounded-full bg-signal-soft text-brand-ink text-xs font-extrabold uppercase tracking-wider whitespace-nowrap">
                 {activeRole}
               </span>
             )}
@@ -196,7 +183,7 @@ export const TpoShell: React.FC<{ children: React.ReactNode; title?: string }> =
           <button
             onClick={handleLogout}
             aria-label="Sign out of the Campus TPO portal"
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-[#A63D28] hover:bg-[#FDEDE9] focus-ring shrink-0"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-danger hover:bg-signal-soft focus-ring shrink-0"
           >
             <LogOut className="w-4 h-4" />
           </button>
@@ -214,18 +201,18 @@ export const TpoShell: React.FC<{ children: React.ReactNode; title?: string }> =
                     <button
                       onClick={() => !item.soon && router.push(item.href)}
                       aria-current={active ? 'page' : undefined}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-bold whitespace-nowrap transition-colors focus-ring ${
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold whitespace-nowrap transition-colors focus-ring ${
                         active
-                          ? 'bg-[#0E2A44] text-white'
+                          ? 'bg-brand-ink text-white'
                           : item.soon
-                            ? 'text-[--text-muted] hover:bg-[#F1EEE7]'
-                            : 'text-[#3E4754] hover:bg-[#F1EEE7]'
+                            ? 'text-[--text-muted] hover:bg-surface-hover'
+                            : 'text-body hover:bg-surface-hover'
                       }`}
                     >
                       <Icon className="w-3.5 h-3.5" />
                       {item.label}
                       {item.soon && !active && (
-                        <span className="text-[9px] font-extrabold uppercase tracking-wider opacity-70">
+                        <span className="text-xs font-extrabold uppercase tracking-wider opacity-70">
                           soon
                         </span>
                       )}
@@ -242,7 +229,7 @@ export const TpoShell: React.FC<{ children: React.ReactNode; title?: string }> =
         {!activeCollegeId && (me?.colleges?.length || 0) > 0 ? <CollegePickerCard /> : children}
       </main>
 
-      <footer className="border-t border-[#E9E7E1] py-4 text-center text-[12px] text-[--text-muted]">
+      <footer className="border-t border-line py-4 text-center text-xs text-[--text-muted]">
         Campus TPO Portal · placement data is scoped to the selected college
       </footer>
     </div>

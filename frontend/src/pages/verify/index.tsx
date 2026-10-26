@@ -44,6 +44,7 @@ export default function VerifyIndexPage() {
     <>
       <Head>
         <title>Verify a certificate · TieEdu</title>
+        <meta name="description" content="Check that a TieEdu certificate is genuine: enter its serial to see who earned it, for what, and when." />
         <meta name="robots" content="noindex" />
       </Head>
 
@@ -65,7 +66,7 @@ export default function VerifyIndexPage() {
         >
           <label
             htmlFor="serial"
-            className="block text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)]"
+            className="block text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]"
           >
             Certificate serial
           </label>

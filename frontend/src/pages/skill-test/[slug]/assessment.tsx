@@ -11,10 +11,11 @@ import {
   SkillTestAttempt, SafeQuestion,
 } from '@/lib/skillTestApi';
 
+import { nameFromSlug, withPageTitle } from '@/components/common/withPageTitle';
 type AnswerState = Record<string, string[]>; // questionId -> selected option indexes (as strings)
 type MarkedState = Record<string, boolean>;
 
-export default function AssessmentPage() {
+function AssessmentPage() {
   const router = useRouter();
   const { slug } = router.query;
 
@@ -158,14 +159,14 @@ export default function AssessmentPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="w-full max-w-md rounded-2xl bg-white border border-gray-200 p-6 sm:p-8 text-center shadow-sm">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-[#0F7BFF]">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-signal-soft text-signal">
             <LogIn className="h-7 w-7" />
           </div>
           <h1 className="mt-4 text-xl font-bold text-gray-900">Sign in required</h1>
           <p className="mt-1 text-sm text-gray-500">Sign in to take the {skillName} assessment and earn your certificate.</p>
           <Link
             href={`/login?next=${encodeURIComponent(`/skill-test/${slug}/assessment`)}`}
-            className="mt-6 block w-full rounded-full bg-[#0F7BFF] py-3.5 text-sm font-semibold text-white hover:bg-[#0C5AD9] transition-colors"
+            className="mt-6 block w-full rounded-full bg-signal py-3.5 text-sm font-semibold text-white hover:bg-signal transition-colors"
           >
             Sign In / Sign Up
           </Link>
@@ -181,7 +182,7 @@ export default function AssessmentPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="w-full max-w-md rounded-2xl bg-white border border-gray-200 p-6 sm:p-8 text-center shadow-sm">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-[#0F7BFF]">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-signal-soft text-signal">
             <Clock className="h-7 w-7" />
           </div>
           <h1 className="mt-4 text-xl font-bold text-gray-900">{skillName} Assessment</h1>
@@ -190,7 +191,7 @@ export default function AssessmentPage() {
           <button
             onClick={handleStart}
             disabled={loading}
-            className="mt-6 w-full rounded-full bg-[#0F7BFF] py-3.5 text-sm font-semibold text-white hover:bg-[#0C5AD9] transition-colors disabled:opacity-60"
+            className="mt-6 w-full rounded-full bg-signal py-3.5 text-sm font-semibold text-white hover:bg-signal transition-colors disabled:opacity-60"
           >
             {loading ? 'Preparing…' : 'Start Now'}
           </button>
@@ -204,7 +205,7 @@ export default function AssessmentPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="text-center">
           <p className="text-gray-600">No questions available for this assessment.</p>
-          <Link href={`/skill-test/${slug}`} className="mt-3 inline-block text-[#0F7BFF] font-medium">Back</Link>
+          <Link href={`/skill-test/${slug}`} className="mt-3 inline-block text-signal font-medium">Back</Link>
         </div>
       </div>
     );
@@ -236,7 +237,7 @@ export default function AssessmentPage() {
           </div>
         </div>
         <div className="h-1 bg-gray-100">
-          <div className="h-full bg-[#0F7BFF] transition-all duration-300" style={{ width: `${((current + 1) / questions.length) * 100}%` }} />
+          <div className="h-full bg-signal transition-all duration-300" style={{ width: `${((current + 1) / questions.length) * 100}%` }} />
         </div>
       </div>
 
@@ -268,11 +269,11 @@ export default function AssessmentPage() {
                   key={opt.index}
                   onClick={() => handleSelect(q.id, opt.index, isMultiple)}
                   className={`w-full flex items-start gap-3 rounded-xl border-2 px-4 py-3 text-left text-sm transition-all min-h-[48px] ${
-                    isSelected ? 'border-[#0F7BFF] bg-blue-50' : 'border-gray-200 bg-white hover:border-gray-300'
+                    isSelected ? 'border-signal bg-signal-soft' : 'border-gray-200 bg-white hover:border-gray-300'
                   }`}
                 >
                   <span className={`mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full border-2 ${
-                    isSelected ? 'border-[#0F7BFF] bg-[#0F7BFF]' : 'border-gray-300'
+                    isSelected ? 'border-signal bg-signal' : 'border-gray-300'
                   }`}>
                     {isSelected && <CheckCircle2 className="h-3.5 w-3.5 text-white" />}
                   </span>
@@ -317,7 +318,7 @@ export default function AssessmentPage() {
           {current < questions.length - 1 ? (
             <button
               onClick={() => setCurrent((c) => c + 1)}
-              className="flex items-center gap-1 rounded-full bg-[#0F7BFF] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#0C5AD9] min-h-[44px]"
+              className="flex items-center gap-1 rounded-full bg-signal px-5 py-2.5 text-sm font-semibold text-white hover:bg-signal min-h-[44px]"
             >
               Next <ArrowRight className="h-4 w-4" />
             </button>
@@ -357,7 +358,7 @@ export default function AssessmentPage() {
                         isM ? 'border-amber-400 bg-amber-50 text-amber-700'
                           : isA ? 'border-emerald-400 bg-emerald-50 text-emerald-700'
                             : 'border-gray-200 bg-gray-50 text-gray-500'
-                      } ${isActive ? 'ring-2 ring-[#0F7BFF] ring-offset-1' : ''}`}
+                      } ${isActive ? 'ring-2 ring-signal ring-offset-1' : ''}`}
                     >
                       {qi + 1}
                     </button>
@@ -397,7 +398,7 @@ export default function AssessmentPage() {
               <button
                 onClick={() => doSubmit(answers, timeLeft)}
                 disabled={submitting}
-                className="rounded-full bg-[#0F7BFF] py-3 text-sm font-semibold text-white hover:bg-[#0C5AD9] transition-colors disabled:opacity-60"
+                className="rounded-full bg-signal py-3 text-sm font-semibold text-white hover:bg-signal transition-colors disabled:opacity-60"
               >
                 {submitting ? 'Submitting…' : 'Submit Assessment'}
               </button>
@@ -415,3 +416,5 @@ export default function AssessmentPage() {
     </div>
   );
 }
+
+export default withPageTitle(AssessmentPage, (q) => `${nameFromSlug(q.slug)} test`);

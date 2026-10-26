@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { SchoolProvider, useSchool } from '@/context/SchoolContext';
 import { SchoolShell } from '@/components/school/SchoolShell';
+import { withPageTitle } from '@/components/common/withPageTitle';
 import { SchoolTabBar } from '@/components/school/SchoolTabBar';
 import HomeScreen from '@/components/school/screens/HomeScreen';
 import CoursesScreen from '@/components/school/screens/CoursesScreen';
@@ -84,4 +85,15 @@ const SchoolApp: React.FC = () => {
   );
 };
 
-export default SchoolApp;
+const SCHOOL_TITLES: Record<string, string> = {
+  courses: 'Courses',
+  notices: 'Notices',
+  progress: 'Progress',
+  profile: 'Profile',
+  login: 'Sign in',
+};
+
+export default withPageTitle(SchoolApp, (q) => {
+  const first = Array.isArray(q.path) ? q.path[0] : q.path;
+  return `${(first && SCHOOL_TITLES[first]) || 'Home'} · School`;
+}, () => 'Your school on TieEdu: courses, notices and progress in one place.');
