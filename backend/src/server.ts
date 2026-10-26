@@ -43,6 +43,7 @@ import { runDriveBridgeMigrations } from './db/driveBridgeMigrate';
 import { emailLeadsRouter } from './routes/emailLeads.routes';
 import { emailCampaignsRouter } from './routes/emailCampaigns.routes';
 import { emailPublicRouter } from './routes/emailPublic.routes';
+import { companyPagesRouter, companyPagesAdminRouter } from './routes/companyPages.routes';
 import { seedSkillTest } from './data/seedSkillTest';
 
 import { runMigrations } from './db/migrate';
@@ -170,6 +171,11 @@ app.use('/api/drops', dropsRouter);
 app.use('/api/email/admin', emailLeadsRouter);
 app.use('/api/email/admin', emailCampaignsRouter);
 app.use('/api/email', emailPublicRouter);
+// Company Page Studio. Public subtree serves published pages only; the admin
+// subtree repeats the coarse requireAdmin gate at the mount, then splits
+// read/write per route with requirePermission.
+app.use('/api/company-pages', companyPagesRouter);
+app.use('/api/admin/company-pages', requireAdmin, companyPagesAdminRouter);
 
 // Health Check — honest
 app.get('/api/health', (req, res) => {

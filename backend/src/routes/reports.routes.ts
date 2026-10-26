@@ -4,6 +4,7 @@ import { requireAdmin, requireAuth, optionalAuth } from '../middleware/auth';
 import { awardAndCommit } from '../lib/xp';
 import { createAutoDrop } from '../lib/autoDrops';
 import { autoDropTemplate } from '../lib/drops';
+import { grantExperienceReward } from '../lib/companyPageStudent';
 
 export const reportsRouter = Router();
 
@@ -107,6 +108,9 @@ reportsRouter.patch('/:id', requireAdmin, (req: Request, res: Response) => {
       });
       owner.xp = result.total_xp;
     }
+    // A company page can opt in to unlocking its pack for the author. Off
+    // unless the company's live page says so; one unlock per student, ever.
+    grantExperienceReward(db, report, req.userId || 'admin');
   }
 
   saveDb(db);

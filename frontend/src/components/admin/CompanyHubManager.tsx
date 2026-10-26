@@ -1,8 +1,12 @@
 import React, { useMemo, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { Company, MetricProvenance, ProvenanceMap } from '@/types';
 import { BrandTile } from '@/components/common/BrandTile';
 import { createCompanyApi, updateCompanyApi, deleteCompanyApi } from '@/lib/api';
-import { Plus, Edit3, Trash2, Building, X, CheckCircle2, ExternalLink, ShieldAlert, ShieldCheck } from 'lucide-react';
+import { Plus, Edit3, Trash2, Building, X, CheckCircle2, ExternalLink, ShieldAlert, ShieldCheck, LayoutTemplate } from 'lucide-react';
+
+// Loaded on demand: the studio carries the whole redesigned page for its preview.
+const CompanyPageStudio = dynamic(() => import('./companyPage/CompanyPageStudio'), { ssr: false });
 
 interface CompanyHubManagerProps {
   companies: Company[];
@@ -86,6 +90,7 @@ export const CompanyHubManager: React.FC<CompanyHubManagerProps> = ({ companies,
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState<FormState>(emptyForm);
+  const [studioFor, setStudioFor] = useState<Company | null>(null);
 
   const sourcedCount = useMemo(
     () => METRIC_KEYS.filter((k) => !!form.metric_sources?.[k]?.source).length,
@@ -258,6 +263,13 @@ export const CompanyHubManager: React.FC<CompanyHubManagerProps> = ({ companies,
                       </button>
                       <button onClick={() => onSelect(c.id)} className="px-3 py-1 bg-[#0284C7] hover:bg-[#0369A1] text-white rounded-lg text-xs font-bold" title="Manage content">
                         Manage
+                      </button>
+                      <button
+                        onClick={() => setStudioFor(c)}
+                        className="inline-flex items-center gap-1 px-3 py-1 border border-gray-300 hover:border-[#0284C7] hover:text-[#0284C7] text-gray-700 rounded-lg text-xs font-bold"
+                        title="Design the redesigned company page"
+                      >
+                        <LayoutTemplate className="w-3.5 h-3.5" /> Design page
                       </button>
                       <button onClick={() => handleDelete(c)} className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg" title="Delete company">
                         <Trash2 className="w-4 h-4" />
@@ -572,6 +584,10 @@ export const CompanyHubManager: React.FC<CompanyHubManagerProps> = ({ companies,
             </button>
           </div>
         </div>
+      )}
+
+      {studioFor && (
+        <CompanyPageStudio company={studioFor} companies={companies} onClose={() => setStudioFor(null)} />
       )}
     </div>
   );

@@ -81,6 +81,10 @@ export const ShellProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      // `key` is undefined on the synthetic keydown Chrome fires when it
+      // autofills a field (saved logins, address autofill). Calling
+      // .toLowerCase() on it crashed the whole app shell.
+      if (typeof event.key !== 'string') return;
       const key = event.key.toLowerCase();
 
       // Cmd-K on a Mac, Ctrl-K everywhere else. The previous binding was on

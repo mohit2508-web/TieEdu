@@ -7,6 +7,7 @@ import { completePaidOrder, unlockedCompanyIds, ownedModuleIdsFor, ownedCourseId
 import { appendAudit } from '../store/audit';
 import { SINGLE_MODULE_PRICE, COMPLETE_PACK_COUNT, packPrice, listPriceFor } from '../lib/pricing';
 import { isRewardCode } from '../lib/perks';
+import { companyPackCap } from '../lib/companyPage';
 import {
   couponEligibleSubtotal,
   couponScopeMatches,
@@ -64,7 +65,7 @@ interface CartItem {
 // `byCompany` carries the per-company module count + the exact pack price charged,
 // so persisted order lines can be stamped with the price actually billed (never a
 // client-supplied or hardcoded number).
-export function summarizePack(items: CartItem[]) {
+export function summarizePack(items: CartItem[], capFor?: (companyId: string) => number | null) {
   const perCompany: Record<string, { id: string; name: string; moduleIds: Set<string>; isComplete: boolean }> = {};
 
   for (const it of items) {
@@ -93,7 +94,12 @@ export function summarizePack(items: CartItem[]) {
     // exactly the modules listed (e.g. a "finish your pack" with 2 left -> Rs 169).
     const n = c.isComplete && c.moduleIds.size === 0 ? COMPLETE_PACK_COUNT : c.moduleIds.size;
     const listPrice = listPriceFor(n);
-    const pack = packPrice(n);
+    // A company page may set a flat pack price (e.g. ₹99 for a mass recruiter).
+    // It caps the ladder, never raises it, and is read from the server's own
+    // published page — a client-sent price is never consulted.
+    const ladder = packPrice(n);
+    const cap = capFor ? capFor(c.id) : null;
+    const pack = cap !== null && cap !== undefined ? Math.min(ladder, cap) : ladder;
     const savings = Math.max(0, listPrice - pack);
     subtotal += pack;
     listTotal += listPrice;
@@ -302,6 +308,13 @@ checkoutRouter.post('/create-order', async (req: Request, res: Response) => {
   const { amount, items = [], coupon_code } = req.body;
   const user_id = req.user!.id;
 
+  // "Plan" lines carried their price from the client and fulfilment granted
+  // nothing for them, so a plan could be bought at any price for nothing. No
+  // screen sells one; refuse them outright rather than bill a client figure.
+  if ((Array.isArray(items) ? items : []).some((it: CartItem) => it && it.kind === 'plan')) {
+    return res.status(400).json({ error: 'Plans are not sold through checkout. Remove them from your cart.' });
+  }
+
   // Drop anything the user already owns (company fully unlocked, module already
   // bought, or course already paid for).
   const ownedModuleIds = ownedModuleIdsFor(db, user_id);
@@ -336,7 +349,7 @@ checkoutRouter.post('/create-order', async (req: Request, res: Response) => {
   // through to the client figure and happily charges Rs 500 for a free course.
   // Testing for the PRESENCE of course lines rather than the value of their sum
   // is what makes that impossible.
-  const pack = summarizePack(unowned as CartItem[]);
+  const pack = summarizePack(unowned as CartItem[], (companyId) => companyPackCap(db, companyId));
   const courses = summarizeCourseLines(db, unowned as CartItem[]);
   const hasCourseLines = unowned.some((it: CartItem) => it.kind === 'course');
   const hasLadderableItems = unowned.some((it: CartItem) => it.kind !== 'plan' && it.kind !== 'course');

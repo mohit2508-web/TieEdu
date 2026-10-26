@@ -2189,7 +2189,7 @@ export function loadDb() {
   // If db.json exists, load it and auto-upgrade modules missing section_data
   if (fs.existsSync(DB_FILE)) {
     try {
-      let raw = fs.readFileSync(DB_FILE, 'utf-8');
+      let raw = readFileWithRetry(DB_FILE);
       if (raw.charCodeAt(0) === 0xfeff) raw = raw.slice(1); // strip BOM
       const data = JSON.parse(raw);
       let upgraded = false;
@@ -2408,8 +2408,18 @@ export function loadDb() {
         saveDb(data);
       }
       return data;
-    } catch {
-      // Fall through to rewrite
+    } catch (err: any) {
+      // Never fall through to the seed write below. This used to: a db.json that
+      // existed but could not be read or parsed — a half-copied backup, a
+      // transient Windows lock that outlived the retries — was silently replaced
+      // with the launch catalogue, deleting every user, order and unlock. A
+      // request that fails loudly is recoverable; a wiped ledger is not.
+      const e = new Error(
+        `db.json exists but could not be loaded (${err?.message || err}). ` +
+          'Refusing to overwrite it with seed data — fix or restore the file from a backup.'
+      );
+      (e as any).cause = err;
+      throw e;
     }
   }
   for (const c of initialDbData.courses) withCourseDimensions(c as Course);
@@ -2430,6 +2440,21 @@ export function loadDb() {
  * retried instead of thrown at the caller.
  */
 const TRANSIENT_WRITE_ERRORS = new Set(['EBUSY', 'EPERM', 'EACCES', 'UNKNOWN']);
+
+/** Same transient-lock tolerance as the write path, for reads. */
+function readFileWithRetry(file: string, attempts = 5): string {
+  let lastErr: any;
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    try {
+      return fs.readFileSync(file, 'utf-8');
+    } catch (err: any) {
+      lastErr = err;
+      if (!TRANSIENT_WRITE_ERRORS.has(err?.code)) break;
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 25 * (attempt + 1));
+    }
+  }
+  throw lastErr;
+}
 
 function writeFileAtomic(file: string, contents: string, attempts = 5): void {
   // Same directory on purpose: a rename across volumes is not atomic.

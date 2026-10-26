@@ -104,11 +104,31 @@ export interface PricingCatalog {
  * @param ownedModuleIds module ids the requesting user already owns
  * @param unlockedCompanyIds company ids the requesting user has fully unlocked
  */
+/**
+ * Pack figures for `remaining` modules, with an optional cap from a live
+ * company page. The cap lowers the pack price and the saving grows with it; it
+ * never raises anything, matching checkout exactly.
+ */
+function cappedPrices(remaining: number, cap: number | null) {
+  const ladder = packPrice(remaining);
+  const pack = cap !== null && cap > 0 && remaining > 0 ? Math.min(ladder, cap) : ladder;
+  const list = listPriceFor(remaining);
+  const savings = Math.max(0, list - pack);
+  return {
+    pack_price: pack,
+    list_total: list,
+    savings,
+    savings_percent: list > 0 ? Math.round((savings / list) * 100) : 0,
+  };
+}
+
 export function buildPricingCatalog(
   companies: any[],
   ownedModuleIds: string[] = [],
   unlockedCompanyIds: string[] = [],
-  isAdmin = false
+  isAdmin = false,
+  /** A live company page's flat pack price — the same cap checkout applies. */
+  capFor: (companyId: string) => number | null = () => null
 ): PricingCatalog {
   const owned = new Set(ownedModuleIds);
   const unlocked = new Set(unlockedCompanyIds);
@@ -143,10 +163,7 @@ export function buildPricingCatalog(
         has_pdf: !!m.pdf,
         price: SINGLE_MODULE_PRICE,
       })),
-      pack_price: packPrice(remaining),
-      list_total: listPriceFor(remaining),
-      savings: savingsFor(remaining),
-      savings_percent: savingsPercent(remaining),
+      ...cappedPrices(remaining, capFor(company.id)),
       is_unlocked: companyUnlocked || ownsEvery,
       owned_module_count: ownedHere.length,
     });

@@ -258,6 +258,8 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
       }
     }
 
+    // `key` can be undefined on browser-synthesised keydowns (autofill).
+    if (typeof e.key !== 'string') return;
     if (mod && e.key.toLowerCase() === 'z') {
       e.preventDefault();
       if (e.shiftKey) redo();

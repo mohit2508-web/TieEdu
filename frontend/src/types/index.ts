@@ -525,6 +525,11 @@ export interface CompanyModuleItem {
   module_ids?: string[];
   module_count: number;
   price: number;
+  /**
+   * A live company page's flat pack price. Display only: the cart caps this
+   * company's pack at it, mirroring the cap checkout reads from the server.
+   */
+  pack_price_cap?: number;
 }
 
 /**

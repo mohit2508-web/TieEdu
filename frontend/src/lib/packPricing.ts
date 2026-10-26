@@ -49,7 +49,7 @@ export interface PackSummary {
  * cart always shows the same price the server will charge.
  */
 export const summarizePackItems = (items: CartItem[]): PackSummary => {
-  const perCompany = new Map<string, { name: string; moduleIds: Set<string>; isComplete: boolean }>();
+  const perCompany = new Map<string, { name: string; moduleIds: Set<string>; isComplete: boolean; cap: number | null }>();
   let planTotal = 0;
   let courseTotal = 0;
 
@@ -66,7 +66,8 @@ export const summarizePackItems = (items: CartItem[]): PackSummary => {
       continue;
     }
     const mi = it as CompanyModuleItem;
-    const c = perCompany.get(mi.id) || perCompany.set(mi.id, { name: mi.name, moduleIds: new Set(), isComplete: false }).get(mi.id)!;
+    const c = perCompany.get(mi.id) || perCompany.set(mi.id, { name: mi.name, moduleIds: new Set(), isComplete: false, cap: null }).get(mi.id)!;
+    if (typeof mi.pack_price_cap === 'number' && mi.pack_price_cap > 0) c.cap = c.cap === null ? mi.pack_price_cap : Math.min(c.cap, mi.pack_price_cap);
     if (Array.isArray(mi.module_ids) && mi.module_ids.length > 0) {
       mi.module_ids.forEach((m) => c.moduleIds.add(m));
       c.isComplete = true;
@@ -86,7 +87,8 @@ export const summarizePackItems = (items: CartItem[]): PackSummary => {
     // A plain company line (no module ids) = every round; array pack lines =
     // exactly the modules listed (e.g. "finish your pack" with 2 left -> Rs 169).
     const n = c.isComplete && c.moduleIds.size === 0 ? COMPLETE_PACK_COUNT : c.moduleIds.size;
-    subtotal += packPrice(n);
+    // Same rule as checkout: a company page's flat price caps the ladder, never raises it.
+    subtotal += c.cap !== null ? Math.min(packPrice(n), c.cap) : packPrice(n);
     listTotal += listPrice(n);
     moduleCount += n;
   }

@@ -18,12 +18,15 @@ import { useAuth } from '@/context/AuthContext';
 import { useCart, useCartScope, cartLineModuleIds, isCompanyCartLine } from '@/context/CartContext';
 import { useShell } from '@/context/ShellContext';
 import dynamic from 'next/dynamic';
-import { fetchCompanyBySlug, fetchCompanies, API_BASE_URL } from '@/lib/api';
+import { fetchCompanyBySlug, fetchCompanies } from '@/lib/api';
 import { packPrice, SINGLE_MODULE_PRICE } from '@/lib/packPricing';
 import { markVaultSeen } from '@/lib/briefingStore';
 import { CompanyModuleReader } from '@/components/company/CompanyModuleReader';
 import { VaultSkeleton } from '@/components/company/VaultSkeleton';
 import { Company, PricingPlan, ContentItem, ContentModule, RoundType, CompanyModuleItem, CartItem } from '@/types';
+import type { CpContent, CpRadarItem } from '@/types/companyPage';
+import { fetchCompanyPage, serverApiBase } from '@/lib/companyPagesApi';
+import { CompanyPageV2 } from '@/components/companyPage/CompanyPageV2';
 import {
   ArrowLeft, CheckCircle2, ChevronRight, ChevronLeft,
   Sparkles, Bookmark, List, ShoppingBag
@@ -53,19 +56,44 @@ const ROUND_SHORT_LABEL: Record<string, string> = {
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const slug = String(context.params?.slug || '');
   let initialCompany: Company | null = null;
-  try {
-    const res = await fetch(`${API_BASE_URL}/companies/${slug}`);
-    if (res.ok) initialCompany = await res.json();
-  } catch {
-    // Backend offline at SSR time — the client effect below retries.
-  }
-  return { props: { initialCompany, initialSlug: slug } };
+  // The redesigned page is opt-in per company: only a page an admin has
+  // published AND switched on comes back here. Anything else — including the
+  // lookup failing — renders the existing vault page unchanged.
+  const api = serverApiBase();
+  const [companyResult, pageResult] = await Promise.allSettled([
+    fetch(`${api}/companies/${slug}`).then((res) => (res.ok ? res.json() : null)),
+    fetchCompanyPage(slug, api),
+  ]);
+  if (companyResult.status === 'fulfilled') initialCompany = companyResult.value;
+  const live = pageResult.status === 'fulfilled' && pageResult.value.enabled ? pageResult.value : null;
+  return {
+    props: {
+      initialCompany,
+      initialSlug: slug,
+      initialPage: live?.page || null,
+      initialRadar: live?.radar || [],
+      packPriceCap: live?.pack_price_cap ?? null,
+    },
+  };
 };
 
-export default function CompanyVaultPage({ initialCompany, initialSlug }: { initialCompany: Company | null; initialSlug: string }) {
+export default function CompanyVaultPage({
+  initialCompany,
+  initialSlug,
+  initialPage = null,
+  initialRadar,
+  packPriceCap = null,
+}: {
+  initialCompany: Company | null;
+  initialSlug: string;
+  initialPage?: CpContent | null;
+  initialRadar?: CpRadarItem[];
+  /** A live company page's flat pack price; checkout applies the same cap server-side. */
+  packPriceCap?: number | null;
+}) {
   const router = useRouter();
   const { slug } = router.query;
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { addMany, items } = useCart();
   const { openOverlay } = useShell();
 
@@ -360,6 +388,13 @@ export default function CompanyVaultPage({ initialCompany, initialSlug }: { init
   // (in which case the buy CTA must vanish instead of asking to re-buy ₹249).
   const vaultComplete = isUnlocked || remainingPremium.length === 0;
 
+  // Redesigned page — only for a company whose admin published one and turned
+  // it on. Guarded on the slug so a client-side hop between companies never
+  // shows one company's page with another's data while the vault refetches.
+  const cpPage = initialPage && company.slug === initialSlug ? initialPage : null;
+  const cpTitle = cpPage ? String(cpPage.settings?.seo_title || '').replace(/\{company\}/g, company.name) : '';
+  const cpDescription = cpPage ? String(cpPage.settings?.seo_description || '').replace(/\{company\}/g, company.name) : '';
+
   const moduleOfItem = (item: ContentItem) =>
     modules.find(mod => (mod.items || []).some(i => i.id === item.id));
   const isItemUnlocked = (item: ContentItem) =>
@@ -426,8 +461,8 @@ export default function CompanyVaultPage({ initialCompany, initialSlug }: { init
   return (
     <>
       <Head>
-        <title>{company.seo_title || `${company.name} Interview Questions 2026 | TieEdu`}</title>
-        <meta name="description" content={company.seo_description || ''} />
+        <title>{cpTitle || company.seo_title || `${company.name} Interview Questions 2026 | TieEdu`}</title>
+        <meta name="description" content={cpDescription || company.seo_description || ''} />
       </Head>
 
       <div
@@ -633,6 +668,49 @@ export default function CompanyVaultPage({ initialCompany, initialSlug }: { init
             </main>
           </div>
 
+        ) : cpPage ? (
+          /* ========================================================
+              REDESIGNED PAGE (Company Page Studio) — replaces only the
+              catalog view; the reader, cart and modals are shared.
+              ======================================================== */
+          <CompanyPageV2
+            content={cpPage}
+            company={company}
+            companies={allCompanies}
+            packPrice={remainingPremium.length > 0 ? (packPriceCap ? Math.min(remainingPrice, packPriceCap) : remainingPrice) : null}
+            packOwned={premiumModules.length > 0 && vaultComplete}
+            onGetPack={() => {
+              if (remainingPremium.length === 0) return;
+              // The line carries the page's cap so the cart shows the price the
+              // server will charge; the server reads the cap from its own copy.
+              const item = completePackItem();
+              addToCart([packPriceCap ? { ...item, price: Math.min(item.price, packPriceCap), pack_price_cap: packPriceCap } : item], true);
+            }}
+            // Not while auth is still restoring: the cached user appears before the
+            // access token does, and a request in that gap 401s into a second
+            // refresh that races the boot refresh for the single-use cookie.
+            signedIn={!!user && !authLoading}
+            onRequireAuth={() => setIsAuthRequiredOpen(true)}
+            initialRadar={initialRadar}
+            onOpenModule={(id) => {
+              const mod = modules.find((m) => m.id === id);
+              if (mod) openModule(mod);
+            }}
+            onPreview={featuredFree ? () => openModule(featuredFree) : undefined}
+            onOpenItem={(itemId) => {
+              const item = modules.flatMap((m) => m.items || []).find((it) => it.id === itemId);
+              if (item) selectItem(item);
+            }}
+            onShareExperience={() => setIsSubmitReportOpen(true)}
+            experiencesSlot={
+              <InterviewExperiences
+                key={`exp-${reportTick}`}
+                companyName={company.name}
+                companyId={company.id}
+                onShare={() => setIsSubmitReportOpen(true)}
+              />
+            }
+          />
         ) : (
           /* ========================================================
               CATALOG MODE — List of modules & questions (Full Width)
@@ -761,7 +839,7 @@ export default function CompanyVaultPage({ initialCompany, initialSlug }: { init
         {/* ================================================
             STICKY UNLOCK BAR (only when locked)
             ================================================ */}
-        {!isUnlocked && remainingPremium.length > 0 && (
+        {!cpPage && !isUnlocked && remainingPremium.length > 0 && (
           <div className="fixed bottom-0 left-0 right-0 z-30 bg-[var(--brand-primary)] border-t border-white/10 text-white px-4 pt-3 safe-bottom shadow-2xl">
             <div className="max-w-[1100px] mx-auto flex items-center justify-between gap-3 sm:gap-4">
               <div className="min-w-0">
