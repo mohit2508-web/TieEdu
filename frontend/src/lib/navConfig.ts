@@ -240,6 +240,16 @@ export const NAV_ITEMS: Record<string, NavItem> = {
     primary: true,
     keywords: ['drive', 'mock drive', 'assessment', 'company test', 'hiring', 'placement test'],
   },
+  guarantee: {
+    id: 'guarantee',
+    href: '/guarantee',
+    label: 'Accuracy guarantee',
+    icon: ShieldCheck,
+    match: 'exact',
+    description: 'If a round was different from what we showed, get your money back',
+    primary: false,
+    keywords: ['refund', 'money back', 'guarantee', 'wrong pattern', 'accuracy'],
+  },
   offers: {
     id: 'offers',
     href: '/offers',

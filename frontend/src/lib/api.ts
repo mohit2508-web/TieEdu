@@ -957,6 +957,9 @@ export interface PlatformSettings {
   upi_qr: string;
   merchant_name: string;
   upi_instructions: string;
+  /** Accuracy guarantee (backend lib/accuracyGuarantee). Off unless switched on. */
+  accuracy_guarantee_enabled?: boolean;
+  accuracy_guarantee_amount?: number;
 }
 
 export interface AnalyticsSnapshot {

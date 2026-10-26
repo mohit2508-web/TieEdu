@@ -490,7 +490,7 @@ export function CompanyPageV2({
     }
     if (campusSlot && !preview && sec.type === campusAfter) {
       blocks.push(
-        <div key="campus" className={s.wrap} style={{ paddingTop: 24 }}>
+        <div key="campus" className={s.wrap}>
           {campusSlot}
         </div>
       );

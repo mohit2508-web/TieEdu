@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { fetchAdminSettingsApi, updateAdminSettingsApi, fetchAnalyticsApi, fetchAdminAuditApi, changePasswordApi, PlatformSettings, AnalyticsSnapshot } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
-import { Database, KeyRound, LogOut, Save, Settings2, QrCode, Upload } from 'lucide-react';
+import { Database, KeyRound, LogOut, Save, Settings2, QrCode, ShieldCheck, Upload } from 'lucide-react';
 
 const inputCls = "w-full sm:w-auto px-3 py-2 border border-gray-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-signal/30 min-w-[220px]";
 
@@ -191,6 +191,42 @@ export const SettingsTab: React.FC = () => {
               </button>
               {saved === true && <span className="text-xs font-semibold text-emerald-600">Saved ✓</span>}
               {saved === false && <span className="text-xs font-semibold text-red-600">Save failed</span>}
+            </div>
+          </div>
+
+          <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-xs space-y-4">
+            <h3 className="text-sm font-extrabold text-ink-soft flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-success" /> Accuracy guarantee
+            </h3>
+            <p className="text-xs text-gray-500">
+              When on, buyers can claim money back if a round’s pattern was different from what you show. Every claim comes to the
+              Guarantee claims tab for review; refunds are made by you through the payment provider, never automatically.
+            </p>
+            <label className="flex items-center gap-2 text-sm font-semibold text-ink-soft">
+              <input
+                type="checkbox"
+                checked={!!form.accuracy_guarantee_enabled}
+                onChange={(e) => setForm({ ...form, accuracy_guarantee_enabled: e.target.checked })}
+                className="h-4 w-4 accent-signal"
+              />
+              Offer the guarantee
+            </label>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Refund amount (₹)</label>
+              <input
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={5000}
+                value={form.accuracy_guarantee_amount ?? 99}
+                onChange={(e) => setForm({ ...form, accuracy_guarantee_amount: Number(e.target.value) })}
+                className={inputCls}
+              />
+            </div>
+            <div className="flex items-center gap-3 pt-1">
+              <button onClick={save} disabled={busy} className="btn btn-primary px-4 py-2 text-xs flex items-center gap-1.5">
+                <Save className="w-3.5 h-3.5" /> {busy ? 'Saving…' : 'Save guarantee'}
+              </button>
             </div>
           </div>
 

@@ -1056,6 +1056,8 @@ adminRouter.get('/settings', requirePermission('settings.read'), (req: Request, 
     upi_qr: '',
     merchant_name: 'TieEdu',
     upi_instructions: 'Scan with any UPI app (Paytm, GPay, PhonePe) and transfer the exact amount.',
+    accuracy_guarantee_enabled: false,
+    accuracy_guarantee_amount: 99,
   };
   res.json({ status: 'success', settings: { ...defaults, ...(db.settings || {}) } });
 });
@@ -1071,6 +1073,12 @@ adminRouter.put('/settings', requirePermission('settings.write'), (req: Request,
   if (typeof req.body.upi_qr === 'string') next.upi_qr = req.body.upi_qr.trim();
   if (typeof req.body.merchant_name === 'string' && req.body.merchant_name.trim()) next.merchant_name = req.body.merchant_name.trim().slice(0, 60);
   if (typeof req.body.upi_instructions === 'string') next.upi_instructions = req.body.upi_instructions.trim().slice(0, 500);
+  // Accuracy guarantee (lib/accuracyGuarantee): off by default, because it promises money back.
+  if (typeof req.body.accuracy_guarantee_enabled === 'boolean') next.accuracy_guarantee_enabled = req.body.accuracy_guarantee_enabled;
+  if (req.body.accuracy_guarantee_amount !== undefined) {
+    const amt = Number(req.body.accuracy_guarantee_amount);
+    if (Number.isInteger(amt) && amt >= 1 && amt <= 5000) next.accuracy_guarantee_amount = amt;
+  }
   db.settings = next;
   saveDb(db);
   res.json({ status: 'success', message: 'Settings saved', settings: next });

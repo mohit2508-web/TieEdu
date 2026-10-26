@@ -12,6 +12,7 @@ import { OrdersTab } from '@/components/admin/OrdersTab';
 import { UsersTab } from '@/components/admin/UsersTab';
 import { ReportsTab } from '@/components/admin/ReportsTab';
 import { OffersTab } from '@/components/admin/OffersTab';
+import { GuaranteeTab } from '@/components/admin/GuaranteeTab';
 import { AnalyticsTab } from '@/components/admin/AnalyticsTab';
 import { SettingsTab } from '@/components/admin/SettingsTab';
 import { PaymentVerificationsTab } from '@/components/admin/PaymentVerificationsTab';
@@ -26,19 +27,20 @@ import { DrivesTab } from '@/components/admin/DrivesTab';
 import {
   BookOpen, Building2, BarChart3, ClipboardList, FileText, Layers, LayoutDashboard,
   LogOut, Mail, RefreshCw, Settings2, ShoppingBag, Ticket, Users, ExternalLink, Wallet, CalendarRange,
-GraduationCap, Award, Zap, Megaphone, BellRing, Send, BrainCircuit, Newspaper, BadgeCheck } from 'lucide-react';
+GraduationCap, Award, Zap, Megaphone, BellRing, Send, BrainCircuit, Newspaper, BadgeCheck, ShieldCheck } from 'lucide-react';
 import { AdminCoursesTab } from '@/components/admin/course/AdminCoursesTab';
 import { AdminCertificatesTab } from '@/components/admin/course/AdminCertificatesTab';
 import { AdminXpTab } from '@/components/admin/course/AdminXpTab';
 import { NotificationBell } from '@/components/layout/NotificationBell';
 import { AccountMenu } from '@/components/layout/AccountMenu';
 
-type TabId = 'overview' | 'orders' | 'payments' | 'users' | 'analytics' | 'hub' | 'content' | 'pack' | 'studyplans' | 'drops' | 'coupons' | 'posters' | 'courses' | 'certificates' | 'xp' | 'skilltest' | 'drives' | 'reports' | 'offers' | 'emails' | 'notifications' | 'broadcast' | 'settings';
+type TabId = 'overview' | 'orders' | 'payments' | 'users' | 'analytics' | 'hub' | 'content' | 'pack' | 'studyplans' | 'drops' | 'coupons' | 'posters' | 'courses' | 'certificates' | 'xp' | 'skilltest' | 'drives' | 'reports' | 'offers' | 'guarantee' | 'emails' | 'notifications' | 'broadcast' | 'settings';
 
 const NAV: { id: TabId; label: string; icon: any; group: string }[] = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard, group: 'Commerce & Health' },
   { id: 'orders', label: 'Orders', icon: ShoppingBag, group: 'Commerce & Health' },
   { id: 'payments', label: 'Payment Verify', icon: Wallet, group: 'Commerce & Health' },
+  { id: 'guarantee', label: 'Guarantee Claims', icon: ShieldCheck, group: 'Commerce & Health' },
   { id: 'users', label: 'Users & Access', icon: Users, group: 'Commerce & Health' },
   { id: 'analytics', label: 'Analytics', icon: BarChart3, group: 'Commerce & Health' },
   { id: 'posters', label: 'Hero Posters', icon: Megaphone, group: 'Commerce & Health' },
@@ -353,6 +355,7 @@ export const AdminCmsView: React.FC = () => {
             {/* TAB: CANDIDATE REPORTS */}
             {activeTab === 'reports' && <ReportsTab companies={companiesList} onChanged={loadData} />}
             {activeTab === 'offers' && <OffersTab />}
+            {activeTab === 'guarantee' && <GuaranteeTab />}
 
             {/* TAB: EMAIL MARKETING — leads, campaigns, templates */}
             {activeTab === 'emails' && <EmailTab />}

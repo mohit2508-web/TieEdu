@@ -28,6 +28,7 @@ import type { CpContent, CpRadarItem } from '@/types/companyPage';
 import { fetchCompanyPage, serverApiBase } from '@/lib/companyPagesApi';
 import { CompanyPageV2 } from '@/components/companyPage/CompanyPageV2';
 import { CampusIntelCard } from '@/components/company/CampusIntelCard';
+import { GuaranteeStrip } from '@/components/company/GuaranteeStrip';
 import type { RoundOffer } from '@/components/companyPage/shared';
 import { ArrowLeft, CheckCircle2, ChevronRight, ChevronLeft, Bookmark, List, ShoppingBag } from 'lucide-react';
 
@@ -691,7 +692,13 @@ export default function CompanyVaultPage({
               ======================================================== */
           <CompanyPageV2
             content={cpPage}
-            campusSlot={user ? <CampusIntelCard slug={company.slug} company={company.name} /> : undefined}
+            campusSlot={
+              // empty:hidden — with nothing to show (signed out, guarantee off) the slot takes no space.
+              <div className="space-y-4 pt-6 empty:hidden">
+                {user && <CampusIntelCard slug={company.slug} company={company.name} />}
+                <GuaranteeStrip />
+              </div>
+            }
             company={company}
             companies={allCompanies}
             packPrice={remainingPremium.length > 0 ? (packPriceCap ? Math.min(remainingPrice, packPriceCap) : remainingPrice) : null}
