@@ -232,7 +232,8 @@ ok(strip.includes('overscroll-x-contain'), 'the strip does not hand its overscro
 console.log('\n--- nav contract (must not drift) ---');
 ok(
   /MOBILE_TAB_SLOTS[^=]*=\s*\[\s*'home',\s*'learn',\s*'practise',\s*'companies',\s*'feed'\s*\]/.test(navConfig) &&
-    /id: 'feed'[^}]*itemIds: \['drops'\]/.test(navConfig),
+    // Drops is first, so the Feed tab opens it; more pages may follow it (the offer wall).
+    /id: 'feed'[^}]*itemIds: \['drops'[,\]]/.test(navConfig),
   'tab slots are the five sections, and Feed opens Drops'
 );
 ok(

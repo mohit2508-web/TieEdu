@@ -30,6 +30,7 @@ import {
   House,
   LayoutGrid,
   Newspaper,
+  PartyPopper,
   Route,
   Search,
   Target,
@@ -238,6 +239,16 @@ export const NAV_ITEMS: Record<string, NavItem> = {
     description: 'Company mock tests and assessments — register, attempt and see results',
     primary: true,
     keywords: ['drive', 'mock drive', 'assessment', 'company test', 'hiring', 'placement test'],
+  },
+  offers: {
+    id: 'offers',
+    href: '/offers',
+    label: 'Offer wall',
+    icon: PartyPopper,
+    match: 'exact',
+    description: 'Real offers from students, and the route each one took',
+    primary: false,
+    keywords: ['offer', 'placed', 'selected', 'success story', 'selection story', 'got job', 'package'],
   },
   debrief: {
     id: 'debrief',
@@ -449,7 +460,7 @@ export const NAV_SECTIONS: NavSection[] = [
   { id: 'learn', label: 'Learn', icon: BookOpen, itemIds: ['courses', 'tracks', 'freeCourse', 'studyPlan', 'calendar', 'myCourses', 'myCertificates'] },
   { id: 'practise', label: 'Practise', icon: Target, itemIds: ['skillTest', 'daily', 'drives'] },
   { id: 'companies', label: 'Companies', icon: Building2, itemIds: ['companies', 'compare', 'offerCheck'], extraPrefixes: ['/company'] },
-  { id: 'feed', label: 'Feed', icon: Newspaper, itemIds: ['drops'] },
+  { id: 'feed', label: 'Feed', icon: Newspaper, itemIds: ['drops', 'offers'] },
 ];
 
 export const sectionHref = (section: NavSection): string => NAV_ITEMS[section.itemIds[0]].href;
