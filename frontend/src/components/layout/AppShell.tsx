@@ -95,6 +95,13 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
         paddingLeft: 'var(--safe-left)',
       }}
     >
+      {/* WCAG 2.4.1: the first Tab stop on every page jumps past the header and sub-tabs. */}
+      <a
+        href="#content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[100] focus:rounded-lg focus:bg-heading focus:px-4 focus:py-2.5 focus:text-sm focus:font-bold focus:text-card"
+      >
+        Skip to content
+      </a>
       <Header />
 
       {/*
@@ -115,6 +122,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
       */}
       <div className="page-body flex-1" data-tabbar={atRoot ? 'on' : 'off'}>
         <SectionSubnav />
+        <div id="content" tabIndex={-1} className="outline-none" />
         {children}
       </div>
 
