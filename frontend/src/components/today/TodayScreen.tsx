@@ -234,6 +234,11 @@ export const TodayScreen: React.FC<{ ready: boolean }> = ({ ready }) => {
               ))}
             </ul>
           )}
+          {/* The calendar: every date, a countdown each, and the day-by-day plan to the next. */}
+          <Link href="/calendar" className="focus-ring mt-4 inline-flex min-h-[40px] items-center gap-1.5 text-sm font-semibold text-signal hover:underline">
+            {week.test_dates.length > 0 ? 'See your plan to the next test' : 'Add a company test date'}
+            <ArrowRight className="h-4 w-4" aria-hidden />
+          </Link>
         </Card>
 
         {/* Continue */}

@@ -22,7 +22,7 @@ import { cn } from '@/lib/cn';
  * signed-out visitors, for whom they are only a sign-in prompt.
  */
 
-const PERSONAL = new Set(['myCourses', 'myCertificates']);
+const PERSONAL = new Set(['myCourses', 'myCertificates', 'calendar']);
 
 export const SectionSubnav: React.FC = () => {
   const router = useRouter();

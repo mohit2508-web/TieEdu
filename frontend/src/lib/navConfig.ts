@@ -21,6 +21,7 @@ import {
   BrainCircuit,
   Building2,
   CalendarCheck,
+  CalendarClock,
   ClipboardList,
   Droplets,
   Flame,
@@ -237,6 +238,16 @@ export const NAV_ITEMS: Record<string, NavItem> = {
     primary: true,
     keywords: ['drive', 'mock drive', 'assessment', 'company test', 'hiring', 'placement test'],
   },
+  calendar: {
+    id: 'calendar',
+    href: '/calendar',
+    label: 'Test dates',
+    icon: CalendarClock,
+    match: 'exact',
+    description: 'A countdown to every company test and a day-by-day plan to the next',
+    primary: false,
+    keywords: ['calendar', 'test date', 'countdown', 'drive date', 'plan', 'schedule', 'exam date'],
+  },
   daily: {
     id: 'daily',
     href: '/daily',
@@ -414,7 +425,7 @@ export interface NavSection {
 
 export const NAV_SECTIONS: NavSection[] = [
   { id: 'home', label: 'Home', icon: House, itemIds: ['home'] },
-  { id: 'learn', label: 'Learn', icon: BookOpen, itemIds: ['courses', 'tracks', 'freeCourse', 'studyPlan', 'myCourses', 'myCertificates'] },
+  { id: 'learn', label: 'Learn', icon: BookOpen, itemIds: ['courses', 'tracks', 'freeCourse', 'studyPlan', 'calendar', 'myCourses', 'myCertificates'] },
   { id: 'practise', label: 'Practise', icon: Target, itemIds: ['skillTest', 'daily', 'drives'] },
   { id: 'companies', label: 'Companies', icon: Building2, itemIds: ['companies', 'compare'], extraPrefixes: ['/company'] },
   { id: 'feed', label: 'Feed', icon: Newspaper, itemIds: ['drops'] },

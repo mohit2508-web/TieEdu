@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { loadDb, saveDb } from '../data/db';
 import { buildToday } from '../lib/today';
+import { calendarFor } from '../lib/prepPlan';
 import { buildPassport, handleError, passportOf, suggestHandle } from '../lib/passport';
 import { buildParentView, newParentToken } from '../lib/parentView';
 import { rateLimit } from '../middleware/auth';
@@ -14,6 +15,16 @@ import { rateLimit } from '../middleware/auth';
 export const meRouter = Router();
 
 /** GET /api/me/today — the Today screen in one request (lib/today). */
+/**
+ * GET /api/me/calendar — every upcoming company test date (set on each company
+ * page) with a countdown, and a day-by-day plan to the soonest (lib/prepPlan).
+ */
+meRouter.get('/calendar', (req: Request, res: Response) => {
+  const db = loadDb();
+  res.setHeader('Cache-Control', 'private, no-store');
+  res.json(calendarFor(db, req.user!.id));
+});
+
 meRouter.get('/today', (req: Request, res: Response) => {
   const db = loadDb();
   res.setHeader('Cache-Control', 'private, no-store');
