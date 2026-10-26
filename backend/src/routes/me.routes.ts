@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { loadDb, saveDb } from '../data/db';
 import { buildToday } from '../lib/today';
 import { calendarFor } from '../lib/prepPlan';
+import { createDebrief, debriefView, deleteDebrief, myDebriefs, DebriefError, DEBRIEF_REASONS, REASON_LABEL, ROUNDS } from '../lib/debrief';
 import { buildPassport, handleError, passportOf, suggestHandle } from '../lib/passport';
 import { buildParentView, newParentToken } from '../lib/parentView';
 import { rateLimit } from '../middleware/auth';
@@ -23,6 +24,41 @@ meRouter.get('/calendar', (req: Request, res: Response) => {
   const db = loadDb();
   res.setHeader('Cache-Control', 'private, no-store');
   res.json(calendarFor(db, req.user!.id));
+});
+
+/**
+ * Rejection debriefs (lib/debrief). The note is private to its author; peer
+ * numbers appear only above a k-anonymity floor.
+ *   GET    /api/me/debriefs        my debriefs + the form's options
+ *   POST   /api/me/debriefs        { company_slug, round, reasons[], note }
+ *   DELETE /api/me/debriefs/:id
+ */
+meRouter.get('/debriefs', (req: Request, res: Response) => {
+  const db = loadDb();
+  res.setHeader('Cache-Control', 'private, no-store');
+  res.json({
+    debriefs: myDebriefs(db, req.user!.id),
+    options: { reasons: DEBRIEF_REASONS.map((id) => ({ id, label: REASON_LABEL[id] })), rounds: ROUNDS },
+  });
+});
+
+meRouter.post('/debriefs', rateLimit(20), (req: Request, res: Response) => {
+  const db = loadDb();
+  try {
+    const d = createDebrief(db, req.user!.id, req.body);
+    saveDb(db);
+    res.status(201).json({ debrief: debriefView(db, d) });
+  } catch (err: any) {
+    if (err instanceof DebriefError) return res.status(err.status).json({ error: err.message });
+    throw err;
+  }
+});
+
+meRouter.delete('/debriefs/:id', (req: Request, res: Response) => {
+  const db = loadDb();
+  if (!deleteDebrief(db, req.user!.id, String(req.params.id))) return res.status(404).json({ error: 'Not found.' });
+  saveDb(db);
+  res.status(204).end();
 });
 
 meRouter.get('/today', (req: Request, res: Response) => {

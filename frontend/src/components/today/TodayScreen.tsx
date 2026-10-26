@@ -239,6 +239,9 @@ export const TodayScreen: React.FC<{ ready: boolean }> = ({ ready }) => {
             {week.test_dates.length > 0 ? 'See your plan to the next test' : 'Add a company test date'}
             <ArrowRight className="h-4 w-4" aria-hidden />
           </Link>
+          <Link href="/debrief" className="focus-ring inline-flex min-h-[40px] items-center gap-1.5 text-sm font-semibold text-muted hover:text-heading">
+            Had a rejection? Debrief it
+          </Link>
         </Card>
 
         {/* Continue */}

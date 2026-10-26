@@ -190,6 +190,11 @@ export default function CalendarPage() {
               </ul>
             </section>
 
+            <p className="mt-6 text-sm text-body">
+              A test did not go your way?{' '}
+              <Link href="/debrief" className="font-semibold text-signal hover:underline">Debrief it in two minutes</Link> and get a plan for the next one.
+            </p>
+
             {/* The plan to the soonest test. */}
             {view?.plan && view.plan.days.length > 0 && (
               <section className="mt-8" aria-labelledby="plan-h">
