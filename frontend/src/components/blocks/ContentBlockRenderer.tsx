@@ -2,17 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { CODE_LANGS, prismName, resolveLang, type CodeLang } from '@/lib/codeLang';
 import { API_BASE_URL } from '@/lib/api';
 import { MarkdownContent } from '@/components/blocks/MarkdownContent';
-import { CourseAnimation } from '@/components/blocks/CourseAnimations';
+import dynamic from 'next/dynamic';
 import { Sheet } from '@/components/common/Sheet';
-import SyntaxHighlighter from 'react-syntax-highlighter/dist/cjs/prism-light';
-import c from 'react-syntax-highlighter/dist/cjs/languages/prism/c';
-import cpp from 'react-syntax-highlighter/dist/cjs/languages/prism/cpp';
-import typescript from 'react-syntax-highlighter/dist/cjs/languages/prism/typescript';
-import java from 'react-syntax-highlighter/dist/cjs/languages/prism/java';
-import python from 'react-syntax-highlighter/dist/cjs/languages/prism/python';
-import bash from 'react-syntax-highlighter/dist/cjs/languages/prism/bash';
-import json from 'react-syntax-highlighter/dist/cjs/languages/prism/json';
-import { oneLight } from 'react-syntax-highlighter/dist/cjs/styles/prism';
+import { CodeHighlight } from '@/components/blocks/CodeHighlight';
 import { ContentBlock } from '@/types';
 import {
   Lock, Copy, Check, Info, AlertTriangle, Lightbulb,
@@ -21,14 +13,11 @@ import {
   Target, Hammer, PenLine, AlertOctagon, GraduationCap, ClipboardCheck, Calculator, FlaskConical,
 } from 'lucide-react';
 
-SyntaxHighlighter.registerLanguage('c', c);
-SyntaxHighlighter.registerLanguage('cpp', cpp);
-SyntaxHighlighter.registerLanguage('typescript', typescript);
-SyntaxHighlighter.registerLanguage('ts', typescript);
-SyntaxHighlighter.registerLanguage('java', java);
-SyntaxHighlighter.registerLanguage('python', python);
-SyntaxHighlighter.registerLanguage('bash', bash);
-SyntaxHighlighter.registerLanguage('json', json);
+// Interactive animations (61 kB of source) load only when a block uses one (A3).
+const CourseAnimation = dynamic(() => import('@/components/blocks/CourseAnimations').then((m) => m.CourseAnimation), {
+  ssr: false,
+  loading: () => <div className="min-h-[220px] animate-pulse rounded-2xl bg-surface-hover" aria-hidden />,
+});
 
 interface ContentBlockRendererProps {
   block: ContentBlock;
@@ -232,14 +221,7 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
 
           {/* Code body */}
           <div className="overflow-x-auto bg-white text-sm">
-            <SyntaxHighlighter
-              language={prismName(selectedLang)}
-              style={oneLight}
-              showLineNumbers
-              customStyle={{ margin: 0, padding: '1rem 1.25rem', background: 'transparent', fontSize: '0.82rem' }}
-            >
-              {getCode(selectedLang)}
-            </SyntaxHighlighter>
+            <CodeHighlight language={prismName(selectedLang)} code={getCode(selectedLang)} />
           </div>
 
           {/* Terminal output */}
@@ -482,17 +464,17 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
               />
             ) : (
               <video
+                playsInline
+                preload="metadata"
                 className="w-full h-full"
                 controls
-                // Without `playsInline`, iOS Safari takes the tap on play as a
-                // request to go fullscreen: it tears the player out of the page
+                // playsInline: without it, iOS Safari takes the tap on play as a
+                // request to go fullscreen — it tears the player out of the page
                 // and covers the lesson title and the rest of the app. It has to
-                // be an attribute, not just a URL param, on a bare <video>.
-                playsInline
-                // `metadata` is enough to show a duration and a scrub bar without
-                // pulling the whole file down on a phone connection. The default,
-                // `auto`, downloads the entire video before the learner can play.
-                preload="metadata"
+                // be an attribute, not just a URL param, on a bare video element.
+                // preload="metadata" is enough to show a duration and a scrub bar
+                // without pulling the whole file down on a phone connection; the
+                // default, `auto`, downloads the entire video before it can play.
                 src={url}
               >
                 Your browser does not support video playback.

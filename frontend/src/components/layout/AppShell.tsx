@@ -7,10 +7,19 @@ import { Header } from '@/components/layout/Header';
 import { MobileTabBar } from '@/components/layout/MobileTabBar';
 import { MobileNavDrawer } from '@/components/layout/MobileNavDrawer';
 import { SectionSubnav } from '@/components/layout/SectionSubnav';
-import { CartModal } from '@/components/checkout/CartModal';
-import { SearchModal } from '@/components/modals/SearchModal';
-import { LeaderboardModal } from '@/components/modals/LeaderboardModal';
-import { DailyBriefing } from '@/components/briefing/DailyBriefing';
+import dynamic from 'next/dynamic';
+
+/*
+ * The overlays load as their own chunks after the page is interactive, not in
+ * every page's first load (A3: _app was 108 kB, most of it these four). Each
+ * opens from ShellContext state, and the shortcuts live there too, so nothing
+ * waits on them before a student first opens one. Client-only: they render
+ * nothing on the server anyway.
+ */
+const CartModal = dynamic(() => import('@/components/checkout/CartModal').then((m) => m.CartModal), { ssr: false });
+const SearchModal = dynamic(() => import('@/components/modals/SearchModal').then((m) => m.SearchModal), { ssr: false });
+const LeaderboardModal = dynamic(() => import('@/components/modals/LeaderboardModal').then((m) => m.LeaderboardModal), { ssr: false });
+const DailyBriefing = dynamic(() => import('@/components/briefing/DailyBriefing').then((m) => m.DailyBriefing), { ssr: false });
 
 /**
  * The site chrome, mounted once.
