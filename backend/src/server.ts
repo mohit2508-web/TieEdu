@@ -23,6 +23,7 @@ import { offersRouter, offersAdminRouter } from './routes/offers.routes';
 import { guaranteeRouter, guaranteeAdminRouter } from './routes/guarantee.routes';
 import { mockInterviewRouter } from './routes/mockInterview.routes';
 import { englishCoachRouter } from './routes/englishCoach.routes';
+import { studyGroupsRouter } from './routes/studyGroups.routes';
 import { coursesRouter } from './routes/courses.routes';
 import { courseAdminRouter } from './routes/courseAdmin.routes';
 import { tracksRouter } from './routes/tracks.routes';
@@ -167,6 +168,7 @@ app.use('/api/offers', optionalAuth, offersRouter);
 app.use('/api/guarantee', optionalAuth, guaranteeRouter);
 app.use('/api/mock-interview', optionalAuth, mockInterviewRouter);
 app.use('/api/english-coach', optionalAuth, englishCoachRouter);
+app.use('/api/study-groups', optionalAuth, studyGroupsRouter);
 app.use('/api/courses', coursesRouter);
 app.use('/api/course-admin', courseAdminRouter);
 // Learning tracks: public list/detail (optionalAuth inside), certificate claim

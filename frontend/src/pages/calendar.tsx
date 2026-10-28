@@ -174,6 +174,7 @@ export default function CalendarPage() {
                       <div className="min-w-0 flex-1">
                         <Link href={`/company/${e.slug}`} className="block truncate font-bold text-heading hover:text-signal">{e.company}</Link>
                         <p className="text-sm text-muted">{fmt(e.date)}{e.overall !== null && ` · readiness ${e.overall}%`}</p>
+                        <Link href={`/study-groups?c=${encodeURIComponent(e.slug)}`} className="mt-0.5 inline-flex min-h-[32px] items-center text-sm font-semibold text-signal hover:underline">Study group</Link>
                       </div>
                       <button
                         type="button"
