@@ -50,6 +50,8 @@ const SKIP = ['components/school', 'pages/school', 'components/companyPage'];
 const MONO_ALLOWED = [
   'components/blocks', 'components/editor', 'components/admin', 'components/modals/BlockEditorModal.tsx', 'pages/verify', 'pages/admin', 'pages/design.tsx',
   'components/ui/Badge.tsx', 'components/ui/DeviceFrame.tsx', 'components/common/PrefsControl.tsx',
+  // The landing's codes, countdowns, URL pills and round numbers (plan §9 E1, E4, E5, E11).
+  'components/home/landing',
 ];
 
 /**

@@ -1186,3 +1186,51 @@ export const sendBroadcastApi = async (input: {
     method: 'POST',
     body: JSON.stringify(input),
   });
+
+// ============================================================================
+// LANDING — honest public numbers and the offer wall (UI_REDESIGN_PLAN_V3 §13)
+// ============================================================================
+
+export interface PublicStats {
+  /** Floored to the hundred; null below 100, when the page shows no count. */
+  students: number | null;
+  companies: number;
+  rounds: number;
+  offer_stories: number;
+  latest_company: { name: string; slug: string; rounds: number; checked_at: string } | null;
+}
+
+/** Plain fetch, like the posters: a failure just means the page shows no numbers. */
+export const fetchPublicStatsApi = async (): Promise<PublicStats | null> => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/public/stats`);
+    if (!res.ok) return null;
+    return (await res.json()) as PublicStats;
+  } catch {
+    return null;
+  }
+};
+
+export interface OfferStoryPublic {
+  id: string;
+  company: string;
+  company_slug: string;
+  role: string;
+  ctc_lpa: number | null;
+  story: string;
+  name: string;
+  college: string | null;
+  verified: boolean;
+  created_at: string;
+}
+
+export const fetchOfferWallApi = async (limit = 8): Promise<OfferStoryPublic[]> => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/offers?limit=${limit}`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data?.items) ? data.items.slice(0, limit) : [];
+  } catch {
+    return [];
+  }
+};

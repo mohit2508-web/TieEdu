@@ -581,8 +581,10 @@ check('search appears once in the phone UI, not twice', () => {
   // one question ("Which company are you preparing for?", UI_REDESIGN_PLAN_V2 §7)
   // and resolves to a company page, so it shows on every size. What must not
   // happen is a second generic search *field* in the chrome - covered above.
-  ok(/<CompanyFinder/.test(home), 'the hero asks for a company, not a generic search');
-  ok(/value=\{searchQuery\}/.test(home), 'the grid filter must stay wired to the query');
+  const hero = read(path.join(ROOT, 'src/components/home/landing/LandingHero.tsx'));
+  ok(/<LandingHero[^>]*searchQuery=\{searchQuery\}/.test(home), 'the home passes the query to the hero');
+  ok(/<CompanyFinder[^>]*value=\{searchQuery\}/.test(hero), 'the hero asks for a company, not a generic search');
+  ok(/<VaultRail[\s\S]*?searchQuery=\{searchQuery\}/.test(home), 'the grid filter must stay wired to the query');
 });
 
 check('a signed-out phone can reach both auth routes', () => {

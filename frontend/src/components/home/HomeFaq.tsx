@@ -1,7 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { ChevronDown } from 'lucide-react';
-import { SectionHead } from '@/components/ui';
+import { Minus, Plus } from 'lucide-react';
 
 /**
  * The questions a student (or a parent) asks before paying for anything.
@@ -55,6 +54,31 @@ const FAQ: Array<{ q: string; a: React.ReactNode }> = [
     ),
   },
   {
+    q: 'What if a round was different from what TieEdu showed?',
+    a: (
+      <>
+        The{' '}
+        <Link href="/guarantee" className="font-semibold text-link hover:underline">
+          accuracy guarantee
+        </Link>{' '}
+        covers it: if a round&apos;s pattern was different, you get your money back for that company&apos;s content.
+      </>
+    ),
+  },
+  {
+    q: 'Can my parents see how I am doing?',
+    a: (
+      <>
+        Only if you choose to. You can create a parent link from your Today screen; it shows your progress, and you can
+        turn it off at any time.
+      </>
+    ),
+  },
+  {
+    q: 'Can I use TieEdu in Hinglish?',
+    a: <>Yes. Switch the language from the header (or the menu on a phone), and the app follows.</>,
+  },
+  {
     q: 'How do I pay?',
     a: <>By UPI. Your purchase unlocks as soon as the payment is verified, and it stays unlocked.</>,
   },
@@ -72,18 +96,26 @@ const FAQ: Array<{ q: string; a: React.ReactNode }> = [
   },
 ];
 
+/*
+ * Warm Paper E14: a left-aligned "Questions" heading and stacked white rows
+ * with an edge and +/−. Still native <details>, so it works without JavaScript.
+ */
 export const HomeFaq: React.FC = () => (
-  <section className="py-12 sm:py-16" aria-labelledby="faq-title">
-    <div className="mx-auto w-full max-w-[760px] px-4 sm:px-6">
-      <SectionHead id="faq-title" eyebrow="Questions" title="Before you start" />
-      <div className="mt-6 divide-y divide-line border-y border-line">
+  <section className="py-16 sm:py-24" aria-labelledby="faq-title">
+    <div className="mx-auto w-full max-w-[860px] px-4 sm:px-6">
+      <p className="eyebrow mb-3">Before you start</p>
+      <h2 id="faq-title" className="font-display text-section text-heading">
+        Questions
+      </h2>
+      <div className="mt-8 flex flex-col gap-3">
         {FAQ.map(({ q, a }) => (
-          <details key={q} className="group">
-            <summary className="focus-ring flex min-h-[56px] list-none items-center justify-between gap-4 py-4 text-base font-semibold text-heading [&::-webkit-details-marker]:hidden">
+          <details key={q} className="group rounded-cell border border-line bg-card shadow-edge-neutral">
+            <summary className="focus-ring flex min-h-[56px] list-none items-center justify-between gap-4 rounded-cell px-5 py-4 font-display text-base font-semibold text-heading [&::-webkit-details-marker]:hidden">
               {q}
-              <ChevronDown className="h-5 w-5 shrink-0 text-muted transition-transform group-open:rotate-180" aria-hidden />
+              <Plus className="h-5 w-5 shrink-0 text-muted group-open:hidden" aria-hidden />
+              <Minus className="hidden h-5 w-5 shrink-0 text-muted group-open:block" aria-hidden />
             </summary>
-            <p className="pb-5 pr-8 text-base leading-relaxed text-body">{a}</p>
+            <p className="px-5 pb-5 pr-10 text-body-md text-muted">{a}</p>
           </details>
         ))}
       </div>

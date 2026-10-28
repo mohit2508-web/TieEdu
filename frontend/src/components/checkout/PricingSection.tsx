@@ -104,7 +104,7 @@ export const PricingSection: React.FC = () => {
   };
 
   return (
-    <section id="pricing" className="py-16 border-t border-line bg-white">
+    <section id="pricing" className="py-16">
       <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12">
 
         <div className="text-center max-w-2xl mx-auto mb-10">

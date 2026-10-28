@@ -44,39 +44,41 @@ const card = read('src/components/company/CompanyCard.tsx');
 const install = read('src/components/common/PWAInstallPrompt.tsx');
 const carousel = read('src/components/common/HeroPosterCarousel.tsx');
 
-console.log('\n--- the feed, not a document page ---');
-ok(!/animate-marquee/.test(home), 'no marquee');
-// Quick actions were retired when the nav became five sections (UI_REDESIGN_PLAN_V2
-// D4): they duplicated it. The three routes by year take their place below the hero.
-ok(/<YearRoutes/.test(home), 'the routes by year follow the hero');
-ok(/<CompanyFinder/.test(home), 'the hero asks which company you are preparing for');
-ok(/<CourseRail/.test(home), 'the homepage has the courses rail');
-ok(/<SkillRail/.test(home), 'the homepage has the skill-tests rail');
-ok(/<VaultRail/.test(home), 'the vault directory is a feed rail, not a grid');
-ok(/<FreeCourseBanner/.test(home), 'the free course gets its billboard');
-ok(/<FinalCta/.test(home), 'the landing closes on the free-entry CTA');
-const vaultRail = read('src/components/home/VaultRail.tsx');
-ok(/href="\/companies"/.test(home), 'the hero leads to the /companies directory');
-ok(/seeAllHref="\/companies"/.test(vaultRail), 'the vault rail links through to the full directory');
-// The old four-tile prose grid stays cut; how it works is now the route band.
+const landing = (f: string) => read(`src/components/home/landing/${f}.tsx`);
+const hero = landing('LandingHero');
+
+console.log('\n--- the Warm Paper landing, in the plan\'s order (UI_REDESIGN_PLAN_V3 §11) ---');
+const ORDER = ['PromoBar', 'LandingHero', 'ToolFan', 'RoutePath', 'CompanyCount', 'VaultRail', 'AudienceGrid', 'PractiseDemo', 'ResearchBento', 'RoundBars', 'OfferStories', 'PricingSection', 'HomeFaq', 'ClosingBand'];
+const at = ORDER.map((c) => home.indexOf(`<${c}`));
+ok(at.every((i) => i > 0), `every section is on the page: ${ORDER.filter((_, i) => at[i] < 0).join(', ') || 'all'}`);
+ok(at.every((i, k) => k === 0 || i > at[k - 1]), 'the sections follow the plan order');
 ok(!/HowItWorks/.test(home), 'the How-it-works prose grid stays cut');
-ok(/<RouteBand/.test(home), 'how it works is shown as the route, on the page\'s one ink band');
 ok(!/CompanyOrbitHero3D/.test(home), 'the 3D orbit stays retired from the homepage');
+const vaultRail = read('src/components/home/VaultRail.tsx');
+ok(/seeAllHref="\/companies"/.test(vaultRail), 'the vault rail links through to the full directory');
 
-console.log('\n--- rails are native snap scrollers ---');
-const rail = read('src/components/home/Rail.tsx');
-ok(/rail-track/.test(rail), 'rails share one track class');
-ok(/scroll-snap-type: x mandatory/.test(css), 'the rail track snaps natively');
-ok(/ChevronLeft/.test(rail) && /hidden lg:/.test(rail), 'desktop gets arrows; phones rely on peek + swipe');
-ok(/scroll-snap-align: start/.test(css), 'rail cards snap to the track edge');
+console.log('\n--- the hero ---');
+ok(/<CompanyFinder/.test(hero), 'the hero asks which company you are preparing for');
+ok(/href="\/companies"/.test(hero), 'the hero leads to the /companies directory');
+ok(/className="marker"/.test(hero), 'the headline carries the highlighter on its key phrase');
+ok(/paper-lines/.test(hero), 'the hero is ruled paper');
+ok(/kind="phone"[^>]*sm:hidden/.test(hero) && /className="hidden sm:block"/.test(hero), 'the mock-up is a phone frame on phones, a browser frame above');
+ok(/min-h-\[48px\]/.test(hero), 'the hero CTAs clear the 44px thumb floor at 48px');
+ok(/stats\?\.students \?/.test(hero), 'the proof line appears only with a real student count');
+ok(/sample/i.test(hero), 'the mock-up says its data is a sample');
 
-console.log('\n--- hero stays compact and never text-only on desktop ---');
-ok(/HeroVaultMock/.test(home), 'the hero falls back to the static vault illustration');
-ok(/hidden md:flex/.test(home), 'the mock stands aside on phones — Quick Actions follow the hero instead');
-ok(/min-h-\[48px\]/.test(home), 'the hero CTAs clear the 44px thumb floor at 48px');
+console.log('\n--- honest numbers ---');
+ok(/expires_at/.test(landing('PromoBar')) && /return null/.test(landing('PromoBar')), 'the promo bar shows only a real, dated offer');
+ok(/items\.length === 0\) return null/.test(landing('OfferStories')), 'offer stories render nothing without an approved story');
+ok(/companies\.length === 0\) return null/.test(landing('CompanyCount')), 'the company count renders nothing without companies');
+ok(/picks\.length < 2\) return null/.test(landing('RoundBars')), 'the round bars need two real companies');
+const research = landing('ResearchBento');
+ok((research.match(/doi: '10\./g) || []).length >= 2 && /https:\/\/doi\.org\//.test(research), 'every study in the research bento is cited with a DOI link');
+ok(!/%/.test(research.replace(/\/\*[\s\S]*?\*\//g, '')), 'the research bento quotes no percentages we have not checked');
 
 console.log('\n--- the pinned search contract (mirrors anti-web) ---');
-ok(/value=\{searchQuery\}/.test(home), 'the hero finder still drives the vault rail filter');
+ok(/<CompanyFinder[^>]*value=\{searchQuery\}/.test(hero), 'the hero finder still drives the vault rail filter');
+ok(/<VaultRail[\s\S]*?searchQuery=\{searchQuery\}/.test(home), 'the vault rail reads the same query');
 
 console.log('\n--- thumb floor in globals ---');
 ok(

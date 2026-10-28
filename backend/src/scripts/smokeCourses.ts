@@ -2052,6 +2052,18 @@ async function main() {
     // with each offer so the strip never invents a number, and every offer
     // deep-links to a course that exists.
     // ======================================================================
+    console.log('\n[20b] public stats');
+    {
+      // The landing page's honest numbers: aggregates only, the student count
+      // floored and withheld below 100, never a list of anything.
+      const stats = await api('/api/public/stats');
+      check('public stats are public', stats.status === 200, `got ${stats.status}`);
+      const b = stats.body || {};
+      check('stats carry company and round counts', typeof b.companies === 'number' && typeof b.rounds === 'number', JSON.stringify(b).slice(0, 200));
+      check('the student count is floored to the hundred or withheld', b.students === null || (Number.isInteger(b.students) && b.students % 100 === 0));
+      check('stats leak no lists', !Object.values(b).some((v) => Array.isArray(v)));
+    }
+
     console.log('\n[21] offers feed');
     {
       // Anonymous: the strip's own perspective.

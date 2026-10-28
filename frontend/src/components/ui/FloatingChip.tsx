@@ -15,7 +15,7 @@ export const FloatingChip: React.FC<{
   bob?: boolean;
   className?: string;
 }> = ({ icon, tone = 'primary', title, caption, bob, className }) => (
-  <div className={cn('inline-flex items-center gap-3 rounded-card border border-line bg-card py-2.5 pl-2.5 pr-4 shadow-pop', bob && 'tk-bob', className)}>
+  <div className={cn('inline-flex w-max items-center gap-3 whitespace-nowrap rounded-card border border-line bg-card py-2.5 pl-2.5 pr-4 shadow-pop', bob && 'tk-bob', className)}>
     <IconTile icon={icon} tone={tone} size="sm" />
     <span className="min-w-0">
       <span className="block font-display text-label text-heading">{title}</span>

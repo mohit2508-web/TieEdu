@@ -534,6 +534,9 @@ body {
   @media (prefers-reduced-motion: reduce) {
     .marker { animation: none; background-size: 100% 42%; }
   }
+  /* The logo never changes colour (plan §0): on teal or in dark mode it sits on
+     this cream plate, the same cream in both themes. */
+  .logo-plate { background: rgb(255 248 238); }
   /* Fade both ends of a sideways row (marquees, carousels). */
   .mask-fade-x {
     -webkit-mask-image: linear-gradient(90deg, #0000, #000 6%, #000 94%, #0000);
@@ -1242,8 +1245,10 @@ p {
    bands, a paragraph inherits the band's colour instead. `:where()` keeps this at
    the element rule's own specificity (0,0,1) — it wins only by coming later, so
    any colour class on the paragraph itself still beats it. `.tk-inherit-p`
-   does the same for Card's band and tint variants. */
-:where(.bg-brand-ink, .tk-inherit-p) p {
+   does the same, for headings too, inside Warm Paper's bands, tints and dark
+   cards (the h1–h6 rule above colours headings the same way). */
+:where(.bg-brand-ink) p,
+:where(.tk-inherit-p) :is(p, h1, h2, h3, h4, h5, h6) {
   color: inherit;
 }
 

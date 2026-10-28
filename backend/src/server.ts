@@ -20,6 +20,7 @@ import { analyticsRouter } from './routes/analytics.routes';
 import { interviewCourseRouter } from './routes/interviewCourse.routes';
 import { dailyChallengeRouter } from './routes/dailyChallenge.routes';
 import { offersRouter, offersAdminRouter } from './routes/offers.routes';
+import { publicStatsRouter } from './routes/publicStats.routes';
 import { guaranteeRouter, guaranteeAdminRouter } from './routes/guarantee.routes';
 import { mockInterviewRouter } from './routes/mockInterview.routes';
 import { englishCoachRouter } from './routes/englishCoach.routes';
@@ -122,6 +123,7 @@ pdfLibraryRouter.use('/admin', requireAdmin); // upload/delete protected; GET /f
 // API Route Bindings
 app.use('/api/companies', companiesRouter);
 app.use('/api/pricing', pricingRouter);
+app.use('/api/public', publicStatsRouter);
 app.use('/api/pdf', pdfLibraryRouter);
 app.use('/api/posters', postersRouter);
 app.use('/api/checkout', checkoutRouter);
