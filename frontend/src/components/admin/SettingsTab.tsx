@@ -347,6 +347,30 @@ export const SettingsTab: React.FC = () => {
 
           <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-xs space-y-4">
             <h3 className="text-sm font-extrabold text-ink-soft flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-success" /> Recruiter search
+            </h3>
+            <p className="text-xs text-gray-500">
+              When on, recruiters you approve in the Recruiters tab can search students who opted in, anonymously, and ask to
+              connect. Students share their name and email only by accepting. Free; no payments are taken.
+            </p>
+            <label className="flex items-center gap-2 text-sm font-semibold text-ink-soft">
+              <input
+                type="checkbox"
+                checked={!!form.recruiter_search_enabled}
+                onChange={(e) => setForm({ ...form, recruiter_search_enabled: e.target.checked })}
+                className="h-4 w-4 accent-signal"
+              />
+              Open recruiter search
+            </label>
+            <div className="flex items-center gap-3 pt-1">
+              <button onClick={save} disabled={busy} className="btn btn-primary px-4 py-2 text-xs flex items-center gap-1.5">
+                <Save className="w-3.5 h-3.5" /> {busy ? 'Saving…' : 'Save recruiter settings'}
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-xs space-y-4">
+            <h3 className="text-sm font-extrabold text-ink-soft flex items-center gap-2">
               <KeyRound className="w-4 h-4 text-amber-deep" /> Admin password
             </h3>
             <input type="password" placeholder="Current password" value={curPw} onChange={(e) => setCurPw(e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-signal/30" />

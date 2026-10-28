@@ -1067,6 +1067,7 @@ adminRouter.get('/settings', requirePermission('settings.read'), (req: Request, 
     ai_english_coach_enabled: false,
     ai_english_coach_daily_limit: 10,
     parent_whatsapp_enabled: false,
+    recruiter_search_enabled: false,
   };
   // Whether the server has a key is shown, never the key itself.
   res.json({ status: 'success', settings: { ...defaults, ...(db.settings || {}) }, ai_key_configured: !!process.env.ANTHROPIC_API_KEY });
@@ -1094,6 +1095,8 @@ adminRouter.put('/settings', requirePermission('settings.write'), (req: Request,
   applyAiSettings(next, req.body, 'english_coach');
   // Parent WhatsApp (lib/parentWhatsapp): off by default; it messages people outside the platform.
   if (typeof req.body.parent_whatsapp_enabled === 'boolean') next.parent_whatsapp_enabled = req.body.parent_whatsapp_enabled;
+  // Recruiter search (lib/talentSearch): off by default; it shows students to people outside the platform.
+  if (typeof req.body.recruiter_search_enabled === 'boolean') next.recruiter_search_enabled = req.body.recruiter_search_enabled;
   db.settings = next;
   saveDb(db);
   res.json({ status: 'success', message: 'Settings saved', settings: next });

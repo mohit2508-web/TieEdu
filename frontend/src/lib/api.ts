@@ -968,6 +968,8 @@ export interface PlatformSettings {
   ai_english_coach_daily_limit?: number;
   /** Weekly parent WhatsApp (backend lib/parentWhatsapp). Off unless switched on. */
   parent_whatsapp_enabled?: boolean;
+  /** Recruiter skill search (backend lib/talentSearch). Off unless switched on. */
+  recruiter_search_enabled?: boolean;
 }
 
 export interface AnalyticsSnapshot {

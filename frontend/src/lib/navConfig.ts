@@ -19,6 +19,7 @@ import {
   BadgeCheck,
   BookOpen,
   BrainCircuit,
+  Briefcase,
   Building2,
   CalendarCheck,
   CalendarClock,
@@ -314,6 +315,16 @@ export const NAV_ITEMS: Record<string, NavItem> = {
     primary: false,
     keywords: ['interview', 'mock interview', 'hr interview', 'technical interview', 'practice interview', 'ai interview', 'tell me about yourself', 'feedback'],
   },
+  talent: {
+    id: 'talent',
+    href: '/talent',
+    label: 'Get found by recruiters',
+    icon: Briefcase,
+    match: 'exact',
+    description: 'Let verified recruiters find you by your tested skills — anonymous until you accept',
+    primary: false,
+    keywords: ['recruiter', 'hiring', 'job', 'get hired', 'profile', 'visible', 'internship', 'opportunities', 'talent'],
+  },
   studyGroups: {
     id: 'studyGroups',
     href: '/study-groups',
@@ -513,7 +524,7 @@ export const NAV_SECTIONS: NavSection[] = [
   { id: 'home', label: 'Home', icon: House, itemIds: ['home'] },
   { id: 'learn', label: 'Learn', icon: BookOpen, itemIds: ['courses', 'tracks', 'freeCourse', 'studyPlan', 'calendar', 'myCourses', 'myCertificates'] },
   { id: 'practise', label: 'Practise', icon: Target, itemIds: ['skillTest', 'daily', 'mockInterview', 'peerMock', 'englishCoach', 'drives'] },
-  { id: 'companies', label: 'Companies', icon: Building2, itemIds: ['companies', 'compare', 'studyGroups', 'offerCheck'], extraPrefixes: ['/company'] },
+  { id: 'companies', label: 'Companies', icon: Building2, itemIds: ['companies', 'compare', 'studyGroups', 'talent', 'offerCheck'], extraPrefixes: ['/company'] },
   { id: 'feed', label: 'Feed', icon: Newspaper, itemIds: ['drops', 'offers'] },
 ];
 
