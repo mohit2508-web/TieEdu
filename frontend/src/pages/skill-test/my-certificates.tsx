@@ -31,7 +31,7 @@ function MyCertificates() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="w-full max-w-md rounded-2xl bg-white border border-gray-200 p-6 sm:p-8 text-center shadow-sm">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-signal-soft text-signal">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-signal-soft text-link">
             <LogIn className="h-7 w-7" />
           </div>
           <h1 className="mt-4 text-xl font-bold text-gray-900">Sign in required</h1>
@@ -58,7 +58,7 @@ function MyCertificates() {
         </Link>
 
         <div className="flex items-center gap-3 mb-6">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-signal-soft text-signal">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-signal-soft text-link">
             <Award className="h-5 w-5" />
           </div>
           <div>
@@ -94,7 +94,7 @@ function MyCertificates() {
                       </span>
                     </div>
                     <div className="mt-1.5 flex items-center gap-3 text-xs text-gray-500">
-                      <span className="font-medium text-signal">{cert.skillLevelText || cert.level}</span>
+                      <span className="font-medium text-link">{cert.skillLevelText || cert.level}</span>
                       <span>Score: {cert.score}/100</span>
                       <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{fmtDate(cert.issueDate)}</span>
                     </div>

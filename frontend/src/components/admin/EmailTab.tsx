@@ -42,13 +42,13 @@ const STATUS_TONE: Record<string, string> = {
   unsubscribed: 'bg-gray-100 text-gray-600 border-gray-200',
   bounced: 'bg-red-50 text-red-700 border-red-200',
   complained: 'bg-red-50 text-red-700 border-red-200',
-  converted: 'bg-signal-soft text-signal border-signal/30',
+  converted: 'bg-signal-soft text-link border-signal/30',
 };
 
 const CAMPAIGN_TONE: Record<string, string> = {
   draft: 'bg-gray-100 text-gray-600 border-gray-200',
   scheduled: 'bg-amber-50 text-amber-700 border-amber-200',
-  sending: 'bg-signal-soft text-signal border-signal/30',
+  sending: 'bg-signal-soft text-link border-signal/30',
   paused: 'bg-amber-50 text-amber-700 border-amber-200',
   sent: 'bg-emerald-50 text-emerald-700 border-emerald-200',
 };
@@ -377,7 +377,7 @@ export const EmailTab: React.FC = () => {
           </div>
         )}
         {queue && queue.configured && queue.queued > 0 && (
-          <div className="mt-4 px-4 py-3 rounded-xl bg-signal-soft border border-signal/30 text-xs font-semibold text-signal-hover flex items-center gap-2">
+          <div className="mt-4 px-4 py-3 rounded-xl bg-signal-soft border border-signal/30 text-xs font-semibold text-link flex items-center gap-2">
             <Loader2 className="w-4 h-4 animate-spin shrink-0" />
             Queue: {queue.queued} queued, {queue.sent_this_run} sent this run — one every {queue.delay_ms}ms.
             {queue.paused && <span className="text-danger"> PAUSED: {queue.last_error}</span>}
@@ -397,7 +397,7 @@ export const EmailTab: React.FC = () => {
           <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm space-y-4">
             <div className="flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-2">
-                <Users className="w-4 h-4 text-signal" />
+                <Users className="w-4 h-4 text-link" />
                 <span className="text-sm font-extrabold text-heading">{leadTotal} matching</span>
                 <span className="text-xs text-gray-500">/ {leadAllTotal} total</span>
               </div>
@@ -508,7 +508,7 @@ export const EmailTab: React.FC = () => {
                       <td className="px-3 py-2 text-xs">{l.year || '—'}</td>
                       <td className="px-3 py-2"><Badge className={STATUS_TONE[l.status]}>{l.status}</Badge></td>
                       <td className="px-3 py-2 text-right">
-                        <button onClick={() => void openTimeline(l)} title="Timeline" className="text-gray-400 hover:text-signal">
+                        <button onClick={() => void openTimeline(l)} title="Timeline" className="text-gray-400 hover:text-link">
                           <History className="w-3.5 h-3.5" />
                         </button>
                         <button onClick={() => removeLead(l)} title="Remove" className="text-gray-400 hover:text-red-600">
@@ -668,7 +668,7 @@ export const EmailTab: React.FC = () => {
           {/* Test send */}
           <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
             <h3 className="text-sm font-extrabold text-heading flex items-center gap-2">
-              <Send className="w-4 h-4 text-signal" /> Send a test to yourself
+              <Send className="w-4 h-4 text-link" /> Send a test to yourself
             </h3>
             <p className="text-xs text-gray-500 mt-1">Renders the real template through the real send path. Do this before every campaign.</p>
             <div className="mt-3 flex flex-wrap gap-2">
@@ -693,7 +693,7 @@ export const EmailTab: React.FC = () => {
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <div className="text-sm font-extrabold text-heading">{t.label}</div>
-                  <div className="text-xs font-semibold text-signal mt-0.5 truncate">{t.subject}</div>
+                  <div className="text-xs font-semibold text-link mt-0.5 truncate">{t.subject}</div>
                   <div className="text-xs text-gray-500 mt-0.5">{t.preheader}</div>
                   <div className="text-xs font-mono text-gray-400 mt-1">cta → {t.home_path}</div>
                 </div>
@@ -735,7 +735,7 @@ export const EmailTab: React.FC = () => {
                 <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <div className="p-3 rounded-xl border border-signal/30 bg-app-warm">
                     <div className="text-sm font-extrabold">Open rate (opened+clicked / accepted)</div>
-                    <div className="text-lg font-extrabold text-signal">{Math.round((analytics.totals.open_rate || 0)*100)}%</div>
+                    <div className="text-lg font-extrabold text-link">{Math.round((analytics.totals.open_rate || 0)*100)}%</div>
                   </div>
                   <div className="p-3 rounded-xl border border-gray-200">
                     <div className="text-sm font-extrabold">CTR (clicked / accepted)</div>
@@ -788,7 +788,7 @@ export const EmailTab: React.FC = () => {
                         <div className="text-xs font-mono text-gray-400">{d.day.slice(5)}</div>
                         <div className="text-sm font-extrabold">{d.sends}</div>
                         <div className="text-xs text-gray-500">sends</div>
-                        <div className="text-xs font-bold text-signal">{d.opens} o • {d.clicks} c</div>
+                        <div className="text-xs font-bold text-link">{d.opens} o • {d.clicks} c</div>
                       </div>
                     ))}
                   </div>

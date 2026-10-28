@@ -81,7 +81,7 @@ export const SchoolShell: React.FC<SchoolShellProps> = ({ children }) => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontWeight: 700,
-                color: 'var(--brand-sky)',
+                color: 'var(--link)',
               }}
             >
               {(user?.name || 'S').slice(0, 1).toUpperCase()}

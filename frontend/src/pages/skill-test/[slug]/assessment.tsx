@@ -159,7 +159,7 @@ function AssessmentPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="w-full max-w-md rounded-2xl bg-white border border-gray-200 p-6 sm:p-8 text-center shadow-sm">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-signal-soft text-signal">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-signal-soft text-link">
             <LogIn className="h-7 w-7" />
           </div>
           <h1 className="mt-4 text-xl font-bold text-gray-900">Sign in required</h1>
@@ -182,7 +182,7 @@ function AssessmentPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="w-full max-w-md rounded-2xl bg-white border border-gray-200 p-6 sm:p-8 text-center shadow-sm">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-signal-soft text-signal">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-signal-soft text-link">
             <Clock className="h-7 w-7" />
           </div>
           <h1 className="mt-4 text-xl font-bold text-gray-900">{skillName} Assessment</h1>
@@ -205,7 +205,7 @@ function AssessmentPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="text-center">
           <p className="text-gray-600">No questions available for this assessment.</p>
-          <Link href={`/skill-test/${slug}`} className="mt-3 inline-block text-signal font-medium">Back</Link>
+          <Link href={`/skill-test/${slug}`} className="mt-3 inline-block text-link font-medium">Back</Link>
         </div>
       </div>
     );

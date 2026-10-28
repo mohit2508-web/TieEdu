@@ -1,5 +1,5 @@
 /**
- * Design tokens — the "Route" system.
+ * Design tokens — the "Warm Paper" system (UI_REDESIGN_PLAN_V3).
  *
  * Colours are declared once in `globals.css` as RGB channels (`--rgb-*`) and
  * read by Tailwind as `rgb(var(--rgb-x) / <alpha-value>)`. That removes the old
@@ -12,7 +12,9 @@
  *   - every channel it references exists in the light theme AND the dark theme;
  *   - the brand aliases the interview feature relies on still resolve;
  *   - the key text/background pairs meet WCAG AA in both themes;
- *   - box shadows still mirror their CSS variables.
+ *   - amber carries dark ink, never white; links use the teal `link` token;
+ *   - the logo's own colour is unchanged;
+ *   - every Tailwind shadow resolves to a declared CSS variable.
  */
 import * as fs from 'fs';
 import * as path from 'path';
@@ -111,7 +113,17 @@ const PAIRS: Array<[string, string, number]> = [
   ['rgb-text-muted', 'rgb-bg-surface', 4.5],
   ['rgb-text-light', 'rgb-bg-app', 4.5], // captions, footer fine print
   ['rgb-text-heading', 'rgb-bg-app', 4.5],
-  ['rgb-signal', 'rgb-bg-surface', 4.5], // links
+  ['rgb-link', 'rgb-bg-surface', 4.5], // links (amber is never link text)
+  ['rgb-link', 'rgb-bg-app', 4.5],
+  ['rgb-on-primary', 'rgb-signal', 4.5], // text on the amber fill
+  ['rgb-on-primary', 'rgb-signal-hover', 3], // pressed fill, button labels are 15px/600
+  ['rgb-secondary', 'rgb-secondary-soft', 4.5],
+  ['rgb-on-hero', 'rgb-brand-ink', 4.5], // text on the teal band
+  ['rgb-on-hero-muted', 'rgb-brand-ink', 4.5],
+  ['rgb-ink', 'rgb-highlight', 4.5], // the marker
+  ['rgb-info', 'rgb-info-soft', 4.5],
+  ['rgb-rose', 'rgb-rose-soft', 4.5],
+  ['rgb-text-muted', 'rgb-bg-surface-hover', 4.5],
   ['rgb-signal-ink', 'rgb-signal-soft', 4.5],
   ['rgb-money-ink', 'rgb-money', 4.5],
   ['rgb-success', 'rgb-bg-surface', 4.5],
@@ -127,9 +139,22 @@ for (const [fg, bg, min] of PAIRS) {
     });
   }
 }
-check('white text on the light action colour ≥ 4.5', () => {
+// White on amber is 2.0:1. The rule is dark ink on amber; this fails loudly if
+// someone "fixes" a button back to white text by retuning the palette.
+check('white text on the light action colour is not readable (amber takes ink)', () => {
   const r = ratio([255, 255, 255], rgbOf(light, 'rgb-signal'));
-  if (r < 4.5) throw new Error(`${r.toFixed(2)}:1`);
+  if (r >= 4.5) throw new Error(`white on --rgb-signal is ${r.toFixed(2)}:1 — the palette changed; review the on-primary rule`);
+});
+check('amber is never link text on paper (link is its own token)', () => {
+  if (config.tokens.link === config.tokens.signal.DEFAULT) throw new Error('link aliases signal');
+});
+check('the logo colour is unchanged (owner decision)', () => {
+  if (light.get('rgb-logo') !== '248 65 9') throw new Error(`light --rgb-logo is ${light.get('rgb-logo')}`);
+  if (dark.get('rgb-logo') !== '255 94 46') throw new Error(`dark --rgb-logo is ${dark.get('rgb-logo')}`);
+});
+check('text on amber fills is re-pointed to on-primary in both themes', () => {
+  const rule = css.indexOf('TEXT ON AMBER');
+  if (rule === -1 || !/\.bg-signal[\s\S]{0,900}color: rgb\(var\(--rgb-on-primary\)\)/.test(css.slice(rule))) throw new Error('rule missing');
 });
 // The dark palette remap in globals.css: status text on its tint, and
 // on-accent text on the fills that turn light in dark.
@@ -180,14 +205,17 @@ check('white text on the mint badge ≥ 4.5', () => {
   if (r < 4.5) throw new Error(`${r.toFixed(2)}:1`);
 });
 
-// ---- shadows still mirror their variables -----------------------------------
+// ---- shadows resolve to declared variables ----------------------------------
+// Tailwind shadows are `var(--shadow-x)` so the dark theme can swap them.
 for (const name of Object.keys(config.boxShadow)) {
-  check(`boxShadow.${name} matches --shadow-${name}`, () => {
-    if (config.boxShadow[name] !== light.get(`shadow-${name}`)) {
-      throw new Error(`tailwind ${JSON.stringify(config.boxShadow[name])} vs css ${JSON.stringify(light.get(`shadow-${name}`))}`);
-    }
+  check(`boxShadow.${name} is var(--shadow-${name}) and declared`, () => {
+    if (config.boxShadow[name] !== `var(--shadow-${name})`) throw new Error(`got ${JSON.stringify(config.boxShadow[name])}`);
+    if (!light.has(`shadow-${name}`)) throw new Error(`--shadow-${name} is not declared in :root`);
   });
 }
+check('shadows are ink-tinted, not the old cool grey', () => {
+  if (/rgba\(16, 21, 28/.test(css)) throw new Error('found rgba(16, 21, 28, …) — use rgb(var(--rgb-shadow) / a)');
+});
 
 console.log(`\ndesign-tokens: ${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

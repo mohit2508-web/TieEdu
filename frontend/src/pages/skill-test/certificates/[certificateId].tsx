@@ -78,7 +78,7 @@ function CertificatePage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-signal" />
+        <Loader2 className="h-8 w-8 animate-spin text-link" />
       </div>
     );
   }
@@ -92,7 +92,7 @@ function CertificatePage() {
           </div>
           <h1 className="mt-4 text-xl font-bold text-red-600">Certificate Not Found</h1>
           <p className="mt-2 text-sm text-gray-600">No certificate exists with ID {certId}.</p>
-          <Link href="/skill-test" className="mt-4 inline-block text-sm font-medium text-signal">
+          <Link href="/skill-test" className="mt-4 inline-block text-sm font-medium text-link">
             Back to Skill Test
           </Link>
         </div>
@@ -144,15 +144,15 @@ function CertificatePage() {
             <div className="absolute bottom-2 right-2 h-6 w-6 border-b-2 border-r-2 border-signal" />
 
             <div className="flex items-center justify-center gap-2 mb-4">
-              <Award className="h-6 w-6 text-signal" />
-              <span className="text-lg font-bold text-signal tracking-wider">TieEdu</span>
+              <Award className="h-6 w-6 text-link" />
+              <span className="text-lg font-bold text-link tracking-wider">TieEdu</span>
             </div>
 
             <p className="text-xs font-medium tracking-[0.3em] text-gray-400 uppercase">Certificate of Skill Proficiency</p>
             <p className="mt-4 text-sm text-gray-500">This certifies that</p>
             <h2 className="mt-2 text-2xl font-bold text-gray-900">{cert.studentName}</h2>
             <p className="mt-3 text-sm text-gray-500">has successfully demonstrated proficiency in</p>
-            <h3 className="mt-2 text-xl font-bold text-signal">{cert.skillName}</h3>
+            <h3 className="mt-2 text-xl font-bold text-link">{cert.skillName}</h3>
             <p className="mt-1 text-sm font-medium text-gray-600">{cert.skillLevelText} Level</p>
 
             <div className="mt-5 inline-flex items-center gap-4 rounded-full bg-gray-50 border border-gray-200 px-6 py-2.5">
@@ -231,7 +231,7 @@ function CertificatePage() {
         </div>
 
         <div className="mt-4 text-center">
-          <Link href="/skill-test/skill-passport" className="text-sm font-medium text-signal hover:underline">
+          <Link href="/skill-test/skill-passport" className="text-sm font-medium text-link hover:underline">
             View Skill Passport →
           </Link>
         </div>

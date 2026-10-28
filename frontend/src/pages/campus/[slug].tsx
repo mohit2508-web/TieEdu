@@ -108,7 +108,7 @@ export default function CampusPage({ page }: { page: CampusPublic }) {
                       <Card className="flex items-center gap-4">
                         <ProgressRing value={c.average} size={64} thickness={6} label={`${c.name} average readiness`} />
                         <div className="min-w-0">
-                          <Link href={`/company/${c.slug}`} className="font-display text-lg font-bold text-heading hover:text-signal">
+                          <Link href={`/company/${c.slug}`} className="font-display text-lg font-bold text-heading hover:text-link">
                             {c.name}
                           </Link>
                           <p className="text-sm text-muted">{c.preparing} preparing</p>

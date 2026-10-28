@@ -51,7 +51,7 @@ export default function StudyGroupsPage() {
 function Intro() {
   return (
     <>
-      <p className="eyebrow text-signal">Study groups</p>
+      <p className="eyebrow text-link">Study groups</p>
       <h1 className="mt-1 font-display text-3xl font-bold text-heading sm:text-4xl">Prepare together, keep each other going</h1>
       <p className="mt-2 text-base text-body">
         Join the group for a company you are preparing for. See who practised this week, and send a friendly nudge when someone goes quiet.
@@ -88,7 +88,7 @@ function Index() {
       {data && data.inbox.items.length > 0 && (
         <section className="mt-6" aria-labelledby="nudges-h">
           <h2 id="nudges-h" className="flex items-center gap-2 font-display text-lg font-bold text-heading">
-            <Bell className="h-5 w-5 text-signal" aria-hidden /> Nudges for you
+            <Bell className="h-5 w-5 text-link" aria-hidden /> Nudges for you
             {data.inbox.unread > 0 && <span className="rounded-full bg-signal px-2 py-0.5 text-xs font-bold text-white">{data.inbox.unread} new</span>}
           </h2>
           <ul className="mt-3 space-y-2">
@@ -97,7 +97,7 @@ function Index() {
                 {n.text}
                 <span className="mt-1 flex flex-wrap items-center gap-x-3 text-muted">
                   {shortDate.format(new Date(n.created_at))}
-                  <Link href="/daily" className="inline-flex min-h-[32px] items-center font-semibold text-signal hover:underline">Practise now</Link>
+                  <Link href="/daily" className="inline-flex min-h-[32px] items-center font-semibold text-link hover:underline">Practise now</Link>
                 </span>
               </li>
             ))}
@@ -113,9 +113,9 @@ function Index() {
             {data.groups.map((g) => (
               <li key={g.company.slug}>
                 <Link href={`/study-groups?c=${encodeURIComponent(g.company.slug)}`} className="focus-ring group flex items-center gap-3 rounded-[14px] border border-line bg-card p-4 hover:border-line-strong">
-                  <Users className="h-5 w-5 shrink-0 text-signal" aria-hidden />
+                  <Users className="h-5 w-5 shrink-0 text-link" aria-hidden />
                   <span className="min-w-0 flex-1">
-                    <span className="block font-bold text-heading group-hover:text-signal">{g.company.name}</span>
+                    <span className="block font-bold text-heading group-hover:text-link">{g.company.name}</span>
                     <span className="block text-sm text-muted">{g.members} member{g.members === 1 ? '' : 's'} · {g.practised_today} other{g.practised_today === 1 ? '' : 's'} practised today</span>
                   </span>
                   <ArrowRight className="h-5 w-5 shrink-0 text-muted" aria-hidden />
@@ -134,7 +134,7 @@ function Index() {
               <li key={s.company.slug}>
                 <Link href={`/study-groups?c=${encodeURIComponent(s.company.slug)}`} className="focus-ring group flex items-center gap-3 rounded-[14px] border border-dashed border-line bg-card p-4 hover:border-line-strong">
                   <span className="min-w-0 flex-1">
-                    <span className="block font-bold text-heading group-hover:text-signal">{s.company.name}</span>
+                    <span className="block font-bold text-heading group-hover:text-link">{s.company.name}</span>
                     <span className="block text-sm text-muted">{s.members === 0 ? 'Be the first to join' : `${s.members} preparing together`}</span>
                   </span>
                   <ArrowRight className="h-5 w-5 shrink-0 text-muted" aria-hidden />
@@ -189,7 +189,7 @@ function Group({ slug }: { slug: string }) {
   };
 
   const back = (
-    <Link href="/study-groups" className="inline-flex min-h-[36px] items-center gap-1 text-sm font-semibold text-signal hover:underline">
+    <Link href="/study-groups" className="inline-flex min-h-[36px] items-center gap-1 text-sm font-semibold text-link hover:underline">
       <ArrowLeft className="h-4 w-4" aria-hidden /> All study groups
     </Link>
   );
@@ -201,7 +201,7 @@ function Group({ slug }: { slug: string }) {
   return (
     <>
       {back}
-      <p className="eyebrow mt-3 text-signal">Study group</p>
+      <p className="eyebrow mt-3 text-link">Study group</p>
       <h1 className="mt-1 font-display text-3xl font-bold text-heading sm:text-4xl">{view.company.name}</h1>
       <p className="mt-2 text-base text-body">
         {s.members === 0 ? 'Nobody has joined yet. Start the group and the next student to prepare will find you.'
@@ -235,7 +235,7 @@ function Group({ slug }: { slug: string }) {
           </ul>
           {view.hidden_members > 0 && <p className="mt-2 text-sm text-muted">And {view.hidden_members} more.</p>}
           <p className="mt-4 text-sm text-body">
-            Practise with someone here: <Link href="/peer-mock" className="font-semibold text-signal hover:underline">do a peer mock interview</Link> and both of you earn points.
+            Practise with someone here: <Link href="/peer-mock" className="font-semibold text-link hover:underline">do a peer mock interview</Link> and both of you earn points.
           </p>
 
           <details className="mt-8 rounded-[14px] border border-line bg-card p-4">
@@ -278,7 +278,7 @@ function MemberRow({ m, kinds, busy, onNudge }: { m: GroupMember; kinds: Array<{
           </div>
           {m.can_nudge && (
             <button type="button" onClick={() => setOpen((o) => !o)} disabled={busy} aria-expanded={open} className="focus-ring inline-flex min-h-[40px] shrink-0 items-center gap-1.5 rounded-xl border border-line px-3 text-sm font-semibold text-heading hover:bg-surface-hover">
-              <HandHeart className="h-4 w-4 text-signal" aria-hidden /> Nudge
+              <HandHeart className="h-4 w-4 text-link" aria-hidden /> Nudge
             </button>
           )}
         </div>

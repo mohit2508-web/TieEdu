@@ -16,7 +16,7 @@ export function CandidateView({ card, action }: { card: CandidateCard; action?: 
         {action}
       </div>
       {card.skills.length === 0
-        ? <p className="mt-2 text-sm text-muted">No tested skills yet — recruiters only see students with at least one skill test. <Link href="/skill-test" className="font-semibold text-signal hover:underline">Take one</Link>.</p>
+        ? <p className="mt-2 text-sm text-muted">No tested skills yet — recruiters only see students with at least one skill test. <Link href="/skill-test" className="font-semibold text-link hover:underline">Take one</Link>.</p>
         : (
           <ul className="mt-3 flex flex-wrap gap-2">
             {card.skills.map((s) => (

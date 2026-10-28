@@ -78,7 +78,7 @@ export const SlashMenu: React.FC<SlashMenuProps> = ({
               onSelect(item.cmd);
             }}
             className={`w-full flex items-center gap-3 px-2.5 py-2 rounded-lg text-left transition-colors ${
-              active ? 'bg-signal/10 text-signal' : 'text-body hover:bg-paper'
+              active ? 'bg-signal/10 text-link' : 'text-body hover:bg-paper'
             }`}
           >
             <span className="w-7 h-7 rounded-md bg-paper flex items-center justify-center shrink-0">

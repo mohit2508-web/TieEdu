@@ -547,7 +547,7 @@ export default function CompanyVaultPage({
                 <div className="flex items-center gap-1.5 text-xs text-[var(--text-muted)] mb-4">
                   <button
                     onClick={() => setSelectedItem(null)}
-                    className="hover:text-[var(--brand-primary)] transition-colors"
+                    className="hover:text-link transition-colors"
                   >
                     {company.name}
                   </button>
@@ -597,7 +597,7 @@ export default function CompanyVaultPage({
                         onClick={() => setActiveReaderTab(tab)}
                         className={`px-1 pb-2.5 mr-6 text-sm font-semibold border-b-2 transition-all capitalize ${
                           activeReaderTab === tab
-                            ? 'border-[var(--brand-accent)] text-[var(--brand-primary)]'
+                            ? 'border-[var(--brand-accent)] text-link'
                             : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-body)]'
                         }`}
                       >
@@ -750,7 +750,7 @@ export default function CompanyVaultPage({
 
             {/* Breadcrumb */}
             <div className="flex items-center gap-1.5 text-sm text-[var(--text-muted)]">
-              <Link href="/companies" className="hover:text-[var(--brand-primary)] flex items-center gap-1 transition-colors">
+              <Link href="/companies" className="hover:text-link flex items-center gap-1 transition-colors">
                 <ArrowLeft className="w-3.5 h-3.5" />
                 Companies
               </Link>

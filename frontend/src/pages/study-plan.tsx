@@ -369,7 +369,7 @@ export default function StudyPlanPage() {
                     className="w-full p-3 border border-gray-200 rounded-xl bg-app-warm text-base focus:outline-none focus:ring-2 focus:ring-signal"
                   />
                   {daysToInterview !== null && daysToInterview >= 0 && (
-                    <p className="mt-1.5 text-xs font-semibold text-signal flex items-center gap-1">
+                    <p className="mt-1.5 text-xs font-semibold text-link flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
                       {daysToInterview === 0 ? 'Interview is today' : `${daysToInterview} day${daysToInterview === 1 ? '' : 's'} to go`}
                     </p>
@@ -394,9 +394,9 @@ export default function StudyPlanPage() {
 
                 {!user && (
                   <p className="flex items-start gap-2 text-xs text-gray-600 bg-paper rounded-xl px-3 py-2.5">
-                    <LogIn className="w-4 h-4 shrink-0 mt-px text-signal" />
+                    <LogIn className="w-4 h-4 shrink-0 mt-px text-link" />
                     <span>
-                      <Link href="/login" className="font-bold text-signal underline focus-ring rounded">Sign in</Link> to save this plan
+                      <Link href="/login" className="font-bold text-link underline focus-ring rounded">Sign in</Link> to save this plan
                       and track progress. You can preview without an account.
                     </span>
                   </p>
@@ -464,7 +464,7 @@ export default function StudyPlanPage() {
                   role="status"
                   className="mb-4 flex items-start gap-3 rounded-2xl border border-signal/25 bg-signal-soft p-4"
                 >
-                  <History className="w-5 h-5 text-signal shrink-0 mt-0.5" />
+                  <History className="w-5 h-5 text-link shrink-0 mt-0.5" />
                   <div className="min-w-0 flex-1">
                     <p className="text-base font-extrabold text-heading">Welcome back — your plan is here</p>
                     <p className="text-sm sm:text-sm text-brand-ink mt-0.5 leading-relaxed">
@@ -475,7 +475,7 @@ export default function StudyPlanPage() {
                     type="button"
                     onClick={() => setDismissedResume(true)}
                     aria-label="Dismiss welcome back message"
-                    className="shrink-0 p-2 -m-1 rounded-lg text-signal hover:bg-white/60 min-h-[2.75rem] min-w-[2.75rem] flex items-center justify-center"
+                    className="shrink-0 p-2 -m-1 rounded-lg text-link hover:bg-white/60 min-h-[2.75rem] min-w-[2.75rem] flex items-center justify-center"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -484,7 +484,7 @@ export default function StudyPlanPage() {
 
               {loading && (
                 <div className="mb-4 flex items-center gap-2 rounded-2xl border border-line bg-white px-4 py-3 text-sm text-[--text-muted]" role="status">
-                  <Loader2 className="w-4 h-4 animate-spin text-signal" /> Building your roadmap…
+                  <Loader2 className="w-4 h-4 animate-spin text-link" /> Building your roadmap…
                 </div>
               )}
 
@@ -492,7 +492,7 @@ export default function StudyPlanPage() {
                 <div className="bg-white border border-line rounded-2xl p-10 sm:p-16 text-center">
                   {resuming ? (
                     <>
-                      <Loader2 className="mx-auto w-8 h-8 text-signal animate-spin mb-4" />
+                      <Loader2 className="mx-auto w-8 h-8 text-link animate-spin mb-4" />
                       <p className="text-base sm:text-base text-[--text-muted] max-w-sm mx-auto leading-relaxed">
                         Loading your saved plan…
                       </p>
@@ -573,7 +573,7 @@ export default function StudyPlanPage() {
                                   className="w-full text-left flex items-start gap-2 min-h-[2.75rem] focus-ring rounded-lg"
                                 >
                                   <span className="min-w-0 flex-1">
-                                    <span className="block text-xs font-bold uppercase text-signal">
+                                    <span className="block text-xs font-bold uppercase text-link">
                                       {phase.dayLabel}
                                     </span>
                                     <span

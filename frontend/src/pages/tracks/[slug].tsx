@@ -36,7 +36,7 @@ function CourseRow({
   return (
     <li className="flex flex-col gap-3 rounded-xl border border-[var(--border-subtle)] bg-white p-4 sm:flex-row sm:items-center sm:gap-4">
       <div className="flex items-center gap-3 sm:w-16">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--brand-sky)]/10 text-xs font-extrabold text-[var(--brand-sky)]">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--brand-sky)]/10 text-xs font-extrabold text-link">
           {index + 1}
         </span>
         {done ? (
@@ -52,7 +52,7 @@ function CourseRow({
           href={available && course.slug ? `/courses/${course.slug}` : '#'}
           className={`text-sm font-bold ${
             available && course.slug
-              ? 'text-[var(--ink)] hover:text-[var(--brand-sky)]'
+              ? 'text-[var(--ink)] hover:text-link'
               : 'text-[var(--text-body)] opacity-60 pointer-events-none'
           }`}
         >
@@ -187,7 +187,7 @@ export default function TrackDetailPage() {
         </div>
         <Link
           href="/tracks"
-          className="mt-4 inline-flex items-center gap-1.5 text-sm font-bold text-[var(--brand-sky)]"
+          className="mt-4 inline-flex items-center gap-1.5 text-sm font-bold text-link"
         >
           <ArrowLeft size={14} aria-hidden /> All tracks
         </Link>
@@ -212,7 +212,7 @@ export default function TrackDetailPage() {
       <div className="mx-auto max-w-4xl px-4 pb-16 pt-6 sm:px-6 lg:px-8">
         <Link
           href="/tracks"
-          className="inline-flex items-center gap-1.5 text-sm font-bold text-[var(--brand-sky)]"
+          className="inline-flex items-center gap-1.5 text-sm font-bold text-link"
         >
           <ArrowLeft size={14} aria-hidden /> All tracks
         </Link>
@@ -234,7 +234,7 @@ export default function TrackDetailPage() {
                   <Award size={14} aria-hidden /> Certified · {formatDate(cert.issued_at)}
                 </span>
               ) : claimable ? (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--brand-sky)]/10 px-3 py-1.5 text-xs font-bold text-[var(--brand-sky)]">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--brand-sky)]/10 px-3 py-1.5 text-xs font-bold text-link">
                   <Award size={14} aria-hidden /> Ready to claim
                 </span>
               ) : null}
@@ -267,7 +267,7 @@ export default function TrackDetailPage() {
 
         <section className="mt-8 rounded-2xl border border-[var(--border-subtle)] bg-white p-5 shadow-sm sm:p-6">
           <h2 className="flex items-center gap-2 text-lg font-extrabold tracking-tight text-[var(--ink)]">
-            <Award size={18} className="text-[var(--brand-sky)]" aria-hidden />
+            <Award size={18} className="text-link" aria-hidden />
             Career Track certificate
           </h2>
           <p className="mt-2 text-sm text-[var(--text-body)]">

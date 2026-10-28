@@ -29,6 +29,21 @@ const tokens = {
   danger: { DEFAULT: c('danger'), soft: c('danger-soft') },
   'info-soft': c('info-soft'),
 
+  // ---- "Warm Paper" additions (UI_REDESIGN_PLAN_V3) ----
+  // `signal` is the amber FILL; links and amber-adjacent text use `link`.
+  link: c('link'),
+  'on-primary': c('on-primary'),
+  secondary: { DEFAULT: c('secondary'), soft: c('secondary-soft'), on: c('on-secondary') },
+  hero: { DEFAULT: c('brand-ink'), edge: c('hero-edge'), on: c('on-hero'), muted: c('on-hero-muted') },
+  highlight: c('highlight'),
+  rose: { DEFAULT: c('rose'), soft: c('rose-soft') },
+  edge: c('edge'),
+  'paper-rule': c('paper-rule'),
+  focus: c('focus'),
+  series: {
+    1: c('series-1'), 2: c('series-2'), 3: c('series-3'), 4: c('series-4'), 5: c('series-5'), 6: c('series-6'), other: c('series-other'),
+  },
+
   // ---- Existing names (kept so current markup keeps working) ----
   app: c('bg-app'),
   'app-warm': c('bg-app-warm'),
@@ -71,11 +86,48 @@ const tokens = {
   'amber-deep': c('amber-deep'),
 };
 
+// Ink-tinted, never neutral grey; each resolves through a CSS variable so the
+// dark theme swaps it (globals.css).
 const boxShadow = {
-  xs: '0 1px 2px rgba(16, 21, 28, 0.05)',
-  soft: '0 2px 8px rgba(16, 21, 28, 0.05)',
-  raised: '0 10px 28px rgba(16, 21, 28, 0.08), 0 2px 8px rgba(16, 21, 28, 0.04)',
-  float: '0 28px 60px rgba(16, 21, 28, 0.14), 0 8px 20px rgba(16, 21, 28, 0.06)',
+  xs: 'var(--shadow-xs)',
+  soft: 'var(--shadow-soft)',
+  raised: 'var(--shadow-raised)',
+  float: 'var(--shadow-float)',
+  // Plan §7: solid under-edges and the two floating depths.
+  'edge-primary': 'var(--shadow-edge-primary)',
+  'edge-selected': 'var(--shadow-edge-selected)',
+  'edge-neutral': 'var(--shadow-edge-neutral)',
+  pop: 'var(--shadow-pop)',
+  device: 'var(--shadow-device)',
+};
+
+// Plan §5, exact: [size, { lineHeight, letterSpacing, fontWeight }].
+const typeScale = {
+  headline: ['clamp(38px, 5.4vw, 64px)', { lineHeight: '1.04', letterSpacing: '-0.04em', fontWeight: '700' }],
+  'headline-sm': ['clamp(30px, 10.6vw, 46px)', { lineHeight: '1.05', letterSpacing: '-0.04em', fontWeight: '700' }],
+  section: ['clamp(32px, 4vw, 48px)', { lineHeight: '1.08', letterSpacing: '-0.035em', fontWeight: '700' }],
+  display: ['34px', { lineHeight: '38px', letterSpacing: '-0.035em', fontWeight: '700' }],
+  h1: ['28px', { lineHeight: '32px', letterSpacing: '-0.03em', fontWeight: '700' }],
+  h2: ['22px', { lineHeight: '28px', letterSpacing: '-0.02em', fontWeight: '700' }],
+  h3: ['17px', { lineHeight: '22px', letterSpacing: '-0.01em', fontWeight: '600' }],
+  'body-lg': ['17px', { lineHeight: '26px' }],
+  'body-md': ['15px', { lineHeight: '22px' }],
+  label: ['15px', { lineHeight: '20px', letterSpacing: '-0.01em', fontWeight: '600' }],
+  chip: ['13px', { lineHeight: '18px', fontWeight: '500' }],
+  caption: ['12px', { lineHeight: '16px', fontWeight: '500' }],
+  eyebrow: ['11px', { lineHeight: '14px', letterSpacing: '0.06em', fontWeight: '500' }],
+};
+
+// Plan §7 radii, added as names so existing rounded-* classes keep their sizes.
+const borderRadius = {
+  well: '12px',
+  cell: '14px',
+  tile: '16px',
+  bubble: '18px',
+  card: '20px',
+  band: '28px',
+  frame: '32px',
+  device: '44px',
 };
 
 module.exports = {
@@ -110,6 +162,9 @@ module.exports = {
     extend: {
       colors: tokens,
       boxShadow,
+      borderRadius,
+      transitionDuration: { press: '80ms', flip: '300ms' },
+      transitionTimingFunction: { paper: 'cubic-bezier(.2,.8,.2,1)' },
       // The four families are self-hosted via next/font (src/styles/fonts.ts)
       // and published as :root variables by _app.
       fontFamily: {
@@ -125,6 +180,7 @@ module.exports = {
         '4xl': ['2.5rem', { lineHeight: '2.875rem' }],
         '5xl': ['3rem', { lineHeight: '3.25rem' }],
         '6xl': ['4rem', { lineHeight: '4.125rem' }],
+        ...typeScale,
       },
     },
   },
@@ -135,3 +191,4 @@ module.exports = {
 // reference exists in globals.css for both themes.
 module.exports.tokens = tokens;
 module.exports.boxShadow = boxShadow;
+module.exports.typeScale = typeScale;

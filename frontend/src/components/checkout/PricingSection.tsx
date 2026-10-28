@@ -15,7 +15,7 @@ import { Check, ShieldCheck, LayoutGrid, ListTree, AlertTriangle, ArrowRight, Fi
 
 const ROUND_META: Record<RoundType, { label: string; cls: string; dot: string }> = {
   OA: { label: 'Online Assessment', cls: 'bg-amber-50 text-amber-800 border-amber-200', dot: 'bg-amber-400' },
-  Technical: { label: 'Technical Round', cls: 'bg-signal-soft text-signal-hover border-signal/30', dot: 'bg-signal' },
+  Technical: { label: 'Technical Round', cls: 'bg-signal-soft text-link border-signal/30', dot: 'bg-signal' },
   SystemDesign: { label: 'System Design', cls: 'bg-purple-50 text-purple-700 border-purple-200', dot: 'bg-purple-500' },
   HR: { label: 'HR Round', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
   Managerial: { label: 'Managerial', cls: 'bg-teal-50 text-teal-700 border-teal-200', dot: 'bg-teal-500' },
@@ -312,7 +312,7 @@ export const PricingSection: React.FC = () => {
                             </span>
                           )}
                           {m.has_pdf && (
-                            <span className="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full bg-signal-soft text-signal border border-signal/30">
+                            <span className="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full bg-signal-soft text-link border border-signal/30">
                               <FileText className="w-3 h-3" /> PDF
                             </span>
                           )}

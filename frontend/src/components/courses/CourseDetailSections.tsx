@@ -181,7 +181,7 @@ export const InstructorSection: React.FC<{ instructor?: CourseInstructor | null 
         <div className="min-w-0">
           <p className="text-base font-extrabold text-[var(--ink)]">{instructor.name}</p>
           {instructor.title && (
-            <p className="mt-0.5 text-sm font-medium text-[var(--brand-sky)]">{instructor.title}</p>
+            <p className="mt-0.5 text-sm font-medium text-link">{instructor.title}</p>
           )}
           {instructor.bio && (
             <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[var(--text-body)]">{instructor.bio}</p>

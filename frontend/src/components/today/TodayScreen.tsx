@@ -116,7 +116,7 @@ const YearPicker: React.FC<{ onSaved: (t: TodayView) => void }> = ({ onSaved }) 
 const StreakWeek: React.FC<{ streak: TodayView['this_week']['streak']; c: Copy }> = ({ streak, c }) => (
   <div>
     <div className="flex items-end gap-3">
-      <Flame className={cn('h-8 w-8', streak.current > 0 ? 'text-signal' : 'text-muted')} aria-hidden />
+      <Flame className={cn('h-8 w-8', streak.current > 0 ? 'text-link' : 'text-muted')} aria-hidden />
       <p className="font-display text-4xl font-bold leading-none tabular-nums text-heading">{streak.current}</p>
       <p className="pb-1 text-sm text-muted">{c.inARow(streak.current)}</p>
     </div>
@@ -261,9 +261,9 @@ export const TodayScreen: React.FC<{ ready: boolean }> = ({ ready }) => {
               {week.test_dates.map((t) => (
                 <li key={t.slug}>
                   <Link href={`/company/${t.slug}`} className="group flex items-center gap-3 rounded-lg py-1">
-                    <CalendarClock className="h-5 w-5 shrink-0 text-signal" aria-hidden />
+                    <CalendarClock className="h-5 w-5 shrink-0 text-link" aria-hidden />
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-semibold text-heading group-hover:text-signal">{c.test(t.company)}</span>
+                      <span className="block truncate text-sm font-semibold text-heading group-hover:text-link">{c.test(t.company)}</span>
                       <span className="block text-xs text-muted">{shortDate.format(new Date(`${t.date}T00:00:00Z`))}</span>
                     </span>
                     <span className="text-sm font-bold tabular-nums text-heading">
@@ -275,7 +275,7 @@ export const TodayScreen: React.FC<{ ready: boolean }> = ({ ready }) => {
             </ul>
           )}
           {/* The calendar: every date, a countdown each, and the day-by-day plan to the next. */}
-          <Link href="/calendar" className="focus-ring mt-4 inline-flex min-h-[40px] items-center gap-1.5 text-sm font-semibold text-signal hover:underline">
+          <Link href="/calendar" className="focus-ring mt-4 inline-flex min-h-[40px] items-center gap-1.5 text-sm font-semibold text-link hover:underline">
             {week.test_dates.length > 0 ? c.planNext : c.addDate}
             <ArrowRight className="h-4 w-4" aria-hidden />
           </Link>
@@ -350,7 +350,7 @@ export const TodayScreen: React.FC<{ ready: boolean }> = ({ ready }) => {
                   <Link href={`/company/${t.slug}`} className="group flex items-center gap-3 py-3">
                     <ProgressRing value={t.overall ?? 0} size={44} thickness={4} label={`${t.company} readiness`} />
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate font-semibold text-heading group-hover:text-signal">{t.company}</span>
+                      <span className="block truncate font-semibold text-heading group-hover:text-link">{t.company}</span>
                       <span className="block text-xs text-muted">
                         {t.overall === null ? c.noScore : c.cleared(t.cleared, t.rounds)}
                       </span>
@@ -374,7 +374,7 @@ export const TodayScreen: React.FC<{ ready: boolean }> = ({ ready }) => {
                 { href: '/companies', label: c.comp, note: c.compNote },
               ].map((x) => (
                 <Link key={x.href} href={x.href} className="group rounded-xl border border-line p-4 transition-colors hover:border-line-strong">
-                  <span className="block font-semibold text-heading group-hover:text-signal">{x.label}</span>
+                  <span className="block font-semibold text-heading group-hover:text-link">{x.label}</span>
                   <span className="block text-sm text-muted">{x.note}</span>
                 </Link>
               ))}

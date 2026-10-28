@@ -88,7 +88,7 @@ export const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({
     >
       <div className="px-5 pb-5">
         <div className="text-center space-y-3">
-          <div className="w-14 h-14 mx-auto rounded-2xl bg-signal-soft border border-signal/30 text-signal flex items-center justify-center shadow-xs">
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-signal-soft border border-signal/30 text-link flex items-center justify-center shadow-xs">
             <Lock className="w-7 h-7" />
           </div>
           <p className="text-sm text-[color:var(--text-muted)] max-w-xs mx-auto">
@@ -106,7 +106,7 @@ export const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({
             aria-selected={tab === 'signup'}
             onClick={() => { setTab('signup'); setError(null); }}
             className={`flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-lg text-xs font-bold transition-colors ${
-              tab === 'signup' ? 'bg-white text-signal shadow-xs' : 'text-gray-500'
+              tab === 'signup' ? 'bg-white text-link shadow-xs' : 'text-gray-500'
             }`}
           >
             <UserPlus className="w-3.5 h-3.5" /> Create Free Account
@@ -117,7 +117,7 @@ export const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({
             aria-selected={tab === 'login'}
             onClick={() => { setTab('login'); setError(null); }}
             className={`flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-lg text-xs font-bold transition-colors ${
-              tab === 'login' ? 'bg-white text-signal shadow-xs' : 'text-gray-500'
+              tab === 'login' ? 'bg-white text-link shadow-xs' : 'text-gray-500'
             }`}
           >
             <LogIn className="w-3.5 h-3.5" /> Sign In
@@ -197,10 +197,10 @@ export const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({
                 type="checkbox"
                 checked={acceptedTerms}
                 onChange={(e) => setAcceptedTerms(e.target.checked)}
-                className="mt-0.5 w-4 h-4 rounded border-gray-300 text-signal focus:ring-signal shrink-0"
+                className="mt-0.5 w-4 h-4 rounded border-gray-300 text-link focus:ring-signal shrink-0"
               />
               <label htmlFor="modal-tc-checkbox" className="text-xs text-gray-600 leading-tight cursor-pointer select-none py-2">
-                I agree to the <span className="font-semibold text-signal underline underline-offset-2">Terms &amp; Conditions</span> and <span className="font-semibold text-signal underline underline-offset-2">Privacy Policy</span>.
+                I agree to the <span className="font-semibold text-link underline underline-offset-2">Terms &amp; Conditions</span> and <span className="font-semibold text-link underline underline-offset-2">Privacy Policy</span>.
               </label>
             </div>
           )}

@@ -14,7 +14,7 @@ interface Props {
 }
 
 const SECTION_CHIPS = [
-  ['Cheatsheets', 'bg-signal-soft text-signal border-signal/30'],
+  ['Cheatsheets', 'bg-signal-soft text-link border-signal/30'],
   ['DSA topic-wise', 'bg-indigo-50 text-indigo-700 border-indigo-200'],
   ['Core + PYQs', 'bg-violet-50 text-violet-700 border-violet-200'],
   ['Interview Q&A', 'bg-amber-50 text-amber-800 border-amber-200'],

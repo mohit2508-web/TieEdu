@@ -725,7 +725,7 @@ export const AdminLessonEditor: React.FC<{
       {/* Video */}
       <div className="rounded-xl border border-line p-4">
         <h3 className="text-xs font-bold uppercase tracking-wider text-text-light mb-2.5 flex items-center gap-2">
-          <PlayCircle className="w-3.5 h-3.5 text-signal" /> Video
+          <PlayCircle className="w-3.5 h-3.5 text-link" /> Video
         </h3>
 
         {lesson.video ? (
@@ -817,7 +817,7 @@ export const AdminLessonEditor: React.FC<{
           href={`/courses/${courseSlug}?lesson=${encodeURIComponent(lesson.id)}`}
           target="_blank"
           rel="noreferrer"
-          className="ml-auto inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-signal hover:underline"
+          className="ml-auto inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-link hover:underline"
         >
           <Eye className="w-3.5 h-3.5" /> Preview as learner
         </a>

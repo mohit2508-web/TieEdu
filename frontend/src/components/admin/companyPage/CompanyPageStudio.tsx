@@ -770,7 +770,7 @@ export default function CompanyPageStudio({
                     <span>
                       {fmtTime(h.at)} <span className="text-gray-500">· {h.sections} sections</span>
                     </span>
-                    <button disabled={!!busy} onClick={() => void restore(h.index)} className="text-xs font-bold text-signal-hover hover:underline">
+                    <button disabled={!!busy} onClick={() => void restore(h.index)} className="text-xs font-bold text-link hover:underline">
                       Restore to draft
                     </button>
                   </div>
@@ -824,7 +824,7 @@ export default function CompanyPageStudio({
                     <ul className="text-sm space-y-1 px-1 max-h-60 overflow-y-auto">
                       {changes.map((c, i) => (
                         <li key={i} className="flex gap-2">
-                          <span className={`shrink-0 w-16 text-xs font-bold uppercase ${c.kind === 'added' ? 'text-emerald-700' : c.kind === 'removed' ? 'text-red-700' : 'text-signal-hover'}`}>{c.kind}</span>
+                          <span className={`shrink-0 w-16 text-xs font-bold uppercase ${c.kind === 'added' ? 'text-emerald-700' : c.kind === 'removed' ? 'text-red-700' : 'text-link'}`}>{c.kind}</span>
                           <span>{c.text}</span>
                         </li>
                       ))}
@@ -883,7 +883,7 @@ export default function CompanyPageStudio({
                   <div className="rounded-lg bg-signal-soft border border-signal/30 p-2.5 text-sm text-brand-ink">
                     Recent updates suggest the drive is <strong>{suggestion.status}</strong>
                     {suggestion.basis && (
-                      <span className="block text-xs text-signal-hover mt-0.5">
+                      <span className="block text-xs text-link mt-0.5">
                         Newest: “{suggestion.basis.text}” ({suggestion.basis.date}) · {suggestion.count} update{suggestion.count === 1 ? '' : 's'} in the last 3 weeks
                       </span>
                     )}
@@ -999,7 +999,7 @@ export default function CompanyPageStudio({
           <button
             key={tab}
             onClick={() => setMobileTab(tab)}
-            className={`py-2.5 capitalize ${mobileTab === tab ? 'text-signal-hover border-b-2 border-signal-hover' : 'text-gray-500'}`}
+            className={`py-2.5 capitalize ${mobileTab === tab ? 'text-link border-b-2 border-signal-hover' : 'text-gray-500'}`}
           >
             {tab}
           </button>
@@ -1014,7 +1014,7 @@ export default function CompanyPageStudio({
             <button
               onClick={() => select('settings')}
               className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-sm font-semibold ${
-                selected === 'settings' ? 'bg-signal-soft text-signal-hover' : 'hover:bg-gray-50'
+                selected === 'settings' ? 'bg-signal-soft text-link' : 'hover:bg-gray-50'
               }`}
             >
               <Settings2 className="w-4 h-4" /> Page settings
@@ -1032,7 +1032,7 @@ export default function CompanyPageStudio({
                   } ${sec.visible ? '' : 'opacity-50'}`}
                 >
                   <button onClick={() => select(sec.id)} className="flex-1 min-w-0 text-left">
-                    <div className={`text-sm font-semibold truncate ${selected === sec.id ? 'text-signal-hover' : ''}`}>
+                    <div className={`text-sm font-semibold truncate ${selected === sec.id ? 'text-link' : ''}`}>
                       {def?.label || sec.type}
                       {count > 0 && <span className="ml-1.5 inline-block w-1.5 h-1.5 rounded-full bg-amber-500 align-middle" />}
                     </div>
@@ -1057,7 +1057,7 @@ export default function CompanyPageStudio({
             <button
               onClick={() => setMenu('add')}
               disabled={sections.length >= schema.limits.max_sections}
-              className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-dashed border-gray-300 text-sm font-semibold text-gray-700 hover:border-signal hover:text-signal-hover disabled:opacity-40"
+              className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-dashed border-gray-300 text-sm font-semibold text-gray-700 hover:border-signal hover:text-link disabled:opacity-40"
             >
               <Plus className="w-4 h-4" /> Add section
             </button>

@@ -398,7 +398,7 @@ export const TrackedVideoPlayer: React.FC<TrackedVideoPlayerProps> = ({
               <span className="text-[var(--color-success)]">Watch requirement met</span>
             ) : (
               <>
-                <span className="stat-num text-[var(--brand-sky)]">{Math.round(watchPercent)}%</span>
+                <span className="stat-num text-link">{Math.round(watchPercent)}%</span>
                 <span className="text-[var(--text-muted)]"> watched</span>
               </>
             )}
@@ -472,7 +472,7 @@ export const TrackedVideoPlayer: React.FC<TrackedVideoPlayerProps> = ({
         </div>
 
         {!canSubmit && (
-          <p className="mt-2 flex items-center gap-1.5 text-xs text-[var(--brand-sky-strong)]">
+          <p className="mt-2 flex items-center gap-1.5 text-xs text-link">
             <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
             Sign in to save your watch progress.
           </p>

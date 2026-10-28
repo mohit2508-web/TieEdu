@@ -48,7 +48,7 @@ export const ProjectSubmit: React.FC<{
             href={currentUrl}
             target="_blank"
             rel="noreferrer"
-            className="text-xs font-semibold text-[var(--brand-sky)] underline underline-offset-2"
+            className="text-xs font-semibold text-link underline underline-offset-2"
           >
             View submitted
           </a>

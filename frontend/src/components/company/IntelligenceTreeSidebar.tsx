@@ -45,7 +45,7 @@ function TreeContent({
           </div>
           <button
             onClick={onBackToModules}
-            className="text-xs text-[--text-muted] hover:text-[--brand-primary] transition-colors flex items-center gap-1"
+            className="text-xs text-[--text-muted] hover:text-link transition-colors flex items-center gap-1"
           >
             <X className="w-3.5 h-3.5" />
             <span>Exit</span>

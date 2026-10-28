@@ -202,7 +202,7 @@ export default function CollegesPage() {
             <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {FEATURES.map((f) => (
                 <Card key={f.title}>
-                  <f.icon className="h-6 w-6 text-signal" aria-hidden />
+                  <f.icon className="h-6 w-6 text-link" aria-hidden />
                   <h3 className="mt-3 font-display text-lg font-bold text-heading">{f.title}</h3>
                   <p className="mt-1.5 text-sm leading-relaxed text-muted">{f.body}</p>
                 </Card>

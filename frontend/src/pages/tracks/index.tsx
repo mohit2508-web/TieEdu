@@ -17,7 +17,7 @@ function TrackCard({ track }: { track: LearningTrack }) {
       className="group flex flex-col rounded-2xl border border-[var(--border-subtle)] bg-white p-5 shadow-sm transition-all hover:-translate-y-1 hover:shadow-[var(--shadow-elevated)]"
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--brand-sky)]/10 text-[var(--brand-sky)]">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--brand-sky)]/10 text-link">
           <Route size={20} aria-hidden />
         </div>
         {hasCert && (
@@ -26,14 +26,14 @@ function TrackCard({ track }: { track: LearningTrack }) {
           </span>
         )}
       </div>
-      <h2 className="mt-4 text-lg font-extrabold tracking-tight text-[var(--ink)] group-hover:text-[var(--brand-sky)]">
+      <h2 className="mt-4 text-lg font-extrabold tracking-tight text-[var(--ink)] group-hover:text-link">
         {track.title}
       </h2>
       <p className="mt-1.5 text-sm text-[var(--text-body)]">{track.tagline}</p>
       <div className="mt-4 flex items-center justify-between text-xs text-[var(--text-body)]">
         <span>{total} courses</span>
         {pct > 0 && (
-          <span className="font-semibold text-[var(--brand-sky)]">
+          <span className="font-semibold text-link">
             {completed}/{total} done · {pct}%
           </span>
         )}
@@ -44,7 +44,7 @@ function TrackCard({ track }: { track: LearningTrack }) {
           style={{ width: `${Math.max(pct, 2)}%` }}
         />
       </div>
-      <span className="mt-4 inline-flex items-center gap-1 text-sm font-bold text-[var(--brand-sky)] group-hover:gap-2 transition-all">
+      <span className="mt-4 inline-flex items-center gap-1 text-sm font-bold text-link group-hover:gap-2 transition-all">
         View track <ArrowRight size={14} aria-hidden />
       </span>
     </Link>
@@ -132,7 +132,7 @@ export default function TracksPage() {
 
         {!loading && !error && tracks.length === 0 && (
           <div className="mt-16 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-10 text-center">
-            <Route className="mx-auto h-8 w-8 text-[var(--brand-sky)]" aria-hidden />
+            <Route className="mx-auto h-8 w-8 text-link" aria-hidden />
             <p className="mt-3 text-sm text-[var(--text-body)]">
               No tracks are published yet. Check back soon.
             </p>

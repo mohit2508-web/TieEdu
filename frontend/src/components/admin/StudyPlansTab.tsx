@@ -269,7 +269,7 @@ export const StudyPlansTab: React.FC = () => {
       <div className="flex flex-wrap items-center gap-3">
         <div>
           <h3 className="text-base font-extrabold text-heading flex items-center gap-2">
-            <CalendarRange className="w-4 h-4 text-signal" /> Study Plan Templates
+            <CalendarRange className="w-4 h-4 text-link" /> Study Plan Templates
           </h3>
           <p className="text-xs text-gray-500">
             Author preparation plans students see on the Study Plan page. Published templates are matched by
@@ -305,7 +305,7 @@ export const StudyPlansTab: React.FC = () => {
             aria-selected={mobilePane === t}
             onClick={() => setMobilePane(t)}
             className={`flex-1 py-2 text-xs font-bold rounded-lg min-h-[2.5rem] ${
-              mobilePane === t ? 'bg-white text-signal shadow-sm' : 'text-gray-500'
+              mobilePane === t ? 'bg-white text-link shadow-sm' : 'text-gray-500'
             }`}
           >
             {t === 'list' ? 'All plans' : selected ? selected.title : 'Editor'}
@@ -618,7 +618,7 @@ export const StudyPlansTab: React.FC = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="sticky top-0 z-10 flex items-center gap-3 px-5 py-3.5 border-b border-gray-200 bg-white rounded-t-2xl">
-              <Eye className="w-4 h-4 text-signal" />
+              <Eye className="w-4 h-4 text-link" />
               <div className="min-w-0">
                 <p className="text-sm font-extrabold text-heading leading-tight">Student preview</p>
                 <p className="text-xs font-mono text-gray-500 truncate">{slugPreview || 'no-slug'}</p>

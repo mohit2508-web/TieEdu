@@ -77,7 +77,7 @@ export default function CalendarPage() {
         <meta name="description" content="Every company test date in one place, a countdown to each, and a day-by-day plan to the next one." />
       </Head>
       <main className="mx-auto w-full max-w-[880px] px-4 pb-14 pt-6 sm:px-6 sm:pt-10">
-        <p className="eyebrow text-signal">Your calendar</p>
+        <p className="eyebrow text-link">Your calendar</p>
         <h1 className="mt-1 font-display text-3xl font-bold text-heading sm:text-4xl">Test dates and countdown</h1>
         <p className="mt-2 max-w-[600px] text-base text-body">
           Add the date of each company’s test. You get a countdown to every one, and a plan for each day until the next.
@@ -172,9 +172,9 @@ export default function CalendarPage() {
                         <p className="mt-1 text-xs text-muted">{e.days_left === 1 ? 'day' : 'days'} left</p>
                       </div>
                       <div className="min-w-0 flex-1">
-                        <Link href={`/company/${e.slug}`} className="block truncate font-bold text-heading hover:text-signal">{e.company}</Link>
+                        <Link href={`/company/${e.slug}`} className="block truncate font-bold text-heading hover:text-link">{e.company}</Link>
                         <p className="text-sm text-muted">{fmt(e.date)}{e.overall !== null && ` · readiness ${e.overall}%`}</p>
-                        <Link href={`/study-groups?c=${encodeURIComponent(e.slug)}`} className="mt-0.5 inline-flex min-h-[32px] items-center text-sm font-semibold text-signal hover:underline">Study group</Link>
+                        <Link href={`/study-groups?c=${encodeURIComponent(e.slug)}`} className="mt-0.5 inline-flex min-h-[32px] items-center text-sm font-semibold text-link hover:underline">Study group</Link>
                       </div>
                       <button
                         type="button"
@@ -193,7 +193,7 @@ export default function CalendarPage() {
 
             <p className="mt-6 text-sm text-body">
               A test did not go your way?{' '}
-              <Link href="/debrief" className="font-semibold text-signal hover:underline">Debrief it in two minutes</Link> and get a plan for the next one.
+              <Link href="/debrief" className="font-semibold text-link hover:underline">Debrief it in two minutes</Link> and get a plan for the next one.
             </p>
 
             {/* The plan to the soonest test. */}
@@ -212,8 +212,8 @@ export default function CalendarPage() {
                           const Icon = TASK_ICON[t.kind];
                           return (
                             <li key={t.href + t.kind}>
-                              <Link href={t.href} className="focus-ring inline-flex min-h-[32px] items-center gap-2 text-sm font-semibold text-heading hover:text-signal">
-                                <Icon className="h-4 w-4 shrink-0 text-signal" aria-hidden />
+                              <Link href={t.href} className="focus-ring inline-flex min-h-[32px] items-center gap-2 text-sm font-semibold text-heading hover:text-link">
+                                <Icon className="h-4 w-4 shrink-0 text-link" aria-hidden />
                                 {t.title}
                               </Link>
                             </li>

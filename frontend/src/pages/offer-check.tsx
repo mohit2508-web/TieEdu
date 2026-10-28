@@ -53,7 +53,7 @@ export default function OfferCheckPage() {
         <meta name="description" content="Paste a job offer, email or WhatsApp message and check it for the signs of a fake offer: fees, UPI requests, look-alike company domains and more. Free, and private: it runs on your phone." />
       </Head>
       <main className="mx-auto w-full max-w-[760px] px-4 pb-14 pt-6 sm:px-6 sm:pt-10">
-        <p className="eyebrow text-signal">Free tool</p>
+        <p className="eyebrow text-link">Free tool</p>
         <h1 className="mt-1 font-display text-3xl font-bold text-heading sm:text-4xl">Is this job offer real?</h1>
         <p className="mt-2 text-base text-body">
           Paste the offer, email or WhatsApp message. We check it for the signs of a fake offer: fees, payment requests, look-alike company sites and more.
@@ -148,7 +148,7 @@ export default function OfferCheckPage() {
               <ul className="mt-3 space-y-2 text-base text-body">
                 <li className="flex gap-2"><CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-success" aria-hidden /> Never pay to get a job, and never share an OTP or password.</li>
                 <li className="flex gap-2"><CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-success" aria-hidden /> Ask your college placement cell: they know which drives are real.</li>
-                <li className="flex gap-2"><CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-success" aria-hidden /> <span>Report a fake offer at <a href="https://cybercrime.gov.in" target="_blank" rel="noopener noreferrer" className="font-semibold text-signal underline">cybercrime.gov.in</a>.</span></li>
+                <li className="flex gap-2"><CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-success" aria-hidden /> <span>Report a fake offer at <a href="https://cybercrime.gov.in" target="_blank" rel="noopener noreferrer" className="font-semibold text-link underline">cybercrime.gov.in</a>.</span></li>
               </ul>
               <p className="mt-4 flex items-start gap-2 rounded-xl bg-danger-soft px-4 py-3 text-sm text-heading">
                 <Phone className="mt-0.5 h-4 w-4 shrink-0 text-danger" aria-hidden />

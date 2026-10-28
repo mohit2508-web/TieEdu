@@ -49,7 +49,7 @@ function SkillPassport() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="w-full max-w-md rounded-2xl bg-white border border-gray-200 p-6 sm:p-8 text-center shadow-sm">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-signal-soft text-signal">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-signal-soft text-link">
             <LogIn className="h-7 w-7" />
           </div>
           <h1 className="mt-4 text-xl font-bold text-gray-900">Sign in required</h1>
@@ -68,7 +68,7 @@ function SkillPassport() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-signal" />
+        <Loader2 className="h-8 w-8 animate-spin text-link" />
       </div>
     );
   }
@@ -118,7 +118,7 @@ function SkillPassport() {
         {/* Verified Skills */}
         <div className="mt-6 rounded-2xl bg-white border border-gray-200 p-6 shadow-sm">
           <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
-            <Target className="h-5 w-5 text-signal" /> Verified Skills
+            <Target className="h-5 w-5 text-link" /> Verified Skills
           </h2>
           {skills.length === 0 ? (
             <p className="mt-3 text-sm text-gray-500">No attempts yet. Take your first assessment to appear here.</p>
@@ -141,7 +141,7 @@ function SkillPassport() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-lg font-bold text-gray-900">{skill.score}</span>
-                    <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-signal" />
+                    <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-link" />
                   </div>
                 </Link>
               ))}
@@ -170,7 +170,7 @@ function SkillPassport() {
                 <p className={`text-xs capitalize ${
                   badge.rarity === 'legendary' ? 'text-amber-600' :
                   badge.rarity === 'epic' ? 'text-purple-600' :
-                  badge.rarity === 'rare' ? 'text-signal' : 'text-gray-500'
+                  badge.rarity === 'rare' ? 'text-link' : 'text-gray-500'
                 }`}>{badge.rarity}</p>
               </div>
             ))}
@@ -181,7 +181,7 @@ function SkillPassport() {
         <div className="mt-6 rounded-2xl bg-white border border-gray-200 p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-signal-soft text-signal">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-signal-soft text-link">
                 <Award className="h-5 w-5" />
               </div>
               <div>
@@ -189,7 +189,7 @@ function SkillPassport() {
                 <p className="text-xs text-gray-500">{data?.totalCertificates ?? 0} earned</p>
               </div>
             </div>
-            <Link href="/skill-test/my-certificates" className="text-sm font-medium text-signal hover:underline flex items-center gap-1">
+            <Link href="/skill-test/my-certificates" className="text-sm font-medium text-link hover:underline flex items-center gap-1">
               View All <ChevronRight className="h-4 w-4" />
             </Link>
           </div>

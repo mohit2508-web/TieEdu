@@ -44,7 +44,7 @@ export const ProvenanceChip: React.FC<{
 
   return (
     <span
-      className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-bold uppercase tracking-wide bg-signal-soft text-signal-hover border border-signal/30 ${className}`}
+      className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-bold uppercase tracking-wide bg-signal-soft text-link border border-signal/30 ${className}`}
       title={`Source: ${prov.source}${day ? ` · checked ${day}` : ''}`}
     >
       <ShieldCheck className="w-2.5 h-2.5" /> Sourced

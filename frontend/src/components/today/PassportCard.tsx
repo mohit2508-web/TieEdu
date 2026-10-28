@@ -54,7 +54,7 @@ export const PassportCard: React.FC<{ ready: boolean }> = ({ ready }) => {
         <div className="max-w-xl">
           <p className="eyebrow text-muted">Placement Passport</p>
           <h2 className="mt-2 flex items-center gap-2 font-display text-xl font-bold text-heading">
-            <IdCard className="h-5 w-5 text-signal" aria-hidden /> One link for everything you have proved
+            <IdCard className="h-5 w-5 text-link" aria-hidden /> One link for everything you have proved
           </h2>
           <p className="mt-2 text-sm leading-relaxed text-muted">
             Your best skill-test scores, your certificates with their verification links, and your readiness for the companies

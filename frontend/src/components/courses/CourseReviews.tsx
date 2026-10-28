@@ -77,7 +77,7 @@ export const CourseReviews: React.FC<{ courseSlug: string }> = ({ courseSlug }) 
             <div className="flex items-center justify-between gap-3">
               <span className="inline-flex items-center gap-2 text-sm font-bold text-[var(--ink)]">
                 <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--brand-sky-soft)]">
-                  <UserRound size={14} className="text-[var(--brand-sky-strong)]" />
+                  <UserRound size={14} className="text-link" />
                 </span>
                 {review.user_name || 'Learner'}
               </span>

@@ -94,7 +94,7 @@ export const LessonRow: React.FC<{
             ? 'border-transparent bg-[var(--color-success)] text-white'
             : locked
               ? 'border-[var(--border-subtle)] bg-[var(--bg-surface-hover)] text-[var(--text-light)]'
-              : 'border-[var(--border-strong)] bg-[var(--bg-surface)] text-[var(--brand-sky)]',
+              : 'border-[var(--border-strong)] bg-[var(--bg-surface)] text-link',
         ].join(' ')}
       >
         {done ? (
@@ -124,7 +124,7 @@ export const LessonRow: React.FC<{
             {lesson.title}
           </span>
           {isNext && !locked && !done && (
-            <span className="shrink-0 rounded-full bg-[var(--brand-sky-soft)] px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-[var(--brand-sky-strong)]">
+            <span className="shrink-0 rounded-full bg-[var(--brand-sky-soft)] px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-link">
               Next
             </span>
           )}
@@ -238,7 +238,7 @@ export const ctaToneClasses = (tone: CourseCtaTone): string =>
           'border-money bg-money text-money-ink hover:bg-money-hover hover:border-money-hover'
         : tone === 'muted'
           ? 'border-line bg-surface-hover text-muted'
-          : 'border-signal bg-transparent text-signal hover:bg-signal-soft',
+          : 'border-signal bg-transparent text-link hover:bg-signal-soft',
   ].join(' ');
 
 /** A live CTA button. Presentational only — the click handler is the caller's. */
@@ -263,7 +263,7 @@ const BADGE_STYLES: Record<string, string> = {
   new: 'bg-[var(--brand-mint)] text-white',
   trending: 'bg-[var(--brand-accent)] text-white',
   popular: 'bg-[var(--brand-sky)] text-white',
-  in_progress: 'bg-[var(--bg-sky-soft)] text-[var(--brand-sky-strong)]',
+  in_progress: 'bg-[var(--bg-sky-soft)] text-link',
   gold: 'bg-[var(--brand-accent)] text-white',
 };
 
@@ -488,7 +488,7 @@ export const CourseRowCard: React.FC<{ course: CourseCard }> = ({ course }) => {
           {/* The link is stretched over the whole card so the entire surface is
               clickable, while the heading stays the accessible name. */}
           <Link href={`/courses/${course.slug}`} className="after:absolute after:inset-0">
-            <h3 className="line-clamp-2 text-lg font-extrabold leading-snug tracking-tight text-[var(--ink)] group-hover:text-[var(--brand-sky-strong)]">
+            <h3 className="line-clamp-2 text-lg font-extrabold leading-snug tracking-tight text-[var(--ink)] group-hover:text-link">
               {course.title}
             </h3>
           </Link>

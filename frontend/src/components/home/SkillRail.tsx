@@ -8,7 +8,7 @@ const CARD_W = 'w-[70vw] max-w-[260px] sm:w-[240px] lg:w-[260px]';
 
 /* Deterministic tint per category — same category, same colour, every render. */
 const TINTS = [
-  'text-signal bg-signal-soft',
+  'text-link bg-signal-soft',
   'text-success bg-surface-hover',
   'text-amber-deep bg-warning-soft',
   'text-[#7C3AED] bg-[#F1EBFE]',
@@ -43,7 +43,7 @@ const SkillRailCard: React.FC<{ skill: SkillTestSkill }> = ({ skill }) => (
     </div>
 
     <div>
-      <h3 className="line-clamp-2 text-base font-extrabold leading-snug text-heading transition-colors group-hover:text-signal">
+      <h3 className="line-clamp-2 text-base font-extrabold leading-snug text-heading transition-colors group-hover:text-link">
         {skill.name}
       </h3>
       <p className="mt-0.5 text-xs font-semibold text-[var(--text-muted)]">{skill.category}</p>
@@ -63,7 +63,7 @@ const SkillRailCard: React.FC<{ skill: SkillTestSkill }> = ({ skill }) => (
       )}
     </div>
 
-    <span className="mt-auto inline-flex items-center gap-1 pt-1 text-sm font-bold text-signal">
+    <span className="mt-auto inline-flex items-center gap-1 pt-1 text-sm font-bold text-link">
       Start test
       <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
     </span>

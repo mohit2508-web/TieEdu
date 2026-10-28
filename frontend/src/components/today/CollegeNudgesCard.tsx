@@ -60,7 +60,7 @@ export const CollegeNudgesCard: React.FC<{ ready: boolean; settingsOnly?: boolea
   if (settingsOnly) {
     return (
       <div className="rounded-xl border border-line p-4">
-        <p className="mb-2 flex items-center gap-2 text-sm font-bold text-heading"><Megaphone className="h-4 w-4 text-signal" aria-hidden /> College placement cell</p>
+        <p className="mb-2 flex items-center gap-2 text-sm font-bold text-heading"><Megaphone className="h-4 w-4 text-link" aria-hidden /> College placement cell</p>
         {sw}
       </div>
     );
@@ -72,11 +72,11 @@ export const CollegeNudgesCard: React.FC<{ ready: boolean; settingsOnly?: boolea
       <ul className="mt-2 space-y-2">
         {inbox.items.slice(0, 3).map((n) => (
           <li key={`${n.id}-${n.at}`} className={`rounded-xl p-3 text-sm ${n.seen ? 'bg-surface-hover text-body' : 'bg-signal-soft text-heading'}`}>
-            <Megaphone className="mr-1.5 inline h-4 w-4 text-signal" aria-hidden />
+            <Megaphone className="mr-1.5 inline h-4 w-4 text-link" aria-hidden />
             {n.text}
             <span className="mt-1 flex flex-wrap items-center gap-x-3 text-xs text-muted">
               {dayMonth.format(new Date(n.at))}
-              <Link href={n.href} className="inline-flex min-h-[32px] items-center gap-1 font-semibold text-signal hover:underline">Go <ArrowRight className="h-3.5 w-3.5" aria-hidden /></Link>
+              <Link href={n.href} className="inline-flex min-h-[32px] items-center gap-1 font-semibold text-link hover:underline">Go <ArrowRight className="h-3.5 w-3.5" aria-hidden /></Link>
             </span>
           </li>
         ))}

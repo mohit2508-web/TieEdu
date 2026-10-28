@@ -167,7 +167,7 @@ const MobileRow: React.FC<{ row: RowDef; cell: Cell }> = ({ row, cell }) => (
         <span
           className={`shrink-0 px-1.5 py-0.5 rounded text-xs font-bold uppercase tracking-wide ${
             cell.state === 'verified'
-              ? 'bg-signal-soft text-signal-hover border border-signal/30'
+              ? 'bg-signal-soft text-link border border-signal/30'
               : 'bg-amber-50 text-amber-800 border border-amber-200'
           }`}
         >

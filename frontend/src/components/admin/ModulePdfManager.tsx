@@ -126,7 +126,7 @@ export const ModulePdfManager: React.FC<ModulePdfManagerProps> = ({ module, comp
         <div className="flex items-start justify-between gap-3 pb-3 border-b border-gray-200">
           <div>
             <h3 className="font-bold text-base text-brand-ink flex items-center gap-2">
-              <FileText className="w-5 h-5 text-signal" /> PDF Library — {pdfs.length} PDF{pdfs.length !== 1 ? 's' : ''}
+              <FileText className="w-5 h-5 text-link" /> PDF Library — {pdfs.length} PDF{pdfs.length !== 1 ? 's' : ''}
             </h3>
             <p className="text-sm text-[--text-muted] mt-0.5">
               {companyName || 'Company'} • {module.title} — Multiple PDFs allowed per module
@@ -161,7 +161,7 @@ export const ModulePdfManager: React.FC<ModulePdfManagerProps> = ({ module, comp
                   <div className="flex items-center gap-2 shrink-0">
                     <button
                       onClick={() => setPreviewPdfId(previewPdfId === pdf.id ? null : pdf.id)}
-                      className="inline-flex items-center gap-1.5 px-3 py-2 bg-signal-soft hover:bg-signal-soft text-signal rounded-xl text-xs font-bold transition-colors"
+                      className="inline-flex items-center gap-1.5 px-3 py-2 bg-signal-soft hover:bg-signal-soft text-link rounded-xl text-xs font-bold transition-colors"
                     >
                       <Eye className="w-3.5 h-3.5" /> {previewPdfId === pdf.id ? 'Hide' : 'Preview'}
                     </button>
@@ -179,7 +179,7 @@ export const ModulePdfManager: React.FC<ModulePdfManagerProps> = ({ module, comp
                 {previewPdfId === pdf.id && (
                   <div className="rounded-xl overflow-hidden border border-gray-200 bg-white">
                     <div className="flex items-center gap-1.5 px-3 py-2 bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
-                      <Eye className="w-3.5 h-3.5 text-signal" /> Admin Live Preview
+                      <Eye className="w-3.5 h-3.5 text-link" /> Admin Live Preview
                     </div>
                     {previewUrls[pdf.id] ? (
                       <iframe src={previewUrls[pdf.id]} title={pdf.title} className="w-full h-64" />
@@ -219,11 +219,11 @@ export const ModulePdfManager: React.FC<ModulePdfManagerProps> = ({ module, comp
               className="hidden"
               onChange={(e) => pickFile(e.target.files?.[0])}
             />
-            <Upload className="w-7 h-7 text-signal mx-auto mb-2" />
+            <Upload className="w-7 h-7 text-link mx-auto mb-2" />
             <p className="text-sm font-bold text-ink-soft">Drag & drop, or click to choose a PDF</p>
             <p className="text-xs text-[--text-muted] mt-1">application/pdf • 25MB max • Multiple uploads supported</p>
             {file && (
-              <p className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 bg-signal-soft border border-signal/30 text-signal rounded-xl text-xs font-bold">
+              <p className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 bg-signal-soft border border-signal/30 text-link rounded-xl text-xs font-bold">
                 <FileText className="w-3.5 h-3.5" /> {file.name} ({fmtSize(file.size)})
               </p>
             )}

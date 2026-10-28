@@ -94,10 +94,10 @@ export default function MyCoursesPage() {
           </div>
           {totalXp > 0 && (
             <div className="rounded-xl bg-[var(--brand-sky-soft)] px-4 py-2.5 text-center">
-              <p className="text-xs font-bold uppercase tracking-wider text-[var(--brand-sky-strong)]">
+              <p className="text-xs font-bold uppercase tracking-wider text-link">
                 Total XP
               </p>
-              <p className="text-xl font-extrabold tabular-nums text-[var(--brand-sky-strong)]">
+              <p className="text-xl font-extrabold tabular-nums text-link">
                 {totalXp}
               </p>
             </div>
@@ -130,7 +130,7 @@ export default function MyCoursesPage() {
             {inProgress.length === 0 && completed.length === 0 && (
               <p className="mt-16 text-center text-sm text-[var(--text-muted)]">
                 You have not started a course yet.{' '}
-                <Link href="/courses" className="font-semibold text-[var(--brand-sky)] underline underline-offset-2">
+                <Link href="/courses" className="font-semibold text-link underline underline-offset-2">
                   Browse the catalogue
                 </Link>
                 .
@@ -176,7 +176,7 @@ export default function MyCoursesPage() {
                           </p>
                         )}
                         {left > 0 && course.certificate_eligible && (
-                          <p className="mt-1.5 text-xs font-semibold text-[var(--brand-sky)]">
+                          <p className="mt-1.5 text-xs font-semibold text-link">
                             {left} lesson{left === 1 ? '' : 's'} from your {tier.label} certificate
                             {gates.length > 0 ? ` + ${gates.join(' + ')}` : ''} →
                           </p>
@@ -257,7 +257,7 @@ export default function MyCoursesPage() {
                 action={
                   <Link
                     href="/my-certificates"
-                    className="inline-flex min-h-[44px] items-center text-xs font-semibold text-[var(--brand-sky)] underline underline-offset-2"
+                    className="inline-flex min-h-[44px] items-center text-xs font-semibold text-link underline underline-offset-2"
                   >
                     View gallery →
                   </Link>
@@ -307,14 +307,14 @@ export default function MyCoursesPage() {
                             <div className="flex justify-end gap-2">
                               <Link
                                 href={`/verify/${c.serial}`}
-                                className="text-xs font-semibold text-[var(--brand-sky)] underline underline-offset-2"
+                                className="text-xs font-semibold text-link underline underline-offset-2"
                               >
                                 Verify
                               </Link>
                               <button
                                 type="button"
                                 onClick={() => download(c)}
-                                className="text-xs font-semibold text-[var(--brand-sky)] underline underline-offset-2"
+                                className="text-xs font-semibold text-link underline underline-offset-2"
                               >
                                 PDF
                               </button>

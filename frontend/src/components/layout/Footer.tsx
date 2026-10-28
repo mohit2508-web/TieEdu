@@ -49,7 +49,7 @@ export const Footer: React.FC = () => {
           </div>
 
           <div className="vault-card !shadow-none p-5 flex items-start gap-4">
-            <div className="w-11 h-11 rounded-2xl bg-signal-soft text-signal flex items-center justify-center shrink-0">
+            <div className="w-11 h-11 rounded-2xl bg-signal-soft text-link flex items-center justify-center shrink-0">
               <Server className="w-5 h-5" />
             </div>
             <div>
@@ -73,7 +73,7 @@ export const Footer: React.FC = () => {
                   target="_blank"
                   rel="noreferrer noopener"
                   aria-label={social.label}
-                  className="flex h-8 w-8 items-center justify-center rounded-full border border-line text-body transition-all hover:-translate-y-0.5 hover:border-[var(--brand-sky)] hover:text-[var(--brand-sky)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand-sky)]"
+                  className="flex h-8 w-8 items-center justify-center rounded-full border border-line text-body transition-all hover:-translate-y-0.5 hover:border-[var(--brand-sky)] hover:text-link focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)]"
                 >
                   {social.icon}
                 </a>
@@ -91,7 +91,7 @@ export const Footer: React.FC = () => {
               <Link
                 key={item.id}
                 href={item.href}
-                className="inline-flex min-h-[40px] items-center transition-colors hover:text-[var(--brand-sky)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand-sky)]"
+                className="inline-flex min-h-[40px] items-center transition-colors hover:text-link focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)]"
               >
                 {navLabel(lang, item.id, item.label)}
               </Link>
@@ -99,7 +99,7 @@ export const Footer: React.FC = () => {
             {/* Colleges get their own door, outside the student nav (§5). */}
             <Link
               href="/colleges"
-              className="inline-flex min-h-[40px] items-center transition-colors hover:text-[var(--brand-sky)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand-sky)]"
+              className="inline-flex min-h-[40px] items-center transition-colors hover:text-link focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)]"
             >
               For colleges
             </Link>

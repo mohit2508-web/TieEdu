@@ -94,7 +94,7 @@ const Results: React.FC<{
                 </span>
                 <ArrowRight
                   size={15}
-                  className={cn('flex-none', i === activeIndex ? 'text-[var(--brand-sky)]' : 'opacity-35')}
+                  className={cn('flex-none', i === activeIndex ? 'text-link' : 'opacity-35')}
                   aria-hidden
                 />
               </button>
@@ -139,7 +139,7 @@ const Results: React.FC<{
                   </span>
                   <ArrowRight
                     size={15}
-                    className={cn('flex-none', i === activeIndex ? 'text-[var(--brand-sky)]' : 'opacity-35')}
+                    className={cn('flex-none', i === activeIndex ? 'text-link' : 'opacity-35')}
                     aria-hidden
                   />
                 </button>
@@ -329,7 +329,7 @@ export const SearchModal: React.FC = () => {
             <button
               type="button"
               onClick={() => closeOverlay('search')}
-              className="-ml-1 flex min-h-[44px] items-center gap-0.5 rounded-lg px-3 text-base font-semibold text-signal transition-colors active:bg-black/5"
+              className="-ml-1 flex min-h-[44px] items-center gap-0.5 rounded-lg px-3 text-base font-semibold text-link transition-colors active:bg-black/5"
             >
               <ChevronLeft size={20} aria-hidden />
               Back

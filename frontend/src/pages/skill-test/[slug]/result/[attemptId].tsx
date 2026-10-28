@@ -10,7 +10,7 @@ import { getResultApi, SkillTestAttempt, SkillTestCertificate, SkillTestRecommen
 import { nameFromSlug, withPageTitle } from '@/components/common/withPageTitle';
 function getLevel(score: number) {
   if (score >= 90) return { level: 'Expert', color: 'text-purple-600', bg: 'bg-purple-50', ring: 'border-purple-300' };
-  if (score >= 75) return { level: 'Advanced', color: 'text-signal', bg: 'bg-signal-soft', ring: 'border-signal/30' };
+  if (score >= 75) return { level: 'Advanced', color: 'text-link', bg: 'bg-signal-soft', ring: 'border-signal/30' };
   if (score >= 60) return { level: 'Intermediate', color: 'text-emerald-600', bg: 'bg-emerald-50', ring: 'border-emerald-300' };
   if (score >= 40) return { level: 'Developing', color: 'text-amber-600', bg: 'bg-amber-50', ring: 'border-amber-300' };
   return { level: 'Beginner', color: 'text-gray-600', bg: 'bg-gray-50', ring: 'border-gray-300' };
@@ -73,7 +73,7 @@ function ResultPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="text-center">
           <p className="text-gray-600">{error || 'Result not found'}</p>
-          <Link href="/skill-test" className="mt-3 inline-block text-signal font-medium">Back to Skill Test</Link>
+          <Link href="/skill-test" className="mt-3 inline-block text-link font-medium">Back to Skill Test</Link>
         </div>
       </div>
     );
@@ -125,7 +125,7 @@ function ResultPage() {
         {/* Topic Performance */}
         <div className="mt-6 rounded-2xl bg-white border border-gray-200 p-6 shadow-sm">
           <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-signal" /> Your Performance
+            <TrendingUp className="h-5 w-5 text-link" /> Your Performance
           </h2>
           <div className="mt-4 space-y-4">
             {topicPerf.map((t) => (
@@ -133,7 +133,7 @@ function ResultPage() {
                 <div className="flex items-center justify-between text-sm mb-1.5">
                   <span className="text-gray-700 font-medium">{t.topicName}</span>
                   <span className={`font-semibold ${
-                    t.percentage >= 75 ? 'text-emerald-600' : t.percentage >= 60 ? 'text-signal' : 'text-red-500'
+                    t.percentage >= 75 ? 'text-emerald-600' : t.percentage >= 60 ? 'text-link' : 'text-red-500'
                   }`}>{t.percentage}%</span>
                 </div>
                 <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
@@ -194,7 +194,7 @@ function ResultPage() {
         {/* Recommended Learning */}
         <div className="mt-6 rounded-2xl bg-white border border-gray-200 p-6 shadow-sm">
           <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
-            <BookOpen className="h-5 w-5 text-signal" /> Recommended Learning
+            <BookOpen className="h-5 w-5 text-link" /> Recommended Learning
           </h2>
           <div className="mt-3 space-y-2">
             {(recommendation?.recommendedCourses?.length
@@ -218,7 +218,7 @@ function ResultPage() {
                   <p className="text-sm font-medium text-gray-900">{item.title}</p>
                   <p className="text-xs text-gray-500">{item.reason}</p>
                 </div>
-                <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-signal flex-none" />
+                <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-link flex-none" />
               </Link>
             ))}
             {weaknesses.length === 0 && !recommendation?.recommendedCourses?.length && (
@@ -236,7 +236,7 @@ function ResultPage() {
             <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-center">
               <Link
                 href={`/skill-test/certificates/${certificate.certificateId}`}
-                className="rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-signal hover:bg-signal-soft transition-colors"
+                className="rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-link hover:bg-signal-soft transition-colors"
               >
                 View Certificate
               </Link>

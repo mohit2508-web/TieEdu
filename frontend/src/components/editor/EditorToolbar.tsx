@@ -128,7 +128,7 @@ interface EditorToolbarProps {
 // costs a swipe rather than a layout break), compact 36px from `sm` up where
 // there is a real pointer.
 const btn =
-  'shrink-0 inline-flex items-center justify-center w-11 h-11 sm:w-9 sm:h-9 rounded-lg text-muted hover:bg-signal/10 hover:text-signal transition-colors focus-ring disabled:opacity-30 disabled:pointer-events-none';
+  'shrink-0 inline-flex items-center justify-center w-11 h-11 sm:w-9 sm:h-9 rounded-lg text-muted hover:bg-signal/10 hover:text-link transition-colors focus-ring disabled:opacity-30 disabled:pointer-events-none';
 
 export const EditorToolbar: React.FC<EditorToolbarProps> = ({
   onCommand,

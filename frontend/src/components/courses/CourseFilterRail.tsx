@@ -63,7 +63,7 @@ const Checkbox: React.FC<{
         checked
           ? 'border-[var(--brand-sky)] bg-[var(--brand-sky)]'
           : 'border-[var(--border-strong)] bg-[var(--bg-surface)] group-hover:border-[var(--brand-sky)]',
-        'peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--brand-sky)]',
+        'peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--focus)]',
       ].join(' ')}
     >
       {checked && (
@@ -129,7 +129,7 @@ const FilterGroup: React.FC<{
           type="button"
           onClick={() => setExpanded((v) => !v)}
           aria-expanded={expanded}
-          className="mt-2 text-xs font-bold text-[var(--brand-sky)] hover:underline"
+          className="mt-2 text-xs font-bold text-link hover:underline"
         >
           {expanded ? 'Show less' : `Show ${hidden} more`}
         </button>
@@ -151,7 +151,7 @@ export const CourseFilterRail: React.FC<{
       <button
         type="button"
         onClick={onClear}
-        className="mb-5 text-sm font-bold text-[var(--brand-sky)] hover:underline"
+        className="mb-5 text-sm font-bold text-link hover:underline"
       >
         Clear all filters ({activeCount})
       </button>

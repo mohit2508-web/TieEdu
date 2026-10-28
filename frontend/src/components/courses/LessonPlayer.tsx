@@ -265,7 +265,7 @@ export const LessonPlayer: React.FC<{
           }}
         />
         {rejectedNote && (
-          <p className="mt-2 rounded-lg bg-[var(--bg-sky-soft)] px-3 py-2 text-xs leading-relaxed text-[var(--brand-sky-strong)]">
+          <p className="mt-2 rounded-lg bg-[var(--bg-sky-soft)] px-3 py-2 text-xs leading-relaxed text-link">
             {rejectedNote}
           </p>
         )}
@@ -385,7 +385,7 @@ export const LessonPlayer: React.FC<{
       )}
 
       {readGated && (
-        <p className="mb-6 flex items-center gap-2 rounded-lg bg-[var(--bg-sky-soft)] px-3 py-2 text-xs leading-relaxed text-[var(--brand-sky-strong)]">
+        <p className="mb-6 flex items-center gap-2 rounded-lg bg-[var(--bg-sky-soft)] px-3 py-2 text-xs leading-relaxed text-link">
           <FileText size={13} className="shrink-0" />
           {state.read_percent >= 90
             ? 'Nearly there — keep reading to finish this lesson.'
@@ -598,7 +598,7 @@ const QuizForm: React.FC<{
   return (
     <section className="rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
       <div className="mb-4 flex items-center gap-2">
-        <ListChecks size={17} className="text-[var(--brand-sky)]" />
+        <ListChecks size={17} className="text-link" />
         <h3 className="text-base font-bold text-[var(--ink)]">
           {questions.length} questions
         </h3>

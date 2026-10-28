@@ -17,7 +17,7 @@ const inputCls = "w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm
 
 const ROUND_CHIP: Record<string, string> = {
   OA: 'bg-amber-100 text-amber-800',
-  Technical: 'bg-signal-soft text-signal-hover',
+  Technical: 'bg-signal-soft text-link',
   SystemDesign: 'bg-purple-100 text-purple-700',
   HR: 'bg-emerald-100 text-emerald-700',
   Managerial: 'bg-teal-100 text-teal-700',
@@ -731,8 +731,8 @@ export const CartModal: React.FC = () => {
               )}
 
               {/* Payment Method Note */}
-              <div className="bg-signal-soft/70 border border-line rounded-xl p-3.5 text-sm text-signal-hover flex items-start gap-2">
-                <ShieldCheck className="w-4 h-4 text-signal mt-0.5 shrink-0" />
+              <div className="bg-signal-soft/70 border border-line rounded-xl p-3.5 text-sm text-link flex items-start gap-2">
+                <ShieldCheck className="w-4 h-4 text-link mt-0.5 shrink-0" />
                 <span>
                   {paymentMode === 'razorpay'
                     ? 'Checkout runs through Razorpay with card/UPI support — your vault unlocks instantly.'
@@ -758,7 +758,7 @@ export const CartModal: React.FC = () => {
                   </div>
                 )}
                 <div className="flex justify-between font-bold text-lg text-heading pt-2 border-t border-dashed border-gray-300">
-                  <span>Total Payable</span><span className="text-signal">₹{finalTotal}</span>
+                  <span>Total Payable</span><span className="text-link">₹{finalTotal}</span>
                 </div>
               </div>
 

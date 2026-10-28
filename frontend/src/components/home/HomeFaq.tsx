@@ -35,7 +35,7 @@ const FAQ: Array<{ q: string; a: React.ReactNode }> = [
     a: (
       <>
         Yes. Start with the{' '}
-        <Link href="/courses?bucket=a&src=faq" className="font-semibold text-signal hover:underline">
+        <Link href="/courses?bucket=a&src=faq" className="font-semibold text-link hover:underline">
           first-year courses
         </Link>{' '}
         and the free skill tests. The company pages matter most in your final year.
@@ -47,7 +47,7 @@ const FAQ: Array<{ q: string; a: React.ReactNode }> = [
     a: (
       <>
         Each certificate has a serial number and a public{' '}
-        <Link href="/verify" className="font-semibold text-signal hover:underline">
+        <Link href="/verify" className="font-semibold text-link hover:underline">
           verification page
         </Link>{' '}
         showing who it was issued to, for which course, and when. Anyone can check it.
@@ -63,7 +63,7 @@ const FAQ: Array<{ q: string; a: React.ReactNode }> = [
     a: (
       <>
         Yes. Placement officers get a dashboard for their batch. See{' '}
-        <Link href="/colleges" className="font-semibold text-signal hover:underline">
+        <Link href="/colleges" className="font-semibold text-link hover:underline">
           TieEdu for colleges
         </Link>
         .

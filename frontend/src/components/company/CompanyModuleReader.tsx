@@ -295,7 +295,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
               <div className="flex items-center gap-2 text-sm text-gray-500 font-medium truncate">
                 <span>{companyName}</span>
                 <span>/</span>
-                <span className="text-signal font-semibold truncate">{module.title}</span>
+                <span className="text-link font-semibold truncate">{module.title}</span>
               </div>
               <h1 className="text-lg sm:text-xl font-extrabold text-gray-900 truncate tracking-tight">
                 {module.title}
@@ -360,7 +360,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
             <div className="flex items-center gap-2 text-sm text-gray-500 font-medium truncate">
               <span>{companyName}</span>
               <span>/</span>
-              <span className="text-signal font-semibold truncate">{module.title}</span>
+              <span className="text-link font-semibold truncate">{module.title}</span>
             </div>
             <h1 className="text-lg sm:text-xl font-extrabold text-gray-900 truncate tracking-tight">
               {module.title}
@@ -446,11 +446,11 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                   onClick={() => setActiveSection(item.id)}
                   className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-bold transition-all text-left ${
                     isActive
-                      ? 'bg-signal/10 text-signal border-l-4 border-signal shadow-xs'
+                      ? 'bg-signal/10 text-link border-l-4 border-signal shadow-xs'
                       : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   }`}
                 >
-                  <Icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-signal' : 'text-gray-400'}`} />
+                  <Icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-link' : 'text-gray-400'}`} />
                   <span className="truncate">{item.label}</span>
                 </button>
               );
@@ -473,7 +473,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                       className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
                         active
                           ? 'bg-signal text-white shadow-xs'
-                          : 'bg-gray-100 text-gray-600 hover:bg-signal/10 hover:text-signal'
+                          : 'bg-gray-100 text-gray-600 hover:bg-signal/10 hover:text-link'
                       }`}
                     >
                       {m.round_type || (m.is_premium ? 'Premium' : 'Free')}
@@ -501,7 +501,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
             <div className="space-y-8 animate-fade-in">
               <div className="border-b border-gray-200 pb-5">
                 <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 flex items-center gap-3 tracking-tight">
-                  <Building2 className="w-7 h-7 text-signal" />
+                  <Building2 className="w-7 h-7 text-link" />
                   Company Overview & Recruitment Blueprint
                 </h2>
                 <p className="text-base text-gray-600 mt-2">
@@ -558,7 +558,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
               <div className="border-b border-gray-200 pb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 flex items-center gap-3 tracking-tight">
-                    <BookOpen className="w-7 h-7 text-signal" />
+                    <BookOpen className="w-7 h-7 text-link" />
                     Core Subjects & Past Year Questions (PYQs)
                   </h2>
                   <p className="text-base text-gray-600 mt-2">
@@ -575,7 +575,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                       onClick={() => setSelectedYear(yr)}
                       className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                         selectedYear === yr
-                          ? 'bg-white text-signal shadow-xs'
+                          ? 'bg-white text-link shadow-xs'
                           : 'text-gray-600 hover:text-gray-900'
                       }`}
                     >
@@ -612,7 +612,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                                   .map((pyq, pIdx) => (
                                     <div key={pIdx} className="p-4 bg-white border border-gray-200 rounded-xl text-base space-y-2 shadow-2xs">
                                       <div className="flex flex-wrap items-center gap-2">
-                                        <span className="px-2.5 py-0.5 bg-signal-soft text-signal-hover rounded font-bold text-xs">
+                                        <span className="px-2.5 py-0.5 bg-signal-soft text-link rounded font-bold text-xs">
                                           Year {pyq.year}
                                         </span>
                                         {pyq.frequency && (
@@ -649,7 +649,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
             <div className="space-y-8 animate-fade-in">
               <div className="border-b border-gray-200 pb-5">
                 <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 flex items-center gap-3 tracking-tight">
-                  <Lightbulb className="w-7 h-7 text-signal" />
+                  <Lightbulb className="w-7 h-7 text-link" />
                   Technical & Coding Interview Questions
                 </h2>
                 <p className="text-base text-gray-600 mt-2">
@@ -672,7 +672,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-center gap-2.5 min-w-0">
                           <span className={`shrink-0 px-3 py-0.5 rounded-md text-xs font-bold uppercase tracking-wider ${
-                            q.category === 'Coding' ? 'bg-purple-100 text-purple-800' : 'bg-signal-soft text-signal-hover'
+                            q.category === 'Coding' ? 'bg-purple-100 text-purple-800' : 'bg-signal-soft text-link'
                           }`}>
                             {q.category}
                           </span>
@@ -731,7 +731,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
             <div className="space-y-8 animate-fade-in">
               <div className="border-b border-gray-200 pb-5">
                 <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 flex items-center gap-3 tracking-tight">
-                  <FileSpreadsheet className="w-7 h-7 text-signal" />
+                  <FileSpreadsheet className="w-7 h-7 text-link" />
                   Quick Cheatsheets & Reference Cards
                 </h2>
                 <p className="text-base text-gray-600 mt-2">
@@ -839,7 +839,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
             <div className="space-y-8 animate-fade-in">
               <div className="border-b border-gray-200 pb-5">
                 <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 flex items-center gap-3 tracking-tight">
-                  <UserCheck className="w-7 h-7 text-signal" />
+                  <UserCheck className="w-7 h-7 text-link" />
                   HR & Behavioral Interview Blueprint
                 </h2>
                 <p className="text-base text-gray-600 mt-2">
@@ -882,7 +882,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
             <div className="space-y-8 animate-fade-in">
               <div className="border-b border-gray-200 pb-5">
                 <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 flex items-center gap-3 tracking-tight">
-                  <FileText className="w-7 h-7 text-signal" />
+                  <FileText className="w-7 h-7 text-link" />
                   PDF Library — Official Study Guides
                 </h2>
                 <p className="text-base text-gray-600 mt-2">
@@ -944,7 +944,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                           <button
                             onClick={() => downloadPdfApi(pdfItem.stored_name, pdfItem.file_name)
                               .catch(() => setDlNote(`Could not download "${pdfItem.title}". Please try again.`))}
-                            className="inline-flex items-center gap-2 px-4 py-3 bg-white border border-signal/30 hover:border-signal text-signal text-sm font-bold rounded-xl shadow-sm transition-all"
+                            className="inline-flex items-center gap-2 px-4 py-3 bg-white border border-signal/30 hover:border-signal text-link text-sm font-bold rounded-xl shadow-sm transition-all"
                           >
                             <Download className="w-4 h-4" /> Download PDF
                           </button>
@@ -1005,7 +1005,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                 </button>
                 <button
                   onClick={onBack}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-white border border-gray-200 hover:border-signal text-signal text-sm font-bold rounded-xl transition-all"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-white border border-gray-200 hover:border-signal text-link text-sm font-bold rounded-xl transition-all"
                 >
                   <BookOpen className="w-4 h-4" /> Browse All Modules
                 </button>

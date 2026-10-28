@@ -101,7 +101,7 @@ export const ReaderActionBar: React.FC<ReaderActionBarProps> = ({
             className={cn(
               'flex h-12 w-12 flex-none items-center justify-center rounded-xl border transition-colors active:bg-black/5',
               bookmarked
-                ? 'border-signal/30 bg-signal/10 text-signal'
+                ? 'border-signal/30 bg-signal/10 text-link'
                 : 'border-gray-200 text-gray-500'
             )}
           >

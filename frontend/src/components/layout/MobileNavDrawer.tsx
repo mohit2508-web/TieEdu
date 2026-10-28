@@ -200,7 +200,7 @@ export const MobileNavDrawer: React.FC = () => {
         <div className="border-t border-line px-3 py-3">
           {signedIn ? (
             <div className="flex items-center gap-3">
-              <span className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-full bg-signal-soft text-signal">
+              <span className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-full bg-signal-soft text-link">
                 <UserRound size={17} strokeWidth={2.2} aria-hidden />
               </span>
               <span className="min-w-0 flex-1">
@@ -235,7 +235,7 @@ export const MobileNavDrawer: React.FC = () => {
               <Link
                 href="/signup"
                 onClick={() => closeOverlay('drawer')}
-                className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border border-signal bg-transparent px-4 text-sm font-bold text-signal transition-colors hover:bg-signal-soft"
+                className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border border-signal bg-transparent px-4 text-sm font-bold text-link transition-colors hover:bg-signal-soft"
               >
                 <UserPlus size={17} strokeWidth={2.4} aria-hidden />
                 Sign up

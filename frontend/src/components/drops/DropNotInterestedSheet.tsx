@@ -44,7 +44,7 @@ export const DropNotInterestedSheet: React.FC<DropNotInterestedSheetProps> = ({
       disabled={busy}
       onPress={() => onMute(kind)}
     >
-      <Icon size={19} strokeWidth={2.2} className="mt-0.5 flex-none text-[var(--brand-sky)]" aria-hidden />
+      <Icon size={19} strokeWidth={2.2} className="mt-0.5 flex-none text-link" aria-hidden />
       <span className="min-w-0">
         <span className="block text-sm font-bold text-[var(--text-heading)]">{title}</span>
         <span className="mt-0.5 block text-xs text-[var(--text-muted)]">{description}</span>

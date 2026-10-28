@@ -16,57 +16,93 @@
    the same channels — which is what lets the 700+ existing `var(--…)` uses
    and every Tailwind class switch theme together.
 
-   Brand: the action colour is the LOGO ORANGE, tuned for contrast
-   (#CC3607: 5.1:1 under white text, 4.7:1 as link text on paper). Amber is
-   reserved for prices and buy buttons. Blue remains only as `info`/`train`.
+   Palette: "Warm Paper" (UI_REDESIGN_PLAN_V3 §2–4). Every colour sits on
+   one warm temperature: cream paper, warm-brown ink (never black or navy),
+   beige lines, ink-tinted shadows. Two brand colours: amber for actions
+   (always with dark ink on it — white on amber is 2.0:1) and deep teal for
+   the one dark band per screen and for link text (amber as text on paper is
+   1.9:1, so `text-link` carries links, never `text-signal`). The logo keeps
+   its own orange (`--rgb-logo`), used by the logo and nothing else.
    ============================================ */
 :root {
   /* Surfaces */
-  --rgb-bg-app: 247 246 243;          /* paper  #F7F6F3 */
-  --rgb-bg-app-warm: 252 251 248;     /* #FCFBF8 */
+  --rgb-bg-app: 255 248 238;          /* ground #FFF8EE */
+  --rgb-bg-app-warm: 251 244 232;     /* pane   #FBF4E8 */
   --rgb-bg-surface: 255 255 255;      /* card   #FFFFFF */
-  --rgb-bg-surface-hover: 243 242 238;/* #F3F2EE */
-  --rgb-border-subtle: 233 231 225;   /* line   #E9E7E1 */
-  --rgb-border-strong: 214 210 200;   /* #D6D2C8 */
+  --rgb-bg-surface-hover: 245 238 226;/* sunk   #F5EEE2 */
+  --rgb-border-subtle: 232 223 208;   /* line   #E8DFD0 */
+  --rgb-border-strong: 138 122 104;   /* #8A7A68 — inputs; 3.9:1 on paper */
+  --rgb-edge: 224 213 194;            /* #E0D5C2 — solid under-edge of neutral buttons/cards */
 
-  /* Ink & text */
-  --rgb-ink: 16 21 28;                /* #10151C — heading text */
-  --rgb-ink-soft: 42 51 64;           /* #2A3340 */
-  --rgb-brand-ink: 14 42 68;          /* #0E2A44 — the navy band */
-  --rgb-text-heading: 16 21 28;       /* #10151C */
-  --rgb-text-body: 62 71 84;          /* #3E4754 */
-  --rgb-text-muted: 90 100 112;       /* #5A6470 — 5.6:1 on paper */
-  --rgb-text-light: 100 108 120;        /* #646C78 — 4.9:1 on the page background */
+  /* Ink & text — one warm-brown ink for headings and body */
+  --rgb-ink: 42 30 20;                /* #2A1E14 */
+  --rgb-ink-soft: 42 30 20;
+  --rgb-brand-ink: 11 79 74;          /* #0B4F4A — the deep-teal band (was navy) */
+  --rgb-text-heading: 42 30 20;       /* 15.4:1 on paper */
+  --rgb-text-body: 42 30 20;
+  --rgb-text-muted: 107 91 75;        /* #6B5B4B — 6.2:1 on paper */
+  --rgb-text-light: 107 91 75;
 
-  /* Brand action — logo orange */
-  --rgb-signal: 204 54 7;             /* #CC3607 */
-  --rgb-signal-hover: 184 48 6;       /* #B83006 */
-  --rgb-signal-soft: 255 244 238;     /* #FFF4EE */
-  --rgb-signal-ink: 154 45 5;         /* #9A2D05 — text on soft tint */
-  --rgb-logo: 248 65 9;               /* #F84109 — logo / decoration only */
+  /* Brand action — amber, dark ink on it */
+  --rgb-signal: 255 164 27;           /* #FFA41B — fills, rings, progress; never text on paper */
+  --rgb-signal-hover: 217 128 10;     /* #D9800A — the under-edge and pressed fill */
+  --rgb-signal-soft: 255 231 191;     /* #FFE7BF — tint */
+  --rgb-signal-ink: 107 62 0;         /* #6B3E00 — text on the tint, 7.5:1 */
+  --rgb-on-primary: 42 30 20;         /* text on amber, 8.2:1 */
+  --rgb-logo: 248 65 9;               /* #F84109 — the logo's own orange, unchanged; logo only */
 
-  /* Money — prices and buy buttons only */
-  --rgb-money: 232 163 61;            /* #E8A33D */
-  --rgb-money-hover: 212 144 44;      /* #D4902C */
-  --rgb-money-ink: 36 26 6;           /* #241A06 — text on amber */
-  --rgb-amber-deep: 180 83 9;         /* #B45309 */
-  --rgb-brand-mint: 13 125 98;        /* #0D7D62 — 5.1:1 under white text (was #10A37F, 3.2:1) */
+  /* Links and the second brand colour — deep teal */
+  --rgb-link: 11 79 74;               /* #0B4F4A — 8.9:1 on paper */
+  --rgb-secondary: 11 79 74;
+  --rgb-on-secondary: 255 248 238;
+  --rgb-secondary-soft: 211 234 230;  /* #D3EAE6 — teal text on it 7.5:1 */
 
-  /* Meaning colours */
-  --rgb-train: 3 105 161;             /* #0369A1 */
-  --rgb-test: 194 65 12;              /* #C2410C */
-  --rgb-track: 15 118 110;            /* #0F766E */
-  --rgb-success: 21 122 59;           /* #157A3B — 4.8:1 even on tinted chips */
-  --rgb-success-soft: 230 244 236;    /* #E6F4EC */
-  --rgb-warning: 180 83 9;            /* #B45309 — 5.0:1 (was #C77B12, 3.1:1) */
-  --rgb-warning-soft: 254 243 199;    /* #FEF3C7 */
-  --rgb-danger: 180 35 24;            /* #B42318 */
-  --rgb-danger-soft: 253 236 234;     /* #FDECEA */
-  --rgb-info: 3 105 161;              /* #0369A1 */
-  --rgb-info-soft: 232 244 251;       /* #E8F4FB */
-  --rgb-purple: 109 40 217;           /* #6D28D9 */
-  --rgb-purple-soft: 245 240 255;
-  --rgb-on-accent: 255 255 255;       /* text on a filled accent */
+  /* The dark band */
+  --rgb-on-hero: 255 248 238;         /* 8.9:1 on the band */
+  --rgb-on-hero-muted: 169 207 201;   /* #A9CFC9 — 5.6:1 */
+  --rgb-hero-edge: 8 59 55;           /* #083B37 */
+
+  /* Money — now the same amber as the action colour (plan D1) */
+  --rgb-money: 255 164 27;
+  --rgb-money-hover: 217 128 10;
+  --rgb-money-ink: 42 30 20;
+  --rgb-amber-deep: 154 91 0;         /* #9A5B00 — warning text, 5.6:1 */
+  --rgb-brand-mint: 20 108 69;        /* = success; white on it 6.6:1 */
+
+  /* Meaning colours (learning types now use text-safe palette values) */
+  --rgb-train: 43 63 179;             /* #2B3FB3 (info) */
+  --rgb-test: 107 62 0;               /* #6B3E00 (amber ink) */
+  --rgb-track: 11 79 74;              /* #0B4F4A (teal) */
+  --rgb-success: 20 108 69;           /* #146C45 — 6.1:1 */
+  --rgb-success-soft: 221 241 231;    /* #DDF1E7 */
+  --rgb-warning: 154 91 0;            /* #9A5B00 */
+  --rgb-warning-soft: 255 231 191;    /* amber tint */
+  --rgb-danger: 180 35 24;            /* #B42318 — 6.2:1 */
+  --rgb-danger-soft: 252 227 223;     /* #FCE3DF */
+  --rgb-info: 43 63 179;              /* #2B3FB3 — 8.1:1 */
+  --rgb-info-soft: 227 231 255;       /* #E3E7FF */
+  --rgb-purple: 138 35 70;            /* rose ink #8A2346 (purple retired) */
+  --rgb-purple-soft: 252 228 236;     /* rose tint #FCE4EC */
+  --rgb-rose: 138 35 70;
+  --rgb-rose-soft: 252 228 236;
+  --rgb-highlight: 255 210 122;       /* #FFD27A — the marker; ink on it 11.4:1 */
+  --rgb-paper-rule: 235 221 198;      /* #EBDDC6 — ruled-paper lines */
+  --rgb-focus: 42 30 20;
+  --rgb-on-accent: 255 255 255;       /* text on success / danger / info / teal fills */
+
+  /* Chart series — charts and heatmaps only */
+  --rgb-series-1: 42 120 214;         /* #2A78D6 */
+  --rgb-series-2: 235 104 52;         /* #EB6834 */
+  --rgb-series-3: 27 175 122;         /* #1BAF7A */
+  --rgb-series-4: 237 161 0;          /* #EDA100 */
+  --rgb-series-5: 232 123 164;        /* #E87BA4 */
+  --rgb-series-6: 0 131 0;            /* #008300 */
+  --rgb-series-other: 163 151 135;    /* #A39787 */
+
+  /* Shadow tint: shadows are ink, never neutral grey */
+  --rgb-shadow: 42 30 20;
+  --shadow-pop-alpha: 0.28;
+  --shadow-device-alpha: 0.45;
 
   /* Named variables (existing API — derived, do not hand-edit) */
   --bg-app: rgb(var(--rgb-bg-app));
@@ -95,6 +131,12 @@
   --text-muted: rgb(var(--rgb-text-muted));
   --text-light: rgb(var(--rgb-text-light));
 
+  --link: rgb(var(--rgb-link));
+  --focus: rgb(var(--rgb-focus));
+  --on-primary: rgb(var(--rgb-on-primary));
+  --highlight: rgb(var(--rgb-highlight));
+  --paper-rule: rgb(var(--rgb-paper-rule));
+
   --color-success: rgb(var(--rgb-success));
   --color-warning: rgb(var(--rgb-warning));
   --color-error: rgb(var(--rgb-danger));
@@ -113,10 +155,16 @@
   --motion-base: 220ms;
 
   /* Shadows — layered */
-  --shadow-xs: 0 1px 2px rgba(16, 21, 28, 0.05);
-  --shadow-soft: 0 2px 8px rgba(16, 21, 28, 0.05);
-  --shadow-raised: 0 10px 28px rgba(16, 21, 28, 0.08), 0 2px 8px rgba(16, 21, 28, 0.04);
-  --shadow-float: 0 28px 60px rgba(16, 21, 28, 0.14), 0 8px 20px rgba(16, 21, 28, 0.06);
+  --shadow-xs: 0 1px 2px rgb(var(--rgb-shadow) / 0.06);
+  --shadow-soft: 0 2px 8px rgb(var(--rgb-shadow) / 0.06);
+  --shadow-raised: 0 12px 32px -12px rgb(var(--rgb-shadow) / var(--shadow-pop-alpha));
+  --shadow-float: 0 30px 60px -30px rgb(var(--rgb-shadow) / var(--shadow-device-alpha));
+  /* Depth (plan §7): solid under-edges, pop for floating things, device for mock-ups */
+  --shadow-edge-primary: 0 3px 0 0 rgb(var(--rgb-signal-hover));
+  --shadow-edge-selected: 0 2px 0 0 rgb(var(--rgb-signal-hover));
+  --shadow-edge-neutral: 0 3px 0 0 rgb(var(--rgb-edge));
+  --shadow-pop: 0 12px 32px -12px rgb(var(--rgb-shadow) / var(--shadow-pop-alpha));
+  --shadow-device: 0 30px 60px -30px rgb(var(--rgb-shadow) / var(--shadow-device-alpha));
 
   --sidebar-width: 270px;
   --max-article: 100%;
@@ -239,46 +287,91 @@
    ============================================ */
 :root[data-theme='dark'] {
   color-scheme: dark;
-  --rgb-bg-app: 11 21 32;             /* #0B1520 */
-  --rgb-bg-app-warm: 13 24 36;
-  --rgb-bg-surface: 17 30 43;         /* #111E2B */
-  --rgb-bg-surface-hover: 22 38 58;
-  --rgb-border-subtle: 31 48 66;
-  --rgb-border-strong: 43 63 85;
+  --rgb-bg-app: 18 16 16;             /* ground #121010 */
+  --rgb-bg-app-warm: 26 23 21;        /* pane   #1A1715 */
+  --rgb-bg-surface: 28 25 23;         /* card   #1C1917 */
+  --rgb-bg-surface-hover: 38 34 32;   /* sunk   #262220 */
+  --rgb-border-subtle: 54 48 43;      /* #36302B */
+  --rgb-border-strong: 128 116 106;   /* #80746A */
+  --rgb-edge: 5 4 4;                  /* #050404 */
 
-  --rgb-ink: 232 238 245;
-  --rgb-ink-soft: 201 211 221;
-  --rgb-brand-ink: 7 20 34;           /* the navy band goes deeper, stays a band */
-  --rgb-text-heading: 232 238 245;
-  --rgb-text-body: 197 207 217;       /* 11.6:1 on the dark page */
-  --rgb-text-muted: 147 161 175;      /* 6.4:1 on dark cards */
-  --rgb-text-light: 125 139 153;
+  --rgb-ink: 247 241 232;             /* #F7F1E8 — 16.9:1 */
+  --rgb-ink-soft: 247 241 232;
+  --rgb-brand-ink: 15 59 55;          /* #0F3B37 — the band */
+  --rgb-text-heading: 247 241 232;
+  --rgb-text-body: 247 241 232;
+  --rgb-text-muted: 180 168 152;      /* #B4A898 — 8.1:1 */
+  --rgb-text-light: 180 168 152;
 
-  --rgb-signal: 255 122 77;           /* #FF7A4D — dark text on it, 7.5:1 */
-  --rgb-signal-hover: 255 150 112;
-  --rgb-signal-soft: 42 22 14;
-  --rgb-signal-ink: 255 181 155;
-  --rgb-logo: 255 94 46;              /* the logo orange, lifted for dark */
-  --rgb-money: 240 185 94;
-  --rgb-money-hover: 245 199 122;
-  --rgb-money-ink: 26 18 5;
-  --rgb-amber-deep: 251 191 36;
-  --rgb-brand-mint: 52 211 153;
+  --rgb-signal: 255 181 71;           /* #FFB547 */
+  --rgb-signal-hover: 184 110 0;      /* #B86E00 */
+  --rgb-signal-soft: 58 42 18;        /* #3A2A12 */
+  --rgb-signal-ink: 255 208 138;      /* #FFD08A — 9.6:1 on the tint */
+  --rgb-on-primary: 42 30 20;         /* 9.2:1 on amber */
+  --rgb-logo: 255 94 46;              /* the logo's existing dark-theme value, unchanged */
 
-  --rgb-train: 56 189 248;
-  --rgb-test: 251 146 60;
-  --rgb-track: 45 212 191;
-  --rgb-success: 74 222 128;
-  --rgb-success-soft: 16 44 30;
-  --rgb-warning: 251 191 36;
-  --rgb-warning-soft: 51 38 8;
-  --rgb-danger: 248 113 113;
-  --rgb-danger-soft: 52 20 20;
-  --rgb-info: 56 189 248;
-  --rgb-info-soft: 12 36 52;
-  --rgb-purple: 196 167 255;
-  --rgb-purple-soft: 36 26 58;
-  --rgb-on-accent: 11 21 32;          /* accents are light in dark, so text on them goes dark */
+  --rgb-link: 92 194 181;             /* #5CC2B5 */
+  --rgb-secondary: 92 194 181;
+  --rgb-on-secondary: 11 32 30;       /* #0B201E */
+  --rgb-secondary-soft: 18 50 47;     /* #12322F */
+
+  --rgb-on-hero: 247 241 232;         /* 11.0:1 */
+  --rgb-on-hero-muted: 159 203 196;   /* #9FCBC4 */
+  --rgb-hero-edge: 7 31 29;           /* #071F1D */
+
+  --rgb-money: 255 181 71;
+  --rgb-money-hover: 184 110 0;
+  --rgb-money-ink: 42 30 20;
+  --rgb-amber-deep: 255 208 138;
+  --rgb-brand-mint: 78 209 154;       /* #4ED19A */
+
+  --rgb-train: 170 182 255;           /* #AAB6FF */
+  --rgb-test: 255 208 138;            /* #FFD08A */
+  --rgb-track: 92 194 181;            /* #5CC2B5 */
+  --rgb-success: 78 209 154;          /* #4ED19A — 9.9:1 */
+  --rgb-success-soft: 18 48 31;       /* #12301F */
+  --rgb-warning: 255 208 138;
+  --rgb-warning-soft: 58 42 18;
+  --rgb-danger: 255 138 122;          /* #FF8A7A — 8.3:1 */
+  --rgb-danger-soft: 58 26 22;        /* #3A1A16 */
+  --rgb-info: 170 182 255;            /* #AAB6FF */
+  --rgb-info-soft: 29 35 71;          /* #1D2347 */
+  --rgb-purple: 244 166 192;          /* rose #F4A6C0 */
+  --rgb-purple-soft: 61 26 38;        /* #3D1A26 */
+  --rgb-rose: 244 166 192;
+  --rgb-rose-soft: 61 26 38;
+  --rgb-highlight: 122 85 18;         /* #7A5512 */
+  --rgb-paper-rule: 46 40 36;         /* #2E2824 */
+  --rgb-focus: 247 241 232;
+  --rgb-on-accent: 18 16 16;          /* accents are light in dark, so text on them goes dark */
+
+  --rgb-series-1: 57 135 229;         /* #3987E5 */
+  --rgb-series-2: 217 89 38;          /* #D95926 */
+  --rgb-series-3: 25 158 112;         /* #199E70 */
+  --rgb-series-4: 201 133 0;          /* #C98500 */
+  --rgb-series-5: 213 81 129;         /* #D55181 */
+  --rgb-series-6: 0 131 0;            /* #008300 */
+  --rgb-series-other: 110 101 92;     /* #6E655C */
+
+  --rgb-shadow: 0 0 0;
+  --shadow-pop-alpha: 0.6;
+  --shadow-device-alpha: 0.81;
+}
+
+/* ============================================
+   TEXT ON AMBER — both themes
+   Amber fills carry dark ink, never white (2.0:1). Older markup pairs
+   `bg-signal` / `bg-money` with `text-white`; this re-points those at the
+   on-primary ink centrally instead of editing ~80 class lists. New code uses
+   `text-on-primary` directly.
+   ============================================ */
+:is(.bg-signal, .bg-signal-hover, .bg-money, .bg-money-hover, .bg-brand-primary, .bg-brand-sky, .bg-brand-accent,
+  .bg-\[var\(--brand-sky\)\], .bg-\[var\(--brand-sky-strong\)\], .bg-\[var\(--brand-primary\)\], .bg-\[--brand-primary\],
+  .bg-\[var\(--brand-accent\)\], .bg-\[--brand-accent\], .bg-\[--brand-sky-strong\]):is(.text-white, .hover\:text-white),
+:is(.bg-signal, .bg-signal-hover, .bg-money, .bg-money-hover, .bg-brand-primary, .bg-brand-sky, .bg-brand-accent,
+  .bg-\[var\(--brand-sky\)\], .bg-\[var\(--brand-sky-strong\)\], .bg-\[var\(--brand-primary\)\], .bg-\[--brand-primary\],
+  .bg-\[var\(--brand-accent\)\], .bg-\[--brand-accent\], .bg-\[--brand-sky-strong\]) .text-white {
+  color: rgb(var(--rgb-on-primary));
 }
 
 /* ============================================
@@ -385,22 +478,61 @@ body {
 
 /* Glassy nav/surfaces: frosted blur + hairline */
 .glass-surface {
-  background: rgba(255, 255, 255, 0.78);
-  backdrop-filter: blur(16px) saturate(1.4);
-  -webkit-backdrop-filter: blur(16px) saturate(1.4);
-  border-bottom: 1px solid rgba(233, 231, 225, 0.9);
+  background: rgb(var(--rgb-bg-app) / 0.9);
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  border-bottom: 1px solid rgb(var(--rgb-border-subtle));
 }
 
 /* Editorial section eyebrow label */
 @layer components {
   /* Layered so a text-* utility can recolour it (e.g. on an ink band). */
+  /* Plan §5: JetBrains Mono 11/14, weight 500, +0.06em, caps, muted ink. */
   .eyebrow {
-    font-family: var(--font-body), system-ui, sans-serif;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.1em;
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--brand-sky);
+    color: var(--text-muted);
+  }
+
+  /* ---- Warm Paper textures and motion (plan §7–8) ---- */
+  /* Ruled exercise-book lines, 36px apart. */
+  .paper-lines {
+    background-image: repeating-linear-gradient(180deg, transparent 0 35px, rgb(var(--rgb-paper-rule)) 35px 36px);
+  }
+  /* Faint 24px graph-paper grid (chat panel, pricing, the dark band uses .grid-paper-on-hero). */
+  .grid-paper {
+    background-image:
+      linear-gradient(rgb(var(--rgb-border-subtle) / 0.7) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(var(--rgb-border-subtle) / 0.7) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+  .grid-paper-on-hero {
+    background-image:
+      linear-gradient(rgb(255 255 255 / 0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(255 255 255 / 0.08) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+  /* Fade a texture out towards the bottom. */
+  .mask-fade-b {
+    -webkit-mask-image: linear-gradient(#000 0% 55%, #0000 100%);
+    mask-image: linear-gradient(#000 0% 55%, #0000 100%);
+  }
+  /* Diagonal hatching: the promo bar and the unfinished part of progress bars. */
+  .hatch {
+    background-image: repeating-linear-gradient(135deg, rgb(var(--rgb-ink) / 0.08) 0 6px, transparent 6px 12px);
+  }
+  /* The highlighter: draws behind a phrase once, after the page settles. */
+  .marker {
+    background: linear-gradient(rgb(var(--rgb-highlight)), rgb(var(--rgb-highlight))) no-repeat 0 88% / 0% 42%;
+    animation: tk-marker 0.9s 0.5s cubic-bezier(.2, .8, .2, 1) forwards;
+  }
+  @keyframes tk-marker { to { background-size: 100% 42%; } }
+  @media (prefers-reduced-motion: reduce) {
+    .marker { animation: none; background-size: 100% 42%; }
   }
 }
 
@@ -412,7 +544,7 @@ body {
   transition: box-shadow var(--motion-base) var(--ease-out), transform var(--motion-base) var(--ease-out), border-color var(--motion-base) var(--ease-out);
 }
 .vault-card:hover {
-  border-color: rgba(2, 132, 199, 0.35);
+  border-color: rgb(var(--rgb-signal) / 0.35);
   box-shadow: var(--shadow-raised);
   transform: translateY(-3px);
 }
@@ -436,26 +568,27 @@ body {
 .btn:active { transform: translateY(1px); }
 .btn-primary {
   background: var(--brand-sky);
-  color: #fff;
-  box-shadow: 0 6px 16px rgba(2, 132, 199, 0.28);
+  color: var(--on-primary);
+  box-shadow: var(--shadow-edge-primary);
 }
-.btn-primary:hover { background: var(--brand-sky-strong); box-shadow: 0 8px 22px rgba(2, 132, 199, 0.34); }
+.btn-primary:hover { background: var(--brand-sky); filter: brightness(1.03); }
+.btn-primary:active { transform: translateY(2px); box-shadow: 0 1px 0 0 rgb(var(--rgb-signal-hover)); }
 .btn-soft {
   background: var(--brand-sky-soft);
-  color: var(--brand-sky-strong);
+  color: var(--link);
 }
-.btn-soft:hover { background: #dceef9; }
+.btn-soft:hover { background: rgb(var(--rgb-signal-soft) / 0.7); }
 .btn-ghost {
   background: var(--bg-surface);
   color: var(--text-heading);
   border-color: var(--border-subtle);
   box-shadow: var(--shadow-xs);
 }
-.btn-ghost:hover { border-color: var(--brand-sky); color: var(--brand-sky-strong); }
+.btn-ghost:hover { border-color: var(--link); color: var(--link); }
 .btn-amber {
   background: var(--brand-accent);
-  color: #fff;
-  box-shadow: 0 6px 16px rgba(232, 163, 61, 0.3);
+  color: var(--on-primary);
+  box-shadow: var(--shadow-edge-primary);
 }
 .btn-amber:hover { background: var(--brand-accent-hover); }
 
@@ -592,12 +725,12 @@ body {
   color: var(--text-heading);
 }
 .nav-link:focus-visible {
-  outline: 2px solid var(--brand-sky);
+  outline: 2px solid var(--focus);
   outline-offset: 3px;
 }
 .nav-link[aria-current='page'] {
   background: var(--brand-sky-soft);
-  color: var(--brand-sky);
+  color: var(--link);
   font-weight: 700;
 }
 .nav-link[aria-current='page']::after {
@@ -645,7 +778,7 @@ body {
   color: var(--text-heading);
 }
 .icon-btn:focus-visible {
-  outline: 2px solid var(--brand-sky);
+  outline: 2px solid var(--focus);
   outline-offset: 3px;
 }
 @media (pointer: coarse) {
@@ -745,18 +878,18 @@ body {
 .nav-search:hover { border-color: var(--border-strong); color: var(--text-body); }
 .nav-search:focus-within {
   width: 320px;
-  border-color: var(--brand-sky);
+  border-color: var(--link);
   background: var(--bg-surface);
-  color: var(--brand-sky);
+  color: var(--link);
 }
-.nav-search:focus-visible { outline: 2px solid var(--brand-sky); outline-offset: 3px; }
+.nav-search:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
 .nav-search kbd {
   display: inline-flex;
   align-items: center;
   gap: 2px;
   padding: 2px 6px;
   border-radius: var(--radius-xs);
-  background: rgba(16, 21, 28, 0.05);
+  background: rgb(var(--rgb-shadow) / 0.05);
   font-family: inherit;
   font-size: 12px;
   font-weight: 700;
@@ -880,7 +1013,7 @@ body {
   transition: color var(--motion-fast) var(--ease-out);
 }
 .tab-slot:hover { color: var(--text-heading); }
-.tab-slot:focus-visible { outline: 2px solid var(--brand-sky); outline-offset: -4px; }
+.tab-slot:focus-visible { outline: 2px solid var(--focus); outline-offset: -4px; }
 .tab-slot span {
   font-size: 12px;
   font-weight: 600;
@@ -892,7 +1025,7 @@ body {
 }
 .tab-slot[aria-current='page'],
 .tab-slot[data-active='true'] {
-  color: var(--brand-sky);
+  color: var(--link);
 }
 .tab-slot[aria-current='page']::before,
 .tab-slot[data-active='true']::before {
@@ -924,10 +1057,10 @@ body {
   transition: background var(--motion-fast) var(--ease-out), color var(--motion-fast) var(--ease-out);
 }
 .nav-row:hover { background: var(--bg-surface-hover); color: var(--text-heading); }
-.nav-row:focus-visible { outline: 2px solid var(--brand-sky); outline-offset: -2px; }
+.nav-row:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
 .nav-row[aria-current='page'] {
   background: var(--brand-sky-soft);
-  color: var(--brand-sky);
+  color: var(--link);
 }
 .nav-row[aria-current='page']::before {
   content: '';
@@ -948,11 +1081,11 @@ body {
   flex: none;
   border-radius: var(--radius-sm);
   background: var(--brand-sky-soft);
-  color: var(--brand-sky);
+  color: var(--link);
 }
 .nav-row[aria-current='page'] .nav-row-icon {
   background: #fff;
-  color: var(--brand-sky);
+  color: var(--link);
 }
 .nav-row-label {
   font-size: 15px;
@@ -964,7 +1097,7 @@ body {
   line-height: 1.35;
   color: var(--text-muted);
 }
-.nav-row[aria-current='page'] .nav-row-desc { color: var(--brand-sky); }
+.nav-row[aria-current='page'] .nav-row-desc { color: var(--link); }
 
 /* Drawer section header. `text-xs`, not the 10px micro-caps the chrome
    used to carry. */
@@ -982,7 +1115,7 @@ body {
 .hero-mesh {
   position: relative;
   background:
-    radial-gradient(52rem 26rem at 12% -8%, rgba(2, 132, 199, 0.12), transparent 55%),
+    radial-gradient(52rem 26rem at 12% -8%, rgb(var(--rgb-signal) / 0.12), transparent 55%),
     radial-gradient(44rem 24rem at 92% 2%, rgba(232, 163, 61, 0.14), transparent 52%),
     linear-gradient(180deg, #FCFBF8 0%, #F4F7FB 60%, var(--bg-app) 100%);
 }
@@ -991,7 +1124,7 @@ body {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background-image: radial-gradient(rgba(16, 21, 28, 0.05) 1px, transparent 1px);
+  background-image: radial-gradient(rgb(var(--rgb-shadow) / 0.05) 1px, transparent 1px);
   background-size: 22px 22px;
   mask-image: linear-gradient(to bottom, rgba(0,0,0,0.35), transparent 62%);
 }
@@ -1039,7 +1172,7 @@ body {
 
 /* Focus ring */
 .focus-ring:focus-visible {
-  outline: 2px solid var(--brand-sky);
+  outline: 2px solid var(--focus);
   outline-offset: 3px;
 }
 
@@ -1145,7 +1278,7 @@ code, pre, kbd, samp, .font-mono {
 .prose-article p { margin: 1.2rem 0; font-size: 18px; line-height: 1.85; color: var(--text-body); }
 
 .prose-article a {
-  color: var(--brand-primary);
+  color: var(--link);
   text-decoration: underline;
   text-underline-offset: 3px;
   font-weight: 600;
@@ -1450,7 +1583,7 @@ code, pre, kbd, samp, .font-mono {
 .sidebar-item.active {
   background: #EFF6FF;
   border-left-color: var(--brand-accent);
-  color: var(--brand-primary);
+  color: var(--link);
   font-weight: 600;
 }
 .sidebar-item.solved .sidebar-icon { color: var(--color-success); }
@@ -2303,7 +2436,7 @@ body {
   }
   .btn-primary:hover {
     background: var(--brand-sky);
-    box-shadow: 0 6px 16px rgba(2, 132, 199, 0.28);
+    box-shadow: var(--shadow-edge-primary);
   }
   .btn-soft:hover { background: var(--brand-sky-soft); }
   .btn-ghost:hover { border-color: var(--border-subtle); color: var(--text-heading); }
@@ -2317,7 +2450,7 @@ body {
   .tab-slot:hover { color: var(--text-muted); }
   .nav-row:hover { background: transparent; color: var(--text-body); }
   .sidebar-item:hover { background: transparent; color: var(--text-body); }
-  .prose-article a:hover { color: var(--brand-primary); }
+  .prose-article a:hover { color: var(--link); }
   /* `transparent` rather than `inherit`: the base cells have no background of
      their own, and `inherit` would take the row's, which is also unset. */
   .prose-article table tr:hover td { background: transparent; }
@@ -2473,7 +2606,7 @@ body {
 .mock-drive-scope .apple-card {
   border: 1px solid rgb(var(--rgb-border-subtle));
   border-radius: 14px;
-  box-shadow: var(--shadow-xs, 0 1px 2px rgba(16, 21, 28, 0.06));
+  box-shadow: var(--shadow-xs, 0 1px 2px rgb(var(--rgb-shadow) / 0.06));
 }
 
 /* iOS grouped list row: full-bleed cell with hairline separator. */

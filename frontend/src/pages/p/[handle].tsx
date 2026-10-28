@@ -140,7 +140,7 @@ export default function PassportPage({ passport: p }: { passport: PassportView }
                       <Card className="flex items-center gap-4">
                         <ProgressRing value={c.readiness} size={72} thickness={7} label={`${c.name} readiness`} />
                         <div className="min-w-0">
-                          <Link href={`/company/${c.slug}`} className="font-display text-lg font-bold text-heading hover:text-signal">
+                          <Link href={`/company/${c.slug}`} className="font-display text-lg font-bold text-heading hover:text-link">
                             {c.name}
                           </Link>
                           <p className="text-sm text-muted">
@@ -197,7 +197,7 @@ export default function PassportPage({ passport: p }: { passport: PassportView }
                       >
                         <p className="font-semibold text-heading">{c.title}</p>
                         <p className="mt-1 text-sm text-muted">Issued {issued.format(new Date(c.issued_at))}</p>
-                        <Link href={c.verify_url} className="mt-3 inline-flex text-sm font-semibold text-signal hover:underline">
+                        <Link href={c.verify_url} className="mt-3 inline-flex text-sm font-semibold text-link hover:underline">
                           Verify this certificate
                         </Link>
                       </Ticket>
@@ -217,7 +217,7 @@ export default function PassportPage({ passport: p }: { passport: PassportView }
 
             <p className="text-center text-sm text-muted">
               <Chip>TieEdu</Chip> <span className="ml-2">Placement prep for engineering students.</span>{' '}
-              <Link href="/" className="font-semibold text-signal hover:underline">
+              <Link href="/" className="font-semibold text-link hover:underline">
                 Make your own passport
               </Link>
             </p>

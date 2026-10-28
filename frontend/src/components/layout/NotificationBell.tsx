@@ -15,7 +15,7 @@ import { cn } from '@/lib/cn';
  * by something other than hue — hence the icon on every row.
  */
 const TONE_STYLE: Record<NotificationTone, { chip: string; icon: React.ReactNode }> = {
-  info: { chip: 'bg-signal-soft text-signal-hover', icon: <Bell size={13} strokeWidth={2.5} aria-hidden /> },
+  info: { chip: 'bg-signal-soft text-link', icon: <Bell size={13} strokeWidth={2.5} aria-hidden /> },
   success: { chip: 'bg-emerald-50 text-emerald-700', icon: <Check size={13} strokeWidth={3} aria-hidden /> },
   warning: { chip: 'bg-amber-50 text-amber-deep', icon: <Loader2 size={13} strokeWidth={2.5} aria-hidden /> },
   error: { chip: 'bg-red-50 text-red-700', icon: <Bell size={13} strokeWidth={2.5} aria-hidden /> },

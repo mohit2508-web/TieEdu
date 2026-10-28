@@ -130,7 +130,7 @@ export function StudentProfileCard({ initialCollege }: { initialCollege?: string
   return (
     <div className="vault-card p-6">
       <h3 className="text-base font-extrabold text-heading flex items-center gap-2">
-        <GraduationCap className="w-4 h-4 text-signal" /> Placement / student profile
+        <GraduationCap className="w-4 h-4 text-link" /> Placement / student profile
       </h3>
       <p className="text-sm text-[--text-muted] mt-2">
         Drives check your roll number, branch, batch and CGPA to decide eligibility. Fill this once to unlock registration.

@@ -76,7 +76,7 @@ function OrdersView({ orders }: { orders: MyAccount['orders'] }) {
             <p className="text-sm font-bold text-brand-ink">₹{o.amount ?? '—'}</p>
             <span className={`inline-block mt-1 px-2 py-0.5 rounded-md text-xs font-extrabold uppercase tracking-wide ${statusChip(o.status, {
               paid: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
-              created: 'bg-signal-soft text-signal border border-signal/30',
+              created: 'bg-signal-soft text-link border border-signal/30',
               failed: 'bg-red-50 text-danger border border-red-200',
             })}`}>
               {o.status}
@@ -111,10 +111,10 @@ function VaultView({ unlockedIds, companies }: { unlockedIds: string[]; companie
           <div className="flex items-center gap-3">
             <BrandTile name={c.name} src={c.logo_url} className="w-10 h-10 rounded-xl" />
             <div className="min-w-0">
-              <p className="text-sm font-extrabold text-heading truncate group-hover:text-signal">{c.name}</p>
+              <p className="text-sm font-extrabold text-heading truncate group-hover:text-link">{c.name}</p>
               <p className="text-xs text-[--text-muted] truncate">{c.industry || 'Interview Vault'}</p>
             </div>
-            <ArrowUpRight className="w-4 h-4 text-text-light group-hover:text-signal ml-auto shrink-0" />
+            <ArrowUpRight className="w-4 h-4 text-text-light group-hover:text-link ml-auto shrink-0" />
           </div>
           {typeof c.ctc_min === 'number' && (
             <p className="mt-3 text-xs font-bold text-amber-deep">₹{c.ctc_min}–{c.ctc_max} LPA</p>
@@ -257,7 +257,7 @@ function SkillTestsView({
                 {slug && (
                   <Link
                     href={`/skill-test/${slug}/result/${a.id}`}
-                    className="text-xs font-bold text-signal hover:underline whitespace-nowrap"
+                    className="text-xs font-bold text-link hover:underline whitespace-nowrap"
                   >
                     Result →
                   </Link>
@@ -278,10 +278,10 @@ function SkillTestsView({
 
       <div className="flex flex-wrap items-center gap-3 text-xs">
         <span className="text-[--text-muted]">{passed} of {attempts.length} passed</span>
-        <Link href="/skill-test/my-certificates" className="font-bold text-signal hover:underline">
+        <Link href="/skill-test/my-certificates" className="font-bold text-link hover:underline">
           My certificates →
         </Link>
-        <Link href="/skill-test/skill-passport" className="font-bold text-signal hover:underline">
+        <Link href="/skill-test/skill-passport" className="font-bold text-link hover:underline">
           Skill passport →
         </Link>
       </div>
@@ -567,7 +567,7 @@ const AccountPageContent: React.FC = () => {
                           </h1>
                           <button
                             onClick={() => { setEditName(account.user.name); setEditCollege(account.user.college || ''); setProfileOpen(true); }}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-line bg-white hover:border-signal text-signal text-xs font-bold transition-colors"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-line bg-white hover:border-signal text-link text-xs font-bold transition-colors"
                           >
                             <Pencil className="w-3.5 h-3.5" /> Edit profile
                           </button>
@@ -586,8 +586,8 @@ const AccountPageContent: React.FC = () => {
                         <p className="text-xs font-extrabold uppercase tracking-wide text-amber-deep flex items-center justify-center gap-1"><Flame className="w-3 h-3" /> XP</p>
                       </div>
                       <div className="bg-signal-soft border border-signal/30 rounded-2xl px-5 py-3 text-center">
-                        <p className="font-extrabold text-signal text-xl stat-num">{account.user.streak}</p>
-                        <p className="text-xs font-extrabold uppercase tracking-wide text-signal">DAY STREAK</p>
+                        <p className="font-extrabold text-link text-xl stat-num">{account.user.streak}</p>
+                        <p className="text-xs font-extrabold uppercase tracking-wide text-link">DAY STREAK</p>
                       </div>
                     </div>
                   </div>
@@ -695,7 +695,7 @@ const AccountPageContent: React.FC = () => {
                     />
                   </div>
                   <p className="text-xs text-[--text-muted] mt-3">
-                    Every completed module adds +50 XP to your real account — <Link href="/interview-course" className="font-bold text-signal hover:underline">continue the course</Link>.
+                    Every completed module adds +50 XP to your real account — <Link href="/interview-course" className="font-bold text-link hover:underline">continue the course</Link>.
                   </p>
                 </div>
               </section>
@@ -712,7 +712,7 @@ const AccountPageContent: React.FC = () => {
                 <p className="eyebrow">#06 — Skill Tests</p>
                 <div className="flex flex-wrap items-end justify-between gap-2 mb-4">
                   <h2 className="font-serif-heading text-2xl font-bold">Skill test history</h2>
-                  <Link href="/skill-test" className="text-sm font-bold text-signal hover:underline">
+                  <Link href="/skill-test" className="text-sm font-bold text-link hover:underline">
                     Take a new test →
                   </Link>
                 </div>
@@ -735,7 +735,7 @@ const AccountPageContent: React.FC = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   <div className="vault-card p-6">
                     <h3 className="text-base font-extrabold text-heading flex items-center gap-2">
-                      <KeyRound className="w-4 h-4 text-signal" /> Change password
+                      <KeyRound className="w-4 h-4 text-link" /> Change password
                     </h3>
                     <form onSubmit={handleChangePassword} className="mt-4 space-y-3">
                       {/* Phase 7. Neither field declared an `autoComplete`, so this
@@ -793,7 +793,7 @@ const AccountPageContent: React.FC = () => {
 
               <div className="flex items-center gap-2 text-xs text-text-light">
                 <UserRound className="w-3.5 h-3.5" /> Signed in as {account.user.email}
-                <span className="inline-block px-1.5 py-0.5 rounded-md bg-signal-soft text-signal text-xs font-extrabold uppercase tracking-wide">Student</span>
+                <span className="inline-block px-1.5 py-0.5 rounded-md bg-signal-soft text-link text-xs font-extrabold uppercase tracking-wide">Student</span>
               </div>
             </>
           )}

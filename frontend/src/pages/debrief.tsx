@@ -65,7 +65,7 @@ export default function DebriefPage() {
         <meta name="description" content="Got a no from a company? Note what happened in two minutes and get a plan for the next one." />
       </Head>
       <main className="mx-auto w-full max-w-[760px] px-4 pb-14 pt-6 sm:px-6 sm:pt-10">
-        <p className="eyebrow text-signal">After a rejection</p>
+        <p className="eyebrow text-link">After a rejection</p>
         <h1 className="mt-1 font-display text-3xl font-bold text-heading sm:text-4xl">A no is information, not a verdict</h1>
         <p className="mt-2 text-base text-body">
           Almost everyone gets several before an offer. Take two minutes to note what happened while it is fresh, and leave with a plan for the next company.
@@ -142,7 +142,7 @@ export default function DebriefPage() {
                           <p className="font-bold text-heading">{d.company} · {d.round}</p>
                           <p className="text-sm text-muted">{shortDate.format(new Date(d.created_at))} · {d.reasons.join(', ')}</p>
                           {d.note && <p className="mt-1 text-sm text-body">{d.note}</p>}
-                          <Link href={d.plan[0]?.href || '/calendar'} className="mt-2 inline-flex min-h-[32px] items-center gap-1 text-sm font-semibold text-signal hover:underline">
+                          <Link href={d.plan[0]?.href || '/calendar'} className="mt-2 inline-flex min-h-[32px] items-center gap-1 text-sm font-semibold text-link hover:underline">
                             Next step: {d.plan[0]?.title || 'plan the next company'} <ArrowRight className="h-4 w-4" aria-hidden />
                           </Link>
                         </div>
@@ -183,7 +183,7 @@ function DebriefResult({ d }: { d: DebriefView }) {
             <Link href={s.href} className="focus-ring group flex gap-4 rounded-[14px] border border-line bg-card p-4 hover:border-line-strong">
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-signal-soft font-bold text-signal-ink">{i + 1}</span>
               <span className="min-w-0 flex-1">
-                <span className="block font-bold text-heading group-hover:text-signal">{s.title}</span>
+                <span className="block font-bold text-heading group-hover:text-link">{s.title}</span>
                 <span className="mt-0.5 block text-sm text-body">{s.why}</span>
               </span>
               <ArrowRight className="mt-1 h-5 w-5 shrink-0 text-muted" aria-hidden />

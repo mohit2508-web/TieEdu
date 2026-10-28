@@ -63,12 +63,12 @@ const ACCENT_HEX_DARK: Record<string, string> = {
  */
 const display = localFont({
   src: [
-    { path: '../../../node_modules/@fontsource/bricolage-grotesque/files/bricolage-grotesque-latin-600-normal.woff2', weight: '600', style: 'normal' },
-    { path: '../../../node_modules/@fontsource/bricolage-grotesque/files/bricolage-grotesque-latin-700-normal.woff2', weight: '700', style: 'normal' },
+    { path: '../../../node_modules/@fontsource/poppins/files/poppins-latin-600-normal.woff2', weight: '600', style: 'normal' },
+    { path: '../../../node_modules/@fontsource/poppins/files/poppins-latin-700-normal.woff2', weight: '700', style: 'normal' },
   ],
   display: 'swap',
   variable: '--cp-display-font',
-  fallback: ['Carlito', 'Calibri', 'Arial', 'sans-serif'],
+  fallback: ['system-ui', 'Segoe UI', 'Arial', 'sans-serif'],
 });
 
 const SITE_URL = 'https://tieedu.com';

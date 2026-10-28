@@ -58,7 +58,7 @@ export default function GuaranteePage() {
         <meta name="description" content="If a round's pattern was different from what TieEdu showed, get your money back for that company's content." />
       </Head>
       <main className="mx-auto w-full max-w-[760px] px-4 pb-14 pt-6 sm:px-6 sm:pt-10">
-        <p className="eyebrow text-signal">Our promise</p>
+        <p className="eyebrow text-link">Our promise</p>
         <h1 className="mt-1 font-display text-3xl font-bold text-heading sm:text-4xl">The accuracy guarantee</h1>
         {!settings && <Skeleton className="mt-4 h-24 w-full" />}
         {settings && !settings.enabled && (

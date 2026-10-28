@@ -121,7 +121,7 @@ export default function LoginPage() {
 
             <p className="mt-6 text-center text-sm text-body">
               Naya ho?{' '}
-              <Link href="/signup" className="font-bold text-signal hover:text-signal">
+              <Link href="/signup" className="font-bold text-link hover:text-link">
                 Create account
               </Link>
             </p>
@@ -130,7 +130,7 @@ export default function LoginPage() {
           <div className="mt-6 text-center">
             <Link
               href="/admin/login"
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-[--text-muted] hover:text-signal transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-[--text-muted] hover:text-link transition-colors"
             >
               <ShieldCheck className="w-3.5 h-3.5" /> Platform owner? Admin portal
             </Link>

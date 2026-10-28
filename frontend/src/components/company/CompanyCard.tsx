@@ -43,7 +43,7 @@ export const CompanyCard: React.FC<CompanyCardProps> = ({ company }) => {
             className="w-14 h-14 rounded-2xl p-1 shadow-soft group-hover:scale-[1.04] transition-transform"
           />
           <div>
-            <h3 className="font-serif-heading text-lg font-extrabold text-heading group-hover:text-signal transition-colors leading-snug">
+            <h3 className="font-serif-heading text-lg font-extrabold text-heading group-hover:text-link transition-colors leading-snug">
               {company.name}
             </h3>
             <p className="text-sm text-[var(--text-muted)] font-medium mt-0.5">{company.industry || 'General'}</p>
@@ -67,7 +67,7 @@ export const CompanyCard: React.FC<CompanyCardProps> = ({ company }) => {
           </div>
           <div>
             <span className="text-xs text-[var(--text-muted)] block uppercase font-bold tracking-wider">Modules</span>
-            <span className="text-sm font-extrabold text-signal stat-num">{company.module_count ?? company.modules?.length ?? 0}</span>
+            <span className="text-sm font-extrabold text-link stat-num">{company.module_count ?? company.modules?.length ?? 0}</span>
           </div>
           <div>
             <span className="text-xs text-[var(--text-muted)] block uppercase font-bold tracking-wider">CTC</span>
@@ -78,7 +78,7 @@ export const CompanyCard: React.FC<CompanyCardProps> = ({ company }) => {
         </div>
       </div>
 
-      <div className="pt-2 flex items-center justify-between text-sm font-bold text-signal group-hover:text-amber-deep transition-colors">
+      <div className="pt-2 flex items-center justify-between text-sm font-bold text-link group-hover:text-amber-deep transition-colors">
         <span className="flex items-center gap-1.5">
           <Building2 className="w-3.5 h-3.5 text-amber-deep" />
           See the rounds

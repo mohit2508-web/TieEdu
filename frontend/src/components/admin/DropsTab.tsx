@@ -292,7 +292,7 @@ export const DropsTab: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <Link href="/drops" target="_blank" className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-signal border border-signal/30 bg-white hover:bg-signal-soft">
+            <Link href="/drops" target="_blank" className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-link border border-signal/30 bg-white hover:bg-signal-soft">
               <ExternalLink className="w-3.5 h-3.5" /> Open the feed
             </Link>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 text-xs font-bold font-mono">
@@ -313,7 +313,7 @@ export const DropsTab: React.FC = () => {
       {analytics && (
         <div className="bg-white border border-gray-200 rounded-3xl p-5 shadow-xs">
           <h4 className="text-sm font-extrabold text-ink-soft flex items-center gap-2">
-            <BarChart3 className="w-4 h-4 text-signal" /> Feed analytics
+            <BarChart3 className="w-4 h-4 text-link" /> Feed analytics
           </h4>
           <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
             {[
@@ -333,7 +333,7 @@ export const DropsTab: React.FC = () => {
           {analytics.top_drops.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-1.5">
               {analytics.top_drops.slice(0, 5).map((t) => (
-                <span key={t.id} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-signal-soft text-xs font-bold text-signal">
+                <span key={t.id} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-signal-soft text-xs font-bold text-link">
                   <span className="truncate max-w-[220px]">{t.headline}</span>
                   <span className="font-mono">{t.views}v · {t.ctr}%</span>
                 </span>
@@ -348,7 +348,7 @@ export const DropsTab: React.FC = () => {
         <div className="xl:col-span-2 bg-white border border-gray-200 rounded-3xl p-5 shadow-xs space-y-4">
           <div className="flex items-center justify-between gap-3">
             <h4 className="text-sm font-extrabold text-ink-soft flex items-center gap-2">
-              {editingId ? <Pencil className="w-4 h-4 text-signal" /> : <Plus className="w-4 h-4 text-signal" />}
+              {editingId ? <Pencil className="w-4 h-4 text-link" /> : <Plus className="w-4 h-4 text-link" />}
               {editingId ? 'Edit Drop' : 'New Drop'}
             </h4>
             {editingId && (
@@ -423,7 +423,7 @@ export const DropsTab: React.FC = () => {
                 </>
               ) : (
                 <div className="py-8 px-4">
-                  <ImageIcon className="w-7 h-7 text-signal mx-auto mb-2" />
+                  <ImageIcon className="w-7 h-7 text-link mx-auto mb-2" />
                   <p className="text-sm font-bold text-ink-soft">Drag & drop, or click to choose</p>
                   <p className="text-xs text-gray-500 mt-1">JPG / PNG / WEBP / AVIF · 6MB max</p>
                 </div>
@@ -558,7 +558,7 @@ export const DropsTab: React.FC = () => {
                   <div className="flex-1 min-w-0 space-y-2">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className={`px-2.5 py-0.5 rounded-full text-xs font-extrabold tracking-wide ${st.cls}`}>{st.text}</span>
-                      {d.pinned && <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-signal-soft text-signal-hover text-xs font-bold"><Pin className="w-3 h-3" /> PINNED</span>}
+                      {d.pinned && <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-signal-soft text-link text-xs font-bold"><Pin className="w-3 h-3" /> PINNED</span>}
                       {d.sponsored && <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-xs font-bold">AD</span>}
                       {d.source?.kind === 'auto' && <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 text-xs font-bold">AUTO</span>}
                     </div>
@@ -583,14 +583,14 @@ export const DropsTab: React.FC = () => {
                       </button>
                       <button
                         onClick={() => patch(d, { pinned: !d.pinned })}
-                        className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors ${d.pinned ? 'bg-signal-soft text-signal-hover' : 'bg-gray-100 text-gray-500 hover:bg-signal-soft hover:text-signal-hover'}`}
+                        className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors ${d.pinned ? 'bg-signal-soft text-link' : 'bg-gray-100 text-gray-500 hover:bg-signal-soft hover:text-link'}`}
                       >
                         {d.pinned ? 'Unpin' : 'Pin'}
                       </button>
-                      <Link href={`/drops/${d.id}`} target="_blank" className="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-gray-100 text-gray-500 hover:bg-signal-soft hover:text-signal-hover">
+                      <Link href={`/drops/${d.id}`} target="_blank" className="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-gray-100 text-gray-500 hover:bg-signal-soft hover:text-link">
                         View
                       </Link>
-                      <button onClick={() => startEdit(d)} className="p-1.5 text-gray-500 hover:text-signal hover:bg-signal-soft rounded-lg" title="Edit">
+                      <button onClick={() => startEdit(d)} className="p-1.5 text-gray-500 hover:text-link hover:bg-signal-soft rounded-lg" title="Edit">
                         <Pencil className="w-4 h-4" />
                       </button>
                       <button onClick={() => remove(d)} className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg ml-auto" title="Delete">

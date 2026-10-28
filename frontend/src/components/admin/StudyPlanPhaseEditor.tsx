@@ -296,7 +296,7 @@ const BlockForm: React.FC<{
 
         <div className="bg-app-warm border border-gray-200 rounded-2xl p-3 min-w-0">
           <div className="flex items-center gap-1.5 text-xs font-mono font-bold uppercase text-brand-ink pb-2 mb-2 border-b border-gray-200">
-            <Eye className="w-3.5 h-3.5 text-signal" /> Student preview
+            <Eye className="w-3.5 h-3.5 text-link" /> Student preview
           </div>
           <div className="bg-white rounded-xl border border-gray-200 p-4 max-h-[28rem] overflow-y-auto">
             <ContentBlockRenderer block={preview} isLocked={false} companyName="Target Company" />
@@ -404,7 +404,7 @@ export const StudyPlanPhaseEditor: React.FC<Props> = ({ templateId, phases, onCh
             aria-selected={mobilePane === t}
             onClick={() => setMobilePane(t)}
             className={`flex-1 py-2 text-xs font-bold rounded-lg min-h-[2.5rem] ${
-              mobilePane === t ? 'bg-white text-signal shadow-sm' : 'text-gray-500'
+              mobilePane === t ? 'bg-white text-link shadow-sm' : 'text-gray-500'
             }`}
           >
             {t === 'list' ? 'Phases' : 'Content'}
@@ -433,11 +433,11 @@ export const StudyPlanPhaseEditor: React.FC<Props> = ({ templateId, phases, onCh
               {!readOnly && (
                 <div className="flex gap-1 mt-2 pt-2 border-t border-gray-100">
                   <button type="button" aria-label="Move up" disabled={i === 0 || busy} onClick={() => move(i, -1)}
-                    className="p-2 rounded-lg border border-gray-200 text-gray-500 hover:text-signal disabled:opacity-30">
+                    className="p-2 rounded-lg border border-gray-200 text-gray-500 hover:text-link disabled:opacity-30">
                     <ChevronUp className="w-3.5 h-3.5" />
                   </button>
                   <button type="button" aria-label="Move down" disabled={i === phases.length - 1 || busy} onClick={() => move(i, 1)}
-                    className="p-2 rounded-lg border border-gray-200 text-gray-500 hover:text-signal disabled:opacity-30">
+                    className="p-2 rounded-lg border border-gray-200 text-gray-500 hover:text-link disabled:opacity-30">
                     <ChevronDown className="w-3.5 h-3.5" />
                   </button>
                   <button
@@ -477,7 +477,7 @@ export const StudyPlanPhaseEditor: React.FC<Props> = ({ templateId, phases, onCh
                   setMobilePane('detail');
                 })
               }
-              className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-dashed border-gray-300 text-gray-500 font-bold text-xs min-h-[2.5rem] hover:border-signal hover:text-signal"
+              className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-dashed border-gray-300 text-gray-500 font-bold text-xs min-h-[2.5rem] hover:border-signal hover:text-link"
             >
               <Plus className="w-3.5 h-3.5" /> Add phase
             </button>
@@ -568,7 +568,7 @@ export const StudyPlanPhaseEditor: React.FC<Props> = ({ templateId, phases, onCh
                             type="button"
                             aria-label="Edit block"
                             onClick={() => { setEditingBlockId(b.id); setMobilePane('detail'); }}
-                            className="p-2 rounded-lg border border-gray-200 text-gray-500 hover:text-signal"
+                            className="p-2 rounded-lg border border-gray-200 text-gray-500 hover:text-link"
                           >
                             <Pencil className="w-3.5 h-3.5" />
                           </button>
@@ -619,7 +619,7 @@ export const StudyPlanPhaseEditor: React.FC<Props> = ({ templateId, phases, onCh
                 <button
                   type="button"
                   onClick={() => { setEditingBlockId('__new__'); setMobilePane('detail'); }}
-                  className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-3 rounded-2xl border border-dashed border-gray-300 text-gray-500 font-bold text-xs min-h-[3rem] hover:border-signal hover:text-signal"
+                  className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-3 rounded-2xl border border-dashed border-gray-300 text-gray-500 font-bold text-xs min-h-[3rem] hover:border-signal hover:text-link"
                 >
                   <Plus className="w-4 h-4" /> Add content block
                 </button>

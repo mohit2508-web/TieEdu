@@ -359,7 +359,7 @@ export const AdminCertificatesTab: React.FC = () => {
                       <button
                         onClick={() => copy(c.serial)}
                         title="Copy serial"
-                        className="font-mono text-xs text-signal hover:underline flex items-center gap-1"
+                        className="font-mono text-xs text-link hover:underline flex items-center gap-1"
                       >
                         {copied === c.serial ? 'Copied' : c.serial}
                         <Copy className="w-3 h-3" />
@@ -429,7 +429,7 @@ export const AdminCertificatesTab: React.FC = () => {
 
       <Panel title="How revocation works">
         <p className="text-xs text-text-light leading-relaxed flex gap-2.5">
-          <ShieldCheck className="w-4 h-4 text-signal shrink-0 mt-0.5" />
+          <ShieldCheck className="w-4 h-4 text-link shrink-0 mt-0.5" />
           <span>
             Each certificate carries an Ed25519 signature computed over its claims at the moment it is issued,
             with a private key that never leaves the server — verifiers check it against the published public key

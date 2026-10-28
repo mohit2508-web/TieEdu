@@ -64,7 +64,7 @@ export default function DailyChallengePage() {
         <meta name="description" content="Ten minutes a day: one aptitude question, one coding question and one HR answer, the same three for every student. Keep your streak going." />
       </Head>
       <main className="mx-auto w-full max-w-[760px] px-4 pb-14 pt-6 sm:px-6 sm:pt-10">
-        <p className="eyebrow text-signal">{view ? longDate.format(new Date(`${view.day}T00:00:00Z`)) : 'Daily challenge'}</p>
+        <p className="eyebrow text-link">{view ? longDate.format(new Date(`${view.day}T00:00:00Z`)) : 'Daily challenge'}</p>
         <h1 className="mt-1 font-display text-3xl font-bold text-heading sm:text-4xl">Today’s 10-minute challenge</h1>
         <p className="mt-2 max-w-[560px] text-base text-body">
           One aptitude question, one coding question and one HR answer. Everyone gets the same three today, and finishing them keeps your streak going.
@@ -170,7 +170,7 @@ function McqCard({ n, item, signedIn, onNeedSignIn, onAnswered }: {
               )}
             >
               <span className={cn('flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-xs font-bold',
-                isRight ? 'border-success bg-success text-white' : isWrongPick ? 'border-danger bg-danger text-white' : isPicked ? 'border-signal text-signal' : 'border-line text-muted')}>
+                isRight ? 'border-success bg-success text-white' : isWrongPick ? 'border-danger bg-danger text-white' : isPicked ? 'border-signal text-link' : 'border-line text-muted')}>
                 {isRight ? <Check className="h-3.5 w-3.5" aria-hidden /> : isWrongPick ? <X className="h-3.5 w-3.5" aria-hidden /> : String.fromCharCode(65 + i)}
               </span>
               <span className="min-w-0 break-words">{text}</span>
@@ -255,7 +255,7 @@ function HrCard({ n, item, signedIn, onNeedSignIn, onAnswered }: {
             <dl className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {(['situation', 'task', 'action', 'result'] as const).map((k) => (
                 <div key={k} className="rounded-xl border border-line px-3.5 py-2.5">
-                  <dt className="text-xs font-bold uppercase tracking-[0.08em] text-signal">{k}</dt>
+                  <dt className="text-xs font-bold uppercase tracking-[0.08em] text-link">{k}</dt>
                   <dd className="mt-0.5 text-sm text-body">{reveal.star_breakdown![k]}</dd>
                 </div>
               ))}

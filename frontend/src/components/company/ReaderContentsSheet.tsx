@@ -102,7 +102,7 @@ export const ReaderContentsSheet: React.FC<ReaderContentsSheetProps> = ({
                       {locked ? (
                         <Lock className="h-4 w-4 flex-none text-gray-400" aria-hidden />
                       ) : active ? (
-                        <CheckCircle2 className="h-4 w-4 flex-none text-signal" aria-hidden />
+                        <CheckCircle2 className="h-4 w-4 flex-none text-link" aria-hidden />
                       ) : null}
                     </button>
                   </li>

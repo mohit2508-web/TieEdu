@@ -17,7 +17,7 @@ interface Props {
 
 const ROUND_META: Record<RoundType, { label: string; cls: string; dot: string }> = {
   OA: { label: 'Online Assessment', cls: 'bg-amber-50 text-amber-800 border-amber-200', dot: 'bg-amber-400' },
-  Technical: { label: 'Technical Round', cls: 'bg-signal-soft text-signal-hover border-signal/30', dot: 'bg-signal' },
+  Technical: { label: 'Technical Round', cls: 'bg-signal-soft text-link border-signal/30', dot: 'bg-signal' },
   SystemDesign: { label: 'System Design', cls: 'bg-purple-50 text-purple-700 border-purple-200', dot: 'bg-purple-500' },
   HR: { label: 'HR Round', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
   Managerial: { label: 'Managerial', cls: 'bg-teal-50 text-teal-700 border-teal-200', dot: 'bg-teal-500' },
@@ -85,7 +85,7 @@ export const PremiumModuleCard: React.FC<Props> = ({ module, companyName, isUnlo
         </div>
       ) : (
         <div className="flex items-baseline gap-2 mb-4">
-          <span className="text-2xl font-extrabold text-[var(--brand-primary)]">₹{price}</span>
+          <span className="text-2xl font-extrabold text-link">₹{price}</span>
           <span className="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-md">One-Time</span>
         </div>
       )}
@@ -111,7 +111,7 @@ export const PremiumModuleCard: React.FC<Props> = ({ module, companyName, isUnlo
             module.pdf ? (
               <button
                 onClick={onOpenPdf || onPreview}
-                className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 bg-white border-2 border-signal/30 hover:border-signal text-signal text-xs font-bold rounded-xl transition-all"
+                className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 bg-white border-2 border-signal/30 hover:border-signal text-link text-xs font-bold rounded-xl transition-all"
               >
                 <FileText className="w-3.5 h-3.5" /> PDF Guide
               </button>

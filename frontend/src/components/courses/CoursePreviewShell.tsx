@@ -88,11 +88,11 @@ export const CoursePreviewShell: React.FC<{
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           {course.category && (
-            <span className="rounded-full bg-[var(--brand-sky-soft)] px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-[var(--brand-sky-strong)]">
+            <span className="rounded-full bg-[var(--brand-sky-soft)] px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-link">
               {course.category}
             </span>
           )}
-          <span className="rounded-full bg-[var(--bg-sky-soft)] px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-[var(--brand-sky)]">
+          <span className="rounded-full bg-[var(--bg-sky-soft)] px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-link">
             {course.is_free ? 'Free' : formatPrice(course.price_inr)}
           </span>
         </div>

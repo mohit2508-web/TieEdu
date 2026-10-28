@@ -54,7 +54,7 @@ export default function CollegeLeaderboardPage() {
         <meta name="robots" content="noindex" />
       </Head>
       <main className="mx-auto w-full max-w-[680px] px-4 pb-14 pt-6 sm:px-6 sm:pt-10">
-        <p className="eyebrow text-signal">This week</p>
+        <p className="eyebrow text-link">This week</p>
         <h1 className="mt-1 font-display text-3xl font-bold text-heading sm:text-4xl">{board?.college ? `${board.college} leaderboard` : 'College leaderboard'}</h1>
         <p className="mt-2 text-base text-body">Points earned this week by students of your college who chose to appear. It starts again every Monday, so anyone can top it.</p>
 

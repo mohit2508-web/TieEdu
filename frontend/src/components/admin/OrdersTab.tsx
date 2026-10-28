@@ -97,7 +97,7 @@ export const OrdersTab: React.FC = () => {
               <button
                 key={val}
                 onClick={() => { setStatus(val); setExpanded(null); load(q.trim(), val); }}
-                className={`px-3 py-1.5 rounded-full border transition-all ${status === val ? 'bg-brand-ink text-white border-brand-ink' : 'bg-white text-gray-500 border-gray-200 hover:border-signal hover:text-signal'}`}
+                className={`px-3 py-1.5 rounded-full border transition-all ${status === val ? 'bg-brand-ink text-white border-brand-ink' : 'bg-white text-gray-500 border-gray-200 hover:border-signal hover:text-link'}`}
               >
                 {label}
               </button>
@@ -135,7 +135,7 @@ export const OrdersTab: React.FC = () => {
                   <React.Fragment key={o.id}>
                     <tr className="hover:bg-app-warm cursor-pointer" onClick={() => setExpanded(expanded === o.id ? null : o.id)}>
                       <td className="px-4 py-3">
-                        <p className="font-mono text-xs text-signal font-bold">{(o.id || '').slice(0, 24)}{(o.id || '').length > 24 ? '…' : ''}</p>
+                        <p className="font-mono text-xs text-link font-bold">{(o.id || '').slice(0, 24)}{(o.id || '').length > 24 ? '…' : ''}</p>
                         <p className="text-xs text-gray-400">{new Date(o.created_at).toLocaleString()}</p>
                       </td>
                       <td className="px-4 py-3">
@@ -148,7 +148,7 @@ export const OrdersTab: React.FC = () => {
                       <td className="px-4 py-3 text-right font-extrabold text-heading">{fmtInr(o.amount_inr)}</td>
                       <td className="px-4 py-3">
                         {o.coupon_code ? (
-                          <span className="text-xs font-mono font-bold bg-signal-soft text-signal px-2 py-0.5 rounded-full">{o.coupon_code}</span>
+                          <span className="text-xs font-mono font-bold bg-signal-soft text-link px-2 py-0.5 rounded-full">{o.coupon_code}</span>
                         ) : (
                           <span className="text-xs text-gray-300">—</span>
                         )}
@@ -163,7 +163,7 @@ export const OrdersTab: React.FC = () => {
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
                             <div>
                               <p className="text-xs font-bold font-mono text-gray-400 uppercase mb-1">Breakdown</p>
-                              <p className="text-gray-600">Base: {fmtInr((o.base_amount_paisa || 0) / 100)}<br />Discount: {fmtInr((o.discount_paisa || 0) / 100)}<br />Paid: <strong className="text-signal">{fmtInr(o.amount_inr)}</strong></p>
+                              <p className="text-gray-600">Base: {fmtInr((o.base_amount_paisa || 0) / 100)}<br />Discount: {fmtInr((o.discount_paisa || 0) / 100)}<br />Paid: <strong className="text-link">{fmtInr(o.amount_inr)}</strong></p>
                             </div>
                             <div className="sm:col-span-2">
                               <p className="text-xs font-bold font-mono text-gray-400 uppercase mb-1">Order items</p>

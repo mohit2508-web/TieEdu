@@ -67,7 +67,7 @@ export const PWAInstallPrompt: React.FC = () => {
     <div className="fixed inset-x-4 bottom-[calc(var(--tabbar-total)_+_16px)] z-50 mx-auto max-w-sm rounded-2xl border border-line bg-white/95 p-4 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-white/80 md:inset-x-auto md:right-4 md:bottom-4 md:left-auto">
       <div className="flex items-start gap-3">
         <div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-signal-soft">
-          <Download size={20} className="text-signal" strokeWidth={2.2} />
+          <Download size={20} className="text-link" strokeWidth={2.2} />
         </div>
         <div className="min-w-0 flex-1">
           <h2 className="text-sm font-bold text-heading">Get the TieEdu App</h2>

@@ -88,7 +88,7 @@ export default function DriveDayPage() {
         <meta name="description" content="Everything for the day of a placement test: reporting time, documents checklist, 15-minute revision and a breathing timer." />
       </Head>
       <main className="mx-auto w-full max-w-[760px] px-4 pb-14 pt-6 sm:px-6 sm:pt-10">
-        <p className="eyebrow text-signal">Drive-day mode</p>
+        <p className="eyebrow text-link">Drive-day mode</p>
         <h1 className="mt-1 font-display text-3xl font-bold text-heading sm:text-4xl">{title}</h1>
         <p className="mt-2 text-base text-body">You have prepared. This page is for the day itself. What you type here stays on this phone.</p>
 
@@ -97,11 +97,11 @@ export default function DriveDayPage() {
           <h2 className="font-display text-lg font-bold text-heading">When and where</h2>
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
             <label className="block">
-              <span className="flex items-center gap-1.5 text-sm font-semibold text-heading"><Clock className="h-4 w-4 text-signal" aria-hidden /> Reporting time</span>
+              <span className="flex items-center gap-1.5 text-sm font-semibold text-heading"><Clock className="h-4 w-4 text-link" aria-hidden /> Reporting time</span>
               <input type="time" value={state.time} onChange={(e) => update({ time: e.target.value })} autoComplete="off" className="mt-1 min-h-[44px] w-full rounded-xl border border-line bg-card px-3 text-base text-heading" />
             </label>
             <label className="block">
-              <span className="flex items-center gap-1.5 text-sm font-semibold text-heading"><MapPin className="h-4 w-4 text-signal" aria-hidden /> Venue or test link</span>
+              <span className="flex items-center gap-1.5 text-sm font-semibold text-heading"><MapPin className="h-4 w-4 text-link" aria-hidden /> Venue or test link</span>
               <input type="text" value={state.venue} onChange={(e) => update({ venue: e.target.value })} autoComplete="off" placeholder="e.g. Seminar hall, block B" className="mt-1 min-h-[44px] w-full rounded-xl border border-line bg-card px-3 text-base text-heading placeholder:text-light" />
             </label>
           </div>
@@ -144,19 +144,19 @@ export default function DriveDayPage() {
             {revision.map((r) => (
               <li key={r.href}>
                 <Link href={r.href} className="focus-ring flex min-h-[44px] items-center gap-3 rounded-xl border border-line px-3.5 text-sm font-semibold text-heading hover:border-line-strong">
-                  <BookOpen className="h-4 w-4 shrink-0 text-signal" aria-hidden /> {r.title}
+                  <BookOpen className="h-4 w-4 shrink-0 text-link" aria-hidden /> {r.title}
                 </Link>
               </li>
             ))}
             {slug && (
               <li>
                 <Link href={`/company/${slug}`} className="focus-ring flex min-h-[44px] items-center gap-3 rounded-xl border border-line px-3.5 text-sm font-semibold text-heading hover:border-line-strong">
-                  <BookOpen className="h-4 w-4 shrink-0 text-signal" aria-hidden /> {company ? `${company}’s rounds at a glance` : 'The company’s rounds at a glance'}
+                  <BookOpen className="h-4 w-4 shrink-0 text-link" aria-hidden /> {company ? `${company}’s rounds at a glance` : 'The company’s rounds at a glance'}
                 </Link>
               </li>
             )}
             {!slug && (
-              <li><Link href="/calendar" className="text-sm font-semibold text-signal hover:underline">Pick a company from your calendar</Link></li>
+              <li><Link href="/calendar" className="text-sm font-semibold text-link hover:underline">Pick a company from your calendar</Link></li>
             )}
           </ul>
         </Card>
@@ -166,7 +166,7 @@ export default function DriveDayPage() {
         {/* Reminders */}
         <Card pad="lg" className="mt-4">
           <h2 className="font-display text-lg font-bold text-heading">Five things to remember</h2>
-          <ol className="mt-3 list-decimal space-y-2 pl-5 text-base text-body marker:font-bold marker:text-signal">
+          <ol className="mt-3 list-decimal space-y-2 pl-5 text-base text-body marker:font-bold marker:text-link">
             {TIPS.map((t) => <li key={t}>{t}</li>)}
           </ol>
         </Card>

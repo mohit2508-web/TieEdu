@@ -39,7 +39,7 @@ export default function OffersPage() {
         <meta name="description" content="Real placement offers from TieEdu students, and how each one prepared: the rounds, the practice and what made the difference." />
       </Head>
       <main className="mx-auto w-full max-w-[880px] px-4 pb-14 pt-6 sm:px-6 sm:pt-10">
-        <p className="eyebrow text-signal">Offer wall</p>
+        <p className="eyebrow text-link">Offer wall</p>
         <h1 className="mt-1 font-display text-3xl font-bold text-heading sm:text-4xl">Offers, and the route that got them</h1>
         <p className="mt-2 text-base text-body">Students who got placed, in their own words: what they practised, what was asked, and what made the difference.</p>
 
@@ -112,7 +112,7 @@ export default function OffersPage() {
               <Card pad="lg">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <Link href={`/company/${o.company_slug}`} className="font-display text-xl font-bold text-heading hover:text-signal">{o.company}</Link>
+                    <Link href={`/company/${o.company_slug}`} className="font-display text-xl font-bold text-heading hover:text-link">{o.company}</Link>
                     <p className="text-sm text-muted">{o.role}{o.ctc_lpa !== null && ` · ₹${o.ctc_lpa} LPA`}</p>
                   </div>
                   {o.verified && (

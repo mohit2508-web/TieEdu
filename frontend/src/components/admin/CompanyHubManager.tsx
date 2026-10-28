@@ -189,7 +189,7 @@ export const CompanyHubManager: React.FC<CompanyHubManagerProps> = ({ companies,
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <h3 className="text-base font-extrabold text-ink-soft flex items-center gap-2">
-            <Building className="w-5 h-5 text-signal" /> Company Hub Directory
+            <Building className="w-5 h-5 text-link" /> Company Hub Directory
           </h3>
           <p className="text-xs text-gray-500">
             {companies.length} companies · every profile field and editorial metric is yours to write
@@ -258,7 +258,7 @@ export const CompanyHubManager: React.FC<CompanyHubManagerProps> = ({ companies,
                   </td>
                   <td className="p-4 text-right">
                     <div className="inline-flex items-center gap-1.5">
-                      <button onClick={() => openEdit(c)} className="p-1.5 text-gray-500 hover:text-signal hover:bg-signal-soft rounded-lg" title="Edit company profile">
+                      <button onClick={() => openEdit(c)} className="p-1.5 text-gray-500 hover:text-link hover:bg-signal-soft rounded-lg" title="Edit company profile">
                         <Edit3 className="w-4 h-4" />
                       </button>
                       <button onClick={() => onSelect(c.id)} className="px-3 py-1 bg-signal hover:bg-signal text-white rounded-lg text-xs font-bold" title="Manage content">
@@ -266,7 +266,7 @@ export const CompanyHubManager: React.FC<CompanyHubManagerProps> = ({ companies,
                       </button>
                       <button
                         onClick={() => setStudioFor(c)}
-                        className="inline-flex items-center gap-1 px-3 py-1 border border-gray-300 hover:border-signal hover:text-signal text-gray-700 rounded-lg text-xs font-bold"
+                        className="inline-flex items-center gap-1 px-3 py-1 border border-gray-300 hover:border-signal hover:text-link text-gray-700 rounded-lg text-xs font-bold"
                         title="Design the redesigned company page"
                       >
                         <LayoutTemplate className="w-3.5 h-3.5" /> Design page

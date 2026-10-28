@@ -46,7 +46,7 @@ export const ParentLinkCard: React.FC<{ ready: boolean }> = ({ ready }) => {
         <div className="max-w-xl">
           <p className="eyebrow text-muted">For your parents</p>
           <h2 className="mt-2 flex items-center gap-2 font-display text-xl font-bold text-heading">
-            <HeartHandshake className="h-5 w-5 text-signal" aria-hidden /> Show them how you are doing
+            <HeartHandshake className="h-5 w-5 text-link" aria-hidden /> Show them how you are doing
           </h2>
           <p className="mt-2 text-sm leading-relaxed text-muted">
             A private page with your last four weeks of lessons and tests, your streak, your certificates and your readiness

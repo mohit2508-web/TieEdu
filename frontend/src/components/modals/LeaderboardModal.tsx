@@ -94,10 +94,10 @@ export const LeaderboardModal: React.FC = () => {
                   touches `user.streak`, so the stored number is frozen — showing
                   it next to live XP would imply it is still being measured.
                 */}
-                <p className="text-xs text-signal">{user.xp || 0} XP</p>
+                <p className="text-xs text-link">{user.xp || 0} XP</p>
               </div>
             </div>
-            <span className="text-xs font-extrabold uppercase tracking-wide text-signal bg-white/70 px-2 py-1 rounded-md">
+            <span className="text-xs font-extrabold uppercase tracking-wide text-link bg-white/70 px-2 py-1 rounded-md">
               Rank #{entries.find((e) => e.id === user.id)?.rank ?? '—'}
             </span>
           </div>
@@ -105,8 +105,8 @@ export const LeaderboardModal: React.FC = () => {
 
         {user && (
           <div className="flex flex-wrap gap-2 mt-4">
-            <Link href="/interview-course" onClick={onClose} className="chip hover:border-signal hover:text-signal">
-              <Award className="w-3.5 h-3.5 text-signal" /> Interview course se XP kamao
+            <Link href="/interview-course" onClick={onClose} className="chip hover:border-signal hover:text-link">
+              <Award className="w-3.5 h-3.5 text-link" /> Interview course se XP kamao
             </Link>
             <Link href="/companies" onClick={onClose} className="chip hover:border-money hover:text-amber-deep">
               <Award className="w-3.5 h-3.5 text-amber-deep" /> +50 XP for submitting a report
@@ -142,7 +142,7 @@ export const LeaderboardModal: React.FC = () => {
                 <Link
                   href="/signup"
                   onClick={onClose}
-                  className="inline-flex items-center gap-1.5 mt-2 text-sm font-bold text-signal hover:text-signal"
+                  className="inline-flex items-center gap-1.5 mt-2 text-sm font-bold text-link hover:text-link"
                 >
                   Create free account <ArrowRight className="w-3.5 h-3.5" />
                 </Link>

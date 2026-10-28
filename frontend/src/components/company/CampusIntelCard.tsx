@@ -64,7 +64,7 @@ export const CampusIntelCard: React.FC<{ slug: string; company: string }> = ({ s
 
   return (
     <Card pad="lg" aria-labelledby="campus-intel-h">
-      <p className="eyebrow text-signal">At your college</p>
+      <p className="eyebrow text-link">At your college</p>
       <h2 id="campus-intel-h" className="mt-1 font-display text-xl font-bold text-heading">{company} on your campus</h2>
 
       {intel.history.length > 0 ? (
@@ -83,7 +83,7 @@ export const CampusIntelCard: React.FC<{ slug: string; company: string }> = ({ s
         <p className="mt-3 text-sm text-muted">Your placement cell has not added {company}’s history yet.</p>
       )}
 
-      <h3 className="mt-6 flex items-center gap-2 text-base font-bold text-heading"><MessageSquareQuote className="h-4 w-4 text-signal" aria-hidden /> From your seniors</h3>
+      <h3 className="mt-6 flex items-center gap-2 text-base font-bold text-heading"><MessageSquareQuote className="h-4 w-4 text-link" aria-hidden /> From your seniors</h3>
       {intel.notes.length > 0 ? (
         <ul className="mt-2 space-y-3">
           {intel.notes.map((n) => (

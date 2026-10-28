@@ -46,7 +46,7 @@ export const RecruitersTab: React.FC = () => {
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div>
               <p className="font-bold text-ink-soft">{r.company} <span className="text-xs font-semibold text-gray-500">· {STATUS[r.status]}</span></p>
-              <p className="text-sm"><a href={r.website} target="_blank" rel="noopener noreferrer nofollow" className="text-signal hover:underline">{r.website}</a> · {r.work_email}</p>
+              <p className="text-sm"><a href={r.website} target="_blank" rel="noopener noreferrer nofollow" className="text-link hover:underline">{r.website}</a> · {r.work_email}</p>
               <p className="text-xs text-gray-500">Account: {r.account_email || 'unknown'} · applied {new Date(r.applied_at).toLocaleDateString('en-IN')} · {r.requests} requests sent</p>
               {r.admin_note && <p className="mt-1 text-xs text-gray-500">Note: {r.admin_note}</p>}
             </div>

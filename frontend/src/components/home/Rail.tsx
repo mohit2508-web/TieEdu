@@ -74,7 +74,7 @@ export const Rail: React.FC<{
   };
 
   const arrowCls =
-    'hidden lg:inline-flex h-10 w-10 items-center justify-center rounded-full border border-line bg-white text-body shadow-soft transition-all hover:text-signal hover:border-signal/40 disabled:opacity-0 disabled:pointer-events-none focus-ring';
+    'hidden lg:inline-flex h-10 w-10 items-center justify-center rounded-full border border-line bg-white text-body shadow-soft transition-all hover:text-link hover:border-signal/40 disabled:opacity-0 disabled:pointer-events-none focus-ring';
 
   return (
     <section
@@ -121,7 +121,7 @@ export const Rail: React.FC<{
             {seeAllHref && (
               <Link
                 href={seeAllHref}
-                className="inline-flex items-center gap-1.5 min-h-[44px] px-3 rounded-xl text-sm font-bold text-signal hover:text-signal-hover transition-colors focus-ring"
+                className="inline-flex items-center gap-1.5 min-h-[44px] px-3 rounded-xl text-sm font-bold text-link hover:text-link transition-colors focus-ring"
               >
                 {seeAllLabel} <ArrowRight className="w-4 h-4" aria-hidden />
               </Link>

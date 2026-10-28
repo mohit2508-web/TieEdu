@@ -609,7 +609,7 @@ export const AdminCoursesTab: React.FC = () => {
                       target="_blank"
                       rel="noreferrer"
                       onClick={(e) => e.stopPropagation()}
-                      className="text-signal hover:text-signal"
+                      className="text-link hover:text-link"
                       title="Open the learner page"
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
@@ -831,7 +831,7 @@ const InstructorPicker: React.FC<{
                           {i.title ? <span className="font-normal text-text-light"> - {i.title}</span> : null}
                         </span>
                         {isAssigned ? (
-                          <span className="block text-xs font-semibold text-signal">Assigned to this course</span>
+                          <span className="block text-xs font-semibold text-link">Assigned to this course</span>
                         ) : (
                           <span className="block text-xs text-text-light">
                             {i.course_count ?? 0} course{(i.course_count ?? 0) === 1 ? '' : 's'}

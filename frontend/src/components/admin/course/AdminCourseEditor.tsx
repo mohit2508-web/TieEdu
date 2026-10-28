@@ -107,7 +107,7 @@ export const AdminCourseEditor: React.FC<{
       <div className="space-y-4">
         <button
           onClick={() => setSelectedLesson(null)}
-          className="text-xs font-bold text-signal hover:underline flex items-center gap-1"
+          className="text-xs font-bold text-link hover:underline flex items-center gap-1"
         >
           <ChevronRight className="w-3.5 h-3.5" /> Back to {mod.title}
         </button>
@@ -125,7 +125,7 @@ export const AdminCourseEditor: React.FC<{
     <div className="space-y-5">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <button onClick={onBack} className="text-xs font-bold text-signal hover:underline">
+          <button onClick={onBack} className="text-xs font-bold text-link hover:underline">
             ← All courses
           </button>
           <h2 className="text-lg font-extrabold text-heading tracking-tight mt-1">{course.title}</h2>

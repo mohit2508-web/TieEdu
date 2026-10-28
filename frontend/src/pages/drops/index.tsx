@@ -367,7 +367,7 @@ export default function DropsPage() {
             {!stale && notice && (
               <div
                 role="status"
-                className="flex items-center gap-2 bg-[var(--brand-sky-soft)] px-4 py-2 text-xs font-semibold text-[var(--brand-sky-strong)]"
+                className="flex items-center gap-2 bg-[var(--brand-sky-soft)] px-4 py-2 text-xs font-semibold text-link"
               >
                 <span className="flex-1">{notice}</span>
                 <button

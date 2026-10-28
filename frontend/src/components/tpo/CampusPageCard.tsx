@@ -50,7 +50,7 @@ export const CampusPageCard: React.FC = () => {
       <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
         <div className="max-w-xl">
           <h2 className="flex items-center gap-2 font-display text-lg font-bold text-heading">
-            <Globe className="h-5 w-5 text-signal" aria-hidden /> Public campus page
+            <Globe className="h-5 w-5 text-link" aria-hidden /> Public campus page
           </h2>
           <p className="mt-1.5 text-sm leading-relaxed text-muted">
             A page for your students and their parents: your college&apos;s name and colour, how many students are preparing,

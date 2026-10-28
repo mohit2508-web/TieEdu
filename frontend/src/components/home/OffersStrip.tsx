@@ -175,7 +175,7 @@ export const OffersStrip: React.FC = () => {
           </div>
           <Link
             href="/courses?src=offers"
-            className="inline-flex shrink-0 items-center gap-1.5 min-h-[44px] px-3 rounded-xl text-sm font-bold text-signal hover:text-signal-hover transition-colors focus-ring"
+            className="inline-flex shrink-0 items-center gap-1.5 min-h-[44px] px-3 rounded-xl text-sm font-bold text-link hover:text-link transition-colors focus-ring"
           >
             All courses <ArrowRight className="h-4 w-4" aria-hidden />
           </Link>

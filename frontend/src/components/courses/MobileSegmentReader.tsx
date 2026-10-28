@@ -111,7 +111,7 @@ export const MobileSegmentReader: React.FC<{
             onClick={() => go(summaryIndex)}
             className="focus-ring inline-flex min-h-[44px] flex-none items-center gap-1.5 rounded-xl border border-[var(--border-strong)] px-3 text-xs font-bold text-[var(--ink)] transition-colors active:bg-[var(--bg-surface-hover)]"
           >
-            <ListChecks size={14} className="text-[var(--brand-sky)]" />
+            <ListChecks size={14} className="text-link" />
             Summary
           </button>
         )}

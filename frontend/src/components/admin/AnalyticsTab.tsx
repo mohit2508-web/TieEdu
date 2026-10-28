@@ -111,13 +111,13 @@ export const AnalyticsTab: React.FC<{ companies: Company[] }> = ({ companies }) 
           )}
           <div className="mt-4 pt-4 border-t border-line flex justify-between text-xs">
             <span className="text-gray-500">Total revenue</span>
-            <strong className="text-signal">{fmtInr(analytics.commerce.revenue_inr)}</strong>
+            <strong className="text-link">{fmtInr(analytics.commerce.revenue_inr)}</strong>
           </div>
         </div>
 
         <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-xs">
           <h3 className="text-sm font-extrabold text-ink-soft flex items-center gap-2 mb-4">
-            <Lock className="w-4 h-4 text-signal" /> Vault unlocks by company
+            <Lock className="w-4 h-4 text-link" /> Vault unlocks by company
           </h3>
           <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
             {sortedCompanies.map((c) => (
@@ -145,7 +145,7 @@ export const AnalyticsTab: React.FC<{ companies: Company[] }> = ({ companies }) 
               {coupons.map((cp) => (
                 <div key={cp.id} className="flex items-center justify-between text-xs py-1.5 border-b border-line last:border-0">
                   <div className="flex items-center gap-2">
-                    <span className="font-mono font-bold text-signal bg-signal-soft px-2 py-0.5 rounded-md">{cp.code}</span>
+                    <span className="font-mono font-bold text-link bg-signal-soft px-2 py-0.5 rounded-md">{cp.code}</span>
                     <span className="text-gray-400">{cp.scope || (cp.discount_percent ? `${cp.discount_percent}%` : cp.discount_flat ? `₹${cp.discount_flat}` : '—')}</span>
                   </div>
                   <span className={`font-mono font-bold ${cp.uses > 0 ? 'text-emerald-700' : 'text-gray-400'}`}>
@@ -168,13 +168,13 @@ export const AnalyticsTab: React.FC<{ companies: Company[] }> = ({ companies }) 
               {leaderboard.slice(0, 10).map((e) => (
                 <div key={e.rank} className="flex items-center justify-between text-xs py-1.5 border-b border-line last:border-0">
                   <div className="flex items-center gap-2.5">
-                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-extrabold ${e.rank === 1 ? 'bg-warning-soft text-amber-deep' : 'bg-signal-soft text-signal'}`}>#{e.rank}</span>
+                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-extrabold ${e.rank === 1 ? 'bg-warning-soft text-amber-deep' : 'bg-signal-soft text-link'}`}>#{e.rank}</span>
                     <span className="font-semibold text-ink-soft">{e.name}</span>
                     {e.college && <span className="text-xs text-gray-400 font-mono">{e.college}</span>}
                   </div>
                   <div className="flex items-center gap-3">
                     {e.report_contributions > 0 && <span className="text-xs text-gray-400 font-mono">{e.report_contributions} reports</span>}
-                    <span className="font-mono font-bold text-signal">{e.xp} XP</span>
+                    <span className="font-mono font-bold text-link">{e.xp} XP</span>
                   </div>
                 </div>
               ))}
@@ -184,7 +184,7 @@ export const AnalyticsTab: React.FC<{ companies: Company[] }> = ({ companies }) 
       </div>
 
       <div className="flex items-center gap-2 text-xs font-mono text-gray-400">
-        <BarChart3 className="w-4 h-4 text-signal" />
+        <BarChart3 className="w-4 h-4 text-link" />
         Sources: /api/analytics, /api/analytics/revenue, /api/admin/coupons, /api/gamification/leaderboard, /api/companies
       </div>
     </div>

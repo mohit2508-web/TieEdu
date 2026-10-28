@@ -32,7 +32,7 @@ export const StudyReminderToggle: React.FC = () => {
           className="mt-0.5 h-4 w-4 accent-signal"
         />
         <span>
-          <span className="flex items-center gap-1.5 font-bold text-heading"><AlarmClock className="h-4 w-4 text-signal" aria-hidden /> Remind me at my usual study time</span>
+          <span className="flex items-center gap-1.5 font-bold text-heading"><AlarmClock className="h-4 w-4 text-link" aria-hidden /> Remind me at my usual study time</span>
           <span className="block text-xs text-muted">
             At most one a day{st.usual_hour !== null ? `, around ${hourLabel(st.usual_hour)}` : ' once we know when you usually study'}. Skipped on days you already practised, never at night.
             {st.paused && ' Paused after a week of reminders you did not need — tick to turn them back on.'}

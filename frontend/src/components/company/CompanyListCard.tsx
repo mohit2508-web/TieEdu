@@ -36,7 +36,7 @@ export const CompanyListCard: React.FC<{ company: Company }> = ({ company }) => 
       <div className="flex items-start gap-3">
         <BrandTile name={company.name} src={company.logo_url} className="h-12 w-12 shrink-0 rounded-xl p-1" />
         <div className="min-w-0 flex-1">
-          <h2 className="truncate font-display text-lg font-bold text-heading transition-colors group-hover:text-signal">
+          <h2 className="truncate font-display text-lg font-bold text-heading transition-colors group-hover:text-link">
             {company.name}
           </h2>
           <p className="truncate text-sm text-muted">{company.tagline || company.industry || 'Company'}</p>

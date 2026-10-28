@@ -80,13 +80,13 @@ export default function EnglishCoachPage() {
         <meta name="description" content="Practise speaking English for interviews and get gentle feedback, explained in English and Hinglish." />
       </Head>
       <main className="mx-auto w-full max-w-[760px] px-4 pb-14 pt-6 sm:px-6 sm:pt-10">
-        <p className="eyebrow text-signal">English coach</p>
+        <p className="eyebrow text-link">English coach</p>
         <h1 className="mt-1 font-display text-3xl font-bold text-heading sm:text-4xl">Speak English with confidence</h1>
         <p className="mt-2 text-base text-body">
           Pick a prompt, speak for half a minute, and get gentle tips on how it sounded. No marks and no judging: just you, a little better each time.
         </p>
         <button type="button" onClick={toggleHinglish} aria-pressed={hinglish} className="focus-ring mt-4 inline-flex min-h-[40px] items-center gap-2 rounded-xl border border-line bg-card px-3.5 text-sm font-semibold text-heading hover:bg-surface-hover">
-          <Languages className="h-4 w-4 text-signal" aria-hidden />
+          <Languages className="h-4 w-4 text-link" aria-hidden />
           {hinglish ? 'Hinglish explanations: on' : 'Hinglish explanations: off'}
         </button>
 
@@ -113,7 +113,7 @@ export default function EnglishCoachPage() {
                 <li key={p.id}>
                   <button type="button" onClick={() => { setPrompt(p); setResult(null); }} className="focus-ring group flex w-full items-center gap-3 rounded-[14px] border border-line bg-card p-4 text-left hover:border-line-strong">
                     <span className="min-w-0 flex-1">
-                      <span className="block font-bold text-heading group-hover:text-signal">{p.text}</span>
+                      <span className="block font-bold text-heading group-hover:text-link">{p.text}</span>
                       <span className="mt-0.5 block text-sm text-muted">About {p.seconds} seconds</span>
                     </span>
                     <ArrowRight className="h-5 w-5 shrink-0 text-muted" aria-hidden />
@@ -161,7 +161,7 @@ export default function EnglishCoachPage() {
                         <p className="text-sm text-muted">
                           {shortDate.format(new Date(a.created_at))} · {a.feedback.words} words{a.feedback.wpm ? ` · ${a.feedback.wpm} words a minute` : ''} · {a.feedback.filler_total === 0 ? 'no filler words' : `${a.feedback.filler_total} filler word${a.feedback.filler_total === 1 ? '' : 's'}`}
                         </p>
-                        <button type="button" onClick={() => { const p = prompts?.find((x) => x.id === a.prompt?.id) || null; setPrompt(p); setResult(a); }} className="mt-2 inline-flex min-h-[32px] items-center gap-1 text-sm font-semibold text-signal hover:underline">
+                        <button type="button" onClick={() => { const p = prompts?.find((x) => x.id === a.prompt?.id) || null; setPrompt(p); setResult(a); }} className="mt-2 inline-flex min-h-[32px] items-center gap-1 text-sm font-semibold text-link hover:underline">
                           See the tips <ArrowRight className="h-4 w-4" aria-hidden />
                         </button>
                       </div>

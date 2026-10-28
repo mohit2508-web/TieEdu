@@ -257,7 +257,7 @@ export const NotificationsTab: React.FC = () => {
         <div className="flex items-start justify-between gap-3">
           <div>
             <h3 className="text-sm font-extrabold text-heading flex items-center gap-2">
-              <Smartphone className="w-4 h-4 text-signal" /> Registered endpoints
+              <Smartphone className="w-4 h-4 text-link" /> Registered endpoints
             </h3>
             <p className="text-xs text-text-light mt-1.5 leading-relaxed max-w-2xl">
               Every browser your account has registered. A test notification goes to all {live.length} active

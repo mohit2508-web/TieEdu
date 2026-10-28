@@ -275,7 +275,7 @@ export default function CoursesPage({ initialData }: { initialData: CourseCatalo
 
       <main className="mx-auto w-full max-w-[1180px] px-5 pb-28 pt-10 sm:px-8 lg:pb-24">
         <header className="max-w-3xl">
-          <p className="text-xs font-bold uppercase tracking-widest text-[var(--brand-sky)]">Learn properly</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-link">Learn properly</p>
           <h1 className="mt-3 text-3xl font-extrabold leading-tight tracking-tight text-[var(--ink)] sm:text-4xl">
             Courses that keep their promises
           </h1>
@@ -299,7 +299,7 @@ export default function CoursesPage({ initialData }: { initialData: CourseCatalo
                   className="inline-flex min-h-[44px] items-center gap-2 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-2 text-sm font-semibold text-[var(--ink)] transition-colors hover:border-[var(--brand-sky)]"
                 >
                   {c.title}
-                  <span className="text-xs font-bold text-[var(--brand-sky)]">{c.progress?.percent}%</span>
+                  <span className="text-xs font-bold text-link">{c.progress?.percent}%</span>
                 </Link>
               ))}
             </div>
@@ -343,7 +343,7 @@ export default function CoursesPage({ initialData }: { initialData: CourseCatalo
             <button
               type="button"
               onClick={() => setWizardOpen(true)}
-              className="inline-flex min-h-[44px] items-center gap-2 rounded-[var(--radius-sm)] border border-dashed border-[var(--brand-sky)]/50 bg-[var(--bg-surface)] px-4 py-2.5 text-sm font-bold text-[var(--brand-sky-strong)]"
+              className="inline-flex min-h-[44px] items-center gap-2 rounded-[var(--radius-sm)] border border-dashed border-[var(--brand-sky)]/50 bg-[var(--bg-surface)] px-4 py-2.5 text-sm font-bold text-link"
             >
               <Compass size={15} />
               Help me choose
@@ -406,7 +406,7 @@ export default function CoursesPage({ initialData }: { initialData: CourseCatalo
             <button
               type="button"
               onClick={clearAll}
-              className="inline-flex min-h-[40px] items-center rounded-full px-2 text-xs font-bold text-[var(--brand-sky)] hover:underline"
+              className="inline-flex min-h-[40px] items-center rounded-full px-2 text-xs font-bold text-link hover:underline"
             >
               Clear all
             </button>
@@ -469,7 +469,7 @@ export default function CoursesPage({ initialData }: { initialData: CourseCatalo
                     <button
                       type="button"
                       onClick={clearAll}
-                      className="inline-flex min-h-[44px] items-center px-2 text-sm font-bold text-[var(--brand-sky)] hover:underline"
+                      className="inline-flex min-h-[44px] items-center px-2 text-sm font-bold text-link hover:underline"
                     >
                       Clear all filters
                     </button>

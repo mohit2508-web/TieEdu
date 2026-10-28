@@ -61,7 +61,7 @@ export const YearRoutes: React.FC = () => (
               >
                 {r.cta.label} <ArrowRight className="h-4 w-4" aria-hidden />
               </Link>
-              <Link href={r.more.href} className="focus-ring inline-flex min-h-[44px] items-center text-sm font-semibold text-signal hover:underline">
+              <Link href={r.more.href} className="focus-ring inline-flex min-h-[44px] items-center text-sm font-semibold text-link hover:underline">
                 {r.more.label}
               </Link>
             </div>

@@ -6,7 +6,7 @@ const fmtInr = (n: number) => `₹${n.toLocaleString('en-IN', { maximumFractionD
 
 const StatCard: React.FC<{ label: string; value: string; sub?: string; icon: any; tone?: string }> = ({ label, value, sub, icon: Icon, tone = 'sky' }) => {
   const tones: Record<string, string> = {
-    sky: 'bg-signal-soft text-signal',
+    sky: 'bg-signal-soft text-link',
     amber: 'bg-warning-soft text-amber-deep',
     emerald: 'bg-emerald-50 text-emerald-700',
     navy: 'bg-brand-ink text-white',
@@ -36,7 +36,7 @@ const RevenueBars: React.FC<{ series: RevenuePoint[] }> = ({ series }) => {
         <div className="flex items-end gap-2 h-36">
           {data.map((d) => (
             <div key={d.date} className="flex-1 flex flex-col items-center gap-1 group" title={`${d.date} · ${fmtInr(d.revenue_inr)} · ${d.orders} orders`}>
-              <span className="text-xs font-mono font-bold text-signal opacity-0 group-hover:opacity-100 transition-opacity">{d.revenue_inr.toFixed(0)}</span>
+              <span className="text-xs font-mono font-bold text-link opacity-0 group-hover:opacity-100 transition-opacity">{d.revenue_inr.toFixed(0)}</span>
               <div className="w-full rounded-t-md bg-signal transition-all hover:bg-signal-hover"
                 style={{ height: `${Math.max(4, (d.revenue_inr / max) * 100)}%` }} />
               <span className="text-xs font-mono text-gray-400 rotate-0 whitespace-nowrap">{d.date.slice(5)}</span>
@@ -117,7 +117,7 @@ export const OverviewTab: React.FC<{ companiesCount: number; pendingReportsCount
         <div className="lg:col-span-2 bg-white border border-gray-200 rounded-3xl p-6 shadow-xs">
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-signal" />
+              <TrendingUp className="w-5 h-5 text-link" />
               <h3 className="text-sm font-extrabold text-ink-soft">Revenue — last {revenue.length} paid days</h3>
             </div>
             <span className="text-xs font-mono font-bold text-gray-400">series: /analytics/revenue</span>

@@ -42,7 +42,7 @@ interface BandLink {
 }
 
 const BRANCHES: BandLink[] = [
-  { key: 'branch:cse', label: 'CSE', sub: 'CS & IT', href: '/courses?branch=cse&src=band', icon: Cpu, tint: 'text-signal bg-signal-soft' },
+  { key: 'branch:cse', label: 'CSE', sub: 'CS & IT', href: '/courses?branch=cse&src=band', icon: Cpu, tint: 'text-link bg-signal-soft' },
   { key: 'branch:ece', label: 'ECE', sub: 'Electronics', href: '/courses?branch=ece&src=band', icon: CircuitBoard, tint: 'text-[#7C3AED] bg-[#F1EBFE]' },
   { key: 'branch:eee', label: 'EEE', sub: 'Electrical', href: '/courses?branch=eee&src=band', icon: Zap, tint: 'text-amber-deep bg-warning-soft' },
   { key: 'branch:mech', label: 'Mech', sub: 'Mechanical', href: '/courses?branch=mech&src=band', icon: Cog, tint: 'text-brand-ink bg-surface-hover' },
@@ -51,7 +51,7 @@ const BRANCHES: BandLink[] = [
 ];
 
 const GOALS: BandLink[] = [
-  { key: 'goal:exam', label: 'Exam pass', sub: 'Semester core', href: '/courses?bucket=b&src=band', icon: GraduationCap, tint: 'text-signal bg-signal-soft' },
+  { key: 'goal:exam', label: 'Exam pass', sub: 'Semester core', href: '/courses?bucket=b&src=band', icon: GraduationCap, tint: 'text-link bg-signal-soft' },
   { key: 'goal:placement', label: 'Placement', sub: 'Career track', href: '/courses?bucket=d&src=band', icon: Target, tint: 'text-success bg-surface-hover' },
   { key: 'goal:internship', label: 'Internship', sub: 'Real search', href: '/courses?q=internship&src=band', icon: Compass, tint: 'text-[#7C3AED] bg-[#F1EBFE]' },
   { key: 'goal:gate', label: 'GATE', sub: 'Real search', href: '/courses?q=gate&src=band', icon: Award, tint: 'text-amber-deep bg-warning-soft' },
@@ -111,7 +111,7 @@ const Row: React.FC<{ title: string; hint: string; links: BandLink[] }> = ({ tit
                 <l.icon className="h-5 w-5" aria-hidden />
               </span>
               <span className="min-w-0">
-                <span className="block truncate text-sm font-extrabold text-heading group-hover:text-signal">
+                <span className="block truncate text-sm font-extrabold text-heading group-hover:text-link">
                   {l.label}
                 </span>
                 <span className="block truncate text-xs font-semibold text-[var(--text-muted)]">

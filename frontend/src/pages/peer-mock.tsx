@@ -76,7 +76,7 @@ export default function PeerMockPage() {
         <meta name="description" content="Interview a friend with TieEdu's questions and rubric, then swap. Both of you earn points." />
       </Head>
       <main className="mx-auto w-full max-w-[760px] px-4 pb-14 pt-6 sm:px-6 sm:pt-10">
-        <p className="eyebrow text-signal">Peer mock interview</p>
+        <p className="eyebrow text-link">Peer mock interview</p>
         <h1 className="mt-1 font-display text-3xl font-bold text-heading sm:text-4xl">Interview a friend, then swap</h1>
         <p className="mt-2 text-base text-body">
           One of you asks, one of you answers, in person or on a call. TieEdu gives the interviewer the questions and what a good answer covers. Both of you earn points.
@@ -97,7 +97,7 @@ export default function PeerMockPage() {
           <>
             <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Card pad="lg">
-                <p className="flex items-center gap-2 font-display text-lg font-bold text-heading"><UserRound className="h-5 w-5 text-signal" aria-hidden /> I will interview</p>
+                <p className="flex items-center gap-2 font-display text-lg font-bold text-heading"><UserRound className="h-5 w-5 text-link" aria-hidden /> I will interview</p>
                 <p className="mt-1 text-sm text-muted">You get a code to give your friend, then three questions and a rubric. +{rubric.xp.INTERVIEWER} points.</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {(['hr', 'technical'] as const).map((k) => <Chip key={k} selected={kind === k} onClick={() => setKind(k)}>{KIND_LABEL[k]}</Chip>)}
@@ -105,7 +105,7 @@ export default function PeerMockPage() {
                 <Button className="mt-4" onClick={() => act(() => startPeerSession(kind))} disabled={busy}>Get a code</Button>
               </Card>
               <Card pad="lg">
-                <p className="flex items-center gap-2 font-display text-lg font-bold text-heading"><Users className="h-5 w-5 text-signal" aria-hidden /> I will be interviewed</p>
+                <p className="flex items-center gap-2 font-display text-lg font-bold text-heading"><Users className="h-5 w-5 text-link" aria-hidden /> I will be interviewed</p>
                 <p className="mt-1 text-sm text-muted">Enter the code your friend gives you. +{rubric.xp.CANDIDATE} points.</p>
                 <form onSubmit={(e) => { e.preventDefault(); act(() => joinPeerSession(code)); }}>
                   <label className="mt-3 block">
@@ -117,7 +117,7 @@ export default function PeerMockPage() {
               </Card>
             </div>
             <p className="mt-4 text-sm text-muted">
-              No partner yet? Find one in your <Link href="/study-groups" className="font-semibold text-signal hover:underline">study groups</Link>.
+              No partner yet? Find one in your <Link href="/study-groups" className="font-semibold text-link hover:underline">study groups</Link>.
               Points count for two peer interviews a day, once a day with the same friend.
             </p>
             <History sessions={sessions || []} onOpen={setActive} />
@@ -303,7 +303,7 @@ function History({ sessions, onOpen }: { sessions: PeerSessionView[]; onOpen: (s
           <li key={s.id}>
             <button type="button" onClick={() => onOpen(s)} className="focus-ring group flex w-full items-center gap-3 rounded-[14px] border border-line bg-card p-4 text-left hover:border-line-strong">
               <span className="min-w-0 flex-1">
-                <span className="block font-bold text-heading group-hover:text-signal">{s.role === 'interviewer' ? `You interviewed ${s.partner}` : `${s.partner} interviewed you`}</span>
+                <span className="block font-bold text-heading group-hover:text-link">{s.role === 'interviewer' ? `You interviewed ${s.partner}` : `${s.partner} interviewed you`}</span>
                 <span className="block text-sm text-muted">{shortDate.format(new Date(s.done_at || s.created_at))} · {KIND_LABEL[s.kind]}{s.xp > 0 ? ` · +${s.xp} points` : ''}</span>
               </span>
               <ArrowRight className="h-5 w-5 shrink-0 text-muted" aria-hidden />

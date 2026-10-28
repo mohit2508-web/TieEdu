@@ -119,7 +119,7 @@ const CheckRow: React.FC<{
 const UnitCard: React.FC<{ unit: ExamPrepUnit; index: number }> = ({ unit, index }) => (
   <article className="rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
     <header className="flex items-baseline gap-3">
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--brand-sky-soft)] text-xs font-extrabold text-[var(--brand-sky-strong)]">
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--brand-sky-soft)] text-xs font-extrabold text-link">
         {index + 1}
       </span>
       <h3 className="text-base font-extrabold tracking-tight text-[var(--ink)]">{unit.title}</h3>
@@ -129,7 +129,7 @@ const UnitCard: React.FC<{ unit: ExamPrepUnit; index: number }> = ({ unit, index
     )}
     {(unit.questions?.length || 0) > 0 && (
       <details className="mt-4 border-t border-[var(--border-subtle)] pt-3">
-        <summary className="cursor-pointer list-none text-sm font-bold text-[var(--brand-sky-strong)] marker:content-none">
+        <summary className="cursor-pointer list-none text-sm font-bold text-link marker:content-none">
           {unit.questions!.length} important question{(unit.questions!.length === 1 ? '' : 's')}
         </summary>
         <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-sm leading-relaxed text-[var(--text-body)]">
@@ -141,7 +141,7 @@ const UnitCard: React.FC<{ unit: ExamPrepUnit; index: number }> = ({ unit, index
     )}
     {(unit.pyqs?.length || 0) > 0 && (
       <details className="mt-2 border-t border-[var(--border-subtle)] pt-3">
-        <summary className="cursor-pointer list-none text-sm font-bold text-[var(--brand-sky-strong)] marker:content-none">
+        <summary className="cursor-pointer list-none text-sm font-bold text-link marker:content-none">
           {unit.pyqs!.length} previous-year question{(unit.pyqs!.length === 1 ? '' : 's')}
         </summary>
         <ul className="mt-2 space-y-2">
@@ -222,7 +222,7 @@ export const ExamPrepPanel: React.FC<{
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="text-lg font-extrabold tracking-tight text-[var(--ink)]">Semester exam prep</h2>
             {prep.target && (
-              <span className="rounded-full bg-[var(--brand-sky-soft)] px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-[var(--brand-sky-strong)]">
+              <span className="rounded-full bg-[var(--brand-sky-soft)] px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-link">
                 {prep.target}
               </span>
             )}
@@ -285,7 +285,7 @@ export const ExamPrepPanel: React.FC<{
                     setTicks([]);
                     writeTicks(courseSlug, []);
                   }}
-                  className="text-xs font-bold text-[var(--brand-sky)] hover:underline"
+                  className="text-xs font-bold text-link hover:underline"
                 >
                   Clear ticks
                 </button>
@@ -335,7 +335,7 @@ export const ExamPrepPanel: React.FC<{
               {filteredPyqs.map((p, i) => (
                 <li key={i} className="rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="rounded-full bg-[var(--brand-sky-soft)] px-2 py-0.5 text-xs font-bold text-[var(--brand-sky-strong)]">
+                    <span className="rounded-full bg-[var(--brand-sky-soft)] px-2 py-0.5 text-xs font-bold text-link">
                       {p.year}
                     </span>
                     {p.unitTitle && <span className="text-xs text-[var(--text-light)]">{p.unitTitle}</span>}
@@ -343,7 +343,7 @@ export const ExamPrepPanel: React.FC<{
                   <p className="mt-2 text-sm leading-relaxed text-[var(--text-body)]">{p.question}</p>
                   {p.solution ? (
                     <details className="mt-2">
-                      <summary className="cursor-pointer list-none text-sm font-bold text-[var(--brand-sky-strong)] marker:content-none">
+                      <summary className="cursor-pointer list-none text-sm font-bold text-link marker:content-none">
                         Show solution
                       </summary>
                       <p className="mt-1.5 whitespace-pre-line border-t border-[var(--border-subtle)] pt-1.5 text-sm leading-relaxed text-[var(--text-muted)]">

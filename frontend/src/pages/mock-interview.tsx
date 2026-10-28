@@ -99,7 +99,7 @@ export default function MockInterviewPage() {
         <meta name="description" content="Practise HR and technical interview questions and get feedback on every answer." />
       </Head>
       <main className="mx-auto w-full max-w-[760px] px-4 pb-14 pt-6 sm:px-6 sm:pt-10">
-        <p className="eyebrow text-signal">Mock interview</p>
+        <p className="eyebrow text-link">Mock interview</p>
         <h1 className="mt-1 font-display text-3xl font-bold text-heading sm:text-4xl">Say it here before you say it there</h1>
         <p className="mt-2 text-base text-body">
           Five questions, answered the way you would out loud. Each answer gets feedback: what landed, what was missing, and how to say it better.
@@ -132,7 +132,7 @@ export default function MockInterviewPage() {
               {kind === 'technical' && slug && <span className="mt-1 block text-sm text-muted">Questions lean towards the topics in this company’s interview rounds.</span>}
             </label>
             <p className="mt-4 flex items-start gap-2 text-sm text-muted">
-              <ClipboardCheck className="mt-0.5 h-4 w-4 shrink-0 text-signal" aria-hidden />
+              <ClipboardCheck className="mt-0.5 h-4 w-4 shrink-0 text-link" aria-hidden />
               {!list ? 'Checking feedback options…'
                 : ai?.enabled
                   ? aiLeft > 0
@@ -215,7 +215,7 @@ export default function MockInterviewPage() {
                           <p className="text-sm text-muted">
                             {shortDate.format(new Date(s.created_at))} · {s.done ? `Average ${s.average} / 5` : `${answered} of ${s.questions.length} answered`}
                           </p>
-                          <button type="button" onClick={() => { setActive(s); setReviewing(null); setText(''); }} className="mt-2 inline-flex min-h-[32px] items-center gap-1 text-sm font-semibold text-signal hover:underline">
+                          <button type="button" onClick={() => { setActive(s); setReviewing(null); setText(''); }} className="mt-2 inline-flex min-h-[32px] items-center gap-1 text-sm font-semibold text-link hover:underline">
                             {s.done ? 'See the feedback' : 'Carry on'} <ArrowRight className="h-4 w-4" aria-hidden />
                           </button>
                         </div>
@@ -313,7 +313,7 @@ function Summary({ s, onNew }: { s: InterviewSessionView; onNew: () => void }) {
         <ul className="mt-2 space-y-2">
           {s.next.map((n) => (
             <li key={n.href}>
-              <Link href={n.href} className="inline-flex min-h-[36px] items-center gap-1 text-sm font-semibold text-signal hover:underline">
+              <Link href={n.href} className="inline-flex min-h-[36px] items-center gap-1 text-sm font-semibold text-link hover:underline">
                 {n.title} <ArrowRight className="h-4 w-4" aria-hidden />
               </Link>
             </li>

@@ -1238,11 +1238,11 @@ function DrivesPanel(props: {
                             }`}>₹ {r.payment_status}</span>
                           )}
                           {r.booking_status && r.booking_status !== 'cancelled' && (
-                            <span className="ml-1.5 rounded-full bg-signal-soft px-1.5 py-0.5 text-xs font-bold uppercase text-signal-hover">slot booked</span>
+                            <span className="ml-1.5 rounded-full bg-signal-soft px-1.5 py-0.5 text-xs font-bold uppercase text-link">slot booked</span>
                           )}
                         </span>
                         {r.slot_starts_at && (
-                          <span className="shrink-0 font-mono text-xs text-signal">
+                          <span className="shrink-0 font-mono text-xs text-link">
                             {new Date(r.slot_starts_at).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true })}
                           </span>
                         )}
@@ -1504,7 +1504,7 @@ function DrivesPanel(props: {
                                 b.status === 'active' ? 'bg-emerald-50 text-emerald-700'
                                 : b.status === 'link_assigned' ? 'bg-amber-50 text-amber-700'
                                 : b.status === 'cancelled' ? 'bg-gray-100 text-gray-400'
-                                : 'bg-signal-soft text-signal-hover'
+                                : 'bg-signal-soft text-link'
                               }`}>
                                 {b.status.replace('_', ' ')}
                               </span>
@@ -1625,7 +1625,7 @@ function DrivesPanel(props: {
                               <button className={btn} disabled={busy} onClick={() => assignLink(b)}>
                                 <Check className="h-4 w-4" /> Save assignment
                               </button>
-                              <button type="button" className="text-xs font-bold text-signal hover:underline" onClick={() => setSection('help')}>
+                              <button type="button" className="text-xs font-bold text-link hover:underline" onClick={() => setSection('help')}>
                                 URL kahan se milega? Help dekhein →
                               </button>
                             </div>

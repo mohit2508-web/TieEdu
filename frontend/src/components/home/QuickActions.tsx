@@ -20,13 +20,13 @@ import {
  * real links, so `#companies` / `#pricing` keep the homepage's in-page jumps.
  */
 const ACTIONS = [
-  { icon: LibraryBig, label: 'Courses', href: '/courses', tint: 'text-signal bg-signal-soft' },
+  { icon: LibraryBig, label: 'Courses', href: '/courses', tint: 'text-link bg-signal-soft' },
   { icon: BrainCircuit, label: 'Skill Tests', href: '/skill-test', tint: 'text-[#7C3AED] bg-[#F1EBFE]' },
-  { icon: ClipboardList, label: 'Mock Drives', href: '/mock-drive', tint: 'text-signal bg-signal-soft' },
+  { icon: ClipboardList, label: 'Mock Drives', href: '/mock-drive', tint: 'text-link bg-signal-soft' },
   { icon: GraduationCap, label: 'Free Course', href: '/interview-course', tint: 'text-amber-deep bg-warning-soft' },
   { icon: Building2, label: 'Companies', href: '/companies', tint: 'text-brand-ink bg-surface-hover' },
   { icon: Zap, label: 'Drops', href: '/drops', tint: 'text-danger bg-signal-soft' },
-  { icon: CalendarCheck, label: 'Study Plan', href: '/study-plan', tint: 'text-signal bg-surface-hover' },
+  { icon: CalendarCheck, label: 'Study Plan', href: '/study-plan', tint: 'text-link bg-surface-hover' },
   { icon: IndianRupee, label: 'Pricing', href: '#pricing', tint: 'text-amber-deep bg-paper' },
 ];
 

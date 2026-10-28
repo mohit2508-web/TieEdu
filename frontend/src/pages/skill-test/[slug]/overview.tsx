@@ -33,7 +33,7 @@ function AssessmentOverview() {
 
         <div className="rounded-2xl bg-white shadow-sm border border-gray-200 p-6 sm:p-8">
           <div className="text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-signal-soft text-signal">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-signal-soft text-link">
               <PlayCircle className="h-7 w-7" />
             </div>
             <h1 className="mt-4 text-2xl font-bold text-gray-900">{skillName} Skill Assessment</h1>
@@ -49,7 +49,7 @@ function AssessmentOverview() {
               const Icon = item.icon;
               return (
                 <div key={item.label} className="rounded-xl bg-gray-50 border border-gray-200 p-3 text-center">
-                  <Icon className="mx-auto h-5 w-5 text-signal" />
+                  <Icon className="mx-auto h-5 w-5 text-link" />
                   <p className="mt-1 text-xs text-gray-500">{item.label}</p>
                   <p className="text-sm font-semibold text-gray-900">{item.value}</p>
                 </div>
@@ -61,7 +61,7 @@ function AssessmentOverview() {
             <h2 className="text-sm font-semibold text-gray-900">Topics Covered</h2>
             <div className="mt-2 flex flex-wrap gap-2">
               {(topics.length > 0 ? topics.map((t) => t.name) : ['Fundamentals', 'Core Concepts', 'Practical Understanding', 'Scenario-based']).map((t) => (
-                <span key={t} className="rounded-full bg-signal-soft px-3 py-1 text-xs font-medium text-signal">
+                <span key={t} className="rounded-full bg-signal-soft px-3 py-1 text-xs font-medium text-link">
                   {t}
                 </span>
               ))}

@@ -164,7 +164,7 @@ export const BlockEditorModal: React.FC<BlockEditorModalProps> = ({
                   aria-selected={mobileTab === t}
                   onClick={() => setMobileTab(t)}
                   className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors min-h-[2.5rem] ${
-                    mobileTab === t ? 'bg-white text-signal shadow-sm' : 'text-gray-500'
+                    mobileTab === t ? 'bg-white text-link shadow-sm' : 'text-gray-500'
                   }`}
                 >
                   {t === 'edit' ? 'Edit' : 'Preview'}
@@ -242,7 +242,7 @@ export const BlockEditorModal: React.FC<BlockEditorModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setChecklistItems((p) => [...p, ''])}
-                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-dashed border-gray-300 text-gray-500 hover:border-signal hover:text-signal font-bold min-h-[2.5rem]"
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-dashed border-gray-300 text-gray-500 hover:border-signal hover:text-link font-bold min-h-[2.5rem]"
                   >
                     <Plus className="w-3.5 h-3.5" /> Add item
                   </button>
@@ -284,7 +284,7 @@ export const BlockEditorModal: React.FC<BlockEditorModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setResourceLinks((p) => [...p, { label: '', url: '' }])}
-                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-dashed border-gray-300 text-gray-500 hover:border-signal hover:text-signal font-bold min-h-[2.5rem]"
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-dashed border-gray-300 text-gray-500 hover:border-signal hover:text-link font-bold min-h-[2.5rem]"
                   >
                     <Plus className="w-3.5 h-3.5" /> Add link
                   </button>
@@ -414,7 +414,7 @@ export const BlockEditorModal: React.FC<BlockEditorModalProps> = ({
             <div className={`bg-app-warm p-4 rounded-2xl border border-gray-200 flex flex-col order-1 lg:order-2 ${mobileTab === 'preview' ? '' : 'hidden lg:flex'}`}>
               <div className="flex items-center justify-between border-b border-gray-200 pb-2 text-xs font-bold text-brand-ink">
                 <span className="flex items-center gap-1.5">
-                  <Eye className="w-4 h-4 text-signal" /> Live Student Preview
+                  <Eye className="w-4 h-4 text-link" /> Live Student Preview
                 </span>
                 <span className="text-xs text-gray-400">Calibre · 18px prose</span>
               </div>

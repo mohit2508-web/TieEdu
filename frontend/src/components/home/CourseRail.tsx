@@ -51,7 +51,7 @@ const CourseRailCard: React.FC<{ course: CourseCard }> = ({ course }) => {
       </div>
 
       <div className="flex flex-1 flex-col gap-2 p-4">
-        <h3 className="line-clamp-2 text-base font-extrabold leading-snug text-heading transition-colors group-hover:text-signal">
+        <h3 className="line-clamp-2 text-base font-extrabold leading-snug text-heading transition-colors group-hover:text-link">
           {course.title}
         </h3>
         <p className="text-xs font-semibold text-[var(--text-muted)]">
@@ -81,7 +81,7 @@ const CourseRailCard: React.FC<{ course: CourseCard }> = ({ course }) => {
           ) : (
             <span className="text-base font-black text-heading">₹{course.price_inr}</span>
           )}
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-paper text-signal transition-colors group-hover:bg-signal group-hover:text-white">
+          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-paper text-link transition-colors group-hover:bg-signal group-hover:text-white">
             <ArrowRight className="w-4 h-4" aria-hidden />
           </span>
         </div>

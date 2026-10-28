@@ -158,10 +158,10 @@ export default function SignupPage() {
                   type="checkbox"
                   checked={acceptedTerms}
                   onChange={(e) => setAcceptedTerms(e.target.checked)}
-                  className="mt-0.5 w-4 h-4 rounded border-line text-signal focus:ring-signal shrink-0"
+                  className="mt-0.5 w-4 h-4 rounded border-line text-link focus:ring-signal shrink-0"
                 />
                 <label htmlFor="tc-checkbox" className="text-sm text-body leading-snug cursor-pointer select-none">
-                  I agree to the <span className="font-semibold text-signal underline underline-offset-2">Terms &amp; Conditions</span> and <span className="font-semibold text-signal underline underline-offset-2">Privacy Policy</span>.
+                  I agree to the <span className="font-semibold text-link underline underline-offset-2">Terms &amp; Conditions</span> and <span className="font-semibold text-link underline underline-offset-2">Privacy Policy</span>.
                 </label>
               </div>
 
@@ -178,7 +178,7 @@ export default function SignupPage() {
 
             <p className="mt-6 text-center text-sm text-body">
               Already have account?{' '}
-              <Link href="/login" className="font-bold text-signal hover:text-signal">
+              <Link href="/login" className="font-bold text-link hover:text-link">
                 Sign in
               </Link>
             </p>

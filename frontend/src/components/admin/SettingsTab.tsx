@@ -100,7 +100,7 @@ export const SettingsTab: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-xs space-y-5">
           <h3 className="text-sm font-extrabold text-ink-soft flex items-center gap-2">
-            <Settings2 className="w-4 h-4 text-signal" /> Platform identity
+            <Settings2 className="w-4 h-4 text-link" /> Platform identity
           </h3>
           <div className="space-y-4">
             <div>
@@ -128,7 +128,7 @@ export const SettingsTab: React.FC = () => {
         <div className="space-y-6">
           <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-xs space-y-4">
             <h3 className="text-sm font-extrabold text-ink-soft flex items-center gap-2">
-              <Database className="w-4 h-4 text-signal" /> System status
+              <Database className="w-4 h-4 text-link" /> System status
             </h3>
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div className="p-3 rounded-2xl bg-app-warm"><p className="text-xs font-mono font-bold text-gray-400 uppercase">Storage</p><p className="font-bold text-ink-soft mt-0.5">{analytics?.system.storage || 'local-json-repository'}</p></div>
@@ -236,7 +236,7 @@ export const SettingsTab: React.FC = () => {
 
           <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-xs space-y-4">
             <h3 className="text-sm font-extrabold text-ink-soft flex items-center gap-2">
-              <MessageSquareText className="w-4 h-4 text-signal" /> AI feedback
+              <MessageSquareText className="w-4 h-4 text-link" /> AI feedback
             </h3>
             <p className="text-xs text-gray-500">
               When on, answers in the mock interview and the English coach are checked by Claude, and each one is billed to your
@@ -405,7 +405,7 @@ export const SettingsTab: React.FC = () => {
 
       <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-xs space-y-4">
         <h3 className="text-sm font-extrabold text-ink-soft flex items-center gap-2">
-          <Database className="w-4 h-4 text-signal" /> Payments & activity ledger
+          <Database className="w-4 h-4 text-link" /> Payments & activity ledger
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
           <div className="p-3 rounded-2xl bg-app-warm">
@@ -445,7 +445,7 @@ export const SettingsTab: React.FC = () => {
                       <td className="px-3 py-2 font-semibold text-ink-soft">{e.action}</td>
                       <td className="px-3 py-2 text-gray-500 hidden md:table-cell max-w-[260px] truncate">{e.detail}</td>
                       <td className="px-3 py-2 font-mono text-gray-400 hidden sm:table-cell">{e.order_id || '—'}</td>
-                      <td className="px-3 py-2"><span className={`px-1.5 py-0.5 rounded text-xs font-bold ${e.gateway === 'razorpay' ? 'bg-signal-soft text-signal-hover' : 'bg-amber-50 text-amber-700'}`}>{e.gateway || 'upi'}</span></td>
+                      <td className="px-3 py-2"><span className={`px-1.5 py-0.5 rounded text-xs font-bold ${e.gateway === 'razorpay' ? 'bg-signal-soft text-link' : 'bg-amber-50 text-amber-700'}`}>{e.gateway || 'upi'}</span></td>
                     </tr>
                   ))}
                 </tbody>

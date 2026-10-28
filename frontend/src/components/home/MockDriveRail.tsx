@@ -61,10 +61,10 @@ export const MockDriveRail: React.FC = () => {
                 <Briefcase className="w-5 h-5" strokeWidth={1.9} aria-hidden />
               </span>
               <div className="min-w-0 flex-1">
-                <span className="inline-flex items-center rounded-full bg-signal-soft px-2 py-0.5 text-xs font-black uppercase tracking-wide text-signal">
+                <span className="inline-flex items-center rounded-full bg-signal-soft px-2 py-0.5 text-xs font-black uppercase tracking-wide text-link">
                   Mock drive
                 </span>
-                <h3 className="mt-1 line-clamp-2 text-base font-extrabold leading-snug text-heading transition-colors group-hover:text-signal">
+                <h3 className="mt-1 line-clamp-2 text-base font-extrabold leading-snug text-heading transition-colors group-hover:text-link">
                   {d.company_name || d.title}
                 </h3>
                 {d.company_name ? (
@@ -90,7 +90,7 @@ export const MockDriveRail: React.FC = () => {
                 tone={driveStatusTone(registered ? (d.my_registration_status ?? 'registered') : d.window_open ? 'open' : 'draft')}
                 dot={registered}
               />
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-paper text-signal transition-colors group-hover:bg-signal group-hover:text-white">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-paper text-link transition-colors group-hover:bg-signal group-hover:text-white">
                 <ArrowRight className="w-4 h-4" aria-hidden />
               </span>
             </div>

@@ -36,7 +36,7 @@ export default function RecruitersPage() {
         <meta name="description" content="Search students by verified skill-test scores. Verified recruiters only; candidates share contact when they accept." />
       </Head>
       <main className="mx-auto w-full max-w-[900px] px-4 pb-14 pt-6 sm:px-6 sm:pt-10">
-        <p className="eyebrow text-signal">For recruiters</p>
+        <p className="eyebrow text-link">For recruiters</p>
         <h1 className="mt-1 font-display text-3xl font-bold text-heading sm:text-4xl">Hire on tested skills</h1>
         <p className="mt-2 text-base text-body">
           Search students by their verified TieEdu skill-test scores. Candidates are anonymous; send a request with the role and pay, and they choose whether to share their contact.
@@ -55,7 +55,7 @@ export default function RecruitersPage() {
         {user && home && (!r || r.status === 'rejected') && <Apply rejectedNote={r?.status === 'rejected' ? r.admin_note : null} onDone={setHome} />}
         {r?.status === 'pending' && (
           <Card pad="lg" className="mt-6">
-            <p className="flex items-center gap-2 font-display text-lg font-bold text-heading"><Clock className="h-5 w-5 text-signal" aria-hidden /> Application received</p>
+            <p className="flex items-center gap-2 font-display text-lg font-bold text-heading"><Clock className="h-5 w-5 text-link" aria-hidden /> Application received</p>
             <p className="mt-1 text-body">TieEdu checks {r.company} and {r.work_email} before you can search. You will be able to search here once verified.</p>
           </Card>
         )}
@@ -143,9 +143,9 @@ function Workspace({ home, setHome }: { home: RecruiterHome; setHome: (h: Recrui
             {accepted.map((r) => (
               <li key={r.id} className="rounded-xl border border-line p-3 text-sm">
                 <p className="font-bold text-heading">{r.contact!.name} <span className="font-normal text-muted">({r.candidate}, for {r.role})</span></p>
-                <a href={`mailto:${r.contact!.email}`} className="font-semibold text-signal hover:underline">{r.contact!.email}</a>
+                <a href={`mailto:${r.contact!.email}`} className="font-semibold text-link hover:underline">{r.contact!.email}</a>
                 {r.contact!.certificates.length > 0 && (
-                  <p className="mt-1 text-xs text-muted">Certificates: {r.contact!.certificates.map((c, i) => <React.Fragment key={c.verify_url}>{i > 0 && ', '}<a href={c.verify_url} target="_blank" rel="noopener noreferrer" className="text-signal hover:underline">{c.title}</a></React.Fragment>)}</p>
+                  <p className="mt-1 text-xs text-muted">Certificates: {r.contact!.certificates.map((c, i) => <React.Fragment key={c.verify_url}>{i > 0 && ', '}<a href={c.verify_url} target="_blank" rel="noopener noreferrer" className="text-link hover:underline">{c.title}</a></React.Fragment>)}</p>
                 )}
               </li>
             ))}

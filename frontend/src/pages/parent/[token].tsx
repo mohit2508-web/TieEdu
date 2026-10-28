@@ -78,7 +78,7 @@ export default function ParentPage({ view: v, token, stop }: { view: ParentView;
             <Card>
               <p className="eyebrow text-muted">Study streak</p>
               <p className="mt-2 flex items-center gap-2 font-display text-3xl font-bold tabular-nums text-heading">
-                <Flame className="h-7 w-7 text-signal" aria-hidden /> {v.streak.current} day{v.streak.current === 1 ? '' : 's'}
+                <Flame className="h-7 w-7 text-link" aria-hidden /> {v.streak.current} day{v.streak.current === 1 ? '' : 's'}
               </p>
               {v.streak.best > v.streak.current && <p className="mt-1 text-sm text-muted">Longest so far: {v.streak.best} days</p>}
             </Card>
@@ -116,7 +116,7 @@ export default function ParentPage({ view: v, token, stop }: { view: ParentView;
                     <Link href={c.verify_url} className="flex items-center gap-3 rounded-xl border border-line bg-card p-4 hover:border-line-strong">
                       <BadgeCheck className="h-5 w-5 shrink-0 text-success" aria-hidden />
                       <span className="min-w-0 flex-1 font-semibold text-heading">{c.title}</span>
-                      <span className="text-sm font-semibold text-signal">Verify</span>
+                      <span className="text-sm font-semibold text-link">Verify</span>
                     </Link>
                   </li>
                 ))}

@@ -44,7 +44,7 @@ export const FeedbackAdModal: React.FC<FeedbackAdModalProps> = ({
         <Award className="h-7 w-7" />
       </div>
 
-      <span className="inline-flex items-center gap-1 rounded-full border border-line bg-signal-soft px-3 py-1 text-xs font-bold text-signal">
+      <span className="inline-flex items-center gap-1 rounded-full border border-line bg-signal-soft px-3 py-1 text-xs font-bold text-link">
         <Users className="h-3.5 w-3.5" /> Help the next batch
       </span>
 

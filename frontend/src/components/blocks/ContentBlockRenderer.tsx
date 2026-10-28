@@ -368,7 +368,7 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
       const style = payload.style || 'tip';
       const config = {
         warning: { bg: 'bg-red-50', border: 'border-red-300', text: 'text-red-800', Icon: AlertTriangle, iconColor: 'text-red-500' },
-        info:    { bg: 'bg-signal-soft', border: 'border-signal/30', text: 'text-signal-hover', Icon: Info, iconColor: 'text-signal' },
+        info:    { bg: 'bg-signal-soft', border: 'border-signal/30', text: 'text-link', Icon: Info, iconColor: 'text-link' },
         tip:     { bg: 'bg-amber-50', border: 'border-amber-300', text: 'text-amber-900', Icon: Lightbulb, iconColor: 'text-amber-500' },
       }[style] || { bg: 'bg-amber-50', border: 'border-amber-300', text: 'text-amber-900', Icon: Lightbulb, iconColor: 'text-amber-500' };
 
@@ -531,7 +531,7 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
                 key={i}
                 className="flex gap-3.5 rounded-xl border border-[--border-subtle] bg-white p-3.5"
               >
-                <span className="shrink-0 w-6 h-6 rounded-full bg-signal-soft text-signal text-xs font-extrabold flex items-center justify-center">
+                <span className="shrink-0 w-6 h-6 rounded-full bg-signal-soft text-link text-xs font-extrabold flex items-center justify-center">
                   {i + 1}
                 </span>
                 <div className="min-w-0 flex-1">
@@ -608,7 +608,7 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
                     className="flex items-center gap-3 px-4 py-3 hover:bg-app-warm transition-colors group"
                   >
                     <Link2 className="w-3.5 h-3.5 text-[--text-muted] shrink-0" />
-                    <span className="text-sm font-medium text-[--text-heading] group-hover:text-[--brand-primary] break-words">
+                    <span className="text-sm font-medium text-[--text-heading] group-hover:text-link break-words">
                       {item.label || item.url}
                     </span>
                     <ChevronRight className="w-4 h-4 text-[--text-muted] ml-auto shrink-0" />
@@ -651,7 +651,7 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
             className="flex items-center gap-3 px-4 py-3 hover:bg-app-warm transition-colors group"
           >
             <Link2 className="w-3.5 h-3.5 text-[--text-muted] shrink-0" />
-            <span className="text-sm font-medium text-[--text-heading] group-hover:text-[--brand-primary] break-words">
+            <span className="text-sm font-medium text-[--text-heading] group-hover:text-link break-words">
               {payload.title ? `Watch: ${url}` : url}
             </span>
             <ChevronRight className="w-4 h-4 text-[--text-muted] ml-auto shrink-0" />
@@ -712,7 +712,7 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
               <ol className="space-y-3">
                 {steps.map((s, i) => (
                   <li key={i} className="flex gap-3">
-                    <span className="shrink-0 w-6 h-6 rounded-full bg-signal-soft text-signal text-xs font-extrabold flex items-center justify-center">
+                    <span className="shrink-0 w-6 h-6 rounded-full bg-signal-soft text-link text-xs font-extrabold flex items-center justify-center">
                       {i + 1}
                     </span>
                     <div className="min-w-0 flex-1">
@@ -816,7 +816,7 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
       return (
         <div className="my-5 rounded-xl border-2 border-brand-ink/15 bg-white p-4">
           <div className="flex items-center gap-2 mb-2">
-            <ClipboardCheck className="w-4 h-4 text-signal" />
+            <ClipboardCheck className="w-4 h-4 text-link" />
             <span className="text-xs font-bold uppercase tracking-wide text-brand-ink">
               {payload.title || 'Lesson summary'}
             </span>
@@ -827,7 +827,7 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
             <ul className="space-y-1.5">
               {points.map((pt, i) => (
                 <li key={i} className="flex gap-2 text-sm text-[--text-body] leading-relaxed">
-                  <Check className="w-4 h-4 text-signal shrink-0 mt-0.5" />
+                  <Check className="w-4 h-4 text-link shrink-0 mt-0.5" />
                   <span>{pt}</span>
                 </li>
               ))}

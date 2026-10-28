@@ -100,7 +100,7 @@ export const ShareSaveButtons: React.FC<{ courseSlug: string; courseTitle: strin
         className={[
           'focus-ring inline-flex min-h-[40px] items-center gap-1.5 rounded-[var(--radius-sm)] border px-3 text-sm font-bold transition-colors',
           saved
-            ? 'border-[var(--brand-sky)] bg-[var(--brand-sky-soft)] text-[var(--brand-sky-strong)]'
+            ? 'border-[var(--brand-sky)] bg-[var(--brand-sky-soft)] text-link'
             : 'border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-body)] hover:border-[var(--brand-sky)]',
         ].join(' ')}
       >

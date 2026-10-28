@@ -124,7 +124,7 @@ export default function AdminLoginPage() {
 
             <p className="mt-6 text-center text-sm text-body">
               Student ho?{' '}
-              <Link href="/login" className="font-bold text-signal hover:text-signal">
+              <Link href="/login" className="font-bold text-link hover:text-link">
                 User sign in
               </Link>
             </p>

@@ -103,7 +103,7 @@ export const DropDetailSheet: React.FC<DropDetailSheetProps> = ({
           )}
 
           {drop.deadline_at && (
-            <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[var(--brand-sky-soft)] px-2.5 py-1 text-xs font-bold text-[var(--brand-sky-strong)]">
+            <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[var(--brand-sky-soft)] px-2.5 py-1 text-xs font-bold text-link">
               {formatDay(drop.deadline_at)}
             </p>
           )}

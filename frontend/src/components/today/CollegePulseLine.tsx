@@ -20,8 +20,8 @@ export const CollegePulseLine: React.FC<{ ready: boolean }> = ({ ready }) => {
   if (!text) return null;
   return (
     <p className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm text-muted">
-      <Users className="h-4 w-4 text-signal" aria-hidden /> {text}
-      <Link href="/college-leaderboard" className="ml-1 font-semibold text-signal hover:underline">This week’s board</Link>
+      <Users className="h-4 w-4 text-link" aria-hidden /> {text}
+      <Link href="/college-leaderboard" className="ml-1 font-semibold text-link hover:underline">This week’s board</Link>
     </p>
   );
 };

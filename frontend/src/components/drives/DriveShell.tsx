@@ -113,7 +113,7 @@ export const DriveShell: React.FC<{ children: React.ReactNode; title?: string; s
           <>
             <div className="flex items-end justify-between gap-3">
               <div className="min-w-0">
-                {heading !== 'Mock Drives' && <p className="eyebrow text-signal">Mock Drives</p>}
+                {heading !== 'Mock Drives' && <p className="eyebrow text-link">Mock Drives</p>}
                 <h1 className="truncate font-display text-2xl font-bold text-heading sm:text-3xl">{heading}</h1>
               </div>
               {bell}

@@ -54,11 +54,11 @@ export const IntentSections: React.FC = () => (
           href={intent.href}
           className="group flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3.5 transition-colors hover:border-[var(--brand-sky)]/50 focus-ring sm:p-4"
         >
-          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-signal-soft text-signal">
+          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-signal-soft text-link">
             <intent.icon size={18} aria-hidden />
           </span>
           <span className="min-w-0">
-            <span className="block truncate text-sm font-extrabold text-[var(--ink)] group-hover:text-[var(--brand-sky-strong)]">
+            <span className="block truncate text-sm font-extrabold text-[var(--ink)] group-hover:text-link">
               {intent.label}
             </span>
             <span className="block truncate text-xs text-[var(--text-muted)]">{intent.sub}</span>
@@ -218,7 +218,7 @@ export const CourseWizard: React.FC<{
               {WIZARD_GOALS.map((g) => (
                 <button key={g.key} type="button" className={optionCls} onClick={() => finish(g.key)}>
                   <span className="flex items-center gap-2.5">
-                    <g.icon size={16} className="text-[var(--brand-sky)]" />
+                    <g.icon size={16} className="text-link" />
                     <span>
                       {g.label}
                       <span className="block text-xs font-semibold text-[var(--text-muted)]">{g.sub}</span>

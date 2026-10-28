@@ -17,7 +17,7 @@ export const FinalCta: React.FC = () => (
         <div className="relative z-10 max-w-2xl mx-auto space-y-5">
           <span className="eyebrow">Start free</span>
           <h2 className="display-2">
-            Your first vault costs <span className="text-signal">nothing</span>
+            Your first vault costs <span className="text-link">nothing</span>
           </h2>
           <p className="text-base sm:text-base text-body leading-relaxed">
             Every vault opens with a free 7-section pack — readable without an account. Read it,

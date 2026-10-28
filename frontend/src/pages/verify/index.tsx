@@ -50,7 +50,7 @@ export default function VerifyIndexPage() {
 
       <main className="mx-auto w-full max-w-2xl px-6 pb-24 pt-16">
         <div className="flex items-center gap-2">
-          <ShieldCheck size={22} className="text-[var(--brand-sky)]" />
+          <ShieldCheck size={22} className="text-link" />
           <h1 className="text-3xl font-extrabold tracking-tight text-[var(--ink)]">
             Certificate verification
           </h1>

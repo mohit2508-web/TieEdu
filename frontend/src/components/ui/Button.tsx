@@ -3,12 +3,12 @@ import Link from 'next/link';
 import { cn } from '@/lib/cn';
 
 /**
- * Button — four kinds, and the kind carries the meaning (UI_REDESIGN_PLAN_V2 §4.8).
+ * Button — four kinds, and the kind carries the meaning.
  *
- *   primary    the one next step on the screen. Logo orange (`signal`).
- *   buy        spends money. Amber (`money`), and only ever for that — a student
- *              should be able to tell a purchase from a navigation at a glance.
- *   secondary  an alternative to the primary. Hairline, card surface.
+ *   primary    the one next step on the screen. Amber (`signal`), dark ink.
+ *   buy        spends money. The same amber since the Warm Paper palette
+ *              (plan D1); the price on or next to it makes it read as a purchase.
+ *   secondary  an alternative to the primary. Card surface, hairline, neutral edge.
  *   text       a link that happens to be a button.
  *
  * One primary per screen is the rule, not something this component can enforce.
@@ -19,17 +19,24 @@ import { cn } from '@/lib/cn';
 export type ButtonKind = 'primary' | 'buy' | 'secondary' | 'text';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
+/*
+ * Warm Paper (UI_REDESIGN_PLAN_V3 §10): amber with dark ink and a solid
+ * under-edge; pressing moves the button down 2px as the edge shrinks, in 80ms.
+ * `buy` is the same amber (plan D1) — a purchase reads as one by its price.
+ */
+const EDGED = 'transition-[transform,box-shadow,background-color] duration-press ease-out active:translate-y-0.5';
 const KIND: Record<ButtonKind, string> = {
-  primary: 'bg-signal text-white hover:bg-signal-hover',
-  buy: 'bg-money text-money-ink hover:bg-money-hover',
-  secondary: 'bg-card text-heading border border-line hover:border-line-strong hover:bg-surface-hover',
-  text: 'text-signal hover:text-signal-hover underline-offset-4 hover:underline px-0',
+  primary: `bg-signal text-on-primary shadow-edge-primary active:shadow-edge-selected ${EDGED}`,
+  buy: `bg-signal text-on-primary shadow-edge-primary active:shadow-edge-selected ${EDGED}`,
+  secondary: `bg-card text-heading border border-line shadow-edge-neutral hover:bg-surface-hover active:shadow-none ${EDGED}`,
+  text: 'text-link hover:text-link underline-offset-4 hover:underline px-0 transition-colors',
 };
 
+// Display face, label size (15/20, 600, -0.01em); radius 14px.
 const SIZE: Record<ButtonSize, string> = {
-  sm: 'min-h-[36px] px-3 text-sm gap-1.5 rounded-lg',
-  md: 'min-h-[44px] px-4 text-sm gap-2 rounded-xl',
-  lg: 'min-h-[52px] px-6 text-base gap-2 rounded-xl',
+  sm: 'min-h-[36px] px-3 text-chip font-display gap-1.5 rounded-cell',
+  md: 'min-h-[44px] px-4 text-label font-display gap-2 rounded-cell',
+  lg: 'min-h-[52px] px-6 text-label font-display gap-2 rounded-cell',
 };
 
 interface Common {
@@ -50,7 +57,7 @@ export type ButtonProps = AsButton | AsLink;
 
 export const buttonClass = (kind: ButtonKind = 'primary', size: ButtonSize = 'md', block = false, className?: string) =>
   cn(
-    'pressable focus-ring inline-flex items-center justify-center font-semibold transition-colors disabled:opacity-50 disabled:pointer-events-none',
+    'pressable focus-ring inline-flex items-center justify-center font-semibold disabled:opacity-50 disabled:pointer-events-none',
     SIZE[size],
     KIND[kind],
     block && 'w-full',

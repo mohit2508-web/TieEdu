@@ -76,11 +76,11 @@ export const JoinChannelsPopup: React.FC = () => {
       }
     >
       <div className="space-y-4 px-5 pb-5 pt-1 text-center">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-line bg-signal-soft text-signal shadow-xs">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-line bg-signal-soft text-link shadow-xs">
           <Users className="h-7 w-7" />
         </div>
 
-        <span className="inline-flex items-center gap-1 rounded-full border border-line bg-signal-soft px-3 py-1 text-xs font-bold text-signal">
+        <span className="inline-flex items-center gap-1 rounded-full border border-line bg-signal-soft px-3 py-1 text-xs font-bold text-link">
           <Megaphone className="h-3.5 w-3.5" /> Stay in the loop
         </span>
 
@@ -102,7 +102,7 @@ export const JoinChannelsPopup: React.FC = () => {
                 {social.icon}
               </span>
               <span className="min-w-0 flex-1 truncate">{social.label}</span>
-              <span className="text-xs font-semibold text-signal">Follow →</span>
+              <span className="text-xs font-semibold text-link">Follow →</span>
             </a>
           ))}
         </div>

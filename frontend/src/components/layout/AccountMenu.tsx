@@ -139,7 +139,7 @@ export const AccountMenu: React.FC<{ onOpenChange?: (open: boolean) => void }> =
             <p className="truncate text-xs text-[var(--text-muted)]">{user.email}</p>
             <span
               className={`mt-1 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-extrabold uppercase tracking-wide ${
-                isAdmin ? 'bg-brand-ink text-money' : 'bg-signal-soft text-signal'
+                isAdmin ? 'bg-brand-ink text-money' : 'bg-signal-soft text-link'
               }`}
             >
               {isAdmin ? 'Platform Admin' : 'Student'}
@@ -173,7 +173,7 @@ export const AccountMenu: React.FC<{ onOpenChange?: (open: boolean) => void }> =
               role="menuitem"
               className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-body hover:bg-surface-hover"
             >
-              <UserRound size={16} className="text-signal" aria-hidden />
+              <UserRound size={16} className="text-link" aria-hidden />
               My account
             </Link>
             <button

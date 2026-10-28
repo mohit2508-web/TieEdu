@@ -136,7 +136,7 @@ export default function Home() {
                   <Link href="/companies" className="pressable focus-ring inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl border border-line-strong bg-card px-5 text-base font-semibold text-heading transition-colors hover:bg-surface-hover">
                     Browse companies <ArrowRight className="h-4 w-4" aria-hidden />
                   </Link>
-                  <Link href="/skill-test" className="focus-ring inline-flex min-h-[48px] items-center justify-center px-2 text-base font-semibold text-signal hover:underline">
+                  <Link href="/skill-test" className="focus-ring inline-flex min-h-[48px] items-center justify-center px-2 text-base font-semibold text-link hover:underline">
                     Or take a free skill test
                   </Link>
                 </div>

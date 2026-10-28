@@ -813,15 +813,15 @@ export default function CoursePage({
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-[1fr_240px] sm:items-start">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="rounded-full bg-[var(--brand-sky-soft)] px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-[var(--brand-sky-strong)]">
+                    <span className="rounded-full bg-[var(--brand-sky-soft)] px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-link">
                       {course.category}
                     </span>
                     {course.is_free ? (
-                      <span className="rounded-full bg-[var(--bg-sky-soft)] px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-[var(--brand-sky)]">
+                      <span className="rounded-full bg-[var(--bg-sky-soft)] px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-link">
                         Free
                       </span>
                     ) : (
-                      <span className="rounded-full bg-[var(--brand-mint)] px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-[var(--brand-sky-strong)]">
+                      <span className="rounded-full bg-[var(--brand-mint)] px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-link">
                         {formatPrice(course.price_inr)}
                       </span>
                     )}
@@ -1101,7 +1101,7 @@ export default function CoursePage({
             {course.perks && course.perks.length > 0 && (
               <section className="mb-8 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
                 <div className="flex items-center gap-2">
-                  <Gift size={16} className="text-[var(--brand-sky)]" />
+                  <Gift size={16} className="text-link" />
                   <h2 className="text-sm font-bold text-[var(--ink)]">What you&apos;ll get</h2>
                 </div>
                 <ul className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -1145,7 +1145,7 @@ export default function CoursePage({
             {course.project?.title && (
               <section aria-labelledby="capstone-heading" className="mb-8 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
                 <div className="flex items-center gap-2">
-                  <Hammer size={16} className="text-[var(--brand-sky)]" />
+                  <Hammer size={16} className="text-link" />
                   <h2 id="capstone-heading" className="text-sm font-bold text-[var(--ink)]">
                     What you will build
                   </h2>
@@ -1202,7 +1202,7 @@ export default function CoursePage({
                     <button
                       type="button"
                       onClick={() => setExamPrepOpen(true)}
-                      className="focus-ring inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[var(--radius-md)] border border-dashed border-[var(--brand-sky)]/50 bg-[var(--brand-sky-soft)]/40 px-4 py-2.5 text-sm font-bold text-[var(--brand-sky-strong)] transition-colors hover:bg-[var(--brand-sky-soft)]"
+                      className="focus-ring inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[var(--radius-md)] border border-dashed border-[var(--brand-sky)]/50 bg-[var(--brand-sky-soft)]/40 px-4 py-2.5 text-sm font-bold text-link transition-colors hover:bg-[var(--brand-sky-soft)]"
                     >
                       <BookOpenCheck size={16} />
                       Semester exam prep — units, PYQs, revision
@@ -1373,7 +1373,7 @@ export default function CoursePage({
                   <h2 id="related-heading" className="text-xl font-extrabold tracking-tight text-[var(--ink)]">
                     Other courses
                   </h2>
-                  <Link href="/courses" className="text-sm font-bold text-[var(--brand-sky)] hover:underline">
+                  <Link href="/courses" className="text-sm font-bold text-link hover:underline">
                     See all
                   </Link>
                 </div>
@@ -1611,7 +1611,7 @@ const CertificateBlock: React.FC<{
   }
   return (
     <div className="rounded-xl border border-[var(--brand-sky)]/30 bg-[var(--bg-sky-soft)] p-4">
-      <p className="text-sm font-bold text-[var(--brand-sky-strong)]">
+      <p className="text-sm font-bold text-link">
         Certificate {issued.serial} issued.
       </p>
       <p className="mt-1 text-xs text-[var(--text-body)]">

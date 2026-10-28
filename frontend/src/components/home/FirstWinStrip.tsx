@@ -53,7 +53,7 @@ export const FirstWinStrip: React.FC = () => {
           </div>
           <Link
             href="/courses?bucket=e&src=firstwin"
-            className="inline-flex shrink-0 items-center gap-1.5 min-h-[44px] px-3 rounded-xl text-sm font-bold text-signal hover:text-signal-hover transition-colors focus-ring"
+            className="inline-flex shrink-0 items-center gap-1.5 min-h-[44px] px-3 rounded-xl text-sm font-bold text-link hover:text-link transition-colors focus-ring"
           >
             All micro-courses <ArrowRight className="h-4 w-4" aria-hidden />
           </Link>
@@ -74,7 +74,7 @@ export const FirstWinStrip: React.FC = () => {
                   href={`/courses/${c.slug}?src=firstwin`}
                   className="group flex w-[82vw] max-w-[320px] flex-none snap-start flex-col justify-center gap-1.5 rounded-2xl border border-line bg-app-warm p-4 transition-colors hover:border-signal/40 focus-ring sm:w-[300px]"
                 >
-                  <span className="line-clamp-2 text-sm font-extrabold leading-snug text-heading group-hover:text-signal">
+                  <span className="line-clamp-2 text-sm font-extrabold leading-snug text-heading group-hover:text-link">
                     {c.title}
                   </span>
                   <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold text-[var(--text-muted)]">

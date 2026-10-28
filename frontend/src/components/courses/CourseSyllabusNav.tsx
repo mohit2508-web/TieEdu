@@ -221,7 +221,7 @@ export const CourseSyllabusNav: React.FC<SyllabusNavProps> = ({
        in the 300px sidebar they squeezed the title to nothing and ran under
        "Expand all". */
     <span className="inline-flex min-w-0 items-start gap-2 text-sm font-bold text-[var(--ink)]">
-      <ListVideo size={16} aria-hidden="true" className="mt-0.5 shrink-0 text-[var(--brand-sky)]" />
+      <ListVideo size={16} aria-hidden="true" className="mt-0.5 shrink-0 text-link" />
       <span className="min-w-0">
         <span className="block truncate">Course content</span>
         <span className="block truncate text-xs font-normal text-[var(--text-muted)]">
@@ -253,7 +253,7 @@ export const CourseSyllabusNav: React.FC<SyllabusNavProps> = ({
         type="button"
         onClick={() => setExpandAll((v) => !v)}
         aria-pressed={expandAll}
-        className="shrink-0 rounded px-1 text-xs font-semibold text-[var(--brand-sky)] hover:underline"
+        className="shrink-0 rounded px-1 text-xs font-semibold text-link hover:underline"
       >
         {expandAll ? 'Collapse all' : 'Expand all'}
       </button>

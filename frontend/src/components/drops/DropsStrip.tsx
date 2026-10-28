@@ -81,7 +81,7 @@ export const DropsStrip: React.FC = () => {
                     {d.bullets[0]}
                   </p>
                 )}
-                <span className="mt-auto inline-flex items-center gap-1 pt-1 text-sm font-bold text-signal">
+                <span className="mt-auto inline-flex items-center gap-1 pt-1 text-sm font-bold text-link">
                   {d.cta_label}
                   <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden />
                 </span>

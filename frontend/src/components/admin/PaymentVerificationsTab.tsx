@@ -141,8 +141,8 @@ export const PaymentVerificationsTab: React.FC = () => {
         </div>
       )}
 
-      <div className="bg-signal-soft border border-line rounded-2xl p-4 text-sm text-signal-hover flex items-start gap-2.5">
-        <CheckCircle2 className="w-4 h-4 text-signal mt-0.5 shrink-0" />
+      <div className="bg-signal-soft border border-line rounded-2xl p-4 text-sm text-link flex items-start gap-2.5">
+        <CheckCircle2 className="w-4 h-4 text-link mt-0.5 shrink-0" />
         <p>Verifying creates a real unlock record and increments revenue in Analytics. Every action is written to the audit ledger for transparency.</p>
       </div>
     </div>

@@ -404,7 +404,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
           Pasting from a web page? Formatting is cleaned automatically
         </span>
         {showHint && value === '' && (
-          <span className="text-[--brand-primary]">
+          <span className="text-link">
             Type <kbd className="px-1 rounded bg-white border border-line">/</kbd> for blocks
           </span>
         )}

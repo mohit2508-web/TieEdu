@@ -230,7 +230,7 @@ function Caption({ text, note }: { text?: string; note?: string }) {
     <figcaption className="px-4 py-3 border-t border-[--border-subtle] bg-white">
       {text && (
         <p className="text-sm leading-relaxed text-[--text-body]">
-          <span className="font-mono text-xs text-[--brand-primary] mr-1.5">
+          <span className="font-mono text-xs text-link mr-1.5">
             {String(0).padStart(2, '0')}
           </span>
           {text}
@@ -546,7 +546,7 @@ export function CallStack({ payload }: { payload: any }) {
                   </span>
                   {f.args && <span className="font-mono text-xs text-[--text-muted]">({f.args})</span>}
                   {f.line && (
-                    <span className="font-mono text-xs text-[--brand-primary] ml-auto">{f.line}</span>
+                    <span className="font-mono text-xs text-link ml-auto">{f.line}</span>
                   )}
                 </div>
                 {(f.locals?.length || f.note) && (
@@ -872,7 +872,7 @@ export function TypesLab({ payload }: { payload: any }) {
         <div className="flex flex-wrap items-center gap-2.5">
           <div className="flex items-baseline gap-2">
             <span className="font-mono text-xs text-[--text-muted]">decimal</span>
-            <span key={`d${clamped}`} className="font-mono text-base font-bold text-[--brand-primary] anim-pop-in">
+            <span key={`d${clamped}`} className="font-mono text-base font-bold text-link anim-pop-in">
               {fmt(clamped)}
             </span>
           </div>
@@ -1187,7 +1187,7 @@ export function Pipeline({ payload }: { payload: any }) {
             <div className={`rounded-lg border px-2.5 py-1.5 text-center ${tone(cur.tone || 'code')}`}>
               <div className="font-mono text-xs font-bold text-[--text-heading]">{cur.tool || cur.name}</div>
             </div>
-            <span className="text-[--brand-primary] text-lg leading-none">→</span>
+            <span className="text-link text-lg leading-none">→</span>
           </div>
           <div className="min-w-0">
             <p className="font-mono text-xs uppercase tracking-wide text-[--text-muted] mb-1">output</p>
@@ -1474,7 +1474,7 @@ export function StepTrace({ payload }: { payload: any }) {
         <h5 className="font-semibold text-sm text-[--text-heading]">{steps[active]?.title}</h5>
         <p className="text-sm text-[--text-body] leading-relaxed">{steps[active]?.desc}</p>
         {steps[active]?.code_snippet && (
-          <pre className="mt-2 p-3 bg-paper rounded-lg text-xs font-mono text-[--brand-primary] overflow-x-auto">
+          <pre className="mt-2 p-3 bg-paper rounded-lg text-xs font-mono text-link overflow-x-auto">
             {steps[active].code_snippet}
           </pre>
         )}

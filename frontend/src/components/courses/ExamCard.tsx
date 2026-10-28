@@ -107,7 +107,7 @@ export const ExamCard: React.FC<{
     return (
       <section className="mb-8 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6">
         <div className="flex items-center gap-2">
-          <Award size={18} className="text-[var(--brand-sky)]" />
+          <Award size={18} className="text-link" />
           <h2 className="text-lg font-bold text-[var(--ink)]">Exam result</h2>
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
@@ -174,7 +174,7 @@ export const ExamCard: React.FC<{
       <section className="mb-8 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <ClipboardCheck size={18} className="text-[var(--brand-sky)]" />
+            <ClipboardCheck size={18} className="text-link" />
             <h2 className="text-lg font-bold text-[var(--ink)]">Final exam</h2>
           </div>
           <div
@@ -246,7 +246,7 @@ export const ExamCard: React.FC<{
   return (
     <section className="mb-8 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6">
       <div className="flex items-center gap-2">
-        <ClipboardCheck size={18} className="text-[var(--brand-sky)]" />
+        <ClipboardCheck size={18} className="text-link" />
         <h2 className="text-lg font-bold text-[var(--ink)]">Final exam</h2>
       </div>
       <p className="mt-2 text-sm leading-relaxed text-[var(--text-body)]">

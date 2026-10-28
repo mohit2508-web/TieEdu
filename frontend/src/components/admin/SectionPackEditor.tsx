@@ -196,7 +196,7 @@ export const SectionPackEditor: React.FC<SectionPackEditorProps> = ({ module, co
               <div className="flex items-center justify-between mb-1">
                 <label className={labelCls + ' mb-0'}>Salary & CTC Breakdown</label>
                 <button type="button" onClick={() => set({ overview: { ...ov, salaryBreakdown: pipeTextToMarkdownTable(ov.salaryBreakdown) } })}
-                  className="text-xs font-bold text-signal hover:underline" title="Turn a 'Label: value | Label: value' line into a table">
+                  className="text-xs font-bold text-link hover:underline" title="Turn a 'Label: value | Label: value' line into a table">
                   Make it a table
                 </button>
               </div>
@@ -248,7 +248,7 @@ export const SectionPackEditor: React.FC<SectionPackEditorProps> = ({ module, co
                       <div className="space-y-2 pt-1">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-bold uppercase text-gray-400 tracking-wider">PYQs ({topic.pyqs?.length || 0})</span>
-                          <button type="button" className="inline-flex items-center gap-1 text-xs font-bold text-signal hover:underline"
+                          <button type="button" className="inline-flex items-center gap-1 text-xs font-bold text-link hover:underline"
                             onClick={() => set({ core_subjects: subjects.map((x, i) => i === sIdx ? { ...x, topics: x.topics.map((t, j) => j === tIdx ? { ...t, pyqs: [...(t.pyqs || []), { year: 2026, question: '', answer: '', frequency: 'High' }] } : t) } : x) })}>
                             <Plus className="w-3 h-3" /> Add PYQ
                           </button>
@@ -281,7 +281,7 @@ export const SectionPackEditor: React.FC<SectionPackEditorProps> = ({ module, co
                       </div>
                     </div>
                   ))}
-                  <button type="button" className="inline-flex items-center gap-1.5 text-xs font-bold text-signal hover:underline"
+                  <button type="button" className="inline-flex items-center gap-1.5 text-xs font-bold text-link hover:underline"
                     onClick={() => set({ core_subjects: subjects.map((x, i) => i === sIdx ? { ...x, topics: [...x.topics, { title: '', content: '', pyqs: [] }] } : x) })}>
                     <Plus className="w-3.5 h-3.5" /> Add Topic
                   </button>
@@ -446,7 +446,7 @@ export const SectionPackEditor: React.FC<SectionPackEditorProps> = ({ module, co
                       </button>
                     </div>
                   ))}
-                  <button type="button" className="inline-flex items-center gap-1 text-xs font-bold text-signal-hover hover:underline"
+                  <button type="button" className="inline-flex items-center gap-1 text-xs font-bold text-link hover:underline"
                     onClick={() => set({ hr_round: hrs.map((x, i) => i === idx ? { ...x, tips: [...x.tips, ''] } : x) })}>
                     <Plus className="w-3.5 h-3.5" /> Add Tip
                   </button>
@@ -587,7 +587,7 @@ export const SectionPackEditor: React.FC<SectionPackEditorProps> = ({ module, co
       {/* Live Preview */}
       <div className="border-t border-gray-200 p-5 bg-app-warm">
         <div className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">
-          <Eye className="w-4 h-4 text-signal" /> Live Student Preview — Calibre, 18px body
+          <Eye className="w-4 h-4 text-link" /> Live Student Preview — Calibre, 18px body
         </div>
         {/* No prose-article here on purpose: each field below renders its own
             MarkdownContent, and nesting both would apply the prose rules twice. */}
@@ -645,7 +645,7 @@ const PackPreview: React.FC<{ data: ModuleSectionData; active: SectionId; compan
       }
       return (
         <div className="space-y-5 text-base sm:text-lg leading-relaxed text-gray-800">
-          <SectionTitle><Building2 className="w-6 h-6 text-signal" /> Company Overview</SectionTitle>
+          <SectionTitle><Building2 className="w-6 h-6 text-link" /> Company Overview</SectionTitle>
           {ov.companyInfo && <div className="p-5 bg-signal-soft/70 border border-signal/30 rounded-2xl"><h3 className="font-bold text-brand-ink text-lg mb-2">Company Profile & Target Roles</h3><MarkdownContent className="text-brand-ink">{ov.companyInfo}</MarkdownContent></div>}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             {ov.eligibility && <div className="p-4 bg-gray-50 border border-gray-200 rounded-2xl"><h4 className="font-bold text-gray-900 text-sm uppercase tracking-wider mb-2">Eligibility</h4><MarkdownContent className="text-base text-gray-700">{ov.eligibility}</MarkdownContent></div>}
@@ -665,7 +665,7 @@ const PackPreview: React.FC<{ data: ModuleSectionData; active: SectionId; compan
       if (subjects.length === 0) return <p className="text-base text-gray-400">No core subjects added yet.</p>;
       return (
         <div className="space-y-6">
-          <SectionTitle><BookOpen className="w-6 h-6 text-signal" /> Core Subjects & PYQs</SectionTitle>
+          <SectionTitle><BookOpen className="w-6 h-6 text-link" /> Core Subjects & PYQs</SectionTitle>
           {subjects.map((sub, sIdx) => (
             <div key={sIdx}>
               <h3 className="text-xl font-bold text-gray-900 border-l-4 border-signal pl-4 py-1">{sub.subject || 'Untitled'}</h3>
@@ -676,7 +676,7 @@ const PackPreview: React.FC<{ data: ModuleSectionData; active: SectionId; compan
                     <MarkdownContent className="text-base text-gray-800 mt-1">{t.content}</MarkdownContent>
                     {(t.pyqs || []).map((p, pIdx) => (
                       <div key={pIdx} className="mt-3 p-3 bg-white border border-gray-200 rounded-xl">
-                        <span className="px-2 py-0.5 bg-signal-soft text-signal-hover rounded font-bold text-xs mr-2">Year {p.year}</span>
+                        <span className="px-2 py-0.5 bg-signal-soft text-link rounded font-bold text-xs mr-2">Year {p.year}</span>
                         <span className="px-2 py-0.5 bg-purple-100 text-purple-800 rounded font-bold text-xs">{p.frequency}</span>
                         <MarkdownContent compact className="font-bold text-gray-900 text-base mt-1.5">{p.question}</MarkdownContent>
                         <span className="block text-xs font-bold uppercase tracking-wider text-gray-900 mt-2">Answer</span>
@@ -696,11 +696,11 @@ const PackPreview: React.FC<{ data: ModuleSectionData; active: SectionId; compan
       if (qs.length === 0) return <p className="text-base text-gray-400">No interview questions yet.</p>;
       return (
         <div className="space-y-5">
-          <SectionTitle><Lightbulb className="w-6 h-6 text-signal" /> Technical & Coding Questions</SectionTitle>
+          <SectionTitle><Lightbulb className="w-6 h-6 text-link" /> Technical & Coding Questions</SectionTitle>
           {qs.map((q, idx) => (
             <div key={idx} className="p-5 bg-gray-50/80 border border-gray-200 rounded-2xl space-y-3">
               <div className="flex items-center gap-2.5">
-                <span className="px-3 py-0.5 rounded-md text-xs font-bold uppercase bg-signal-soft text-signal-hover">{q.category}</span>
+                <span className="px-3 py-0.5 rounded-md text-xs font-bold uppercase bg-signal-soft text-link">{q.category}</span>
                 <h3 className="font-bold text-gray-900 text-lg">{q.title}</h3>
               </div>
               <MarkdownContent className="text-base text-gray-900 font-bold">{q.question}</MarkdownContent>
@@ -719,7 +719,7 @@ const PackPreview: React.FC<{ data: ModuleSectionData; active: SectionId; compan
       if (sheets.length === 0) return <p className="text-base text-gray-400">No cheatsheets yet.</p>;
       return (
         <div className="space-y-4">
-          <SectionTitle><FileSpreadsheet className="w-6 h-6 text-signal" /> Quick Cheatsheets</SectionTitle>
+          <SectionTitle><FileSpreadsheet className="w-6 h-6 text-link" /> Quick Cheatsheets</SectionTitle>
           {sheets.map((s, idx) => (
             <div key={idx} className="p-5 bg-amber-50/60 border border-amber-200 rounded-2xl">
               <h3 className="font-bold text-amber-950 text-xl">{s.title}</h3>
@@ -774,7 +774,7 @@ const PackPreview: React.FC<{ data: ModuleSectionData; active: SectionId; compan
       if (hrs.length === 0) return <p className="text-base text-gray-400">No HR round content yet.</p>;
       return (
         <div className="space-y-4">
-          <SectionTitle><UserCheck className="w-6 h-6 text-signal" /> HR & Behavioral Blueprint</SectionTitle>
+          <SectionTitle><UserCheck className="w-6 h-6 text-link" /> HR & Behavioral Blueprint</SectionTitle>
           {hrs.map((hr, idx) => (
             <div key={idx} className="p-5 bg-signal-soft/60 border border-signal/30 rounded-2xl">
               <h3 className="font-bold text-brand-ink text-lg">Q: {hr.question}</h3>

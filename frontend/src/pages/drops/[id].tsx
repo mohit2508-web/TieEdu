@@ -142,7 +142,7 @@ export default function DropPage({ initialDrop, initialId }: { initialDrop: Drop
       <main className="mx-auto w-full max-w-[720px] px-5 pb-16 pt-6" style={chipStyle} data-test="drop-detail">
           <Link
             href="/drops"
-            className="inline-flex min-h-[44px] items-center gap-1 text-sm font-bold text-[var(--brand-sky)] hover:underline"
+            className="inline-flex min-h-[44px] items-center gap-1 text-sm font-bold text-link hover:underline"
           >
             <ChevronLeft size={17} strokeWidth={2.6} aria-hidden />
             Back to the feed
@@ -173,7 +173,7 @@ export default function DropPage({ initialDrop, initialId }: { initialDrop: Drop
           )}
 
           {drop.deadline_at && (
-            <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[var(--brand-sky-soft)] px-3 py-1.5 text-xs font-bold text-[var(--brand-sky-strong)]">
+            <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[var(--brand-sky-soft)] px-3 py-1.5 text-xs font-bold text-link">
               <CalendarClock size={14} strokeWidth={2.6} aria-hidden />
               {formatDay(drop.deadline_at)}
             </p>

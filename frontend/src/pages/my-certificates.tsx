@@ -128,7 +128,7 @@ export default function MyCertificatesPage() {
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-2">
-                    <div className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[var(--brand-sky-soft)] text-[var(--brand-sky-strong)]">
+                    <div className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[var(--brand-sky-soft)] text-link">
                       <Award size={18} />
                     </div>
                     <div>
@@ -160,7 +160,7 @@ export default function MyCertificatesPage() {
                     </p>
                   )}
                   {c.distinction && (
-                    <p className="font-semibold text-[var(--brand-sky)]">
+                    <p className="font-semibold text-link">
                       With Distinction — first attempt
                     </p>
                   )}

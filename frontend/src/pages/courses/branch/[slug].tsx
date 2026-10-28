@@ -147,7 +147,7 @@ export default function BranchPage({ initialData, branch }: { initialData: Cours
 
       <main className="mx-auto w-full max-w-[1180px] px-5 pb-28 pt-10 sm:px-8">
         <header className="max-w-3xl">
-          <p className="text-xs font-bold uppercase tracking-widest text-[var(--brand-sky)]">
+          <p className="text-xs font-bold uppercase tracking-widest text-link">
             <Link href="/courses?src=branch" className="hover:underline">Courses</Link>
             {' / '}{meta.short}
           </p>

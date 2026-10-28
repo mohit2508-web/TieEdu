@@ -163,7 +163,7 @@ export const AdminCmsView: React.FC = () => {
                       : 'text-gray-600 hover:bg-surface-hover hover:text-heading'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 ${activeTab === t.id ? 'text-amber-deep' : 'text-signal'}`} />
+                  <Icon className={`w-4 h-4 ${activeTab === t.id ? 'text-amber-deep' : 'text-link'}`} />
                   <span className="flex-1">{t.label}</span>
                   {badge !== null && badge > 0 && (
                     <span className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${activeTab === t.id ? 'bg-amber-400/20 text-amber-300' : 'bg-brand-ink text-white'}`}>{badge}</span>
@@ -185,7 +185,7 @@ export const AdminCmsView: React.FC = () => {
       {/* Sidebar (lg+) */}
       <aside className="hidden lg:flex w-[250px] shrink-0 flex-col border-r border-line bg-white">
         <div className="p-5 border-b border-line">
-          <p className="text-xs font-mono font-bold text-signal uppercase tracking-[0.2em]">TieEdu</p>
+          <p className="text-xs font-mono font-bold text-link uppercase tracking-[0.2em]">TieEdu</p>
           <h1 className="text-lg font-extrabold text-heading tracking-tight">Admin Control Plane</h1>
           <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full bg-warning-soft text-amber-deep text-xs font-bold font-mono">OWNER BACKOFFICE</span>
         </div>
@@ -200,7 +200,7 @@ export const AdminCmsView: React.FC = () => {
               <p className="text-xs text-gray-400 truncate">{user?.email}</p>
             </div>
           </div>
-          <Link href="/" className="block px-3 py-2 rounded-xl text-xs font-bold text-signal hover:bg-signal-soft flex items-center gap-2">
+          <Link href="/" className="block px-3 py-2 rounded-xl text-xs font-bold text-link hover:bg-signal-soft flex items-center gap-2">
             <ExternalLink className="w-3.5 h-3.5" /> View student site
           </Link>
           <button onClick={signOut} className="w-full px-3 py-2 rounded-xl text-xs font-bold text-red-600 hover:bg-red-50 flex items-center gap-2">
@@ -233,7 +233,7 @@ export const AdminCmsView: React.FC = () => {
               */}
               <NotificationBell />
               <AccountMenu />
-              <a href="/" target="_blank" rel="noreferrer" className="hidden sm:inline-flex px-3 py-2 rounded-xl text-xs font-bold text-signal border border-signal/30 bg-white hover:bg-signal-soft items-center gap-1.5">
+              <a href="/" target="_blank" rel="noreferrer" className="hidden sm:inline-flex px-3 py-2 rounded-xl text-xs font-bold text-link border border-signal/30 bg-white hover:bg-signal-soft items-center gap-1.5">
                 <ExternalLink className="w-3.5 h-3.5" /> Student site
               </a>
               <button

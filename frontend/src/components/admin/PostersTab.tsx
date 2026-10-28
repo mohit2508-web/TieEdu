@@ -280,7 +280,7 @@ export const PostersTab: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <Link href="/" target="_blank" className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-signal border border-signal/30 bg-white hover:bg-signal-soft">
+            <Link href="/" target="_blank" className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-link border border-signal/30 bg-white hover:bg-signal-soft">
               <ExternalLink className="w-3.5 h-3.5" /> Homepage par dekhein
             </Link>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 text-xs font-bold font-mono">
@@ -302,7 +302,7 @@ export const PostersTab: React.FC = () => {
         <div className="xl:col-span-2 bg-white border border-gray-200 rounded-3xl p-5 shadow-xs space-y-4">
           <div className="flex items-center justify-between gap-3">
             <h4 className="text-sm font-extrabold text-ink-soft flex items-center gap-2">
-              {editingId ? <Pencil className="w-4 h-4 text-signal" /> : <Plus className="w-4 h-4 text-signal" />}
+              {editingId ? <Pencil className="w-4 h-4 text-link" /> : <Plus className="w-4 h-4 text-link" />}
               {editingId ? 'Edit Poster' : 'New Poster'}
             </h4>
             {editingId && (
@@ -342,7 +342,7 @@ export const PostersTab: React.FC = () => {
                 </>
               ) : (
                 <div className="py-10 px-4">
-                  <ImageIcon className="w-7 h-7 text-signal mx-auto mb-2" />
+                  <ImageIcon className="w-7 h-7 text-link mx-auto mb-2" />
                   <p className="text-sm font-bold text-ink-soft">Drag & drop, ya click karke choose karein</p>
                   <p className="text-xs text-gray-500 mt-1">JPG / PNG / WEBP / AVIF • 6MB max</p>
                 </div>
@@ -390,7 +390,7 @@ export const PostersTab: React.FC = () => {
                   key={preset.href}
                   type="button"
                   onClick={() => setForm({ ...form, href: preset.href })}
-                  className="px-2 py-1 rounded-lg bg-app-warm border border-gray-200 text-xs font-bold text-gray-600 hover:border-signal hover:text-signal"
+                  className="px-2 py-1 rounded-lg bg-app-warm border border-gray-200 text-xs font-bold text-gray-600 hover:border-signal hover:text-link"
                 >
                   {preset.label}
                 </button>
@@ -542,13 +542,13 @@ export const PostersTab: React.FC = () => {
                       >
                         {p.is_featured ? 'Unfeature' : 'Feature only'}
                       </button>
-                      <button onClick={() => startEdit(p)} className="p-1.5 text-gray-500 hover:text-signal hover:bg-signal-soft rounded-lg" title="Edit">
+                      <button onClick={() => startEdit(p)} className="p-1.5 text-gray-500 hover:text-link hover:bg-signal-soft rounded-lg" title="Edit">
                         <Pencil className="w-4 h-4" />
                       </button>
-                      <button onClick={() => move(p, -1)} disabled={i === 0} className="p-1.5 text-gray-500 hover:text-signal hover:bg-signal-soft rounded-lg disabled:opacity-30 disabled:hover:bg-transparent" title="Move up">
+                      <button onClick={() => move(p, -1)} disabled={i === 0} className="p-1.5 text-gray-500 hover:text-link hover:bg-signal-soft rounded-lg disabled:opacity-30 disabled:hover:bg-transparent" title="Move up">
                         <ArrowUp className="w-4 h-4" />
                       </button>
-                      <button onClick={() => move(p, 1)} disabled={i === posters.length - 1} className="p-1.5 text-gray-500 hover:text-signal hover:bg-signal-soft rounded-lg disabled:opacity-30 disabled:hover:bg-transparent" title="Move down">
+                      <button onClick={() => move(p, 1)} disabled={i === posters.length - 1} className="p-1.5 text-gray-500 hover:text-link hover:bg-signal-soft rounded-lg disabled:opacity-30 disabled:hover:bg-transparent" title="Move down">
                         <ArrowDown className="w-4 h-4" />
                       </button>
                       <button onClick={() => remove(p)} className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg ml-auto" title="Delete">

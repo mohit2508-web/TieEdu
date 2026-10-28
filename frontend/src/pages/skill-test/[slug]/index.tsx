@@ -36,7 +36,7 @@ function SkillDetail() {
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center px-4">
           <h1 className="text-2xl font-bold text-gray-900">Skill Not Found</h1>
-          <Link href="/skill-test" className="mt-4 inline-block text-signal font-medium">
+          <Link href="/skill-test" className="mt-4 inline-block text-link font-medium">
             Back to Skill Test
           </Link>
         </div>

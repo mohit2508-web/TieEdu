@@ -115,7 +115,7 @@ export const UsersTab: React.FC<{ companies: Company[] }> = ({ companies }) => {
       </div>
 
       {notice && (
-        <div className="px-4 py-3 rounded-2xl bg-signal-soft text-signal text-xs font-semibold border border-signal/30">{notice}</div>
+        <div className="px-4 py-3 rounded-2xl bg-signal-soft text-link text-xs font-semibold border border-signal/30">{notice}</div>
       )}
 
       <div className="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-xs">
@@ -158,7 +158,7 @@ export const UsersTab: React.FC<{ companies: Company[] }> = ({ companies }) => {
                       <p className="text-xs text-gray-400">{u.email}{u.college ? ` · ${u.college}` : ''}</p>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-bold uppercase ${u.role === 'admin' ? 'bg-brand-ink text-white' : 'bg-signal-soft text-signal'}`}>{u.role}</span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-bold uppercase ${u.role === 'admin' ? 'bg-brand-ink text-white' : 'bg-signal-soft text-link'}`}>{u.role}</span>
                     </td>
                     <td className="px-4 py-3 font-mono text-xs text-gray-600">{u.xp} XP · {u.streak}🔥</td>
                     <td className="px-4 py-3 text-center font-semibold">{u.orders_count}</td>
@@ -215,7 +215,7 @@ export const UsersTab: React.FC<{ companies: Company[] }> = ({ companies }) => {
                 {unlockedFor.map((cid) => {
                   const c = companies.find((x) => x.id === cid);
                   return (
-                    <span key={cid} className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full bg-signal-soft text-signal text-xs font-bold border border-signal/30">
+                    <span key={cid} className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full bg-signal-soft text-link text-xs font-bold border border-signal/30">
                       {c?.name || cid}
                       <button onClick={() => revoke(cid)} disabled={busy} className="p-0.5 rounded-full hover:bg-red-100 text-red-500" title="Revoke"><X className="w-3 h-3" /></button>
                     </span>

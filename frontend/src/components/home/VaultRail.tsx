@@ -26,7 +26,7 @@ const VaultRailCard: React.FC<{ company: Company }> = ({ company }) => (
         className="h-11 w-11 shrink-0 rounded-2xl p-1"
       />
       <div className="min-w-0 flex-1">
-        <h3 className="truncate font-serif-heading text-lg font-extrabold text-heading transition-colors group-hover:text-signal">
+        <h3 className="truncate font-serif-heading text-lg font-extrabold text-heading transition-colors group-hover:text-link">
           {company.name}
         </h3>
         <p className="truncate text-xs font-semibold text-[var(--text-muted)]">

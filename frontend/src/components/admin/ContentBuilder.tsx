@@ -159,8 +159,8 @@ export const ContentBuilder: React.FC<ContentBuilderProps> = ({ companies, selec
                   </div>
 
                   <div className="flex items-center gap-1.5 shrink-0">
-                    <button onClick={() => handleReorder(idx, -1)} className="p-1.5 text-gray-400 hover:text-signal hover:bg-signal-soft rounded-lg" title="Move up"><ChevronUp className="w-4 h-4" /></button>
-                    <button onClick={() => handleReorder(idx, 1)} className="p-1.5 text-gray-400 hover:text-signal hover:bg-signal-soft rounded-lg" title="Move down"><ChevronDown className="w-4 h-4" /></button>
+                    <button onClick={() => handleReorder(idx, -1)} className="p-1.5 text-gray-400 hover:text-link hover:bg-signal-soft rounded-lg" title="Move up"><ChevronUp className="w-4 h-4" /></button>
+                    <button onClick={() => handleReorder(idx, 1)} className="p-1.5 text-gray-400 hover:text-link hover:bg-signal-soft rounded-lg" title="Move down"><ChevronDown className="w-4 h-4" /></button>
                     <button onClick={() => onEditModule(mod)} className="px-3 py-1.5 bg-signal hover:bg-signal text-white rounded-xl text-xs font-bold flex items-center gap-1.5 ml-1">
                       <PenLine className="w-3.5 h-3.5" /> Pack Editor
                     </button>
@@ -168,9 +168,9 @@ export const ContentBuilder: React.FC<ContentBuilderProps> = ({ companies, selec
                       <FileText className="w-3.5 h-3.5" />
                       {mod.pdf ? 'PDF ✓' : 'PDF'}
                     </button>
-                    <button onClick={() => openModuleModal(mod)} className="p-1.5 text-gray-500 hover:text-signal hover:bg-signal-soft rounded-lg" title="Edit module"><Edit3 className="w-4 h-4" /></button>
+                    <button onClick={() => openModuleModal(mod)} className="p-1.5 text-gray-500 hover:text-link hover:bg-signal-soft rounded-lg" title="Edit module"><Edit3 className="w-4 h-4" /></button>
                     <button onClick={() => handleDeleteModule(mod)} className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg" title="Delete module"><Trash2 className="w-4 h-4" /></button>
-                    <button onClick={() => setExpandedId(isExpanded ? null : mod.id)} className={`p-1.5 rounded-lg transition-colors ${isExpanded ? 'text-signal bg-signal-soft' : 'text-gray-400 hover:bg-gray-100'}`} title="Toggle questions">
+                    <button onClick={() => setExpandedId(isExpanded ? null : mod.id)} className={`p-1.5 rounded-lg transition-colors ${isExpanded ? 'text-link bg-signal-soft' : 'text-gray-400 hover:bg-gray-100'}`} title="Toggle questions">
                       <ChevronDown className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                     </button>
                   </div>
@@ -207,7 +207,7 @@ export const ContentBuilder: React.FC<ContentBuilderProps> = ({ companies, selec
                               <button onClick={() => setBlockTarget({ itemId: item.id, module: mod })} className="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-brand-ink rounded-lg text-xs font-bold flex items-center gap-1">
                                 <Layers className="w-3.5 h-3.5" /> Add Block
                               </button>
-                              <button onClick={() => setItemModal({ moduleId: mod.id, item, open: true })} className="p-1.5 text-gray-500 hover:text-signal hover:bg-signal-soft rounded-lg"><Edit3 className="w-4 h-4" /></button>
+                              <button onClick={() => setItemModal({ moduleId: mod.id, item, open: true })} className="p-1.5 text-gray-500 hover:text-link hover:bg-signal-soft rounded-lg"><Edit3 className="w-4 h-4" /></button>
                               <button onClick={() => handleDeleteItem(mod.id, item.id)} className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg"><Trash2 className="w-4 h-4" /></button>
                             </div>
                           </div>

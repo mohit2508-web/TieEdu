@@ -82,7 +82,7 @@ export const ReportsTab: React.FC<{ companies: Company[]; onChanged?: () => void
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 rounded-full border transition-all ${filter === f ? 'bg-brand-ink text-white border-brand-ink' : 'bg-white text-gray-500 border-gray-200 hover:border-signal hover:text-signal'}`}
+              className={`px-3 py-1.5 rounded-full border transition-all ${filter === f ? 'bg-brand-ink text-white border-brand-ink' : 'bg-white text-gray-500 border-gray-200 hover:border-signal hover:text-link'}`}
             >
               {f === 'all' ? 'All' : f === 'pending_review' ? 'Pending' : f === 'published' ? 'Published' : 'Rejected'} ({counts[f]})
             </button>
@@ -141,7 +141,7 @@ export const ReportsTab: React.FC<{ companies: Company[]; onChanged?: () => void
                   </div>
                 ))}
                 {r.rounds.length > 2 && (
-                  <button onClick={() => setExpanded(expanded === r.id ? null : r.id)} className="text-xs font-semibold text-signal flex items-center gap-1">
+                  <button onClick={() => setExpanded(expanded === r.id ? null : r.id)} className="text-xs font-semibold text-link flex items-center gap-1">
                     <ChevronDown className={`w-3.5 h-3.5 transition-transform ${expanded === r.id ? 'rotate-180' : ''}`} />
                     {expanded === r.id ? 'Show less' : `+${r.rounds.length - 2} more rounds`}
                   </button>
@@ -150,7 +150,7 @@ export const ReportsTab: React.FC<{ companies: Company[]; onChanged?: () => void
 
               <div className="flex items-center justify-between pt-2 border-t border-gray-100">
                 <div className="text-xs font-mono text-gray-500">
-                  Accuracy: <strong className="text-signal">{r.accuracy_rating}%</strong>
+                  Accuracy: <strong className="text-link">{r.accuracy_rating}%</strong>
                   {r.salary_lpa ? ` · ${r.salary_lpa} LPA` : ''}
                 </div>
                 <div className="flex flex-wrap items-center justify-end gap-2">

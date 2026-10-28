@@ -129,7 +129,7 @@ export default function TpoLoginPage() {
               <div className="mb-5 px-4 py-3 rounded-xl bg-signal-soft border border-signal/30 text-brand-ink text-sm font-semibold">
                 {notice}
                 <div className="mt-2 flex flex-wrap gap-3">
-                  <Link href="/" className="inline-flex items-center gap-1 font-bold text-signal">
+                  <Link href="/" className="inline-flex items-center gap-1 font-bold text-link">
                     Go to TieEdu home <ExternalLink className="w-3 h-3" />
                   </Link>
                   <button
@@ -206,7 +206,7 @@ export default function TpoLoginPage() {
 
             <p className="mt-6 text-center text-sm text-body">
               Student ho?{' '}
-              <Link href="/login" className="font-bold text-signal hover:text-signal">
+              <Link href="/login" className="font-bold text-link hover:text-link">
                 User sign in
               </Link>
             </p>

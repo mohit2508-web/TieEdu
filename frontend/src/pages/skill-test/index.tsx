@@ -61,7 +61,7 @@ const SkillCard: React.FC<{ skill: CardSkill }> = ({ skill }) => (
     className="group focus-ring flex min-h-[120px] flex-col rounded-[14px] border border-line bg-card p-4 transition-colors hover:border-line-strong"
   >
     <div className="flex items-start justify-between gap-2">
-      <h4 className="font-display text-lg font-bold leading-snug text-heading transition-colors group-hover:text-signal">
+      <h4 className="font-display text-lg font-bold leading-snug text-heading transition-colors group-hover:text-link">
         {skill.name}
       </h4>
       {skill.popular && <Chip tone="signal">Popular</Chip>}
@@ -77,7 +77,7 @@ const SkillCard: React.FC<{ skill: CardSkill }> = ({ skill }) => (
       ) : (
         <span />
       )}
-      <ArrowRight className="h-4 w-4 text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-signal" aria-hidden />
+      <ArrowRight className="h-4 w-4 text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-link" aria-hidden />
     </div>
   </Link>
 );
@@ -296,7 +296,7 @@ export default function SkillTestLanding() {
               <h2 className="font-display text-2xl font-bold text-heading">Don&apos;t just say you know it. Prove it.</h2>
               <p className="mt-1 text-base text-muted">
                 Every certificate you earn is listed on your{' '}
-                <Link href="/skill-test/skill-passport" className="font-semibold text-signal hover:underline">
+                <Link href="/skill-test/skill-passport" className="font-semibold text-link hover:underline">
                   skill passport
                 </Link>
                 , and each one has its own verification page.

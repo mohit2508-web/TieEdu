@@ -94,7 +94,7 @@ export const ModuleTestCard: React.FC<{
     return (
       <section className="mb-6 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
         <div className="flex items-center gap-2">
-          <Award size={16} className="text-[var(--brand-sky)]" />
+          <Award size={16} className="text-link" />
           <h3 className="text-base font-bold text-[var(--ink)]">
             Module test — {moduleTitle}
           </h3>
@@ -167,7 +167,7 @@ export const ModuleTestCard: React.FC<{
     return (
       <section className="mb-6 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
         <div className="flex items-center gap-2">
-          <ClipboardCheck size={16} className="text-[var(--brand-sky)]" />
+          <ClipboardCheck size={16} className="text-link" />
           <h3 className="text-base font-bold text-[var(--ink)]">
             Module test — {moduleTitle}
           </h3>
@@ -236,7 +236,7 @@ export const ModuleTestCard: React.FC<{
     <section className="mb-6 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
       <div className="flex items-center gap-2">
         {canStart || passed ? (
-          <PlayCircle size={16} className="text-[var(--brand-sky)]" />
+          <PlayCircle size={16} className="text-link" />
         ) : (
           <Lock size={16} className="text-[var(--text-muted)]" />
         )}

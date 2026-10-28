@@ -150,7 +150,7 @@ function RefPicker({
             />
             <span className="flex-1 text-gray-900">{o.label}</span>
             {o.meta && <span className="text-xs text-gray-500">{o.meta}</span>}
-            {on && <span className="text-xs font-semibold text-signal-hover">#{value.indexOf(o.id) + 1}</span>}
+            {on && <span className="text-xs font-semibold text-link">#{value.indexOf(o.id) + 1}</span>}
           </label>
         );
       })}
@@ -287,7 +287,7 @@ function ListField({
             onChange([...value, row]);
             setOpen(row.id);
           }}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-dashed border-gray-300 text-sm font-semibold text-gray-700 hover:border-signal hover:text-signal-hover disabled:opacity-40"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-dashed border-gray-300 text-sm font-semibold text-gray-700 hover:border-signal hover:text-link disabled:opacity-40"
         >
           {/* "Rounds (stations)" → "Add round" */}
           <Plus className="w-4 h-4" /> Add {field.label.replace(/\s*\(.*\)\s*$/, '').toLowerCase().replace(/s$/, '')}

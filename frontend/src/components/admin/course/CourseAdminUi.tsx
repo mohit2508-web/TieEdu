@@ -136,7 +136,7 @@ export const OkNote: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
 export const Loading: React.FC<{ label?: string }> = ({ label = 'Loading' }) => (
   <div className="flex items-center gap-2.5 py-10 justify-center text-sm text-text-light">
-    <Loader2 className="w-4 h-4 animate-spin text-signal" />
+    <Loader2 className="w-4 h-4 animate-spin text-link" />
     {label}...
   </div>
 );
