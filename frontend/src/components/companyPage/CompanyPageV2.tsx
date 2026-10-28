@@ -21,6 +21,10 @@ import { AlsoPreparing, CommunityOffer, EligibilityApply, Experiences, Faq, Rich
 import { Comeback, Countdown, DriveRadar, Onboarding, PrepPack } from './InteractiveSections';
 import s from './companyPage.module.css';
 import { useLang } from '@/lib/lang';
+import { trackExperiment, useVariant } from '@/lib/experiments';
+
+/** Version B of the main button (experiment cp_main_cta, backend lib/experiments). */
+const CTA_B: Record<CpLang, string> = { en: 'See where you stand in 2 minutes', hi: '2 minute mein dekho aap kahan khade ho' };
 
 /**
  * Accent swatches. The server owns the palette (`ACCENT_PALETTE` in
@@ -155,14 +159,31 @@ export function CompanyPageV2({
   const settings = localized.settings || {};
   const t = useMemo(() => makeT(company.name), [company.name]);
   const ui = useMemo(() => makeUi(lang), [lang]);
-  const visible = useMemo(() => localized.sections.filter((x) => x.visible), [localized.sections]);
+  // ---- A/B test (F5): the main button's wording. Version B replaces the
+  // hero's button label (and so the sticky bar's, which repeats it); A is the
+  // page as authored. Never in the admin preview.
+  const ctaVariant = useVariant('cp_main_cta');
+  const visible = useMemo(() => {
+    const v = localized.sections.filter((x) => x.visible);
+    if (preview || ctaVariant !== 'b') return v;
+    return v.map((x) => (x.type === 'hero' && x.data.card_cta_href ? { ...x, data: { ...x.data, card_cta_label: CTA_B[lang] } } : x));
+  }, [localized.sections, ctaVariant, lang, preview]);
   const anchors = useMemo(() => buildAnchors(visible), [visible]);
   const anchorOf = useMemo(() => (sec: CpSection) => anchors.get(sec.id) || `section-${sec.id}`, [anchors]);
 
   // ---- analytics
   const event = useCallback((name: string) => {
-    if (!preview) trackCpEvent(slug, name);
-  }, [preview, slug]);
+    if (preview) return;
+    trackCpEvent(slug, name);
+    if (name === 'readiness_start') trackExperiment('cp_main_cta', ctaVariant, 'conversion');
+  }, [preview, slug, ctaVariant]);
+  const exposed = useRef('');
+  const heroHasCta = visible.some((x) => x.type === 'hero' && !!x.data.card_cta_href);
+  useEffect(() => {
+    if (preview || !ctaVariant || !heroHasCta || exposed.current === slug) return;
+    exposed.current = slug;
+    trackExperiment('cp_main_cta', ctaVariant, 'exposure');
+  }, [preview, ctaVariant, heroHasCta, slug]);
   const viewed = useRef('');
   useEffect(() => {
     if (preview || viewed.current === slug) return;

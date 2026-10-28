@@ -14,6 +14,7 @@ import { ReportsTab } from '@/components/admin/ReportsTab';
 import { OffersTab } from '@/components/admin/OffersTab';
 import { GuaranteeTab } from '@/components/admin/GuaranteeTab';
 import { RecruitersTab } from '@/components/admin/RecruitersTab';
+import { ExperimentsTab } from '@/components/admin/ExperimentsTab';
 import { AnalyticsTab } from '@/components/admin/AnalyticsTab';
 import { SettingsTab } from '@/components/admin/SettingsTab';
 import { PaymentVerificationsTab } from '@/components/admin/PaymentVerificationsTab';
@@ -28,14 +29,14 @@ import { DrivesTab } from '@/components/admin/DrivesTab';
 import {
   BookOpen, Building2, BarChart3, ClipboardList, FileText, Layers, LayoutDashboard,
   LogOut, Mail, RefreshCw, Settings2, ShoppingBag, Ticket, Users, ExternalLink, Wallet, CalendarRange,
-GraduationCap, Award, Zap, Megaphone, BellRing, Send, BrainCircuit, Newspaper, BadgeCheck, Briefcase, ShieldCheck } from 'lucide-react';
+GraduationCap, Award, Zap, Megaphone, BellRing, Send, BrainCircuit, Newspaper, BadgeCheck, Briefcase, FlaskConical, ShieldCheck } from 'lucide-react';
 import { AdminCoursesTab } from '@/components/admin/course/AdminCoursesTab';
 import { AdminCertificatesTab } from '@/components/admin/course/AdminCertificatesTab';
 import { AdminXpTab } from '@/components/admin/course/AdminXpTab';
 import { NotificationBell } from '@/components/layout/NotificationBell';
 import { AccountMenu } from '@/components/layout/AccountMenu';
 
-type TabId = 'overview' | 'orders' | 'payments' | 'users' | 'analytics' | 'hub' | 'content' | 'pack' | 'studyplans' | 'drops' | 'coupons' | 'posters' | 'courses' | 'certificates' | 'xp' | 'skilltest' | 'drives' | 'reports' | 'offers' | 'guarantee' | 'recruiters' | 'emails' | 'notifications' | 'broadcast' | 'settings';
+type TabId = 'overview' | 'orders' | 'payments' | 'users' | 'analytics' | 'hub' | 'content' | 'pack' | 'studyplans' | 'drops' | 'coupons' | 'posters' | 'courses' | 'certificates' | 'xp' | 'skilltest' | 'drives' | 'reports' | 'offers' | 'guarantee' | 'recruiters' | 'experiments' | 'emails' | 'notifications' | 'broadcast' | 'settings';
 
 const NAV: { id: TabId; label: string; icon: any; group: string }[] = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard, group: 'Commerce & Health' },
@@ -59,6 +60,7 @@ const NAV: { id: TabId; label: string; icon: any; group: string }[] = [
   { id: 'reports', label: 'Candidate Reports', icon: FileText, group: 'Engagement' },
   { id: 'offers', label: 'Offer Wall', icon: BadgeCheck, group: 'Engagement' },
   { id: 'recruiters', label: 'Recruiters', icon: Briefcase, group: 'Engagement' },
+  { id: 'experiments', label: 'Experiments', icon: FlaskConical, group: 'Engagement' },
   { id: 'emails', label: 'Email Marketing', icon: Mail, group: 'Engagement' },
   { id: 'notifications', label: 'Notifications', icon: BellRing, group: 'System' },
   { id: 'broadcast', label: 'Broadcast', icon: Send, group: 'System' },
@@ -359,6 +361,7 @@ export const AdminCmsView: React.FC = () => {
             {activeTab === 'offers' && <OffersTab />}
             {activeTab === 'guarantee' && <GuaranteeTab />}
             {activeTab === 'recruiters' && <RecruitersTab />}
+            {activeTab === 'experiments' && <ExperimentsTab />}
 
             {/* TAB: EMAIL MARKETING — leads, campaigns, templates */}
             {activeTab === 'emails' && <EmailTab />}

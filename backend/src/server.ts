@@ -26,6 +26,7 @@ import { englishCoachRouter } from './routes/englishCoach.routes';
 import { studyGroupsRouter } from './routes/studyGroups.routes';
 import { peerMockRouter } from './routes/peerMock.routes';
 import { talentRouter, talentAdminRouter } from './routes/talent.routes';
+import { experimentsRouter, experimentsAdminRouter } from './routes/experiments.routes';
 import { coursesRouter } from './routes/courses.routes';
 import { courseAdminRouter } from './routes/courseAdmin.routes';
 import { tracksRouter } from './routes/tracks.routes';
@@ -131,6 +132,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/admin/offers', requireAdmin, offersAdminRouter);
 app.use('/api/admin/guarantee', requireAdmin, guaranteeAdminRouter);
 app.use('/api/admin/recruiters', requireAdmin, talentAdminRouter);
+app.use('/api/admin/experiments', requireAdmin, experimentsAdminRouter);
 app.use('/api/admin', requireAdmin, adminRouter);
 // Mounted after the catch-all above so its own requirePermission guards apply.
 // It also inherits requireAdmin from that mount, which is intentional and
@@ -177,6 +179,7 @@ app.use('/api/english-coach', optionalAuth, englishCoachRouter);
 app.use('/api/study-groups', optionalAuth, studyGroupsRouter);
 app.use('/api/peer-mock', optionalAuth, peerMockRouter);
 app.use('/api/talent', optionalAuth, talentRouter);
+app.use('/api/experiments', experimentsRouter);
 app.use('/api/courses', coursesRouter);
 app.use('/api/course-admin', courseAdminRouter);
 // Learning tracks: public list/detail (optionalAuth inside), certificate claim
