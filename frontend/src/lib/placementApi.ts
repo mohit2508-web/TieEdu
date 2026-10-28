@@ -316,3 +316,14 @@ export const downloadCollegeReport = async (q: ReportQuery, collegeId?: string |
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 10_000);
 };
+
+/** Year-on-year placement results from Campus intel history (backend lib/yearOnYear). */
+export interface YearOnYearData {
+  years: Array<{ year: number; companies: number; selected: number; unrecorded: number; change: number | null; change_pct: number | null }>;
+  companies: Array<{ company: string; slug: string; by_year: Record<string, number | null>; latest_change: number | null }>;
+}
+export const getYearOnYear = async (collegeId?: string | null): Promise<YearOnYearData> => {
+  const res = await apiFetch(`${API_BASE_URL}/placement/year-on-year`, { headers: collegeHeader(collegeId) });
+  if (!res.ok) return fail(res);
+  return res.json();
+};

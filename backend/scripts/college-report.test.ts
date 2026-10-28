@@ -57,6 +57,7 @@ check('average readiness per branch', r.branches[0].avg_readiness, 60);
 check('practice counts only this college’s students in the period', r.practice, { tests: 2, lessons: 1, course_certificates: 1, skill_certificates: 1, practice_days: 2 });
 check('active in period', r.active_in_period, 4);
 check('results by year, this college only', r.results.map((x) => [x.year, x.companies, x.selected]), [[2025, 2, 42], [2024, 1, 9]]);
+check('change vs the previous year', r.results.map((x) => x.change_pct), [367, null]);
 check('company names, most selected first', r.results[0].detail.map((d) => d.company), ['TCS', 'Infosys']);
 const json = JSON.stringify(r);
 check('no names, roll numbers or user ids anywhere', /Student Name|ROLL\d|"u\d+"/.test(json), false);

@@ -17,6 +17,7 @@ import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from 'pdf
 import type { BatchReadiness, Segment } from './batchReadiness';
 import { historyOf } from './campusIntel';
 import { istDate } from './streak';
+import { yearOnYear } from './yearOnYear';
 
 export const MIN_GROUP = 5;
 const SEGS: Segment[] = ['not_started', 'at_risk', 'in_progress', 'ready'];
@@ -34,7 +35,7 @@ export interface CollegeReport {
   segments: Record<Segment, number>;
   branches: BranchRow[];
   practice: { tests: number; lessons: number; course_certificates: number; skill_certificates: number; practice_days: number };
-  results: Array<{ year: number; companies: number; selected: number; detail: Array<{ company: string; selected: number | null }> }>;
+  results: Array<{ year: number; companies: number; selected: number; change_pct: number | null; detail: Array<{ company: string; selected: number | null }> }>;
 }
 
 const inPeriod = (iso: unknown, from: string, to: string) => {
@@ -101,12 +102,15 @@ export function buildCollegeReport(db: any, batch: BatchReadiness, input: Report
   for (const h of historyOf(db).filter((x) => x.college_id === input.collegeId)) {
     years.set(h.year, [...(years.get(h.year) || []), { company: companies.get(h.company_slug) || h.company_slug, selected: h.selected }]);
   }
+  // Change between comparable years, computed once in lib/yearOnYear.
+  const yoy = new Map(yearOnYear(db, input.collegeId).years.map((y) => [y.year, y.change_pct]));
   const results = [...years.entries()]
     .sort((a, b) => b[0] - a[0])
     .map(([year, detail]) => ({
       year,
       companies: detail.length,
       selected: detail.reduce((n, d) => n + (d.selected || 0), 0),
+      change_pct: yoy.get(year) ?? null,
       detail: detail.sort((a, b) => (b.selected || 0) - (a.selected || 0) || a.company.localeCompare(b.company)),
     }));
 
@@ -233,8 +237,8 @@ export async function renderCollegeReportPdf(r: CollegeReport): Promise<Uint8Arr
   if (!r.results.length) para('No placement results have been recorded by the placement cell yet. They are added under Campus intel in the TPO portal.', 10);
   else {
     table(
-      [{ label: 'Year', w: 0.25 }, { label: 'Companies recorded', w: 0.375, right: true }, { label: 'Students selected', w: 0.375, right: true }],
-      r.results.map((x) => [String(x.year), String(x.companies), String(x.selected)])
+      [{ label: 'Year', w: 0.2 }, { label: 'Companies recorded', w: 0.28, right: true }, { label: 'Students selected', w: 0.28, right: true }, { label: 'Change', w: 0.24, right: true }],
+      r.results.map((x) => [String(x.year), String(x.companies), String(x.selected), x.change_pct === null ? '-' : `${x.change_pct > 0 ? '+' : ''}${x.change_pct}%`])
     );
     for (const x of r.results.slice(0, 3)) {
       y -= 6;
@@ -243,7 +247,7 @@ export async function renderCollegeReportPdf(r: CollegeReport): Promise<Uint8Arr
       y -= 15;
       table([{ label: 'Company', w: 0.7 }, { label: 'Selected', w: 0.3, right: true }], x.detail.map((d) => [d.company, d.selected === null ? 'not recorded' : String(d.selected)]));
     }
-    para('Results as recorded by the college placement cell in TieEdu.', 8.5);
+    para('Results as recorded by the college placement cell in TieEdu. Change compares students selected with the previous year that has recorded numbers; companies with no number recorded are not counted.', 8.5);
   }
 
   // Footer on every page

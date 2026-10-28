@@ -19,6 +19,7 @@ import { placementCan } from '../placement/permissions';
 import { collegeNudgeList, draftNudge, NudgeError, rejectNudge, sendNow, withdrawNudge, type Actor } from '../lib/collegeNudges';
 import { sendPushToUser } from '../lib/push';
 import { buildCollegeReport, parsePeriod, renderCollegeReportPdf } from '../lib/collegeReport';
+import { yearOnYear } from '../lib/yearOnYear';
 
 export const placementRouter = Router();
 
@@ -415,6 +416,12 @@ const intelError = (res: Response, err: any) => {
 
 placementRouter.get('/campus-intel', requirePlacementAuth, requirePlacementScope('placement.dashboard.read'), (req: Request, res: Response) => {
   res.json(tpoIntel(loadDb(), req.placement!.collegeId!));
+});
+
+// Year-on-year placement results (lib/yearOnYear), from the history above.
+placementRouter.get('/year-on-year', requirePlacementAuth, requirePlacementScope('placement.dashboard.read'), (req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'private, no-store');
+  res.json(yearOnYear(loadDb(), req.placement!.collegeId!));
 });
 
 placementRouter.put('/campus-history', requirePlacementAuth, requirePlacementScope('placement.settings.write'), (req: Request, res: Response) => {

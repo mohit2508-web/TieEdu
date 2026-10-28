@@ -15,6 +15,7 @@ import {
   saveCampusHistory,
 } from '@/lib/placementApi';
 import { cn } from '@/lib/cn';
+import { YearOnYearCard } from '@/components/tpo/YearOnYearCard';
 
 /**
  * Campus intel (D1 + D2) for the placement officer: record past placement
@@ -66,6 +67,7 @@ const IntelBody: React.FC = () => {
   const field = 'mt-1 min-h-[44px] w-full rounded-xl border border-line bg-card px-3 text-base text-heading';
   return (
     <div className="space-y-6">
+      <YearOnYearCard refresh={data.history} />
       <Card pad="lg">
         <h2 className="font-display text-lg font-bold text-heading">Placement history</h2>
         <p className="mt-1 text-sm text-muted">Students of your college see this on each company’s page. Saving the same company and year again updates it.</p>
