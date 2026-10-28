@@ -47,6 +47,7 @@ import driveBridgeRouter from './routes/bridge.routes';
 import { drivesRouter, studentProfileRouter } from './routes/drives.routes';
 import { meRouter, parentRouter, passportRouter } from './routes/me.routes';
 import { startWeeklyRecapScheduler } from './lib/recapPush';
+import { startParentWhatsappScheduler } from './lib/parentWhatsappScheduler';
 import { collegesRouter, collegesAdminRouter } from './routes/colleges.routes';
 import { campusPagesRouter } from './routes/campusPages.routes';
 import driveAdminRouter from './routes/driveAdmin.routes';
@@ -384,6 +385,7 @@ export const httpServer = app.listen(PORT, async () => {
   console.log(`⚡ [TieEdu Backend API] Server running on http://localhost:${PORT}`);
   // Off unless WEEKLY_RECAP_PUSH=1 (lib/recapPush): dev shares real push subscriptions.
   startWeeklyRecapScheduler();
+  startParentWhatsappScheduler();
   if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
     console.warn('🔐 [Auth] JWT_SECRET env missing in production — auth is FAIL-CLOSED. Set JWT_SECRET (32+ chars) now.');
   }

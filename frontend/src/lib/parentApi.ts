@@ -36,3 +36,16 @@ export async function fetchParentView(token: string, base: string): Promise<Pare
     return null;
   }
 }
+
+/** Weekly WhatsApp updates (backend lib/parentWhatsapp). */
+export interface ParentWaStatus { allowed: boolean; subscribed: { phone: string; lang: 'hi' | 'en'; since: string } | null; sending: boolean }
+export interface StudentWaStatus { allowed: boolean; subscribed: { phone: string; lang: 'hi' | 'en'; since: string; last_week: string | null } | null }
+
+export const getStudentWhatsapp = () => call<StudentWaStatus>('/me/parent-whatsapp');
+export const setStudentWhatsapp = (allowed: boolean) => call<StudentWaStatus>('/me/parent-whatsapp', { method: 'PUT', body: JSON.stringify({ allowed }) });
+
+const wa = (token: string) => `/parent/${encodeURIComponent(token)}/whatsapp`;
+export const getParentWhatsapp = (token: string) => call<ParentWaStatus>(wa(token));
+export const subscribeParentWhatsapp = (token: string, input: { phone: string; lang: 'hi' | 'en'; consent: boolean }) =>
+  call<ParentWaStatus>(wa(token), { method: 'POST', body: JSON.stringify(input) });
+export const stopParentWhatsapp = (token: string) => call<ParentWaStatus>(wa(token), { method: 'DELETE' });

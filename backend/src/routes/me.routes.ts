@@ -7,6 +7,7 @@ import { playerCollegeIds, isConnectionFailure } from '../lib/bridge/core';
 import { createDebrief, debriefView, deleteDebrief, myDebriefs, DebriefError, DEBRIEF_REASONS, REASON_LABEL, ROUNDS } from '../lib/debrief';
 import { buildPassport, handleError, passportOf, suggestHandle } from '../lib/passport';
 import { buildParentView, newParentToken } from '../lib/parentView';
+import { endOnLinkChange, ParentWaError, parentWaStatus, setStudentAllowed, studentWaStatus, subscribeParent, unsubscribeParent } from '../lib/parentWhatsapp';
 import { rateLimit } from '../middleware/auth';
 
 /**
@@ -199,6 +200,8 @@ meRouter.post('/parent-link', (req: Request, res: Response) => {
   const user = (db.users || []).find((u: any) => u.id === req.user!.id);
   if (!user) return res.status(404).json({ error: 'Account not found.' });
   user.parent_link = { token: newParentToken(), created_at: new Date().toISOString() };
+  // The old link's WhatsApp subscriber stops with it.
+  endOnLinkChange(user);
   saveDb(db);
   res.status(201).json({ link: user.parent_link });
 });
@@ -208,8 +211,31 @@ meRouter.delete('/parent-link', (req: Request, res: Response) => {
   const user = (db.users || []).find((u: any) => u.id === req.user!.id);
   if (!user) return res.status(404).json({ error: 'Account not found.' });
   user.parent_link = null;
+  endOnLinkChange(user);
   saveDb(db);
   res.json({ link: null });
+});
+
+/**
+ * Weekly parent WhatsApp updates (lib/parentWhatsapp): the student's switch.
+ *   GET /api/me/parent-whatsapp   { allowed, subscribed }
+ *   PUT /api/me/parent-whatsapp   { allowed } — off also ends any subscription
+ */
+meRouter.get('/parent-whatsapp', (req: Request, res: Response) => {
+  const user = (loadDb().users || []).find((u: any) => u.id === req.user!.id);
+  if (!user) return res.status(404).json({ error: 'Account not found.' });
+  res.setHeader('Cache-Control', 'private, no-store');
+  res.json(studentWaStatus(user));
+});
+
+meRouter.put('/parent-whatsapp', (req: Request, res: Response) => {
+  if (typeof req.body?.allowed !== 'boolean') return res.status(400).json({ error: 'Say whether updates are allowed.' });
+  const db = loadDb();
+  const user = (db.users || []).find((u: any) => u.id === req.user!.id);
+  if (!user) return res.status(404).json({ error: 'Account not found.' });
+  setStudentAllowed(user, req.body.allowed);
+  saveDb(db);
+  res.json(studentWaStatus(user));
 });
 
 /** Public, no auth: GET /api/parent/:token. The token is the capability. */
@@ -222,4 +248,39 @@ parentRouter.get('/:token', rateLimit(30), (req: Request, res: Response) => {
   if (!user) return res.status(404).json({ error: 'This link is not active.' });
   res.setHeader('Cache-Control', 'private, no-store');
   res.json(buildParentView(db, user));
+});
+
+/**
+ * The parent's side of WhatsApp updates, on the same capability token.
+ *   GET    /api/parent/:token/whatsapp   status (masked number only)
+ *   POST   /api/parent/:token/whatsapp   { phone, lang, consent: true }
+ *   DELETE /api/parent/:token/whatsapp   stop
+ */
+const parentWa = (res: Response, fn: () => unknown, status = 200) => {
+  try {
+    res.setHeader('Cache-Control', 'private, no-store');
+    res.status(status).json(fn());
+  } catch (err: any) {
+    if (err instanceof ParentWaError) return res.status(err.status).json({ error: err.message });
+    throw err;
+  }
+};
+parentRouter.get('/:token/whatsapp', rateLimit(30), (req: Request, res: Response) => {
+  parentWa(res, () => parentWaStatus(loadDb(), String(req.params.token || '')));
+});
+parentRouter.post('/:token/whatsapp', rateLimit(5), (req: Request, res: Response) => {
+  const db = loadDb();
+  parentWa(res, () => {
+    const out = subscribeParent(db, String(req.params.token || ''), req.body);
+    saveDb(db);
+    return out;
+  }, 201);
+});
+parentRouter.delete('/:token/whatsapp', rateLimit(10), (req: Request, res: Response) => {
+  const db = loadDb();
+  parentWa(res, () => {
+    const out = unsubscribeParent(db, String(req.params.token || ''));
+    saveDb(db);
+    return out;
+  });
 });

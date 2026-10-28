@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Copy, HeartHandshake, RefreshCw, X } from 'lucide-react';
 import { Button, Card } from '@/components/ui';
-import { createParentLink, deleteParentLink, getParentLink, ParentLink } from '@/lib/parentApi';
+import { createParentLink, deleteParentLink, getParentLink, getStudentWhatsapp, ParentLink, setStudentWhatsapp, type StudentWaStatus } from '@/lib/parentApi';
 
 /**
  * "Share with a parent" (UI_REDESIGN_PLAN_V2 §8). The student decides: a
@@ -13,12 +13,14 @@ export const ParentLinkCard: React.FC<{ ready: boolean }> = ({ ready }) => {
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [wa, setWa] = useState<StudentWaStatus | null>(null);
 
   useEffect(() => {
     if (!ready) return;
     getParentLink()
       .then((r) => setLink(r.link))
       .catch(() => setError('Could not load your parent link.'));
+    getStudentWhatsapp().then(setWa).catch(() => { /* the switch stays hidden */ });
   }, [ready]);
 
   if (link === undefined) return error ? <Card><p className="text-sm text-danger">{error}</p></Card> : null;
@@ -29,6 +31,8 @@ export const ParentLinkCard: React.FC<{ ready: boolean }> = ({ ready }) => {
     setError(null);
     try {
       setLink((await op()).link);
+      // A new or removed link ends any WhatsApp subscription made through the old one.
+      getStudentWhatsapp().then(setWa).catch(() => {});
     } catch (e: any) {
       setError(e?.message || 'Something went wrong. Try again.');
     } finally {
@@ -81,6 +85,28 @@ export const ParentLinkCard: React.FC<{ ready: boolean }> = ({ ready }) => {
                 </Button>
               </div>
               <p className="mt-2 text-xs text-muted">A new link stops the old one from working.</p>
+              {wa && (
+                <div className="mt-4 rounded-xl border border-line p-3">
+                  <label className="flex items-start gap-2 text-sm text-body">
+                    <input
+                      type="checkbox"
+                      checked={wa.allowed}
+                      disabled={busy}
+                      onChange={async (e) => {
+                        try { setWa(await setStudentWhatsapp(e.target.checked)); } catch { setError('Could not change WhatsApp updates. Try again.'); }
+                      }}
+                      className="mt-0.5 h-4 w-4 accent-signal"
+                    />
+                    <span>
+                      <span className="font-semibold text-heading">Let my parent get a weekly WhatsApp update</span>
+                      <span className="block text-xs text-muted">A short Sunday message in Hindi or English with the same numbers as this page. Your parent signs up on the page with their own number, and either of you can stop it.</span>
+                    </span>
+                  </label>
+                  {wa.subscribed && (
+                    <p className="mt-2 text-xs text-success">Signed up: {wa.subscribed.phone}, in {wa.subscribed.lang === 'hi' ? 'Hindi' : 'English'}.</p>
+                  )}
+                </div>
+              )}
             </>
           ) : (
             <Button disabled={busy} onClick={() => run(createParentLink)}>

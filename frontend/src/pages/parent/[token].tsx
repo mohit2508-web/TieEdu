@@ -7,6 +7,7 @@ import { Footer } from '@/components/layout/Footer';
 import { Card, ProgressRing, SectionHead } from '@/components/ui';
 import { serverApiBase } from '@/lib/companyPagesApi';
 import { fetchParentView, ParentView } from '@/lib/parentApi';
+import { ParentWhatsappBox } from '@/components/parent/ParentWhatsappBox';
 
 /**
  * /parent/<token> — the read-only page a student shares with a parent
@@ -15,18 +16,20 @@ import { fetchParentView, ParentView } from '@/lib/parentApi';
  * shared caches, and gone the moment the student turns the link off.
  */
 
-export const getServerSideProps: GetServerSideProps<{ view: ParentView }> = async ({ params, res }) => {
-  const view = await fetchParentView(String(params?.token || ''), serverApiBase());
+export const getServerSideProps: GetServerSideProps<{ view: ParentView; token: string; stop: boolean }> = async ({ params, query, res }) => {
+  const token = String(params?.token || '');
+  const view = await fetchParentView(token, serverApiBase());
   if (!view) return { notFound: true };
   res.setHeader('Cache-Control', 'private, no-store');
-  return { props: { view } };
+  // ?stop=1 is the stop link in each WhatsApp message.
+  return { props: { view, token, stop: query.stop === '1' } };
 };
 
 const dayMonth = new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', timeZone: 'UTC' });
 const weekLabel = (w: ParentView['weeks'][number], i: number, n: number) =>
   i === n - 1 ? 'This week' : `${dayMonth.format(new Date(`${w.from}T00:00:00Z`))} – ${dayMonth.format(new Date(`${w.to}T00:00:00Z`))}`;
 
-export default function ParentPage({ view: v }: { view: ParentView }) {
+export default function ParentPage({ view: v, token, stop }: { view: ParentView; token: string; stop: boolean }) {
   const max = Math.max(1, ...v.weeks.map((w) => w.lessons + w.tests));
   return (
     <>
@@ -45,6 +48,8 @@ export default function ParentPage({ view: v }: { view: ParentView }) {
               {v.year ? `${v.year}. ` : ''}This page shows effort and results on TieEdu. {v.first_name} can turn it off at any time.
             </p>
           </header>
+
+          {stop && <ParentWhatsappBox token={token} name={v.first_name} stop />}
 
           <section aria-labelledby="weeks-title">
             <SectionHead id="weeks-title" title="The last four weeks" description="Lessons finished and skill tests taken, week by week." />
@@ -117,6 +122,8 @@ export default function ParentPage({ view: v }: { view: ParentView }) {
               </ul>
             </section>
           )}
+
+          {!stop && <ParentWhatsappBox token={token} name={v.first_name} stop={false} />}
         </main>
         <Footer />
       </div>

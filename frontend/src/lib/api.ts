@@ -966,6 +966,8 @@ export interface PlatformSettings {
   /** English coach (backend lib/englishCoach). Off unless switched on. */
   ai_english_coach_enabled?: boolean;
   ai_english_coach_daily_limit?: number;
+  /** Weekly parent WhatsApp (backend lib/parentWhatsapp). Off unless switched on. */
+  parent_whatsapp_enabled?: boolean;
 }
 
 export interface AnalyticsSnapshot {
@@ -1005,6 +1007,9 @@ export const setUserDisabledApi = async (userId: string, disabled: boolean) =>
 export const fetchAdminSettingsApi = async () => adminFetch('/admin/settings');
 
 export const fetchAdminAuditApi = async () => adminFetch('/admin/audit');
+
+/** Weekly parent WhatsApp: status, template text and a redacted preview (backend lib/parentWhatsapp). */
+export const fetchParentWhatsappAdminApi = async () => adminFetch('/admin/parent-whatsapp');
 
 export const updateAdminSettingsApi = async (settings: Partial<PlatformSettings>) =>
   adminFetch('/admin/settings', { method: 'PUT', body: JSON.stringify(settings) });

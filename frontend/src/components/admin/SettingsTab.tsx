@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { fetchAdminSettingsApi, updateAdminSettingsApi, fetchAnalyticsApi, fetchAdminAuditApi, changePasswordApi, PlatformSettings, AnalyticsSnapshot } from '@/lib/api';
+import { fetchAdminSettingsApi, updateAdminSettingsApi, fetchAnalyticsApi, fetchAdminAuditApi, fetchParentWhatsappAdminApi, changePasswordApi, PlatformSettings, AnalyticsSnapshot } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
-import { Database, KeyRound, LogOut, MessageSquareText, Save, Settings2, QrCode, ShieldCheck, Upload } from 'lucide-react';
+import { Database, KeyRound, LogOut, MessageCircle, MessageSquareText, Save, Settings2, QrCode, ShieldCheck, Upload } from 'lucide-react';
 
 const inputCls = "w-full sm:w-auto px-3 py-2 border border-gray-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-signal/30 min-w-[220px]";
 
@@ -24,6 +24,7 @@ export const SettingsTab: React.FC = () => {
   const [saved, setSaved] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
   const [aiKey, setAiKey] = useState(false);
+  const [pwa, setPwa] = useState<any>(null);
 
   const [curPw, setCurPw] = useState('');
   const [newPw, setNewPw] = useState('');
@@ -39,6 +40,7 @@ export const SettingsTab: React.FC = () => {
         setSettings(s.settings);
         setForm({ ...emptySettings, ...s.settings });
         setAiKey(!!s.ai_key_configured);
+        fetchParentWhatsappAdminApi().then((r) => { if (active) setPwa(r); }).catch(() => { /* card shows without status */ });
         setAnalytics(a);
         setAudit(au);
       } catch {
@@ -289,6 +291,56 @@ export const SettingsTab: React.FC = () => {
             <div className="flex items-center gap-3 pt-1">
               <button onClick={save} disabled={busy} className="btn btn-primary px-4 py-2 text-xs flex items-center gap-1.5">
                 <Save className="w-3.5 h-3.5" /> {busy ? 'Saving…' : 'Save AI settings'}
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-xs space-y-4">
+            <h3 className="text-sm font-extrabold text-ink-soft flex items-center gap-2">
+              <MessageCircle className="w-4 h-4 text-success" /> Parent WhatsApp updates
+            </h3>
+            <p className="text-xs text-gray-500">
+              A Sunday message to parents who signed up on their child’s parent page, after the student allowed it. It needs a
+              WhatsApp Business account: set WHATSAPP_TOKEN, WHATSAPP_PHONE_NUMBER_ID and WHATSAPP_TEMPLATE on the backend, and get the
+              template below approved by Meta in Hindi and English. Each message is billed by Meta.
+            </p>
+            {pwa && (
+              <ul className="text-xs text-ink-soft space-y-1">
+                <li className={pwa.configured ? 'text-emerald-600 font-semibold' : 'text-amber-deep font-semibold'}>
+                  {pwa.configured ? 'Provider: configured.' : 'Provider: not configured, so nothing can be sent.'}
+                </li>
+                <li>Parents signed up: {pwa.subscribers} ({pwa.by_lang.hi} Hindi, {pwa.by_lang.en} English)</li>
+                <li>This week ({pwa.this_week.week}): {pwa.this_week.sent} sent, {pwa.this_week.failed} failed</li>
+                {pwa.recent_errors.length > 0 && <li className="text-red-600">Last error: {pwa.recent_errors[pwa.recent_errors.length - 1].error}</li>}
+              </ul>
+            )}
+            <label className="flex items-center gap-2 text-sm font-semibold text-ink-soft">
+              <input
+                type="checkbox"
+                checked={!!form.parent_whatsapp_enabled}
+                onChange={(e) => setForm({ ...form, parent_whatsapp_enabled: e.target.checked })}
+                className="h-4 w-4 accent-signal"
+              />
+              Send weekly messages (Sundays from 10:00 IST)
+            </label>
+            {pwa && (
+              <details className="text-xs text-ink-soft">
+                <summary className="cursor-pointer font-bold">Template text to submit for approval</summary>
+                <p className="mt-2 font-semibold">Hindi (hi)</p>
+                <p className="mt-1 whitespace-pre-wrap rounded-xl bg-gray-50 p-2">{pwa.templates.hi}</p>
+                <p className="mt-2 font-semibold">English (en)</p>
+                <p className="mt-1 whitespace-pre-wrap rounded-xl bg-gray-50 p-2">{pwa.templates.en}</p>
+                {pwa.preview.length > 0 && (
+                  <>
+                    <p className="mt-3 font-semibold">This week’s messages would read (numbers and links hidden):</p>
+                    {pwa.preview.map((m: any, i: number) => <p key={i} className="mt-1 rounded-xl bg-gray-50 p-2">{m.text}</p>)}
+                  </>
+                )}
+              </details>
+            )}
+            <div className="flex items-center gap-3 pt-1">
+              <button onClick={save} disabled={busy} className="btn btn-primary px-4 py-2 text-xs flex items-center gap-1.5">
+                <Save className="w-3.5 h-3.5" /> {busy ? 'Saving…' : 'Save WhatsApp settings'}
               </button>
             </div>
           </div>

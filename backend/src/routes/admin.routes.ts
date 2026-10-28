@@ -11,6 +11,9 @@ import { autoDropTemplate } from '../lib/drops';
 import { requirePermission } from '../middleware/auth';
 import { normaliseCouponExpiry, normaliseCouponScope } from '../lib/coupons';
 import { applyAiSettings } from '../lib/ai';
+import { adminSummary } from '../lib/parentWhatsapp';
+import { whatsappConfigured } from '../lib/whatsapp';
+import { siteUrl } from '../lib/parentWhatsappScheduler';
 
 export const adminRouter = Router();
 
@@ -1063,6 +1066,7 @@ adminRouter.get('/settings', requirePermission('settings.read'), (req: Request, 
     ai_mock_interview_daily_limit: 10,
     ai_english_coach_enabled: false,
     ai_english_coach_daily_limit: 10,
+    parent_whatsapp_enabled: false,
   };
   // Whether the server has a key is shown, never the key itself.
   res.json({ status: 'success', settings: { ...defaults, ...(db.settings || {}) }, ai_key_configured: !!process.env.ANTHROPIC_API_KEY });
@@ -1088,9 +1092,17 @@ adminRouter.put('/settings', requirePermission('settings.write'), (req: Request,
   // AI features (lib/ai): off by default, because every graded answer costs money.
   applyAiSettings(next, req.body, 'mock_interview');
   applyAiSettings(next, req.body, 'english_coach');
+  // Parent WhatsApp (lib/parentWhatsapp): off by default; it messages people outside the platform.
+  if (typeof req.body.parent_whatsapp_enabled === 'boolean') next.parent_whatsapp_enabled = req.body.parent_whatsapp_enabled;
   db.settings = next;
   saveDb(db);
   res.json({ status: 'success', message: 'Settings saved', settings: next });
+});
+
+// GET /api/admin/parent-whatsapp — subscribers, this week's run, template text and a redacted preview
+adminRouter.get('/parent-whatsapp', requirePermission('settings.read'), (req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'private, no-store');
+  res.json(adminSummary(loadDb(), siteUrl() || 'https://example.invalid', whatsappConfigured()));
 });
 
 // GET /api/admin/audit — Recent platform audit events (order lifecycle transparency)
