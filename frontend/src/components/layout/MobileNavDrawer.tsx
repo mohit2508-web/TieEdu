@@ -20,6 +20,8 @@ import { useCart } from '@/context/CartContext';
 import { PWAInstallButton } from '@/components/common/PWAInstallButton';
 import { formatBadgeCount } from '@/lib/notifications';
 import { cn } from '@/lib/cn';
+import { useLang } from '@/lib/lang';
+import { navDescription, navLabel, sectionLabel } from '@/lib/navHinglish';
 
 /**
  * The mobile drawer.
@@ -38,6 +40,7 @@ export const MobileNavDrawer: React.FC = () => {
   const router = useRouter();
   const { isOpen, closeOverlay, toggleOverlay } = useShell();
   const { user, logout } = useAuth();
+  const [lang] = useLang();
   const { count, hydrated } = useCart();
   const open = isOpen('drawer');
 
@@ -68,10 +71,10 @@ export const MobileNavDrawer: React.FC = () => {
         </span>
         <span className="min-w-0 flex-1">
           <span className="nav-row-label flex items-center gap-2">
-            {item.label}
+            {navLabel(lang, item.id, item.label)}
             {item.badge === 'free' && <span className="nav-link-badge">Free</span>}
           </span>
-          <span className="nav-row-desc block">{item.description}</span>
+          <span className="nav-row-desc block">{navDescription(lang, item.id, item.description)}</span>
         </span>
         <ChevronRight size={16} className="flex-none opacity-40" aria-hidden />
       </Link>
@@ -122,7 +125,7 @@ export const MobileNavDrawer: React.FC = () => {
         <div className="flex-1 overflow-y-auto overscroll-contain px-3 py-4">
           {groups.map((group) => (
             <section key={group.id} className="mb-5">
-              <h2 className="nav-group-label">{group.label}</h2>
+              <h2 className="nav-group-label">{sectionLabel(lang, group.id, group.label)}</h2>
               <div className="flex flex-col gap-0.5">
                 {group.items.map((item) => (
                   <Row key={item.id} item={item} />
@@ -181,7 +184,7 @@ export const MobileNavDrawer: React.FC = () => {
           </section>
 
           <section>
-            <h2 className="nav-group-label">Account</h2>
+            <h2 className="nav-group-label">{sectionLabel(lang, 'account', 'Account')}</h2>
             <div className="flex flex-col gap-0.5">
               {signedIn && (
                 <Row item={NAV_ITEMS.account} />

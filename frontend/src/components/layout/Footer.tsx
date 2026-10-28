@@ -6,6 +6,9 @@ import { useAuth } from '@/context/AuthContext';
 import { ALL_NAV_ITEMS, type NavItem } from '@/lib/navConfig';
 import { SOCIAL_LINKS } from '@/lib/socialLinks';
 import { ThemeSwitch } from '@/components/common/ThemeSwitch';
+import { LangSwitch } from '@/components/common/LangSwitch';
+import { useLang } from '@/lib/lang';
+import { navLabel } from '@/lib/navHinglish';
 
 /**
  * Footer order, and the only two destinations it leaves out.
@@ -19,6 +22,7 @@ const FOOTER_EXCLUDED = new Set(['campus']);
 const FOOTER_ITEMS: NavItem[] = ALL_NAV_ITEMS.filter((item) => !FOOTER_EXCLUDED.has(item.id));
 
 export const Footer: React.FC = () => {
+  const [lang] = useLang();
   return (
     <footer className="bg-white border-t border-line mt-16 pt-12 pb-8">
       <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12">
@@ -89,7 +93,7 @@ export const Footer: React.FC = () => {
                 href={item.href}
                 className="inline-flex min-h-[40px] items-center transition-colors hover:text-[var(--brand-sky)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand-sky)]"
               >
-                {item.label}
+                {navLabel(lang, item.id, item.label)}
               </Link>
             ))}
             {/* Colleges get their own door, outside the student nav (§5). */}
@@ -100,7 +104,10 @@ export const Footer: React.FC = () => {
               For colleges
             </Link>
           </div>
-          <ThemeSwitch />
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <ThemeSwitch />
+            <LangSwitch />
+          </div>
           <div className="flex items-center gap-1">
             <span>Built for placement season with</span>
             <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500" />

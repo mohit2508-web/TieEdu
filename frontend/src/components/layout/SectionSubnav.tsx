@@ -6,6 +6,8 @@ import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
 import { NAV_ITEMS, isNavActive, isRootDepth, resolveSection } from '@/lib/navConfig';
 import { cn } from '@/lib/cn';
+import { useLang } from '@/lib/lang';
+import { navLabel } from '@/lib/navHinglish';
 
 /**
  * The sub-tabs of the current section (UI_REDESIGN_PLAN_V2 §5) — "Courses ·
@@ -27,6 +29,7 @@ const PERSONAL = new Set(['myCourses', 'myCertificates', 'calendar']);
 export const SectionSubnav: React.FC = () => {
   const router = useRouter();
   const { user } = useAuth();
+  const [lang] = useLang();
   const section = resolveSection(router.pathname);
   if (!section || !isRootDepth(router.pathname)) return null;
 
@@ -50,7 +53,7 @@ export const SectionSubnav: React.FC = () => {
                 active ? 'text-heading' : 'text-muted hover:text-heading'
               )}
             >
-              {item.label}
+              {navLabel(lang, item.id, item.label)}
               {item.badge === 'free' && <span className="nav-link-badge">Free</span>}
               {active && <span aria-hidden className="absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-signal" />}
             </Link>

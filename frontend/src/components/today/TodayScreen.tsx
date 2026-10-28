@@ -8,6 +8,7 @@ import { cn } from '@/lib/cn';
 import { PassportCard } from './PassportCard';
 import { ParentLinkCard } from './ParentLinkCard';
 import { CollegeNudgesCard } from './CollegeNudgesCard';
+import { useLang, type Lang } from '@/lib/lang';
 
 /**
  * Today — the signed-in home (UI_REDESIGN_PLAN_V2 §6.1).
@@ -19,9 +20,47 @@ import { CollegeNudgesCard } from './CollegeNudgesCard';
  * account sees a short, honest page instead of a dashboard of zeros.
  */
 
-const greeting = () => {
+/**
+ * Today's own words in English and Hinglish (lib/lang). Text that comes from
+ * the server (the next step, route stations) stays as the server wrote it.
+ */
+const COPY = {
+  en: {
+    morning: 'Good morning', afternoon: 'Good afternoon', evening: 'Good evening',
+    route: 'Your route', next: 'Next step', week: 'This week', inARow: (n: number): string => (n === 1 ? 'day in a row' : 'days in a row'),
+    frozen: 'You missed yesterday. Study today and this week’s freeze covers it.',
+    countedToday: 'Today counts. Finish a lesson or a test tomorrow to keep it going.',
+    freezeLeft: 'Finish a lesson or a test today. One missed day a week is covered.',
+    freezeUsed: 'This week’s freeze is used, so today counts.',
+    best: (n: number) => ` Best: ${n} days.`,
+    lessons: 'Lessons', tests: 'Tests', test: (c: string) => `${c} test`, today: 'Today', days: (n: number) => `${n} day${n === 1 ? '' : 's'}`,
+    planNext: 'See your plan to the next test', addDate: 'Add a company test date', debrief: 'Had a rejection? Debrief it',
+    cont: 'Continue', resume: 'Resume lesson', backTest: 'Back to the test',
+    last7: 'Last 7 days', lessonsDone: (n: number) => `${n} lesson${n === 1 ? '' : 's'} finished`, testsDone: (n: number) => `${n} skill test${n === 1 ? '' : 's'} taken`, certsDone: (n: number) => `${n} certificate${n === 1 ? '' : 's'} earned`,
+    companies: 'Your companies', noScore: 'Take a round’s skill test to get a score', cleared: (a: number, b: number) => `${a} of ${b} rounds cleared`,
+    start: 'Start somewhere', learn: 'Learn', learnNote: 'Courses, free to start', practise: 'Practise', practiseNote: 'Free skill tests', comp: 'Companies', compNote: 'Round-by-round prep',
+  },
+  hi: {
+    morning: 'Namaste', afternoon: 'Namaste', evening: 'Namaste',
+    route: 'Aapka raasta', next: 'Agla step', week: 'Is hafte', inARow: (_n: number) => 'din lagatar',
+    frozen: 'Kal miss ho gaya. Aaj padh lo, is hafte ka freeze use cover kar lega.',
+    countedToday: 'Aaj ka din gin liya. Kal ek lesson ya test karke streak chalu rakho.',
+    freezeLeft: 'Aaj ek lesson ya test poora karo. Hafte mein ek din miss ho jaaye to chalega.',
+    freezeUsed: 'Is hafte ka freeze use ho chuka, isliye aaj zaroor karo.',
+    best: (n: number) => ` Sabse lamba: ${n} din.`,
+    lessons: 'Lessons', tests: 'Tests', test: (c: string) => `${c} ka test`, today: 'Aaj', days: (n: number) => `${n} din`,
+    planNext: 'Agle test tak ka plan dekho', addDate: 'Company ke test ki date daalo', debrief: 'Rejection mila? Debrief karo',
+    cont: 'Jahan chhoda tha', resume: 'Lesson continue karo', backTest: 'Test pe wapas jao',
+    last7: 'Pichhle 7 din', lessonsDone: (n: number) => `${n} lesson poore kiye`, testsDone: (n: number) => `${n} skill test diye`, certsDone: (n: number) => `${n} certificate mile`,
+    companies: 'Aapki companies', noScore: 'Score ke liye kisi round ka skill test do', cleared: (a: number, b: number) => `${b} mein se ${a} rounds clear`,
+    start: 'Kahin se shuru karo', learn: 'Seekho', learnNote: 'Courses, shuru karna free', practise: 'Practice', practiseNote: 'Free skill tests', comp: 'Companies', compNote: 'Round-by-round tayari',
+  },
+};
+type Copy = (typeof COPY)['en'];
+
+const greeting = (c: Copy) => {
   const h = Number(new Intl.DateTimeFormat('en-IN', { hour: 'numeric', hour12: false, timeZone: 'Asia/Kolkata' }).format(new Date()));
-  return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  return h < 12 ? c.morning : h < 17 ? c.afternoon : c.evening;
 };
 
 const longDate = new Intl.DateTimeFormat('en-IN', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Asia/Kolkata' });
@@ -73,12 +112,12 @@ const YearPicker: React.FC<{ onSaved: (t: TodayView) => void }> = ({ onSaved }) 
   );
 };
 
-const StreakWeek: React.FC<{ streak: TodayView['this_week']['streak'] }> = ({ streak }) => (
+const StreakWeek: React.FC<{ streak: TodayView['this_week']['streak']; c: Copy }> = ({ streak, c }) => (
   <div>
     <div className="flex items-end gap-3">
       <Flame className={cn('h-8 w-8', streak.current > 0 ? 'text-signal' : 'text-muted')} aria-hidden />
       <p className="font-display text-4xl font-bold leading-none tabular-nums text-heading">{streak.current}</p>
-      <p className="pb-1 text-sm text-muted">day{streak.current === 1 ? '' : 's'} in a row</p>
+      <p className="pb-1 text-sm text-muted">{c.inARow(streak.current)}</p>
     </div>
     <ol className="mt-4 grid grid-cols-7 gap-1.5" aria-label="Last seven days">
       {streak.week.map((d) => (
@@ -103,14 +142,8 @@ const StreakWeek: React.FC<{ streak: TodayView['this_week']['streak'] }> = ({ st
       ))}
     </ol>
     <p className="mt-3 text-sm text-muted">
-      {streak.protected_by_freeze
-        ? 'You missed yesterday. Study today and this week’s freeze covers it.'
-        : streak.practised_today
-          ? 'Today counts. Finish a lesson or a test tomorrow to keep it going.'
-          : streak.freeze_available_this_week
-            ? 'Finish a lesson or a test today. One missed day a week is covered.'
-            : 'This week’s freeze is used, so today counts.'}
-      {streak.best > streak.current && streak.best > 1 && ` Best: ${streak.best} days.`}
+      {streak.protected_by_freeze ? c.frozen : streak.practised_today ? c.countedToday : streak.freeze_available_this_week ? c.freezeLeft : c.freezeUsed}
+      {streak.best > streak.current && streak.best > 1 && c.best(streak.best)}
     </p>
   </div>
 );
@@ -122,6 +155,8 @@ const StreakWeek: React.FC<{ streak: TodayView['this_week']['streak'] }> = ({ st
 export const TodayScreen: React.FC<{ ready: boolean }> = ({ ready }) => {
   const [data, setData] = useState<TodayView | null>(null);
   const [failed, setFailed] = useState(false);
+  const [lang] = useLang();
+  const c: Copy = COPY[lang as Lang];
 
   const load = useCallback(() => {
     setFailed(false);
@@ -164,20 +199,20 @@ export const TodayScreen: React.FC<{ ready: boolean }> = ({ ready }) => {
       <header>
         <p className="text-sm text-muted">{longDate.format(new Date())}</p>
         <h1 className="mt-1 font-display text-3xl font-bold tracking-tight text-heading sm:text-4xl">
-          {greeting()}, {data.first_name}.
+          {greeting(c)}, {data.first_name}.
         </h1>
       </header>
 
       {/* The route: where you are, then the one thing to do next. */}
       <Card variant="ink" pad="lg" className="mt-6">
-        <p className="eyebrow text-money">Your route</p>
+        <p className="eyebrow text-money">{c.route}</p>
         <RouteLine
           onInk
           className="mt-5"
           stations={data.route.map((s) => ({ label: s.label, note: s.note || undefined, state: s.state }))}
         />
         <div className="mt-8 rounded-[14px] bg-white/[0.06] p-5 ring-1 ring-inset ring-white/10 sm:p-6">
-          <p className="eyebrow text-white/70">Next step</p>
+          <p className="eyebrow text-white/70">{c.next}</p>
           <h2 className="mt-2 font-display text-xl font-bold text-white sm:text-2xl">{step.title}</h2>
           <p className="mt-1.5 max-w-2xl text-base text-white/80">{step.body}</p>
           {step.kind === 'set_year' ? (
@@ -201,15 +236,15 @@ export const TodayScreen: React.FC<{ ready: boolean }> = ({ ready }) => {
       <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* This week */}
         <Card className="lg:row-span-2">
-          <h2 className="font-display text-lg font-bold text-heading">This week</h2>
+          <h2 className="font-display text-lg font-bold text-heading">{c.week}</h2>
           <div className="mt-4">
-            <StreakWeek streak={week.streak} />
+            <StreakWeek streak={week.streak} c={c} />
           </div>
           {hasWeekNumbers && (
             <dl className="mt-5 grid grid-cols-3 gap-2 border-t border-line pt-4 text-center">
               {[
-                ['Lessons', week.lessons],
-                ['Tests', week.tests],
+                [c.lessons, week.lessons],
+                [c.tests, week.tests],
                 ['XP', week.xp],
               ].map(([label, n]) => (
                 <div key={label as string}>
@@ -226,11 +261,11 @@ export const TodayScreen: React.FC<{ ready: boolean }> = ({ ready }) => {
                   <Link href={`/company/${t.slug}`} className="group flex items-center gap-3 rounded-lg py-1">
                     <CalendarClock className="h-5 w-5 shrink-0 text-signal" aria-hidden />
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-semibold text-heading group-hover:text-signal">{t.company} test</span>
+                      <span className="block truncate text-sm font-semibold text-heading group-hover:text-signal">{c.test(t.company)}</span>
                       <span className="block text-xs text-muted">{shortDate.format(new Date(`${t.date}T00:00:00Z`))}</span>
                     </span>
                     <span className="text-sm font-bold tabular-nums text-heading">
-                      {t.days_left === 0 ? 'Today' : `${t.days_left} day${t.days_left === 1 ? '' : 's'}`}
+                      {t.days_left === 0 ? c.today : c.days(t.days_left)}
                     </span>
                   </Link>
                 </li>
@@ -239,18 +274,18 @@ export const TodayScreen: React.FC<{ ready: boolean }> = ({ ready }) => {
           )}
           {/* The calendar: every date, a countdown each, and the day-by-day plan to the next. */}
           <Link href="/calendar" className="focus-ring mt-4 inline-flex min-h-[40px] items-center gap-1.5 text-sm font-semibold text-signal hover:underline">
-            {week.test_dates.length > 0 ? 'See your plan to the next test' : 'Add a company test date'}
+            {week.test_dates.length > 0 ? c.planNext : c.addDate}
             <ArrowRight className="h-4 w-4" aria-hidden />
           </Link>
           <Link href="/debrief" className="focus-ring inline-flex min-h-[40px] items-center gap-1.5 text-sm font-semibold text-muted hover:text-heading">
-            Had a rejection? Debrief it
+            {c.debrief}
           </Link>
         </Card>
 
         {/* Continue */}
         {data.continue && (
           <Card>
-            <p className="eyebrow text-muted">Continue</p>
+            <p className="eyebrow text-muted">{c.cont}</p>
             <div className="mt-3 flex items-center gap-4">
               {data.continue.percent !== null ? (
                 <ProgressRing value={data.continue.percent} size={64} thickness={6} label={`${data.continue.title} progress`} tone="train" />
@@ -265,7 +300,7 @@ export const TodayScreen: React.FC<{ ready: boolean }> = ({ ready }) => {
               </div>
             </div>
             <Button href={data.continue.href} kind="secondary" block className="mt-4">
-              {data.continue.kind === 'course' ? 'Resume lesson' : 'Back to the test'}
+              {data.continue.kind === 'course' ? c.resume : c.backTest}
             </Button>
           </Card>
         )}
@@ -273,21 +308,21 @@ export const TodayScreen: React.FC<{ ready: boolean }> = ({ ready }) => {
         {/* Last week */}
         {data.recap && (
           <Card>
-            <p className="eyebrow text-muted">Last 7 days</p>
+            <p className="eyebrow text-muted">{c.last7}</p>
             <ul className="mt-3 space-y-1.5 text-sm text-body">
               {data.recap.lessons > 0 && (
                 <li className="flex items-center gap-2">
-                  <BookOpen className="h-4 w-4 text-train" aria-hidden /> {data.recap.lessons} lesson{data.recap.lessons === 1 ? '' : 's'} finished
+                  <BookOpen className="h-4 w-4 text-train" aria-hidden /> {c.lessonsDone(data.recap.lessons)}
                 </li>
               )}
               {data.recap.tests > 0 && (
                 <li className="flex items-center gap-2">
-                  <ClipboardCheck className="h-4 w-4 text-test" aria-hidden /> {data.recap.tests} skill test{data.recap.tests === 1 ? '' : 's'} taken
+                  <ClipboardCheck className="h-4 w-4 text-test" aria-hidden /> {c.testsDone(data.recap.tests)}
                 </li>
               )}
               {data.recap.certificates > 0 && (
                 <li className="flex items-center gap-2">
-                  <ClipboardCheck className="h-4 w-4 text-success" aria-hidden /> {data.recap.certificates} certificate{data.recap.certificates === 1 ? '' : 's'} earned
+                  <ClipboardCheck className="h-4 w-4 text-success" aria-hidden /> {c.certsDone(data.recap.certificates)}
                 </li>
               )}
               {data.recap.xp > 0 && <li className="pl-6 text-muted">{data.recap.xp} XP</li>}
@@ -306,7 +341,7 @@ export const TodayScreen: React.FC<{ ready: boolean }> = ({ ready }) => {
         {/* Companies being prepared for */}
         {data.targets.length > 0 && (
           <Card className={cn(!data.continue && !data.recap && 'lg:col-span-2')}>
-            <p className="eyebrow text-muted">Your companies</p>
+            <p className="eyebrow text-muted">{c.companies}</p>
             <ul className="mt-3 divide-y divide-line">
               {data.targets.map((t) => (
                 <li key={t.slug}>
@@ -315,7 +350,7 @@ export const TodayScreen: React.FC<{ ready: boolean }> = ({ ready }) => {
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-semibold text-heading group-hover:text-signal">{t.company}</span>
                       <span className="block text-xs text-muted">
-                        {t.overall === null ? 'Take a round’s skill test to get a score' : `${t.cleared} of ${t.rounds} rounds cleared`}
+                        {t.overall === null ? c.noScore : c.cleared(t.cleared, t.rounds)}
                       </span>
                     </span>
                     <ArrowRight className="h-4 w-4 text-muted" aria-hidden />
@@ -329,12 +364,12 @@ export const TodayScreen: React.FC<{ ready: boolean }> = ({ ready }) => {
         {/* A new account: point at the three doors instead of empty boxes. */}
         {!data.continue && !data.recap && data.targets.length === 0 && (
           <Card className="lg:col-span-2">
-            <p className="eyebrow text-muted">Start somewhere</p>
+            <p className="eyebrow text-muted">{c.start}</p>
             <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
               {[
-                { href: '/courses', label: 'Learn', note: 'Courses, free to start' },
-                { href: '/skill-test', label: 'Practise', note: 'Free skill tests' },
-                { href: '/companies', label: 'Companies', note: 'Round-by-round prep' },
+                { href: '/courses', label: c.learn, note: c.learnNote },
+                { href: '/skill-test', label: c.practise, note: c.practiseNote },
+                { href: '/companies', label: c.comp, note: c.compNote },
               ].map((x) => (
                 <Link key={x.href} href={x.href} className="group rounded-xl border border-line p-4 transition-colors hover:border-line-strong">
                   <span className="block font-semibold text-heading group-hover:text-signal">{x.label}</span>

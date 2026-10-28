@@ -20,6 +20,7 @@ import { Hero, SectionNav, StatStrip } from './HeroSections';
 import { AlsoPreparing, CommunityOffer, EligibilityApply, Experiences, Faq, RichText, RoleCompare, RoundsRoute } from './ContentSections';
 import { Comeback, Countdown, DriveRadar, Onboarding, PrepPack } from './InteractiveSections';
 import s from './companyPage.module.css';
+import { useLang } from '@/lib/lang';
 
 /**
  * Accent swatches. The server owns the palette (`ACCENT_PALETTE` in
@@ -67,7 +68,6 @@ const display = localFont({
 });
 
 const SITE_URL = 'https://tieedu.com';
-const LANG_KEY = 'cp-lang';
 // Stable default: a fresh [] per render would re-run the radar sync effect forever.
 const NO_RADAR: CpRadarItem[] = [];
 
@@ -145,23 +145,8 @@ export function CompanyPageV2({
   const slug = company.slug;
   const hinglishOn = content.settings?.hinglish_enabled === true;
 
-  // ---- language: the visitor's choice, remembered on this device
-  const [chosenLang, setChosenLang] = useState<CpLang>('en');
-  useEffect(() => {
-    try {
-      if (window.localStorage.getItem(LANG_KEY) === 'hi') setChosenLang('hi');
-    } catch {
-      /* storage unavailable */
-    }
-  }, []);
-  const setLang = (l: CpLang) => {
-    setChosenLang(l);
-    try {
-      window.localStorage.setItem(LANG_KEY, l);
-    } catch {
-      /* storage unavailable */
-    }
-  };
+  // ---- language: the site-wide choice (lib/lang), so the page and the rest of the site agree
+  const [chosenLang, setLang] = useLang();
   const lang: CpLang = forceLang || (hinglishOn ? chosenLang : 'en');
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const langToggle = useMemo(() => (hinglishOn && !forceLang ? { lang, setLang } : null), [hinglishOn, forceLang, lang]);

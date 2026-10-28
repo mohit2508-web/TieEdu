@@ -30,6 +30,8 @@ import { formatBadgeCount } from '@/lib/notifications';
 import { NotificationBell } from '@/components/layout/NotificationBell';
 import { AccountMenu } from '@/components/layout/AccountMenu';
 import { MobileMenuButton } from '@/components/layout/MobileTabBar';
+import { useLang } from '@/lib/lang';
+import { sectionLabel } from '@/lib/navHinglish';
 
 /** Tailwind's `md`, negated. `tailwind.config.js` sets no custom `screens`. */
 const BELOW_MD = '(max-width: 767.98px)';
@@ -49,6 +51,7 @@ const BELOW_MD = '(max-width: 767.98px)';
  */
 export const Header: React.FC = () => {
   const { user, loading, logout } = useAuth();
+  const [lang] = useLang();
   const router = useRouter();
   const { toggleOverlay, anyOpen, isOpen, drillTitle: drillTitleOverride, setDrillTitle } = useShell();
   const { count, hydrated } = useCart();
@@ -349,7 +352,7 @@ export const Header: React.FC = () => {
                   className="nav-link"
                 >
                   {/* Signed in, home is the Today screen (§5). */}
-                  {section.id === 'home' && user ? 'Today' : section.label}
+                  {section.id === 'home' && user ? sectionLabel(lang, 'today', 'Today') : sectionLabel(lang, section.id, section.label)}
                 </Link>
               );
             })}

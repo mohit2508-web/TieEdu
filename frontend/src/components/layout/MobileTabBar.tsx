@@ -14,6 +14,8 @@ import {
 import { useShell } from '@/context/ShellContext';
 import { useAuth } from '@/context/AuthContext';
 import { formatBadgeCount } from '@/lib/notifications';
+import { useLang } from '@/lib/lang';
+import { sectionLabel } from '@/lib/navHinglish';
 
 /**
  * The mobile navigation bar.
@@ -49,6 +51,7 @@ export const MobileTabBar: React.FC = () => {
    * rather than by two copies of a route list.
    */
   const { user } = useAuth();
+  const [lang] = useLang();
   const atRoot = isRootDepth(router.pathname);
   const current = resolveSection(router.pathname);
 
@@ -71,7 +74,7 @@ export const MobileTabBar: React.FC = () => {
             className="tab-slot"
           >
             <Icon size={20} strokeWidth={active ? 2.5 : 2} aria-hidden />
-            <span>{section.id === 'home' && user ? 'Today' : section.label}</span>
+            <span>{section.id === 'home' && user ? sectionLabel(lang, 'today', 'Today') : sectionLabel(lang, section.id, section.label)}</span>
           </Link>
         );
       })}
