@@ -73,6 +73,8 @@ export const PLACEMENT_PERMISSION_GROUPS = {
     'placement.projects.read',
     'placement.alerts.read',
     'placement.audit.read',
+    /** Management / NAAC PDF reports: aggregates only, no student names (lib/collegeReport). */
+    'placement.reports.read',
   ],
 
   write: [
@@ -84,6 +86,13 @@ export const PLACEMENT_PERMISSION_GROUPS = {
     'placement.interviews.write',
     'placement.projects.write',
     'placement.alerts.write',
+    /** Draft a nudge to a segment of students (lib/collegeNudges). */
+    'placement.nudges.write',
+    /**
+     * Approve a drafted nudge so it is sent. Separate from `nudges.write`
+     * because the rule is that a T&P Officer drafts and only the T&P Head sends.
+     */
+    'placement.nudges.approve',
   ],
 
   /**
@@ -129,6 +138,7 @@ export const PLACEMENT_ROLE_PERMISSIONS: Record<PlacementRole, string[]> = {
     'placement.analytics.read',
     'placement.impact.read',
     'placement.forecast.read',
+    'placement.reports.read',
   ],
 
   tpo_head: READ_WRITE,
@@ -144,11 +154,14 @@ export const PLACEMENT_ROLE_PERMISSIONS: Record<PlacementRole, string[]> = {
     'placement.alerts.read',
     'placement.alerts.write',
     'placement.students.pii',
+    // Drafts only; the T&P Head approves (placement.nudges.approve).
+    'placement.nudges.write',
   ],
 
   data_officer: [
     'placement.dashboard.read',
     'placement.analytics.read',
+    'placement.reports.read',
     'placement.companies.read',
     'placement.imports.write',
     'placement.season.lock',

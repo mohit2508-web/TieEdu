@@ -7,6 +7,7 @@ import { playerCollegeIds, isConnectionFailure } from '../lib/bridge/core';
 import { createDebrief, debriefView, deleteDebrief, myDebriefs, DebriefError, DEBRIEF_REASONS, REASON_LABEL, ROUNDS } from '../lib/debrief';
 import { buildPassport, handleError, passportOf, suggestHandle } from '../lib/passport';
 import { buildParentView, newParentToken } from '../lib/parentView';
+import { markStudentSeen, NudgeError, setStudentOptOut, studentInbox } from '../lib/collegeNudges';
 import { endOnLinkChange, ParentWaError, parentWaStatus, setStudentAllowed, studentWaStatus, subscribeParent, unsubscribeParent } from '../lib/parentWhatsapp';
 import { rateLimit } from '../middleware/auth';
 
@@ -236,6 +237,36 @@ meRouter.put('/parent-whatsapp', (req: Request, res: Response) => {
   setStudentAllowed(user, req.body.allowed);
   saveDb(db);
   res.json(studentWaStatus(user));
+});
+
+/**
+ * Nudges from the student's college placement cell (lib/collegeNudges).
+ *   GET  /api/me/college-nudges        inbox + whether they are off
+ *   POST /api/me/college-nudges/seen
+ *   PUT  /api/me/college-nudges        { off } — the college sees a count, never who
+ */
+meRouter.get('/college-nudges', (req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'private, no-store');
+  res.json(studentInbox(loadDb(), req.user!.id));
+});
+
+meRouter.post('/college-nudges/seen', (req: Request, res: Response) => {
+  const db = loadDb();
+  if (markStudentSeen(db, req.user!.id) > 0) saveDb(db);
+  res.status(204).end();
+});
+
+meRouter.put('/college-nudges', (req: Request, res: Response) => {
+  if (typeof req.body?.off !== 'boolean') return res.status(400).json({ error: 'Say whether college nudges are off.' });
+  const db = loadDb();
+  try {
+    setStudentOptOut(db, req.user!.id, req.body.off);
+    saveDb(db);
+    res.json(studentInbox(db, req.user!.id));
+  } catch (err: any) {
+    if (err instanceof NudgeError) return res.status(err.status).json({ error: err.message });
+    throw err;
+  }
 });
 
 /** Public, no auth: GET /api/parent/:token. The token is the capability. */

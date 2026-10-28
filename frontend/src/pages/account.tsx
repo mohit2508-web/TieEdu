@@ -11,6 +11,7 @@ import {
 import { Footer } from '@/components/layout/Footer';
 import { RequireAuth } from '@/components/auth/RequireAuth';
 import NotificationSettings from '@/components/account/NotificationSettings';
+import { CollegeNudgesCard } from '@/components/today/CollegeNudgesCard';
 import StudentProfileCard from '@/components/account/StudentProfileCard';
 import { useAuth } from '@/context/AuthContext';
 import {
@@ -727,6 +728,7 @@ const AccountPageContent: React.FC = () => {
                 <p className="eyebrow">#07 — Settings</p>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
                   <NotificationSettings />
+                  <div className="mt-3"><CollegeNudgesCard ready settingsOnly /></div>
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   <div className="vault-card p-6">

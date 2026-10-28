@@ -7,6 +7,7 @@ import { fetchToday, saveGradYear, TodayView } from '@/lib/todayApi';
 import { cn } from '@/lib/cn';
 import { PassportCard } from './PassportCard';
 import { ParentLinkCard } from './ParentLinkCard';
+import { CollegeNudgesCard } from './CollegeNudgesCard';
 
 /**
  * Today — the signed-in home (UI_REDESIGN_PLAN_V2 §6.1).
@@ -192,6 +193,8 @@ export const TodayScreen: React.FC<{ ready: boolean }> = ({ ready }) => {
           )}
         </div>
       </Card>
+
+      <CollegeNudgesCard ready={ready} />
 
       <DailyChallengeCard />
 

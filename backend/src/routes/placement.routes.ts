@@ -16,6 +16,9 @@ import { buildBatchReadiness } from '../lib/batchReadiness';
 import { campusPagesOf, campusSettings } from '../lib/campusPage';
 import { deleteHistory, IntelError, moderateNote, tpoIntel, upsertHistory } from '../lib/campusIntel';
 import { placementCan } from '../placement/permissions';
+import { collegeNudgeList, draftNudge, NudgeError, rejectNudge, sendNow, withdrawNudge, type Actor } from '../lib/collegeNudges';
+import { sendPushToUser } from '../lib/push';
+import { buildCollegeReport, parsePeriod, renderCollegeReportPdf } from '../lib/collegeReport';
 
 export const placementRouter = Router();
 
@@ -352,6 +355,23 @@ placementRouter.get('/student/link', requireAuth, async (req: Request, res: Resp
   }
 });
 
+/** The college's student roster from `student_profile`, latest row per student. */
+async function collegeRoster(collegeId: string) {
+  const r = await getPool().query(
+    `SELECT DISTINCT ON (user_id) user_id, roll_no, branch, batch
+       FROM student_profile
+      WHERE college_id = $1
+      ORDER BY user_id, updated_at DESC`,
+    [collegeId]
+  );
+  return (r.rows || []).map((row: any) => ({
+    user_id: String(row.user_id),
+    roll_no: String(row.roll_no),
+    branch: row.branch ?? null,
+    batch: row.batch ?? null,
+  }));
+}
+
 // ---------------------------------------------------------------------------
 // Batch readiness — students × target companies (UI_REDESIGN_PLAN_V2 §7.2).
 //
@@ -367,19 +387,7 @@ placementRouter.get(
   async (req: Request, res: Response) => {
     const auth = req.placement!;
     try {
-      const r = await getPool().query(
-        `SELECT DISTINCT ON (user_id) user_id, roll_no, branch, batch
-           FROM student_profile
-          WHERE college_id = $1
-          ORDER BY user_id, updated_at DESC`,
-        [auth.collegeId]
-      );
-      const roster = (r.rows || []).map((row: any) => ({
-        user_id: String(row.user_id),
-        roll_no: String(row.roll_no),
-        branch: row.branch ?? null,
-        batch: row.batch ?? null,
-      }));
+      const roster = await collegeRoster(auth.collegeId!);
       res.setHeader('Cache-Control', 'private, no-store');
       return res.json(
         buildBatchReadiness(loadDb(), roster, { withNames: placementCan(auth, 'placement.students.pii') })
@@ -457,4 +465,158 @@ placementRouter.put('/campus-page', requirePlacementAuth, requirePlacementScope(
   row.updated_at = new Date().toISOString();
   saveDb(db);
   res.json(row);
+});
+
+// ---------------------------------------------------------------------------
+// One-click nudges (lib/collegeNudges). A T&P Officer drafts
+// (placement.nudges.write); the T&P Head approves (placement.nudges.approve)
+// and a Head's own draft goes straight out. Every step is audited. Students
+// who opted out or already had this week's college nudges are skipped.
+// ---------------------------------------------------------------------------
+const nudgeActor = (req: Request): Actor => {
+  const auth = req.placement!;
+  return {
+    userId: auth.userId,
+    collegeId: auth.collegeId!,
+    collegeName: auth.colleges.find((c) => c.college_id === auth.collegeId)?.name || 'Your college',
+    canApprove: placementCan(auth, 'placement.nudges.approve'),
+  };
+};
+const collegeBatch = async (collegeId: string) => buildBatchReadiness(loadDb(), await collegeRoster(collegeId), { withNames: false });
+const deliverPushes = (pushes: Array<{ userId: string; title: string; body: string; url: string }>) => {
+  // Best effort, after the inbox rows are saved; a push failure never undoes a nudge.
+  for (const p of pushes) sendPushToUser(p.userId, { title: p.title, body: p.body, url: p.url }).catch((e) => console.error('[nudges] push failed', e?.message || e));
+};
+const nudgeFail = (res: Response, err: any) => {
+  if (err instanceof NudgeError) return res.status(err.status).json({ error: err.message });
+  if (isConnectionFailure(err)) return pgUnavailable(res);
+  console.error('[nudges]', err?.message || err);
+  return res.status(500).json({ error: 'That did not work. Try again.' });
+};
+const nudgeAudit = (actor: Actor, id: string, field: string, value: string, reason?: string | null) =>
+  writePlacementAudit({ college_id: actor.collegeId, table_name: 'college_nudges', record_id: id, field, new_value: value, changed_by: actor.userId, reason: reason ?? null });
+
+placementRouter.get('/nudges', requirePlacementAuth, requirePlacementScope('placement.nudges.write'), async (req: Request, res: Response) => {
+  try {
+    const actor = nudgeActor(req);
+    res.setHeader('Cache-Control', 'private, no-store');
+    res.json({ can_approve: actor.canApprove, ...collegeNudgeList(loadDb(), actor.collegeId, actor.userId, await collegeBatch(actor.collegeId)) });
+  } catch (err) {
+    nudgeFail(res, err);
+  }
+});
+
+placementRouter.post('/nudges', requirePlacementAuth, requirePlacementScope('placement.nudges.write'), rateLimit(20), async (req: Request, res: Response) => {
+  try {
+    const actor = nudgeActor(req);
+    const batch = await collegeBatch(actor.collegeId);
+    const db = loadDb();
+    const n = draftNudge(db, actor, req.body, batch);
+    let pushes: Parameters<typeof deliverPushes>[0] = [];
+    if (actor.canApprove) pushes = sendNow(db, actor, n.id, batch).pushes;
+    saveDb(db);
+    await nudgeAudit(actor, n.id, 'status', n.status, actor.canApprove ? 'drafted and sent by the T&P Head' : 'drafted, awaiting the T&P Head');
+    deliverPushes(pushes);
+    res.status(201).json({ nudge: { id: n.id, status: n.status, preview_count: n.preview_count, sent: n.sent } });
+  } catch (err) {
+    nudgeFail(res, err);
+  }
+});
+
+placementRouter.post('/nudges/:id/approve', requirePlacementAuth, requirePlacementScope('placement.nudges.approve'), async (req: Request, res: Response) => {
+  try {
+    const actor = nudgeActor(req);
+    const batch = await collegeBatch(actor.collegeId);
+    const db = loadDb();
+    const { nudge, pushes } = sendNow(db, actor, String(req.params.id), batch);
+    saveDb(db);
+    await nudgeAudit(actor, nudge.id, 'status', 'sent', `approved; delivered ${nudge.sent!.delivered}, opted out ${nudge.sent!.opted_out}, over the weekly cap ${nudge.sent!.capped}`);
+    deliverPushes(pushes);
+    res.json({ nudge: { id: nudge.id, status: nudge.status, sent: nudge.sent } });
+  } catch (err) {
+    nudgeFail(res, err);
+  }
+});
+
+placementRouter.post('/nudges/:id/reject', requirePlacementAuth, requirePlacementScope('placement.nudges.approve'), async (req: Request, res: Response) => {
+  try {
+    const actor = nudgeActor(req);
+    const db = loadDb();
+    const n = rejectNudge(db, actor, String(req.params.id), req.body?.reason);
+    saveDb(db);
+    await nudgeAudit(actor, n.id, 'status', 'rejected', n.reject_reason);
+    res.json({ nudge: { id: n.id, status: n.status } });
+  } catch (err) {
+    nudgeFail(res, err);
+  }
+});
+
+placementRouter.post('/nudges/:id/withdraw', requirePlacementAuth, requirePlacementScope('placement.nudges.write'), async (req: Request, res: Response) => {
+  try {
+    const actor = nudgeActor(req);
+    const db = loadDb();
+    const n = withdrawNudge(db, actor, String(req.params.id));
+    saveDb(db);
+    await nudgeAudit(actor, n.id, 'status', 'withdrawn');
+    res.json({ nudge: { id: n.id, status: n.status } });
+  } catch (err) {
+    nudgeFail(res, err);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Management / NAAC report (lib/collegeReport). Aggregates only — no student
+// names or rows — for Management, the T&P Head and the Data Officer
+// (placement.reports.read). Each download is audited.
+//   GET /api/placement/reports/summary?from&to&batch   the figures, as JSON
+//   GET /api/placement/reports/pdf?from&to&batch       the same, as a PDF
+// ---------------------------------------------------------------------------
+async function reportFor(req: Request) {
+  const auth = req.placement!;
+  const { from, to } = parsePeriod(req.query.from, req.query.to);
+  const batchFilter = typeof req.query.batch === 'string' && req.query.batch.trim() ? req.query.batch.trim().slice(0, 20) : null;
+  const batch = buildBatchReadiness(loadDb(), await collegeRoster(auth.collegeId!), { withNames: false });
+  const collegeName = auth.colleges.find((c) => c.college_id === auth.collegeId)?.name || 'College';
+  const report = buildCollegeReport(loadDb(), batch, { collegeId: auth.collegeId!, collegeName, from, to, batch: batchFilter });
+  const batches = Array.from(new Set(batch.students.map((s) => s.batch).filter(Boolean))).sort();
+  return { report, batches };
+}
+const reportFail = (res: Response, err: any) => {
+  if (isConnectionFailure(err)) return pgUnavailable(res);
+  if (/start date is after/.test(String(err?.message))) return res.status(400).json({ error: err.message });
+  console.error('[college-report]', err?.message || err);
+  return res.status(500).json({ error: 'The report could not be prepared.' });
+};
+
+placementRouter.get('/reports/summary', requirePlacementAuth, requirePlacementScope('placement.reports.read'), async (req: Request, res: Response) => {
+  try {
+    const { report, batches } = await reportFor(req);
+    res.setHeader('Cache-Control', 'private, no-store');
+    res.json({ ...report, batches });
+  } catch (err) {
+    reportFail(res, err);
+  }
+});
+
+placementRouter.get('/reports/pdf', requirePlacementAuth, requirePlacementScope('placement.reports.read'), rateLimit(10), async (req: Request, res: Response) => {
+  try {
+    const { report } = await reportFor(req);
+    const bytes = await renderCollegeReportPdf(report);
+    await writePlacementAudit({
+      college_id: req.placement!.collegeId,
+      table_name: 'college_reports',
+      record_id: `${report.period.from}..${report.period.to}`,
+      field: 'download',
+      new_value: report.batch || 'all batches',
+      changed_by: req.placement!.userId,
+      reason: 'management / NAAC PDF downloaded',
+    });
+    const slug = report.college.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'college';
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${slug}-placement-report-${report.period.to}.pdf"`);
+    res.setHeader('Cache-Control', 'private, no-store');
+    res.send(Buffer.from(bytes));
+  } catch (err) {
+    reportFail(res, err);
+  }
 });

@@ -244,3 +244,75 @@ export const moderateSeniorNote = async (id: string, status: 'approved' | 'rejec
   const res = await apiFetch(`${API_BASE_URL}/placement/senior-notes/${encodeURIComponent(id)}`, { method: 'PUT', headers: collegeHeader(collegeId), body: JSON.stringify({ status }) });
   if (!res.ok) return fail(res);
 };
+
+// ---------------------------------------------------------------------------
+// One-click nudges (backend lib/collegeNudges): officers draft, the T&P Head
+// approves; students can opt out and the college sees only how many have.
+// ---------------------------------------------------------------------------
+export type NudgeSegment = 'not_started' | 'at_risk' | 'in_progress' | 'ready';
+export interface CollegeNudgeRow {
+  id: string;
+  status: 'pending' | 'sent' | 'rejected' | 'withdrawn';
+  preview: string;
+  audience: { segments: NudgeSegment[]; branch: string | null; batch: string | null; labels: string[] };
+  preview_count: number;
+  drafted_by: string | null;
+  drafted_by_me: boolean;
+  drafted_at: string;
+  decided_by: string | null;
+  decided_at: string | null;
+  reject_reason: string | null;
+  sent: { delivered: number; opted_out: number; capped: number } | null;
+}
+export interface CollegeNudgeData {
+  can_approve: boolean;
+  presets: Array<{ id: string; label: string; text: string; needs_company: boolean }>;
+  segments: Array<{ id: NudgeSegment; label: string; students: number }>;
+  branches: string[];
+  batches: string[];
+  opted_out: number;
+  limits: { line_max: number; per_student_per_week: number };
+  nudges: CollegeNudgeRow[];
+}
+export interface NudgeDraft { preset: string; company_slug?: string; line: string; audience: { segments: NudgeSegment[]; branch: string | null; batch: string | null } }
+
+const nudgeCall = async <T>(path: string, init: RequestInit, collegeId?: string | null): Promise<T> => {
+  const res = await apiFetch(`${API_BASE_URL}/placement/nudges${path}`, { ...init, headers: { ...collegeHeader(collegeId), ...(init.headers || {}) } });
+  if (!res.ok) return fail(res);
+  return res.json();
+};
+export const getCollegeNudges = (collegeId?: string | null) => nudgeCall<CollegeNudgeData>('', {}, collegeId);
+export const draftCollegeNudge = (d: NudgeDraft, collegeId?: string | null) =>
+  nudgeCall<{ nudge: { id: string; status: string; preview_count: number; sent: CollegeNudgeRow['sent'] } }>('', { method: 'POST', body: JSON.stringify(d) }, collegeId);
+export const approveCollegeNudge = (id: string, collegeId?: string | null) => nudgeCall<{ nudge: { id: string; sent: CollegeNudgeRow['sent'] } }>(`/${encodeURIComponent(id)}/approve`, { method: 'POST' }, collegeId);
+export const rejectCollegeNudge = (id: string, reason: string, collegeId?: string | null) => nudgeCall(`/${encodeURIComponent(id)}/reject`, { method: 'POST', body: JSON.stringify({ reason }) }, collegeId);
+export const withdrawCollegeNudge = (id: string, collegeId?: string | null) => nudgeCall(`/${encodeURIComponent(id)}/withdraw`, { method: 'POST' }, collegeId);
+
+// ---------------------------------------------------------------------------
+// Management / NAAC report (backend lib/collegeReport): aggregates only.
+// ---------------------------------------------------------------------------
+export interface ReportQuery { from?: string; to?: string; batch?: string }
+const reportQs = (q: ReportQuery) => new URLSearchParams(Object.entries(q).filter(([, v]) => v) as Array<[string, string]>).toString();
+
+/** The figures the PDF is built from, for an on-screen preview. */
+export const getCollegeReport = async (q: ReportQuery, collegeId?: string | null): Promise<any> => {
+  const res = await apiFetch(`${API_BASE_URL}/placement/reports/summary?${reportQs(q)}`, { headers: collegeHeader(collegeId) });
+  if (!res.ok) return fail(res);
+  return res.json();
+};
+
+/** Downloads the PDF through an object URL, since the request needs the auth and college headers. */
+export const downloadCollegeReport = async (q: ReportQuery, collegeId?: string | null): Promise<void> => {
+  const res = await apiFetch(`${API_BASE_URL}/placement/reports/pdf?${reportQs(q)}`, { headers: collegeHeader(collegeId) });
+  if (!res.ok) return fail(res);
+  const blob = await res.blob();
+  const name = /filename="([^"]+)"/.exec(res.headers.get('content-disposition') || '')?.[1] || 'placement-report.pdf';
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10_000);
+};
