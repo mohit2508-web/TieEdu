@@ -8,6 +8,7 @@ import { cn } from '@/lib/cn';
 import { PassportCard } from './PassportCard';
 import { ParentLinkCard } from './ParentLinkCard';
 import { CollegeNudgesCard } from './CollegeNudgesCard';
+import { CollegePulseLine } from './CollegePulseLine';
 import { useLang, type Lang } from '@/lib/lang';
 
 /**
@@ -201,6 +202,7 @@ export const TodayScreen: React.FC<{ ready: boolean }> = ({ ready }) => {
         <h1 className="mt-1 font-display text-3xl font-bold tracking-tight text-heading sm:text-4xl">
           {greeting(c)}, {data.first_name}.
         </h1>
+        <CollegePulseLine ready={ready} />
       </header>
 
       {/* The route: where you are, then the one thing to do next. */}

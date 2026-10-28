@@ -7,6 +7,9 @@ import { playerCollegeIds, isConnectionFailure } from '../lib/bridge/core';
 import { createDebrief, debriefView, deleteDebrief, myDebriefs, DebriefError, DEBRIEF_REASONS, REASON_LABEL, ROUNDS } from '../lib/debrief';
 import { buildPassport, handleError, passportOf, suggestHandle } from '../lib/passport';
 import { buildParentView, newParentToken } from '../lib/parentView';
+import { collegePulse } from '../lib/collegePulse';
+import { collegeBoard, setBoardChoice } from '../lib/collegeBoard';
+import { getPool } from '../db/client';
 import { markStudentSeen, NudgeError, setStudentOptOut, studentInbox } from '../lib/collegeNudges';
 import { endOnLinkChange, ParentWaError, parentWaStatus, setStudentAllowed, studentWaStatus, subscribeParent, unsubscribeParent } from '../lib/parentWhatsapp';
 import { rateLimit } from '../middleware/auth';
@@ -237,6 +240,60 @@ meRouter.put('/parent-whatsapp', (req: Request, res: Response) => {
   setStudentAllowed(user, req.body.allowed);
   saveDb(db);
   res.json(studentWaStatus(user));
+});
+
+/**
+ * "From your college" on Today (lib/collegePulse). A number only above the
+ * privacy floor. No college, or the college database unreachable: no line.
+ */
+/** The student's (first) college and its roster, from the placement database; null when there is none. */
+async function myCollege(userId: string): Promise<{ name: string; rosterIds: string[] } | null> {
+  const [collegeId] = await playerCollegeIds(userId);
+  if (!collegeId) return null;
+  const [college, roster] = await Promise.all([
+    getPool().query<{ name: string; short_name: string | null }>(`SELECT name, short_name FROM placement_college WHERE college_id = $1`, [collegeId]),
+    getPool().query<{ user_id: string }>(`SELECT DISTINCT user_id FROM student_profile WHERE college_id = $1`, [collegeId]),
+  ]);
+  const name = college.rows[0]?.short_name || college.rows[0]?.name;
+  return name ? { name, rosterIds: roster.rows.map((r) => String(r.user_id)) } : null;
+}
+const collegeDbDown = (err: any) => isConnectionFailure(err) || /DATABASE_URL is not set/.test(String(err?.message || ''));
+
+meRouter.get('/college-pulse', async (req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'private, no-store');
+  try {
+    const mine = await myCollege(req.user!.id);
+    res.json({ pulse: mine ? collegePulse(loadDb(), mine.name, mine.rosterIds) : null });
+  } catch (err: any) {
+    // A missing or unreachable college database just means no line on Today.
+    if (!collegeDbDown(err)) console.error('[college-pulse]', err?.message || err);
+    res.json({ pulse: null });
+  }
+});
+
+/**
+ * College leaderboard (lib/collegeBoard): opt-in, weekly points, shown only
+ * to students of that college — membership is checked here, from the roster.
+ *   GET /api/me/college-board   PUT /api/me/college-board { on, name_mode }
+ */
+meRouter.get('/college-board', async (req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'private, no-store');
+  try {
+    const mine = await myCollege(req.user!.id);
+    if (!mine || !mine.rosterIds.includes(req.user!.id)) return res.json({ board: null });
+    res.json({ board: collegeBoard(loadDb(), mine.name, mine.rosterIds, req.user!.id) });
+  } catch (err: any) {
+    if (collegeDbDown(err)) return res.status(503).json({ error: 'College data is temporarily unavailable.' });
+    console.error('[college-board]', err?.message || err);
+    res.status(500).json({ error: 'The leaderboard could not be loaded.' });
+  }
+});
+
+meRouter.put('/college-board', (req: Request, res: Response) => {
+  const db = loadDb();
+  const choice = setBoardChoice(db, req.user!.id, req.body);
+  saveDb(db);
+  res.json({ choice });
 });
 
 /**
