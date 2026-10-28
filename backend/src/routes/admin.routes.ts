@@ -1058,8 +1058,11 @@ adminRouter.get('/settings', requirePermission('settings.read'), (req: Request, 
     upi_instructions: 'Scan with any UPI app (Paytm, GPay, PhonePe) and transfer the exact amount.',
     accuracy_guarantee_enabled: false,
     accuracy_guarantee_amount: 99,
+    ai_mock_interview_enabled: false,
+    ai_mock_interview_daily_limit: 10,
   };
-  res.json({ status: 'success', settings: { ...defaults, ...(db.settings || {}) } });
+  // Whether the server has a key is shown, never the key itself.
+  res.json({ status: 'success', settings: { ...defaults, ...(db.settings || {}) }, ai_key_configured: !!process.env.ANTHROPIC_API_KEY });
 });
 
 // PUT /api/admin/settings — Update platform settings (persist to db.settings)
@@ -1078,6 +1081,12 @@ adminRouter.put('/settings', requirePermission('settings.write'), (req: Request,
   if (req.body.accuracy_guarantee_amount !== undefined) {
     const amt = Number(req.body.accuracy_guarantee_amount);
     if (Number.isInteger(amt) && amt >= 1 && amt <= 5000) next.accuracy_guarantee_amount = amt;
+  }
+  // AI mock interview (lib/mockInterview): off by default, because every graded answer costs money.
+  if (typeof req.body.ai_mock_interview_enabled === 'boolean') next.ai_mock_interview_enabled = req.body.ai_mock_interview_enabled;
+  if (req.body.ai_mock_interview_daily_limit !== undefined) {
+    const n = Number(req.body.ai_mock_interview_daily_limit);
+    if (Number.isInteger(n) && n >= 0 && n <= 100) next.ai_mock_interview_daily_limit = n;
   }
   db.settings = next;
   saveDb(db);

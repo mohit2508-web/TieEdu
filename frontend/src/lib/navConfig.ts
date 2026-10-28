@@ -29,6 +29,7 @@ import {
   HeartHandshake,
   House,
   LayoutGrid,
+  MessageSquareText,
   Newspaper,
   PartyPopper,
   Route,
@@ -300,6 +301,16 @@ export const NAV_ITEMS: Record<string, NavItem> = {
     primary: true,
     keywords: ['daily', 'challenge', 'streak', 'aptitude', 'quiz', 'practice', 'question of the day'],
   },
+  mockInterview: {
+    id: 'mockInterview',
+    href: '/mock-interview',
+    label: 'Mock interview',
+    icon: MessageSquareText,
+    match: 'exact',
+    description: 'Answer five HR or technical questions and get feedback on each answer',
+    primary: false,
+    keywords: ['interview', 'mock interview', 'hr interview', 'technical interview', 'practice interview', 'ai interview', 'tell me about yourself', 'feedback'],
+  },
   drops: {
     id: 'drops',
     href: '/drops',
@@ -468,7 +479,7 @@ export interface NavSection {
 export const NAV_SECTIONS: NavSection[] = [
   { id: 'home', label: 'Home', icon: House, itemIds: ['home'] },
   { id: 'learn', label: 'Learn', icon: BookOpen, itemIds: ['courses', 'tracks', 'freeCourse', 'studyPlan', 'calendar', 'myCourses', 'myCertificates'] },
-  { id: 'practise', label: 'Practise', icon: Target, itemIds: ['skillTest', 'daily', 'drives'] },
+  { id: 'practise', label: 'Practise', icon: Target, itemIds: ['skillTest', 'daily', 'mockInterview', 'drives'] },
   { id: 'companies', label: 'Companies', icon: Building2, itemIds: ['companies', 'compare', 'offerCheck'], extraPrefixes: ['/company'] },
   { id: 'feed', label: 'Feed', icon: Newspaper, itemIds: ['drops', 'offers'] },
 ];

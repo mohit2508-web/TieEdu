@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { fetchAdminSettingsApi, updateAdminSettingsApi, fetchAnalyticsApi, fetchAdminAuditApi, changePasswordApi, PlatformSettings, AnalyticsSnapshot } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
-import { Database, KeyRound, LogOut, Save, Settings2, QrCode, ShieldCheck, Upload } from 'lucide-react';
+import { Database, KeyRound, LogOut, MessageSquareText, Save, Settings2, QrCode, ShieldCheck, Upload } from 'lucide-react';
 
 const inputCls = "w-full sm:w-auto px-3 py-2 border border-gray-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-signal/30 min-w-[220px]";
 
@@ -23,6 +23,7 @@ export const SettingsTab: React.FC = () => {
   const [audit, setAudit] = useState<{ entries: any[]; total: number } | null>(null);
   const [saved, setSaved] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
+  const [aiKey, setAiKey] = useState(false);
 
   const [curPw, setCurPw] = useState('');
   const [newPw, setNewPw] = useState('');
@@ -37,6 +38,7 @@ export const SettingsTab: React.FC = () => {
         if (!active) return;
         setSettings(s.settings);
         setForm({ ...emptySettings, ...s.settings });
+        setAiKey(!!s.ai_key_configured);
         setAnalytics(a);
         setAudit(au);
       } catch {
@@ -226,6 +228,46 @@ export const SettingsTab: React.FC = () => {
             <div className="flex items-center gap-3 pt-1">
               <button onClick={save} disabled={busy} className="btn btn-primary px-4 py-2 text-xs flex items-center gap-1.5">
                 <Save className="w-3.5 h-3.5" /> {busy ? 'Saving…' : 'Save guarantee'}
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-xs space-y-4">
+            <h3 className="text-sm font-extrabold text-ink-soft flex items-center gap-2">
+              <MessageSquareText className="w-4 h-4 text-signal" /> AI mock interview
+            </h3>
+            <p className="text-xs text-gray-500">
+              When on, answers in the mock interview are graded by Claude, and each graded answer is billed to your Anthropic account.
+              Students always get key-point feedback; AI feedback is extra, up to the daily limit per student. Answer text is sent to
+              Anthropic, never the student’s name or email.
+            </p>
+            <p className={`text-xs font-semibold ${aiKey ? 'text-emerald-600' : 'text-amber-deep'}`}>
+              {aiKey ? 'API key: set on the server.' : 'API key: not set. Add ANTHROPIC_API_KEY to the backend environment; until then this stays off.'}
+            </p>
+            <label className="flex items-center gap-2 text-sm font-semibold text-ink-soft">
+              <input
+                type="checkbox"
+                checked={!!form.ai_mock_interview_enabled}
+                onChange={(e) => setForm({ ...form, ai_mock_interview_enabled: e.target.checked })}
+                className="h-4 w-4 accent-signal"
+              />
+              Grade answers with AI
+            </label>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">AI-graded answers per student per day</label>
+              <input
+                type="number"
+                inputMode="numeric"
+                min={0}
+                max={100}
+                value={form.ai_mock_interview_daily_limit ?? 10}
+                onChange={(e) => setForm({ ...form, ai_mock_interview_daily_limit: Number(e.target.value) })}
+                className={inputCls}
+              />
+            </div>
+            <div className="flex items-center gap-3 pt-1">
+              <button onClick={save} disabled={busy} className="btn btn-primary px-4 py-2 text-xs flex items-center gap-1.5">
+                <Save className="w-3.5 h-3.5" /> {busy ? 'Saving…' : 'Save AI settings'}
               </button>
             </div>
           </div>

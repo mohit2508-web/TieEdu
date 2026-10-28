@@ -124,9 +124,11 @@ export function recoveryPlan(db: any, d: Debrief): RecoveryStep[] {
       const l = roundLink([/technical/i, /\br1\b|interview/i], '/skill-test');
       if (slug) add({ title: `Re-read ${l.name || 'the technical round'}`, why: 'Interviewers repeat topics across years. Go through the round’s questions until you can answer them out loud.', href: l.read });
       add({ title: 'Brush up your core subjects', why: 'OOP, DBMS, OS and networks come up in almost every technical interview.', href: '/courses' });
+      add({ title: 'Do a mock technical interview', why: 'Explaining a concept out loud is a different skill from knowing it. Practise it here first.', href: '/mock-interview' });
     }
     if (r === 'communication') {
       add({ title: 'Practise the HR questions', why: 'Fifty common HR questions with model answers and the traps to avoid.', href: '/interview-course' });
+      add({ title: 'Do a mock HR interview', why: 'Answer five questions as you would in the room and get feedback on each answer.', href: '/mock-interview' });
       add({ title: 'Answer one HR question a day', why: 'The daily challenge includes an HR question; saying it out loud is the practice.', href: '/daily' });
     }
     if (r === 'nerves') {

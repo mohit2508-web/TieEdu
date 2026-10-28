@@ -960,6 +960,9 @@ export interface PlatformSettings {
   /** Accuracy guarantee (backend lib/accuracyGuarantee). Off unless switched on. */
   accuracy_guarantee_enabled?: boolean;
   accuracy_guarantee_amount?: number;
+  /** AI mock interview (backend lib/mockInterview). Off unless switched on. */
+  ai_mock_interview_enabled?: boolean;
+  ai_mock_interview_daily_limit?: number;
 }
 
 export interface AnalyticsSnapshot {
