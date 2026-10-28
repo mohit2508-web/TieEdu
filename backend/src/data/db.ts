@@ -864,7 +864,7 @@ export interface XpEvent {
   lesson_id: string | null;
   /** Unique idempotency key — prevents double-awarding the same achievement. */
   key: string;
-  reason: 'lesson_complete' | 'quiz_pass' | 'course_complete' | 'feedback_reward' | 'review' | 'reversal' | 'legacy_opening_balance' | 'exam_pass' | 'exam_distinction' | 'project_submit' | 'daily_challenge';
+  reason: 'lesson_complete' | 'quiz_pass' | 'course_complete' | 'feedback_reward' | 'review' | 'reversal' | 'legacy_opening_balance' | 'exam_pass' | 'exam_distinction' | 'project_submit' | 'daily_challenge' | 'peer_mock';
   xp: number;
   created_at: string;
   note: string;

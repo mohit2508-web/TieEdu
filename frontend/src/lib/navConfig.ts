@@ -33,6 +33,7 @@ import {
   MessageSquareText,
   Newspaper,
   PartyPopper,
+  Repeat,
   Route,
   Search,
   Target,
@@ -323,6 +324,16 @@ export const NAV_ITEMS: Record<string, NavItem> = {
     primary: false,
     keywords: ['study group', 'group', 'friends', 'together', 'peers', 'batchmates', 'nudge', 'accountability'],
   },
+  peerMock: {
+    id: 'peerMock',
+    href: '/peer-mock',
+    label: 'Peer mock interview',
+    icon: Repeat,
+    match: 'exact',
+    description: 'Interview a friend with our questions and rubric, then swap — both earn points',
+    primary: false,
+    keywords: ['peer', 'friend', 'mock interview', 'practice partner', 'interview each other', 'rubric', 'points', 'xp'],
+  },
   englishCoach: {
     id: 'englishCoach',
     href: '/english-coach',
@@ -501,7 +512,7 @@ export interface NavSection {
 export const NAV_SECTIONS: NavSection[] = [
   { id: 'home', label: 'Home', icon: House, itemIds: ['home'] },
   { id: 'learn', label: 'Learn', icon: BookOpen, itemIds: ['courses', 'tracks', 'freeCourse', 'studyPlan', 'calendar', 'myCourses', 'myCertificates'] },
-  { id: 'practise', label: 'Practise', icon: Target, itemIds: ['skillTest', 'daily', 'mockInterview', 'englishCoach', 'drives'] },
+  { id: 'practise', label: 'Practise', icon: Target, itemIds: ['skillTest', 'daily', 'mockInterview', 'peerMock', 'englishCoach', 'drives'] },
   { id: 'companies', label: 'Companies', icon: Building2, itemIds: ['companies', 'compare', 'studyGroups', 'offerCheck'], extraPrefixes: ['/company'] },
   { id: 'feed', label: 'Feed', icon: Newspaper, itemIds: ['drops', 'offers'] },
 ];

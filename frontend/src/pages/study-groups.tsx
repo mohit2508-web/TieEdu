@@ -234,6 +234,9 @@ function Group({ slug }: { slug: string }) {
             ))}
           </ul>
           {view.hidden_members > 0 && <p className="mt-2 text-sm text-muted">And {view.hidden_members} more.</p>}
+          <p className="mt-4 text-sm text-body">
+            Practise with someone here: <Link href="/peer-mock" className="font-semibold text-signal hover:underline">do a peer mock interview</Link> and both of you earn points.
+          </p>
 
           <details className="mt-8 rounded-[14px] border border-line bg-card p-4">
             <summary className="focus-ring cursor-pointer font-bold text-heading">Your settings in this group</summary>
