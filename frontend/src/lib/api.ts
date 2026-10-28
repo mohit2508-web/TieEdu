@@ -963,6 +963,9 @@ export interface PlatformSettings {
   /** AI mock interview (backend lib/mockInterview). Off unless switched on. */
   ai_mock_interview_enabled?: boolean;
   ai_mock_interview_daily_limit?: number;
+  /** English coach (backend lib/englishCoach). Off unless switched on. */
+  ai_english_coach_enabled?: boolean;
+  ai_english_coach_daily_limit?: number;
 }
 
 export interface AnalyticsSnapshot {

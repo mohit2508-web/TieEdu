@@ -129,6 +129,7 @@ export function recoveryPlan(db: any, d: Debrief): RecoveryStep[] {
     if (r === 'communication') {
       add({ title: 'Practise the HR questions', why: 'Fifty common HR questions with model answers and the traps to avoid.', href: '/interview-course' });
       add({ title: 'Do a mock HR interview', why: 'Answer five questions as you would in the room and get feedback on each answer.', href: '/mock-interview' });
+      add({ title: 'Practise speaking with the English coach', why: 'Half a minute out loud, with gentle tips on fillers, pace and phrasing — explained in Hinglish too.', href: '/english-coach' });
       add({ title: 'Answer one HR question a day', why: 'The daily challenge includes an HR question; saying it out loud is the practice.', href: '/daily' });
     }
     if (r === 'nerves') {

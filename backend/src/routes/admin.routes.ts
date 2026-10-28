@@ -10,6 +10,7 @@ import { createAutoDrop } from '../lib/autoDrops';
 import { autoDropTemplate } from '../lib/drops';
 import { requirePermission } from '../middleware/auth';
 import { normaliseCouponExpiry, normaliseCouponScope } from '../lib/coupons';
+import { applyAiSettings } from '../lib/ai';
 
 export const adminRouter = Router();
 
@@ -1060,6 +1061,8 @@ adminRouter.get('/settings', requirePermission('settings.read'), (req: Request, 
     accuracy_guarantee_amount: 99,
     ai_mock_interview_enabled: false,
     ai_mock_interview_daily_limit: 10,
+    ai_english_coach_enabled: false,
+    ai_english_coach_daily_limit: 10,
   };
   // Whether the server has a key is shown, never the key itself.
   res.json({ status: 'success', settings: { ...defaults, ...(db.settings || {}) }, ai_key_configured: !!process.env.ANTHROPIC_API_KEY });
@@ -1082,12 +1085,9 @@ adminRouter.put('/settings', requirePermission('settings.write'), (req: Request,
     const amt = Number(req.body.accuracy_guarantee_amount);
     if (Number.isInteger(amt) && amt >= 1 && amt <= 5000) next.accuracy_guarantee_amount = amt;
   }
-  // AI mock interview (lib/mockInterview): off by default, because every graded answer costs money.
-  if (typeof req.body.ai_mock_interview_enabled === 'boolean') next.ai_mock_interview_enabled = req.body.ai_mock_interview_enabled;
-  if (req.body.ai_mock_interview_daily_limit !== undefined) {
-    const n = Number(req.body.ai_mock_interview_daily_limit);
-    if (Number.isInteger(n) && n >= 0 && n <= 100) next.ai_mock_interview_daily_limit = n;
-  }
+  // AI features (lib/ai): off by default, because every graded answer costs money.
+  applyAiSettings(next, req.body, 'mock_interview');
+  applyAiSettings(next, req.body, 'english_coach');
   db.settings = next;
   saveDb(db);
   res.json({ status: 'success', message: 'Settings saved', settings: next });

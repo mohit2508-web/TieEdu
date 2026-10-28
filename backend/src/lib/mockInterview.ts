@@ -9,7 +9,7 @@
  *    needs no network and costs nothing.
  *  - The Claude grader is used only when an admin has turned it on
  *    (settings.ai_mock_interview_enabled) AND ANTHROPIC_API_KEY is set. Each
- *    student gets AI_DAILY_LIMIT_DEFAULT AI-graded answers per India day (admin
+ *    student gets a daily number of AI-graded answers per India day (admin
  *    can change it); past that, or on any API failure or refusal, the rubric
  *    grades instead and the feedback says so. Nothing is ever left ungraded.
  *
@@ -25,6 +25,9 @@ import crypto from 'crypto';
 import Anthropic from '@anthropic-ai/sdk';
 import { istDate } from './streak';
 import { studentPage } from './companyPageDerive';
+import { aiStatusFor, AI_MODEL, type AiStatus } from './ai';
+
+export { AI_MODEL, type AiStatus };
 
 export const INTERVIEW_KINDS = ['hr', 'technical'] as const;
 export type InterviewKind = (typeof INTERVIEW_KINDS)[number];
@@ -33,8 +36,6 @@ export const QUESTIONS_PER_SESSION = 5;
 export const ANSWER_MAX = 2500;
 export const ANSWER_MIN_WORDS = 8;
 export const SESSIONS_KEPT = 20;
-export const AI_DAILY_LIMIT_DEFAULT = 10;
-export const AI_MODEL = 'claude-opus-5-5';
 
 export interface KeyPoint { label: string; words: string[] }
 export interface InterviewQuestion {
@@ -150,17 +151,8 @@ export const questionById = (id: string) => BY_ID.get(id);
 
 // --- settings ---------------------------------------------------------------------
 
-export interface AiStatus { enabled: boolean; daily_limit: number }
-
-/** AI grading runs only when an admin has turned it on and a key is configured. */
-export function aiStatus(db: any, env: NodeJS.ProcessEnv = process.env): AiStatus {
-  const s = db.settings || {};
-  const limit = Number(s.ai_mock_interview_daily_limit);
-  return {
-    enabled: s.ai_mock_interview_enabled === true && !!env.ANTHROPIC_API_KEY,
-    daily_limit: Number.isInteger(limit) && limit >= 0 ? limit : AI_DAILY_LIMIT_DEFAULT,
-  };
-}
+/** AI grading runs only when an admin has turned it on and a key is configured (lib/ai). */
+export const aiStatus = (db: any, env: NodeJS.ProcessEnv = process.env): AiStatus => aiStatusFor(db, 'mock_interview', env);
 
 // --- sessions ---------------------------------------------------------------------
 

@@ -234,12 +234,12 @@ export const SettingsTab: React.FC = () => {
 
           <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-xs space-y-4">
             <h3 className="text-sm font-extrabold text-ink-soft flex items-center gap-2">
-              <MessageSquareText className="w-4 h-4 text-signal" /> AI mock interview
+              <MessageSquareText className="w-4 h-4 text-signal" /> AI feedback
             </h3>
             <p className="text-xs text-gray-500">
-              When on, answers in the mock interview are graded by Claude, and each graded answer is billed to your Anthropic account.
-              Students always get key-point feedback; AI feedback is extra, up to the daily limit per student. Answer text is sent to
-              Anthropic, never the student’s name or email.
+              When on, answers in the mock interview and the English coach are checked by Claude, and each one is billed to your
+              Anthropic account. Students always get free checklist feedback; AI feedback is extra, up to the daily limit per student.
+              Answer text is sent to Anthropic, never the student’s name, email or voice.
             </p>
             <p className={`text-xs font-semibold ${aiKey ? 'text-emerald-600' : 'text-amber-deep'}`}>
               {aiKey ? 'API key: set on the server.' : 'API key: not set. Add ANTHROPIC_API_KEY to the backend environment; until then this stays off.'}
@@ -251,7 +251,7 @@ export const SettingsTab: React.FC = () => {
                 onChange={(e) => setForm({ ...form, ai_mock_interview_enabled: e.target.checked })}
                 className="h-4 w-4 accent-signal"
               />
-              Grade answers with AI
+              Mock interview: grade answers with AI
             </label>
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">AI-graded answers per student per day</label>
@@ -262,6 +262,27 @@ export const SettingsTab: React.FC = () => {
                 max={100}
                 value={form.ai_mock_interview_daily_limit ?? 10}
                 onChange={(e) => setForm({ ...form, ai_mock_interview_daily_limit: Number(e.target.value) })}
+                className={inputCls}
+              />
+            </div>
+            <label className="flex items-center gap-2 text-sm font-semibold text-ink-soft">
+              <input
+                type="checkbox"
+                checked={!!form.ai_english_coach_enabled}
+                onChange={(e) => setForm({ ...form, ai_english_coach_enabled: e.target.checked })}
+                className="h-4 w-4 accent-signal"
+              />
+              English coach: coach with AI
+            </label>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">AI-coached attempts per student per day</label>
+              <input
+                type="number"
+                inputMode="numeric"
+                min={0}
+                max={100}
+                value={form.ai_english_coach_daily_limit ?? 10}
+                onChange={(e) => setForm({ ...form, ai_english_coach_daily_limit: Number(e.target.value) })}
                 className={inputCls}
               />
             </div>

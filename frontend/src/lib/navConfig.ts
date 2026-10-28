@@ -28,6 +28,7 @@ import {
   GraduationCap,
   HeartHandshake,
   House,
+  Languages,
   LayoutGrid,
   MessageSquareText,
   Newspaper,
@@ -311,6 +312,16 @@ export const NAV_ITEMS: Record<string, NavItem> = {
     primary: false,
     keywords: ['interview', 'mock interview', 'hr interview', 'technical interview', 'practice interview', 'ai interview', 'tell me about yourself', 'feedback'],
   },
+  englishCoach: {
+    id: 'englishCoach',
+    href: '/english-coach',
+    label: 'English coach',
+    icon: Languages,
+    match: 'exact',
+    description: 'Speak for half a minute and get gentle tips on your English, explained in Hinglish too',
+    primary: false,
+    keywords: ['english', 'spoken english', 'speaking', 'communication', 'fluency', 'confidence', 'hinglish', 'grammar', 'pronunciation', 'english practice'],
+  },
   drops: {
     id: 'drops',
     href: '/drops',
@@ -479,7 +490,7 @@ export interface NavSection {
 export const NAV_SECTIONS: NavSection[] = [
   { id: 'home', label: 'Home', icon: House, itemIds: ['home'] },
   { id: 'learn', label: 'Learn', icon: BookOpen, itemIds: ['courses', 'tracks', 'freeCourse', 'studyPlan', 'calendar', 'myCourses', 'myCertificates'] },
-  { id: 'practise', label: 'Practise', icon: Target, itemIds: ['skillTest', 'daily', 'mockInterview', 'drives'] },
+  { id: 'practise', label: 'Practise', icon: Target, itemIds: ['skillTest', 'daily', 'mockInterview', 'englishCoach', 'drives'] },
   { id: 'companies', label: 'Companies', icon: Building2, itemIds: ['companies', 'compare', 'offerCheck'], extraPrefixes: ['/company'] },
   { id: 'feed', label: 'Feed', icon: Newspaper, itemIds: ['drops', 'offers'] },
 ];
