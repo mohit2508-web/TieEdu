@@ -1,24 +1,33 @@
 import React, { useEffect, useState } from 'react';
 import Head from 'next/head';
-import { ArrowRight, BookOpen, Briefcase, Inbox, IndianRupee, Moon, ShoppingBag, Sun, Timer, Users } from 'lucide-react';
+import { ArrowRight, BookOpen, Briefcase, CalendarCheck, Flame, Inbox, IndianRupee, Moon, ShoppingBag, Sun, Timer, Trophy, Users } from 'lucide-react';
 import { RequireAdmin } from '@/components/auth/RequireAdmin';
 import {
+  Accordion,
   Avatar,
+  Badge,
   Button,
   Card,
   Chip,
   Cover,
+  DeviceFrame,
   EmptyState,
+  FloatingChip,
+  IconTile,
+  Marquee,
+  ProgressBar,
   ProgressRing,
+  RadioCard,
   RouteLine,
   SectionHead,
+  SegmentedControl,
   Stamp,
   StatTile,
   Ticket,
 } from '@/components/ui';
 
 /**
- * /design — the living style guide (UI_REDESIGN_PLAN_V2 §4.8). Admin-only and
+ * /design — the living style guide (UI_REDESIGN_PLAN_V3 §10). Admin-only and
  * noindex. Every token and component renders here from the real code, so this
  * page cannot drift from the product; if something looks wrong here, it looks
  * wrong everywhere.
@@ -30,22 +39,26 @@ import {
 const COLOURS: Array<{ group: string; tokens: Array<[string, string]> }> = [
   { group: 'Surfaces', tokens: [['paper', 'bg-app'], ['card', 'bg-surface'], ['hover', 'bg-surface-hover'], ['line', 'border-subtle'], ['line strong', 'border-strong']] },
   { group: 'Text', tokens: [['heading', 'text-heading'], ['body', 'text-body'], ['muted', 'text-muted'], ['light', 'text-light'], ['brand ink', 'brand-ink']] },
-  { group: 'Action and money', tokens: [['signal', 'signal'], ['signal hover', 'signal-hover'], ['signal soft', 'signal-soft'], ['logo', 'logo'], ['money', 'money'], ['money ink', 'money-ink']] },
+  { group: 'Action (amber)', tokens: [['primary', 'signal'], ['primary hover', 'signal-hover'], ['primary tint', 'signal-soft'], ['text on tint', 'signal-ink'], ['text on primary', 'on-primary'], ['highlight', 'highlight']] },
+  { group: 'Teal and logo', tokens: [['link', 'link'], ['secondary tint', 'secondary-soft'], ['band', 'brand-ink'], ['on band', 'on-hero'], ['on band muted', 'on-hero-muted'], ['logo (fixed)', 'logo']] },
+  { group: 'Tints', tokens: [['info', 'info'], ['info tint', 'info-soft'], ['rose', 'rose'], ['rose tint', 'rose-soft'], ['edge', 'edge'], ['paper rule', 'paper-rule']] },
   { group: 'Modes', tokens: [['train', 'train'], ['test', 'test'], ['track', 'track']] },
   { group: 'States', tokens: [['success', 'success'], ['warning', 'warning'], ['danger', 'danger'], ['info', 'info']] },
 ];
 
 const TYPE: Array<[string, string, string]> = [
-  ['6xl · 64', 'text-6xl font-display font-bold', 'Route to the offer'],
-  ['5xl · 48', 'text-5xl font-display font-bold', 'Route to the offer'],
-  ['4xl · 40', 'text-4xl font-display font-bold', 'Know every round'],
-  ['3xl · 32', 'text-3xl font-display font-bold', 'Know every round'],
-  ['2xl · 24', 'text-2xl font-display font-bold', 'Section heading'],
-  ['xl · 20', 'text-xl font-semibold', 'Card title'],
-  ['lg · 18', 'text-lg', 'Lead paragraph text'],
-  ['base · 16', 'text-base', 'Body text for reading and forms.'],
-  ['sm · 14', 'text-sm', 'Secondary text, table cells, buttons.'],
-  ['xs · 12', 'text-xs', 'Captions and labels. Nothing smaller.'],
+  ['headline', 'text-headline font-display', 'Your placement, round by round'],
+  ['section', 'text-section font-display', 'Every round, explained'],
+  ['display · 34', 'text-display font-display', 'Know every round'],
+  ['h1 · 28', 'text-h1 font-display', 'Page title'],
+  ['h2 · 22', 'text-h2 font-display', 'Section heading'],
+  ['h3 · 17', 'text-h3 font-display', 'Card title'],
+  ['body-lg · 17', 'text-body-lg', 'Lead paragraph text, and lessons.'],
+  ['body · 15', 'text-body-md', 'Body text for reading and forms.'],
+  ['label · 15', 'text-label font-display', 'Button and field labels'],
+  ['chip · 13', 'text-chip font-medium', 'Chips and small UI'],
+  ['caption · 12', 'text-caption', 'Captions. Nothing smaller.'],
+  ['eyebrow · 11', 'eyebrow', 'Mono caps eyebrow'],
 ];
 
 const Swatch: React.FC<{ name: string; channel: string }> = ({ name, channel }) => (
@@ -69,6 +82,8 @@ const DesignGuide: React.FC = () => {
   const [filter, setFilter] = useState('All');
   const [ring, setRing] = useState(64);
   const [stampKey, setStampKey] = useState(0);
+  const [segment, setSegment] = useState<'oa' | 'tech' | 'hr'>('oa');
+  const [plan, setPlan] = useState<'free' | 'pack'>('pack');
 
   useEffect(() => {
     const el = document.documentElement;
@@ -86,7 +101,7 @@ const DesignGuide: React.FC = () => {
       <div className="mx-auto max-w-[1200px] px-4 py-10 sm:px-6">
         <SectionHead
           level={1}
-          eyebrow="Route 2.0"
+          eyebrow="Warm Paper"
           title="Design system"
           description="Every token and component, rendered from the real code. Use these instead of one-off classes; the design-system test fails on hand-picked sizes and colours."
           action={
@@ -96,7 +111,7 @@ const DesignGuide: React.FC = () => {
           }
         />
 
-        <Block title="Colour" note="Declared once as RGB channels in globals.css, swapped wholesale for dark mode. Orange is for the next step, amber only for money, train/test/track only for those modes.">
+        <Block title="Colour" note="Declared once as RGB channels in globals.css, swapped wholesale for dark mode. Amber fills the one next step and carries dark ink, never white; teal is for links and the band; the logo colour never changes.">
           <div className="space-y-6">
             {COLOURS.map((g) => (
               <div key={g.group}>
@@ -111,7 +126,7 @@ const DesignGuide: React.FC = () => {
           </div>
         </Block>
 
-        <Block title="Type" note="Bricolage Grotesque for display and numbers, Figtree for UI, Source Serif 4 for lessons, JetBrains Mono for code only. Sentence case; nothing under 12px.">
+        <Block title="Type" note="Poppins for headings, buttons and numbers; Mukta for UI and lessons (Hindi included); JetBrains Mono for eyebrows, tags and code. Sentence case; only the mono eyebrow is under 12px.">
           <div className="space-y-4">
             {TYPE.map(([label, cls, sample]) => (
               <div key={label} className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-6">
@@ -120,9 +135,9 @@ const DesignGuide: React.FC = () => {
               </div>
             ))}
             <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-6">
-              <span className="w-24 shrink-0 text-xs font-semibold text-muted">serif</span>
+              <span className="w-24 shrink-0 text-xs font-semibold text-muted">lesson</span>
               <p className="max-w-[720px] font-serif text-lg leading-relaxed text-body">
-                A lesson reads like a well-made book: Source Serif at 18px, a 720px measure, and generous line height.
+                A lesson reads like a well-made exercise book: Mukta at 17px, a 720px measure, and generous line height. यह हिंदी भी उसी फ़ॉन्ट में है।
               </p>
             </div>
             <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-6">
@@ -132,7 +147,7 @@ const DesignGuide: React.FC = () => {
           </div>
         </Block>
 
-        <Block title="Buttons" note="One primary per screen. Buy is amber and only ever spends money.">
+        <Block title="Buttons" note="One primary per screen. Buy is the same amber; the price makes it a purchase. Press moves the button down 2px.">
           <div className="flex flex-wrap items-center gap-3">
             <Button icon={ArrowRight} iconEnd>Start round 1</Button>
             <Button kind="buy" icon={ShoppingBag}>Get the pack — ₹99</Button>
@@ -188,7 +203,7 @@ const DesignGuide: React.FC = () => {
                 ]}
               />
               <Card variant="ink">
-                <p className="eyebrow mb-4 text-money">On an ink band</p>
+                <p className="eyebrow mb-4 !text-hero-muted">On the band</p>
                 <RouteLine
                   onInk
                   stations={[
@@ -223,15 +238,15 @@ const DesignGuide: React.FC = () => {
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             <Card>
               <p className="font-semibold text-heading">Plain card</p>
-              <p className="mt-1 text-sm text-muted">Most cards. Hairline border, 14px radius.</p>
+              <p className="mt-1 text-sm text-muted">Most cards. Hairline border, 20px radius.</p>
             </Card>
             <Card variant="raised">
               <p className="font-semibold text-heading">Raised card</p>
               <p className="mt-1 text-sm text-muted">The one card the screen is about.</p>
             </Card>
             <Card variant="ink">
-              <p className="font-semibold text-white">Ink card</p>
-              <p className="mt-1 text-sm text-white/80">The page&apos;s one heavy area.</p>
+              <p className="font-semibold">Band card</p>
+              <p className="mt-1 text-sm text-hero-muted">The page&apos;s one teal area.</p>
             </Card>
           </div>
           <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -244,6 +259,88 @@ const DesignGuide: React.FC = () => {
               <p className="mt-1 text-sm text-muted">Scored 86% · verifiable at /verify</p>
             </Ticket>
           </div>
+        </Block>
+
+        <Block title="Tints, badges and icon tiles">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            {(['tint-primary', 'tint-secondary', 'tint-info', 'tint-rose', 'tint-success'] as const).map((v) => (
+              <Card key={v} variant={v} pad="sm">
+                <p className="font-display text-label">{v.replace('tint-', '')}</p>
+                <p className="mt-1 text-sm">A note in its own colour.</p>
+              </Card>
+            ))}
+          </div>
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <Badge>New</Badge>
+            <Badge tone="success">Just added</Badge>
+            <Badge tone="rose">50% off</Badge>
+            <Badge tone="info">Beta</Badge>
+            <Badge tone="neutral">Draft</Badge>
+            <IconTile icon={Flame} />
+            <IconTile icon={Trophy} tone="secondary" />
+            <IconTile icon={CalendarCheck} tone="info" />
+            <IconTile icon={Users} tone="rose" size="sm" />
+          </div>
+        </Block>
+
+        <Block title="Controls" note="Segmented control and radio cards are radio groups: one Tab stop, arrow keys move.">
+          <SegmentedControl
+            label="Round"
+            value={segment}
+            onChange={setSegment}
+            options={[
+              { value: 'oa', label: 'OA' },
+              { value: 'tech', label: 'Technical' },
+              { value: 'hr', label: 'HR' },
+            ]}
+          />
+          <div role="radiogroup" aria-label="Plan" className="mt-4 grid max-w-xl grid-cols-1 gap-3">
+            <RadioCard checked={plan === 'free'} onSelect={() => setPlan('free')} title="Free" description="Readiness check and round 1" aside="₹0" />
+            <RadioCard checked={plan === 'pack'} onSelect={() => setPlan('pack')} title="Round pack" description="Every round, with mock tests" aside="₹99" />
+          </div>
+          <div className="mt-6 max-w-xl space-y-2">
+            <ProgressBar value={ring} goal={80} label="Readiness" />
+            <p className="text-caption text-muted">{ring}% ready · goal 80%</p>
+          </div>
+        </Block>
+
+        <Block title="Accordion">
+          <Accordion
+            className="max-w-2xl"
+            defaultOpen={['free']}
+            items={[
+              { id: 'free', question: 'Is the readiness check free?', answer: 'Yes. Pick a company and take it in about two minutes.' },
+              { id: 'hindi', question: 'Can I study in Hinglish?', answer: 'Yes. Switch language from the header; lessons and the app follow.' },
+            ]}
+          />
+        </Block>
+
+        <Block title="Mock-ups and floating chips" note="Decorative frames for product shots. Floating chips bob unless reduced motion is on.">
+          <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-[1fr_280px]">
+            <div className="relative">
+              <DeviceFrame url="tieedu.in/company/tcs">
+                <div className="paper-lines mask-fade-b h-56 p-6">
+                  <p className="font-display text-h2 text-heading">TCS NQT</p>
+                  <p className="mt-1 text-sm text-muted">4 rounds · 12 days</p>
+                </div>
+              </DeviceFrame>
+              <FloatingChip bob icon={Flame} title="7-day streak" caption="Keep it going" className="absolute -bottom-5 left-4" />
+              <FloatingChip bob icon={Trophy} tone="secondary" title="Round 1 cleared" caption="Score 82%" className="absolute -right-2 top-14 hidden sm:inline-flex" />
+            </div>
+            <DeviceFrame kind="phone" className="mx-auto w-[260px]">
+              <div className="h-[420px] p-5 pt-10">
+                <p className="eyebrow">Today</p>
+                <p className="mt-1 font-display text-h2 text-heading">Good evening</p>
+              </div>
+            </DeviceFrame>
+          </div>
+          <Marquee label="Companies" className="mt-10">
+            {['TCS', 'Infosys', 'Wipro', 'Accenture', 'Zscaler', 'Cognizant', 'Capgemini'].map((c) => (
+              <span key={c} className="rounded-cell border border-line bg-card px-5 py-3 font-display text-label text-heading shadow-edge-neutral">
+                {c}
+              </span>
+            ))}
+          </Marquee>
         </Block>
 
         <Block title="Generated covers" note="Pattern from the subject, colour from the title. Same course, same cover, everywhere.">

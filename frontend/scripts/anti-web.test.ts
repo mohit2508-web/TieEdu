@@ -599,10 +599,12 @@ check('a signed-out phone can reach both auth routes', () => {
 
   const menu = read(path.join(ROOT, 'src/components/layout/AccountMenu.tsx'));
   ok(/href="\/login"/.test(menu), 'the header must offer a sign-in link');
-  // One button only: the phone header row has no room for a pair.
+  // One button only on phones: the row has no room for a pair. From `md` up
+  // (Warm Paper E2) "Start free" joins it, so any sign-up link must be md-only.
+  const signupTags = menu.match(/<Link[^>]*href="\/signup"[^>]*>/g) ?? [];
   ok(
-    !/href="\/signup"/.test(menu),
-    'the header must not carry a sign-up link as well - the phone row cannot fit both'
+    signupTags.every((tag) => /!?hidden\b/.test(tag) && /\bmd:!?inline-flex\b/.test(tag)),
+    'a sign-up link in the header must be hidden below md - the phone row cannot fit both'
   );
 
   const drawer = read(path.join(ROOT, 'src/components/layout/MobileNavDrawer.tsx'));
@@ -779,7 +781,7 @@ check('the phone header carries the logo, bell, account and a bare leaderboard i
   ok(/<NotificationBell/.test(header), 'the bell must be in the header');
   ok(/<AccountMenu/.test(header), 'the account control must be in the header');
   ok(/<MobileMenuButton/.test(header), 'the drawer button must survive - it is the mobile nav');
-  ok(/hidden items-center gap-0\.5 md:flex/.test(header), 'primary nav links stay desktop-only');
+  ok(/<nav aria-label="Primary" className="[^"]*\bhidden\b[^"]*\bmd:flex\b/.test(header), 'primary nav links stay desktop-only');
 
   // One surface per action: the leaderboard moved into the header, so it must not
   // also be in the drawer the header's hamburger opens.

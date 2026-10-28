@@ -534,6 +534,23 @@ body {
   @media (prefers-reduced-motion: reduce) {
     .marker { animation: none; background-size: 100% 42%; }
   }
+  /* Fade both ends of a sideways row (marquees, carousels). */
+  .mask-fade-x {
+    -webkit-mask-image: linear-gradient(90deg, #0000, #000 6%, #000 94%, #0000);
+    mask-image: linear-gradient(90deg, #0000, #000 6%, #000 94%, #0000);
+  }
+  /* Floating chips bob gently around a mock-up. */
+  .tk-bob { animation: tk-bob 3.6s ease-in-out infinite; }
+  @keyframes tk-bob { 50% { transform: translateY(-5px); } }
+  /* Marquee: the track holds the items twice and slides by half its width. */
+  .tk-marquee-track { animation: marquee-scroll 40s linear infinite; }
+  .tk-marquee:hover .tk-marquee-track,
+  .tk-marquee:focus-within .tk-marquee-track { animation-play-state: paused; }
+  @media (prefers-reduced-motion: reduce) {
+    .tk-bob { animation: none; }
+    .tk-marquee { overflow-x: auto; }
+    .tk-marquee-track { animation: none; }
+  }
 }
 
 /* Vault card surface */
@@ -701,21 +718,34 @@ body {
    the active-state treatment is defined exactly once.
    ============================================ */
 
-/* --- Desktop nav link ---------------------------------------------------
-   Active state is a sky-soft pill plus a 2px sky bar on the bottom edge.
+/* --- Desktop nav (Warm Paper E2) ----------------------------------------
+   The links sit in one white pill group with a hairline and a neutral
+   under-edge. The current section is an amber-tint pill with the selected
+   edge — the same "selected" treatment chips and segmented controls use.
    One treatment, applied wherever `aria-current="page"` is set, so the
    desktop bar, the drawer rows and the palette can never disagree about
    which page the user is on. */
+.nav-pill {
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-edge-neutral);
+}
 .nav-link {
   position: relative;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 8px 14px;
-  border-radius: var(--radius-sm);
-  font-size: 14px;
-  font-weight: 600;
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 500;
   line-height: 1.2;
+  letter-spacing: -0.01em;
   color: var(--text-body);
   white-space: nowrap;
   transition: background var(--motion-fast) var(--ease-out), color var(--motion-fast) var(--ease-out);
@@ -729,19 +759,10 @@ body {
   outline-offset: 3px;
 }
 .nav-link[aria-current='page'] {
-  background: var(--brand-sky-soft);
-  color: var(--link);
-  font-weight: 700;
-}
-.nav-link[aria-current='page']::after {
-  content: '';
-  position: absolute;
-  left: 14px;
-  right: 14px;
-  bottom: 2px;
-  height: 2px;
-  border-radius: 2px;
-  background: var(--brand-sky);
+  background: rgb(var(--rgb-signal-soft));
+  color: rgb(var(--rgb-signal-ink));
+  font-weight: 600;
+  box-shadow: var(--shadow-edge-selected);
 }
 
 /* The free-course acquisition hook. A small chip, not a louder colour —
@@ -751,8 +772,8 @@ body {
   align-items: center;
   padding: 1px 6px;
   border-radius: 999px;
-  background: #E9F6EE;
-  color: #15803D;
+  background: rgb(var(--rgb-success-soft));
+  color: rgb(var(--rgb-success));
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -1220,8 +1241,9 @@ p {
    and turns navy-on-navy in light mode (Mock Drives' hero did). On the dark
    bands, a paragraph inherits the band's colour instead. `:where()` keeps this at
    the element rule's own specificity (0,0,1) — it wins only by coming later, so
-   any colour class on the paragraph itself still beats it. */
-:where(.bg-brand-ink) p {
+   any colour class on the paragraph itself still beats it. `.tk-inherit-p`
+   does the same for Card's band and tint variants. */
+:where(.bg-brand-ink, .tk-inherit-p) p {
   color: inherit;
 }
 

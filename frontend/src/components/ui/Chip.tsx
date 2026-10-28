@@ -37,7 +37,8 @@ export interface ChipProps {
 }
 
 export const Chip: React.FC<ChipProps> = ({ tone = 'neutral', icon: Icon, onClick, selected, className, children }) => {
-  const base = 'inline-flex items-center gap-1.5 rounded-full border px-3 text-xs font-semibold whitespace-nowrap';
+  // Warm Paper §10: pill, 13/500; a selected filter is the amber tint on the selected edge.
+  const base = 'inline-flex items-center gap-1.5 rounded-full border px-3 text-chip font-medium whitespace-nowrap';
   const content = (
     <>
       {Icon ? <Icon className="h-3.5 w-3.5 shrink-0" /> : null}
@@ -53,7 +54,9 @@ export const Chip: React.FC<ChipProps> = ({ tone = 'neutral', icon: Icon, onClic
       className={cn(
         base,
         'pressable focus-ring min-h-[36px] transition-colors',
-        selected ? 'bg-heading text-card border-heading' : 'bg-card text-body border-line hover:border-line-strong',
+        selected
+          ? 'bg-signal-soft text-signal-ink border-signal/40 shadow-edge-selected'
+          : 'bg-card text-body border-line shadow-edge-neutral hover:border-line-strong',
         className
       )}
     >

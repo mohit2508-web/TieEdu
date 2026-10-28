@@ -7,6 +7,7 @@ import { useReducedMotion } from 'framer-motion';
 import { Award, ChevronDown, ChevronLeft, Command, Flame, LogOut, Search, ShieldCheck, ShoppingBag, UserRound } from 'lucide-react';
 import { TieEduLogo } from '@/components/common/TieEduLogo';
 import { PWAInstallButton } from '@/components/common/PWAInstallButton';
+import { PrefsControl } from '@/components/common/PrefsControl';
 import { useAuth } from '@/context/AuthContext';
 import { useShell } from '@/context/ShellContext';
 import { useCart } from '@/context/CartContext';
@@ -341,7 +342,8 @@ export const Header: React.FC = () => {
 
           {/* The five sections (§5). A section is active anywhere inside it; its
               other pages are the sub-tabs `SectionSubnav` draws under the bar. */}
-          <nav aria-label="Primary" className="hidden items-center gap-0.5 md:flex">
+          {/* Warm Paper E2: the links sit in one white pill group with an edge. */}
+          <nav aria-label="Primary" className="nav-pill hidden md:flex">
             {NAV_SECTIONS.map((section) => {
               const active = currentSection?.id === section.id;
               return (
@@ -444,6 +446,9 @@ export const Header: React.FC = () => {
               )}
             </span>
           </button>
+
+          {/* Language + theme, one control (E2). Below `md` they live in the drawer. */}
+          <PrefsControl className="hidden md:block" />
 
           <NotificationBell />
 

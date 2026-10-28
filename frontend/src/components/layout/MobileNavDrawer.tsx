@@ -18,6 +18,8 @@ import { useShell } from '@/context/ShellContext';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { PWAInstallButton } from '@/components/common/PWAInstallButton';
+import { LangSwitch } from '@/components/common/LangSwitch';
+import { ThemeSwitch } from '@/components/common/ThemeSwitch';
 import { formatBadgeCount } from '@/lib/notifications';
 import { cn } from '@/lib/cn';
 import { useLang } from '@/lib/lang';
@@ -195,6 +197,15 @@ export const MobileNavDrawer: React.FC = () => {
               <Row item={NAV_ITEMS.pricing} />
             </div>
           </section>
+
+          {/* Language and theme. On `md+` they are the header's combined control. */}
+          <section className="mt-5">
+            <h2 className="nav-group-label">Display</h2>
+            <div className="flex flex-col items-start gap-2 px-3">
+              <LangSwitch />
+              <ThemeSwitch />
+            </div>
+          </section>
         </div>
 
         <div className="border-t border-line px-3 py-3">
@@ -227,7 +238,7 @@ export const MobileNavDrawer: React.FC = () => {
               <Link
                 href="/login"
                 onClick={() => closeOverlay('drawer')}
-                className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-signal px-4 text-sm font-bold text-white transition-colors hover:bg-signal"
+                className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-cell bg-signal px-4 font-display text-label text-on-primary shadow-edge-primary transition-colors hover:bg-signal-hover"
               >
                 <LogIn size={17} strokeWidth={2.4} aria-hidden />
                 Sign in
@@ -235,7 +246,7 @@ export const MobileNavDrawer: React.FC = () => {
               <Link
                 href="/signup"
                 onClick={() => closeOverlay('drawer')}
-                className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border border-signal bg-transparent px-4 text-sm font-bold text-link transition-colors hover:bg-signal-soft"
+                className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-cell border border-line bg-card px-4 font-display text-label text-heading shadow-edge-neutral transition-colors hover:bg-surface-hover"
               >
                 <UserPlus size={17} strokeWidth={2.4} aria-hidden />
                 Sign up

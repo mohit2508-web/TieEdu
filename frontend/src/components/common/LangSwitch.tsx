@@ -25,7 +25,7 @@ export const LangSwitch: React.FC<{ className?: string }> = ({ className }) => {
   };
 
   return (
-    <div role="radiogroup" aria-label="Language" className={cn('inline-flex items-center rounded-xl border border-line bg-card p-1', className)}>
+    <div role="radiogroup" aria-label="Language" className={cn('inline-flex items-center rounded-cell border border-line bg-card p-1', className)}>
       <Languages className="mx-1.5 h-4 w-4 text-muted" aria-hidden />
       {OPTIONS.map((o, i) => {
         const on = lang === o.value;
@@ -43,8 +43,8 @@ export const LangSwitch: React.FC<{ className?: string }> = ({ className }) => {
             onClick={() => setLang(o.value)}
             onKeyDown={(e) => onKeyDown(e, i)}
             className={cn(
-              'focus-ring inline-flex min-h-[36px] items-center rounded-lg px-3 text-sm font-semibold transition-colors',
-              on ? 'bg-heading text-card' : 'text-muted hover:text-heading'
+              'focus-ring inline-flex min-h-[36px] items-center rounded-well px-3 text-sm font-semibold transition-colors',
+              on ? 'bg-signal-soft text-signal-ink shadow-edge-selected' : 'text-muted hover:text-heading'
             )}
           >
             {o.label}

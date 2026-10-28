@@ -5,8 +5,6 @@ import { TieEduLogo } from '@/components/common/TieEduLogo';
 import { useAuth } from '@/context/AuthContext';
 import { ALL_NAV_ITEMS, type NavItem } from '@/lib/navConfig';
 import { SOCIAL_LINKS } from '@/lib/socialLinks';
-import { ThemeSwitch } from '@/components/common/ThemeSwitch';
-import { LangSwitch } from '@/components/common/LangSwitch';
 import { useLang } from '@/lib/lang';
 import { navLabel } from '@/lib/navHinglish';
 
@@ -24,7 +22,7 @@ const FOOTER_ITEMS: NavItem[] = ALL_NAV_ITEMS.filter((item) => !FOOTER_EXCLUDED.
 export const Footer: React.FC = () => {
   const [lang] = useLang();
   return (
-    <footer className="bg-white border-t border-line mt-16 pt-12 pb-8">
+    <footer className="bg-app border-t border-line mt-16 pt-12 pb-8">
       <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12">
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pb-10 border-b border-line">
@@ -103,10 +101,6 @@ export const Footer: React.FC = () => {
             >
               For colleges
             </Link>
-          </div>
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            <ThemeSwitch />
-            <LangSwitch />
           </div>
           <div className="flex items-center gap-1">
             <span>Built for placement season with</span>

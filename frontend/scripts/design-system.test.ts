@@ -42,7 +42,15 @@ function findRoot(): string {
 
 const SRC = path.join(findRoot(), 'src');
 const SKIP = ['components/school', 'pages/school', 'components/companyPage'];
-const MONO_ALLOWED = ['components/blocks', 'components/editor', 'components/admin', 'components/modals/BlockEditorModal.tsx', 'pages/verify', 'pages/admin', 'pages/design.tsx'];
+/*
+ * Warm Paper (UI_REDESIGN_PLAN_V3 §5) gives mono a second job besides code:
+ * eyebrows, badges, codes and countdowns. Those roles live in the components
+ * below, so screens get mono through them rather than by hand.
+ */
+const MONO_ALLOWED = [
+  'components/blocks', 'components/editor', 'components/admin', 'components/modals/BlockEditorModal.tsx', 'pages/verify', 'pages/admin', 'pages/design.tsx',
+  'components/ui/Badge.tsx', 'components/ui/DeviceFrame.tsx', 'components/common/PrefsControl.tsx',
+];
 
 /**
  * Colours allowed as literals: drop-type category purples (they have no token

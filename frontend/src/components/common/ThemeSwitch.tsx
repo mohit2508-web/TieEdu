@@ -35,7 +35,7 @@ export const ThemeSwitch: React.FC<{ className?: string }> = ({ className }) => 
   };
 
   return (
-    <div role="radiogroup" aria-label="Theme" className={cn('inline-flex rounded-xl border border-line bg-card p-1', className)}>
+    <div role="radiogroup" aria-label="Theme" className={cn('inline-flex rounded-cell border border-line bg-card p-1', className)}>
       {OPTIONS.map((o, i) => {
         const on = choice === o.value;
         // Until the stored choice is read, the first option holds the Tab stop.
@@ -53,8 +53,8 @@ export const ThemeSwitch: React.FC<{ className?: string }> = ({ className }) => 
             onClick={() => pick(o.value)}
             onKeyDown={(e) => onKeyDown(e, i)}
             className={cn(
-              'focus-ring inline-flex min-h-[36px] items-center gap-1.5 rounded-lg px-3 text-sm font-semibold transition-colors',
-              on ? 'bg-heading text-card' : 'text-muted hover:text-heading'
+              'focus-ring inline-flex min-h-[36px] items-center gap-1.5 rounded-well px-3 text-sm font-semibold transition-colors',
+              on ? 'bg-signal-soft text-signal-ink shadow-edge-selected' : 'text-muted hover:text-heading'
             )}
           >
             <o.icon className="h-4 w-4" aria-hidden />
