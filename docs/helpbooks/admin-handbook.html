@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>TieEdu Admin Console — Handbook</title>
+<link rel="stylesheet" href="helpbook.css">
+</head>
+<body>
+
+<div class="cover">
+  <div>
+    <div class="bar"></div>
+    <div class="brand">TieEdu · Admin Console</div>
+    <h1>Admin Handbook</h1>
+    <p class="sub">Running the TieEdu platform: content, payments, moderation, colleges, outbound messaging and the safety switches that keep it all off until you mean it.</p>
+    <span class="who">For the TieEdu team: super admins, admins, finance, content editors, moderators, support and analysts</span>
+  </div>
+  <div class="foot">TieEdu · Version of October 2026. Internal — contains operational and configuration details. Do not share outside the TieEdu team.</div>
+</div>
+
+<div class="toc">
+  <h2>Contents</h2>
+  <ol>
+    <li>Getting in and staff roles</li>
+    <li>The console at a glance <span>— every tab and what it is for</span></li>
+    <li>Daily and weekly routines</li>
+    <li>Payments, orders and coupons</li>
+    <li>Content: companies, packs, courses, study plans</li>
+    <li>Moderation: offer wall, guarantee claims, recruiters, candidate reports</li>
+    <li>Colleges and the TPO portal</li>
+    <li>Outbound messaging: push, broadcast, email, WhatsApp</li>
+    <li>The safety switches <span>— everything that is off by default</span></li>
+    <li>AI features</li>
+    <li>A/B experiments</li>
+    <li>Server configuration reference</li>
+    <li>Rules you must not break</li>
+  </ol>
+</div>
+
+<section class="chapter">
+  <h2>1. Getting in and staff roles</h2>
+  <p>The console is at <span class="path">/admin</span>; sign in at <span class="path">/admin/login</span>. Only accounts with the admin role reach it, and inside, each person's <strong>staff role</strong> decides which tabs and actions they get.</p>
+  <table>
+    <thead><tr><th>Staff role</th><th>For</th><th>Can do</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Super admin</strong></td><td>Platform owner</td><td>Everything, including dangerous operations. Created automatically for the owner account.</td></tr>
+      <tr><td><strong>Admin</strong></td><td>Core team</td><td>Everything except dangerous operations.</td></tr>
+      <tr><td><strong>Finance</strong></td><td>Payments staff</td><td>Orders, payment verification, coupons, refunds.</td></tr>
+      <tr><td><strong>Content editor</strong></td><td>Content team</td><td>Companies, packs, courses, study plans, drops, posters.</td></tr>
+      <tr><td><strong>Moderator</strong></td><td>Community</td><td>Offer wall, reports and other student submissions.</td></tr>
+      <tr><td><strong>Instructor</strong></td><td>Course authors</td><td>Their courses and lessons.</td></tr>
+      <tr><td><strong>Support</strong></td><td>Help desk</td><td>Look up users and orders, help with access.</td></tr>
+      <tr><td><strong>Analyst</strong></td><td>Reporting</td><td>Read analytics, devices, orders, courses, users.</td></tr>
+      <tr><td><strong>Viewer</strong></td><td>Observers</td><td>Read-only.</td></tr>
+    </tbody>
+  </table>
+  <p>Manage staff in <strong>Users &amp; Access</strong>. A role can be given extra permissions on top; a grant never replaces the role's defaults.</p>
+</section>
+
+<section class="chapter break">
+  <h2>2. The console at a glance</h2>
+  <table>
+    <thead><tr><th>Group</th><th>Tab</th><th>What it is for</th></tr></thead>
+    <tbody>
+      <tr><td rowspan="7"><strong>Commerce &amp; Health</strong></td><td>Overview</td><td>Today's health: sales, sign-ups, activity.</td></tr>
+      <tr><td>Orders</td><td>Every order, its status and history.</td></tr>
+      <tr><td>Payment Verify</td><td>Manual UPI payments waiting to be checked and unlocked.</td></tr>
+      <tr><td>Guarantee Claims</td><td>Accuracy-guarantee claims to approve, reject or mark refunded.</td></tr>
+      <tr><td>Users &amp; Access</td><td>Accounts, disabling accounts, staff roles.</td></tr>
+      <tr><td>Analytics</td><td>Traffic, funnels and engagement.</td></tr>
+      <tr><td>Hero Posters</td><td>Banners on the home page.</td></tr>
+      <tr><td rowspan="6"><strong>Content &amp; Vault</strong></td><td>Company Hub</td><td>Companies: details, rounds, metrics, publishing.</td></tr>
+      <tr><td>Content Builder</td><td>Company page content and studio.</td></tr>
+      <tr><td>Pack Editor</td><td>Paid company packs and their modules.</td></tr>
+      <tr><td>Study Plans</td><td>Plan templates and phases.</td></tr>
+      <tr><td>Drops</td><td>Job/drive news posts, scheduled and archived automatically.</td></tr>
+      <tr><td>Coupons &amp; Pricing</td><td>Coupons, scopes and expiry; prices.</td></tr>
+      <tr><td rowspan="5"><strong>Learning</strong></td><td>Courses</td><td>Courses, lessons, quizzes, exams.</td></tr>
+      <tr><td>Certificates</td><td>Issued certificates; revoke if needed.</td></tr>
+      <tr><td>XP Ledger</td><td>Every point ever granted (append-only; corrections are reversal rows).</td></tr>
+      <tr><td>Skill Test</td><td>Question banks and skill tests.</td></tr>
+      <tr><td>Mock Drives</td><td>Mock drive slots and results.</td></tr>
+      <tr><td rowspan="5"><strong>Engagement</strong></td><td>Candidate Reports</td><td>Students' interview experience reports (outcome, difficulty) to publish or reject.</td></tr>
+      <tr><td>Offer Wall</td><td>Placement stories to approve; “verified” after confirming by email.</td></tr>
+      <tr><td>Recruiters</td><td>Recruiter applications to approve, reject or suspend.</td></tr>
+      <tr><td>Experiments</td><td>A/B tests: start, stop, read results.</td></tr>
+      <tr><td>Email Marketing</td><td>Leads, campaigns, templates, automations.</td></tr>
+      <tr><td rowspan="3"><strong>System</strong></td><td>Notifications</td><td>Check push works on your own device before relying on it.</td></tr>
+      <tr><td>Broadcast</td><td>Push a message to students. Two-step confirm; cannot be recalled.</td></tr>
+      <tr><td>Settings</td><td>Platform details, UPI, and every on/off switch in chapter 9.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="chapter">
+  <h2>3. Daily and weekly routines</h2>
+  <div class="two">
+    <div class="card"><h4>Every day</h4><ul>
+      <li><strong>Payment Verify</strong>: clear the UPI queue so students get access the same day.</li>
+      <li><strong>Offer Wall</strong>: approve or reject pending stories (pending first).</li>
+      <li><strong>Recruiters</strong>: review new applications.</li>
+      <li><strong>Candidate Reports</strong>: publish or reject new interview experiences.</li>
+      <li><strong>Guarantee Claims</strong>: if the guarantee is on.</li>
+    </ul></div>
+    <div class="card"><h4>Every week</h4><ul>
+      <li><strong>Analytics</strong>: sign-ups, activity, conversion.</li>
+      <li><strong>Experiments</strong>: read running tests.</li>
+      <li><strong>Settings → Parent WhatsApp</strong>: this week's sent / failed (Sundays).</li>
+      <li><strong>Drops</strong>: schedule the coming week's posts.</li>
+    </ul></div>
+  </div>
+</section>
+
+<section class="chapter">
+  <h2>4. Payments, orders and coupons</h2>
+  <ul>
+    <li><strong>Razorpay</strong> payments unlock automatically through the payment webhook.</li>
+    <li><strong>UPI (manual)</strong> payments wait in <strong>Payment Verify</strong>. Check the amount and reference in your bank app, then approve to unlock — real money in, real unlocks out.</li>
+    <li><strong>Coupons</strong> can be limited to items and given an expiry. Expired or out-of-scope coupons are refused at checkout.</li>
+  </ul>
+  <h3>The accuracy guarantee</h3>
+  <p>Off by default (Settings → Accuracy guarantee). When on, a student with a paid unlock can claim within 30 days of their interview if a round's pattern differed from what the page showed. Claims arrive in <strong>Guarantee Claims</strong>:</p>
+  <ol class="steps">
+    <li>Read the claim and check it against other students' published interview experiences.</li>
+    <li>Approve or reject, with a note.</li>
+    <li>If approved, <strong>refund through the payment provider yourself</strong>, then mark the claim “refunded”. Nothing pays out automatically, and “refunded” is final.</li>
+  </ol>
+</section>
+
+<section class="chapter">
+  <h2>5. Content: companies, packs, courses, study plans</h2>
+  <ul>
+    <li><strong>Company Hub</strong> creates the company; <strong>Content Builder</strong> designs its page section by section, with a preview before publishing. Publishing a company page writes an audit row.</li>
+    <li>Page settings include <strong>“Offer a Hinglish version”</strong>; fill each section's Hinglish fields, or English shows.</li>
+    <li>Every figure on a company page shows whether it is checked or being verified. Record sources for figures — pages without sources say so.</li>
+    <li><strong>Pack Editor</strong> holds the paid content; mark modules as free preview where you want a taster.</li>
+    <li><strong>Courses</strong> hold lessons, quizzes and the final exam; certificates are issued from completions and can be revoked in <strong>Certificates</strong>.</li>
+  </ul>
+</section>
+
+<section class="chapter">
+  <h2>6. Moderation</h2>
+  <table>
+    <thead><tr><th>Queue</th><th>Approve when</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Offer Wall</strong></td><td>The story is genuine and useful.</td><td>Mark “verified” only after confirming the offer with the student by email (their account email is shown only here). Never collect offer letters.</td></tr>
+      <tr><td><strong>Recruiters</strong></td><td>The website is a real company and the work email is on its domain.</td><td>Personal email addresses are refused at application. Suspending withdraws their open requests. A rejection note is shown to the recruiter.</td></tr>
+      <tr><td><strong>Guarantee Claims</strong></td><td>The pattern really differed.</td><td>See chapter 4.</td></tr>
+      <tr><td><strong>Candidate Reports</strong></td><td>The experience is genuine and consistent with others.</td><td>Published reports appear on company pages as candidate experiences, and back the “from candidate reports” labels.</td></tr>
+    </tbody>
+  </table>
+  <p>Colleges moderate their own <strong>notes from seniors</strong> in the TPO portal; that is not an admin queue.</p>
+</section>
+
+<section class="chapter">
+  <h2>7. Colleges and the TPO portal</h2>
+  <p>Each college's placement cell works in the Campus TPO Portal (<span class="path">/tpo</span>). The TPO Handbook and the College Leadership Guide cover their side.</p>
+  <h3>Onboarding a college</h3>
+  <ol class="steps">
+    <li><strong>Create the college</strong> and <strong>invite its first T&amp;P Head</strong>. These are done through the placement admin API (<span class="path">/api/admin/placement/colleges</span>, <span class="path">…/colleges/:id/invites</span>) — there is no console screen for them yet.</li>
+    <li>The Head accepts the invite link and then invites their own staff from the portal.</li>
+    <li><strong>Import the student roster</strong> (and past drives) so students appear in batch readiness. For GLA the importer is <span class="path">npm run import:gla</span> in the backend; it needs <span class="path">PLACEMENT_IMPORT=1</span> in production and runs in one transaction.</li>
+  </ol>
+  <div class="warn"><span class="label">Careful</span>Roster files contain real personal data. Keep them in <span class="path">backend/seed-data/</span> and never commit or email them.</div>
+</section>
+
+<section class="chapter">
+  <h2>8. Outbound messaging</h2>
+  <table>
+    <thead><tr><th>Channel</th><th>Who sends</th><th>Controls</th></tr></thead>
+    <tbody>
+      <tr><td>Push notifications</td><td>Platform events, broadcasts, nudges, reminders</td><td>Test your own device first in <strong>Notifications</strong>.</td></tr>
+      <tr><td>Broadcast</td><td>Admins</td><td>Tick a box and retype the title. Delivered pushes cannot be recalled.</td></tr>
+      <tr><td>College nudges</td><td>TPO staff (Head approves)</td><td>Max 2 per student per week; students can opt out.</td></tr>
+      <tr><td>Email marketing</td><td>Admins, in <strong>Email Marketing</strong></td><td>Leads, campaigns, templates; unsubscribes are honoured at send time.</td></tr>
+      <tr><td>Parent WhatsApp / email</td><td>Weekly, automatic</td><td>Off until switched on; double opt-in; see chapter 9.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="chapter break">
+  <h2>9. The safety switches</h2>
+  <p class="lead">Every feature that spends money, contacts people outside the platform, or shows students to outsiders ships <strong>off</strong>. Turn each on deliberately.</p>
+  <table>
+    <thead><tr><th>Feature</th><th>Switch</th><th>Also needs</th></tr></thead>
+    <tbody>
+      <tr><td>AI grading — mock interview</td><td>Settings → AI feedback → Mock interview</td><td><span class="path">ANTHROPIC_API_KEY</span>; set the daily limit per student</td></tr>
+      <tr><td>AI coaching — English coach</td><td>Settings → AI feedback → English coach</td><td>Same key; its own daily limit</td></tr>
+      <tr><td>Accuracy guarantee</td><td>Settings → Accuracy guarantee</td><td>A refund amount; manual refunds</td></tr>
+      <tr><td>Parent WhatsApp</td><td>Settings → Parent WhatsApp updates</td><td>Meta WhatsApp Business account, approved template (text shown in Settings), <span class="path">WHATSAPP_*</span> variables</td></tr>
+      <tr><td>Parent email</td><td>Settings → “Also offer a weekly email”</td><td>Resend. <strong>The key is already set</strong>, so this tick is the only safeguard.</td></tr>
+      <tr><td>Recruiter search</td><td>Settings → Recruiter search</td><td>Approve recruiters in the Recruiters tab</td></tr>
+      <tr><td>Study-time reminders</td><td>Server variable <span class="path">STUDY_REMINDER_PUSH=1</span></td><td>Push configured</td></tr>
+      <tr><td>Weekly recap push</td><td>Server variable <span class="path">WEEKLY_RECAP_PUSH=1</span></td><td>Push configured</td></tr>
+      <tr><td>A/B experiment</td><td>Experiments → Start</td><td>—</td></tr>
+    </tbody>
+  </table>
+  <div class="warn"><span class="label">Development servers</span>A development server shares real students' push subscriptions. Never set the push variables on a development machine.</div>
+</section>
+
+<section class="chapter">
+  <h2>10. AI features</h2>
+  <ul>
+    <li>Students always get free, offline feedback: the mock interview checks answers against key points; the English coach checks pace, filler words and common slips.</li>
+    <li>With AI on, Claude adds a score and a better answer (mock interview) or tips and a polished version (English coach), up to the daily limit per student. Over the limit, on an error or a refusal, the free feedback is used and the student is told why.</li>
+    <li>Only the answer text is sent to Anthropic — never names, emails or audio.</li>
+    <li>Each AI-graded answer is billed to your Anthropic account. Set the daily limits with that in mind.</li>
+  </ul>
+</section>
+
+<section class="chapter">
+  <h2>11. A/B experiments</h2>
+  <p>The <strong>Experiments</strong> tab lists experiments defined in code. The first: the company page's main button wording (A = as authored, B = “See where you stand in 2 minutes”). Success = the student starts the free readiness check.</p>
+  <ul>
+    <li>Press <strong>Start</strong>; each visitor then sees one version, always the same one.</li>
+    <li>The table shows unique visitors, successes and the rate per version, and a verdict. No winner is named under 200 visitors per version, or when the difference could be chance (p ≥ 0.05).</li>
+    <li>Press <strong>Stop</strong> to end it; counts are kept. To adopt B for good, change the button text in Content Builder.</li>
+  </ul>
+</section>
+
+<section class="chapter">
+  <h2>12. Server configuration reference</h2>
+  <table>
+    <thead><tr><th>Variable</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><span class="path">DATABASE_URL</span></td><td>Placement database (colleges, TPO access, rosters). Without it, college features show “temporarily unavailable”.</td></tr>
+      <tr><td><span class="path">JWT_SECRET</span></td><td>Sign-in tokens.</td></tr>
+      <tr><td><span class="path">RAZORPAY_*</span></td><td>Payments and the payment webhook.</td></tr>
+      <tr><td><span class="path">RESEND_API_KEY</span>, <span class="path">EMAIL_FROM</span>, <span class="path">EMAIL_REPLY_TO</span></td><td>Outbound email.</td></tr>
+      <tr><td><span class="path">VAPID_*</span></td><td>Push notifications.</td></tr>
+      <tr><td><span class="path">NEXT_PUBLIC_SITE_URL</span></td><td>Links inside emails and WhatsApp messages. Parent messages refuse to send without it.</td></tr>
+      <tr><td><span class="path">ANTHROPIC_API_KEY</span></td><td>AI feedback (plus the Settings switches).</td></tr>
+      <tr><td><span class="path">WHATSAPP_TOKEN</span>, <span class="path">WHATSAPP_PHONE_NUMBER_ID</span>, <span class="path">WHATSAPP_TEMPLATE</span></td><td>Parent WhatsApp (plus the Settings switch).</td></tr>
+      <tr><td><span class="path">WEEKLY_RECAP_PUSH</span>, <span class="path">STUDY_REMINDER_PUSH</span></td><td>Set to <span class="path">1</span> only on the production server.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="chapter keep">
+  <h2>13. Rules you must not break</h2>
+  <ul>
+    <li><strong>Never show a number you cannot back.</strong> Unknown figures stay blank or say “being verified”.</li>
+    <li><strong>Never loosen a privacy floor</strong> (5 or 10 students) or a consent rule without the owner's decision.</li>
+    <li><strong>Never edit the XP ledger</strong> by hand; corrections are reversal rows.</li>
+    <li><strong>Back up</strong> <span class="path">backend/data/db.json</span> before any data repair.</li>
+    <li><strong>Never rewrite git history</strong> or force-push without the owner's explicit yes.</li>
+    <li>Refunds are always made by a person, through the payment provider.</li>
+  </ul>
+</section>
+
+</body>
+</html>

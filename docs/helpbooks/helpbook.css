@@ -1,0 +1,81 @@
+/* TieEdu help books — one print stylesheet for every role's guide (A4). */
+@page { size: A4; margin: 18mm 17mm 20mm 17mm; }
+:root {
+  --ink: #0e2a44;
+  --body: #2b3542;
+  --muted: #667085;
+  --line: #dde1e7;
+  --soft: #f5f7fa;
+  --signal: #e85c21;
+  --signal-soft: #fdeee6;
+  --ok: #157347;
+  --ok-soft: #e7f4ec;
+  --warn: #9a5b00;
+  --warn-soft: #fff4dc;
+}
+* { box-sizing: border-box; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { margin: 0; font-family: "Segoe UI", "Noto Sans", "Nirmala UI", Arial, sans-serif; font-size: 10.5pt; line-height: 1.55; color: var(--body); }
+
+/* Cover */
+.cover { height: 250mm; display: flex; flex-direction: column; justify-content: space-between; page-break-after: always; }
+.cover .bar { width: 28mm; height: 3mm; background: var(--signal); border-radius: 2mm; }
+.cover .brand { margin-top: 6mm; font-size: 13pt; font-weight: 700; color: var(--ink); letter-spacing: 0.02em; }
+.cover h1 { margin: 34mm 0 4mm; font-size: 34pt; line-height: 1.1; color: var(--ink); }
+.cover .sub { font-size: 14pt; color: var(--muted); max-width: 150mm; }
+.cover .who { margin-top: 10mm; display: inline-block; padding: 3mm 5mm; background: var(--signal-soft); color: #8a3510; border-radius: 3mm; font-weight: 600; }
+.cover .foot { font-size: 9pt; color: var(--muted); border-top: 1px solid var(--line); padding-top: 4mm; }
+
+/* Contents */
+.toc { page-break-after: always; }
+.toc ol { padding-left: 6mm; }
+.toc li { margin: 1.6mm 0; font-size: 11pt; color: var(--ink); }
+.toc li span { color: var(--muted); font-size: 9.5pt; }
+
+/* Body */
+h2 { font-size: 17pt; color: var(--ink); margin: 0 0 3mm; padding-top: 2mm; border-bottom: 2px solid var(--signal); padding-bottom: 2mm; page-break-after: avoid; }
+section.chapter { margin-top: 9mm; }
+section.chapter:first-of-type { margin-top: 0; }
+section.break { page-break-before: always; margin-top: 0; }
+h3 { font-size: 12.5pt; color: var(--ink); margin: 6mm 0 1.5mm; page-break-after: avoid; }
+h4 { font-size: 10.5pt; color: var(--ink); margin: 4mm 0 1mm; page-break-after: avoid; }
+p { margin: 1.5mm 0 2.5mm; }
+ul, ol { margin: 1.5mm 0 3mm; padding-left: 6mm; }
+li { margin: 0.8mm 0; }
+strong { color: var(--ink); }
+code, .path { font-family: Consolas, "Cascadia Mono", monospace; font-size: 9pt; background: var(--soft); border: 1px solid var(--line); border-radius: 1.2mm; padding: 0 1.2mm; color: var(--ink); white-space: nowrap; }
+.lead { font-size: 11.5pt; color: var(--body); }
+
+/* Tables */
+table { width: 100%; border-collapse: collapse; margin: 2mm 0 4mm; font-size: 9.6pt; page-break-inside: auto; }
+thead { display: table-header-group; }
+tr { page-break-inside: avoid; }
+th { text-align: left; background: var(--ink); color: #fff; font-weight: 600; padding: 2mm 2.5mm; }
+td { padding: 2mm 2.5mm; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:nth-child(even) td { background: var(--soft); }
+td.yes { color: var(--ok); font-weight: 700; }
+td.no { color: var(--muted); }
+
+/* Callouts */
+.note, .tip, .warn { border-radius: 2mm; padding: 3mm 4mm; margin: 3mm 0 4mm; page-break-inside: avoid; }
+.note { background: var(--soft); border-left: 1.2mm solid var(--ink); }
+.tip { background: var(--ok-soft); border-left: 1.2mm solid var(--ok); }
+.warn { background: var(--warn-soft); border-left: 1.2mm solid var(--warn); }
+.note > :first-child, .tip > :first-child, .warn > :first-child { margin-top: 0; }
+.note > :last-child, .tip > :last-child, .warn > :last-child { margin-bottom: 0; }
+.label { font-weight: 700; text-transform: uppercase; font-size: 8pt; letter-spacing: 0.06em; display: block; margin-bottom: 1mm; }
+.tip .label { color: var(--ok); }
+.warn .label { color: var(--warn); }
+.note .label { color: var(--ink); }
+
+/* Step lists */
+ol.steps { counter-reset: s; list-style: none; padding-left: 0; }
+ol.steps > li { counter-increment: s; position: relative; padding-left: 9mm; margin: 2.2mm 0; }
+ol.steps > li::before { content: counter(s); position: absolute; left: 0; top: 0.3mm; width: 6mm; height: 6mm; border-radius: 50%; background: var(--signal); color: #fff; font-weight: 700; font-size: 8.5pt; display: flex; align-items: center; justify-content: center; }
+
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; }
+.card { border: 1px solid var(--line); border-radius: 2.5mm; padding: 3mm 4mm; page-break-inside: avoid; }
+.card h4 { margin-top: 0; }
+.small { font-size: 9pt; color: var(--muted); }
+.hi { font-family: "Nirmala UI", "Noto Sans Devanagari", "Mangal", sans-serif; }
+.keep { page-break-inside: avoid; }

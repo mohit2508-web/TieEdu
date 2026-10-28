@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>TieEdu Campus TPO Portal — Handbook</title>
+<link rel="stylesheet" href="helpbook.css">
+</head>
+<body>
+
+<div class="cover">
+  <div>
+    <div class="bar"></div>
+    <div class="brand">TieEdu · Campus TPO Portal</div>
+    <h1>TPO Handbook</h1>
+    <p class="sub">How your placement cell uses TieEdu: see your batch's readiness, record placement results, nudge students, and produce reports for management and NAAC.</p>
+    <span class="who">For T&amp;P Heads, T&amp;P Officers, Placement Data Officers, trainers and mentors</span>
+  </div>
+  <div class="foot">TieEdu · Version of October 2026. Screens marked “coming soon” in the portal are not covered here until they open.</div>
+</div>
+
+<div class="toc">
+  <h2>Contents</h2>
+  <ol>
+    <li>Getting into the portal <span>— invites, sign-in, choosing a college</span></li>
+    <li>Who can do what <span>— the roles and their permissions</span></li>
+    <li>Batch readiness <span>— the one screen for your whole batch</span></li>
+    <li>Your college's public page</li>
+    <li>Campus intel <span>— placement history, notes from seniors, year on year</span></li>
+    <li>Nudges <span>— messaging students, with approval</span></li>
+    <li>Reports for management and NAAC</li>
+    <li>Mock drives</li>
+    <li>What students see from you <span>— and what they control</span></li>
+    <li>Privacy rules built into the portal</li>
+    <li>Troubleshooting and support</li>
+  </ol>
+</div>
+
+<section class="chapter">
+  <h2>1. Getting into the portal</h2>
+  <p class="lead">The Campus TPO Portal lives at <span class="path">/tpo</span> on the TieEdu site. It uses the same account as the student site — one account per person — but only works for people your college has given a portal role.</p>
+
+  <h3>Accepting an invite</h3>
+  <ol class="steps">
+    <li>Your T&amp;P Head (or the TieEdu team, for the first Head of a college) sends you an invite link: <span class="path">/tpo/invite/…</span>. Invites last 7 days.</li>
+    <li><strong>If you have no TieEdu account</strong>, the invite page asks for your name and a password and signs you straight into the portal.</li>
+    <li><strong>If you already have an account</strong> with that email, sign in first; the page then attaches the role to your account. An invite can only be accepted by the account whose email it was sent to.</li>
+  </ol>
+  <div class="note"><span class="label">Note</span>Each failure has its own message — invalid, already used, expired, signed in as a different account. If you see “expired”, ask for a new invite; it is not a fault.</div>
+
+  <h3>Signing in later</h3>
+  <p>Go to <span class="path">/tpo/login</span> and use your normal TieEdu email and password. The portal then checks that your account holds an active role for a college. If it says <em>“ask your T&amp;P Head for an invite”</em>, your account exists but has no portal role yet.</p>
+
+  <h3>More than one college</h3>
+  <p>If you work with several colleges, choose the college at the top of the portal. Every screen, export and nudge applies only to the college selected. Data from one college is never shown under another.</p>
+
+  <h3>The Dashboard</h3>
+  <p>The Dashboard shows who you are, the active college, your role and the exact permissions your role carries. If you cannot open a screen, this list is the answer — share it with your T&amp;P Head or TieEdu support.</p>
+</section>
+
+<section class="chapter">
+  <h2>2. Who can do what</h2>
+  <p>Each person holds one role per college. The portal only shows tabs your role can use.</p>
+  <table>
+    <thead><tr><th>Role</th><th>Typical person</th><th>Can do</th></tr></thead>
+    <tbody>
+      <tr><td><strong>T&amp;P Head</strong></td><td>Training &amp; Placement Head</td><td>Everything for the college: batch readiness, campus page, campus intel, <strong>approve and send nudges</strong>, reports, drives, settings, unlocking a placement season.</td></tr>
+      <tr><td><strong>T&amp;P Officer</strong></td><td>Placement officers</td><td>Batch readiness with student names, companies and drives, <strong>draft nudges</strong> (the Head approves), alerts.</td></tr>
+      <tr><td><strong>Placement Data Officer</strong></td><td>Data / records staff</td><td>Batch readiness, <strong>reports</strong>, student and drive data imports (done with the TieEdu team until the Imports screen opens), locking a season, the audit log.</td></tr>
+      <tr><td><strong>Management</strong></td><td>VC, Dean, Director</td><td>Read-only aggregates and <strong>reports</strong>. No student contact details, no changes. See the separate College Leadership Guide.</td></tr>
+      <tr><td><strong>HoD</strong></td><td>Head of Department</td><td>Read-only dashboard and analytics.</td></tr>
+      <tr><td><strong>Master / Vendor Trainer</strong></td><td>Training partners</td><td>Training, tiers and interview records (vendor trainers see only their own batches).</td></tr>
+      <tr><td><strong>Faculty Mentor</strong></td><td>Mentors</td><td>Projects and interview records for their mentees.</td></tr>
+    </tbody>
+  </table>
+  <div class="tip"><span class="label">Good practice</span>Give each person the smallest role that lets them do their job. Only Officers and the Head see students' names in batch readiness; others see roll numbers.</div>
+</section>
+
+<section class="chapter">
+  <h2>3. Batch readiness</h2>
+  <p class="lead">Tab: <strong>Batch readiness</strong>. Your whole batch on one screen: students down the side, the companies your batch is preparing for across the top, each cell the readiness score that student sees on their own Today screen.</p>
+
+  <h3>Reading the screen</h3>
+  <ul>
+    <li><strong>Companies</strong> are chosen automatically: the ones most students in your batch are preparing for (set a test date for, or bought a pack for), up to eight.</li>
+    <li><strong>Readiness</strong> comes from each student's skill tests on that company's interview rounds. A blank cell means the student has not tested for that company yet — it is not a zero.</li>
+    <li><strong>Segments</strong> tell you who needs attention:</li>
+  </ul>
+  <table>
+    <thead><tr><th>Segment</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Ready</strong></td><td>Average readiness of 70% or more.</td></tr>
+      <tr><td><strong>In progress</strong></td><td>Practising, between 50% and 70%.</td></tr>
+      <tr><td><strong>At risk</strong></td><td>Below 50%, or no practice in the last 14 days.</td></tr>
+      <tr><td><strong>Not started</strong></td><td>No tests or lessons yet.</td></tr>
+    </tbody>
+  </table>
+  <h3>Exporting</h3>
+  <p>The CSV export is built in your browser from exactly what is on screen, so it never contains more than you can already see.</p>
+  <h3>Who appears</h3>
+  <p>Students appear once they are on your college roster (imported by your Data Officer or the TieEdu team) and have a TieEdu account linked to it.</p>
+</section>
+
+<section class="chapter">
+  <h2>4. Your college's public page</h2>
+  <p>On the Batch readiness tab, the <strong>Campus page</strong> card turns on a public page for your college at <span class="path">/campus/&lt;your-college&gt;</span>, in your college's colour. It is meant for your students and their parents and tells them how to join.</p>
+  <ul>
+    <li>It shows <strong>aggregates only</strong>, and none at all until at least <strong>10</strong> students have linked.</li>
+    <li>A company's average appears only when at least <strong>5</strong> students have a score for it.</li>
+    <li>You can turn the page off at any time.</li>
+  </ul>
+</section>
+
+<section class="chapter">
+  <h2>5. Campus intel</h2>
+  <p class="lead">Tab: <strong>Campus intel</strong>. Two things your students value most: what happened at each company at your college before, and advice from seniors who went through it.</p>
+
+  <h3>Placement history</h3>
+  <ol class="steps">
+    <li>Choose the company and the year.</li>
+    <li>Enter how many students were selected, and if you know them, the CGPA cut-off and backlogs allowed. Leave a field blank if you do not know it — never guess.</li>
+    <li>Add a short note if useful (up to 300 characters) and save. Saving the same company and year again updates it.</li>
+  </ol>
+  <p>Students of your college see this on each company's page.</p>
+
+  <h3>Year on year</h3>
+  <p>At the top of Campus intel, the <strong>Year on year</strong> card compares your recorded results: students selected per year, the change from the year before, and a company-by-year table.</p>
+  <div class="note"><span class="label">How it counts</span>Only recorded numbers are counted. A company with no number shows as “—” and is not treated as zero. A change is shown only between two years that both have recorded numbers. The same figures appear in the management / NAAC report.</div>
+
+  <h3>Notes from seniors</h3>
+  <p>Placed students can leave notes for juniors. Nothing is shown until you approve it. Approve or reject each note under <strong>Notes from seniors</strong>; rejected notes are never shown.</p>
+</section>
+
+<section class="chapter">
+  <h2>6. Nudges</h2>
+  <p class="lead">Tab: <strong>Nudges</strong>. Send a short message to a group of your own students — for example, everyone <em>at risk</em> in CSE, batch 2027.</p>
+
+  <h3>Sending a nudge</h3>
+  <ol class="steps">
+    <li><strong>Who:</strong> pick one or more segments (Not started, At risk, In progress, Ready). Optionally narrow by branch and batch. The page shows how many students are in those groups.</li>
+    <li><strong>Message:</strong> choose a preset — <em>Come back to practice</em>, <em>Start preparing</em>, <em>Company test coming up</em> (choose the company), or <em>Keep it up</em>.</li>
+    <li><strong>Add a line</strong> if you like, up to 200 characters — for example “Mock drive on Friday at 10 am in Lab 3.” Links, phone numbers and email addresses are not allowed.</li>
+    <li>Check <strong>“Students will see”</strong>, then press <strong>Send for approval</strong> (Officers) or <strong>Send now</strong> (Head).</li>
+  </ol>
+
+  <h3>The approval rule</h3>
+  <table>
+    <thead><tr><th>You are</th><th>What happens</th></tr></thead>
+    <tbody>
+      <tr><td>T&amp;P Officer</td><td>Your nudge waits for the T&amp;P Head. Nothing reaches students until it is approved. You can withdraw it while it waits.</td></tr>
+      <tr><td>T&amp;P Head</td><td>Your own nudges go out when you send them. Officers' nudges appear under <strong>Waiting for your approval</strong>: <em>Approve and send</em>, or <em>Don't send</em> with an optional reason the officer will see.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>What students receive</h3>
+  <ul>
+    <li>The message, signed “<em>&lt;Your college&gt; placement cell</em>”, in the app and as a phone notification if they have notifications on. Nudges are never sent by email.</li>
+    <li>At most <strong>2 college nudges per student in any 7 days</strong>. Students over the limit are skipped automatically.</li>
+    <li>Students can <strong>turn college nudges off</strong>. The portal shows how many have, never who. They are skipped automatically.</li>
+    <li>The audience is worked out again when the nudge is sent, so an approval a day later reaches the students who are in that group then.</li>
+  </ul>
+  <p>The <strong>History</strong> list shows every nudge, who drafted and decided it, and how many students it reached, opted out or were over the weekly limit. Every step is also written to the placement audit log.</p>
+</section>
+
+<section class="chapter">
+  <h2>7. Reports for management and NAAC</h2>
+  <p class="lead">Tab: <strong>Reports</strong> (T&amp;P Head, Data Officer and Management). A placement readiness report you can preview on screen and download as a PDF.</p>
+  <ol class="steps">
+    <li>Choose the period (the default is the last 12 months) and, if you want, one batch.</li>
+    <li>Press <strong>Update</strong> to preview, then <strong>Download PDF</strong>.</li>
+  </ol>
+  <h3>What is in it</h3>
+  <ol>
+    <li>Students on TieEdu, how many practised in the period, and the readiness segments.</li>
+    <li>Readiness by branch.</li>
+    <li>Practice in the period: skill tests, lessons, practice days, certificates.</li>
+    <li>Placement results by year, with the change from the previous year, as recorded in Campus intel.</li>
+  </ol>
+  <div class="tip"><span class="label">Privacy</span>The report contains totals only — no student names, roll numbers or individual results. Any branch with fewer than 5 students is combined into “Other branches” so no individual can be identified. Each download is recorded in the audit log.</div>
+  <p>The report is suitable as <strong>supporting evidence for NAAC Criterion 5 (Student Support and Progression)</strong>. It does not calculate NAAC's own metrics for you.</p>
+</section>
+
+<section class="chapter">
+  <h2>8. Mock drives</h2>
+  <p>Tab: <strong>Drives</strong>. Run a mock placement drive for your students in the real pattern — online test through interview — and see their results. Officers and the Head can create and run drives for the selected college only; drives of other colleges are never visible.</p>
+</section>
+
+<section class="chapter">
+  <h2>9. What students see from you</h2>
+  <table>
+    <thead><tr><th>Students see</th><th>Where</th><th>They control</th></tr></thead>
+    <tbody>
+      <tr><td>Your placement history and approved senior notes</td><td>Each company's page</td><td>—</td></tr>
+      <tr><td>Your nudges</td><td>Today screen, notifications</td><td>Can turn college nudges off</td></tr>
+      <tr><td>“14 students from your college practised today”</td><td>Today screen</td><td>Shown only when at least 10 students are in the number</td></tr>
+      <tr><td>Your college leaderboard</td><td><span class="path">/college-leaderboard</span></td><td>Opt-in only, first name or initials, weekly points</td></tr>
+      <tr><td>Your campus page</td><td><span class="path">/campus/&lt;college&gt;</span></td><td>—</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="chapter">
+  <h2>10. Privacy rules built into the portal</h2>
+  <ul>
+    <li><strong>Students' answers and attempt-by-attempt scores are never shown</strong> — readiness, counts and last active only.</li>
+    <li>Names appear only to roles that hold the student-details permission (Head and Officers); everyone else sees roll numbers.</li>
+    <li>No college number appears anywhere for groups too small to be anonymous (5 for reports and company averages, 10 for the campus page and the Today line).</li>
+    <li>Nudges need the Head's approval, are capped per student, and can be turned off by the student.</li>
+    <li>Every nudge decision, report download and role change is in the placement audit log.</li>
+  </ul>
+</section>
+
+<section class="chapter">
+  <h2>11. Troubleshooting and support</h2>
+  <table>
+    <thead><tr><th>You see</th><th>What it means / what to do</th></tr></thead>
+    <tbody>
+      <tr><td>“Ask your T&amp;P Head for an invite”</td><td>Your account has no portal role. Ask your Head (or TieEdu support for a first Head).</td></tr>
+      <tr><td>“Placement backend unavailable” / “College data is temporarily unavailable”</td><td>A temporary server problem. Try again in a few minutes.</td></tr>
+      <tr><td>A tab is missing</td><td>Your role does not include it. Check the permissions on the Dashboard.</td></tr>
+      <tr><td>“No college selected”</td><td>Choose your college at the top of the portal.</td></tr>
+      <tr><td>A student is missing from batch readiness</td><td>They are not on the roster yet, or have not linked their TieEdu account. Ask your Data Officer.</td></tr>
+      <tr><td>“No students match that group right now”</td><td>The segments and filters you picked contain nobody. Widen them.</td></tr>
+      <tr><td>A nudge reached fewer students than expected</td><td>Check History: some had turned nudges off or already had two college nudges that week.</td></tr>
+    </tbody>
+  </table>
+  <p>For anything else, contact TieEdu support from the address in the site footer, with your college name and the permissions list from your Dashboard.</p>
+</section>
+
+</body>
+</html>
