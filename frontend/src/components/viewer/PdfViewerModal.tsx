@@ -350,7 +350,7 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
             <p className="text-sm text-gray-300 font-semibold">{errorMsg}</p>
             <button
               onClick={() => { setStatus('loading'); setErrorMsg(''); }}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-signal hover:bg-signal text-white text-sm font-bold rounded-xl transition-colors"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-signal hover:bg-signal text-on-primary text-sm font-bold rounded-cell transition-colors shadow-edge-primary active:translate-y-0.5 active:shadow-edge-selected"
             >
               <RefreshCw className="w-4 h-4" /> Retry
             </button>

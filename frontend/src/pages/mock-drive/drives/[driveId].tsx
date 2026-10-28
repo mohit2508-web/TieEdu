@@ -111,7 +111,7 @@ function DriveDetailScreen() {
     <DriveShell title={drive.company_name || 'Drive'}>
       <div className="mx-auto w-full max-w-[880px] px-4 pb-8 pt-4">
         {/* Header card */}
-        <div className="rounded-[14px] border p-4" style={{ background: 'var(--apple-surface)', borderColor: 'var(--apple-separator)' }}>
+        <div className="rounded-card border p-4" style={{ background: 'var(--apple-surface)', borderColor: 'var(--apple-separator)' }}>
           <div className="flex items-start gap-3">
             <span
               className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-[12px] text-base font-bold"

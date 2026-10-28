@@ -96,7 +96,7 @@ function SettingsScreen() {
         ) : (
           <>
             {/* Account — editable name + college, read-only email */}
-            <form onSubmit={saveAccount} className="mb-4 overflow-hidden rounded-[14px] border" style={{ background: 'var(--apple-surface)', borderColor: 'var(--apple-separator)' }}>
+            <form onSubmit={saveAccount} className="mb-4 overflow-hidden rounded-card border" style={{ background: 'var(--apple-surface)', borderColor: 'var(--apple-separator)' }}>
               <div className="flex items-center gap-2 px-4 pb-1 pt-3">
                 <User size={14} style={{ color: 'var(--apple-label-2)' }} />
                 <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--apple-label-2)' }}>Account</p>
@@ -153,7 +153,7 @@ function SettingsScreen() {
             </div>
 
             {/* Toggles */}
-            <div className="overflow-hidden rounded-[14px] border" style={{ background: 'var(--apple-surface)', borderColor: 'var(--apple-separator)' }}>
+            <div className="overflow-hidden rounded-card border" style={{ background: 'var(--apple-surface)', borderColor: 'var(--apple-separator)' }}>
               {TOGGLES.map((t, i) => {
                 const on = settings?.[t.key] ?? false;
                 return (

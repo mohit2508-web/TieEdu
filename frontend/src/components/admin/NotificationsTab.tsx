@@ -220,7 +220,7 @@ export const NotificationsTab: React.FC = () => {
                   ? 'Permission is blocked in browser settings.'
                   : 'Sends a real notification to your own registered devices'
               }
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-signal hover:bg-signal disabled:opacity-60 text-white rounded-xl text-xs font-bold transition"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-signal hover:bg-signal disabled:opacity-60 text-on-primary rounded-cell text-xs font-bold transition shadow-edge-primary active:translate-y-0.5 active:shadow-edge-selected"
             >
               {sending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
               Send test to my devices

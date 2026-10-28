@@ -71,7 +71,7 @@ export const OrdersTab: React.FC = () => {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => { setExpanded(null); load(q.trim(), status); }} className="px-3 py-2 bg-signal hover:bg-signal text-white rounded-xl text-xs font-bold flex items-center gap-1.5">
+          <button onClick={() => { setExpanded(null); load(q.trim(), status); }} className="px-3 py-2 bg-signal hover:bg-signal text-on-primary rounded-xl text-xs font-bold flex items-center gap-1.5">
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} /> Refresh
           </button>
           <button onClick={() => exportCsv(orders)} className="px-3 py-2 bg-brand-ink hover:bg-brand-ink text-white rounded-xl text-xs font-bold flex items-center gap-1.5">

@@ -99,7 +99,7 @@ export default function OffersPage() {
         )}
 
         {error && <p className="mt-6 rounded-xl bg-danger-soft px-4 py-3 text-sm text-danger">{error}</p>}
-        {!wall && !error && <div className="mt-6 space-y-3">{[0, 1].map((n) => <Skeleton key={n} className="h-40 w-full rounded-[14px]" />)}</div>}
+        {!wall && !error && <div className="mt-6 space-y-3">{[0, 1].map((n) => <Skeleton key={n} className="h-40 w-full rounded-card" />)}</div>}
         {wall && wall.items.length === 0 && (
           <Card pad="lg" className="mt-6 text-center">
             <p className="font-display text-lg font-bold text-heading">No stories here yet</p>

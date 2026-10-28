@@ -136,7 +136,7 @@ export const MockInterviewModal: React.FC<MockInterviewModalProps> = ({
             {!submitted ? (
               <button
                 onClick={handleSubmitAnswer}
-                className="bg-signal hover:bg-signal-hover text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-all shadow-lg shadow-brand-orange/20"
+                className="bg-signal hover:bg-signal-hover text-on-primary font-semibold text-sm px-5 py-2.5 rounded-xl transition-all shadow-lg shadow-brand-orange/20"
               >
                 Submit &amp; Reveal Model Answer
               </button>

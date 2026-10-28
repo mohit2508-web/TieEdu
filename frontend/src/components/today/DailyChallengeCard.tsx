@@ -23,7 +23,7 @@ export const DailyChallengeCard: React.FC = () => {
   return (
     <Link
       href="/daily"
-      className="focus-ring group mt-4 flex items-center gap-4 rounded-[14px] border border-line bg-card p-4 transition-colors hover:border-line-strong sm:p-5"
+      className="focus-ring group mt-4 flex items-center gap-4 rounded-card border border-line bg-card p-4 transition-colors hover:border-line-strong sm:p-5"
     >
       <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${done ? 'bg-success-soft text-success' : 'bg-signal-soft text-signal-ink'}`} aria-hidden>
         {done ? <CheckCircle2 className="h-5 w-5" /> : <Zap className="h-5 w-5" />}

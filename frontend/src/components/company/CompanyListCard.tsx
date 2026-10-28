@@ -31,7 +31,7 @@ export const CompanyListCard: React.FC<{ company: Company }> = ({ company }) => 
   return (
     <Link
       href={`/company/${company.slug}`}
-      className="group focus-ring flex flex-col rounded-[14px] border border-line bg-card p-5 transition-colors hover:border-line-strong"
+      className="group focus-ring flex flex-col rounded-card border border-line bg-card p-5 transition-colors hover:border-line-strong"
     >
       <div className="flex items-start gap-3">
         <BrandTile name={company.name} src={company.logo_url} className="h-12 w-12 shrink-0 rounded-xl p-1" />

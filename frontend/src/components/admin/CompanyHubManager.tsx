@@ -261,7 +261,7 @@ export const CompanyHubManager: React.FC<CompanyHubManagerProps> = ({ companies,
                       <button onClick={() => openEdit(c)} className="p-1.5 text-gray-500 hover:text-link hover:bg-signal-soft rounded-lg" title="Edit company profile">
                         <Edit3 className="w-4 h-4" />
                       </button>
-                      <button onClick={() => onSelect(c.id)} className="px-3 py-1 bg-signal hover:bg-signal text-white rounded-lg text-xs font-bold" title="Manage content">
+                      <button onClick={() => onSelect(c.id)} className="px-3 py-1 bg-signal hover:bg-signal text-on-primary rounded-lg text-xs font-bold" title="Manage content">
                         Manage
                       </button>
                       <button

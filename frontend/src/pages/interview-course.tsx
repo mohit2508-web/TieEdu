@@ -148,7 +148,7 @@ export default function InterviewCoursePage() {
                 <div className="flex flex-wrap items-center gap-4 pt-4">
                   <a
                     href="#curriculum"
-                    className="bg-signal hover:bg-signal-hover text-white font-bold text-sm sm:text-base px-7 py-3.5 rounded-full shadow-lg shadow-brand-orange/25 transition-all flex items-center gap-2"
+                    className="bg-signal hover:bg-signal-hover text-on-primary font-bold text-sm sm:text-base px-7 py-3.5 rounded-full shadow-lg shadow-brand-orange/25 transition-all flex items-center gap-2"
                   >
                     Start 50 Modules Now 👉
                   </a>
@@ -332,7 +332,7 @@ export default function InterviewCoursePage() {
                   onClick={() => setActiveCategory(cat)}
                   className={`text-xs sm:text-sm font-semibold px-4 py-2 rounded-xl whitespace-nowrap transition-all ${
                     activeCategory === cat
-                      ? 'bg-signal text-white shadow-md shadow-signal/20'
+                      ? 'bg-signal text-on-primary shadow-md shadow-signal/20'
                       : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
                   }`}
                 >

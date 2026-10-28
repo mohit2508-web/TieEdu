@@ -126,7 +126,7 @@ const StreakWeek: React.FC<{ streak: TodayView['this_week']['streak']; c: Copy }
           <span
             className={cn(
               'flex h-8 w-8 items-center justify-center rounded-full border-2',
-              d.state === 'done' && 'border-signal bg-signal text-white',
+              d.state === 'done' && 'border-signal bg-signal text-on-primary',
               d.state === 'frozen' && 'border-info/60 bg-info-soft text-info',
               d.state === 'missed' && 'border-line bg-card',
               d.state === 'today' && 'border-dashed border-signal bg-card'
@@ -213,7 +213,7 @@ export const TodayScreen: React.FC<{ ready: boolean }> = ({ ready }) => {
           className="mt-5"
           stations={data.route.map((s) => ({ label: s.label, note: s.note || undefined, state: s.state }))}
         />
-        <div className="mt-8 rounded-[14px] bg-white/[0.06] p-5 ring-1 ring-inset ring-white/10 sm:p-6">
+        <div className="mt-8 rounded-card bg-white/[0.06] p-5 ring-1 ring-inset ring-white/10 sm:p-6">
           <p className="eyebrow text-white/70">{c.next}</p>
           <h2 className="mt-2 font-display text-xl font-bold text-white sm:text-2xl">{step.title}</h2>
           <p className="mt-1.5 max-w-2xl text-base text-white/80">{step.body}</p>

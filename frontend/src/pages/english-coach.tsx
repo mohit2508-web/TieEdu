@@ -106,12 +106,12 @@ export default function EnglishCoachPage() {
             <div className="mt-3 flex flex-wrap gap-2">
               {LEVELS.map((l) => <Chip key={l.id} selected={level === l.id} onClick={() => setLevel(l.id)}>{l.label}</Chip>)}
             </div>
-            {!prompts && !err && <Skeleton className="mt-3 h-40 w-full rounded-[14px]" />}
+            {!prompts && !err && <Skeleton className="mt-3 h-40 w-full rounded-card" />}
             {err && <p className="mt-3 text-sm text-danger">{err}</p>}
             <ul className="mt-3 space-y-2">
               {levelPrompts.map((p) => (
                 <li key={p.id}>
-                  <button type="button" onClick={() => { setPrompt(p); setResult(null); }} className="focus-ring group flex w-full items-center gap-3 rounded-[14px] border border-line bg-card p-4 text-left hover:border-line-strong">
+                  <button type="button" onClick={() => { setPrompt(p); setResult(null); }} className="focus-ring group flex w-full items-center gap-3 rounded-card border border-line bg-card p-4 text-left hover:border-line-strong">
                     <span className="min-w-0 flex-1">
                       <span className="block font-bold text-heading group-hover:text-link">{p.text}</span>
                       <span className="mt-0.5 block text-sm text-muted">About {p.seconds} seconds</span>
@@ -149,7 +149,7 @@ export default function EnglishCoachPage() {
         {user && (
           <section className="mt-10" aria-labelledby="past-h">
             <h2 id="past-h" className="font-display text-lg font-bold text-heading">Your practice</h2>
-            {!list && <Skeleton className="mt-3 h-20 w-full rounded-[14px]" />}
+            {!list && <Skeleton className="mt-3 h-20 w-full rounded-card" />}
             {list && list.attempts.length === 0 && <p className="mt-2 text-sm text-muted">Nothing yet. Your practice stays private to you.</p>}
             <ul className="mt-3 space-y-3">
               {list?.attempts.filter((a) => a.id !== result?.id).slice(0, 10).map((a) => (
@@ -301,7 +301,7 @@ function Practice({ prompt, hinglish, aiNote, onBack, onDone }: {
             type="button"
             onClick={listen}
             aria-pressed={listening}
-            className={`focus-ring inline-flex min-h-[52px] items-center gap-2 rounded-xl px-6 text-base font-bold text-white ${listening ? 'bg-danger' : 'bg-signal hover:bg-signal-hover'}`}
+            className={`focus-ring inline-flex min-h-[52px] items-center gap-2 rounded-cell px-6 text-base font-bold text-on-primary ${listening ? 'bg-danger' : 'bg-signal hover:bg-signal-hover'} shadow-edge-primary active:translate-y-0.5 active:shadow-edge-selected`}
           >
             {listening ? <Square className="h-5 w-5" aria-hidden /> : <Mic className="h-5 w-5" aria-hidden />}
             {listening ? `Stop · ${elapsed}s` : text ? 'Keep speaking' : 'Start speaking'}

@@ -111,7 +111,7 @@ export const CompanyFinder: React.FC<CompanyFinderProps> = ({ companies, value, 
         </div>
         <button
           type="submit"
-          className="pressable focus-ring inline-flex min-h-[52px] items-center gap-2 rounded-xl bg-signal px-5 text-base font-semibold text-white transition-colors hover:bg-signal-hover"
+          className="pressable focus-ring inline-flex min-h-[52px] items-center gap-2 rounded-cell bg-signal px-5 text-base font-semibold text-on-primary transition-colors hover:bg-signal-hover shadow-edge-primary active:translate-y-0.5 active:shadow-edge-selected"
         >
           <span className="hidden sm:inline">Find</span>
           <ArrowRight className="h-5 w-5" aria-hidden />

@@ -38,7 +38,7 @@ function MyCertificates() {
           <p className="mt-1 text-sm text-gray-500">Sign in to see your earned certificates.</p>
           <Link
             href="/login?next=/skill-test/my-certificates"
-            className="mt-6 block w-full rounded-full bg-signal py-3.5 text-sm font-semibold text-white hover:bg-signal transition-colors"
+            className="mt-6 block w-full rounded-full bg-signal py-3.5 text-sm font-semibold text-on-primary hover:bg-signal transition-colors"
           >
             Sign In / Sign Up
           </Link>
@@ -113,7 +113,7 @@ function MyCertificates() {
             <p className="mt-3 text-sm text-gray-500">No certificates yet. Take an assessment to earn your first!</p>
             <Link
               href="/skill-test"
-              className="mt-4 inline-block rounded-full bg-signal px-6 py-2.5 text-sm font-semibold text-white hover:bg-signal transition-colors"
+              className="mt-4 inline-block rounded-full bg-signal px-6 py-2.5 text-sm font-semibold text-on-primary hover:bg-signal transition-colors"
             >
               Explore Skills
             </Link>

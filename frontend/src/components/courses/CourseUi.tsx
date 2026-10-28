@@ -232,7 +232,7 @@ export const ctaToneClasses = (tone: CourseCtaTone): string =>
   [
     'inline-flex items-center justify-center rounded-[var(--radius-sm)] border px-5 py-2.5 text-sm font-bold transition-colors',
     tone === 'primary'
-      ? 'border-signal bg-signal text-white hover:bg-signal-hover hover:border-signal-hover'
+      ? 'border-signal bg-signal text-on-primary hover:bg-signal-hover hover:border-signal-hover'
       : tone === 'gold'
         ? // Amber is money. Dark ink on it: white on amber is 2.2:1.
           'border-money bg-money text-money-ink hover:bg-money-hover hover:border-money-hover'

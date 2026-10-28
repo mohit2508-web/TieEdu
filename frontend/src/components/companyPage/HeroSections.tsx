@@ -43,6 +43,25 @@ export function Hero({
 
   const title = t(d.title) || `${company.name} placement prep`;
 
+  /*
+   * Warm Paper (UI_REDESIGN_PLAN_V3 §11): the company's name is the key phrase.
+   * On the paper hero it gets the highlighter; on the teal hero a yellow mark
+   * behind cream text would not read, so the name turns amber instead, as the
+   * closing band does.
+   */
+  const at = company.name ? title.indexOf(company.name) : -1;
+  const keyClass = heroStyle === 'paper' ? 'marker' : s.heroKey;
+  const titleNode =
+    at < 0 ? (
+      title
+    ) : (
+      <>
+        {title.slice(0, at)}
+        <span className={keyClass}>{company.name}</span>
+        {title.slice(at + company.name.length)}
+      </>
+    );
+
   return (
     <header id={anchorOf(section)} className={cx(s.hero, heroStyle === 'paper' && s.heroPaper)}>
       <div className={cx(s.wrap, s.heroInner)}>
@@ -79,7 +98,7 @@ export function Hero({
               <span className={s.tChip}>Track</span>
             </div>
           )}
-          <h1 className={s.h1}>{title}</h1>
+          <h1 className={s.h1}>{titleNode}</h1>
           {d.subtitle && <p className={s.heroSub}>{t(d.subtitle)}</p>}
 
           {nextText && (

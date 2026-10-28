@@ -150,7 +150,7 @@ export const ModulePdfManager: React.FC<ModulePdfManagerProps> = ({ module, comp
               <div key={pdf.id} className="p-4 bg-app-warm border border-gray-200 rounded-2xl space-y-3">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-xl bg-signal text-white flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-signal text-on-primary flex items-center justify-center shrink-0">
                       <FileText className="w-5 h-5" />
                     </div>
                     <div className="min-w-0">
@@ -248,7 +248,7 @@ export const ModulePdfManager: React.FC<ModulePdfManagerProps> = ({ module, comp
               <button
                 onClick={handleUpload}
                 disabled={busy}
-                className="w-full py-3 bg-signal hover:bg-signal text-white text-sm font-bold rounded-xl inline-flex items-center justify-center gap-2 transition-colors disabled:opacity-60"
+                className="w-full py-3 bg-signal hover:bg-signal text-on-primary text-sm font-bold rounded-xl inline-flex items-center justify-center gap-2 transition-colors disabled:opacity-60"
               >
                 {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
                 {progress !== null ? `Uploading… ${progress}%` : 'Upload PDF'}

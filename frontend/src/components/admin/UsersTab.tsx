@@ -108,7 +108,7 @@ export const UsersTab: React.FC<{ companies: Company[] }> = ({ companies }) => {
               className="pl-9 pr-3 py-2 border border-gray-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-signal/30 w-56"
             />
           </div>
-          <button onClick={() => load(q.trim())} className="px-3 py-2 bg-signal hover:bg-signal text-white rounded-xl text-xs font-bold flex items-center gap-1.5">
+          <button onClick={() => load(q.trim())} className="px-3 py-2 bg-signal hover:bg-signal text-on-primary rounded-xl text-xs font-bold flex items-center gap-1.5">
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} /> Refresh
           </button>
         </div>
@@ -172,7 +172,7 @@ export const UsersTab: React.FC<{ companies: Company[] }> = ({ companies }) => {
                           <button
                             onClick={() => openModal(u)}
                             disabled={busy}
-                            className="px-2.5 py-1.5 bg-signal hover:bg-signal text-white rounded-lg text-xs font-bold flex items-center gap-1"
+                            className="px-2.5 py-1.5 bg-signal hover:bg-signal text-on-primary rounded-lg text-xs font-bold flex items-center gap-1"
                             title="Grant / revoke vault unlock"
                           >
                             <KeyRound className="w-3 h-3" /> Access

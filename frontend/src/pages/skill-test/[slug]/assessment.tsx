@@ -166,7 +166,7 @@ function AssessmentPage() {
           <p className="mt-1 text-sm text-gray-500">Sign in to take the {skillName} assessment and earn your certificate.</p>
           <Link
             href={`/login?next=${encodeURIComponent(`/skill-test/${slug}/assessment`)}`}
-            className="mt-6 block w-full rounded-full bg-signal py-3.5 text-sm font-semibold text-white hover:bg-signal transition-colors"
+            className="mt-6 block w-full rounded-full bg-signal py-3.5 text-sm font-semibold text-on-primary hover:bg-signal transition-colors"
           >
             Sign In / Sign Up
           </Link>
@@ -191,7 +191,7 @@ function AssessmentPage() {
           <button
             onClick={handleStart}
             disabled={loading}
-            className="mt-6 w-full rounded-full bg-signal py-3.5 text-sm font-semibold text-white hover:bg-signal transition-colors disabled:opacity-60"
+            className="mt-6 w-full rounded-full bg-signal py-3.5 text-sm font-semibold text-on-primary hover:bg-signal transition-colors disabled:opacity-60"
           >
             {loading ? 'Preparing…' : 'Start Now'}
           </button>
@@ -318,7 +318,7 @@ function AssessmentPage() {
           {current < questions.length - 1 ? (
             <button
               onClick={() => setCurrent((c) => c + 1)}
-              className="flex items-center gap-1 rounded-full bg-signal px-5 py-2.5 text-sm font-semibold text-white hover:bg-signal min-h-[44px]"
+              className="flex items-center gap-1 rounded-full bg-signal px-5 py-2.5 text-sm font-semibold text-on-primary hover:bg-signal min-h-[44px]"
             >
               Next <ArrowRight className="h-4 w-4" />
             </button>
@@ -398,7 +398,7 @@ function AssessmentPage() {
               <button
                 onClick={() => doSubmit(answers, timeLeft)}
                 disabled={submitting}
-                className="rounded-full bg-signal py-3 text-sm font-semibold text-white hover:bg-signal transition-colors disabled:opacity-60"
+                className="rounded-full bg-signal py-3 text-sm font-semibold text-on-primary hover:bg-signal transition-colors disabled:opacity-60"
               >
                 {submitting ? 'Submitting…' : 'Submit Assessment'}
               </button>

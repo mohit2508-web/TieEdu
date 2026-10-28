@@ -124,7 +124,7 @@ const BlockForm: React.FC<{
             aria-pressed={type === b.type}
             className={`inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-bold transition-colors min-h-[2rem] ${
               type === b.type
-                ? 'bg-signal text-white'
+                ? 'bg-signal text-on-primary'
                 : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-300'
             }`}
           >
@@ -380,7 +380,7 @@ export const StudyPlanPhaseEditor: React.FC<Props> = ({ templateId, phases, onCh
               setSelectedId(res.phase.id);
             })
           }
-          className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-signal text-white text-xs font-bold min-h-[2.5rem]"
+          className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-cell bg-signal text-on-primary text-xs font-bold min-h-[2.5rem] shadow-edge-primary active:translate-y-0.5 active:shadow-edge-selected"
         >
           <Plus className="w-4 h-4" /> Add first phase
         </button>

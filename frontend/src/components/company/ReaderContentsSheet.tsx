@@ -136,7 +136,7 @@ export const ReaderContentsSheet: React.FC<ReaderContentsSheetProps> = ({
                   <span
                     className={cn(
                       'flex h-8 w-8 flex-none items-center justify-center rounded-lg',
-                      active ? 'bg-signal text-white' : 'bg-gray-100 text-gray-500'
+                      active ? 'bg-signal text-on-primary' : 'bg-gray-100 text-gray-500'
                     )}
                     aria-hidden
                   >

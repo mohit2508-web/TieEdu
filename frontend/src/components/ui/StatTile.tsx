@@ -22,7 +22,7 @@ export interface StatTileProps {
 }
 
 export const StatTile: React.FC<StatTileProps> = ({ label, value, unit, note, source, icon: Icon, className }) => (
-  <div className={cn('rounded-[14px] border border-line bg-card p-4', className)}>
+  <div className={cn('rounded-card border border-line bg-card p-4', className)}>
     <p className="flex items-center gap-1.5 text-xs font-semibold text-muted">
       {Icon ? <Icon className="h-4 w-4" /> : null}
       {label}

@@ -97,7 +97,7 @@ export default function DailyChallengePage() {
         )}
 
         <div className="mt-6 space-y-4">
-          {!view && !error && [0, 1, 2].map((n) => <Skeleton key={n} className="h-56 w-full rounded-[14px]" />)}
+          {!view && !error && [0, 1, 2].map((n) => <Skeleton key={n} className="h-56 w-full rounded-card" />)}
           {view?.items.map((item, n) =>
             item.kind === 'hr' ? (
               <HrCard key={item.kind} n={n + 1} item={item} signedIn={!!user} onNeedSignIn={() => setNeedSignIn(true)} onAnswered={replaceItem} />

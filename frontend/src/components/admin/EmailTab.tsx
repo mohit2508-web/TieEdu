@@ -413,7 +413,7 @@ export const EmailTab: React.FC = () => {
               >
                 <Plus className="w-3.5 h-3.5" /> Add one
               </button>
-              <label className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer transition ${importing ? 'bg-gray-100 text-gray-400' : 'bg-signal hover:bg-signal text-white'}`}>
+              <label className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer transition ${importing ? 'bg-gray-100 text-gray-400' : 'bg-signal hover:bg-signal text-on-primary'}`}>
                 {importing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileUp className="w-3.5 h-3.5" />}
                 {importing ? 'Importing…' : 'Import CSV'}
                 <input
@@ -541,7 +541,7 @@ export const EmailTab: React.FC = () => {
                 <h3 className="text-sm font-extrabold text-heading">Campaigns</h3>
                 <p className="text-xs text-gray-500 mt-0.5">Draft → send → paced by the queue. Progress updates live.</p>
               </div>
-              <button onClick={() => setShowCreate((v) => !v)} className="px-3.5 py-2 bg-signal hover:bg-signal text-white rounded-xl text-xs font-bold flex items-center gap-1.5">
+              <button onClick={() => setShowCreate((v) => !v)} className="px-3.5 py-2 bg-signal hover:bg-signal text-on-primary rounded-xl text-xs font-bold flex items-center gap-1.5">
                 <Plus className="w-3.5 h-3.5" /> New campaign
               </button>
             </div>
@@ -598,7 +598,7 @@ export const EmailTab: React.FC = () => {
                         {(c.status === 'draft') && (
                           <button
                             onClick={() => { setSendFor(c); setSendAck(false); setSendTyped(''); }}
-                            className="px-3 py-2 bg-signal hover:bg-signal text-white rounded-lg text-xs font-bold flex items-center gap-1"
+                            className="px-3 py-2 bg-signal hover:bg-signal text-on-primary rounded-lg text-xs font-bold flex items-center gap-1"
                           >
                             <Send className="w-3 h-3" /> Send
                           </button>

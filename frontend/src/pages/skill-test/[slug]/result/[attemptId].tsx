@@ -260,7 +260,7 @@ function ResultPage() {
           </Link>
           <Link
             href="/skill-test"
-            className="flex items-center justify-center gap-2 rounded-full bg-signal py-3 text-sm font-semibold text-white hover:bg-signal transition-colors"
+            className="flex items-center justify-center gap-2 rounded-full bg-signal py-3 text-sm font-semibold text-on-primary hover:bg-signal transition-colors"
           >
             Explore More Skills
           </Link>

@@ -143,7 +143,7 @@ export const CouponsManager: React.FC = () => {
             <input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} className="accent-signal w-4 h-4" />
             Active
           </label>
-          <button onClick={handleSubmit} className="inline-flex items-center gap-2 px-4 py-2.5 bg-signal hover:bg-signal text-white rounded-xl text-xs font-bold transition-colors">
+          <button onClick={handleSubmit} className="inline-flex items-center gap-2 px-4 py-2.5 bg-signal hover:bg-signal text-on-primary rounded-cell text-xs font-bold transition-colors shadow-edge-primary active:translate-y-0.5 active:shadow-edge-selected">
             {editingId ? 'Update Coupon' : <><Plus className="w-4 h-4" /> Create Coupon</>}
           </button>
           {editingId && (

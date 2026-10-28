@@ -110,7 +110,7 @@ export default function CalendarPage() {
                   <Button href={`/company/${soonest.slug}`} kind="secondary">Open {soonest.company}</Button>
                 </div>
                 {todayPlan && (
-                  <div className="mt-5 rounded-[14px] bg-white/[0.06] p-4 ring-1 ring-inset ring-white/10">
+                  <div className="mt-5 rounded-card bg-white/[0.06] p-4 ring-1 ring-inset ring-white/10">
                     <p className="eyebrow text-white/70">Today</p>
                     <ul className="mt-2 space-y-2">
                       {todayPlan.tasks.map((t) => {
@@ -159,7 +159,7 @@ export default function CalendarPage() {
             {/* All dates */}
             <section className="mt-6" aria-labelledby="dates-h">
               <h2 id="dates-h" className="font-display text-lg font-bold text-heading">All your test dates</h2>
-              {!view && !error && <Skeleton className="mt-3 h-24 w-full rounded-[14px]" />}
+              {!view && !error && <Skeleton className="mt-3 h-24 w-full rounded-card" />}
               {view && view.entries.length === 0 && (
                 <EmptyState icon={CalendarDays} title="No test dates yet" note="Add one above, or set it on any company page." />
               )}
@@ -203,7 +203,7 @@ export default function CalendarPage() {
                 <p className="mt-1 text-sm text-muted">Weakest rounds first. It updates itself as you take tests.</p>
                 <ol className="mt-4 space-y-2">
                   {view.plan.days.map((d) => (
-                    <li key={d.date} className={cn('rounded-[14px] border p-4', d.date === view.today ? 'border-signal bg-signal-soft' : 'border-line bg-card')}>
+                    <li key={d.date} className={cn('rounded-card border p-4', d.date === view.today ? 'border-signal bg-signal-soft' : 'border-line bg-card')}>
                       <p className="text-xs font-bold uppercase tracking-[0.08em] text-muted">
                         {d.date === view.today ? 'Today' : fmt(d.date)} · {d.days_left === 0 ? 'test day' : `${d.days_left} to go`}
                       </p>

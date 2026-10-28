@@ -67,7 +67,7 @@ export default function TalentPage() {
             <Button href="/login?next=%2Ftalent" className="mt-4">Sign in</Button>
           </Card>
         )}
-        {user && !data && !err && <Skeleton className="mt-6 h-48 w-full rounded-[14px]" />}
+        {user && !data && !err && <Skeleton className="mt-6 h-48 w-full rounded-card" />}
         {err && <p className="mt-4 text-sm text-danger" role="alert">{err}</p>}
 
         {user && data && (

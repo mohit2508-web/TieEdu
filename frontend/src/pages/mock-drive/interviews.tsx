@@ -59,7 +59,7 @@ function InterviewsScreen() {
                 <li key={iv.interview_id}>
                   <Link
                     href={`/mock-drive/drives/${iv.drive_id}`}
-                    className="block rounded-[14px] border p-4"
+                    className="block rounded-card border p-4"
                     style={{ background: 'var(--apple-surface)', borderColor: 'var(--apple-separator)' }}
                   >
                     <div className="flex items-start justify-between gap-3">

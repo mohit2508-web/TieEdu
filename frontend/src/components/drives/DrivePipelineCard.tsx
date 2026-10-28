@@ -104,7 +104,7 @@ export const DrivePipelineCard: React.FC<{
   if (booking) {
     const linkState = booking.link_active_at ? 'active' : booking.link_assigned_at ? 'assigned' : 'pending';
     return (
-      <div className="rounded-[14px] border p-4" style={{ borderColor: 'var(--apple-separator)', background: 'var(--apple-surface)' }}>
+      <div className="rounded-card border p-4" style={{ borderColor: 'var(--apple-separator)', background: 'var(--apple-surface)' }}>
         <div className="flex items-center gap-2 text-xs font-semibold" style={{ color: 'var(--apple-label-2)' }}>
           <Clock3 size={14} style={{ color: 'var(--apple-blue)' }} />
           YOUR TEST STARTS IN
@@ -171,7 +171,7 @@ const StepCard: React.FC<{
   }[tone];
 
   return (
-    <div className="rounded-[14px] border p-4" style={{ borderColor: 'var(--apple-separator)', background: 'var(--apple-surface)' }}>
+    <div className="rounded-card border p-4" style={{ borderColor: 'var(--apple-separator)', background: 'var(--apple-surface)' }}>
       <div className="flex items-center gap-2">
         <span className="inline-flex h-7 w-7 items-center justify-center rounded-full" style={{ background: tones.bg, color: tones.fg }}>
           {icon}

@@ -33,7 +33,7 @@ export const FeedbackAdModal: React.FC<FeedbackAdModalProps> = ({
           onClose();
           onOpenFeedbackForm();
         }}
-        className="flex w-full items-center justify-center gap-2 rounded-xl bg-signal py-3 text-sm font-bold text-white shadow-md transition-colors hover:bg-signal active:bg-signal"
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-signal py-3 text-sm font-bold text-on-primary shadow-md transition-colors hover:bg-signal active:bg-signal"
       >
         <MessageSquarePlus className="h-4 w-4" /> Share Feedback &amp; Claim +50 XP
       </button>

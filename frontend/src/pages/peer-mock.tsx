@@ -90,7 +90,7 @@ export default function PeerMockPage() {
           </Card>
         )}
 
-        {user && !rubric && !err && <Skeleton className="mt-6 h-48 w-full rounded-[14px]" />}
+        {user && !rubric && !err && <Skeleton className="mt-6 h-48 w-full rounded-card" />}
         {err && <p className="mt-4 text-sm text-danger" role="alert">{err}</p>}
 
         {user && rubric && !active && (
@@ -275,7 +275,7 @@ function Result({ s, rubric, busy, onDeleteNote, onSwap }: { s: PeerSessionView;
       <ol className="mt-4 space-y-3">
         {s.questions.map((q, i) => (
           <li key={q.id}>
-            <details className="rounded-[14px] border border-line bg-card p-4">
+            <details className="rounded-card border border-line bg-card p-4">
               <summary className="focus-ring cursor-pointer list-none font-bold text-heading">{i + 1}. {q.question}</summary>
               {q.rating && <p className="mt-2 text-sm text-body">{rubric.dimensions.map((d) => `${d.label}: ${label(q.rating![d.id])}`).join(' · ')}</p>}
               <p className="mt-2 text-sm font-bold text-heading">A strong answer covers</p>
@@ -301,7 +301,7 @@ function History({ sessions, onOpen }: { sessions: PeerSessionView[]; onOpen: (s
       <ul className="mt-3 space-y-2">
         {done.map((s) => (
           <li key={s.id}>
-            <button type="button" onClick={() => onOpen(s)} className="focus-ring group flex w-full items-center gap-3 rounded-[14px] border border-line bg-card p-4 text-left hover:border-line-strong">
+            <button type="button" onClick={() => onOpen(s)} className="focus-ring group flex w-full items-center gap-3 rounded-card border border-line bg-card p-4 text-left hover:border-line-strong">
               <span className="min-w-0 flex-1">
                 <span className="block font-bold text-heading group-hover:text-link">{s.role === 'interviewer' ? `You interviewed ${s.partner}` : `${s.partner} interviewed you`}</span>
                 <span className="block text-sm text-muted">{shortDate.format(new Date(s.done_at || s.created_at))} · {KIND_LABEL[s.kind]}{s.xp > 0 ? ` · +${s.xp} points` : ''}</span>

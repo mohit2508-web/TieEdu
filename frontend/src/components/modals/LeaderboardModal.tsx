@@ -84,7 +84,7 @@ export const LeaderboardModal: React.FC = () => {
         {user && (
           <div className="bg-signal-soft border border-signal/30 rounded-xl px-4 py-3 mt-4 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <span className="w-8 h-8 rounded-lg bg-signal text-white flex items-center justify-center text-sm font-extrabold uppercase">
+              <span className="w-8 h-8 rounded-lg bg-signal text-on-primary flex items-center justify-center text-sm font-extrabold uppercase">
                 {user.name.charAt(0)}
               </span>
               <div>

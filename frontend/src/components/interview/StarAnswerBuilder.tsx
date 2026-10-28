@@ -64,7 +64,7 @@ export const StarAnswerBuilder: React.FC = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={handleCopy}
-            className="flex items-center gap-2 bg-signal hover:bg-signal-hover text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition-all shadow-lg shadow-brand-orange/20"
+            className="flex items-center gap-2 bg-signal hover:bg-signal-hover text-on-primary font-semibold text-sm px-4 py-2.5 rounded-xl transition-all shadow-lg shadow-brand-orange/20"
           >
             {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
             {copied ? 'Copied to Clipboard!' : 'Copy Formatted STAR Story'}

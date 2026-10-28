@@ -201,7 +201,7 @@ export default function MockInterviewPage() {
         {user && (
           <section className="mt-8" aria-labelledby="past-h">
             <h2 id="past-h" className="font-display text-lg font-bold text-heading">Your interviews</h2>
-            {!list && !err && <Skeleton className="mt-3 h-20 w-full rounded-[14px]" />}
+            {!list && !err && <Skeleton className="mt-3 h-20 w-full rounded-card" />}
             {list && list.sessions.length === 0 && <p className="mt-2 text-sm text-muted">None yet. They stay private to you.</p>}
             <ul className="mt-3 space-y-3">
               {list?.sessions.filter((s) => s.id !== active?.id).map((s) => {
@@ -291,7 +291,7 @@ function Summary({ s, onNew }: { s: InterviewSessionView; onNew: () => void }) {
       <ol className="mt-4 space-y-3">
         {s.questions.map((q, i) => (
           <li key={q.id}>
-            <details className="group rounded-[14px] border border-line bg-card p-4">
+            <details className="group rounded-card border border-line bg-card p-4">
               <summary className="focus-ring flex cursor-pointer list-none items-start gap-3">
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-signal-soft font-bold text-signal-ink">{i + 1}</span>
                 <span className="min-w-0 flex-1 font-bold text-heading">{q.question}</span>

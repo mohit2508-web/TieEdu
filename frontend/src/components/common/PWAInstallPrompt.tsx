@@ -78,7 +78,7 @@ export const PWAInstallPrompt: React.FC = () => {
             <button
               type="button"
               onClick={handleInstall}
-              className="flex min-h-[40px] items-center justify-center gap-1.5 rounded-xl bg-signal px-3 text-xs font-bold text-white transition-colors hover:bg-signal"
+              className="flex min-h-[40px] items-center justify-center gap-1.5 rounded-cell bg-signal px-3 text-xs font-bold text-on-primary transition-colors hover:bg-signal shadow-edge-primary active:translate-y-0.5 active:shadow-edge-selected"
             >
               <Download size={16} strokeWidth={2.4} />
               Get App

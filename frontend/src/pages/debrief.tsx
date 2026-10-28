@@ -131,7 +131,7 @@ export default function DebriefPage() {
 
             <section className="mt-8" aria-labelledby="past-h">
               <h2 id="past-h" className="font-display text-lg font-bold text-heading">Your debriefs</h2>
-              {!list && !err && <Skeleton className="mt-3 h-20 w-full rounded-[14px]" />}
+              {!list && !err && <Skeleton className="mt-3 h-20 w-full rounded-card" />}
               {list && list.debriefs.length === 0 && <p className="mt-2 text-sm text-muted">None yet. They stay private to you.</p>}
               <ul className="mt-3 space-y-3">
                 {list?.debriefs.filter((d) => d.id !== latest?.id).map((d) => (
@@ -180,7 +180,7 @@ function DebriefResult({ d }: { d: DebriefView }) {
       <ol className="mt-4 space-y-3">
         {d.plan.map((s, i) => (
           <li key={s.href}>
-            <Link href={s.href} className="focus-ring group flex gap-4 rounded-[14px] border border-line bg-card p-4 hover:border-line-strong">
+            <Link href={s.href} className="focus-ring group flex gap-4 rounded-card border border-line bg-card p-4 hover:border-line-strong">
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-signal-soft font-bold text-signal-ink">{i + 1}</span>
               <span className="min-w-0 flex-1">
                 <span className="block font-bold text-heading group-hover:text-link">{s.title}</span>

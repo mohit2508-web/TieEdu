@@ -49,7 +49,7 @@ export default function RecruitersPage() {
             <Button href="/login?next=%2Frecruiters" className="mt-4">Sign in</Button>
           </Card>
         )}
-        {user && !home && !err && <Skeleton className="mt-6 h-48 w-full rounded-[14px]" />}
+        {user && !home && !err && <Skeleton className="mt-6 h-48 w-full rounded-card" />}
         {err && <p className="mt-4 text-sm text-danger" role="alert">{err}</p>}
 
         {user && home && (!r || r.status === 'rejected') && <Apply rejectedNote={r?.status === 'rejected' ? r.admin_note : null} onDone={setHome} />}

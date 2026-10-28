@@ -85,7 +85,7 @@ function AssessmentOverview() {
           <div className="mt-6 flex flex-col gap-3">
             <Link
               href={`/skill-test/${slug}/assessment`}
-              className="inline-flex items-center justify-center rounded-full bg-signal px-8 py-3.5 text-sm font-semibold text-white shadow-sm hover:bg-signal transition-colors"
+              className="inline-flex items-center justify-center rounded-full bg-signal px-8 py-3.5 text-sm font-semibold text-on-primary shadow-sm hover:bg-signal transition-colors"
             >
               Start Assessment
             </Link>

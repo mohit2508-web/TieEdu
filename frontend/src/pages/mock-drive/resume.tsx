@@ -67,7 +67,7 @@ function ResumeScreen() {
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
           onDrop={(e) => { e.preventDefault(); setDragOver(false); onFiles(e.dataTransfer.files); }}
-          className="rounded-[14px] border-2 border-dashed px-4 py-8 text-center transition-colors"
+          className="rounded-card border-2 border-dashed px-4 py-8 text-center transition-colors"
           style={{ borderColor: dragOver ? 'var(--apple-blue)' : 'var(--apple-separator)', background: dragOver ? 'var(--apple-blue-soft)' : 'var(--apple-surface)' }}
         >
           <Upload size={24} className="mx-auto" style={{ color: dragOver ? 'var(--apple-blue)' : 'var(--apple-label-3)' }} />

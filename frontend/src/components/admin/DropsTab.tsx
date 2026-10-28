@@ -522,7 +522,7 @@ export const DropsTab: React.FC = () => {
             <button
               onClick={handleSubmit}
               disabled={busy}
-              className="ml-auto inline-flex items-center gap-2 px-4 py-2.5 bg-signal hover:bg-signal text-white rounded-xl text-xs font-bold transition-colors disabled:opacity-60"
+              className="ml-auto inline-flex items-center gap-2 px-4 py-2.5 bg-signal hover:bg-signal text-on-primary rounded-cell text-xs font-bold transition-colors disabled:opacity-60 shadow-edge-primary active:translate-y-0.5 active:shadow-edge-selected"
             >
               {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
               {editingId ? 'Save Changes' : 'Create Drop'}

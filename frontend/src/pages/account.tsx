@@ -526,7 +526,7 @@ const AccountPageContent: React.FC = () => {
                             className="w-24 h-24 rounded-2xl object-cover border-4 border-white shadow-lg"
                           />
                         ) : (
-                          <div className="w-24 h-24 rounded-2xl bg-signal text-white flex items-center justify-center text-4xl font-extrabold uppercase border-4 border-white shadow-lg">
+                          <div className="w-24 h-24 rounded-2xl bg-signal text-on-primary flex items-center justify-center text-4xl font-extrabold uppercase border-4 border-white shadow-lg">
                             {account.user.name.charAt(0)}
                           </div>
                         )}
@@ -541,7 +541,7 @@ const AccountPageContent: React.FC = () => {
                           </button>
                         ) : null}
                         <label
-                          className="absolute -bottom-1.5 -right-1.5 w-8 h-8 rounded-full bg-signal hover:bg-signal text-white cursor-pointer flex items-center justify-center shadow-md transition-colors"
+                          className="absolute -bottom-1.5 -right-1.5 w-8 h-8 rounded-full bg-signal hover:bg-signal text-on-primary cursor-pointer flex items-center justify-center shadow-md transition-colors"
                           title="Upload profile photo"
                         >
                           <Camera className="w-4 h-4" />

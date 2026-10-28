@@ -72,7 +72,7 @@ function AttemptDetailScreen() {
     <DriveShell title="Result">
       <div className="mx-auto w-full max-w-[880px] px-4 pb-8 pt-4">
         {/* Score card */}
-        <div className="rounded-[14px] border p-5 text-center" style={{ background: 'var(--apple-surface)', borderColor: 'var(--apple-separator)' }}>
+        <div className="rounded-card border p-5 text-center" style={{ background: 'var(--apple-surface)', borderColor: 'var(--apple-separator)' }}>
           <div
             className="mx-auto flex h-24 w-24 items-center justify-center rounded-full"
             style={{ border: `5px solid ${ringColor}` }}

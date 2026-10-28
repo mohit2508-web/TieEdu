@@ -59,7 +59,7 @@ export default function CollegeLeaderboardPage() {
         <p className="mt-2 text-base text-body">Points earned this week by students of your college who chose to appear. It starts again every Monday, so anyone can top it.</p>
 
         {!loading && !user && <Card pad="lg" className="mt-6 text-center"><Button href="/login?next=%2Fcollege-leaderboard">Sign in</Button></Card>}
-        {user && board === undefined && !err && <Skeleton className="mt-6 h-64 w-full rounded-[14px]" />}
+        {user && board === undefined && !err && <Skeleton className="mt-6 h-64 w-full rounded-card" />}
         {err && <p className="mt-4 text-sm text-danger" role="alert">{err}</p>}
         {user && board === null && <Card pad="lg" className="mt-6"><p className="text-body">This needs your college on TieEdu. Once your placement cell adds your batch, your college’s board appears here.</p></Card>}
 
@@ -87,7 +87,7 @@ export default function CollegeLeaderboardPage() {
               )}
             </Card>
 
-            <ol className="mt-6 divide-y divide-line rounded-[14px] border border-line bg-card" aria-label={`Week from ${dayMonth.format(new Date(`${board.week_start}T00:00:00Z`))}`}>
+            <ol className="mt-6 divide-y divide-line rounded-card border border-line bg-card" aria-label={`Week from ${dayMonth.format(new Date(`${board.week_start}T00:00:00Z`))}`}>
               {board.entries.length === 0 && <li className="p-4 text-sm text-muted">Nobody on the board yet this week. Be the first.</li>}
               {board.entries.map((e, i) => (
                 <li key={`${e.rank}-${e.name}-${i}`} className={`flex items-center gap-3 px-4 py-3 ${e.me ? 'bg-signal-soft' : ''}`}>

@@ -109,7 +109,7 @@ const IntelBody: React.FC = () => {
       </Card>
 
       <Card pad="lg">
-        <h2 className="font-display text-lg font-bold text-heading">Notes from seniors {pending.length > 0 && <span className="ml-2 rounded-full bg-signal px-2 py-0.5 text-xs font-bold text-white">{pending.length} to check</span>}</h2>
+        <h2 className="font-display text-lg font-bold text-heading">Notes from seniors {pending.length > 0 && <span className="ml-2 rounded-full bg-signal px-2 py-0.5 text-xs font-bold text-on-primary">{pending.length} to check</span>}</h2>
         <p className="mt-1 text-sm text-muted">Placed students leave these for juniors. Nothing is shown until you approve it, and juniors never see who wrote it.</p>
         {data.notes.length === 0 && <p className="mt-4 text-sm text-muted">No notes yet.</p>}
         <ul className="mt-4 space-y-3">

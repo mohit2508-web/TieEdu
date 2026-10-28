@@ -132,7 +132,7 @@ const OfferCard: React.FC<{ offer: PublicOffer }> = ({ offer }) => {
           href={targetHref(offer)}
           onClick={stage}
           aria-label={`Use ${offer.code} on ${targetLabel(offer)}`}
-          className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl bg-signal px-3 text-white transition-colors hover:bg-signal focus-ring"
+          className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-cell bg-signal px-3 text-on-primary transition-colors hover:bg-signal focus-ring shadow-edge-primary active:translate-y-0.5 active:shadow-edge-selected"
         >
           <ArrowRight className="h-4 w-4" aria-hidden />
         </Link>

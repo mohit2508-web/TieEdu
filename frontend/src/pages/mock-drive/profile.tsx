@@ -103,7 +103,7 @@ function ProfileScreen() {
             </p>
           </div>
         ) : (
-          <div className="overflow-hidden rounded-[14px] border" style={{ background: 'var(--apple-surface)', borderColor: 'var(--apple-separator)' }}>
+          <div className="overflow-hidden rounded-card border" style={{ background: 'var(--apple-surface)', borderColor: 'var(--apple-separator)' }}>
             {FIELDS.map((f, i) => {
               const raw = profile[f.key];
               const isEditing = editing === f.key;

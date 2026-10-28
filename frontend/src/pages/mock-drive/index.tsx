@@ -93,7 +93,7 @@ function HomeTab() {
         {home && home.unread_notifications > 0 && (
           <Link
             href="/mock-drive/notifications"
-            className="mt-3 flex items-center gap-3 rounded-[14px] border px-3.5 py-3"
+            className="mt-3 flex items-center gap-3 rounded-card border px-3.5 py-3"
             style={{ background: 'var(--apple-red-soft)', borderColor: 'transparent' }}
           >
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] relative" style={{ background: 'var(--apple-surface)', color: 'var(--apple-red)' }}>
@@ -160,7 +160,7 @@ function HomeTab() {
                 <li key={`${n.drive_id}-${n.type}`}>
                   <Link
                     href={`/mock-drive/drives/${n.drive_id}`}
-                    className="flex items-start gap-3 rounded-[14px] border p-3"
+                    className="flex items-start gap-3 rounded-card border p-3"
                     style={{ background: 'var(--apple-surface)', borderColor: 'var(--apple-separator)' }}
                   >
                     <NeedsIcon type={n.type} />
@@ -184,7 +184,7 @@ function HomeTab() {
                 <li key={a.attempt_id}>
                   <Link
                     href={`/mock-drive/assessments/${a.attempt_id}`}
-                    className="flex items-center gap-3 rounded-[14px] border p-3.5"
+                    className="flex items-center gap-3 rounded-card border p-3.5"
                     style={{ background: 'var(--apple-surface)', borderColor: 'var(--apple-separator)' }}
                   >
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[11px]" style={{ background: 'var(--apple-orange-soft)', color: 'var(--apple-orange)' }}>
@@ -216,7 +216,7 @@ function HomeTab() {
                   <li key={d.drive_id}>
                     <Link
                       href={`/mock-drive/drives/${d.drive_id}`}
-                      className="block rounded-[14px] border p-3.5 transition-colors active:bg-[var(--apple-fill)]"
+                      className="block rounded-card border p-3.5 transition-colors active:bg-[var(--apple-fill)]"
                       style={{ background: 'var(--apple-surface)', borderColor: 'var(--apple-separator)' }}
                     >
                       <div className="flex items-start gap-3">
@@ -269,7 +269,7 @@ function HomeTab() {
                   <li key={d.drive_id}>
                     <Link
                       href={`/mock-drive/drives/${d.drive_id}`}
-                      className="flex items-center gap-3 rounded-[14px] border p-3"
+                      className="flex items-center gap-3 rounded-card border p-3"
                       style={{ background: 'var(--apple-surface)', borderColor: 'var(--apple-separator)' }}
                     >
                       {date ? (
@@ -372,7 +372,7 @@ const Section: React.FC<{ title: string; href: string; linkLabel: string; childr
 const Empty: React.FC<{ icon: React.ReactNode; title: string; body: string; href: string; cta: string }> = ({
   icon, title, body, href, cta,
 }) => (
-  <div className="rounded-[14px] border px-4 py-8 text-center" style={{ borderColor: 'var(--apple-separator)', background: 'var(--apple-surface)' }}>
+  <div className="rounded-card border px-4 py-8 text-center" style={{ borderColor: 'var(--apple-separator)', background: 'var(--apple-surface)' }}>
     <span style={{ color: 'var(--apple-label-2)' }}>{icon}</span>
     <p className="mt-2 text-sm font-medium" style={{ color: 'var(--apple-label)' }}>{title}</p>
     <p className="mx-auto mt-1 max-w-[260px] text-xs" style={{ color: 'var(--apple-label-2)' }}>{body}</p>

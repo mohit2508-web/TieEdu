@@ -98,7 +98,7 @@ function SkillDetail() {
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <Link
                 href={`/skill-test/${slug}/overview`}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-signal px-8 py-3 text-sm font-semibold text-white shadow-sm hover:bg-signal transition-colors"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-signal px-8 py-3 text-sm font-semibold text-on-primary shadow-sm hover:bg-signal transition-colors"
               >
                 Start Assessment <ChevronRight className="h-4 w-4" />
               </Link>

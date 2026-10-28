@@ -67,7 +67,7 @@ export const RouteLine: React.FC<RouteLineProps> = ({ stations, orientation = 'h
               aria-hidden
               className={cn(
                 'flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold',
-                s.state === 'done' && 'border-signal bg-signal text-white',
+                s.state === 'done' && 'border-signal bg-signal text-on-primary',
                 s.state === 'current' && cn('border-signal ring-4 ring-signal/20', onInk ? 'bg-brand-ink' : 'bg-card'),
                 s.state === 'next' && cn(onInk ? 'border-white/30 bg-brand-ink' : 'border-line-strong bg-card', numbered && 'border-signal')
               )}

@@ -109,7 +109,7 @@ export default function OfferCheckPage() {
 
         {result && v && (
           <section id="offer-result" className="mt-6 scroll-mt-24" aria-live="polite">
-            <div className={cn('rounded-[14px] border-2 p-5 sm:p-6', v.tone)}>
+            <div className={cn('rounded-card border-2 p-5 sm:p-6', v.tone)}>
               <p className={cn('flex items-center gap-2 font-display text-2xl font-bold', v.text)}>
                 <v.icon className="h-7 w-7 shrink-0" aria-hidden /> {v.title}
               </p>

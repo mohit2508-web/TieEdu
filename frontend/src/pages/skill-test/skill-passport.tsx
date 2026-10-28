@@ -56,7 +56,7 @@ function SkillPassport() {
           <p className="mt-1 text-sm text-gray-500">Sign in to view your skill passport.</p>
           <Link
             href="/login?next=/skill-test/skill-passport"
-            className="mt-6 block w-full rounded-full bg-signal py-3.5 text-sm font-semibold text-white hover:bg-signal transition-colors"
+            className="mt-6 block w-full rounded-full bg-signal py-3.5 text-sm font-semibold text-on-primary hover:bg-signal transition-colors"
           >
             Sign In / Sign Up
           </Link>

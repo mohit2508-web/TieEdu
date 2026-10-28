@@ -83,17 +83,17 @@ function Index() {
     <>
       <Intro />
       {err && <p className="mt-4 text-sm text-danger">{err}</p>}
-      {!data && !err && <Skeleton className="mt-6 h-32 w-full rounded-[14px]" />}
+      {!data && !err && <Skeleton className="mt-6 h-32 w-full rounded-card" />}
 
       {data && data.inbox.items.length > 0 && (
         <section className="mt-6" aria-labelledby="nudges-h">
           <h2 id="nudges-h" className="flex items-center gap-2 font-display text-lg font-bold text-heading">
             <Bell className="h-5 w-5 text-link" aria-hidden /> Nudges for you
-            {data.inbox.unread > 0 && <span className="rounded-full bg-signal px-2 py-0.5 text-xs font-bold text-white">{data.inbox.unread} new</span>}
+            {data.inbox.unread > 0 && <span className="rounded-full bg-signal px-2 py-0.5 text-xs font-bold text-on-primary">{data.inbox.unread} new</span>}
           </h2>
           <ul className="mt-3 space-y-2">
             {data.inbox.items.slice(0, 5).map((n) => (
-              <li key={n.id} className={`rounded-[14px] border p-3.5 text-sm ${n.seen ? 'border-line bg-card text-body' : 'border-signal/40 bg-signal-soft text-heading'}`}>
+              <li key={n.id} className={`rounded-card border p-3.5 text-sm ${n.seen ? 'border-line bg-card text-body' : 'border-signal/40 bg-signal-soft text-heading'}`}>
                 {n.text}
                 <span className="mt-1 flex flex-wrap items-center gap-x-3 text-muted">
                   {shortDate.format(new Date(n.created_at))}
@@ -112,7 +112,7 @@ function Index() {
           <ul className="mt-3 space-y-2">
             {data.groups.map((g) => (
               <li key={g.company.slug}>
-                <Link href={`/study-groups?c=${encodeURIComponent(g.company.slug)}`} className="focus-ring group flex items-center gap-3 rounded-[14px] border border-line bg-card p-4 hover:border-line-strong">
+                <Link href={`/study-groups?c=${encodeURIComponent(g.company.slug)}`} className="focus-ring group flex items-center gap-3 rounded-card border border-line bg-card p-4 hover:border-line-strong">
                   <Users className="h-5 w-5 shrink-0 text-link" aria-hidden />
                   <span className="min-w-0 flex-1">
                     <span className="block font-bold text-heading group-hover:text-link">{g.company.name}</span>
@@ -132,7 +132,7 @@ function Index() {
           <ul className="mt-3 space-y-2">
             {data.suggestions.map((s) => (
               <li key={s.company.slug}>
-                <Link href={`/study-groups?c=${encodeURIComponent(s.company.slug)}`} className="focus-ring group flex items-center gap-3 rounded-[14px] border border-dashed border-line bg-card p-4 hover:border-line-strong">
+                <Link href={`/study-groups?c=${encodeURIComponent(s.company.slug)}`} className="focus-ring group flex items-center gap-3 rounded-card border border-dashed border-line bg-card p-4 hover:border-line-strong">
                   <span className="min-w-0 flex-1">
                     <span className="block font-bold text-heading group-hover:text-link">{s.company.name}</span>
                     <span className="block text-sm text-muted">{s.members === 0 ? 'Be the first to join' : `${s.members} preparing together`}</span>
@@ -195,7 +195,7 @@ function Group({ slug }: { slug: string }) {
   );
 
   if (err && !view) return <>{back}<p className="mt-4 text-sm text-danger">{err}</p></>;
-  if (!view) return <>{back}<Skeleton className="mt-4 h-48 w-full rounded-[14px]" /></>;
+  if (!view) return <>{back}<Skeleton className="mt-4 h-48 w-full rounded-card" /></>;
 
   const s = view.summary;
   return (
@@ -238,7 +238,7 @@ function Group({ slug }: { slug: string }) {
             Practise with someone here: <Link href="/peer-mock" className="font-semibold text-link hover:underline">do a peer mock interview</Link> and both of you earn points.
           </p>
 
-          <details className="mt-8 rounded-[14px] border border-line bg-card p-4">
+          <details className="mt-8 rounded-card border border-line bg-card p-4">
             <summary className="focus-ring cursor-pointer font-bold text-heading">Your settings in this group</summary>
             <GroupSettingsForm initial={view.settings} busy={busy} onSave={(f) => run(() => updateGroupSettings(slug, f), 'Settings saved.')} />
             <Button kind="text" className="mt-4 text-danger" onClick={() => run(async () => { await leaveGroup(slug); setView(await fetchGroup(slug)); }, 'You left the group.')} disabled={busy}>

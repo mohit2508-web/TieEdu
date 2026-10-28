@@ -189,7 +189,7 @@ export const BlockEditorModal: React.FC<BlockEditorModalProps> = ({
                       aria-pressed={blockType === b.type}
                       className={`p-2.5 rounded-xl border text-center flex flex-col items-center justify-center gap-1 font-bold transition-all min-h-[3.25rem] ${
                         blockType === b.type
-                          ? 'bg-signal text-white border-signal shadow-sm'
+                          ? 'bg-signal text-on-primary border-signal shadow-sm'
                           : 'bg-app-warm text-gray-500 border-gray-200 hover:bg-white'
                       }`}
                     >

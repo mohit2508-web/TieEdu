@@ -125,7 +125,7 @@ export const AccountMenu: React.FC<{ onOpenChange?: (open: boolean) => void }> =
           // eslint-disable-next-line @next/next/no-img-element -- base64 data-URL avatar, see above
           <img src={user.avatar} alt="" width={28} height={28} decoding="async" className="h-7 w-7 rounded-lg object-cover" />
         ) : (
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-signal text-sm font-extrabold uppercase text-white">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-signal text-sm font-extrabold uppercase text-on-primary">
             {user.name.charAt(0)}
           </span>
         )}

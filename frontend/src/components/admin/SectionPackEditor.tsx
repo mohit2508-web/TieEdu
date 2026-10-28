@@ -95,7 +95,7 @@ export const SectionPackEditor: React.FC<SectionPackEditorProps> = ({ module, co
         <h3 className="text-sm font-bold text-ink-soft flex items-center gap-2">{title}</h3>
         <button
           onClick={onAdd}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-signal hover:bg-signal text-white rounded-lg text-xs font-bold transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-signal hover:bg-signal text-on-primary rounded-lg text-xs font-bold transition-colors"
           type="button"
         >
           <Plus className="w-3.5 h-3.5" /> {addLabel}
@@ -553,7 +553,7 @@ export const SectionPackEditor: React.FC<SectionPackEditorProps> = ({ module, co
             return (
               <button key={s.id} onClick={() => setActive(s.id)} type="button"
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all text-sm font-bold ${
-                  isActive ? 'bg-signal text-white shadow-sm' : 'text-gray-600 hover:bg-white'
+                  isActive ? 'bg-signal text-on-primary shadow-sm' : 'text-gray-600 hover:bg-white'
                 }`}>
                 <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-gray-400'}`} />
                 <span className="flex-1 truncate">{s.label}</span>

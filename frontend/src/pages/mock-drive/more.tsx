@@ -28,7 +28,7 @@ function MoreTab() {
     <DriveShell title="More">
       <div className="mx-auto w-full max-w-[880px] px-4 pb-8 pt-4">
         {/* Account card */}
-        <div className="flex items-center gap-3 rounded-[14px] border p-4" style={{ background: 'var(--apple-surface)', borderColor: 'var(--apple-separator)' }}>
+        <div className="flex items-center gap-3 rounded-card border p-4" style={{ background: 'var(--apple-surface)', borderColor: 'var(--apple-separator)' }}>
           <span
             className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-base font-bold"
             style={{ background: 'var(--apple-blue-soft)', color: 'var(--apple-blue)' }}
@@ -42,7 +42,7 @@ function MoreTab() {
         </div>
 
         {/* Nav list */}
-        <div className="mt-4 overflow-hidden rounded-[14px] border" style={{ background: 'var(--apple-surface)', borderColor: 'var(--apple-separator)' }}>
+        <div className="mt-4 overflow-hidden rounded-card border" style={{ background: 'var(--apple-surface)', borderColor: 'var(--apple-separator)' }}>
           {ITEMS.map((item, i) => {
             const Icon = item.icon;
             return (
@@ -67,7 +67,7 @@ function MoreTab() {
 
         {/* Support & Help — phone first: one tap to call. */}
         {config && (config.support_phone || config.support_email) && (
-          <div className="mt-4 overflow-hidden rounded-[14px] border" style={{ background: 'var(--apple-surface)', borderColor: 'var(--apple-separator)' }}>
+          <div className="mt-4 overflow-hidden rounded-card border" style={{ background: 'var(--apple-surface)', borderColor: 'var(--apple-separator)' }}>
             <div className="flex items-center gap-2 px-4 pb-1 pt-3.5">
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px]" style={{ background: 'var(--apple-green-soft)', color: 'var(--apple-green)' }}>
                 <LifeBuoy size={16} strokeWidth={1.9} />

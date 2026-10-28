@@ -31,7 +31,7 @@ export const FeaturedFreeModuleCard: React.FC<Props> = ({ module, companyName, o
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-signal via-signal to-money" />
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div className="flex items-start gap-4 min-w-0">
-          <div className="w-14 h-14 rounded-2xl bg-signal text-white flex items-center justify-center shrink-0 shadow-sm">
+          <div className="w-14 h-14 rounded-2xl bg-signal text-on-primary flex items-center justify-center shrink-0 shadow-sm">
             <BookOpen className="w-7 h-7" />
           </div>
           <div className="min-w-0">

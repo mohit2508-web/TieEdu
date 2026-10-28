@@ -73,7 +73,7 @@ export const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({
           type="submit"
           form={FORM_ID}
           disabled={loading}
-          className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-signal py-3 text-sm font-bold text-white shadow-md transition-colors hover:bg-signal disabled:opacity-60"
+          className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-cell bg-signal py-3 text-sm font-bold text-on-primary shadow-md transition-colors hover:bg-signal disabled:opacity-60 shadow-edge-primary active:translate-y-0.5 active:shadow-edge-selected"
         >
           {loading ? (
             <Loader2 className="h-4 w-4 animate-spin" />

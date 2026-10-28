@@ -124,7 +124,7 @@ export const ReaderActionBar: React.FC<ReaderActionBarProps> = ({
             onClick={onNext}
             disabled={!hasNext}
             aria-label="Next section"
-            className="flex h-12 w-12 flex-none items-center justify-center rounded-xl bg-signal text-white transition-colors active:bg-signal disabled:opacity-30"
+            className="flex h-12 w-12 flex-none items-center justify-center rounded-xl bg-signal text-on-primary transition-colors active:bg-signal disabled:opacity-30"
           >
             <ChevronRight className="h-5 w-5" />
           </button>

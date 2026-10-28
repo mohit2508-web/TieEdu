@@ -353,7 +353,7 @@ const DesignGuide: React.FC = () => {
               ['SQL for Placements', 'Databases', 'Course · 16 lessons'],
               ['Communication Skills', 'Soft skills', 'Course · 8 lessons'],
             ].map(([t, s, k]) => (
-              <Cover key={t} title={t} subject={s} kicker={k} className="rounded-[14px]" />
+              <Cover key={t} title={t} subject={s} kicker={k} className="rounded-card" />
             ))}
           </div>
         </Block>

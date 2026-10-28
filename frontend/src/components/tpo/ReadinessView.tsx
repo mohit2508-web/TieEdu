@@ -82,7 +82,7 @@ export const ReadinessView: React.FC<{ data: BatchReadiness }> = ({ data }) => {
             type="button"
             aria-pressed={segment === s.key}
             onClick={() => setSegment(segment === s.key ? 'all' : s.key)}
-            className={cn('focus-ring rounded-[14px] border p-4 text-left transition-shadow [&_p]:text-current', s.tone, segment === s.key && 'ring-2 ring-signal')}
+            className={cn('focus-ring rounded-card border p-4 text-left transition-shadow [&_p]:text-current', s.tone, segment === s.key && 'ring-2 ring-signal')}
           >
             <p className="text-sm font-semibold">{s.label}</p>
             <p className="mt-1 font-display text-3xl font-bold tabular-nums">{data.segments[s.key]}</p>
@@ -110,7 +110,7 @@ export const ReadinessView: React.FC<{ data: BatchReadiness }> = ({ data }) => {
         </Button>
       </div>
 
-      <div className="overflow-x-auto rounded-[14px] border border-line bg-card">
+      <div className="overflow-x-auto rounded-card border border-line bg-card">
         <table className="w-full min-w-[720px] border-collapse text-sm">
           <caption className="sr-only">Readiness by student and company, lowest average first</caption>
           <thead>

@@ -58,7 +58,7 @@ const typicalLength = (skills: CardSkill[]): { q: number; min: number } | null =
 const SkillCard: React.FC<{ skill: CardSkill }> = ({ skill }) => (
   <Link
     href={`/skill-test/${skill.slug}`}
-    className="group focus-ring flex min-h-[120px] flex-col rounded-[14px] border border-line bg-card p-4 transition-colors hover:border-line-strong"
+    className="group focus-ring flex min-h-[120px] flex-col rounded-cell border border-line bg-card p-4 transition-colors hover:border-line-strong"
   >
     <div className="flex items-start justify-between gap-2">
       <h4 className="font-display text-lg font-bold leading-snug text-heading transition-colors group-hover:text-link">
@@ -179,7 +179,7 @@ export default function SkillTestLanding() {
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link
                   href={`/skill-test/${firstSlug}`}
-                  className="pressable focus-ring inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-signal px-6 text-base font-semibold text-white transition-colors hover:bg-signal-hover"
+                  className="pressable focus-ring inline-flex min-h-[48px] items-center justify-center gap-2 rounded-cell bg-signal px-6 text-base font-semibold text-on-primary transition-colors hover:bg-signal-hover shadow-edge-primary active:translate-y-0.5 active:shadow-edge-selected"
                 >
                   Take a free test <ArrowRight className="h-4 w-4" aria-hidden />
                 </Link>
@@ -304,7 +304,7 @@ export default function SkillTestLanding() {
             </div>
             <Link
               href={`/skill-test/${firstSlug}`}
-              className="pressable focus-ring inline-flex min-h-[48px] shrink-0 items-center gap-2 rounded-xl bg-signal px-6 text-base font-semibold text-white transition-colors hover:bg-signal-hover"
+              className="pressable focus-ring inline-flex min-h-[48px] shrink-0 items-center gap-2 rounded-cell bg-signal px-6 text-base font-semibold text-on-primary transition-colors hover:bg-signal-hover shadow-edge-primary active:translate-y-0.5 active:shadow-edge-selected"
             >
               Take a free test <ArrowRight className="h-4 w-4" aria-hidden />
             </Link>

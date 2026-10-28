@@ -161,7 +161,7 @@ export const ContentBuilder: React.FC<ContentBuilderProps> = ({ companies, selec
                   <div className="flex items-center gap-1.5 shrink-0">
                     <button onClick={() => handleReorder(idx, -1)} className="p-1.5 text-gray-400 hover:text-link hover:bg-signal-soft rounded-lg" title="Move up"><ChevronUp className="w-4 h-4" /></button>
                     <button onClick={() => handleReorder(idx, 1)} className="p-1.5 text-gray-400 hover:text-link hover:bg-signal-soft rounded-lg" title="Move down"><ChevronDown className="w-4 h-4" /></button>
-                    <button onClick={() => onEditModule(mod)} className="px-3 py-1.5 bg-signal hover:bg-signal text-white rounded-xl text-xs font-bold flex items-center gap-1.5 ml-1">
+                    <button onClick={() => onEditModule(mod)} className="px-3 py-1.5 bg-signal hover:bg-signal text-on-primary rounded-xl text-xs font-bold flex items-center gap-1.5 ml-1">
                       <PenLine className="w-3.5 h-3.5" /> Pack Editor
                     </button>
                     <button onClick={() => setPdfManagerModule(mod)} className="px-3 py-1.5 bg-brand-ink hover:bg-brand-ink text-white rounded-xl text-xs font-bold flex items-center gap-1.5" title="Manage PDF library">
@@ -181,7 +181,7 @@ export const ContentBuilder: React.FC<ContentBuilderProps> = ({ companies, selec
                   <div className="p-4 bg-app-warm">
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-xs font-bold font-mono uppercase text-gray-500">Questions & Blocks ({mod.items?.length || 0})</span>
-                      <button onClick={() => setItemModal({ moduleId: mod.id, item: null, open: true })} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-signal hover:bg-signal text-white rounded-lg text-xs font-bold">
+                      <button onClick={() => setItemModal({ moduleId: mod.id, item: null, open: true })} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-signal hover:bg-signal text-on-primary rounded-lg text-xs font-bold">
                         <Plus className="w-3.5 h-3.5" /> Add Question
                       </button>
                     </div>

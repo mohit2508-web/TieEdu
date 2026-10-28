@@ -280,7 +280,7 @@ export const StudyPlansTab: React.FC = () => {
           type="button"
           onClick={createTemplate}
           disabled={busy}
-          className="ml-auto inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-signal text-white text-xs font-bold uppercase tracking-wider min-h-[2.5rem]"
+          className="ml-auto inline-flex items-center gap-1.5 px-4 py-2.5 rounded-cell bg-signal text-on-primary text-xs font-bold uppercase tracking-wider min-h-[2.5rem] shadow-edge-primary active:translate-y-0.5 active:shadow-edge-selected"
         >
           <Plus className="w-4 h-4" /> New plan
         </button>
