@@ -8,6 +8,7 @@ import { Card, ProgressRing, SectionHead } from '@/components/ui';
 import { serverApiBase } from '@/lib/companyPagesApi';
 import { fetchParentView, ParentView } from '@/lib/parentApi';
 import { ParentWhatsappBox } from '@/components/parent/ParentWhatsappBox';
+import { ParentEmailBox } from '@/components/parent/ParentEmailBox';
 
 /**
  * /parent/<token> — the read-only page a student shares with a parent
@@ -124,6 +125,7 @@ export default function ParentPage({ view: v, token, stop }: { view: ParentView;
           )}
 
           {!stop && <ParentWhatsappBox token={token} name={v.first_name} stop={false} />}
+          {!stop && <ParentEmailBox token={token} name={v.first_name} />}
         </main>
         <Footer />
       </div>

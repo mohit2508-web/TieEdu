@@ -323,6 +323,19 @@ export const SettingsTab: React.FC = () => {
               />
               Send weekly messages (Sundays from 10:00 IST)
             </label>
+            <label className="flex items-center gap-2 text-sm font-semibold text-ink-soft">
+              <input
+                type="checkbox"
+                checked={!!form.parent_email_enabled}
+                onChange={(e) => setForm({ ...form, parent_email_enabled: e.target.checked })}
+                className="h-4 w-4 accent-signal"
+              />
+              Also offer a weekly email (uses your Resend setup)
+            </label>
+            <p className="text-xs text-gray-500">
+              Email is double opt-in: a parent gets one confirmation email and nothing weekly until they click it. An address that
+              never confirms is not mailed again.
+            </p>
             {pwa && (
               <details className="text-xs text-ink-soft">
                 <summary className="cursor-pointer font-bold">Template text to submit for approval</summary>

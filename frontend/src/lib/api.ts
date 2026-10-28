@@ -970,6 +970,8 @@ export interface PlatformSettings {
   parent_whatsapp_enabled?: boolean;
   /** Recruiter skill search (backend lib/talentSearch). Off unless switched on. */
   recruiter_search_enabled?: boolean;
+  /** Weekly parent email (backend lib/parentEmail). Off unless switched on. */
+  parent_email_enabled?: boolean;
 }
 
 export interface AnalyticsSnapshot {

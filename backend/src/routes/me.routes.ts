@@ -9,6 +9,9 @@ import { buildPassport, handleError, passportOf, suggestHandle } from '../lib/pa
 import { buildParentView, newParentToken } from '../lib/parentView';
 import { collegePulse } from '../lib/collegePulse';
 import { collegeBoard, setBoardChoice } from '../lib/collegeBoard';
+import { confirmParentEmail, ParentEmailError, parentEmailStatus, requestParentEmail, stopParentEmail } from '../lib/parentEmail';
+import { resendMailer, siteUrl } from '../lib/parentWhatsappScheduler';
+import { reminderSettings, setReminders } from '../lib/studyReminders';
 import { getPool } from '../db/client';
 import { markStudentSeen, NudgeError, setStudentOptOut, studentInbox } from '../lib/collegeNudges';
 import { endOnLinkChange, ParentWaError, parentWaStatus, setStudentAllowed, studentWaStatus, subscribeParent, unsubscribeParent } from '../lib/parentWhatsapp';
@@ -326,6 +329,22 @@ meRouter.put('/college-nudges', (req: Request, res: Response) => {
   }
 });
 
+/**
+ * Study-time reminders (lib/studyReminders): the student's switch.
+ *   GET /api/me/study-reminders   PUT /api/me/study-reminders { on }
+ */
+meRouter.get('/study-reminders', (req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'private, no-store');
+  res.json(reminderSettings(loadDb(), req.user!.id));
+});
+meRouter.put('/study-reminders', (req: Request, res: Response) => {
+  if (typeof req.body?.on !== 'boolean') return res.status(400).json({ error: 'Say whether reminders are on.' });
+  const db = loadDb();
+  const out = setReminders(db, req.user!.id, req.body.on);
+  saveDb(db);
+  res.json(out);
+});
+
 /** Public, no auth: GET /api/parent/:token. The token is the capability. */
 export const parentRouter = Router();
 parentRouter.get('/:token', rateLimit(30), (req: Request, res: Response) => {
@@ -371,4 +390,48 @@ parentRouter.delete('/:token/whatsapp', rateLimit(10), (req: Request, res: Respo
     saveDb(db);
     return out;
   });
+});
+
+/**
+ * Weekly parent email (lib/parentEmail): the parent's side, on the parent-link
+ * capability, plus the confirm / unsubscribe tokens from the emails.
+ *   GET  /api/parent/:token/email      status (masked address only)
+ *   POST /api/parent/:token/email      { email, lang, consent: true } — sends one confirmation
+ *   POST /api/parent-email/confirm     { t }
+ *   POST /api/parent-email/stop        { t }
+ */
+const emailFail = (res: Response, err: any) => {
+  if (err instanceof ParentEmailError) return res.status(err.status).json({ error: err.message });
+  console.error('[parent-email]', err?.message || err);
+  return res.status(500).json({ error: 'That did not work. Try again.' });
+};
+parentRouter.get('/:token/email', rateLimit(30), (req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'private, no-store');
+  try { res.json(parentEmailStatus(loadDb(), String(req.params.token || ''))); } catch (err) { emailFail(res, err); }
+});
+parentRouter.post('/:token/email', rateLimit(3), async (req: Request, res: Response) => {
+  try {
+    if (!siteUrl()) return res.status(503).json({ error: 'Email updates are not available yet.' });
+    res.status(201).json(await requestParentEmail(loadDb, saveDb, String(req.params.token || ''), req.body, siteUrl(), resendMailer));
+  } catch (err) {
+    emailFail(res, err);
+  }
+});
+
+export const parentEmailRouter = Router();
+parentEmailRouter.post('/confirm', rateLimit(20), (req: Request, res: Response) => {
+  const db = loadDb();
+  try {
+    const out = confirmParentEmail(db, String(req.body?.t || ''));
+    saveDb(db);
+    res.json(out);
+  } catch (err) {
+    emailFail(res, err);
+  }
+});
+parentEmailRouter.post('/stop', rateLimit(20), (req: Request, res: Response) => {
+  const db = loadDb();
+  const out = stopParentEmail(db, String(req.body?.t || ''));
+  saveDb(db);
+  res.json(out);
 });

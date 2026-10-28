@@ -46,9 +46,10 @@ import { placementRouter } from './routes/placement.routes';
 import { placementAdminRouter } from './routes/placementAdmin.routes';
 import driveBridgeRouter from './routes/bridge.routes';
 import { drivesRouter, studentProfileRouter } from './routes/drives.routes';
-import { meRouter, parentRouter, passportRouter } from './routes/me.routes';
+import { meRouter, parentRouter, parentEmailRouter, passportRouter } from './routes/me.routes';
 import { startWeeklyRecapScheduler } from './lib/recapPush';
 import { startParentWhatsappScheduler } from './lib/parentWhatsappScheduler';
+import { startStudyReminderScheduler } from './lib/studyReminderScheduler';
 import { collegesRouter, collegesAdminRouter } from './routes/colleges.routes';
 import { campusPagesRouter } from './routes/campusPages.routes';
 import driveAdminRouter from './routes/driveAdmin.routes';
@@ -150,6 +151,7 @@ app.use('/api/drives', requireAuth, drivesRouter);
 app.use('/api/me', requireAuth, meRouter);
 app.use('/api/passport', passportRouter);
 app.use('/api/parent', parentRouter);
+app.use('/api/parent-email', parentEmailRouter);
 app.use('/api/colleges', collegesRouter);
 app.use('/api/campus-pages', campusPagesRouter);
 app.use('/api/admin/college-requests', requireAdmin, collegesAdminRouter);
@@ -389,6 +391,7 @@ export const httpServer = app.listen(PORT, async () => {
   // Off unless WEEKLY_RECAP_PUSH=1 (lib/recapPush): dev shares real push subscriptions.
   startWeeklyRecapScheduler();
   startParentWhatsappScheduler();
+  startStudyReminderScheduler();
   if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
     console.warn('🔐 [Auth] JWT_SECRET env missing in production — auth is FAIL-CLOSED. Set JWT_SECRET (32+ chars) now.');
   }

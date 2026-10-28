@@ -98,8 +98,8 @@ export const ParentLinkCard: React.FC<{ ready: boolean }> = ({ ready }) => {
                       className="mt-0.5 h-4 w-4 accent-signal"
                     />
                     <span>
-                      <span className="font-semibold text-heading">Let my parent get a weekly WhatsApp update</span>
-                      <span className="block text-xs text-muted">A short Sunday message in Hindi or English with the same numbers as this page. Your parent signs up on the page with their own number, and either of you can stop it.</span>
+                      <span className="font-semibold text-heading">Let my parent get a weekly update</span>
+                      <span className="block text-xs text-muted">A short Sunday message on WhatsApp or by email, in Hindi or English, with the same numbers as this page. Your parent signs up on the page with their own number or email, and either of you can stop it.</span>
                     </span>
                   </label>
                   {wa.subscribed && (

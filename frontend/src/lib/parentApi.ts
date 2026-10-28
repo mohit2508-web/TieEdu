@@ -49,3 +49,12 @@ export const getParentWhatsapp = (token: string) => call<ParentWaStatus>(wa(toke
 export const subscribeParentWhatsapp = (token: string, input: { phone: string; lang: 'hi' | 'en'; consent: boolean }) =>
   call<ParentWaStatus>(wa(token), { method: 'POST', body: JSON.stringify(input) });
 export const stopParentWhatsapp = (token: string) => call<ParentWaStatus>(wa(token), { method: 'DELETE' });
+
+/** Weekly parent email (backend lib/parentEmail): confirmed double opt-in. */
+export interface ParentEmailStatus { offered: boolean; subscribed: { email: string; lang: 'hi' | 'en'; confirmed: boolean } | null }
+const pe = (token: string) => `/parent/${encodeURIComponent(token)}/email`;
+export const getParentEmail = (token: string) => call<ParentEmailStatus>(pe(token));
+export const requestParentEmail = (token: string, input: { email: string; lang: 'hi' | 'en'; consent: boolean }) =>
+  call<ParentEmailStatus>(pe(token), { method: 'POST', body: JSON.stringify(input) });
+export const confirmParentEmail = (t: string) => call<{ confirmed: boolean; first_name: string }>('/parent-email/confirm', { method: 'POST', body: JSON.stringify({ t }) });
+export const stopParentEmail = (t: string) => call<{ stopped: boolean }>('/parent-email/stop', { method: 'POST', body: JSON.stringify({ t }) });

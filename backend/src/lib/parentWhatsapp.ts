@@ -99,12 +99,14 @@ export function unsubscribeParent(db: any, token: string) {
 /** The student's switch. Turning it off also ends any subscription. */
 export function setStudentAllowed(user: any, allowed: boolean) {
   user.parent_whatsapp_allowed = allowed;
-  if (!allowed) user.parent_whatsapp = null;
+  // The same switch covers the weekly email (lib/parentEmail), so off ends both.
+  if (!allowed) { user.parent_whatsapp = null; user.parent_email = null; }
 }
 
 /** Called whenever the parent link is replaced or turned off: the old link's subscriber stops. */
 export function endOnLinkChange(user: any) {
   user.parent_whatsapp = null;
+  user.parent_email = null;
 }
 
 export function studentWaStatus(user: any) {
