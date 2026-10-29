@@ -136,7 +136,7 @@ function HomeTab() {
                 className="flex-none rounded-full px-2.5 py-1 text-xs font-bold"
                 style={
                   home.next_test.link_active_at
-                    ? { background: 'rgba(52,199,89,.22)', color: '#30D158' }
+                    ? { background: 'rgba(52,199,89,.22)', color: '#30D158' } // bright green: this chip sits on the dark card in both themes
                     : { background: 'rgba(255,255,255,.14)', color: 'rgba(255,255,255,.85)' }
                 }
               >

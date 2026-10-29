@@ -80,7 +80,7 @@ const LoginScreen: React.FC = () => {
           <Pressable as="button" type="submit" disabled={loading} className="btn-primary" style={{ padding: '12px 16px', borderRadius: 12 }}>
             {loading ? 'Checking...' : 'Continue'}
           </Pressable>
-          {error && <span style={{ color: '#DC2626', fontSize: 13 }}>{error}</span>}
+          {error && <span style={{ color: 'rgb(var(--rgb-danger))', fontSize: 13 }}>{error}</span>}
         </form>
       ) : (
         <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -116,7 +116,7 @@ const LoginScreen: React.FC = () => {
           <Pressable as="button" type="submit" disabled={loading} className="btn-primary" style={{ padding: '12px 16px', borderRadius: 12 }}>
             {loading ? 'Signing in...' : 'Sign in'}
           </Pressable>
-          {error && <span style={{ color: '#DC2626', fontSize: 13 }}>{error}</span>}
+          {error && <span style={{ color: 'rgb(var(--rgb-danger))', fontSize: 13 }}>{error}</span>}
         </form>
       )}
     </div>

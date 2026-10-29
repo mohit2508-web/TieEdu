@@ -240,7 +240,7 @@
   --drop-scholarship: #0277B6;  /* 4.9:1 under white (was #0284C7, 4.1:1) */
   --drop-college: #6D28D9;
   --drop-tip: #A16207;          /* 4.9:1 under white (was #C77B12, 3.35:1) */
-  --drop-tieedu: #0E2A44;
+  --drop-tieedu: #0B4F4A;     /* Warm Paper teal */
 
   /* ---------------------------------------------------------------
      SAFE AREAS  (Phase 0 — MOBILE_APP_UI_PLAN.md)
@@ -1140,8 +1140,8 @@ body {
   position: relative;
   background:
     radial-gradient(52rem 26rem at 12% -8%, rgb(var(--rgb-signal) / 0.12), transparent 55%),
-    radial-gradient(44rem 24rem at 92% 2%, rgba(232, 163, 61, 0.14), transparent 52%),
-    linear-gradient(180deg, #FCFBF8 0%, #F4F7FB 60%, var(--bg-app) 100%);
+    radial-gradient(44rem 24rem at 92% 2%, rgb(var(--rgb-secondary) / 0.10), transparent 52%),
+    linear-gradient(180deg, rgb(var(--rgb-bg-app-warm)) 0%, rgb(var(--rgb-bg-app)) 100%);
 }
 .hero-mesh::after {
   content: "";
@@ -1182,13 +1182,13 @@ body {
 
 /* Gradient text underline for brand words */
 .gradient-sky {
-  background: linear-gradient(92deg, #0284C7 0%, #0E7490 55%, #E8A33D 120%);
+  background: linear-gradient(92deg, rgb(var(--rgb-link)) 0%, rgb(var(--rgb-track)) 55%, rgb(var(--rgb-signal)) 120%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 .gradient-amber {
-  background: linear-gradient(92deg, #D4902C, #E8A33D 55%, #B45309);
+  background: linear-gradient(92deg, rgb(var(--rgb-signal-hover)), rgb(var(--rgb-signal)) 55%, rgb(var(--rgb-amber-deep)));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -1324,7 +1324,7 @@ code, pre, kbd, samp, .font-mono {
   margin: 0.6rem 0;
   font-size: 18px;
   line-height: 1.85;
-  color: #334155;
+  color: var(--text-body);
 }
 .prose-article li::marker { color: var(--brand-accent); font-weight: bold; }
 
@@ -1332,7 +1332,7 @@ code, pre, kbd, samp, .font-mono {
   border-left: 4px solid var(--brand-accent);
   padding: 0.75rem 1.25rem;
   margin: 1.5rem 0;
-  background: #FFFBF5;
+  background: rgb(var(--rgb-bg-app-warm));
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   color: #475569;
   font-style: italic;
@@ -1340,7 +1340,7 @@ code, pre, kbd, samp, .font-mono {
 }
 
 .prose-article code {
-  background: #F1F5F9;
+  background: rgb(var(--rgb-bg-surface-hover));
   padding: 0.2em 0.5em;
   border-radius: 4px;
   font-size: 0.88em;
@@ -1349,8 +1349,8 @@ code, pre, kbd, samp, .font-mono {
 }
 
 .prose-article pre {
-  background: #0F172A;
-  color: #F8FAFC;
+  background: #1B130D; /* warm near-black; the One Dark colours below are tuned for a dark block */
+  color: #FBF6EE;
   padding: 1.25rem 1.5rem;
   border-radius: var(--radius-md);
   overflow-x: auto;
@@ -1385,7 +1385,7 @@ code, pre, kbd, samp, .font-mono {
   display: block;
 }
 .prose-article table th {
-  background: #F4F4F2;
+  background: rgb(var(--rgb-bg-surface-hover));
   font-weight: 700;
   text-align: left;
   padding: 0.6rem 1rem;
@@ -1397,7 +1397,7 @@ code, pre, kbd, samp, .font-mono {
   border-bottom: 1px solid var(--border-subtle);
 }
 .prose-article table tr:last-child td { border-bottom: none; }
-.prose-article table tr:hover td { background: #FAFAF9; }
+.prose-article table tr:hover td { background: rgb(var(--rgb-bg-app-warm)); }
 
 .prose-article hr {
   border: none;
@@ -1604,11 +1604,11 @@ code, pre, kbd, samp, .font-mono {
   border-bottom: none;
 }
 .sidebar-item:hover {
-  background: #F4F4F2;
+  background: rgb(var(--rgb-bg-surface-hover));
   color: var(--text-heading);
 }
 .sidebar-item.active {
-  background: #EFF6FF;
+  background: rgb(var(--rgb-signal-soft));
   border-left-color: var(--brand-accent);
   color: var(--link);
   font-weight: 600;
@@ -1630,8 +1630,8 @@ code, pre, kbd, samp, .font-mono {
    ============================================ */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #DDDDD8; border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: #B0B0A8; }
+::-webkit-scrollbar-thumb { background: rgb(var(--rgb-edge)); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgb(var(--rgb-border-strong)); }
 
 /* scrollbar-none — hide scrollbar visually but keep scroll behavior */
 .scrollbar-none::-webkit-scrollbar { display: none; }
@@ -1722,10 +1722,10 @@ code, pre, kbd, samp, .font-mono {
   z-index: 1;
   min-width: 200px;
   max-width: 200px;
-  border-right: 1px solid #EDEDEB;
+  border-right: 1px solid rgb(var(--rgb-border-subtle));
 }
-.compare-sticky-col { background-color: #FFFFFF; }
-.compare-sticky-col-alt { background-color: #FAFAF9; }
+.compare-sticky-col { background-color: rgb(var(--rgb-bg-surface)); }
+.compare-sticky-col-alt { background-color: rgb(var(--rgb-bg-app-warm)); }
 
 /* Horizontal chip rails (company switcher, round filters) keep their scroll
    affordance invisible so the row reads as a segmented control, not a scroller. */
@@ -1902,15 +1902,15 @@ code, pre, kbd, samp, .font-mono {
 /* An expanding ring on the cell a pointer currently refers to. Repetition is
    the point: the link is meant to be noticed, not just seen once. */
 @keyframes anim-target-ring {
-  0%   { box-shadow: inset 0 0 0 2px rgba(232, 163, 61, 0.9); }
-  50%  { box-shadow: inset 0 0 0 2px rgba(232, 163, 61, 0.18); }
-  100% { box-shadow: inset 0 0 0 2px rgba(232, 163, 61, 0.9); }
+  0%   { box-shadow: inset 0 0 0 2px rgb(var(--rgb-signal) / 0.9); }
+  50%  { box-shadow: inset 0 0 0 2px rgb(var(--rgb-signal) / 0.18); }
+  100% { box-shadow: inset 0 0 0 2px rgb(var(--rgb-signal) / 0.9); }
 }
 .anim-target-ring { animation: anim-target-ring 1700ms ease-in-out infinite; }
 
 /* A cell whose contents just changed. */
 @keyframes anim-write-flash {
-  0%   { background-color: #E8A33D; }
+  0%   { background-color: rgb(var(--rgb-signal)); }
   100% { background-color: transparent; }
 }
 .anim-write-flash { animation: anim-write-flash 700ms ease-out; }
@@ -1925,8 +1925,8 @@ code, pre, kbd, samp, .font-mono {
 /* The currently-executing line breathing, so it stays findable while the
    learner is looking at the variables panel instead. */
 @keyframes anim-line-breathe {
-  0%, 100% { box-shadow: inset 3px 0 0 #E8A33D; }
-  50%      { box-shadow: inset 3px 0 0 rgba(232, 163, 61, 0.35); }
+  0%, 100% { box-shadow: inset 3px 0 0 rgb(var(--rgb-signal)); }
+  50%      { box-shadow: inset 3px 0 0 rgb(var(--rgb-signal) / 0.35); }
 }
 .anim-line-breathe { animation: anim-line-breathe 1600ms ease-in-out infinite; }
 
@@ -2604,8 +2604,11 @@ body {
   --apple-label-3: rgb(var(--rgb-text-light));
   --apple-placeholder: rgb(var(--rgb-text-light) / 0.7);
 
-  --apple-blue: rgb(var(--rgb-signal));          /* the brand action colour */
-  --apple-blue-soft: rgb(var(--rgb-signal-soft));
+  /* Teal, not amber (Warm Paper §4): "blue" is used here both as text and as a
+     fill under --apple-on-fill. Amber fails both (1.9:1 as text on paper, 2.0:1
+     under white); teal passes both, in light and dark. */
+  --apple-blue: rgb(var(--rgb-link));
+  --apple-blue-soft: rgb(var(--rgb-secondary-soft));
   --apple-green: rgb(var(--rgb-success));
   --apple-green-soft: rgb(var(--rgb-success-soft));
   --apple-orange: rgb(var(--rgb-warning));
@@ -2632,7 +2635,7 @@ body {
 /* In Mock Drives a grouped card is a brand card: hairline border, the site radius. */
 .mock-drive-scope .apple-card {
   border: 1px solid rgb(var(--rgb-border-subtle));
-  border-radius: 14px;
+  border-radius: 20px;
   box-shadow: var(--shadow-xs, 0 1px 2px rgb(var(--rgb-shadow) / 0.06));
 }
 

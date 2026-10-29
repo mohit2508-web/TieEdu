@@ -88,14 +88,14 @@ function ResultPage() {
           <p className="text-sm font-medium text-gray-500">Assessment Complete</p>
           <div className="mt-4 relative inline-flex items-center justify-center">
             <svg width="160" height="160" viewBox="0 0 160 160" className="-rotate-90">
-              <circle cx="80" cy="80" r="70" fill="none" stroke="#E5E7EB" strokeWidth="10" />
+              <circle cx="80" cy="80" r="70" fill="none" strokeWidth="10" style={{ stroke: 'rgb(var(--rgb-bg-surface-hover))' }} />
               <circle
                 cx="80" cy="80" r="70" fill="none"
-                stroke={passed ? '#0F7BFF' : '#F59E0B'}
                 strokeWidth="10" strokeLinecap="round"
                 strokeDasharray={circumference}
                 strokeDashoffset={offset}
-                style={{ transition: 'stroke-dashoffset 1.5s ease-out' }}
+                // SVG attributes cannot read CSS variables, so the colour is a style.
+                style={{ stroke: passed ? 'rgb(var(--rgb-success))' : 'rgb(var(--rgb-signal))', transition: 'stroke-dashoffset 1.5s ease-out' }}
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">

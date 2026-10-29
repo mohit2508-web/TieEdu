@@ -315,7 +315,7 @@ export const CartModal: React.FC = () => {
             }
           },
           modal: { ondismiss: () => setIsProcessing(false) },
-          theme: { color: '#0284C7' },
+          theme: { color: '#FFA41B' }, // Warm Paper amber; Razorpay needs a hex
         });
         rzp.on?.('payment.failed', () => {
           setIsProcessing(false);

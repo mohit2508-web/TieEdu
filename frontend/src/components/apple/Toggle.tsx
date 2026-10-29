@@ -21,7 +21,7 @@ export const Toggle: React.FC<ToggleProps> = ({ checked, onChange, disabled, ari
     disabled={disabled}
     onClick={() => onChange(!checked)}
     className="relative h-[31px] w-[51px] shrink-0 rounded-full transition-colors duration-300 ease-out disabled:opacity-60"
-    style={{ background: checked ? 'var(--apple-green, #34C759)' : '#E5E5EA' }}
+    style={{ background: checked ? 'var(--apple-green, #34C759)' : 'var(--apple-fill, #E5E5EA)' }}
   >
     <span
       className="absolute left-[2px] top-[2px] block h-[27px] w-[27px] rounded-full bg-white transition-transform duration-300 ease-out"

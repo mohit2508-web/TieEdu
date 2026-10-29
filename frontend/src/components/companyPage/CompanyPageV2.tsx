@@ -526,7 +526,7 @@ export function CompanyPageV2({
           onSelectSection?.(inner?.dataset.cpSub || sec.id);
         }}
         style={{
-          outline: selectedHere ? '2px solid #0284C7' : undefined,
+          outline: selectedHere ? '2px solid var(--focus)' : undefined,
           outlineOffset: -2,
           cursor: 'pointer',
         }}

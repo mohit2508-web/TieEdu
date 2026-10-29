@@ -171,7 +171,7 @@ export const CoursePreviewShell: React.FC<{
         {sample && (sample.blocks?.length || 0) > 0 && (
           <section aria-labelledby="preview-sample" className="mt-10 rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-success-soft, #E8F7EE)] px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-[var(--color-success)]">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-success-soft px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-[var(--color-success)]">
                 <PlayCircle size={12} /> Free sample
               </span>
               {sample.module_title && (

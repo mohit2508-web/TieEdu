@@ -55,7 +55,7 @@ const TpoDashboardBody: React.FC = () => {
             <div className="flex items-center gap-3">
               <span
                 className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm font-black shrink-0"
-                style={{ background: college?.theme_color || '#1F3A5F' }}
+                style={{ background: college?.theme_color || 'rgb(var(--rgb-brand-ink))' }}
               >
                 {(college?.short_name || college?.name || '??').slice(0, 2).toUpperCase()}
               </span>

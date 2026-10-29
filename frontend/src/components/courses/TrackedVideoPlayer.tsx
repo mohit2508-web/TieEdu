@@ -461,7 +461,7 @@ export const TrackedVideoPlayer: React.FC<TrackedVideoPlayerProps> = ({
                 className="focus-ring inline-flex min-h-[44px] items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-colors"
                 style={{
                   background: isPlaying ? 'var(--brand-sky-soft)' : 'var(--brand-sky)',
-                  color: isPlaying ? 'var(--brand-sky-strong)' : '#fff',
+                  color: isPlaying ? 'rgb(var(--rgb-signal-ink))' : 'rgb(var(--rgb-on-primary))', // the tint's ink; dark ink on amber
                 }}
               >
                 {isPlaying ? <PauseCircle className="h-3.5 w-3.5" /> : <PlayCircle className="h-3.5 w-3.5" />}

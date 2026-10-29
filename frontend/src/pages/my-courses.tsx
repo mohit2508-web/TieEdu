@@ -211,7 +211,7 @@ export default function MyCoursesPage() {
                             <Chip label={`${tier.label} cert`} color={tier.accent} soft={tier.soft} />
                           )}
                           {cert?.distinction && (
-                            <Chip label="With distinction" color="#1B7A4B" soft="#E4F6EC" />
+                            <Chip label="With distinction" color="rgb(var(--rgb-success))" soft="rgb(var(--rgb-success-soft))" />
                           )}
                         </div>
                         <div className="mt-2 flex items-start gap-2">
@@ -285,7 +285,7 @@ export default function MyCoursesPage() {
                                 const tier = tierStyle(c.tier);
                                 return <Chip label={tier.label} color={tier.accent} soft={tier.soft} />;
                               })()}
-                              {c.distinction && <Chip label="With distinction" color="#1B7A4B" soft="#E4F6EC" />}
+                              {c.distinction && <Chip label="With distinction" color="rgb(var(--rgb-success))" soft="rgb(var(--rgb-success-soft))" />}
                             </span>
                           </td>
                           <td className="px-4 py-2.5 text-xs text-[var(--text-muted)]">

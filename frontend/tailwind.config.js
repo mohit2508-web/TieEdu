@@ -130,6 +130,27 @@ const borderRadius = {
   device: '44px',
 };
 
+/*
+ * Warm Paper (UI_REDESIGN_PLAN_V3 §11 "Admin: token swap"): ~1,700 legacy
+ * gray/slate classes render this warm scale instead of Tailwind's cool greys,
+ * so older screens sit on the cream paper without a per-file rewrite. Text
+ * steps keep at least the old contrast on white (500: 5.6:1, was 4.8). Dark mode
+ * still goes through the remap at the end of globals.css.
+ */
+const WARM_GRAY = {
+  50: '#FBF6EE',
+  100: '#F5EEE2',
+  200: '#E8DFD0',
+  300: '#D9CCB8',
+  400: '#A8998A',
+  500: '#75655A',
+  600: '#6B5B4B',
+  700: '#54463A',
+  800: '#3B2F25',
+  900: '#2A1E14',
+  950: '#1B130D',
+};
+
 module.exports = {
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
@@ -160,7 +181,7 @@ module.exports = {
   },
   theme: {
     extend: {
-      colors: tokens,
+      colors: { ...tokens, gray: WARM_GRAY, slate: WARM_GRAY, zinc: WARM_GRAY, neutral: WARM_GRAY, stone: WARM_GRAY },
       boxShadow,
       borderRadius,
       transitionDuration: { press: '80ms', flip: '300ms' },

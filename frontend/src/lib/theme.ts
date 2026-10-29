@@ -38,8 +38,9 @@ export function applyTheme(choice: ThemeChoice): void {
   const el = document.documentElement;
   if (dark) el.setAttribute('data-theme', 'dark');
   else el.removeAttribute('data-theme');
-  // The browser UI colour follows the page.
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#0B1520' : '#0E2A44');
+  // The browser UI colour follows the page: the Warm Paper ground in each theme.
+  // A chosen theme overrides the OS, so every theme-color meta gets the same value.
+  document.querySelectorAll('meta[name="theme-color"]').forEach((m) => m.setAttribute('content', dark ? '#121010' : '#FFF8EE'));
 }
 
 export function setTheme(choice: ThemeChoice): void {

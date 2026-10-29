@@ -29,9 +29,11 @@ const SIZE: Record<ShareFormat, { w: number; h: number }> = {
   portrait: { w: 1080, h: 1350 },
 };
 
-const INK = '#0E2A44';
+// Warm Paper (UI_REDESIGN_PLAN_V3 §2): the teal band, the logo colour
+// (never changed) and the amber. A canvas needs literal colours.
+const INK = '#0B4F4A';
 const LOGO = '#F84109';
-const MONEY = '#E8A33D';
+const MONEY = '#FFA41B';
 
 /** The family name next/font registered, read from the CSS variable the app sets. */
 function family(varName: string, fallback: string): string {

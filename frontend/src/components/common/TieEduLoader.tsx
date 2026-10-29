@@ -72,7 +72,7 @@ export const TieEduLoader: React.FC = () => {
      */
     <div className="fixed top-0 left-0 right-0 z-[100] h-1 bg-surface-hover" aria-hidden="true">
       <div
-        className="h-full bg-gradient-to-r from-money via-amber-400 to-brand-ink transition-all duration-150 ease-out shadow-[0_0_10px_#E8A33D]"
+        className="h-full bg-gradient-to-r from-money via-amber-400 to-brand-ink transition-all duration-150 ease-out shadow-[0_0_10px_rgb(var(--rgb-signal))]"
         style={{ width: `${progress}%` }}
       />
     </div>

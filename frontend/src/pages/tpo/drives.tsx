@@ -175,7 +175,7 @@ export default function TpoDrivesPage() {
                       className="flex shrink-0 items-center gap-2 rounded-full px-3.5 py-2 text-sm font-medium transition-all active:scale-[0.97]"
                       style={
                         active
-                          ? { background: 'var(--apple-blue)', color: '#fff' }
+                          ? { background: 'var(--apple-blue)', color: 'var(--apple-on-fill)' }
                           : { background: 'var(--apple-surface)', color: 'var(--apple-label-2)' }
                       }
                     >

@@ -46,7 +46,7 @@ const SEGMENT_TONE = { ready: 'bg-success', in_progress: 'bg-warning', at_risk: 
 
 export default function CampusPage({ page }: { page: CampusPublic }) {
   const { college, aggregate: a } = page;
-  const accent = /^#[0-9a-f]{6}$/i.test(college.theme_color || '') ? (college.theme_color as string) : '#0E2A44';
+  const accent = /^#[0-9a-f]{6}$/i.test(college.theme_color || '') ? (college.theme_color as string) : '#0B4F4A'; // Warm Paper teal
 
   return (
     <>

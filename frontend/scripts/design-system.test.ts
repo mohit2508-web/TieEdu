@@ -117,6 +117,57 @@ check('font-mono only in code and identifier contexts', () => {
   );
 });
 
+/*
+ * Warm Paper §13: colours come from tokens. A hex literal is allowed only as a
+ * `var(--x, #…)` fallback, in a comment, or in one of these files, each for a
+ * stated reason.
+ */
+const HEX_FILES: Record<string, string> = {
+  'components/courses/CertificatePreview.tsx': 'mirrors the printed certificate PDF',
+  'components/ui/Cover.tsx': 'generated course-cover palette',
+  'components/blocks/CourseAnimations.tsx': 'lesson illustrations',
+  'components/common/CompanyOrbitHero3D.tsx': 'retired 3D hero, kept for the studio',
+  'components/companyPage/CompanyPageV2.tsx': 'the studio accent choices, light and dark',
+  'components/companyPage/InteractiveSections.tsx': 'chart series on the teal band',
+  'components/home/BranchGoalBand.tsx': 'category purples',
+  'components/home/QuickActions.tsx': 'category purples',
+  'components/home/SkillRail.tsx': 'category purples',
+  'components/common/BrandTile.tsx': 'category purples',
+  'components/admin/companyPage/CompanyPageStudio.tsx': 'the Google result preview',
+  'components/checkout/CartModal.tsx': 'Razorpay checkout needs a hex',
+  'pages/account.tsx': 'canvas image export',
+  'pages/campus/[slug].tsx': 'validates and defaults a college theme hex',
+  'pages/_document.tsx': 'browser theme-color meta',
+  'pages/mock-drive/index.tsx': 'a chip on the always-dark card',
+  'pages/skill-test/certificates/[certificateId].tsx': 'LinkedIn blue',
+  'pages/my-certificates.tsx': 'LinkedIn blue',
+  'components/common/TieEduLogo.tsx': 'the logo',
+  'lib/briefing/briefingLogic.ts': 'per-kind tones; the card appends alpha digits to the hex',
+  'lib/courseFormat.ts': 'generated course-cover palette',
+  'lib/shareCard.ts': 'canvas share image',
+  'lib/theme.ts': 'browser theme-color meta',
+};
+
+check('no hard-coded hex colours outside tokens', () => {
+  const hits: string[] = [];
+  for (const f of files) {
+    if (HEX_FILES[f.rel]) continue;
+    const lines = fs.readFileSync(f.abs, 'utf8').split('\n');
+    lines.forEach((line, i) => {
+      const code = line.replace(/\/\/.*$/, '').replace(/\/\*.*?\*\//g, '').replace(/^\s*\*.*$/, '');
+      const stripped = code.replace(/var\(--[\w-]+,\s*#[0-9A-Fa-f]{3,8}\)/g, '').replace(/,\s*#[0-9A-Fa-f]{3,8}\)/g, ')');
+      for (const m of stripped.matchAll(/#[0-9A-Fa-f]{6}\b|#[0-9A-Fa-f]{3}\b(?![\w-])/g)) {
+        if (/^#\d+[a-z]?$/i.test(m[0]) && !/[a-f]/i.test(m[0].slice(1))) {
+          // "#01", "#123" read as numbers/labels, not colours, unless 6 digits
+          if (m[0].length !== 7) continue;
+        }
+        hits.push(`${f.rel}:${i + 1}  ${m[0]}`);
+      }
+    });
+  }
+  none(hits, 'use a token (rgb(var(--rgb-…)) or a Tailwind colour); add a file to HEX_FILES only with a reason');
+});
+
 check('no Sparkles icon', () => {
   none(findAll(/\bSparkles\b/g), 'pick an icon that says what the thing is');
 });
