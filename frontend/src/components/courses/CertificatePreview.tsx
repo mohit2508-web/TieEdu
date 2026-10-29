@@ -50,8 +50,8 @@ export const CertificatePreview: React.FC<{
    * signed record but is not printed on the PDF, so it is stated in the caption
    * rather than drawn — the preview shows only what the real page shows.
    */
-  const NAVY = '#0E2A44';
-  const AMBER = '#E8A33D';
+  const NAVY = '#0B4F4A';
+  const AMBER = '#FFA41B';
   const SERIF = 'Georgia, "Times New Roman", serif';
   const title = courseTitle.length > 46 ? courseTitle.slice(0, 45) + '…' : courseTitle;
   const ticks: Array<[number, number, number, number]> = [
@@ -61,7 +61,7 @@ export const CertificatePreview: React.FC<{
   return (
     <div className={className}>
       <svg viewBox="0 0 320 226" role="img" aria-label={`Sample certificate for ${courseTitle}`} className="block w-full rounded-md shadow-soft">
-        <rect width="320" height="226" fill="#FCFBF8" />
+        <rect width="320" height="226" fill="#FFF8EE" />
         <rect x="8" y="8" width="304" height="210" fill="none" stroke={NAVY} strokeWidth="1" />
         <rect x="12" y="12" width="296" height="202" fill="none" stroke={AMBER} strokeWidth="0.4" />
         {ticks.map(([x, y, sx, sy]) => (
@@ -77,36 +77,36 @@ export const CertificatePreview: React.FC<{
           CERTIFICATE OF COURSE COMPLETION
         </text>
 
-        <text x="160" y="64" textAnchor="middle" fontFamily={SERIF} fontSize="15" fontWeight="700" fill="#10151C">
+        <text x="160" y="64" textAnchor="middle" fontFamily={SERIF} fontSize="15" fontWeight="700" fill="#2A1E14">
           Certificate of Completion
         </text>
-        <text x="160" y="77" textAnchor="middle" fontSize="5" fill="#7A858F">This certifies that</text>
+        <text x="160" y="77" textAnchor="middle" fontSize="5" fill="#6B5B4B">This certifies that</text>
 
-        <text x="160" y="96" textAnchor="middle" fontFamily={SERIF} fontSize="12" fontStyle="italic" fill="#9AA3AD">
+        <text x="160" y="96" textAnchor="middle" fontFamily={SERIF} fontSize="12" fontStyle="italic" fill="#A8998A">
           Your name
         </text>
         <line x1="100" y1="102" x2="220" y2="102" stroke={AMBER} strokeWidth="0.5" />
 
-        <text x="160" y="113" textAnchor="middle" fontSize="4.6" fill="#7A858F">has successfully completed all lessons of</text>
-        <text x="160" y="127" textAnchor="middle" fontFamily={SERIF} fontSize="8" fontWeight="700" fill="#10151C">
+        <text x="160" y="113" textAnchor="middle" fontSize="4.6" fill="#6B5B4B">has successfully completed all lessons of</text>
+        <text x="160" y="127" textAnchor="middle" fontFamily={SERIF} fontSize="8" fontWeight="700" fill="#2A1E14">
           {title}
         </text>
 
         {(['Lessons completed', 'XP earned', 'Date of issue'] as const).map((label, i) => (
           <g key={label}>
-            <rect x={96 + i * 46} y="141" width="36" height="4" rx="1" fill="#E7E4DC" />
-            <text x={114 + i * 46} y="153" textAnchor="middle" fontSize="3.6" fill="#7A858F">{label}</text>
+            <rect x={96 + i * 46} y="141" width="36" height="4" rx="1" fill="#E8DFD0" />
+            <text x={114 + i * 46} y="153" textAnchor="middle" fontSize="3.6" fill="#6B5B4B">{label}</text>
           </g>
         ))}
 
-        <line x1="24" y1="176" x2="296" y2="176" stroke="#DAD9D0" strokeWidth="0.4" />
-        <text x="24" y="188" fontSize="3.6" fontWeight="700" fill="#7A858F" letterSpacing="0.3">ISSUED BY</text>
-        <text x="24" y="196" fontSize="4.6" fontWeight="700" fill="#10151C">TieEdu Placement Intelligence</text>
-        <text x="240" y="196" textAnchor="end" fontSize="3.8" fill="#7A858F">Serial · Ed25519 signature</text>
-        <rect x="270" y="182" width="22" height="22" fill="none" stroke="#10151C" strokeWidth="0.6" />
-        <rect x="274" y="186" width="5" height="5" fill="#10151C" />
-        <rect x="283" y="186" width="5" height="5" fill="#10151C" />
-        <rect x="274" y="195" width="5" height="5" fill="#10151C" />
+        <line x1="24" y1="176" x2="296" y2="176" stroke="#E8DFD0" strokeWidth="0.4" />
+        <text x="24" y="188" fontSize="3.6" fontWeight="700" fill="#6B5B4B" letterSpacing="0.3">ISSUED BY</text>
+        <text x="24" y="196" fontSize="4.6" fontWeight="700" fill="#2A1E14">TieEdu Placement Intelligence</text>
+        <text x="240" y="196" textAnchor="end" fontSize="3.8" fill="#6B5B4B">Serial · Ed25519 signature</text>
+        <rect x="270" y="182" width="22" height="22" fill="none" stroke="#2A1E14" strokeWidth="0.6" />
+        <rect x="274" y="186" width="5" height="5" fill="#2A1E14" />
+        <rect x="283" y="186" width="5" height="5" fill="#2A1E14" />
+        <rect x="274" y="195" width="5" height="5" fill="#2A1E14" />
       </svg>
       <p className="mt-2 text-xs leading-snug text-muted">
         A sample of the certificate this course issues ({style.label.toLowerCase()} tier). Yours carries your name,

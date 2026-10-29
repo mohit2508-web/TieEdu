@@ -46,15 +46,15 @@ const Welcome: React.FC<TemplateProps> = (p) => {
       </P>
       <H2>Start with these</H2>
       <Check>
-        <a href={p.href(v.free_course_path)} style={{ color: '#0284C7' }}>Coding Foundations</a> — programming
+        <a href={p.href(v.free_course_path)} style={{ color: '#0B4F4A' }}>Coding Foundations</a> — programming
         fundamentals, zero cost, start this week.
       </Check>
       <Check>
-        <a href={p.href('/skill-test')} style={{ color: '#0284C7' }}>Free skill test</a> — 20 questions,
+        <a href={p.href('/skill-test')} style={{ color: '#0B4F4A' }}>Free skill test</a> — 20 questions,
         instant score, a certificate for your resume.
       </Check>
       <Check>
-        <a href={p.href(v.vault_path)} style={{ color: '#0284C7' }}>{v.vault_company} prep vault</a> — see the
+        <a href={p.href(v.vault_path)} style={{ color: '#0B4F4A' }}>{v.vault_company} prep vault</a> — see the
         actual round pattern before you ever sit for it.
       </Check>
       <P>

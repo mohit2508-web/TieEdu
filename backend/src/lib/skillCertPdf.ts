@@ -76,16 +76,16 @@ export async function buildSkillCertPdf(cert: SkillCertificate): Promise<Buffer>
   const sans = await pdf.embedFont(StandardFonts.Helvetica);
   const sansBold = await pdf.embedFont(StandardFonts.HelveticaBold);
 
-  const NAVY = rgb(0.055, 0.165, 0.267);
-  const SKY = rgb(0.059, 0.482, 1); // #0F7BFF — the TieEdu skill-test blue
-  const AMBER = rgb(0.910, 0.639, 0.239);
-  const INK = rgb(0.063, 0.082, 0.110);
-  const BODY = rgb(0.243, 0.278, 0.329);
-  const MUTED = rgb(0.478, 0.522, 0.560);
-  const HAIRLINE = rgb(0.855, 0.851, 0.816);
+  const NAVY = rgb(0.043, 0.310, 0.290); // Warm Paper band teal #0B4F4A
+  const SKY = rgb(0.604, 0.357, 0); // accent: deep amber #9A5B00 (Warm Paper)
+  const AMBER = rgb(1, 0.643, 0.106); // #FFA41B
+  const INK = rgb(0.165, 0.118, 0.078); // #2A1E14
+  const BODY = rgb(0.329, 0.275, 0.227); // #54463A
+  const MUTED = rgb(0.420, 0.357, 0.294); // #6B5B4B
+  const HAIRLINE = rgb(0.910, 0.875, 0.816); // #E8DFD0
 
   // --- Paper + frame -----------------------------------------------------
-  page.drawRectangle({ x: 0, y: 0, width: W, height: H, color: rgb(0.988, 0.984, 0.973) });
+  page.drawRectangle({ x: 0, y: 0, width: W, height: H, color: rgb(1, 0.973, 0.933) }); // paper #FFF8EE
   page.drawRectangle({
     x: 22, y: 22, width: W - 44, height: H - 44,
     borderColor: NAVY, borderWidth: 2.2,

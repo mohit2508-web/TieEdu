@@ -1,13 +1,24 @@
+/* Warm Paper fonts, from the frontend's own @fontsource packages (no network). */
+@font-face { font-family: "Mukta"; font-weight: 400; src: url("../../frontend/node_modules/@fontsource/mukta/files/mukta-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Mukta"; font-weight: 600; src: url("../../frontend/node_modules/@fontsource/mukta/files/mukta-latin-600-normal.woff2") format("woff2"); }
+@font-face { font-family: "Mukta"; font-weight: 700; src: url("../../frontend/node_modules/@fontsource/mukta/files/mukta-latin-700-normal.woff2") format("woff2"); }
+@font-face { font-family: "Mukta"; font-weight: 400; src: url("../../frontend/node_modules/@fontsource/mukta/files/mukta-devanagari-400-normal.woff2") format("woff2"); unicode-range: U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+25CC, U+A830-A839, U+A8E0-A8FF; }
+@font-face { font-family: "Mukta"; font-weight: 600; src: url("../../frontend/node_modules/@fontsource/mukta/files/mukta-devanagari-600-normal.woff2") format("woff2"); unicode-range: U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+25CC, U+A830-A839, U+A8E0-A8FF; }
+@font-face { font-family: "Mukta"; font-weight: 700; src: url("../../frontend/node_modules/@fontsource/mukta/files/mukta-devanagari-700-normal.woff2") format("woff2"); unicode-range: U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+25CC, U+A830-A839, U+A8E0-A8FF; }
+@font-face { font-family: "Poppins"; font-weight: 600; src: url("../../frontend/node_modules/@fontsource/poppins/files/poppins-latin-600-normal.woff2") format("woff2"); }
+@font-face { font-family: "Poppins"; font-weight: 700; src: url("../../frontend/node_modules/@fontsource/poppins/files/poppins-latin-700-normal.woff2") format("woff2"); }
+h1, h2, h3, h4, .cover .brand { font-family: "Poppins", "Mukta", "Segoe UI", sans-serif; letter-spacing: -0.01em; }
+
 /* TieEdu help books — one print stylesheet for every role's guide (A4). */
 @page { size: A4; margin: 18mm 17mm 20mm 17mm; }
 :root {
-  --ink: #0e2a44;
-  --body: #2b3542;
-  --muted: #667085;
-  --line: #dde1e7;
-  --soft: #f5f7fa;
-  --signal: #e85c21;
-  --signal-soft: #fdeee6;
+  --ink: #0b4f4a;  /* Warm Paper teal: headings, table heads */
+  --body: #3b2f25;
+  --muted: #6b5b4b;
+  --line: #e8dfd0;
+  --soft: #fbf4e8;
+  --signal: #ffa41b;  /* amber: rules and bars only, never text */
+  --signal-soft: #ffe7bf;
   --ok: #157347;
   --ok-soft: #e7f4ec;
   --warn: #9a5b00;
@@ -15,7 +26,7 @@
 }
 * { box-sizing: border-box; }
 html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-body { margin: 0; font-family: "Segoe UI", "Noto Sans", "Nirmala UI", Arial, sans-serif; font-size: 10.5pt; line-height: 1.55; color: var(--body); }
+body { margin: 0; font-family: "Mukta", "Segoe UI", "Noto Sans", "Nirmala UI", Arial, sans-serif; font-size: 10.5pt; line-height: 1.55; color: var(--body); }
 
 /* Cover */
 .cover { height: 250mm; display: flex; flex-direction: column; justify-content: space-between; page-break-after: always; }
@@ -23,7 +34,7 @@ body { margin: 0; font-family: "Segoe UI", "Noto Sans", "Nirmala UI", Arial, san
 .cover .brand { margin-top: 6mm; font-size: 13pt; font-weight: 700; color: var(--ink); letter-spacing: 0.02em; }
 .cover h1 { margin: 34mm 0 4mm; font-size: 34pt; line-height: 1.1; color: var(--ink); }
 .cover .sub { font-size: 14pt; color: var(--muted); max-width: 150mm; }
-.cover .who { margin-top: 10mm; display: inline-block; padding: 3mm 5mm; background: var(--signal-soft); color: #8a3510; border-radius: 3mm; font-weight: 600; }
+.cover .who { margin-top: 10mm; display: inline-block; padding: 3mm 5mm; background: var(--signal-soft); color: #6b3e00; border-radius: 3mm; font-weight: 600; }
 .cover .foot { font-size: 9pt; color: var(--muted); border-top: 1px solid var(--line); padding-top: 4mm; }
 
 /* Contents */
@@ -77,5 +88,5 @@ ol.steps > li::before { content: counter(s); position: absolute; left: 0; top: 0
 .card { border: 1px solid var(--line); border-radius: 2.5mm; padding: 3mm 4mm; page-break-inside: avoid; }
 .card h4 { margin-top: 0; }
 .small { font-size: 9pt; color: var(--muted); }
-.hi { font-family: "Nirmala UI", "Noto Sans Devanagari", "Mangal", sans-serif; }
+.hi { font-family: "Mukta", "Nirmala UI", "Noto Sans Devanagari", "Mangal", sans-serif; }
 .keep { page-break-inside: avoid; }

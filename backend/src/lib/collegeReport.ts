@@ -144,10 +144,11 @@ const fmtDate = (d: string) => new Date(`${d}T00:00:00Z`).toLocaleDateString('en
 
 const A4: [number, number] = [595.28, 841.89];
 const M = 48;
-const INK = rgb(0.11, 0.13, 0.2);
-const MUTED = rgb(0.42, 0.45, 0.52);
-const LINE = rgb(0.86, 0.87, 0.9);
-const ACCENT = rgb(0.91, 0.36, 0.13);
+// Warm Paper (UI_REDESIGN_PLAN_V3 §2): ink, muted, hairline, teal accent.
+const INK = rgb(0.165, 0.118, 0.078);
+const MUTED = rgb(0.420, 0.357, 0.294);
+const LINE = rgb(0.910, 0.875, 0.816);
+const ACCENT = rgb(0.043, 0.310, 0.290);
 
 export async function renderCollegeReportPdf(r: CollegeReport): Promise<Uint8Array> {
   const pdf = await PDFDocument.create();
