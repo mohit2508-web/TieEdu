@@ -28,7 +28,7 @@ import { CourseReviews } from '@/components/courses/CourseReviews';
 import { ShareSaveButtons } from '@/components/courses/ShareSaveButtons';
 import { ExamPrepPanel } from '@/components/courses/ExamPrepPanel';
 import { Sheet } from '@/components/common/Sheet';
-import { Award, AlertTriangle, CheckCircle2, Download, Lock, ShieldCheck, Star, Users, Layers, FileText, Clock, CircleDashed, Hammer, BookOpenCheck, Gift } from 'lucide-react';
+import { Award, AlertTriangle, CheckCircle2, Download, Lock, ShieldCheck, Star, Users, Layers, FileText, Clock, CircleDashed, Hammer, BookOpenCheck, Gift, Plus } from 'lucide-react';
 import {
   fetchCourse,
   fetchLesson,
@@ -805,116 +805,129 @@ export default function CoursePage({
 
         {course && (
           <>
-            <header className="mb-8">
-              {/* Scaler-style split hero: the text carries the decision, the
-                  cover gives the page an anchor. On narrow screens the cover
-                  drops below the title rather than squeezing the title into a
-                  narrow column. */}
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-[1fr_240px] sm:items-start">
+            {/* The hero band. A deep-teal stage with an amber glow, so the course
+                title is the first and loudest thing on the page and the one
+                action - start, continue or buy - sits right under it. The cover
+                floats on the right as a tilted card; on a phone it moves above
+                the copy at 16:9 instead of squeezing the title. */}
+            <header className="relative isolate mb-8 overflow-hidden rounded-[2rem] bg-[var(--brand-ink)] text-white shadow-float">
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_85%_15%,rgb(var(--rgb-money)/0.35),transparent_45%),radial-gradient(circle_at_10%_110%,rgb(255_255_255/0.12),transparent_40%)]"
+              />
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 -z-10 opacity-[0.07] [background-image:linear-gradient(rgb(255_255_255)_1px,transparent_1px),linear-gradient(90deg,rgb(255_255_255)_1px,transparent_1px)] [background-size:40px_40px]"
+              />
+
+              <div className="grid grid-cols-1 gap-8 p-6 sm:p-10 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-center lg:gap-12 lg:p-12 min-[1440px]:grid-cols-[minmax(0,1fr)_420px]">
                 <div className="min-w-0">
+                  {/* Phone and tablet cover: above the copy, full width. */}
+                  <CourseCover
+                    slug={course.slug}
+                    title={course.title}
+                    subject={course.category}
+                    thumbnailUrl={course.thumbnail_url}
+                    priority
+                    className="mb-6 aspect-[16/9] w-full overflow-hidden rounded-2xl ring-1 ring-white/20 lg:hidden"
+                    /* Band padding plus page padding: p-6 + px-4 on a phone,
+                       p-10 + px-6 from sm. Hidden from lg up. */
+                    sizes="(min-width: 640px) calc(100vw - 128px), calc(100vw - 80px)"
+                  />
+
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="rounded-full bg-[var(--brand-sky-soft)] px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-link">
+                    <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-white ring-1 ring-white/20">
                       {course.category}
                     </span>
-                    {course.is_free ? (
-                      <span className="rounded-full bg-[var(--bg-sky-soft)] px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-link">
-                        Free
+                    <span className="rounded-full bg-[var(--brand-accent)] px-3 py-1 text-xs font-extrabold uppercase tracking-widest text-[var(--accent-ink)]">
+                      {course.is_free ? 'Free' : formatPrice(course.price_inr)}
+                    </span>
+                    <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-white/90 ring-1 ring-white/20">
+                      {formatLevel(course.level)}
+                    </span>
+                  </div>
+
+                  <h1 className="mt-5 font-display text-4xl font-extrabold leading-[1.05] tracking-tight text-white sm:text-5xl min-[1440px]:text-6xl">
+                    {course.title}
+                  </h1>
+                  {course.subtitle && (
+                    <p className="mt-4 max-w-2xl text-lg leading-relaxed text-white/80">
+                      {course.subtitle}
+                    </p>
+                  )}
+
+                  {/* Real, server-counted facts only - each is dropped when it
+                      does not exist rather than shown as a placeholder. */}
+                  <div className="mt-6 flex flex-wrap items-center gap-2.5 text-sm">
+                    {rating && (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 font-bold ring-1 ring-white/15">
+                        <Star size={15} className="text-[var(--brand-accent)]" fill="currentColor" />
+                        {rating}
+                        {reviews && <span className="font-medium text-white/70">({reviews})</span>}
                       </span>
-                    ) : (
-                      <span className="rounded-full bg-[var(--brand-mint)] px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-link">
-                        {formatPrice(course.price_inr)}
+                    )}
+                    {enrolled && (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 font-semibold ring-1 ring-white/15">
+                        <Users size={15} className="text-white/70" />
+                        {enrolled}
+                      </span>
+                    )}
+                    {duration && (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 font-semibold ring-1 ring-white/15">
+                        <Clock size={15} className="text-white/70" />
+                        {duration}
+                      </span>
+                    )}
+                    {course.certificate_eligible && (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 font-semibold ring-1 ring-white/15">
+                        <Award size={15} className="text-[var(--brand-accent)]" />
+                        Certificate
                       </span>
                     )}
                   </div>
-                  <h1 className="mt-3 text-3xl font-extrabold leading-tight tracking-tight text-[var(--ink)] sm:text-4xl">
-                    {course.title}
-                  </h1>
-                  <p className="mt-3 max-w-2xl text-base leading-relaxed text-[var(--text-body)]">
-                    {course.subtitle}
-                  </p>
+
+                  {/* One enrol control per screen. Below `md` the fixed bar
+                      carries it whenever `hasEnrolBar`, so it is hidden here then.
+                      The paywall and the progress bar are written for a paper
+                      surface, so they sit on one inside the band. */}
+                  <div className="mt-8 flex flex-wrap items-center gap-3">
+                    <div
+                      className={cn(
+                        hasEnrolBar && 'hidden md:block',
+                        (locked || progress?.enrolled) &&
+                          'w-full max-w-md rounded-2xl bg-[var(--bg-surface)] p-4 text-[var(--ink)] shadow-float'
+                      )}
+                    >
+                      {enrollAction()}
+                    </div>
+                    <ShareSaveButtons courseSlug={course.slug} courseTitle={course.title} />
+                  </div>
                 </div>
 
-                {/* Second child of `sm:grid-cols-[1fr_240px]`, so this is the
-                    fixed 240px track, NOT the `1fr` column — the `1fr` column is
-                    the title block above. The width is therefore 240 at every
-                    viewport, and claiming the `1fr` width here (it was written
-                    up as 1272px) is a 5.3x overstatement: a 240px slot that
-                    believes it is 1272px downloads the largest file in the
-                    srcset. Nothing in the build or typecheck notices. */}
-                <CourseCover
-                  slug={course.slug}
-                  title={course.title}
-                  subject={course.category}
-                  thumbnailUrl={course.thumbnail_url}
-                  priority
-                  className="hidden aspect-[4/3] w-full overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border-subtle)] sm:block"
-                  sizes="240px"
-                />
-              </div>
-
-              {/* The cover belongs above the copy on a phone, where the split
-                  layout collapses and a right-hand column would leave the title
-                  a few characters wide. */}
-            <CourseCover
-              slug={course.slug}
-              title={course.title}
-              subject={course.category}
-              thumbnailUrl={course.thumbnail_url}
-              priority
-              className="mt-5 aspect-[16/9] w-full overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border-subtle)] sm:hidden"
-              /* Sits outside the two-column grid, and only shows below `sm`, so
-                 the width is the viewport less the page's `px-4`. */
-              sizes="calc(100vw - 32px)"
-            />
-
-              {/* Real, server-counted facts. Each one is omitted when it does not
-                  exist rather than replaced with a placeholder, so the row below
-                  the title is always true. */}
-              <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-[var(--text-body)]">
-                {rating && (
-                  <span className="inline-flex items-center gap-1.5 font-semibold">
-                    <Star size={15} className="text-[var(--brand-accent)]" fill="currentColor" />
-                    {rating}
-                    {reviews && <span className="font-normal text-[var(--text-muted)]">({reviews})</span>}
-                  </span>
-                )}
-                {enrolled && (
-                  <span className="inline-flex items-center gap-1.5">
-                    <Users size={15} className="text-[var(--text-muted)]" />
-                    {enrolled}
-                  </span>
-                )}
-                <span className="inline-flex items-center gap-1.5">
-                  <Layers size={15} className="text-[var(--text-muted)]" />
-                  {formatModuleCount(course.stats)}
-                </span>
-                <span className="inline-flex items-center gap-1.5">
-                  <FileText size={15} className="text-[var(--text-muted)]" />
-                  {formatLessonCount(course.stats)}
-                </span>
-                {duration && (
-                  <span className="inline-flex items-center gap-1.5">
-                    <Clock size={15} className="text-[var(--text-muted)]" />
-                    {duration}
-                  </span>
-                )}
-                <span className="text-[var(--text-muted)]">{formatLevel(course.level)}</span>
-              </div>
-
-              {/* One enrol control per screen. Below `md` the fixed bar already
-                  carries it whenever `hasEnrolBar`, so the hero copy is hidden
-                  there rather than rendered twice — same action, two targets,
-                  is exactly the clutter the mobile audit flagged. From `md` up
-                  there is no bar (and no side card until 1440px), so the hero
-                  stays the control. Progress is information, not a duplicate
-                  action, so the enrolled state keeps it at every width. */}
-              <div
-                className={cn(
-                  'mt-5 flex flex-wrap items-center gap-3',
-                  hasEnrolBar && 'md:flex hidden'
-                )}
-              >
-                {enrollAction()}
+                {/* Desktop cover: a tilted card with the course size pinned to
+                    it. `sizes` matches the fixed right-hand track less padding. */}
+                <div className="relative hidden lg:block">
+                  <div className="rotate-2 rounded-3xl bg-white/10 p-2 ring-1 ring-white/20 shadow-float transition-transform duration-300 motion-safe:hover:rotate-0">
+                    <CourseCover
+                      slug={course.slug}
+                      title={course.title}
+                      subject={course.category}
+                      thumbnailUrl={course.thumbnail_url}
+                      priority
+                      className="aspect-[4/3] w-full overflow-hidden rounded-2xl"
+                      sizes="(min-width: 1440px) 404px, 344px"
+                    />
+                  </div>
+                  <div className="absolute -bottom-5 -left-5 flex items-center gap-3 rounded-2xl bg-[var(--bg-surface)] px-4 py-3 text-[var(--ink)] shadow-float">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--brand-accent)] text-[var(--accent-ink)]">
+                      <Layers size={18} />
+                    </span>
+                    <div className="leading-tight">
+                      <p className="text-sm font-extrabold">{formatModuleCount(course.stats)}</p>
+                      <p className="text-xs text-[var(--text-muted)]">{formatLessonCount(course.stats)}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </header>
 
@@ -1065,103 +1078,116 @@ export default function CoursePage({
               </section>
             )}
 
-            {/* The numbers a learner checks before committing time or money,
-                placed directly under the hero so they answer "is this worth it"
-                before any scrolling. Every pip is a value the server sent; the
-                strip renders nothing at all when it has none, rather than a row
-                of placeholders. */}
+            {/* The course at a glance - big numbers a learner checks before
+                committing time. Every tile is a value the server sent; the strip
+                renders nothing when it has none. */}
             <CourseFactStrip
               level={course.level}
               lessonCount={course.stats?.lesson_count ?? null}
               moduleCount={course.stats?.module_count ?? null}
               totalMinutes={course.stats?.total_minutes ?? null}
-              // `stats.quiz_count` is the count of quiz lessons; the server's
-              // `challenge_count` is counted from the same lessons independently.
-              // The server figure is the one shown, because it is derived next to
-              // the gating logic, and a disagreement between the two would mean
-              // one of them is lying about the course.
+              // `challenge_count` is derived server-side next to the gating
+              // logic, so it is the figure shown rather than `stats.quiz_count`.
               challengeCount={course.challenge_count ?? null}
               audioLanguage={course.audio_language ?? null}
               captionLanguage={course.caption_language ?? null}
               certificateEligible={course.certificate_eligible}
             />
 
-            {/* Share and save, under the facts rather than under the enrol CTA:
-                the visitor deciding whether to keep this page open is the one
-                who needs these, and they are above the fold on every layout. */}
-            <div className="mb-8">
-              <ShareSaveButtons courseSlug={course.slug} courseTitle={course.title} />
-            </div>
-
-            {/* "What you'll get" — the rewards this course really issues, not a
-                marketing list. The server only sends perks it grants (see
-                lib/perks), so an empty array means there is nothing to promise
-                and the panel disappears rather than claiming a reward that will
-                never arrive. */}
-            {course.perks && course.perks.length > 0 && (
-              <section className="mb-8 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
-                <div className="flex items-center gap-2">
-                  <Gift size={16} className="text-link" />
-                  <h2 className="text-sm font-bold text-[var(--ink)]">What you&apos;ll get</h2>
-                </div>
-                <ul className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  {course.perks.map((perk) => (
-                    <li
-                      key={perk.key}
-                      className="flex items-start gap-2 rounded-lg bg-[var(--bg-surface-hover)] px-3 py-2.5"
+            {/* The payoff, side by side: what you build, and what you walk away
+                with. Each card only renders when the course really has it - the
+                server sends only perks it grants (lib/perks), the preview only
+                exists for certificate-eligible courses, and the capstone only
+                when authored - so nothing here is a promise the course cannot keep. */}
+            {(() => {
+              const project = course.project?.title ? course.project : null;
+              const perks = course.perks || [];
+              const hasReward = course.certificate_eligible || perks.length > 0;
+              if (!project && !hasReward) return null;
+              return (
+                <div
+                  className={cn(
+                    'mt-8 grid grid-cols-1 gap-5',
+                    project && hasReward && 'lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:items-start'
+                  )}
+                >
+                  {project && (
+                    <section
+                      aria-labelledby="capstone-heading"
+                      className="relative overflow-hidden rounded-3xl border border-[var(--brand-accent)]/40 bg-[var(--brand-accent)]/10 p-6 sm:p-8"
                     >
-                      <CheckCircle2 size={15} className="mt-0.5 shrink-0 text-[var(--color-success)]" />
-                      <div>
-                        <p className="text-sm font-semibold text-[var(--ink)]">{perk.label}</p>
-                        {perk.detail && (
-                          <p className="text-xs text-[var(--text-muted)]">{perk.detail}</p>
-                        )}
+                      <div className="flex items-center gap-3">
+                        <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--brand-accent)] text-[var(--accent-ink)]">
+                          <Hammer size={20} />
+                        </span>
+                        <p className="text-xs font-extrabold uppercase tracking-widest text-[var(--text-muted)]">
+                          Capstone · what you will build
+                        </p>
                       </div>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
+                      <h2 id="capstone-heading" className="mt-5 font-display text-2xl font-extrabold leading-tight tracking-tight text-[var(--ink)] sm:text-3xl">
+                        {project.title}
+                      </h2>
+                      <p className="mt-3 whitespace-pre-line text-base leading-relaxed text-[var(--text-body)]">
+                        {project.brief}
+                      </p>
+                      {project.submission_hint && (
+                        <p className="mt-5 rounded-2xl bg-[var(--bg-surface)] px-4 py-3 text-sm leading-relaxed text-[var(--text-body)]">
+                          <span className="font-bold text-[var(--ink)]">You submit: </span>
+                          {project.submission_hint}
+                        </p>
+                      )}
+                    </section>
+                  )}
 
-            {/* What the certificate looks like, before the learner commits.
-                Only for courses that actually issue one — the preview is the
-                course's own tier, styled as the issuer will style the PDF, and
-                labelled a preview so it can never be mistaken for the artefact. */}
-            {course.certificate_eligible && (
-              <section aria-labelledby="cert-preview-heading" className="mb-8 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
-                <h2 id="cert-preview-heading" className="text-sm font-bold text-[var(--ink)]">
-                  Your certificate
+                  {hasReward && (
+                    <section
+                      aria-labelledby="reward-heading"
+                      className="rounded-3xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6 shadow-edge-neutral sm:p-8"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--brand-ink)] text-white">
+                          <Gift size={20} />
+                        </span>
+                        <p className="text-xs font-extrabold uppercase tracking-widest text-[var(--text-muted)]">
+                          What you walk away with
+                        </p>
+                      </div>
+                      <h2 id="reward-heading" className="mt-5 font-display text-2xl font-extrabold leading-tight tracking-tight text-[var(--ink)]">
+                        {course.certificate_eligible ? 'A certificate anyone can verify' : 'Rewards for finishing'}
+                      </h2>
+                      {course.certificate_eligible && (
+                        <div className="mt-5 -rotate-1 transition-transform duration-300 motion-safe:hover:rotate-0">
+                          <CertificatePreview tier={course.certificate_tier} courseTitle={course.title} className="max-w-[340px]" />
+                        </div>
+                      )}
+                      {perks.length > 0 && (
+                        <ul className="mt-6 space-y-2.5">
+                          {perks.map((perk) => (
+                            <li key={perk.key} className="flex items-start gap-2.5">
+                              <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-[var(--color-success)]" />
+                              <div>
+                                <p className="text-sm font-bold text-[var(--ink)]">{perk.label}</p>
+                                {perk.detail && <p className="text-xs text-[var(--text-muted)]">{perk.detail}</p>}
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </section>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* Into the course itself. */}
+            <div id="course-content" className="mb-6 mt-14 flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <p className="text-xs font-extrabold uppercase tracking-widest text-link">Inside the course</p>
+                <h2 className="mt-1 font-display text-3xl font-extrabold tracking-tight text-[var(--ink)] sm:text-4xl">
+                  {progress?.enrolled ? 'Pick up where you left off' : 'Learn it lesson by lesson'}
                 </h2>
-                <div className="mt-3">
-                  <CertificatePreview tier={course.certificate_tier} courseTitle={course.title} className="max-w-[320px]" />
-                </div>
-              </section>
-            )}
-
-            {/* The capstone, advertised up front. A buyer should know what they
-                will build before they pay — the ProjectSubmit card below only
-                appears once the learner is enrolled and past the exam, so
-                without this the project would be a surprise at the end. */}
-            {course.project?.title && (
-              <section aria-labelledby="capstone-heading" className="mb-8 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
-                <div className="flex items-center gap-2">
-                  <Hammer size={16} className="text-link" />
-                  <h2 id="capstone-heading" className="text-sm font-bold text-[var(--ink)]">
-                    What you will build
-                  </h2>
-                </div>
-                <p className="mt-3 text-sm font-semibold text-[var(--ink)]">{course.project.title}</p>
-                <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-[var(--text-body)]">
-                  {course.project.brief}
-                </p>
-                {course.project.submission_hint && (
-                  <p className="mt-3 text-xs text-[var(--text-muted)]">
-                    You will submit: {course.project.submission_hint}
-                  </p>
-                )}
-              </section>
-            )}
-
+              </div>
+            </div>
             {/* Two columns from `lg`, three from a width that can actually pay for
                 the third one.
 
@@ -1269,15 +1295,22 @@ export default function CoursePage({
                   is the hero's own control, so this can never offer something
                   different from the offer above. */}
               <aside className="hidden min-[1440px]:block" aria-label="Enrol in this course">
-                <div className="sticky top-[var(--rail-top)] rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
-                  <div className="text-2xl font-extrabold leading-none text-[var(--ink)]">
-                    {course.is_free ? 'Free' : formatPrice(course.price_inr)}
+                <div className="sticky top-[var(--rail-top)] overflow-hidden rounded-3xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] shadow-float">
+                  <div className="relative isolate bg-[var(--brand-ink)] px-5 pb-5 pt-6 text-white">
+                    <div
+                      aria-hidden="true"
+                      className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_100%_0%,rgb(var(--rgb-money)/0.4),transparent_60%)]"
+                    />
+                    <p className="text-xs font-bold uppercase tracking-widest text-white/70">
+                      {course.is_free ? 'Price' : 'One-time · lifetime access'}
+                    </p>
+                    <div className="mt-1 font-display text-4xl font-extrabold leading-none tracking-tight">
+                      {course.is_free ? 'Free' : formatPrice(course.price_inr)}
+                    </div>
                   </div>
-                  {!course.is_free && (
-                    <p className="mt-1 text-xs text-[var(--text-muted)]">One-time payment, lifetime access</p>
-                  )}
+                  <div className="p-5">
 
-                  <div className="mt-4 flex flex-wrap items-center gap-3">{enrollAction()}</div>
+                  <div className="flex flex-wrap items-center gap-3 [&>button]:w-full">{enrollAction()}</div>
 
                   {includes.length > 0 && (
                     <>
@@ -1294,6 +1327,7 @@ export default function CoursePage({
                       </ul>
                     </>
                   )}
+                  </div>
                 </div>
               </aside>
             </div>
@@ -1318,17 +1352,20 @@ export default function CoursePage({
                 promise reused on every page. */}
             {(course.outcomes?.length || 0) > 0 && (
               <section aria-labelledby="outcomes-heading" className="mt-14">
-                <h2 id="outcomes-heading" className="text-xl font-extrabold tracking-tight text-[var(--ink)]">
+                <p className="text-xs font-extrabold uppercase tracking-widest text-link">By the last lesson</p>
+                <h2 id="outcomes-heading" className="mt-1 font-display text-3xl font-extrabold tracking-tight text-[var(--ink)] sm:text-4xl">
                   What you will be able to do
                 </h2>
-                <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <ol className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {course.outcomes!.map((outcome, i) => (
-                    <li key={i} className="flex gap-3 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4">
-                      <CheckCircle2 size={17} className="mt-0.5 shrink-0 text-[var(--color-success)]" />
-                      <span className="text-sm leading-relaxed text-[var(--text-body)]">{outcome}</span>
+                    <li key={i} className="flex flex-col gap-3 rounded-3xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6 shadow-edge-neutral">
+                      <span aria-hidden="true" className="font-display text-4xl font-extrabold leading-none text-[var(--brand-accent)]">
+                        {String(i + 1).padStart(2, '0')}
+                      </span>
+                      <span className="text-base font-medium leading-relaxed text-[var(--ink)]">{outcome}</span>
                     </li>
                   ))}
-                </ul>
+                </ol>
               </section>
             )}
 
@@ -1345,16 +1382,24 @@ export default function CoursePage({
 
             {faq.length > 0 && (
               <section aria-labelledby="faq-heading" className="mt-14 max-w-3xl">
-                <h2 id="faq-heading" className="text-xl font-extrabold tracking-tight text-[var(--ink)]">
+                <h2 id="faq-heading" className="font-display text-3xl font-extrabold tracking-tight text-[var(--ink)] sm:text-4xl">
                   Questions before you start
                 </h2>
-                <div className="mt-4 divide-y divide-[var(--border-subtle)] border-y border-[var(--border-subtle)]">
+                <div className="mt-6 space-y-3">
                   {faq.map((item) => (
-                    <details key={item.q} className="group py-4">
-                      <summary className="list-none text-sm font-bold text-[var(--ink)] marker:content-none">
+                    <details
+                      key={item.q}
+                      className="group rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-5 py-4 open:shadow-edge-neutral"
+                    >
+                      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-base font-bold text-[var(--ink)] marker:content-none [&::-webkit-details-marker]:hidden">
                         {item.q}
+                        <Plus
+                          size={18}
+                          aria-hidden="true"
+                          className="shrink-0 text-link transition-transform duration-200 group-open:rotate-45"
+                        />
                       </summary>
-                      <p className="mt-2 text-sm leading-relaxed text-[var(--text-body)]">{item.a}</p>
+                      <p className="mt-3 text-sm leading-relaxed text-[var(--text-body)]">{item.a}</p>
                     </details>
                   ))}
                 </div>
@@ -1370,7 +1415,7 @@ export default function CoursePage({
             {related.length > 0 && (
               <section aria-labelledby="related-heading" className="mt-14">
                 <div className="flex items-baseline justify-between gap-4">
-                  <h2 id="related-heading" className="text-xl font-extrabold tracking-tight text-[var(--ink)]">
+                  <h2 id="related-heading" className="font-display text-3xl font-extrabold tracking-tight text-[var(--ink)]">
                     Other courses
                   </h2>
                   <Link href="/courses" className="text-sm font-bold text-link hover:underline">

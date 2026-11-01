@@ -8,6 +8,7 @@ import {
   Gauge,
   GraduationCap,
   Headphones,
+  Layers3,
   ListChecks,
   Target,
   UserRound,
@@ -50,7 +51,7 @@ const Section: React.FC<{
   className?: string;
 }> = ({ id, title, lede, children, className = '' }) => (
   <section aria-labelledby={`${id}-heading`} className={`mt-14 ${className}`}>
-    <h2 id={`${id}-heading`} className="text-xl font-extrabold tracking-tight text-[var(--ink)]">
+    <h2 id={`${id}-heading`} className="font-display text-2xl font-extrabold tracking-tight text-[var(--ink)] sm:text-3xl">
       {title}
     </h2>
     {lede && <p className="mt-2 max-w-3xl text-sm leading-relaxed text-[var(--text-muted)]">{lede}</p>}
@@ -147,7 +148,7 @@ export const InstructorSection: React.FC<{ instructor?: CourseInstructor | null 
 
   return (
     <Section id="instructor" title="Your instructor">
-      <div className="flex flex-col gap-5 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6 sm:flex-row">
+      <div className="flex flex-col gap-5 rounded-3xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6 shadow-edge-neutral sm:flex-row sm:p-8">
         {photo ? (
           /*
            * `next/image` for the one image on the student path that is a real
@@ -232,40 +233,70 @@ export const CourseFactStrip: React.FC<{
   captionLanguage,
   certificateEligible,
 }) => {
-  type Pip = { key: string; icon: React.ElementType; label: string };
+  // Countable facts become big tiles; descriptive ones become chips beneath.
+  type Tile = { key: string; icon: React.ElementType; value: string; label: string; tone: string };
+  type Chip = { key: string; icon: React.ElementType; label: string };
 
-  const pips: Pip[] = [];
+  const tiles: Tile[] = [];
+  const chips: Chip[] = [];
 
-  if (level) pips.push({ key: 'level', icon: Gauge, label: level[0].toUpperCase() + level.slice(1) });
+  if (typeof moduleCount === 'number' && moduleCount > 0) {
+    tiles.push({ key: 'modules', icon: Layers3, value: String(moduleCount), label: moduleCount === 1 ? 'Module' : 'Modules', tone: 'bg-[var(--brand-ink)] text-white' });
+  }
   if (typeof lessonCount === 'number' && lessonCount > 0) {
-    const parts = [String(lessonCount), lessonCount === 1 ? 'lesson' : 'lessons'];
-    if (typeof moduleCount === 'number' && moduleCount > 0) parts.push(`in ${moduleCount} ${moduleCount === 1 ? 'module' : 'modules'}`);
-    pips.push({ key: 'lessons', icon: ListChecks, label: parts.join(' ') });
+    tiles.push({ key: 'lessons', icon: ListChecks, value: String(lessonCount), label: lessonCount === 1 ? 'Lesson' : 'Lessons', tone: 'bg-[var(--brand-sky-soft)] text-link' });
   }
   if (typeof totalMinutes === 'number' && totalMinutes > 0) {
     const h = Math.floor(totalMinutes / 60);
     const m = totalMinutes % 60;
-    const label = h > 0 ? `${h}h${m > 0 ? ` ${m}m` : ''} of material` : `${m}m of material`;
-    pips.push({ key: 'duration', icon: Clock3, label });
+    const value = h > 0 ? `${h}h${m > 0 ? ` ${m}m` : ''}` : `${m}m`;
+    tiles.push({ key: 'duration', icon: Clock3, value, label: 'Of material', tone: 'bg-[var(--brand-accent)] text-[var(--accent-ink)]' });
   }
   if (typeof challengeCount === 'number') {
-    pips.push({ key: 'challenges', icon: Target, label: `${challengeCount} ${challengeCount === 1 ? 'challenge' : 'challenges'}` });
+    tiles.push({ key: 'challenges', icon: Target, value: String(challengeCount), label: challengeCount === 1 ? 'Graded challenge' : 'Graded challenges', tone: 'bg-[var(--color-success)]/15 text-[var(--color-success)]' });
   }
-  if (audioLanguage) pips.push({ key: 'audio', icon: Headphones, label: `${audioLanguage} audio` });
-  if (captionLanguage) pips.push({ key: 'captions', icon: Captions, label: `${captionLanguage} captions` });
-  if (certificateEligible) pips.push({ key: 'certificate', icon: Award, label: 'Certificate on completion' });
 
-  if (pips.length === 0) return null;
+  if (level) chips.push({ key: 'level', icon: Gauge, label: level[0].toUpperCase() + level.slice(1) });
+  if (audioLanguage) chips.push({ key: 'audio', icon: Headphones, label: `${audioLanguage} audio` });
+  if (captionLanguage) chips.push({ key: 'captions', icon: Captions, label: `${captionLanguage} captions` });
+  if (certificateEligible) chips.push({ key: 'certificate', icon: Award, label: 'Certificate on completion' });
+
+  if (tiles.length === 0 && chips.length === 0) return null;
 
   return (
-    <dl className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-3">
-      {pips.map((p) => (
-        <div key={p.key} className="flex items-center gap-1.5">
-          <p.icon size={15} aria-hidden="true" className="shrink-0 text-[var(--text-light)]" />
-          <dd className="text-xs font-semibold text-[var(--text-body)]">{p.label}</dd>
-        </div>
-      ))}
-    </dl>
+    <div>
+      {tiles.length > 0 && (
+        <ul className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          {tiles.map((t) => (
+            <li
+              key={t.key}
+              className="flex items-center gap-4 rounded-3xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 shadow-edge-neutral sm:p-5"
+            >
+              <span aria-hidden="true" className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${t.tone}`}>
+                <t.icon size={22} />
+              </span>
+              <div className="min-w-0">
+                <p className="font-display text-2xl font-extrabold leading-none tracking-tight text-[var(--ink)] sm:text-3xl">{t.value}</p>
+                <p className="mt-1 text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">{t.label}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+      {chips.length > 0 && (
+        <ul className="mt-4 flex flex-wrap gap-2">
+          {chips.map((c) => (
+            <li
+              key={c.key}
+              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 py-1.5 text-sm font-semibold text-[var(--text-body)]"
+            >
+              <c.icon size={15} aria-hidden="true" className="shrink-0 text-link" />
+              {c.label}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 };
 

@@ -262,11 +262,11 @@ const slugPage = fs.readFileSync(path.join(ROOT, 'src', 'pages', 'courses', '[sl
 const heroUses = (slugPage.match(/<CourseCover[\s\S]*?\/>/g) || []).filter((u) => /priority/.test(u));
 ok(heroUses.length === 2, 'the course page renders both hero covers (desktop and mobile)');
 ok(
-  heroUses.some((u) => /sizes="240px"/.test(u)),
-  'the desktop hero is pinned to its 240px grid track, not the 1fr column'
+  heroUses.some((u) => /sizes="\(min-width: 1440px\) 404px, 344px"/.test(u)),
+  'the desktop hero is pinned to its fixed grid track (360/420px less p-2), not the 1fr column'
 );
 ok(
-  heroUses.some((u) => /sizes="calc\(100vw - 32px\)"/.test(u)),
+  heroUses.some((u) => /sizes="\(min-width: 640px\) calc\(100vw - 128px\), calc\(100vw - 80px\)"/.test(u)),
   'the mobile hero is the full-width box it renders as'
 );
 
