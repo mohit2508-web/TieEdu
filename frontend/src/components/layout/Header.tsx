@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import { DriveChip } from './DriveChip';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useReducedMotion } from 'framer-motion';
@@ -452,6 +453,7 @@ export const Header: React.FC = () => {
           {/* Language + theme, one control (E2). Below `lg` they live in the drawer. */}
           <PrefsControl className="hidden lg:block" />
 
+          <DriveChip />
           <NotificationBell />
 
           <AccountMenu onOpenChange={setAccountOpen} />

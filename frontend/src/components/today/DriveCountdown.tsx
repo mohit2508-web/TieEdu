@@ -22,12 +22,15 @@ export const DriveCountdown: React.FC<{
 
   useEffect(() => {
     const today = new Date().toISOString().slice(0, 10);
+    // The header chip reads this on every page.
+    const date = new Date(Date.now() + daysLeft * 86400000).toISOString().slice(0, 10);
+    window.localStorage.setItem('tieedu_next_drive', JSON.stringify({ company, slug, date }));
     const seen = window.localStorage.getItem(SEEN_KEY);
     if (seen !== `${today}:${slug}`) {
       setAnimate(true);
       window.localStorage.setItem(SEEN_KEY, `${today}:${slug}`);
     }
-  }, [slug]);
+  }, [slug, company, daysLeft]);
 
   const tone = daysLeft <= 3 ? 'text-danger' : daysLeft <= 7 ? 'text-amber-deep' : 'text-heading';
   const label = daysLeft === 0 ? 'Today is the day' : `day${daysLeft === 1 ? '' : 's'} left`;
