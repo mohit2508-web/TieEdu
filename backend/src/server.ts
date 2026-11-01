@@ -51,6 +51,7 @@ import { drivesRouter, studentProfileRouter } from './routes/drives.routes';
 import { meRouter, parentRouter, parentEmailRouter, passportRouter } from './routes/me.routes';
 import { startWeeklyRecapScheduler } from './lib/recapPush';
 import { startParentWhatsappScheduler } from './lib/parentWhatsappScheduler';
+import { startCountdownPushScheduler } from './lib/countdownPushScheduler';
 import { startStudyReminderScheduler } from './lib/studyReminderScheduler';
 import { collegesRouter, collegesAdminRouter } from './routes/colleges.routes';
 import { campusPagesRouter } from './routes/campusPages.routes';
@@ -396,6 +397,7 @@ export const httpServer = app.listen(PORT, async () => {
   // Off unless WEEKLY_RECAP_PUSH=1 (lib/recapPush): dev shares real push subscriptions.
   startWeeklyRecapScheduler();
   startParentWhatsappScheduler();
+  startCountdownPushScheduler();
   startStudyReminderScheduler();
   if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
     console.warn('🔐 [Auth] JWT_SECRET env missing in production — auth is FAIL-CLOSED. Set JWT_SECRET (32+ chars) now.');
