@@ -27,6 +27,7 @@ import { totalXpForUser } from '../lib/xp';
 import { certificateReadiness, completionState, generateSerial } from '../lib/courses';
 import { findTrackBySlug, trackCourseCard, trackProgressFor } from '../lib/tracks';
 import { SIGNING_VERSION, signCertificate, verificationUrlFor } from '../lib/certificate';
+import { events as msgEvents, sendToUser } from '../lib/messaging';
 
 export const tracksRouter = Router();
 
@@ -290,6 +291,7 @@ tracksRouter.post('/:slug/certificate', requireAuth, (req: Request, res: Respons
     db.certificates = db.certificates || [];
     db.certificates.push(certificate);
     saveDb(db);
+    void sendToUser(userId, msgEvents.courseCertificate(certificate));
     return res
       .status(201)
       .json({ status: 'success', already_issued: false, certificate: presentTrackCertificate(certificate) });

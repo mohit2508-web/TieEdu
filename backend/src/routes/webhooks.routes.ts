@@ -5,6 +5,7 @@ import { completePaidOrder } from '../payments/orders';
 import { appendAudit } from '../store/audit';
 import { getEmailClient } from '../lib/email/client';
 import { startEmailQueue } from '../lib/email/queue';
+import { events as msgEvents, sendToUser } from '../lib/messaging';
 
 export const webhooksRouter = Router();
 
@@ -47,6 +48,7 @@ webhooksRouter.post('/razorpay', async (req: Request, res: Response) => {
         gateway: 'razorpay',
       });
       saveDb(db);
+      void sendToUser(createdBy, msgEvents.orderPaid(order));
     } catch (e) {
       return res.status(500).json({ error: 'Completion failed' });
     }

@@ -72,6 +72,7 @@ import {
   verificationUrlFor,
   verifyCertificate,
 } from '../lib/certificate';
+import { events as msgEvents, sendToUser } from '../lib/messaging';
 
 export const coursesRouter = Router();
 
@@ -1578,6 +1579,7 @@ coursesRouter.post('/:slug/certificate', requireAuth, (req: Request, res: Respon
     db.certificates = db.certificates || [];
     db.certificates.push(certificate);
     saveDb(db);
+    void sendToUser(userId, msgEvents.courseCertificate(certificate));
 
     return res.status(201).json({ status: 'success', already_issued: false, certificate: presentCertificate(db, certificate) });
   } catch (e: any) {

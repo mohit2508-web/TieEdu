@@ -17,6 +17,7 @@ import { markStudentSeen, NudgeError, setStudentOptOut, studentInbox } from '../
 import { endOnLinkChange, ParentWaError, parentWaStatus, setStudentAllowed, studentWaStatus, subscribeParent, unsubscribeParent } from '../lib/parentWhatsapp';
 import { rateLimit, safeUser } from '../middleware/auth';
 import { OnboardingError, parseOnboarding } from '../lib/onboarding';
+import { TOPICS as MESSAGE_TOPICS, topicPrefs } from '../lib/messaging';
 
 /**
  * The signed-in student's own surfaces (UI_REDESIGN_PLAN_V2 Phase 3).
@@ -480,4 +481,57 @@ meRouter.post('/consent', rateLimit(20), (req: Request, res: Response) => {
   u.consents = [...(Array.isArray(u.consents) ? u.consents : []), row].slice(-20);
   saveDb(db);
   res.json({ ok: true });
+});
+
+/**
+ * GET/PUT /api/me/notification-settings — the topic × channel grid
+ * (PROFESSIONAL_PLATFORM_PLAN §4.3). Required topics (account, payments)
+ * always email; their email switch is ignored on save.
+ */
+meRouter.get('/notification-settings', (req: Request, res: Response) => {
+  const db = loadDb();
+  const user = (db.users || []).find((u: any) => u.id === req.user!.id) as any;
+  if (!user) return res.status(404).json({ error: 'Account not found.' });
+  res.setHeader('Cache-Control', 'private, no-store');
+  res.json({
+    topics: MESSAGE_TOPICS.map((t) => ({ id: t.id, label: t.label, description: t.description, required: !!t.required })),
+    prefs: topicPrefs(user),
+    channels: user.notify || { email: true, push: true, whatsapp: false },
+    email: user.email,
+    email_verified: !!user.email_verified,
+    whatsapp: user.whatsapp ? { number: user.whatsapp.number, verified: !!user.whatsapp.verified } : null,
+  });
+});
+
+meRouter.put('/notification-settings', rateLimit(30), (req: Request, res: Response) => {
+  const db = loadDb();
+  const user = (db.users || []).find((u: any) => u.id === req.user!.id) as any;
+  if (!user) return res.status(404).json({ error: 'Account not found.' });
+  const body = req.body || {};
+  if (body.channels && typeof body.channels === 'object') {
+    const cur = user.notify || { email: true, push: true, whatsapp: false };
+    user.notify = {
+      email: body.channels.email === undefined ? cur.email : !!body.channels.email,
+      push: body.channels.push === undefined ? cur.push : !!body.channels.push,
+      // WhatsApp needs a number; turning it on without one is refused.
+      whatsapp: body.channels.whatsapp === undefined ? cur.whatsapp : !!body.channels.whatsapp && !!user.whatsapp?.number,
+    };
+  }
+  if (body.topics && typeof body.topics === 'object') {
+    const next: Record<string, Record<string, boolean>> = { ...(user.notify_topics || {}) };
+    for (const t of MESSAGE_TOPICS) {
+      const v = body.topics[t.id];
+      if (!v || typeof v !== 'object') continue;
+      next[t.id] = {
+        ...(next[t.id] || {}),
+        ...(['email', 'push', 'whatsapp'] as const).reduce((acc, ch) => {
+          if (typeof v[ch] === 'boolean' && !(t.required && ch === 'email')) acc[ch] = v[ch];
+          return acc;
+        }, {} as Record<string, boolean>),
+      };
+    }
+    user.notify_topics = next;
+  }
+  saveDb(db);
+  res.json({ prefs: topicPrefs(user), channels: user.notify || { email: true, push: true, whatsapp: false } });
 });

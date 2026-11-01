@@ -6,6 +6,7 @@ import { touchStreak } from '../lib/streak';
 import type { Skill, Topic, Question, Assessment, Attempt, AttemptAnswer, SkillCertificate, Recommendation } from '../data/skillTestTypes';
 import { requireAuth } from '../middleware/auth';
 import { buildSkillCertPdf } from '../lib/skillCertPdf';
+import { events as msgEvents, sendToUser } from '../lib/messaging';
 
 export const skillTestRouter = Router();
 
@@ -390,6 +391,17 @@ skillTestRouter.post('/attempts/:attemptId/submit', requireAuth, (req: Request, 
   }
 
   saveDb(db);
+  {
+    const skill = (db.skills || []).find((s: Skill) => s.id === attempt.skillId);
+    void sendToUser(attempt.userId, msgEvents.skillTestResult({
+      attemptId: attempt.id,
+      skillName: skill?.name || 'Skill',
+      score,
+      passed: passFail === 'pass',
+      certificateId: certificate?.certificateId || null,
+      weakTopics: weakTopics.map((t) => t.topicName),
+    }));
+  }
 
   res.json({
     attempt: sanitizeAttempt(attempt, db.questions || []),

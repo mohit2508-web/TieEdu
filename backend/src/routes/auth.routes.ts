@@ -9,6 +9,7 @@ import {
 import { rateLimit } from '../middleware/auth';
 import { OAuth2Client } from 'google-auth-library';
 import { consumeAccountToken, issueAccountToken, sendPasswordResetEmail, sendVerifyEmail } from '../lib/accountTokens';
+import { events as msgEvents, sendToUser } from '../lib/messaging';
 
 export const authRouter = Router();
 
@@ -356,6 +357,7 @@ authRouter.post('/google', rateLimit(10), async (req: Request, res: Response) =>
     db.users.push(user);
   }
   saveDb(db);
+  if (created) void sendToUser(user.id, msgEvents.welcome(user.name));
 
   const signedIn = user;
   const refreshToken = issueSession(signedIn.id);

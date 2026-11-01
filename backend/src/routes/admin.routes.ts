@@ -14,6 +14,7 @@ import { applyAiSettings } from '../lib/ai';
 import { adminSummary } from '../lib/parentWhatsapp';
 import { whatsappConfigured } from '../lib/whatsapp';
 import { siteUrl } from '../lib/parentWhatsappScheduler';
+import { events as msgEvents, sendToUser } from '../lib/messaging';
 
 export const adminRouter = Router();
 
@@ -976,6 +977,7 @@ adminRouter.post('/payments/:id/verify', requirePermission('orders.verify'), asy
     gateway: 'upi',
   });
   saveDb(db);
+  void sendToUser(order.user_id, msgEvents.orderPaid(order));
   res.json({ status: 'success', message: 'Payment verified — vault unlocked for the student', order });
 });
 

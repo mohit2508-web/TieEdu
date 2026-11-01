@@ -17,6 +17,7 @@ import {
   isPublicOffer,
   publicOfferFor,
 } from '../lib/coupons';
+import { events as msgEvents, sendToUser } from '../lib/messaging';
 
 export const checkoutRouter = Router();
 
@@ -541,5 +542,6 @@ checkoutRouter.post('/verify', async (req: Request, res: Response) => {
   order.razorpay_payment_id = razorpay_payment_id;
   await completePaidOrder(db, order, user_id);
   saveDb(db);
+  void sendToUser(user_id, msgEvents.orderPaid(order));
   res.json({ status: 'success', message: 'Payment verified & vault unlocked', order, unlocked_company_ids: unlockedCompanyIds(db, user_id) });
 });
