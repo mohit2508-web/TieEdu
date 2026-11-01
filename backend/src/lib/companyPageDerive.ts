@@ -190,7 +190,7 @@ export function derivePageContent(db: any, company: any): PageContent {
     sec('hero', {
       eyebrow: company.industry ? String(company.industry) : '',
       title: '{company} placement prep',
-      intro: '',
+      intro: company.tagline ? String(company.tagline) : '',
       subtitle: '',
       show_chips: true,
       next_step_label: 'Your next step',
@@ -219,6 +219,55 @@ export function derivePageContent(db: any, company: any): PageContent {
       })
     );
   }
+  // ---- program profile (2026–27 import): eligibility, roles, facts students ask about
+  const prof = company.profile || null;
+  if (prof) {
+    const el = prof.eligibility || {};
+    const rows = [
+      ['Degree and branches', el.degrees],
+      ['Eligible batches', el.batches],
+      ['Academic cut-off', el.cutoff],
+      ['Backlogs', el.backlogs],
+      ['Education gap', el.gap],
+    ].map(([label, value], i) => ({ id: `el${i}`, label, value: value || '', check: false }));
+    sections.push(
+      sec('eligibility_apply', {
+        title: 'Can you apply, and how?',
+        eligibility_title: 'Eligibility',
+        rows,
+        apply_title: 'How to apply',
+        steps: [
+          { id: 'ap1', title: 'Register', body: company.careers_link ? 'On the official careers page, or through your college placement cell.' : 'Through your college placement cell or the official listing.', link_label: company.careers_link ? 'Official careers page' : '', link_href: company.careers_link || '' },
+          { id: 'ap2', title: 'Get your test invite', body: 'Check your email, including spam.', link_label: '', link_href: '' },
+          { id: 'ap3', title: 'Clear the rounds', body: roundStations.map((r) => r.title).join(', ') + '.', link_label: '', link_href: '' },
+          { id: 'ap4', title: 'Offer and onboarding', body: prof.training ? String(prof.training) : 'Read the offer letter before you accept.', link_label: '', link_href: '' },
+        ],
+        last_confirmed: company.fact_checked_at ? String(company.fact_checked_at).slice(0, 10) : '',
+        source_label: prof.source || '',
+        source_url: '',
+      })
+    );
+    const roles: any[] = Array.isArray(prof.roles) ? prof.roles.slice(0, 3) : [];
+    if (roles.length > 1) {
+      sections.push(
+        sec('role_compare', {
+          title: 'Which role should you aim for?',
+          picker_label: 'Aim for',
+          roles: roles.map((r, i) => ({ id: `r${i}`, title: r.title, short: r.title, ctc: r.ctc || '', stamp: company.fact_checked_at ? 'verified' : 'being_verified' })),
+          rows: [{ id: 'rw1', attribute: 'What gets you there', role_1: 'Clear the standard rounds', role_2: prof.higher_package || '', role_3: roles[2] ? prof.higher_package || '' : '' }],
+        })
+      );
+    }
+    const faq = [
+      prof.higher_package && ['What decides the higher package?', prof.higher_package],
+      prof.bond && ['Is there a bond or service agreement?', prof.bond],
+      prof.training && ['What training happens after joining?', prof.training],
+      prof.hiring_window && ['When does hiring happen?', prof.hiring_window],
+      prof.note && ['How reliable is this information?', `${prof.note} Always confirm in the official notice and your offer letter.`],
+    ].filter(Boolean) as string[][];
+    if (faq.length) sections.push(sec('faq', { title: 'Questions students ask', items: faq.map(([q, a], i) => ({ id: `fq${i}`, q, a })) }));
+  }
+
   if (premium.length) {
     sections.push(
       sec('prep_pack', {
