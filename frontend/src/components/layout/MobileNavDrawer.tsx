@@ -198,7 +198,7 @@ export const MobileNavDrawer: React.FC = () => {
             </div>
           </section>
 
-          {/* Language and theme. On `md+` they are the header's combined control. */}
+          {/* Language and theme. On `lg+` they are the header's combined control. */}
           <section className="mt-5">
             <h2 className="nav-group-label">Display</h2>
             <div className="flex flex-col items-start gap-2 px-3">

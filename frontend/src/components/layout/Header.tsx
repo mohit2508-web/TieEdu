@@ -331,11 +331,11 @@ export const Header: React.FC = () => {
       <div
         className={
           isPushedScreen
-            ? 'mx-auto hidden w-full max-w-[1700px] items-center justify-between gap-3 px-3 sm:px-8 lg:px-12 md:flex'
-            : 'mx-auto flex w-full max-w-[1700px] items-center justify-between gap-3 px-3 sm:px-8 lg:px-12'
+            ? 'mx-auto hidden w-full max-w-[1700px] items-center justify-between gap-3 px-3 sm:px-8 md:px-5 lg:px-12 md:flex'
+            : 'mx-auto flex w-full max-w-[1700px] items-center justify-between gap-3 px-3 sm:px-8 md:px-5 lg:px-12'
         }
       >
-        <div className="flex min-w-0 items-center gap-2 sm:gap-6">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-6 md:gap-3 lg:gap-6">
           <Link href="/" className="flex flex-none items-center" aria-label="TieEdu home">
             <TieEduLogo size="sm" />
           </Link>
@@ -409,7 +409,7 @@ export const Header: React.FC = () => {
             <Flame size={15} className="shrink-0 text-[var(--amber-deep)]" strokeWidth={2.2} aria-hidden />
             <span className="hidden font-bold xl:inline">Leaderboard</span>
           </button>
-          <PWAInstallButton className="hidden sm:inline-flex" />
+          <PWAInstallButton className="hidden sm:inline-flex md:!hidden lg:!inline-flex" />
 
           {/*
             The cart and search buttons are desktop-only: below `lg` the bottom
@@ -447,8 +447,8 @@ export const Header: React.FC = () => {
             </span>
           </button>
 
-          {/* Language + theme, one control (E2). Below `md` they live in the drawer. */}
-          <PrefsControl className="hidden md:block" />
+          {/* Language + theme, one control (E2). Below `lg` they live in the drawer. */}
+          <PrefsControl className="hidden lg:block" />
 
           <NotificationBell />
 

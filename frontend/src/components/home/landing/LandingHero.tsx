@@ -129,7 +129,7 @@ export const LandingHero: React.FC<{
             <SampleToday compact />
           </DeviceFrame>
 
-          <FloatingChip bob icon={MessagesSquare} tone="info" title="Mock interview feedback" caption="5 answers reviewed" className="absolute right-[calc(100%-44px)] top-16 hidden xl:inline-flex" />
+          <FloatingChip bob icon={MessagesSquare} tone="info" title="Mock interview feedback" caption="5 answers reviewed" className="absolute -top-6 right-[calc(100%-44px)] hidden xl:inline-flex" />
           <FloatingChip bob icon={TrendingUp} tone="success" title="Infosys readiness 62%" caption="Up 12% this week" className="absolute left-[calc(100%-44px)] top-36 hidden xl:inline-flex [animation-delay:-1.2s]" />
           <FloatingChip bob icon={Target} tone="primary" title="Daily challenge done" caption="3 of 3" className="absolute -bottom-7 left-[calc(100%-44px)] hidden xl:inline-flex [animation-delay:-2s]" />
           <FloatingChip bob icon={Languages} tone="secondary" title="Explained in Hinglish" caption="Switch any time" className="absolute bottom-10 right-[calc(100%-44px)] hidden xl:inline-flex [animation-delay:-0.6s]" />

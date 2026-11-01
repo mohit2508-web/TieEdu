@@ -97,11 +97,12 @@ export const MobileMenuButton: React.FC = () => {
       aria-haspopup="dialog"
       aria-label={open ? 'Close menu' : 'Open menu'}
       /*
-       * `md:hidden` is load-bearing. `.icon-btn` is shared with the desktop
+       * `lg:hidden` is load-bearing. `.icon-btn` is shared with the desktop
        * header's notification and account triggers, so it cannot hide itself at
-       * `md`; without this the hamburger sat next to the full desktop nav bar.
+       * `lg`; without this the hamburger sat next to the full desktop nav bar.
+       * From `md` to `lg` it stays: the five links fit, the extras do not.
        */
-      className="icon-btn md:hidden"
+      className="icon-btn lg:hidden"
     >
       <Menu size={21} strokeWidth={2.2} aria-hidden />
     </button>

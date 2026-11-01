@@ -601,12 +601,12 @@ check('a signed-out phone can reach both auth routes', () => {
 
   const menu = read(path.join(ROOT, 'src/components/layout/AccountMenu.tsx'));
   ok(/href="\/login"/.test(menu), 'the header must offer a sign-in link');
-  // One button only on phones: the row has no room for a pair. From `md` up
-  // (Warm Paper E2) "Start free" joins it, so any sign-up link must be md-only.
+  // One button only on phones: the row has no room for a pair. From `lg` up
+  // (Warm Paper E2) "Start free" joins it, so any sign-up link must be lg-only (md to lg is too tight).
   const signupTags = menu.match(/<Link[^>]*href="\/signup"[^>]*>/g) ?? [];
   ok(
-    signupTags.every((tag) => /!?hidden\b/.test(tag) && /\bmd:!?inline-flex\b/.test(tag)),
-    'a sign-up link in the header must be hidden below md - the phone row cannot fit both'
+    signupTags.every((tag) => /!?hidden\b/.test(tag) && /\blg:!?inline-flex\b/.test(tag)),
+    'a sign-up link in the header must be hidden below lg - the phone row cannot fit both'
   );
 
   const drawer = read(path.join(ROOT, 'src/components/layout/MobileNavDrawer.tsx'));
