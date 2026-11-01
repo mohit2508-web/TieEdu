@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import { ArrowRight, BadgeCheck, ClipboardCheck, Search, SearchX, X } from 'lucide-react';
+import { ArrowRight, BadgeCheck, Briefcase, BrainCircuit, Building2, ClipboardCheck, Cloud, Code2, Cpu, Database, Globe, Palette, Search, SearchX, Smartphone, Target, X, type LucideIcon } from 'lucide-react';
 import { Chip, EmptyState, RouteLine, SectionHead, SkeletonCard } from '@/components/ui';
 import { fetchSkillsApi, SkillTestSkill } from '@/lib/skillTestApi';
 
@@ -30,7 +30,25 @@ type CardSkill = {
   tags: string[];
   popular: boolean;
   certificate: boolean;
+  companySlug?: string;
 };
+
+/* One look per category: an icon on a tinted tile (tokens only). */
+const CAT_STYLE: Record<string, { icon: LucideIcon; tile: string }> = {
+  Programming: { icon: Code2, tile: 'bg-signal-soft text-amber-deep' },
+  'Web Development': { icon: Globe, tile: 'bg-secondary-soft text-secondary' },
+  Databases: { icon: Database, tile: 'bg-success-soft text-success' },
+  'Core CS': { icon: Cpu, tile: 'bg-warning-soft text-amber-deep' },
+  'Data Science & AI': { icon: BrainCircuit, tile: 'bg-secondary-soft text-secondary' },
+  'Cloud & DevOps': { icon: Cloud, tile: 'bg-success-soft text-success' },
+  'Mobile & Game Dev': { icon: Smartphone, tile: 'bg-danger-soft text-danger' },
+  'Design & Creative': { icon: Palette, tile: 'bg-danger-soft text-danger' },
+  'Career & Aptitude': { icon: Target, tile: 'bg-signal-soft text-amber-deep' },
+  'Business & Marketing': { icon: Briefcase, tile: 'bg-warning-soft text-amber-deep' },
+  'Company mocks': { icon: Building2, tile: 'bg-signal text-on-primary' },
+};
+const catStyle = (c: string) => CAT_STYLE[c] || { icon: ClipboardCheck, tile: 'bg-surface-hover text-heading' };
+const COMPANY_MOCKS = 'Company mocks';
 
 const toCard = (s: SkillTestSkill): CardSkill => ({
   name: s.name.replace(/ Programming$/, ''),
@@ -41,6 +59,7 @@ const toCard = (s: SkillTestSkill): CardSkill => ({
   tags: s.tags || [],
   popular: !!s.isPopular,
   certificate: s.certificateAvailable !== false,
+  companySlug: (s as any).company_slug,
 });
 
 /** The length most tests share, so the steps can say it without a hard-coded number. */
@@ -55,30 +74,58 @@ const typicalLength = (skills: CardSkill[]): { q: number; min: number } | null =
   return best ? { q: best.q, min: best.min } : null;
 };
 
+const CatTile: React.FC<{ category: string; size?: 'sm' | 'md' }> = ({ category, size = 'sm' }) => {
+  const { icon: Icon, tile } = catStyle(category);
+  return (
+    <span className={`flex shrink-0 items-center justify-center ${size === 'md' ? 'h-11 w-11 rounded-xl' : 'h-8 w-8 rounded-lg'} ${tile}`} aria-hidden>
+      <Icon className={size === 'md' ? 'h-5 w-5' : 'h-4 w-4'} />
+    </span>
+  );
+};
+
 const SkillCard: React.FC<{ skill: CardSkill }> = ({ skill }) => (
   <Link
     href={`/skill-test/${skill.slug}`}
-    className="group focus-ring flex min-h-[120px] flex-col rounded-cell border border-line bg-card p-4 transition-colors hover:border-line-strong"
+    className="group focus-ring flex h-full min-h-[148px] flex-col rounded-card border border-line bg-card p-5 shadow-edge-neutral transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 hover:border-signal/60 hover:shadow-[var(--shadow-pop)] motion-reduce:transition-none motion-reduce:hover:translate-y-0"
   >
-    <div className="flex items-start justify-between gap-2">
-      <h4 className="font-display text-lg font-bold leading-snug text-heading transition-colors group-hover:text-link">
-        {skill.name}
-      </h4>
+    <div className="flex items-start gap-3">
+      <CatTile category={skill.category} size="md" />
+      <div className="min-w-0 flex-1">
+        <h4 className="truncate font-display text-lg font-bold leading-snug text-heading">{skill.name}</h4>
+        <p className="mt-0.5 text-sm tabular-nums text-muted">{skill.q} questions · {skill.min} min</p>
+      </div>
       {skill.popular && <Chip tone="signal">Popular</Chip>}
     </div>
-    <p className="mt-1 text-sm tabular-nums text-muted">
-      {skill.q} questions · {skill.min} min
-    </p>
-    <div className="mt-auto flex items-center justify-between pt-3">
+    <div className="mt-auto flex items-center justify-between pt-4">
       {skill.certificate ? (
-        <span className="inline-flex items-center gap-1 text-xs font-semibold text-success">
-          <BadgeCheck className="h-3.5 w-3.5" aria-hidden /> Certificate
+        <span className="inline-flex items-center gap-1 text-sm font-semibold text-success">
+          <BadgeCheck className="h-4 w-4" aria-hidden /> Certificate
         </span>
-      ) : (
-        <span />
-      )}
-      <ArrowRight className="h-4 w-4 text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-link" aria-hidden />
+      ) : <span />}
+      <span className="inline-flex items-center gap-1 text-sm font-semibold text-link">
+        Start <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
+      </span>
     </div>
+  </Link>
+);
+
+/* Company mocks (3T): the real-pattern tests, shown first and larger. */
+const MockCard: React.FC<{ skill: CardSkill }> = ({ skill }) => (
+  <Link
+    href={`/skill-test/${skill.slug}`}
+    className="group focus-ring flex flex-col gap-4 rounded-card border border-signal/40 bg-card p-6 shadow-edge-neutral transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-pop)] motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:flex-row sm:items-center"
+  >
+    <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-signal text-on-primary" aria-hidden>
+      <Building2 className="h-7 w-7" />
+    </span>
+    <div className="min-w-0 flex-1">
+      <p className="text-xs font-semibold uppercase tracking-wider text-amber-deep">Company mock · real pattern</p>
+      <h4 className="mt-1 font-display text-xl font-bold text-heading">{skill.name}</h4>
+      <p className="mt-1 text-base tabular-nums text-muted">{skill.q} questions · {skill.min} minutes · timed, secure mode</p>
+    </div>
+    <span className="btn btn-primary min-h-[48px] px-5">
+      Start the mock <ArrowRight className="h-4 w-4" aria-hidden />
+    </span>
   </Link>
 );
 
@@ -106,13 +153,14 @@ export default function SkillTestLanding() {
 
   const catNames = useMemo(() => {
     const seen: string[] = [];
-    for (const s of skills) if (!seen.includes(s.category)) seen.push(s.category);
+    for (const s of skills) if (s.category !== COMPANY_MOCKS && !seen.includes(s.category)) seen.push(s.category);
     return seen;
   }, [skills]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return skills.filter((s) => {
+      if (s.category === COMPANY_MOCKS) return false;
       if (activeCat !== 'All' && s.category !== activeCat) return false;
       if (!q) return true;
       return (
@@ -133,7 +181,8 @@ export default function SkillTestLanding() {
     return Array.from(map.entries()).map(([name, list]) => ({ name, skills: list }));
   }, [filtered]);
 
-  const typical = useMemo(() => typicalLength(skills), [skills]);
+  const mocks = useMemo(() => skills.filter((s) => s.category === COMPANY_MOCKS), [skills]);
+  const typical = useMemo(() => typicalLength(skills.filter((s) => s.category !== COMPANY_MOCKS)), [skills]);
   const firstSlug = skills.find((s) => s.popular)?.slug ?? skills[0]?.slug ?? 'java';
 
   const clearFilters = () => {
@@ -142,7 +191,7 @@ export default function SkillTestLanding() {
   };
 
   const steps = [
-    { label: 'Pick a skill', note: skills.length ? `${skills.length} to choose from` : undefined },
+    { label: 'Pick a skill', note: skills.length ? `${skills.length - mocks.length} to choose from` : undefined },
     {
       label: typical ? `Answer ${typical.q} questions` : 'Answer the questions',
       note: typical ? `About ${typical.min} minutes` : undefined,
@@ -198,10 +247,18 @@ export default function SkillTestLanding() {
 
         {/* Skills */}
         <section id="skills" className="mx-auto max-w-[1200px] scroll-mt-24 px-4 py-12 sm:px-6">
+          {mocks.length > 0 && (
+            <div className="mb-12">
+              <SectionHead eyebrow="Placement" title="Company mocks" description="The real test pattern of each company, section by section." />
+              <ul className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+                {mocks.map((m) => <li key={m.slug}><MockCard skill={m} /></li>)}
+              </ul>
+            </div>
+          )}
           <SectionHead
             eyebrow="All tests"
             title="Choose a skill"
-            description={loading ? 'Loading tests…' : `${skills.length} tests, all free.`}
+            description={loading ? 'Loading tests…' : `${skills.length - mocks.length} skill tests, all free, each with a certificate.`}
           />
 
           {loading ? (
@@ -246,15 +303,19 @@ export default function SkillTestLanding() {
                 </label>
 
                 <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0">
-                  {['All', ...catNames].map((cat) => (
-                    <Chip key={cat} selected={activeCat === cat} onClick={() => setActiveCat(cat)}>
-                      {cat}
-                    </Chip>
-                  ))}
+                  {['All', ...catNames].map((cat) => {
+                    const Icon = cat === 'All' ? null : catStyle(cat).icon;
+                    return (
+                      <Chip key={cat} selected={activeCat === cat} onClick={() => setActiveCat(cat)}>
+                        {Icon && <Icon className="h-4 w-4" aria-hidden />}
+                        {cat}
+                      </Chip>
+                    );
+                  })}
                 </div>
 
                 <p className="text-sm text-muted" aria-live="polite">
-                  {filtered.length === skills.length ? `All ${skills.length}` : `${filtered.length} of ${skills.length}`}
+                  {filtered.length === skills.length - mocks.length ? `All ${filtered.length}` : `${filtered.length} of ${skills.length - mocks.length}`}
                   {activeCat !== 'All' && ` in ${activeCat}`}
                   {query.trim() && ` matching “${query.trim()}”`}
                 </p>
@@ -271,11 +332,12 @@ export default function SkillTestLanding() {
               ) : (
                 groups.map((cat) => (
                   <section key={cat.name} className="mt-10" aria-labelledby={`cat-${cat.name}`}>
-                    <h3 id={`cat-${cat.name}`} className="flex items-baseline gap-2 font-display text-xl font-bold text-heading">
+                    <h3 id={`cat-${cat.name}`} className="flex items-center gap-2 font-display text-xl font-bold text-heading">
+                      <CatTile category={cat.name} />
                       {cat.name}
                       <span className="text-sm font-normal tabular-nums text-muted">{cat.skills.length}</span>
                     </h3>
-                    <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    <ul className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                       {cat.skills.map((skill) => (
                         <li key={skill.slug} className="min-w-0">
                           <SkillCard skill={skill} />
