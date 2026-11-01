@@ -11,7 +11,7 @@ import { TECHNICAL, HR, type PrepItem } from '../data/interviewPrep/infosysSE';
 import { LESSONS, type Lesson } from '../data/interviewPrep/infosysSELessons';
 import { FEED_V2 } from '../data/feedV2';
 
-export function seedCompanyProfiles(db: any, onlyMissing = false): { created: number; updated: number } {
+export function seedCompanyProfiles(db: any, onlyMissing = false, only?: string[]): { created: number; updated: number } {
   const FACT_CHECKED = '2026-10-27';
   db.companies = Array.isArray(db.companies) ? db.companies : [];
 
@@ -23,6 +23,7 @@ export function seedCompanyProfiles(db: any, onlyMissing = false): { created: nu
   let created = 0;
   let updated = 0;
   for (const p of PROFILES) {
+    if (only && !only.includes(p.slug)) continue;
     const rounds = p.rounds.map(([title, round_type, test_type, question_count, duration_minutes, elimination, train_topics], i) => ({
       step_number: i + 1,
       round_type,
@@ -351,6 +352,20 @@ export function applyCompanyFocus(db: any): number {
   return n;
 }
 
+/**
+ * Focus fix, once per database: the 5 focus programs are published, and the
+ * main focus company gets its full profile even if an older record with the
+ * same slug existed (an earlier admin-made "Infosys" draft blocked it on prod).
+ */
+export function ensureFocusLive(db: any): number {
+  if (db.company_focus_v2) return 0;
+  seedCompanyProfiles(db, false, ['infosys-systems-engineer']);
+  let n = 0;
+  for (const c of db.companies || []) if (FOCUS.includes(c.slug) && c.status !== 'published') { c.status = 'published'; n++; }
+  db.company_focus_v2 = new Date().toISOString();
+  return n + 1;
+}
+
 /** Server start: add any missing 3T content. Returns true when something was added. */
 export function seedMissing3T(db: any): boolean {
   const covers = seedCourseCovers(db) + seedFeedV2(db);
@@ -359,5 +374,6 @@ export function seedMissing3T(db: any): boolean {
   const t = COMPANY_TESTS.reduce((n, k) => n + seedCompanyTest(db, k, true), 0);
   const i = seedInterviewPrep(db, true);
   const focus = applyCompanyFocus(db);
-  return covers + t0 + focus + p.created + t + i > 0;
+  const focusFix = ensureFocusLive(db);
+  return covers + t0 + focus + focusFix + p.created + t + i > 0;
 }
