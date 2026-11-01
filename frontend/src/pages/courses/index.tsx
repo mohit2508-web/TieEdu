@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import type { GetServerSideProps } from 'next';
 import { SlidersHorizontal, X, Search as SearchIcon, ChevronDown, Compass, Route } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
-import { CourseRowCard, CourseRowSkeleton, Pill } from '@/components/courses/CourseUi';
+import { CourseGridCard, CourseGridSkeleton, Pill } from '@/components/courses/CourseUi';
 import { CourseFilterRail } from '@/components/courses/CourseFilterRail';
 import {
   IntentSections,
@@ -488,11 +488,12 @@ export default function CoursesPage({ initialData }: { initialData: CourseCatalo
 
             {/* Names the list for screen readers and keeps the outline h1 → h2 → card h3. */}
             <h2 className="sr-only">Courses</h2>
-            <div className="space-y-4">
+            {/* Grid of readable cards (redesign plan §4): 1 / 2 / 3 per row. */}
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 2xl:grid-cols-3">
               {status === 'loading'
-                ? Array.from({ length: 6 }, (_, i) => <CourseRowSkeleton key={i} />)
-                : courses.map((c) => <CourseRowCard key={c.id} course={c} />)}
-              {loadingMore && Array.from({ length: 3 }, (_, i) => <CourseRowSkeleton key={`more-${i}`} />)}
+                ? Array.from({ length: 6 }, (_, i) => <CourseGridSkeleton key={i} />)
+                : courses.map((c) => <CourseGridCard key={c.id} course={c} />)}
+              {loadingMore && Array.from({ length: 3 }, (_, i) => <CourseGridSkeleton key={`more-${i}`} />)}
             </div>
 
             <div ref={sentinel} aria-hidden="true" className="h-px" />

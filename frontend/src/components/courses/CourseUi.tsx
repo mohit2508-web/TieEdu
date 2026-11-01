@@ -664,3 +664,84 @@ export const CourseDetailSkeleton: React.FC = () => (
   </div>
 );
 
+
+/**
+ * Grid card for the catalogue (FEED_COURSES_SKILLS_REDESIGN_PLAN §4): a 16:9
+ * cover on top, then a readable title (20px), a 16px summary and a 14px meta
+ * row, with the call to action across the bottom. Same data and CTA mapping as
+ * CourseRowCard, so a course reads the same wherever it appears.
+ */
+export const CourseGridCard: React.FC<{ course: CourseCard }> = ({ course }) => {
+  const cta = courseCta({ progress: course.progress, access: course.access, price_inr: course.price_inr });
+  const rating = formatRating(course.signals);
+  const reviews = formatReviewCount(course.signals);
+  const duration = formatDuration(course.stats.total_minutes);
+  const inProgress = !!course.progress?.enrolled && !course.progress.is_complete;
+  const badges = [...(course.badges || []), ...(inProgress ? (['in_progress'] as const) : [])];
+
+  return (
+    <article className="group relative flex h-full flex-col overflow-hidden rounded-card border border-line bg-card shadow-edge-neutral transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 hover:border-signal/60 hover:shadow-[var(--shadow-pop)] motion-reduce:transition-none motion-reduce:hover:translate-y-0">
+      <CourseCover
+        slug={course.slug}
+        title={course.title}
+        subject={course.category}
+        thumbnailUrl={course.thumbnail_url}
+        alt={course.thumbnail_alt || ''}
+        className="aspect-video w-full"
+        sizes="(min-width: 1280px) 400px, (min-width: 640px) 50vw, 100vw"
+      />
+      <div className="flex flex-1 flex-col p-5">
+        <p className="text-sm font-semibold text-muted">{formatLevel(course.level)} · {course.category}</p>
+        <Link href={`/courses/${course.slug}`} className="mt-1 after:absolute after:inset-0">
+          <h3 className="line-clamp-2 font-display text-xl font-bold leading-snug text-heading group-hover:text-link">{course.title}</h3>
+        </Link>
+        <p className="mt-2 line-clamp-2 text-base leading-relaxed text-body">{course.subtitle}</p>
+
+        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-muted">
+          {rating && (
+            <span className="inline-flex items-center gap-1 font-semibold text-heading">
+              <Star size={15} className="text-[var(--brand-accent)]" fill="currentColor" aria-hidden /> {rating}
+              {reviews && <span className="font-normal text-muted">({reviews})</span>}
+            </span>
+          )}
+          <span className="inline-flex items-center gap-1"><Layers size={15} aria-hidden /> {formatModuleCount(course.stats)}</span>
+          <span className="inline-flex items-center gap-1"><FileText size={15} aria-hidden /> {formatLessonCount(course.stats)}</span>
+          {duration && <span className="inline-flex items-center gap-1"><Clock size={15} aria-hidden /> {duration}</span>}
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          {course.active_offer && (
+            <span className="inline-flex items-center rounded-full bg-danger-soft px-2.5 py-0.5 text-xs font-bold text-danger">{course.active_offer.badge}</span>
+          )}
+          {course.is_free && <CourseBadge kind="new" label="Free" />}
+          {badges.map((b) => <CourseBadge key={b} kind={b} />)}
+          {course.certificate_eligible && (
+            <span className="inline-flex items-center gap-1 text-sm font-semibold text-success"><Award size={14} aria-hidden /> Certificate</span>
+          )}
+        </div>
+
+        {inProgress && (
+          <div className="mt-4">
+            <ProgressBar percent={course.progress!.percent} label={`${course.progress!.completed} of ${course.progress!.total} lessons done`} />
+          </div>
+        )}
+
+        <div className="mt-auto pt-5">
+          <span aria-hidden="true" className={`${ctaToneClasses(cta.tone)} w-full`}>{cta.label}</span>
+        </div>
+      </div>
+    </article>
+  );
+};
+
+export const CourseGridSkeleton: React.FC = () => (
+  <div aria-hidden="true" className="overflow-hidden rounded-card border border-line bg-card">
+    <div className="aspect-video w-full animate-pulse bg-[var(--bg-surface-hover)]" />
+    <div className="space-y-3 p-5">
+      <div className="h-3 w-1/3 animate-pulse rounded bg-[var(--bg-surface-hover)]" />
+      <div className="h-5 w-3/4 animate-pulse rounded bg-[var(--bg-surface-hover)]" />
+      <div className="h-3 w-full animate-pulse rounded bg-[var(--bg-surface-hover)]" />
+      <div className="h-11 w-full animate-pulse rounded-[var(--radius-sm)] bg-[var(--bg-surface-hover)]" />
+    </div>
+  </div>
+);
