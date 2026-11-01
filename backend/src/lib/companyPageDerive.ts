@@ -219,6 +219,25 @@ export function derivePageContent(db: any, company: any): PageContent {
       })
     );
   }
+  // ---- Plan: the countdown splits days across rounds by their readiness weight
+  const testable = (pipeline.length ? pipeline : []).filter((p: any) => p.test_type && p.test_type !== 'live_interview');
+  // Only for programs with an imported profile: the plan needs a real round list.
+  if (company.profile && roundStations.length) {
+    sections.push(
+      sec('countdown', {
+        title: 'When is your test? We’ll split the days for you.',
+        date_label: 'Your {company} test date',
+        default_days: 14,
+        mock_every_days: 4,
+        final_day_label: 'Revise weak topics, rest',
+        plan_blocks: (testable.length ? testable : pipeline.length ? pipeline : roundStations).map((r: any) => ({
+          focus: String(r.title || 'Practice'),
+          weight: typeof r.weight === 'number' && r.weight > 0 ? r.weight : 1,
+        })),
+      })
+    );
+  }
+
   // ---- program profile (2026–27 import): eligibility, roles, facts students ask about
   const prof = company.profile || null;
   if (prof) {
@@ -290,6 +309,21 @@ export function derivePageContent(db: any, company: any): PageContent {
       })
     );
   }
+  // ---- Track after the drive: crowd radar, onboarding, comeback (profiled programs only)
+  if (company.profile) sections.push(
+    sec('drive_radar', { title: 'Drive Radar', min_confirmations: 3, updates: [] }),
+    sec('onboarding', {
+      eyebrow: 'Selected?',
+      title: 'Track it to day one',
+      steps: ['Offer letter received', 'Documents submitted', 'Background verification', 'Joining letter', 'Day one'].map((title, i) => ({ id: `ob${i + 1}`, title })),
+    }),
+    sec('comeback', {
+      title: 'Didn’t clear this time?',
+      body: 'Your Track results show which round to fix. Get a comeback plan and see which other drives are open now.',
+      cta_label: 'Get my comeback plan',
+      cta_href: '/study-plan',
+    })
+  );
   sections.push(
     sec('community_offer', {
       title: 'Took the {company} process? Help the next batch.',
