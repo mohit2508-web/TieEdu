@@ -16,6 +16,7 @@ import { AppShell } from '@/components/layout/AppShell';
 import { RouteTransition } from '@/components/layout/RouteTransition';
 import { PWAInstallPrompt } from '@/components/common/PWAInstallPrompt';
 import { useLeadTracking } from '@/hooks/useLeadTracking';
+import { CookieConsent } from '@/components/legal/CookieConsent';
 
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
@@ -137,6 +138,8 @@ export default function App({ Component, pageProps }: AppProps) {
             </RouteTransition>
             <PWAInstallPrompt />
           </AppShell>
+          {/* Outside AppShell so it also shows on shell-less pages (login, welcome). */}
+          <CookieConsent />
         </ShellProvider>
       </CartProvider>
     </AuthProvider>

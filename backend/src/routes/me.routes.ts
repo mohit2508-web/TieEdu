@@ -457,3 +457,27 @@ meRouter.put('/onboarding', (req: Request, res: Response) => {
     throw err;
   }
 });
+
+/**
+ * POST /api/me/consent { v, personalisation, analytics, advertising } — keeps
+ * a dated record of the signed-in user's cookie choice (proof of consent,
+ * PROFESSIONAL_PLATFORM_PLAN §2.2). The browser cookie is what is enforced;
+ * this is the audit trail. Last 20 choices are kept.
+ */
+meRouter.post('/consent', rateLimit(20), (req: Request, res: Response) => {
+  const db = loadDb();
+  const user = (db.users || []).find((u: any) => u.id === req.user!.id);
+  if (!user) return res.status(404).json({ error: 'Account not found.' });
+  const v = Number(req.body?.v);
+  const row = {
+    v: Number.isInteger(v) && v > 0 ? v : 1,
+    personalisation: !!req.body?.personalisation,
+    analytics: !!req.body?.analytics,
+    advertising: !!req.body?.advertising,
+    at: new Date().toISOString(),
+  };
+  const u = user as any;
+  u.consents = [...(Array.isArray(u.consents) ? u.consents : []), row].slice(-20);
+  saveDb(db);
+  res.json({ ok: true });
+});

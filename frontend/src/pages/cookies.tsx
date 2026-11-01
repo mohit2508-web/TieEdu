@@ -38,7 +38,7 @@ const sections: LegalSection[] = [
           ['tieedu_refresh (sign-in session)', 'Strictly necessary', 'Until you sign out, up to 30 days'],
           ['tieedu_consent', 'Strictly necessary', '12 months'],
           ['Theme and language (local storage)', 'Strictly necessary', 'Until you clear it'],
-          ['tieedu_lead (set only when you arrive from one of our emails)', 'Analytics', '90 days'],
+          ['tieedu_lead (only if you allow Analytics, after arriving from one of our emails)', 'Analytics', '90 days'],
           ['Recently viewed (local storage)', 'Personalisation', 'Until you clear it'],
           ['Google AdSense cookies (if ads are on)', 'Advertising', 'Set by Google, see Google’s policy'],
         ]}

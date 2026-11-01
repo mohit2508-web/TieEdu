@@ -1,5 +1,6 @@
 import { Html, Head, Main, NextScript } from 'next/document';
 import { THEME_BOOT } from '@/lib/theme';
+import { CONSENT_BOOT } from '@/lib/consent';
 
 export default function Document() {
   return (
@@ -52,6 +53,15 @@ export default function Document() {
         <script
           dangerouslySetInnerHTML={{
             __html: THEME_BOOT,
+          }}
+        />
+        {/* Google Consent Mode v2 defaults: everything optional is denied
+            until the visitor chooses (lib/consent). Must run before any Google
+            tag, so it is inline in the head. A stored choice is applied at once
+            so a returning visitor's ads/analytics are not held back a beat. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: CONSENT_BOOT,
           }}
         />
       </Head>

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type { NextRouter } from 'next/router';
 import { API_BASE_URL } from '@/lib/api';
+import { hasConsent, onConsentChange } from '@/lib/consent';
 
 /**
  * Cookie identity + page-view observation (EMAIL_MARKETING_PLAN.md Phase 3).
@@ -52,53 +53,80 @@ const sendTrack = (routePath: string) => {
   }
 };
 
+/** Where an `em` token waits (this tab only) until Analytics is allowed. */
+const PENDING_KEY = 'tieedu_pending_em';
+
+/**
+ * Consent gate (PROFESSIONAL_PLATFORM_PLAN §2.2). Nothing here runs without
+ * Analytics consent: the `em` token is stripped from the URL at once (so it is
+ * never shared or bookmarked) and parked in sessionStorage; the exchange and
+ * the page-view beacons start only when the visitor allows Analytics — now, or
+ * later in the same tab from the banner.
+ */
 export function useLeadTracking(router: NextRouter) {
   const bootedRef = useRef(false);
+  const startedRef = useRef(false);
 
   useEffect(() => {
     // React 18 strict mode runs effects twice in dev; boot handling (the `em`
-    // strip especially) must happen exactly once or the token vanishes before
-    // the first exchange completes.
+    // strip especially) must happen exactly once.
     if (bootedRef.current) return;
     bootedRef.current = true;
 
-    const exchangeAndTrack = async () => {
-      const url = new URL(window.location.href);
-      const em = url.searchParams.get('em');
-      let landingPath = url.pathname + url.search;
+    const url = new URL(window.location.href);
+    const em = url.searchParams.get('em');
+    if (em) {
+      url.searchParams.delete('em');
+      // replaceState, not a router push: no re-render, no scroll jump.
+      window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
+      try {
+        sessionStorage.setItem(PENDING_KEY, JSON.stringify({ token: em, landing: url.pathname + url.search }));
+      } catch {
+        // Storage blocked: the token is simply dropped.
+      }
+    }
 
-      if (em) {
-        url.searchParams.delete('em');
-        landingPath = url.pathname + url.search;
-        // replaceState, not a router push: no re-render, no scroll jump, and
-        // the still-loading page does not race a navigation.
-        window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
+    const start = async () => {
+      if (startedRef.current || !hasConsent('analytics')) return;
+      startedRef.current = true;
+      let pending: { token: string; landing: string } | null = null;
+      try {
+        pending = JSON.parse(sessionStorage.getItem(PENDING_KEY) || 'null');
+        sessionStorage.removeItem(PENDING_KEY);
+      } catch {
+        pending = null;
+      }
+      if (pending?.token) {
         try {
           await fetch(`${API_BASE_URL}/email/identify`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token: em, landing: landingPath }),
+            credentials: 'include',
+            body: JSON.stringify(pending),
             keepalive: true,
           });
         } catch {
-          // Cookie may already be set by the click redirect itself; the
-          // exchange is a fallback, not a dependency.
+          // Best-effort: tracking must never break the page.
         }
       }
-
-      // Initial view: the identify response has landed, so if any cookie
-      // exists (fresh or from a previous click) this beacon carries it.
       if (shouldSend(window.location.pathname)) sendTrack(window.location.pathname + window.location.search);
     };
 
-    void exchangeAndTrack();
+    void start();
+    const offConsent = onConsentChange((s) => {
+      if (s.analytics) void start();
+      else startedRef.current = false;
+    });
 
-    const onRouteChange = (url: string, opts?: { shallow?: boolean }) => {
+    const onRouteChange = (u: string, opts?: { shallow?: boolean }) => {
       if (opts?.shallow) return; // in-page query sync, not a new view
-      if (!shouldSend(url)) return;
-      sendTrack(url);
+      if (!hasConsent('analytics') || !shouldSend(u)) return;
+      sendTrack(u);
     };
     router.events.on('routeChangeComplete', onRouteChange);
-    return () => router.events.off('routeChangeComplete', onRouteChange);
+    return () => {
+      offConsent();
+      router.events.off('routeChangeComplete', onRouteChange);
+    };
   }, [router]);
 }

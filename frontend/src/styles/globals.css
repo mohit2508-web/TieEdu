@@ -2982,3 +2982,9 @@ body {
   color: rgb(var(--rgb-money-ink));
 }
 
+
+/* Cookie banner (components/legal/CookieConsent): sits above the mobile tab
+   bar wherever that bar is on screen, at the very bottom everywhere else. */
+@media (max-width: 767px) {
+  body:has(.tab-bar) .consent-bar { bottom: var(--tabbar-total); }
+}

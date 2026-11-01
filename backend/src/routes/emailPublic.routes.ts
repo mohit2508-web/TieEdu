@@ -85,13 +85,13 @@ emailPublicRouter.get('/click', (req: Request, res: Response) => {
 
   if (message.lead_id) {
     recordActivity(db, message.lead_id, 'email_click', u);
-    setLeadCookie(res, message.lead_id);
   }
 
   saveDb(db);
-  // Belt to the cookie's braces: the cookie rides this response, but if it is
-  // blocked or cleared before the page boots, the landing URL still carries a
-  // short-lived `em` token the frontend exchanges for the same identity.
+  // No cookie here (PROFESSIONAL_PLATFORM_PLAN §2.2): the visit cookie is
+  // analytics, and nothing on this redirect knows the visitor's choice. The
+  // landing URL carries a short-lived `em` token instead, which the site
+  // exchanges via /identify only once Analytics cookies are allowed.
   res.redirect(302, message.lead_id ? withIdentifyParam(u, message.lead_id) : u);
 });
 
@@ -221,4 +221,13 @@ a{color:#0284C7}</style></head>
   // tracked as an interested lead.
   res.clearCookie(LEAD_COOKIE_NAME, { path: '/' });
   page('You are unsubscribed', `${lead.email} will not receive further emails from TieEdu. This took effect immediately.`, true);
+});
+
+/**
+ * POST /api/email/forget — clears the visit cookie when the visitor turns
+ * Analytics off in cookie settings (withdrawing must be as easy as giving).
+ */
+emailPublicRouter.post('/forget', (_req: Request, res: Response) => {
+  res.clearCookie(LEAD_COOKIE_NAME, { path: '/' });
+  res.json({ ok: true });
 });
