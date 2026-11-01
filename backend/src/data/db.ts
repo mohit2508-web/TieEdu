@@ -953,6 +953,17 @@ export interface Session {
   token_hash: string;
   created_at: string;
   expires_at: string;
+  /**
+   * Set when this refresh token was exchanged for a new one. The row is kept
+   * for a short grace window so a response the browser never stored (tab
+   * closed, page navigated mid-refresh, two refreshes racing) does not sign
+   * the student out — see REFRESH_GRACE_MS in routes/auth.routes.ts.
+   */
+  rotated_at?: string;
+  /** The session that replaced this one at rotation. */
+  replaced_by?: string;
+  /** First session of this sign-in; every rotation inherits it, so logout can end them all. */
+  family?: string;
 }
 
 // ============================================================================

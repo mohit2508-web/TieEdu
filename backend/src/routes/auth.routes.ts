@@ -25,9 +25,22 @@ function setRefreshCookie(res: Response, token: string) {
   });
 }
 
-function issueSession(userId: string) {
+/**
+ * How long a just-rotated refresh token keeps working. Rotation used to delete
+ * the old row at once, so any refresh response the browser did not store —
+ * the tab closed or the page navigated mid-request, or two refreshes raced —
+ * left the student holding a dead token: signed out on the next visit. Within
+ * this window the old token is honoured once more; after it, it is refused.
+ */
+export const REFRESH_GRACE_MS = 2 * 60 * 1000;
+
+const usable = (s: Session, now = Date.now()) =>
+  new Date(s.expires_at).getTime() >= now && (!s.rotated_at || now - Date.parse(s.rotated_at) <= REFRESH_GRACE_MS);
+
+function issueSession(userId: string, replaces?: string) {
   const db = loadDb();
   const refreshToken = crypto.randomBytes(48).toString('base64url');
+  const now = Date.now();
   const session: Session = {
     id: `sess-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`,
     user_id: userId,
@@ -35,17 +48,34 @@ function issueSession(userId: string) {
     created_at: new Date().toISOString(),
     expires_at: new Date(Date.now() + REFRESH_TTL_DAYS * 24 * 60 * 60 * 1000).toISOString(),
   };
-  if (!db.sessions) db.sessions = [];
+  // Drop rows that can never be used again (expired, or rotated past grace).
+  db.sessions = (db.sessions || []).filter((s: Session) => usable(s, now));
+  session.family = session.id;
+  if (replaces) {
+    const old = db.sessions.find((s: Session) => s.id === replaces);
+    if (old) {
+      old.rotated_at = old.rotated_at || new Date(now).toISOString();
+      old.replaced_by = session.id;
+      session.family = old.family || old.id;
+    }
+  }
   db.sessions.push(session);
   saveDb(db);
   return refreshToken;
 }
 
+/**
+ * End this sign-in: the session for this token and every other token in its
+ * family (older ones still inside the rotation grace, and newer ones).
+ */
 function destroySession(refreshToken: string | undefined) {
   if (!refreshToken) return;
   const db = loadDb();
   const hash = hashRefresh(refreshToken);
-  db.sessions = (db.sessions || []).filter((s: Session) => s.token_hash !== hash);
+  const hit = (db.sessions || []).find((s: Session) => s.token_hash === hash);
+  if (!hit) return;
+  const family = hit.family || hit.id;
+  db.sessions = (db.sessions || []).filter((s: Session) => (s.family || s.id) !== family);
   saveDb(db);
 }
 
@@ -164,7 +194,7 @@ authRouter.post('/refresh', (req: Request, res: Response) => {
 
   const hash = hashRefresh(token);
   const session = (db.sessions || []).find((s: Session) => s.token_hash === hash);
-  if (!session) {
+  if (!session || (session.rotated_at && !usable(session))) {
     res.clearCookie(COOKIE_NAME);
     return res.status(401).json({ error: 'Session expired' });
   }
@@ -181,9 +211,8 @@ authRouter.post('/refresh', (req: Request, res: Response) => {
     return res.status(401).json({ error: 'Account unavailable' });
   }
 
-  // Rotate: revoke old token, mint new
-  destroySession(token);
-  const newRefresh = issueSession(user.id);
+  // Rotate: mint a new token; the old one stays valid for REFRESH_GRACE_MS only.
+  const newRefresh = issueSession(user.id, session.id);
   setRefreshCookie(res, newRefresh);
   return res.json({ accessToken: signAccessToken(user), user: safeUser(user) });
 });
