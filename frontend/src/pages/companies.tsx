@@ -6,6 +6,7 @@ import { Footer } from '@/components/layout/Footer';
 import { CompanyListCard } from '@/components/company/CompanyListCard';
 import { Chip, EmptyState, SectionHead, SkeletonCard } from '@/components/ui';
 import { fetchCompanies } from '@/lib/api';
+import { industryGroup } from '@/lib/industryGroup';
 import { useCartScope } from '@/context/CartContext';
 import type { Company } from '@/types';
 
@@ -58,7 +59,10 @@ export default function CompaniesPage() {
 
   const industries = useMemo(() => {
     const counts = new Map<string, number>();
-    for (const c of companies) if (c.industry) counts.set(c.industry, (counts.get(c.industry) ?? 0) + 1);
+    for (const c of companies) {
+      const g = industryGroup(c.industry);
+      counts.set(g, (counts.get(g) ?? 0) + 1);
+    }
     return ['All', ...[...counts.entries()].sort((a, b) => b[1] - a[1]).map(([name]) => name)];
   }, [companies]);
 
@@ -66,7 +70,7 @@ export default function CompaniesPage() {
     const q = query.trim().toLowerCase();
     const list = companies.filter(
       (c) =>
-        (industry === 'All' || c.industry === industry) &&
+        (industry === 'All' || industryGroup(c.industry) === industry) &&
         (!q ||
           c.name.toLowerCase().includes(q) ||
           (c.industry || '').toLowerCase().includes(q) ||
@@ -79,6 +83,9 @@ export default function CompaniesPage() {
     };
     return [...list].sort(by[sort]);
   }, [companies, query, industry, sort]);
+
+  const roundsMapped = companies.reduce((n, c) => n + (c.rounds_pipeline?.length ?? 0), 0);
+  const checkedCount = companies.filter((c) => c.fact_checked_at).length;
 
   return (
     <>
@@ -102,6 +109,21 @@ export default function CompaniesPage() {
                 : `${companies.length} companies, each with its rounds, questions and what it pays.`
             }
           />
+
+          {!loading && companies.length > 0 && (
+            <dl className="mt-6 flex flex-wrap gap-3">
+              {[
+                [companies.length, 'companies'],
+                [roundsMapped, 'rounds mapped'],
+                [checkedCount, 'fact-checked'],
+              ].filter(([n]) => Number(n) > 0).map(([n, label]) => (
+                <div key={label} className="flex items-baseline gap-2 rounded-full border border-line bg-card px-4 py-2 shadow-edge-neutral">
+                  <dd className="font-display text-lg font-bold tabular-nums text-heading">{n}</dd>
+                  <dt className="text-sm text-muted">{label}</dt>
+                </div>
+              ))}
+            </dl>
+          )}
 
           <div className="mt-8 flex flex-col gap-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -168,9 +190,9 @@ export default function CompaniesPage() {
                 <p className="mb-3 text-sm text-muted" aria-live="polite">
                   {shown.length === companies.length ? `All ${shown.length}` : `${shown.length} of ${companies.length}`}
                 </p>
-                <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {shown.map((c) => (
-                    <li key={c.id} className="min-w-0">
+                <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                  {shown.map((c, i) => (
+                    <li key={c.id} className="min-w-0 apple-fade-up" style={{ animationDelay: `${Math.min(i, 8) * 50}ms` }}>
                       <CompanyListCard company={c} />
                     </li>
                   ))}

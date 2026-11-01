@@ -669,6 +669,44 @@ body {
 }
 
 /*
+ * Leaderboard trigger. Sits on `.chip.chip--icon` for the 40px box, then adds
+ * a warm amber wash and a trophy disc so it reads as a destination, not a tag.
+ * From `xl` the label returns and the pill matches the 40px header row.
+ */
+.lb-btn {
+  border-color: rgb(var(--rgb-signal) / 0.35);
+  background: linear-gradient(135deg, rgb(var(--rgb-warning-soft)), var(--bg-surface));
+  color: var(--text-heading);
+  box-shadow: var(--shadow-edge-neutral);
+  transition: transform var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) var(--ease-out), border-color var(--motion-fast) var(--ease-out);
+}
+.lb-btn:hover { border-color: rgb(var(--rgb-signal) / 0.8); transform: translateY(-1px); }
+.lb-btn__disc {
+  display: inline-flex;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgb(var(--rgb-signal));
+  color: var(--on-primary);
+}
+.lb-btn:hover .lb-btn__disc svg { animation: lb-wiggle 480ms var(--ease-out); }
+@keyframes lb-wiggle {
+  0%, 100% { transform: rotate(0); }
+  30% { transform: rotate(-14deg); }
+  60% { transform: rotate(10deg); }
+}
+@media (min-width: 1280px) {
+  .lb-btn.chip--icon { height: 40px; padding: 0 14px 0 7px; font-size: 13px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lb-btn, .lb-btn:hover { transform: none; }
+  .lb-btn:hover .lb-btn__disc svg { animation: none; }
+}
+
+/*
  * Directory filter chips. `.chip`'s bordered-pill look reads as a form control,
  * and its conditional `bg-…` utilities are silently beaten by its own
  * unlayered background anyway — so the active state had almost no visual. This

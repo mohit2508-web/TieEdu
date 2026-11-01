@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useReducedMotion } from 'framer-motion';
-import { Award, ChevronDown, ChevronLeft, Command, Flame, LogOut, Search, ShieldCheck, ShoppingBag, UserRound } from 'lucide-react';
+import { Award, ChevronDown, ChevronLeft, Command, LogOut, Search, ShieldCheck, ShoppingBag, Trophy, UserRound } from 'lucide-react';
 import { TieEduLogo } from '@/components/common/TieEduLogo';
 import { PWAInstallButton } from '@/components/common/PWAInstallButton';
 import { PrefsControl } from '@/components/common/PrefsControl';
@@ -404,9 +404,11 @@ export const Header: React.FC = () => {
             onClick={() => toggleOverlay('leaderboard')}
             aria-label="Leaderboard"
             title="Placement season XP rankings"
-            className="chip chip--icon"
+            className="chip chip--icon lb-btn"
           >
-            <Flame size={15} className="shrink-0 text-[var(--amber-deep)]" strokeWidth={2.2} aria-hidden />
+            <span className="lb-btn__disc" aria-hidden>
+              <Trophy size={14} strokeWidth={2.4} />
+            </span>
             <span className="hidden font-bold xl:inline">Leaderboard</span>
           </button>
           <PWAInstallButton className="hidden sm:inline-flex md:!hidden lg:!inline-flex" />
