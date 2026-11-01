@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { readinessBand, BAND_CLASS } from '@/lib/readiness';
 import { ArrowRight } from 'lucide-react';
 import type { CpSection } from '@/types/companyPage';
 import { CpLang, CpLink, DEFAULT_NAV_LABEL, Stamp, cx, roundKey, stationsForRole, useCp } from './shared';
@@ -130,6 +131,16 @@ export function Hero({
             {overall !== null ? (
               <p className={s.readyMeta}>
                 <strong className={s.readyOverall}>{ui('overall_ready', { score: overall })}</strong>
+                {(() => {
+                  // 3T §6: the score always comes with a word and a next step.
+                  const b = readinessBand(overall);
+                  return b ? (
+                    <span className="mt-1 block text-sm">
+                      <span className={`mr-2 rounded-full px-2 py-0.5 text-xs font-semibold ${BAND_CLASS[b.tone]}`}>{b.label}</span>
+                      {b.message(company.name)}
+                    </span>
+                  ) : null;
+                })()}
               </p>
             ) : (
               d.card_meta && <p className={s.readyMeta}>{t(d.card_meta)}</p>

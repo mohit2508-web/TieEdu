@@ -1,4 +1,5 @@
 import { DriveCountdown } from './DriveCountdown';
+import { readinessBand, BAND_CLASS } from '@/lib/readiness';
 import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, BookOpen, CalendarClock, ClipboardCheck, Flame, RotateCw, Snowflake, TrendingUp } from 'lucide-react';
@@ -359,7 +360,13 @@ export const TodayScreen: React.FC<{ ready: boolean }> = ({ ready }) => {
                   <Link href={`/company/${t.slug}`} className="group flex items-center gap-3 py-3">
                     <ProgressRing value={t.overall ?? 0} size={44} thickness={4} label={`${t.company} readiness`} />
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate font-semibold text-heading group-hover:text-link">{t.company}</span>
+                      <span className="flex items-center gap-2">
+                        <span className="truncate font-semibold text-heading group-hover:text-link">{t.company}</span>
+                        {(() => {
+                          const b = readinessBand(t.overall);
+                          return b ? <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${BAND_CLASS[b.tone]}`}>{b.label}</span> : null;
+                        })()}
+                      </span>
                       <span className="block text-xs text-muted">
                         {t.overall === null ? c.noScore : c.cleared(t.cleared, t.rounds)}
                       </span>
