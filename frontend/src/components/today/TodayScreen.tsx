@@ -1,3 +1,4 @@
+import { DriveCountdown } from './DriveCountdown';
 import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, BookOpen, CalendarClock, ClipboardCheck, Flame, RotateCw, Snowflake, TrendingUp } from 'lucide-react';
@@ -204,6 +205,14 @@ export const TodayScreen: React.FC<{ ready: boolean }> = ({ ready }) => {
         </h1>
         <CollegePulseLine ready={ready} />
       </header>
+
+      {/* 3T §7: the nearest drive date, struck down by one each day. */}
+      {week.test_dates.length > 0 && (() => {
+        const next = [...week.test_dates].sort((a, b) => a.days_left - b.days_left).find((t) => t.days_left >= 0);
+        return next ? (
+          <DriveCountdown company={next.company} slug={next.slug} daysLeft={next.days_left} nextTask={{ title: step.title, href: step.href }} />
+        ) : null;
+      })()}
 
       {/* The route: where you are, then the one thing to do next. */}
       <Card variant="ink" pad="lg" className="mt-6">

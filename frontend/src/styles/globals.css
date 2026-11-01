@@ -706,6 +706,29 @@ body {
   .lb-btn:hover .lb-btn__disc svg { animation: none; }
 }
 
+/* --- Drive countdown moment (3T plan §7) -------------------------------- */
+.cd-cross path {
+  fill: none;
+  stroke: rgb(var(--rgb-danger));
+  stroke-width: 7;
+  stroke-linecap: round;
+  stroke-dasharray: 130;
+  stroke-dashoffset: 130;
+  animation: cd-stroke 260ms var(--ease-out) forwards;
+}
+.cd-cross path:nth-child(1) { animation-delay: 350ms; }
+.cd-cross path:nth-child(2) { animation-delay: 650ms; }
+.cd-old { animation: cd-old-out 400ms var(--ease-out) 1150ms forwards; }
+.cd-new { opacity: 0; transform: translateY(-40%) rotateX(80deg); animation: cd-flip 420ms var(--ease-out) 1250ms forwards; }
+@keyframes cd-stroke { to { stroke-dashoffset: 0; } }
+@keyframes cd-old-out { to { opacity: 0.35; transform: scale(0.8); } }
+@keyframes cd-flip { to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .cd-cross path { animation: none; stroke-dashoffset: 0; }
+  .cd-old { animation: none; opacity: 0.35; }
+  .cd-new { animation: none; opacity: 1; transform: none; }
+}
+
 /*
  * Directory filter chips. `.chip`'s bordered-pill look reads as a form control,
  * and its conditional `bg-…` utilities are silently beaten by its own
@@ -2905,3 +2928,4 @@ body {
 :root[data-theme='dark'] :is(.bg-amber-400, .bg-amber-500, .bg-money, .bg-warning, .bg-\[var\(--brand-accent\)\], .bg-\[--brand-accent\]) :is(.text-gray-900, .text-gray-800) {
   color: rgb(var(--rgb-money-ink));
 }
+
