@@ -84,6 +84,18 @@ function stat(label: string, value: string, source: any) {
   };
 }
 
+const MONTH_YEAR = new Intl.DateTimeFormat('en-IN', { month: 'short', year: 'numeric' });
+const TEST_TYPE_LABEL = {
+  mcq: 'MCQ test',
+  coding: 'Coding test',
+  pseudocode: 'Pseudocode MCQ',
+  written: 'Written / essay',
+  audio: 'Speaking (audio)',
+  video_interview: 'Recorded video interview',
+  live_interview: 'Live interview',
+  group_discussion: 'Group discussion',
+} as const;
+
 export function derivePageContent(db: any, company: any): PageContent {
   const modules: any[] = Array.isArray(company.modules) ? company.modules : [];
   const pipeline: any[] = Array.isArray(company.rounds_pipeline) ? company.rounds_pipeline : [];
@@ -103,7 +115,7 @@ export function derivePageContent(db: any, company: any): PageContent {
       .map((m) => m.id);
 
   // ---- rounds: the recorded pipeline, else inferred from module types
-  type Station = { key: RoundKey | null; title: string; short: string; note: string; train: string };
+  type Station = { key: RoundKey | null; title: string; short: string; note: string; train: string; step?: any };
   let stations: Station[];
   if (pipeline.length > 0) {
     stations = [...pipeline]
@@ -114,8 +126,9 @@ export function derivePageContent(db: any, company: any): PageContent {
           key,
           title: stripRoundPrefix(String(p.title || (key ? ROUND_LABEL[key].title : 'Round'))).slice(0, 44),
           short: (key ? ROUND_LABEL[key].short : String(p.round_type || '')).slice(0, 18),
-          note: 'Pattern being verified',
+          note: p.pattern_checked_at ? `Pattern last checked ${MONTH_YEAR.format(new Date(p.pattern_checked_at))}` : 'Pattern being verified',
           train: p.subtitle ? `Focus: ${String(p.subtitle)}.` : '',
+          step: p,
         };
       });
   } else {
@@ -131,14 +144,27 @@ export function derivePageContent(db: any, company: any): PageContent {
 
   const roundStations = stations.map((st) => {
     const skills = skillsFor(st.key);
+    const p = st.step || {};
+    // One pattern row ("MCQ test · 90 Qs · 90 min") when the admin set a test type.
+    const pattern = p.test_type
+      ? [{
+          id: 'p1',
+          name: TEST_TYPE_LABEL[p.test_type as keyof typeof TEST_TYPE_LABEL] || String(p.test_type),
+          questions: typeof p.question_count === 'number' ? p.question_count : null,
+          minutes: typeof p.duration_minutes === 'number' ? p.duration_minutes : null,
+        }]
+      : [];
+    const topics: string[] = Array.isArray(p.train_topics) ? p.train_topics : [];
     return {
       title: st.title,
       short_label: st.short,
       status_note: st.note,
-      eliminatory: 'unknown',
-      pattern: [],
-      topics: [],
-      train_text: st.train || 'Questions from this round, with worked answers.',
+      eliminatory: typeof p.elimination === 'boolean' ? (p.elimination ? 'yes' : 'no') : 'unknown',
+      pattern,
+      topics,
+      test_type: p.test_type || null,
+      weight: typeof p.weight === 'number' ? p.weight : null,
+      train_text: topics.length ? `${topics.join(', ')}.` : st.train || 'Questions from this round, with worked answers.',
       module_ids: modulesFor(st.key),
       test_text: skills.length ? 'A free skill test on this round’s topics.' : '',
       test_label: skills.length ? 'Take the skill test' : '',

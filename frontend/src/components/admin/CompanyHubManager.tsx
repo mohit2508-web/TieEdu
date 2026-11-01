@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { Company, MetricProvenance, ProvenanceMap } from '@/types';
+import { Company, MetricProvenance, ProvenanceMap, TEST_TYPE_LABEL, type TestType } from '@/types';
 import { BrandTile } from '@/components/common/BrandTile';
 import { createCompanyApi, updateCompanyApi, deleteCompanyApi } from '@/lib/api';
 import { Plus, Edit3, Trash2, Building, X, CheckCircle2, ExternalLink, ShieldAlert, ShieldCheck, LayoutTemplate } from 'lucide-react';
@@ -18,7 +18,7 @@ const inputCls = "w-full p-2.5 border border-gray-200 rounded-xl bg-app-warm tex
 const labelCls = "block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1";
 
 /** Matches the RoundType union the compare pipeline normalises to. */
-const ROUND_TYPE_OPTIONS = ['OA', 'Technical', 'System Design', 'HR'] as const;
+const ROUND_TYPE_OPTIONS = ['OA', 'Coding', 'Technical', 'System Design', 'Communication', 'Managerial', 'HR'] as const;
 
 /** The editorial metrics that require provenance, keyed the same way the API stores them. */
 const METRIC_KEYS = ['ctc', 'process_days', 'rounds', 'difficulty', 'round_1_oa', 'round_2_tech', 'round_3_system_design', 'round_4_hr'] as const;
@@ -41,7 +41,21 @@ type PipelineStepForm = {
   title: string;
   subtitle: string;
   module_count: string;
+  test_type: string;
+  question_count: string;
+  duration_minutes: string;
+  weight: string;
+  elimination: boolean;
+  /** Comma-separated in the form, an array on the wire. */
+  train_topics: string;
+  pattern_checked_at: string;
 };
+
+const emptyStep = (): PipelineStepForm => ({
+  round_type: '', title: '', subtitle: '', module_count: '',
+  test_type: '', question_count: '', duration_minutes: '', weight: '', elimination: false,
+  train_topics: '', pattern_checked_at: '',
+});
 
 const emptyForm = (): FormState => ({
   name: '', slug: '', logo_url: '', industry: '', tags: '',
@@ -77,6 +91,13 @@ const toForm = (c: Company): FormState => ({
     title: r.title || '',
     subtitle: r.subtitle || '',
     module_count: r.module_count != null ? String(r.module_count) : '',
+    test_type: r.test_type || '',
+    question_count: r.question_count != null ? String(r.question_count) : '',
+    duration_minutes: r.duration_minutes != null ? String(r.duration_minutes) : '',
+    weight: r.weight != null ? String(r.weight) : '',
+    elimination: !!r.elimination,
+    train_topics: (r.train_topics || []).join(', '),
+    pattern_checked_at: r.pattern_checked_at ? r.pattern_checked_at.slice(0, 10) : '',
   })),
   seo_title: c.seo_title || '', seo_description: c.seo_description || '',
   status: c.status,
@@ -90,6 +111,8 @@ export const CompanyHubManager: React.FC<CompanyHubManagerProps> = ({ companies,
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState<FormState>(emptyForm);
+  const setStep = (i: number, patch: Partial<PipelineStepForm>) =>
+    setForm((f) => ({ ...f, rounds_pipeline: f.rounds_pipeline.map((st, x) => (x === i ? { ...st, ...patch } : st)) }));
   const [studioFor, setStudioFor] = useState<Company | null>(null);
 
   const sourcedCount = useMemo(
@@ -151,6 +174,13 @@ export const CompanyHubManager: React.FC<CompanyHubManagerProps> = ({ companies,
             subtitle: r.subtitle.trim(),
             difficulty: 'medium' as const,
             module_count: numOrUndef(r.module_count) ?? 0,
+            test_type: (r.test_type || undefined) as TestType | undefined,
+            question_count: numOrUndef(r.question_count),
+            duration_minutes: numOrUndef(r.duration_minutes),
+            weight: numOrUndef(r.weight),
+            elimination: r.elimination,
+            train_topics: r.train_topics.split(',').map((t) => t.trim()).filter(Boolean),
+            pattern_checked_at: r.pattern_checked_at || undefined,
           })),
         seo_title: form.seo_title.trim(),
         seo_description: form.seo_description.trim(),
@@ -529,6 +559,24 @@ export const CompanyHubManager: React.FC<CompanyHubManagerProps> = ({ companies,
                         placeholder="Modules"
                       />
                     </div>
+                    {/* How this round is tested (3T plan §5). Feeds the Test box and the engine. */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      <select className={inputCls} value={step.test_type} onChange={(e) => setStep(i, { test_type: e.target.value })} aria-label="Test type">
+                        <option value="">Test type…</option>
+                        {(Object.keys(TEST_TYPE_LABEL) as TestType[]).map((t) => <option key={t} value={t}>{TEST_TYPE_LABEL[t]}</option>)}
+                      </select>
+                      <input className={inputCls} type="number" min={0} value={step.question_count} onChange={(e) => setStep(i, { question_count: e.target.value })} placeholder="Questions" aria-label="Questions" />
+                      <input className={inputCls} type="number" min={0} value={step.duration_minutes} onChange={(e) => setStep(i, { duration_minutes: e.target.value })} placeholder="Minutes" aria-label="Minutes" />
+                      <input className={inputCls} type="number" min={0} value={step.weight} onChange={(e) => setStep(i, { weight: e.target.value })} placeholder="Weight %" aria-label="Readiness weight" />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-2 items-center">
+                      <input className={inputCls} value={step.train_topics} onChange={(e) => setStep(i, { train_topics: e.target.value })} placeholder="Train topics, comma separated (Quant, Logic, Verbal…)" aria-label="Train topics" />
+                      <input className={inputCls} type="date" value={step.pattern_checked_at} onChange={(e) => setStep(i, { pattern_checked_at: e.target.value })} aria-label="Pattern last checked" />
+                      <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 whitespace-nowrap">
+                        <input type="checkbox" checked={step.elimination} onChange={(e) => setStep(i, { elimination: e.target.checked })} />
+                        Elimination
+                      </label>
+                    </div>
                   </div>
                 ))}
 
@@ -536,7 +584,7 @@ export const CompanyHubManager: React.FC<CompanyHubManagerProps> = ({ companies,
                   type="button"
                   onClick={() => setForm({
                     ...form,
-                    rounds_pipeline: [...form.rounds_pipeline, { round_type: '', title: '', subtitle: '', module_count: '' }],
+                    rounds_pipeline: [...form.rounds_pipeline, emptyStep()],
                   })}
                   className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-dashed border-gray-300 text-xs font-bold text-gray-600 hover:border-gray-400 hover:text-gray-900 transition-colors"
                 >

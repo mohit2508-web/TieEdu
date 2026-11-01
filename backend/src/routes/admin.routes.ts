@@ -203,13 +203,34 @@ function sanitizeComparisonMetrics(input: any) {
 }
 
 /** Round types the compare pipeline and module reader understand. */
-const ROUND_TYPES = ['OA', 'Technical', 'System Design', 'HR'] as const;
+const ROUND_TYPES = ['OA', 'Coding', 'Technical', 'System Design', 'Communication', 'Managerial', 'HR'] as const;
+/** How a round is tested (TRAIN_TEST_TRACK_PLAN §5). Drives the Test box and the test engine. */
+const TEST_TYPES = ['mcq', 'coding', 'pseudocode', 'written', 'audio', 'video_interview', 'live_interview', 'group_discussion'] as const;
 
 /**
  * The pipeline renders verbatim on the public company page, so it is validated
  * as strictly as the comparison notes: a step with no round_type, an unknown
  * round_type, or a non-numeric module_count is dropped rather than shown.
  */
+/** Optional per-round test details; anything missing or invalid is dropped. */
+function roundTestFields(step: any) {
+  const out: Record<string, unknown> = {};
+  const testType = strOrNull(step.test_type);
+  if (testType && (TEST_TYPES as readonly string[]).includes(testType)) out.test_type = testType;
+  for (const k of ['question_count', 'duration_minutes', 'weight'] as const) {
+    const n = numOrNull(step[k]);
+    if (n != null && n >= 0) out[k] = n;
+  }
+  if (typeof step.elimination === 'boolean') out.elimination = step.elimination;
+  if (Array.isArray(step.train_topics)) {
+    const topics = step.train_topics.map((t: unknown) => strOrNull(t)).filter(Boolean).slice(0, 20);
+    if (topics.length) out.train_topics = topics;
+  }
+  const checked = strOrNull(step.pattern_checked_at);
+  if (checked && !Number.isNaN(Date.parse(checked))) out.pattern_checked_at = checked;
+  return out;
+}
+
 function sanitizeRoundsPipeline(input: any) {
   if (!Array.isArray(input)) return [];
   const out: any[] = [];
@@ -224,6 +245,7 @@ function sanitizeRoundsPipeline(input: any) {
       subtitle: strOrNull((step as any).subtitle) || '',
       difficulty: 'medium',
       module_count: numOrNull((step as any).module_count) ?? 0,
+      ...roundTestFields(step),
     });
   }
   return out;

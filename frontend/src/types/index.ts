@@ -418,7 +418,29 @@ export interface RoundStep {
   round_type: RoundType;
   difficulty: 'easy' | 'medium' | 'hard';
   module_count: number;
+  /** How the round is tested. Optional: older companies have none. */
+  test_type?: TestType;
+  question_count?: number;
+  duration_minutes?: number;
+  elimination?: boolean;
+  /** Share of the readiness score; equal split when unset. */
+  weight?: number;
+  train_topics?: string[];
+  pattern_checked_at?: string;
 }
+
+export type TestType = 'mcq' | 'coding' | 'pseudocode' | 'written' | 'audio' | 'video_interview' | 'live_interview' | 'group_discussion';
+
+export const TEST_TYPE_LABEL: Record<TestType, string> = {
+  mcq: 'MCQ test',
+  coding: 'Coding test',
+  pseudocode: 'Pseudocode MCQ',
+  written: 'Written / essay',
+  audio: 'Speaking (audio)',
+  video_interview: 'Recorded video interview',
+  live_interview: 'Live interview',
+  group_discussion: 'Group discussion',
+};
 
 export interface QuestionComment {
   id: string;

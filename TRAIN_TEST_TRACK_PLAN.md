@@ -160,6 +160,30 @@ Score, per-topic accuracy, time per question, integrity flags, and the
 **"What to do next"** list (the 3 weakest topics → their Train blocks). Low
 performance is shown plainly with the fix next to it, never hidden.
 
+### 5.4 Round test types (per company round, set in admin)
+
+Every round in a company's pipeline now carries **how it is tested**, so the
+Test box, the test engine and the readiness weight all follow the real drive:
+
+| Test type | Used for | Engine |
+|---|---|---|
+| `mcq` | Aptitude, cognitive, technical MCQ | Skill-test engine (secure mode) ✅ |
+| `pseudocode` | Pseudocode / output-prediction MCQ | Skill-test engine ✅ |
+| `coding` | 1–3 problems, hidden test cases | Coding sandbox (`sandbox.routes.ts`) + secure mode |
+| `written` | Essay / email writing | Text answer + rubric |
+| `audio` | Read-aloud, repeat, short Q&A (communication) | English coach recording |
+| `video_interview` | Recorded answers | Mock interview |
+| `live_interview` | Technical / HR interview | Peer mock / mock interview |
+| `group_discussion` | GD rounds | Topic + checklist (practice only) |
+
+Per round the admin also sets: **questions, minutes, elimination yes/no,
+readiness weight %, train topics, pattern-last-checked date** (built
+2026-11-01; shown on the company page round cards).
+
+Company content intake: the owner fills `docs/COMPANY_CONTENT_TEMPLATE.md` per
+company (rounds with test types, eligibility, question bank CSV, train content);
+we load it through the admin panel.
+
 ---
 
 ## 6. Track: the Placement Readiness Score
