@@ -209,21 +209,82 @@ black box.
 
 ---
 
-## 8. Company page in 3T (waiting for your reference page)
+## 8. Company page in 3T (owner's reference: "Accenture company page.pdf")
 
-You will send the company page design to follow. Until then the structure is:
+This is the page a student sees when they select any company. The reference is
+the Accenture mock (4 pages); every company uses the same template, with its
+data filled from the admin (§9). The detailed field-level spec for this design
+already lives in `COMPANY_PAGE_3T_REDESIGN_PLAN.md`; this section fixes the
+order, the look, and what I'm adding.
 
-1. Hero: company, countdown, readiness score + band, "Your next step".
-2. Journey: rounds in order; each round is a card with three tabs:
-   **Train** (modules, progress) · **Test** (round quiz, last score) ·
-   **Track** (round score, weak topics).
-3. Full mock test.
-4. Plan: days left split by round (links to `/study-plan`).
-5. One pack, one price (D1), with the "What you got" list.
-6. Eligibility, how to apply, FAQ.
+**Look:** the reference uses navy + orange. We keep **our Warm Paper UI**: the
+hero becomes the dark teal band (`grid-paper-on-hero`), orange buttons become
+our amber primary, navy cards become teal cards, Poppins headings, cream page.
+Same layout, our colours and components. Logo colour never changes.
 
-Reuse `CompanyPageV2` sections where they fit; the old 3T plan's phases 2–4 cover
-most of this. Final layout follows your reference once it arrives.
+### 8.1 Sections, top to bottom
+
+| # | Section (from the reference) | Content | 3T verb |
+|---|---|---|---|
+| 1 | **Hero** (dark band) | Breadcrumb · "{Company} placement prep, 2026–27 freshers" · one-line promise · amber **Plan my days from my test date** · right card **"How ready are you for {Company}?"**: round chips, **Start the free check** (no login to start) | Plan + Test |
+| 2 | **Stat strip** | Package per role (e.g. ASE ₹4.5 LPA, AASE ₹6.5 LPA) with "checked {date}" · number of rounds · eligible batch · off-campus drive Open/Closed → Drive Radar | Plan |
+| 3 | **Sticky section pills** | Eligibility · Rounds · Prep plan · Roles · Prep pack · Drive Radar · FAQ (scroll-spy, sticks under header) | — |
+| 4 | **Can you apply, and how?** | Eligibility table (degree, passing year, min marks, backlogs, gap, "last confirmed {date} from official page") + 4-step How to apply | Plan |
+| 5 | **N rounds. Train, test and track each one.** | One card per round: big number, name, pattern ("90 Qs in 90 min, elimination"), "pattern last checked {date}", and three boxes: **Train** (topics) · **Test** (timed mock link) · **Track** (weakest topics after one mock) | **Train · Test · Track** |
+| 6 | **When is your test? We'll split the days.** | Teal card: date input + **Build my plan** + **Today's drop** (10 company-pattern Qs, streak) · beside it a sample 14-day plan that becomes theirs once a date is set | Plan + Train |
+| 7 | **Roles: ASE or Advanced ASE?** | Comparison table (package, eligibility, extra round/cut-off, choose this if) + "Aim for X" buttons that set the readiness target | Track |
+| 8 | **Start free. Go deeper when ready.** | Free ₹0 card vs **{Company} Pack ₹99 one time** card ("Updated for 2026–27", bank size, sectional mocks, Track analytics) · **Try 3 questions first** · refund line | Train |
+| 9 | **Took the test? Get the pack free.** | Green band: share a verified round-by-round experience → pack unlocks | — |
+| 10 | **Drive Radar** + **Selected? Track it to day one** | Crowd-reported, crowd-confirmed updates (applications, invites/results, onboarding mails) with Report / Notify me · onboarding checklist 0 of 5 | Track |
+| 11 | **Didn't clear this time?** | Comeback plan from their Track results + other open drives | Track |
+| 12 | **Questions students ask** | `<details>` FAQ | — |
+| 13 | **Also preparing for** | Other company chips + Compare drives ("your readiness carries over") | Plan |
+
+### 8.2 What I'm adding on top of the reference (my recommendation)
+
+1. **Logged-in hero changes.** After the free check, the hero card turns into the
+   student's **readiness ring + band** ("62% · Getting there"), the **countdown**
+   ("39 days left") and **Your next step** (one button). The free-check card is
+   only for students who haven't taken it.
+2. **Live Track in each round card.** The Track box shows the student's real round
+   score and top 2 weak topics, with a "Fix this" link into Train. Before any
+   attempt it says "Take the mock to see this", never a fake number.
+3. **Round progress line.** A thin progress bar per round card (Train coverage),
+   so the page shows at a glance which round is weakest.
+4. **Sticky bottom CTA bar.** One action that changes with state: Start free
+   check → Build my plan → Continue today's task → Get the pack. (The current
+   page's A/B-tested sticky bar is reused.)
+5. **No placeholders in production.** Every `[date]`, `[Add]`, `[N]` field from the
+   reference is either filled by the admin or the row is hidden. A missing
+   "checked" date shows "Being verified", never a blank chip.
+6. **Roles generalised.** "ASE vs AASE" becomes "Roles at {Company}" (admin adds
+   1–3 roles), so the same template works for TCS (Ninja/Digital/Prime) and Infosys
+   (SE/DSE/SP).
+7. **"What you got" link** on the pack card, opening the full contents list (§3)
+   before payment as well as after.
+8. **Secure-mode badge** on every Test link ("Timed · secure mode") so students
+   know what to expect (§5).
+9. **Hinglish toggle** from the reference stays (our language control already does
+   this), and all copy goes through the Hinglish strings.
+10. **Phone layout.** Round cards stack Train/Test/Track as three rows; the stat
+    strip scrolls sideways; the sticky pills scroll; the sticky CTA sits above
+    the tab bar.
+
+### 8.3 Data each section needs (admin, §9)
+Hero promise + roles + packages (with checked dates) · rounds (name, pattern,
+elimination, checked date, Train topics, Test link, weight) · eligibility rows +
+source + date · how-to-apply steps · sample plan template · pack price + contents
+· refund policy · Drive Radar events · FAQ · related companies. Any section with
+no data is hidden, so a half-filled company still looks finished.
+
+### 8.4 Done when
+- Accenture page matches the reference layout in Warm Paper colours, desktop and
+  phone, light and dark.
+- Every Train/Test/Track box links to real content or a real test.
+- A logged-in student with a test date sees their own readiness, countdown and
+  next step in the hero.
+- The same template renders TCS, Infosys, Wipro, Cognizant and Capgemini from
+  admin data alone, with no code changes.
 
 ---
 
@@ -287,13 +348,13 @@ empty state, error state, phone 360px, dark mode, Hinglish, guard tests.
 
 | Phase | What | Est. | Done when |
 |---|---|---|---|
-| 0 | Admin audit (§9 table), route audit (§10 sign-off), your decisions (§13), your company page reference | 2–3 days | Tables filled, decisions made |
+| 0 | Admin audit (§9 table), route audit (§10 sign-off), your decisions (§13) | 2–3 days | Tables filled, decisions made |
 | 1 | Data model: round weights, round ↔ content map, per-round question bank, test config, readiness tables (Postgres) | 4–5 days | Admin can set all 10 checklist items for one company |
 | 2 | Secure test engine (§5) + result screen | 6–8 days | All graded tests run in secure mode; flags logged |
 | 3 | Readiness score service + Track view (§6) | 4–5 days | Score + band + weak topics on Today, company page and results |
 | 4 | Onboarding + Today 3T cockpit + countdown moment + push (§2, §7) | 5–6 days | Final-year login lands on cockpit; countdown plays once per day |
 | 5 | Plan my placement wizard + "What you got" + Day 1 CTA (§3) | 4–5 days | ≤ 6 clicks home → Day 1 lesson |
-| 6 | Company page 3T (§8) to your reference | 6–8 days | Matches reference; Train/Test/Track per round |
+| 6 | Company page 3T (§8): reference layout in Warm Paper + my 10 additions | 6–8 days | §8.4 all true |
 | 7 | Route cleanup (§10) + pricing removal + UI sweep (§11) | 4–6 days | Every kept route passes the route check |
 | 8 | Content fill: every live company completes the admin checklist | ongoing | Every live company "3T live" |
 
@@ -305,7 +366,7 @@ Total build ≈ 6–8 weeks, plus content time (the long pole: question banks).
 
 | # | Decision | Recommendation |
 |---|---|---|
-| D1 | Pricing: one price per company pack, or keep the round ladder? | **One price per company** (e.g. ₹99–₹249), contents listed 100% |
+| D1 | Pricing: one price per company pack, or keep the round ladder? | **One price per company**: your reference shows Free vs ₹99 pack, so ₹99 one-time, contents listed 100% |
 | D2 | Which companies go 3T first? | Accenture, TCS, Infosys, Wipro, Cognizant, Capgemini (mass recruiters) |
 | D3 | Secure mode: auto-submit after 3 tab switches? | **Yes**, with 2 warnings first |
 | D4 | Approve the §10 hide/remove list | Review line by line |
