@@ -4,10 +4,12 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
 import { TieEduLogo } from '@/components/common/TieEduLogo';
+import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
+import { afterAuthPath } from '@/lib/auth';
 import { Mail, Lock, ArrowRight, ShieldCheck, Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
-  const { user, loading, login } = useAuth();
+  const { user, loading, login, adoptSession } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,7 +19,7 @@ export default function LoginPage() {
   const next = typeof router.query.next === 'string' ? router.query.next : '/';
 
   useEffect(() => {
-    if (!loading && user) router.replace(next);
+    if (!loading && user) router.replace(afterAuthPath(user, next));
   }, [loading, user, next, router]);
 
   const handleSubmit = async (e: FormEvent) => {
@@ -29,8 +31,8 @@ export default function LoginPage() {
     }
     setSubmitting(true);
     try {
-      await login(email.trim(), password);
-      router.replace(next);
+      const u = await login(email.trim(), password);
+      router.replace(afterAuthPath(u, next));
     } catch (err: any) {
       setError(err?.message || 'Sign-in failed — please try again');
       setSubmitting(false);
@@ -63,6 +65,14 @@ export default function LoginPage() {
               </div>
             )}
 
+            <GoogleSignInButton
+              onSignedIn={(data) => router.replace(afterAuthPath(adoptSession(data), next))}
+              onError={setError}
+              after={                <div className="my-5 flex items-center gap-3 text-xs font-bold uppercase tracking-widest text-[--text-muted]">
+                    <span className="h-px flex-1 bg-line" /> or use email <span className="h-px flex-1 bg-line" />
+                  </div>}
+            />
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="email" className="block text-xs font-bold text-body mb-1.5 tracking-wide uppercase">
@@ -88,9 +98,14 @@ export default function LoginPage() {
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-xs font-bold text-body mb-1.5 tracking-wide uppercase">
-                  Password
-                </label>
+                <div className="mb-1.5 flex items-center justify-between">
+                  <label htmlFor="password" className="block text-xs font-bold text-body tracking-wide uppercase">
+                    Password
+                  </label>
+                  <Link href={`/forgot-password${email.trim() ? `?email=${encodeURIComponent(email.trim())}` : ''}`} className="text-xs font-bold text-link hover:underline">
+                    Forgot password?
+                  </Link>
+                </div>
                 <div className="relative">
                   <Lock className="w-4 h-4 text-[--text-muted] absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input

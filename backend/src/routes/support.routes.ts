@@ -56,14 +56,16 @@ supportRouter.post('/contact', rateLimit(3), (req: Request, res: Response) => {
     subject: `[${row.ref}] ${topic}: ${name}`,
     body: `${message}\n\nFrom: ${name} <${email}>${row.user_id ? `\nUser id: ${row.user_id}` : ''}`,
     driveName: 'TieEdu Support',
+    note: 'TieEdu Support · New contact form message.',
   });
   void sendDriveEmail({
     to: email,
     subject: `We got your message (${row.ref})`,
-    body: `Hi ${name.split(/\s+/)[0]},\n\nThanks for writing to TieEdu. Your reference is ${row.ref}. Someone from the team will reply to this email within 1 working day.\n\nYour message:\n${message}`,
+    body: `Thanks for writing to TieEdu, ${name.split(/\s+/)[0]}. Your reference is ${row.ref}. Someone from the team will reply to this email within 1 working day.\n\nYour message:\n${message}`,
     driveName: 'TieEdu Support',
     url: '/contact',
     ctaLabel: 'Open help & FAQs',
+    note: 'TieEdu Support · A copy of the message you sent us.',
   });
 
   res.status(201).json({ ref: row.ref });

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Lock, LogIn, UserPlus, ArrowRight, Loader2, CheckCircle2 } from 'lucide-react';
 import { Sheet } from '@/components/common/Sheet';
+import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
 
 interface AuthRequiredModalProps {
   isOpen: boolean;
@@ -25,7 +26,7 @@ export const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({
   onSuccess,
   targetTitle,
 }) => {
-  const { user, login, signup } = useAuth();
+  const { user, login, signup, adoptSession } = useAuth();
   const [tab, setTab] = useState<'login' | 'signup'>('signup');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -134,6 +135,19 @@ export const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({
           </p>
         )}
 
+        <div className="mt-4">
+          <GoogleSignInButton
+            text={tab === 'signup' ? 'signup_with' : 'signin_with'}
+            onSignedIn={(data) => { adoptSession(data); onSuccess?.(); }}
+            onError={setError}
+            after={
+              <div className="mt-4 flex items-center gap-3 text-xs font-bold uppercase tracking-widest text-gray-500">
+                <span className="h-px flex-1 bg-line" /> or <span className="h-px flex-1 bg-line" />
+              </div>
+            }
+          />
+        </div>
+
         <form id={FORM_ID} onSubmit={handleSubmit} className="space-y-3.5 mt-4">
           {tab === 'signup' && (
             <div>
@@ -180,7 +194,7 @@ export const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({
               name="password"
               type="password"
               required
-              minLength={6}
+              minLength={tab === 'signup' ? 8 : 1}
               autoComplete={tab === 'signup' ? 'new-password' : 'current-password'}
               enterKeyHint="go"
               placeholder="••••••••"

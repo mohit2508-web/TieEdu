@@ -102,6 +102,19 @@ export interface User {
   disabled?: boolean;
   /** Per-user UI preferences (notification toggles etc.), persisted as JSON. */
   preferences?: Record<string, any>;
+  /** True once the student clicked the verification link, signed in with Google, or reset their password. */
+  email_verified?: boolean;
+  /** Google account id ("sub") when the account is linked to Sign in with Google. */
+  google_sub?: string;
+  /** Onboarding answers (PROFESSIONAL_PLATFORM_PLAN §1.3). */
+  branch?: string;
+  interests?: string[];
+  /** Messaging opt-ins chosen at onboarding / in settings. */
+  notify?: { email: boolean; push: boolean; whatsapp: boolean };
+  /** WhatsApp number in E.164 (+91…). Confirmed by code in Phase 6; until then unverified. */
+  whatsapp?: { number: string; verified: boolean } | null;
+  /** When onboarding was finished or skipped; absent = show onboarding. */
+  onboarded_at?: string;
   created_at: string;
 }
 

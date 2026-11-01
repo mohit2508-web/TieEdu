@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Check } from 'lucide-react';
 import { Sheet } from '@/components/ui';
+import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
+import { yearOptions } from '@/lib/onboardingApi';
 import { fetchTarget, saveTarget, OPEN_TARGET_EVENT } from '@/lib/prepApi';
 
 /**
@@ -12,8 +14,23 @@ import { fetchTarget, saveTarget, OPEN_TARGET_EVENT } from '@/lib/prepApi';
 const READY = [{ slug: 'infosys-systems-engineer', name: 'Infosys Systems Engineer (SE)', meta: 'Online test 54 Qs · Technical · HR · ₹3.6–4.2 LPA' }];
 const SOON = ['TCS NQT', 'Accenture', 'Wipro Elite NTH', 'Cognizant GenC'];
 
+// Pages where the sheet must never pop up on its own.
+const QUIET_PATHS = ['/welcome', '/login', '/signup', '/forgot-password', '/reset-password', '/verify-email'];
+
+/**
+ * Ask on its own only when company prep is relevant now: onboarding done, and
+ * 3rd year or later (PROFESSIONAL_PLATFORM_PLAN §3.2 — a first-year gains
+ * nothing from a company picker). It can still be opened by hand any time.
+ */
+function shouldAutoAsk(user: { needs_onboarding?: boolean; grad_year?: number | null }): boolean {
+  if (user.needs_onboarding || !user.grad_year) return false;
+  const thirdYear = yearOptions().find((y) => y.label === '3rd year')!.grad_year;
+  return user.grad_year <= thirdYear;
+}
+
 export const TargetSheet: React.FC = () => {
   const { user } = useAuth();
+  const { pathname } = useRouter();
   const [open, setOpen] = useState(false);
   const [slug, setSlug] = useState(READY[0].slug);
   const [date, setDate] = useState('');
@@ -22,11 +39,13 @@ export const TargetSheet: React.FC = () => {
 
   useEffect(() => {
     if (!user || isAdmin) return;
-    fetchTarget().then((t) => { if (!t.slug && !t.asked) setOpen(true); }).catch(() => {});
+    if (shouldAutoAsk(user) && !QUIET_PATHS.includes(pathname)) {
+      fetchTarget().then((t) => { if (!t.slug && !t.asked) setOpen(true); }).catch(() => {});
+    }
     const on = () => setOpen(true);
     window.addEventListener(OPEN_TARGET_EVENT, on);
     return () => window.removeEventListener(OPEN_TARGET_EVENT, on);
-  }, [user, isAdmin]);
+  }, [user, isAdmin, pathname]);
 
   const save = async (s: string | null) => {
     setBusy(true);

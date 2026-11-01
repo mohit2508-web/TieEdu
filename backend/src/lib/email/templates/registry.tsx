@@ -275,7 +275,7 @@ const DriveUpdate: React.FC<TemplateProps> = (p) => {
         ))}</P>
       ))}
       {ctaUrl ? <Button href={p.href(ctaUrl)}>{ctaLabel}</Button> : null}
-      <Note>{v.drive_name || 'TieEdu'} · This is a transactional update about your mock drive registration.</Note>
+      <Note>{V(p, 'note', '') || `${v.drive_name || 'TieEdu'} · This is a transactional update about your mock drive registration.`}</Note>
     </Layout>
   );
 };

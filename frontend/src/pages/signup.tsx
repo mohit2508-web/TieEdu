@@ -4,11 +4,14 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
 import { TieEduLogo } from '@/components/common/TieEduLogo';
+import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
+import { afterAuthPath } from '@/lib/auth';
 import { Mail, Lock, User, GraduationCap, ArrowRight, Loader2 } from 'lucide-react';
 
 export default function SignupPage() {
-  const { user, loading, signup } = useAuth();
+  const { user, loading, signup, adoptSession } = useAuth();
   const router = useRouter();
+  const next = typeof router.query.next === 'string' ? router.query.next : '/';
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [college, setCollege] = useState('');
@@ -19,21 +22,21 @@ export default function SignupPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!loading && user) router.replace('/');
-  }, [loading, user, router]);
+    if (!loading && user) router.replace(afterAuthPath(user, next));
+  }, [loading, user, next, router]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
     if (name.trim().length < 2) return setError('Name must be at least 2 characters');
     if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return setError('Enter a valid email address');
-    if (password.length < 6) return setError('Password must be at least 6 characters');
+    if (password.length < 8) return setError('Password must be at least 8 characters');
     if (password !== confirm) return setError('Passwords do not match');
     if (!acceptedTerms) return setError('You must agree to the Terms & Conditions to register.');
     setSubmitting(true);
     try {
-      await signup({ name: name.trim(), email: email.trim(), password, college: college.trim() || undefined });
-      router.replace('/');
+      const u = await signup({ name: name.trim(), email: email.trim(), password, college: college.trim() || undefined });
+      router.replace(afterAuthPath(u, next));
     } catch (err: any) {
       setError(err?.message || 'Signup failed — please try again');
       setSubmitting(false);
@@ -65,6 +68,24 @@ export default function SignupPage() {
                 {error}
               </div>
             )}
+
+            <GoogleSignInButton
+              text="signup_with"
+              onSignedIn={(data) => router.replace(afterAuthPath(adoptSession(data), next))}
+              onError={setError}
+              after={
+                <>
+                  <p className="mt-2 text-center text-xs text-[--text-muted]">
+                    By continuing with Google you agree to our{' '}
+                    <Link href="/terms" target="_blank" className="underline">Terms</Link> and{' '}
+                    <Link href="/privacy" target="_blank" className="underline">Privacy Policy</Link>.
+                  </p>
+                  <div className="my-5 flex items-center gap-3 text-xs font-bold uppercase tracking-widest text-[--text-muted]">
+                    <span className="h-px flex-1 bg-line" /> or use email <span className="h-px flex-1 bg-line" />
+                  </div>
+                </>
+              }
+            />
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -129,7 +150,7 @@ export default function SignupPage() {
                     enterKeyHint="next"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Min 6 characters"
+                    placeholder="Min 8 characters"
                     className="w-full pl-10 pr-4 py-3 bg-white/90 border border-line rounded-xl text-sm text-heading placeholder:text-text-light focus:outline-none focus:border-signal focus:ring-4 focus:ring-signal/10 transition-shadow"
                   />
                 </div>

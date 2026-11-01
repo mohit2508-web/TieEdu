@@ -93,6 +93,15 @@ export function safeUser(u: User) {
     license_id: u.license_id || `LIC-${rawId.slice(-6).toUpperCase()}`,
     roll_no: u.roll_no || `ROLL-${rawId.slice(-6).toUpperCase()}`,
     created_at: u.created_at,
+    email_verified: !!u.email_verified,
+    has_password: !!u.password_hash,
+    google_linked: !!u.google_sub,
+    grad_year: u.grad_year ?? null,
+    branch: u.branch ?? null,
+    interests: u.interests ?? [],
+    notify: u.notify ?? null,
+    whatsapp: u.whatsapp ? { number: u.whatsapp.number, verified: !!u.whatsapp.verified } : null,
+    needs_onboarding: !u.onboarded_at && u.role === 'user',
   };
 }
 

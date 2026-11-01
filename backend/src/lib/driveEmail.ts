@@ -18,6 +18,8 @@ export interface DriveEmailInput {
   /** Site path for the CTA button (must start with `/`). */
   url?: string;
   ctaLabel?: string;
+  /** Footer line under the button; defaults to the mock-drive note. */
+  note?: string;
 }
 
 const validEmail = (e: string): boolean => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e);
@@ -43,6 +45,7 @@ export const sendDriveEmail = async (input: DriveEmailInput): Promise<boolean> =
         drive_name: String(input.driveName || 'TieEdu').slice(0, 120),
         cta_url: typeof input.url === 'string' && input.url.startsWith('/') ? input.url : '',
         cta_label: String(input.ctaLabel || 'Open your drive page').slice(0, 80),
+        ...(input.note ? { note: String(input.note).slice(0, 200) } : {}),
       },
     });
     saveDb(db);

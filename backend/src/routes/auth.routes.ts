@@ -7,6 +7,8 @@ import {
   COOKIE_NAME, REFRESH_TTL_DAYS,
 } from '../middleware/auth';
 import { rateLimit } from '../middleware/auth';
+import { OAuth2Client } from 'google-auth-library';
+import { consumeAccountToken, issueAccountToken, sendPasswordResetEmail, sendVerifyEmail } from '../lib/accountTokens';
 
 export const authRouter = Router();
 
@@ -56,7 +58,7 @@ authRouter.post('/signup', rateLimit(10), (req: Request, res: Response) => {
 
   if (name.length < 2) return res.status(400).json({ error: 'Please enter a name (min 2 characters)' });
   if (!EMAIL_RE.test(email)) return res.status(400).json({ error: 'Please enter a valid email address' });
-  if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
+  if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
   if ((db.users || []).some((u: User) => u.email === email)) {
     return res.status(409).json({ error: 'This email is already registered — please sign in' });
   }
@@ -75,7 +77,9 @@ authRouter.post('/signup', rateLimit(10), (req: Request, res: Response) => {
 
   db.users = db.users || [];
   db.users.push(user);
+  const verifyToken = issueAccountToken(db, user.id, 'verify');
   saveDb(db);
+  void sendVerifyEmail(user.email, user.name, verifyToken);
 
   const refreshToken = issueSession(user.id);
   setRefreshCookie(res, refreshToken);
@@ -89,6 +93,9 @@ authRouter.post('/login', rateLimit(10), (req: Request, res: Response) => {
   const password = (req.body.password || '').toString();
 
   const user = (db.users || []).find((u: User) => u.email === email);
+  if (user && !user.password_hash) {
+    return res.status(401).json({ error: 'This account uses Continue with Google. Sign in with Google, or use "Forgot password" to set a password.' });
+  }
   if (!user || !bcrypt.compareSync(password, user.password_hash)) {
     return res.status(401).json({ error: 'Incorrect email or password' });
   }
@@ -194,6 +201,9 @@ authRouter.post('/change-password', requireAuth, (req: Request, res: Response) =
   const current = (req.body.current_password || '').toString();
   const next = (req.body.new_password || '').toString();
 
+  if (!user.password_hash) {
+    return res.status(400).json({ error: 'Your account has no password yet. Use "Forgot password" on the sign-in page to set one.' });
+  }
   if (!bcrypt.compareSync(current, user.password_hash)) {
     return res.status(400).json({ error: 'Current password is incorrect' });
   }
@@ -217,4 +227,139 @@ authRouter.get('/admin-status', (req: Request, res: Response) => {
 // GET /api/auth/verify-admin — protected sanity check used by admin portal boot
 authRouter.get('/verify-admin', requireAdmin, (req: Request, res: Response) => {
   return res.json({ status: 'ok', user: safeUser(req.user!) });
+});
+// ---------------------------------------------------------------------------
+// Account recovery & verification (PROFESSIONAL_PLATFORM_PLAN §1.2)
+// ---------------------------------------------------------------------------
+
+// POST /api/auth/forgot { email } — always the same answer, so the endpoint
+// cannot be used to find out who has an account.
+authRouter.post('/forgot', rateLimit(5), (req: Request, res: Response) => {
+  const email = (req.body.email || '').toString().trim().toLowerCase();
+  const generic = { status: 'success', message: 'If that email has an account, a reset link is on its way. It expires in 30 minutes.' };
+  if (!EMAIL_RE.test(email)) return res.json(generic);
+  const db = loadDb();
+  const user = (db.users || []).find((u: User) => u.email === email);
+  if (user && !user.disabled) {
+    const token = issueAccountToken(db, user.id, 'reset');
+    saveDb(db);
+    void sendPasswordResetEmail(user.email, user.name, token);
+  }
+  return res.json(generic);
+});
+
+// POST /api/auth/reset { token, password } — sets the password, signs out
+// every device, then signs this one in.
+authRouter.post('/reset', rateLimit(10), (req: Request, res: Response) => {
+  const password = (req.body.password || '').toString();
+  if (password.length < 8) return res.status(400).json({ error: 'Use at least 8 characters for your new password.' });
+  const db = loadDb();
+  const userId = consumeAccountToken(db, (req.body.token || '').toString(), 'reset');
+  const user = userId ? (db.users || []).find((u: User) => u.id === userId) : null;
+  if (!user || user.disabled) {
+    saveDb(db);
+    return res.status(400).json({ error: 'This reset link is invalid or has expired. Ask for a new one.' });
+  }
+  user.password_hash = bcrypt.hashSync(password, 12);
+  user.email_verified = true; // they just proved they read this inbox
+  db.sessions = (db.sessions || []).filter((s: Session) => s.user_id !== user.id);
+  saveDb(db);
+  const refreshToken = issueSession(user.id);
+  setRefreshCookie(res, refreshToken);
+  return res.json({ status: 'success', user: safeUser(user), accessToken: signAccessToken(user) });
+});
+
+// POST /api/auth/verify-email { token }
+authRouter.post('/verify-email', rateLimit(20), (req: Request, res: Response) => {
+  const db = loadDb();
+  const userId = consumeAccountToken(db, (req.body.token || '').toString(), 'verify');
+  const user = userId ? (db.users || []).find((u: User) => u.id === userId) : null;
+  if (!user) return res.status(400).json({ error: 'This confirmation link is invalid or has expired. Sign in and ask for a new one.' });
+  user.email_verified = true;
+  saveDb(db);
+  return res.json({ status: 'success', email: user.email });
+});
+
+// POST /api/auth/resend-verification (signed in)
+authRouter.post('/resend-verification', requireAuth, rateLimit(3), (req: Request, res: Response) => {
+  const db = loadDb();
+  const user = (db.users || []).find((u: User) => u.id === req.user!.id);
+  if (!user) return res.status(404).json({ error: 'Account not found' });
+  if (user.email_verified) return res.json({ status: 'success', already: true });
+  const token = issueAccountToken(db, user.id, 'verify');
+  saveDb(db);
+  void sendVerifyEmail(user.email, user.name, token);
+  return res.json({ status: 'success' });
+});
+
+// ---------------------------------------------------------------------------
+// Continue with Google (Google Identity Services ID token)
+// ---------------------------------------------------------------------------
+
+const GOOGLE_CLIENT_ID = () => (process.env.GOOGLE_CLIENT_ID || '').trim();
+let googleClient: OAuth2Client | null = null;
+
+// GET /api/auth/google/config — whether the button should render at all.
+authRouter.get('/google/config', (_req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'public, max-age=300');
+  return res.json({ enabled: !!GOOGLE_CLIENT_ID(), client_id: GOOGLE_CLIENT_ID() || null });
+});
+
+// POST /api/auth/google { credential } — verify Google's signed ID token, then
+// sign in the matching account, link it, or create one.
+authRouter.post('/google', rateLimit(10), async (req: Request, res: Response) => {
+  const clientId = GOOGLE_CLIENT_ID();
+  if (!clientId) return res.status(503).json({ error: 'Google sign-in is not set up yet.' });
+  const credential = (req.body.credential || '').toString();
+  if (!credential) return res.status(400).json({ error: 'Missing Google credential.' });
+
+  let payload: any;
+  try {
+    googleClient = googleClient || new OAuth2Client(clientId);
+    const ticket = await googleClient.verifyIdToken({ idToken: credential, audience: clientId });
+    payload = ticket.getPayload();
+  } catch {
+    return res.status(401).json({ error: 'Google could not confirm this sign-in. Please try again.' });
+  }
+  const email = String(payload?.email || '').toLowerCase();
+  if (!payload?.sub || !email || payload.email_verified !== true) {
+    return res.status(401).json({ error: 'Your Google account email is not verified.' });
+  }
+
+  const db = loadDb();
+  db.users = db.users || [];
+  let user: User | undefined =
+    db.users.find((u: User) => u.google_sub === payload.sub) || db.users.find((u: User) => u.email === email);
+  let created = false;
+  const picture = typeof payload.picture === 'string' && payload.picture.startsWith('https://') ? payload.picture : undefined;
+  if (user) {
+    if (user.disabled) return res.status(403).json({ error: 'Account disabled — contact support' });
+    // Google has verified the address, so linking it to the existing account is safe.
+    user.google_sub = user.google_sub || payload.sub;
+    user.email_verified = true;
+    if (!user.avatar && picture) user.avatar = picture;
+  } else {
+    created = true;
+    user = {
+      id: `user-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`,
+      name: String(payload.name || email.split('@')[0]).slice(0, 60),
+      email,
+      password_hash: '',
+      role: 'user',
+      xp: 0,
+      streak: 0,
+      email_verified: true,
+      google_sub: payload.sub,
+      avatar: picture,
+      created_at: new Date().toISOString(),
+    };
+    db.users.push(user);
+  }
+  saveDb(db);
+
+  const signedIn = user;
+  const refreshToken = issueSession(signedIn.id);
+  setRefreshCookie(res, refreshToken);
+  const unlocks = (db.unlocks || []).filter((u: any) => u.user_id === signedIn.id && u.status === 'active').map((u: any) => u.company_id);
+  return res.status(created ? 201 : 200).json({ status: 'success', created, user: safeUser(signedIn), accessToken: signAccessToken(signedIn), unlocked_company_ids: unlocks });
 });

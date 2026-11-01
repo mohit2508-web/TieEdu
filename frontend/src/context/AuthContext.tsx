@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useLayoutEffect, useState, ReactNode } from 'react';
 import {
-  AuthUser, apiLogin, apiSignup, apiLogout, setAuthSession, getUserId,
+  AuthUser, AuthLoginPayload, apiLogin, apiSignup, apiLogout, setAuthSession, getUserId,
 } from '@/lib/auth';
 import { tryRefreshSession, getSessionUser } from '@/lib/api';
 import { clearPlacementAccess } from '@/lib/placementApi';
@@ -14,6 +14,10 @@ interface AuthContextValue {
   signup: (payload: { name: string; email: string; password: string; college?: string }) => Promise<AuthUser>;
   logout: () => Promise<void>;
   setUser: (user: AuthUser | null) => void;
+  /** Adopt a session the server already issued (Google sign-in, password reset). */
+  adoptSession: (data: AuthLoginPayload) => AuthUser;
+  /** Replace the signed-in user after a profile change (keeps the cache in step). */
+  updateUser: (user: AuthUser) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -73,6 +77,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return () => { active = false; };
   }, []);
 
+  const adoptSession = (data: AuthLoginPayload) => {
+    setAuthSession(data.accessToken, data.user.id);
+    setUser(data.user);
+    try { localStorage.setItem('tieedu_cached_user', JSON.stringify(data.user)); } catch {}
+    return data.user;
+  };
+
+  const updateUser = (next: AuthUser) => {
+    setUser(next);
+    try { localStorage.setItem('tieedu_cached_user', JSON.stringify(next)); } catch {}
+  };
+
   const login = async (email: string, password: string) => {
     const data = await apiLogin(email, password);
     setAuthSession(data.accessToken, data.user.id);
@@ -99,7 +115,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try { localStorage.removeItem('tieedu_cached_user'); } catch {}
   };
 
-  const value: AuthContextValue = { user, loading, login, signup, logout, setUser };
+  const value: AuthContextValue = { user, loading, login, signup, logout, setUser, adoptSession, updateUser };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

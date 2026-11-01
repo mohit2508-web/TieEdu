@@ -15,7 +15,8 @@ import { reminderSettings, setReminders } from '../lib/studyReminders';
 import { getPool } from '../db/client';
 import { markStudentSeen, NudgeError, setStudentOptOut, studentInbox } from '../lib/collegeNudges';
 import { endOnLinkChange, ParentWaError, parentWaStatus, setStudentAllowed, studentWaStatus, subscribeParent, unsubscribeParent } from '../lib/parentWhatsapp';
-import { rateLimit } from '../middleware/auth';
+import { rateLimit, safeUser } from '../middleware/auth';
+import { OnboardingError, parseOnboarding } from '../lib/onboarding';
 
 /**
  * The signed-in student's own surfaces (UI_REDESIGN_PLAN_V2 Phase 3).
@@ -434,4 +435,25 @@ parentEmailRouter.post('/stop', rateLimit(20), (req: Request, res: Response) => 
   const out = stopParentEmail(db, String(req.body?.t || ''));
   saveDb(db);
   res.json(out);
+});
+
+/**
+ * PUT /api/me/onboarding — save the first-run answers (PROFESSIONAL_PLATFORM_PLAN §1.3).
+ * Every field is optional, so a step can be skipped; `{ skip: true }` just
+ * marks onboarding done. Answers can be changed later from Account.
+ */
+meRouter.put('/onboarding', (req: Request, res: Response) => {
+  const db = loadDb();
+  const user = (db.users || []).find((u: any) => u.id === req.user!.id);
+  if (!user) return res.status(404).json({ error: 'Account not found.' });
+  try {
+    const patch = req.body?.skip ? {} : parseOnboarding(req.body, new Date(), user.whatsapp);
+    Object.assign(user, patch);
+    if (req.body?.finish || req.body?.skip) user.onboarded_at = user.onboarded_at || new Date().toISOString();
+    saveDb(db);
+    res.json({ user: safeUser(user) });
+  } catch (err) {
+    if (err instanceof OnboardingError) return res.status(400).json({ error: err.message });
+    throw err;
+  }
 });
