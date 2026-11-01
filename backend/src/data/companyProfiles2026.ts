@@ -197,7 +197,7 @@ export const PROFILES: Profile[] = [
     roles: [['Systems Engineer', '~₹3.6–4.2 LPA']], ctc: [3.6, 4.2],
     elig: { degrees: 'B.E./B.Tech, M.E./M.Tech, MCA, M.Sc (CSE, IT, AI/ML, DS, ECE, EEE and related)', batches: 'Current batch on campus; some drives accept earlier batches', cutoff: '60% or 6.0 CGPA throughout', backlogs: 'No active backlogs when applying', gap: 'Up to 2 years' },
     rounds: [
-      ['Online assessment', 'OA', 'mcq', undefined, undefined, true, [...APT, 'Pseudocode']],
+      ['Online assessment', 'OA', 'mcq', 54, 100, true, [...APT, 'Pseudocode']],
       ['Technical interview', 'Technical', 'live_interview', undefined, undefined, undefined, TECH_IV],
       ['HR interview', 'HR', 'live_interview', undefined, undefined, undefined, HR_IV],
     ],
