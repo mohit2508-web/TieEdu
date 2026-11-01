@@ -166,7 +166,7 @@ export function derivePageContent(db: any, company: any): PageContent {
       weight: typeof p.weight === 'number' ? p.weight : null,
       train_text: topics.length ? `${topics.join(', ')}.` : st.train || 'Questions from this round, with worked answers.',
       module_ids: modulesFor(st.key),
-      test_text: skills.length ? 'A free skill test on this round’s topics.' : '',
+      test_text: skills.length ? 'A free skill test on this round’s topics. Timed, in secure mode.' : '',
       test_label: skills.length ? 'Take the skill test' : '',
       test_href: skills.length ? `/skill-test/${skills[0]}` : '',
       skill_slugs: skills,

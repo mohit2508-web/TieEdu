@@ -524,8 +524,8 @@ export const NAV_SECTIONS: NavSection[] = [
   { id: 'home', label: 'Home', icon: House, itemIds: ['home'] },
   { id: 'learn', label: 'Learn', icon: BookOpen, itemIds: ['courses', 'tracks', 'freeCourse', 'studyPlan', 'calendar', 'myCourses', 'myCertificates'] },
   { id: 'practise', label: 'Practise', icon: Target, itemIds: ['skillTest', 'daily', 'mockInterview', 'peerMock', 'englishCoach', 'drives'] },
-  { id: 'companies', label: 'Companies', icon: Building2, itemIds: ['companies', 'compare', 'studyGroups', 'talent', 'offerCheck'], extraPrefixes: ['/company'] },
-  { id: 'feed', label: 'Feed', icon: Newspaper, itemIds: ['drops', 'offers'] },
+  { id: 'companies', label: 'Companies', icon: Building2, itemIds: ['companies', 'compare', 'talent'], extraPrefixes: ['/company'] },
+  { id: 'feed', label: 'Feed', icon: Newspaper, itemIds: ['drops'] },
 ];
 
 export const sectionHref = (section: NavSection): string => NAV_ITEMS[section.itemIds[0]].href;
