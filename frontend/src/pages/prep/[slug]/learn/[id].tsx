@@ -172,7 +172,7 @@ const LockedLesson: React.FC<{ slug: string; name: string }> = ({ slug, name }) 
   return (
     <div className="mt-6 rounded-card border border-signal/40 bg-signal-soft p-6 text-center">
       <p className="text-lg text-heading">This lesson is in the prep pack. The first lesson of every section is free.</p>
-      <button type="button" onClick={() => setOpen(true)} className="btn btn-primary mt-4 min-h-[48px] px-6">See what's in the pack</button>
+      <button type="button" onClick={() => setOpen(true)} className="btn btn-primary mt-4 min-h-[48px] px-6">See what&apos;s in the pack</button>
       <BuyPackSheet open={open} onClose={() => setOpen(false)} slug={slug} name={name} what="This lesson" />
     </div>
   );

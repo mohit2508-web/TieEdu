@@ -272,7 +272,7 @@ function AssessmentPage() {
           {error && companySlug && /pack/i.test(error) && (
             <>
               <button type="button" onClick={() => setPackOpen(true)} className="btn btn-primary focus-ring mt-3 inline-flex min-h-[44px] px-5">
-                See what's in the pack
+                See what&apos;s in the pack
               </button>
               <BuyPackSheet open={packOpen} onClose={() => setPackOpen(false)} slug={companySlug} name="Infosys SE" what="This test" />
             </>

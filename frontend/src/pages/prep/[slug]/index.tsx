@@ -101,7 +101,7 @@ export default function PrepPage() {
         {!data.owned && (
           <div className="mt-4 flex flex-col gap-3 rounded-card border border-signal/40 bg-signal-soft p-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-base text-heading">Free plan: 1 full demo mock and the first lesson of every section. The pack unlocks everything else.</p>
-            <button type="button" onClick={() => setSheet('')} className="btn btn-primary min-h-[48px] shrink-0 px-5">See what's in the pack</button>
+            <button type="button" onClick={() => setSheet('')} className="btn btn-primary min-h-[48px] shrink-0 px-5">See what&apos;s in the pack</button>
           </div>
         )}
 
