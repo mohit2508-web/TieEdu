@@ -4,7 +4,7 @@ import React, { useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
 import { usePlacement } from '@/context/PlacementContext';
-import { LayoutDashboard, Building2, CalendarCheck, Users, Upload, GraduationCap, BellRing, BarChart3, LogOut, Home, ChevronDown, History, Megaphone, FileText } from 'lucide-react';
+import { LayoutDashboard, Building2, CalendarCheck, BellRing, BarChart3, LogOut, Home, ChevronDown, History, Megaphone, FileText } from 'lucide-react';
 
 /**
  * Chrome for every `/tpo/*` screen — the placement portal's equivalent of
@@ -37,16 +37,15 @@ export interface TpoNavItem {
 
 export const TPO_NAV_ITEMS: TpoNavItem[] = [
   { id: 'dashboard', href: '/tpo', label: 'Dashboard', icon: LayoutDashboard, permission: 'placement.dashboard.read' },
-  { id: 'analytics', href: '/tpo/analytics', label: 'Batch readiness', icon: BarChart3, permission: 'placement.analytics.read' },
+  { id: 'analytics', href: '/tpo/analytics', label: 'Students & readiness', icon: BarChart3, permission: 'placement.analytics.read' },
+  { id: 'alerts', href: '/tpo/alerts', label: 'Alerts', icon: BellRing, permission: 'placement.alerts.read' },
+  { id: 'drives', href: '/tpo/drives', label: 'Mock drives', icon: CalendarCheck, permission: 'placement.drives.read' },
   { id: 'intel', href: '/tpo/campus-intel', label: 'Campus intel', icon: History, permission: 'placement.dashboard.read' },
   { id: 'nudges', href: '/tpo/nudges', label: 'Nudges', icon: Megaphone, permission: 'placement.nudges.write' },
   { id: 'reports', href: '/tpo/reports', label: 'Reports', icon: FileText, permission: 'placement.reports.read' },
-  { id: 'companies', href: '/tpo/companies', label: 'Companies', icon: Building2, permission: 'placement.companies.read', soon: true },
-  { id: 'drives', href: '/tpo/drives', label: 'Drives', icon: CalendarCheck, permission: 'placement.drives.read', soon: true },
-  { id: 'students', href: '/tpo/students', label: 'Students', icon: Users, permission: 'placement.dashboard.read', soon: true },
-  { id: 'training', href: '/tpo/training', label: 'Training', icon: GraduationCap, permission: 'placement.training.read', soon: true },
-  { id: 'imports', href: '/tpo/imports', label: 'Imports', icon: Upload, permission: 'placement.imports.write', soon: true },
-  { id: 'alerts', href: '/tpo/alerts', label: 'Alerts', icon: BellRing, permission: 'placement.alerts.read', soon: true },
+  // Companies, Training and Imports used to sit here marked "soon". A menu of
+  // promises reads as unfinished (PROFESSIONAL_PLATFORM_PLAN §10), so only
+  // pages that work are listed; add an item back when its page exists.
 ];
 
 const CollegeSwitcher: React.FC = () => {

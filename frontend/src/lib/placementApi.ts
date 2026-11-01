@@ -327,3 +327,26 @@ export const getYearOnYear = async (collegeId?: string | null): Promise<YearOnYe
   if (!res.ok) return fail(res);
   return res.json();
 };
+
+// ---------------------------------------------------------------------------
+// Alerts (backend lib/tpoAlerts) — PROFESSIONAL_PLATFORM_PLAN §10
+// ---------------------------------------------------------------------------
+export interface TpoAlert {
+  id: string;
+  level: 'urgent' | 'watch' | 'info';
+  title: string;
+  detail: string;
+  count: number;
+  examples: string[];
+  nudge_segment?: string;
+  href: string;
+  cta: string;
+}
+
+export const placementAlerts = async (
+  collegeId?: string | null
+): Promise<{ generated_at: string; segments: Record<string, number>; alerts: TpoAlert[] }> => {
+  const res = await apiFetch(`${API_BASE_URL}/placement/alerts`, { headers: collegeHeader(collegeId) });
+  if (!res.ok) return fail(res);
+  return res.json();
+};

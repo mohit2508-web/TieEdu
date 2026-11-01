@@ -13,6 +13,7 @@ import { isPlacementRole, PLACEMENT_ROLE_LABELS, PlacementRole } from '../placem
 import { getPool } from '../db/client';
 import { driveAdminRouter } from './driveAdmin.routes';
 import { buildBatchReadiness } from '../lib/batchReadiness';
+import { buildTpoAlerts } from '../lib/tpoAlerts';
 import { campusPagesOf, campusSettings } from '../lib/campusPage';
 import { deleteHistory, IntelError, moderateNote, tpoIntel, upsertHistory } from '../lib/campusIntel';
 import { placementCan } from '../placement/permissions';
@@ -393,6 +394,44 @@ placementRouter.get(
       return res.json(
         buildBatchReadiness(loadDb(), roster, { withNames: placementCan(auth, 'placement.students.pii') })
       );
+    } catch (err: any) {
+      if (isConnectionFailure(err)) return pgUnavailable(res);
+      throw err;
+    }
+  }
+);
+
+// ---------------------------------------------------------------------------
+// Alerts (lib/tpoAlerts): quiet students, low readiness, not started, and
+// drive deadlines in the next few days. Same roster and the same name/roll
+// rule as Batch readiness; it only reads.
+// ---------------------------------------------------------------------------
+placementRouter.get(
+  '/alerts',
+  requirePlacementAuth,
+  requirePlacementScope('placement.alerts.read'),
+  async (req: Request, res: Response) => {
+    const auth = req.placement!;
+    try {
+      const roster = await collegeRoster(auth.collegeId!);
+      const batch = buildBatchReadiness(loadDb(), roster, { withNames: placementCan(auth, 'placement.students.pii') });
+      const drives = await getPool().query(
+        `SELECT drive_id, title, status, registration_closes_at, starts_at
+           FROM mock_drive
+          WHERE college_id = $1 AND status IN ('published','live')
+          ORDER BY COALESCE(registration_closes_at, starts_at) ASC NULLS LAST
+          LIMIT 50`,
+        [auth.collegeId]
+      );
+      const rows = drives.rows.map((d: any) => ({
+        drive_id: String(d.drive_id),
+        title: String(d.title),
+        status: String(d.status),
+        registration_closes_at: d.registration_closes_at ? new Date(d.registration_closes_at).toISOString() : null,
+        starts_at: d.starts_at ? new Date(d.starts_at).toISOString() : null,
+      }));
+      res.setHeader('Cache-Control', 'private, no-store');
+      return res.json({ generated_at: batch.generated_at, segments: batch.segments, alerts: buildTpoAlerts(batch, rows) });
     } catch (err: any) {
       if (isConnectionFailure(err)) return pgUnavailable(res);
       throw err;

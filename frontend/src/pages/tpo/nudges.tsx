@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 import { Check, Info, RotateCw, Send, Undo2, X } from 'lucide-react';
 import { RequirePlacement } from '@/components/placement/RequirePlacement';
 import { TpoShell } from '@/components/tpo/TpoShell';
@@ -27,6 +28,12 @@ const NudgesBody: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [companies, setCompanies] = useState<Array<{ name: string; slug: string }>>([]);
   const [segments, setSegments] = useState<NudgeSegment[]>(['at_risk']);
+  // Arriving from Alerts (?segment=not_started) pre-selects that segment.
+  const router = useRouter();
+  useEffect(() => {
+    const q = router.query.segment;
+    if (typeof q === 'string' && ['not_started', 'at_risk', 'in_progress', 'ready'].includes(q)) setSegments([q as NudgeSegment]);
+  }, [router.query.segment]);
   const [branch, setBranch] = useState('');
   const [batch, setBatch] = useState('');
   const [preset, setPreset] = useState('come_back');
