@@ -249,10 +249,20 @@ export function seedInterviewPrep(db: any, onlyMissing = false): number {
   return added;
 }
 
+/** Courses without a cover get the generated one (routes/covers.routes.ts). Uploaded covers are kept. */
+export function seedCourseCovers(db: any): number {
+  let n = 0;
+  for (const c of db.courses || []) {
+    if (!c.thumbnail_url && c.slug) { c.thumbnail_url = `/api/covers/course/${c.slug}.svg`; n++; }
+  }
+  return n;
+}
+
 /** Server start: add any missing 3T content. Returns true when something was added. */
 export function seedMissing3T(db: any): boolean {
+  const covers = seedCourseCovers(db);
   const p = seedCompanyProfiles(db, true);
   const t = COMPANY_TESTS.reduce((n, k) => n + seedCompanyTest(db, k, true), 0);
   const i = seedInterviewPrep(db, true);
-  return p.created + t + i > 0;
+  return covers + p.created + t + i > 0;
 }

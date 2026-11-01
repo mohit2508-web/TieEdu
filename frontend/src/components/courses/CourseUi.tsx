@@ -406,6 +406,8 @@ export const CourseCover: React.FC<{
             fill
             sizes={sizes}
             priority={priority}
+            // Generated covers are SVG: the optimizer does not take SVG, the browser draws it crisp anyway.
+            unoptimized={src.endsWith('.svg')}
             onLoad={() => setLoaded(true)}
             onError={() => setLoaded(false)}
             className="object-cover"
