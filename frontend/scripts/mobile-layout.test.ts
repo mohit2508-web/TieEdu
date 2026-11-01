@@ -69,7 +69,7 @@ check('a .btn has a height even without padding of its own', () => {
 });
 
 check('the touch-target floor sets height only (a min-width crushes flex chips)', () => {
-  const css = fs.readFileSync(path.join(ROOT, 'src/styles/globals.css'), 'utf8');
+  const css = fs.readFileSync(path.join(ROOT, 'src/styles/globals.css'), 'utf8').replace(/\r\n/g, '\n'); // autocrlf checkouts
   const start = css.indexOf('@media (pointer: coarse) {\n  :where(a[href]');
   if (start === -1) throw new Error('touch-target floor missing');
   // Comments stripped: the block's own comment explains, by name, why there is no min-width.

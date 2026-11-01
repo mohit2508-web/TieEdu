@@ -2,7 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { PricingCatalog, RoundType } from '@/types';
+import { CatalogCompany, PricingCatalog, RoundType } from '@/types';
+import { RadioCard } from '@/components/ui/RadioCard';
 import { fetchPricingCatalogApi } from '@/lib/api';
 import { Check, ShieldCheck, LayoutGrid, ListTree, AlertTriangle, ArrowRight, FileText, BadgeCheck } from 'lucide-react';
 
@@ -56,6 +57,96 @@ const CompanyMark: React.FC<{ name: string; logo_url?: string; size?: string }> 
     <span className={`${size} rounded-xl bg-brand-ink text-white font-black text-sm flex items-center justify-center shrink-0`}>
       {name.slice(0, 2).toUpperCase()}
     </span>
+  );
+};
+
+/*
+ * Warm Paper E13: one card for one company. Two radio cards (one round / the
+ * whole pack), the price from the catalog, and an amber button into that
+ * vault's checkout, which is where UPI payment actually happens. No coupon
+ * badge and no testimonial: we only show a discount the server computed and
+ * have no consented parent quote to print. The graph paper and blobs behind it
+ * belong to the home page's wrapper, not to this card.
+ */
+const PackCard: React.FC<{ companies: CatalogCompany[]; onPay: (slug: string, moduleId?: string) => void }> = ({ companies, onPay }) => {
+  const forSale = useMemo(() => companies.filter((c) => !c.is_unlocked && c.modules.length > 0), [companies]);
+  const [companyId, setCompanyId] = useState('');
+  const [plan, setPlan] = useState<'pack' | 'single'>('pack');
+  const company = forSale.find((c) => c.id === companyId) ?? forSale[0];
+  if (!company) return null;
+
+  const cheapest = company.modules.reduce((a, b) => (b.price < a.price ? b : a));
+  const hasPack = company.modules.length > 1;
+  const choice = hasPack ? plan : 'single';
+  const price = choice === 'pack' ? company.pack_price : cheapest.price;
+
+  return (
+    <div data-pack-card="" className="mb-12">
+      <div className="mx-auto max-w-md rounded-card border border-line bg-card p-5 shadow-[var(--shadow-pop)] sm:p-6">
+        <label className="block">
+          <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted">Company</span>
+          <select
+            value={company.id}
+            onChange={(e) => { setCompanyId(e.target.value); setPlan('pack'); }}
+            className="focus-ring w-full min-h-[44px] rounded-cell border border-line bg-card px-3 font-display text-label text-heading"
+          >
+            {forSale.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </label>
+
+        <ul className="my-5 space-y-2 text-sm text-body">
+          {company.modules.slice(0, 4).map((m) => (
+            <li key={m.id} className="flex items-start gap-2">
+              <Check className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden />
+              <span className="truncate">{m.title}</span>
+            </li>
+          ))}
+          {company.modules.length > 4 && (
+            <li className="pl-6 text-xs text-muted">+ {company.modules.length - 4} more round{company.modules.length - 4 === 1 ? '' : 's'}</li>
+          )}
+        </ul>
+
+        <div role="radiogroup" aria-label="Choose a plan" className="space-y-2.5">
+          {hasPack && (
+            <RadioCard
+              checked={choice === 'pack'}
+              onSelect={() => setPlan('pack')}
+              title={`All ${company.modules.length} rounds`}
+              description={
+                company.savings > 0 ? (
+                  <>
+                    <span className="text-xs font-bold uppercase text-amber-deep">Save {company.savings_percent}%</span>
+                    <span className="ml-2 line-through">₹{company.list_total}</span>
+                  </>
+                ) : 'One-time'
+              }
+              aside={<span className="font-display text-2xl font-bold">₹{company.pack_price}</span>}
+            />
+          )}
+          <RadioCard
+            checked={choice === 'single'}
+            onSelect={() => setPlan('single')}
+            title="One round"
+            description={cheapest.title}
+            aside={<span className="font-display text-2xl font-bold">₹{cheapest.price}</span>}
+          />
+        </div>
+
+        <button
+          type="button"
+          onClick={() => onPay(company.slug, choice === 'single' ? cheapest.id : undefined)}
+          className="btn btn-primary focus-ring mt-5 w-full min-h-[52px] text-base"
+        >
+          Pay ₹{price} with UPI <ArrowRight className="h-4 w-4" aria-hidden />
+        </button>
+        <p className="mt-2 text-center text-xs text-muted">One-time payment · no subscription</p>
+
+        <div className="mt-4 flex flex-col items-center gap-1.5 text-sm">
+          <Link href="/today" className="text-link underline underline-offset-2">Ask a parent: share your parent link</Link>
+          <Link href="/signup" className="text-muted underline underline-offset-2">Or start free first</Link>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -140,6 +231,8 @@ export const PricingSection: React.FC = () => {
           </div>
         ) : (
           <>
+            <PackCard companies={companies} onPay={openVault} />
+
             {/* ===== THE LADDER — the actual pricing rule, straight from the server ===== */}
             <div className="rounded-2xl border border-line bg-app-warm p-5 sm:p-6 mb-10">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
