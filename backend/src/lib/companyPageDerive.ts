@@ -207,9 +207,10 @@ export function derivePageContent(db: any, company: any): PageContent {
         : 'Pick a round below and start with its questions.',
       next_step_href: '',
       card_eyebrow: firstSkill ? 'Test · Free' : '',
-      card_title: firstSkill ? 'Check your level for {company}' : '',
-      card_meta: '',
-      card_cta_label: firstSkill ? 'Take a free skill test' : '',
+      // With a company mock, the hero card offers the real-pattern test itself.
+      card_title: companyMock ? 'How ready are you for {company}?' : firstSkill ? 'Check your level for {company}' : '',
+      card_meta: companyMock ? `${companyMock.totalQuestions} questions · ${companyMock.avgCompletionTime} minutes · the real pattern, timed` : '',
+      card_cta_label: companyMock ? 'Start the full mock' : firstSkill ? 'Take a free skill test' : '',
       card_cta_href: firstSkill,
       card_note: '',
     }),

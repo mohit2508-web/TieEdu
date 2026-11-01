@@ -59,6 +59,13 @@ for (const p of PROFILES) {
     // Low-confidence profiles get no "checked" date, so the site says "Being verified".
     fact_checked_at: p.confidence === 'low' ? null : FACT_CHECKED,
     rounds_pipeline: rounds,
+    // Checked figures carry their source, so the page stamps them "verified"
+    // instead of "being verified". Low-confidence profiles get none.
+    metric_sources: p.confidence === 'low' ? {} : {
+      ctc: { source: 'Company profiles (prep sites, recent drives)', verified_at: FACT_CHECKED },
+      rounds: { source: 'Company profiles (recent drives)', verified_at: FACT_CHECKED },
+      difficulty: { source: 'Editorial estimate', verified_at: FACT_CHECKED },
+    },
     profile: {
       program_type: p.program_type,
       contest: !!p.contest,
