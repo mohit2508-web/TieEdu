@@ -147,6 +147,22 @@ export default function CompanyVaultPage({
   // the router object is a new identity on every navigation, and depending on it
   // re-ran this on unrelated route changes.
   const { m: urlModuleId, q: urlItemId } = router.query;
+  /**
+   * Modules written as question items (lessons, interview answers) have no
+   * section pack, so the pack reader would call them unpublished. Open them in
+   * the item reader at their first item instead.
+   */
+  const showModule = (mod: ContentModule) => {
+    const hasPack = Object.values((mod as any).section_data || {}).some((v: any) => (Array.isArray(v) ? v.length : v && Object.keys(v).length)) || ((mod as any).pdfs || []).length > 0;
+    if (!hasPack && (mod.items || []).length) {
+      setSelectedModule(null);
+      setSelectedItem(mod.items![0]);
+      setActiveReaderTab('content');
+      return;
+    }
+    setSelectedModule(mod);
+  };
+
   useEffect(() => {
     if (!company) return;
     if (!user && (urlModuleId || urlItemId)) {
@@ -160,7 +176,7 @@ export default function CompanyVaultPage({
     }
     if (urlModuleId) {
       const mod = (company.modules || []).find(x => x.id === urlModuleId);
-      if (mod) setSelectedModule(mod);
+      if (mod) showModule(mod);
     }
   }, [company, user, urlModuleId, urlItemId]);
 
@@ -432,7 +448,7 @@ export default function CompanyVaultPage({
       return;
     }
     setReaderSection(section);
-    setSelectedModule(mod);
+    showModule(mod);
     pushState(mod.id);
 
     moduleClickCountRef.current += 1;
@@ -444,7 +460,7 @@ export default function CompanyVaultPage({
   const handleAuthSuccess = () => {
     if (pendingModule) {
       setReaderSection(pendingModule.section);
-      setSelectedModule(pendingModule.mod);
+      showModule(pendingModule.mod);
       pushState(pendingModule.mod.id);
       setPendingModule(null);
     }
@@ -495,7 +511,7 @@ export default function CompanyVaultPage({
             isUnlocked={isUnlocked}
             isModuleUnlocked={isModuleOwned(selectedModule)}
             allModules={modules}
-            onSwitchModule={mod => { setSelectedModule(mod); pushState(mod.id); }}
+            onSwitchModule={mod => { showModule(mod); pushState(mod.id); }}
             onBack={() => { setSelectedModule(null); pushState(); }}
             onUnlockClick={handleUnlockClick}
             unlockPrice={remainingPrice || undefined}
