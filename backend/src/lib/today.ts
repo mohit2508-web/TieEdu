@@ -15,6 +15,7 @@
 import { completionState, getProgress, orderedLessons } from './courses';
 import { computeTrack, profilesOf } from './companyPageStudent';
 import { studentPage } from './companyPageDerive';
+import { PREP_COMPANIES } from './prep';
 import { addDays, dayDiff, istDate, streakView, StreakView } from './streak';
 
 export type Stage = 'foundation' | 'internship' | 'placement';
@@ -123,13 +124,15 @@ export function buildToday(db: any, userId: string, now = new Date()): TodayView
   const skillCerts = (db.skillCertificates || []).filter((c: any) => c.userId === userId && c.status !== 'revoked');
   const courseCerts = (db.certificates || []).filter((c: any) => c.user_id === userId && c.status === 'active');
 
-  // ---- target companies: prep profiles plus companies the student bought
+  // ---- target company: only the one the student chose ("Which company are
+  // you preparing for?"). It used to be every company with a prep profile or an
+  // unlock, so the route and next step named a company (e.g. one a test was
+  // once taken for) while the prep card above still said none was chosen. Same
+  // rule as GET /api/prep/target, so the two can never disagree.
   const companies = db.companies || [];
-  const targetIds = new Set<string>();
-  for (const p of profilesOf(db)) if (p.user_id === userId) targetIds.add(p.company_id);
-  for (const u of db.unlocks || []) if (u.user_id === userId && u.status !== 'revoked') targetIds.add(u.company_id);
-  const targets = [...targetIds]
-    .map((id) => companies.find((c: any) => c.id === id && c.status === 'published'))
+  const chosen = user.target_company && PREP_COMPANIES[user.target_company] ? String(user.target_company) : null;
+  const targets = (chosen ? [chosen] : [])
+    .map((slug) => companies.find((c: any) => c.slug === slug && c.status === 'published'))
     .filter(Boolean)
     .map((company: any) => {
       const hit = studentPage(db, company);
