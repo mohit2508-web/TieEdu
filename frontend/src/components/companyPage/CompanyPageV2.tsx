@@ -16,6 +16,7 @@ import {
 } from '@/lib/companyPagesApi';
 import { CpContextValue, CpHandlers, CpLang, CpLink, CpMeActions, CpProvider, RoundOffer, buildAnchors, cx, formatRupees, localizeContent, makeT, makeUi } from './shared';
 import { SectionBoundary } from './SectionBoundary';
+import { PackWelcome } from './PackWelcome';
 import { Hero, SectionNav, StatStrip } from './HeroSections';
 import { AlsoPreparing, CommunityOffer, EligibilityApply, Experiences, Faq, RichText, RoleCompare, RoundsRoute } from './ContentSections';
 import { Comeback, Countdown, DriveRadar, Onboarding, PrepPack } from './InteractiveSections';
@@ -549,6 +550,7 @@ export function CompanyPageV2({
 
   return (
     <CpProvider value={ctx}>
+      {!preview && <PackWelcome company={company} owned={packOwned} firstHref="#rounds" />}
       {!preview && (
         <Head>
           {ogTitle && <meta property="og:title" content={ogTitle} />}
