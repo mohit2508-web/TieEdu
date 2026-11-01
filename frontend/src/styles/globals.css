@@ -487,13 +487,13 @@ body {
 /* Editorial section eyebrow label */
 @layer components {
   /* Layered so a text-* utility can recolour it (e.g. on an ink band). */
-  /* Plan §5: JetBrains Mono 11/14, weight 500, +0.06em, caps, muted ink. */
+  /* Plan §5: JetBrains Mono 13/18, weight 600, +0.06em, caps, muted ink. */
   .eyebrow {
     font-family: var(--font-mono), ui-monospace, monospace;
-    font-size: 11px;
-    line-height: 14px;
-    font-weight: 500;
-    letter-spacing: 0.06em;
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--text-muted);
   }

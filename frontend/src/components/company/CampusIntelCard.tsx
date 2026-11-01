@@ -75,12 +75,12 @@ export const CampusIntelCard: React.FC<{ slug: string; company: string }> = ({ s
               <p className="mt-0.5 text-sm text-body">
                 {[h.selected !== null && `${h.selected} selected`, h.cgpa_cutoff !== null && `CGPA cut-off ${h.cgpa_cutoff}`, h.backlogs_allowed !== null && (h.backlogs_allowed === 0 ? 'no backlogs' : `up to ${h.backlogs_allowed} backlogs`)].filter(Boolean).join(' · ') || 'Visited'}
               </p>
-              {h.note && <p className="mt-1 text-sm text-muted">{h.note}</p>}
+              {h.note && <p className="mt-1 text-base text-body">{h.note}</p>}
             </li>
           ))}
         </ul>
       ) : (
-        <p className="mt-3 text-sm text-muted">Your placement cell has not added {company}’s history yet.</p>
+        <p className="mt-3 text-base text-body">Your placement cell has not added {company}’s history yet.</p>
       )}
 
       <h3 className="mt-6 flex items-center gap-2 text-base font-bold text-heading"><MessageSquareQuote className="h-4 w-4 text-link" aria-hidden /> From your seniors</h3>
@@ -94,7 +94,7 @@ export const CampusIntelCard: React.FC<{ slug: string; company: string }> = ({ s
           ))}
         </ul>
       ) : (
-        <p className="mt-2 text-sm text-muted">No notes yet. Seniors placed at {company} can leave one below.</p>
+        <p className="mt-2 text-base text-body">No notes yet. Seniors placed at {company} can leave one below.</p>
       )}
 
       {intel.my_notes.length > 0 && (
@@ -127,7 +127,7 @@ export const CampusIntelCard: React.FC<{ slug: string; company: string }> = ({ s
             <span className="text-sm font-semibold text-heading">Shown as <span className="font-normal text-muted">(no name — e.g. “2025 batch, CSE”)</span></span>
             <input value={label} onChange={(e) => setLabel(e.target.value)} maxLength={40} autoComplete="off" placeholder="2025 batch, CSE" className="mt-1 min-h-[44px] w-full rounded-xl border border-line bg-card px-3 text-base text-heading placeholder:text-light" />
           </label>
-          <p className="text-xs text-muted">Your placement cell checks every note before juniors see it. Leave out phone numbers and links.</p>
+          <p className="text-sm text-muted">Your placement cell checks every note before juniors see it. Leave out phone numbers and links.</p>
           <div className="flex gap-2">
             <Button type="submit" size="sm" disabled={busy || body.trim().length < 20}>{busy ? 'Sending…' : 'Send for review'}</Button>
             <Button kind="text" size="sm" onClick={() => setOpen(false)}>Cancel</Button>
