@@ -13,9 +13,11 @@ import { LandingSection } from './LandingHead';
  * without real companies.
  */
 
-const CompanyMini: React.FC<{ c: Company }> = ({ c }) => (
+const CompanyMini: React.FC<{ c: Company; repeat?: boolean }> = ({ c, repeat }) => (
   <Link
     href={`/company/${c.slug}`}
+    aria-hidden={repeat || undefined}
+    tabIndex={repeat ? -1 : undefined}
     className="focus-ring flex w-56 flex-none items-center gap-3 rounded-card border border-line bg-card p-3 shadow-edge-neutral hover:bg-surface-hover"
   >
     <span className="flex h-10 w-10 flex-none items-center justify-center rounded-well bg-secondary-soft font-display text-label text-secondary" aria-hidden>
@@ -23,18 +25,28 @@ const CompanyMini: React.FC<{ c: Company }> = ({ c }) => (
     </span>
     <span className="min-w-0">
       <span className="block truncate font-display text-label text-heading">{c.name}</span>
-      <span className="block text-caption text-muted">
+      <span className="block truncate text-caption text-muted">
         {c.rounds_pipeline?.length ? `${c.rounds_pipeline.length} rounds` : c.industry || 'Company page'}
       </span>
     </span>
   </Link>
 );
 
+/* A row must be wider than the widest screen, or a short list leaves the
+   track bunched on the left with empty space on the right. Eight 224px
+   cards clear 1920px, so short rows are repeated up to that. */
+const MIN_ROW = 8;
+const fillRow = (row: Company[]) => {
+  const out: Company[] = [];
+  while (out.length < MIN_ROW) out.push(...row);
+  return out;
+};
+
 export const CompanyCount: React.FC<{ companies: Company[]; stats: PublicStats | null }> = ({ companies, stats }) => {
   if (companies.length === 0) return null;
   const half = Math.ceil(companies.length / 2);
-  const rowA = companies.slice(0, half);
-  const rowB = companies.slice(half).length ? companies.slice(half) : rowA;
+  const rowA = fillRow(companies.slice(0, half));
+  const rowB = companies.slice(half).length ? fillRow(companies.slice(half)) : rowA;
   const latest = stats?.latest_company;
 
   return (
@@ -52,13 +64,13 @@ export const CompanyCount: React.FC<{ companies: Company[]; stats: PublicStats |
 
       <div className="relative mt-12 space-y-4">
         <Marquee label="Companies on TieEdu">
-          {rowA.map((c) => (
-            <CompanyMini key={c.id} c={c} />
+          {rowA.map((c, i) => (
+            <CompanyMini key={`a-${c.id}-${i}`} c={c} repeat={i >= half} />
           ))}
         </Marquee>
         <Marquee className="[&_.tk-marquee-track]:[animation-direction:reverse]">
-          {rowB.map((c) => (
-            <CompanyMini key={`b-${c.id}`} c={c} />
+          {rowB.map((c, i) => (
+            <CompanyMini key={`b-${c.id}-${i}`} c={c} repeat={i >= companies.length - half} />
           ))}
         </Marquee>
 

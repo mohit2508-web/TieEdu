@@ -17,15 +17,11 @@ import { ResearchBento } from '@/components/home/landing/ResearchBento';
 import { RoundBars } from '@/components/home/landing/RoundBars';
 import { OfferStories } from '@/components/home/landing/OfferStories';
 import { ClosingBand } from '@/components/home/landing/ClosingBand';
-import { fetchCompanies, fetchHeroPostersApi, fetchPublicStatsApi, type PublicStats } from '@/lib/api';
+import { fetchCompanies, fetchPublicStatsApi, type PublicStats } from '@/lib/api';
 import { useCartScope } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { TodayScreen } from '@/components/today/TodayScreen';
-import { Company, HeroPoster } from '@/types';
-
-const HeroPosterCarousel = dynamic(() => import('@/components/common/HeroPosterCarousel'), {
-  ssr: false,
-});
+import { Company } from '@/types';
 
 const JoinChannelsPopup = dynamic(
   () => import('@/components/home/JoinChannelsPopup').then((m) => m.JoinChannelsPopup),
@@ -41,7 +37,6 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [dataError, setDataError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [posters, setPosters] = useState<HeroPoster[]>([]);
   const [stats, setStats] = useState<PublicStats | null>(null);
 
   useEffect(() => {
@@ -66,16 +61,6 @@ export default function Home() {
     return () => {
       active = false;
     };
-  }, []);
-
-  // Admin hero creatives, shown under the hero when there are any. A failure here is not an error state — the hero falls back
-  // to the static vault mock (desktop) / goes text-first (phones).
-  useEffect(() => {
-    let active = true;
-    fetchHeroPostersApi()
-      .then(data => { if (active && data.length > 0) setPosters(data); })
-      .catch(() => { /* fallback visuals handle it */ });
-    return () => { active = false; };
   }, []);
 
   /*
@@ -139,12 +124,6 @@ export default function Home() {
             <div className="w-full border-b border-signal/30 bg-signal-soft px-4 py-2.5 text-center">
               <p className="text-sm font-bold text-danger">{dataError}</p>
             </div>
-          )}
-
-          {posters.length > 0 && (
-            <section className="mx-auto w-full max-w-[1200px] px-4 pt-12 sm:px-6" aria-label="Featured">
-              <HeroPosterCarousel posters={posters} />
-            </section>
           )}
 
           <ToolFan />

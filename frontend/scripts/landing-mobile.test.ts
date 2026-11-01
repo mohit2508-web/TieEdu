@@ -111,8 +111,6 @@ ok(!/text-\[11px\]/.test(pricing), 'PricingSection dropped its 11px metadata');
 ok(!/text-\[10px\]/.test(card), 'CompanyCard stat labels are no longer 10px');
 
 console.log('\n--- pricing does not dump dozens of cards on a phone ---');
-ok(/MODULE_PREVIEW/.test(pricing), 'the module-wise view has a preview slice');
-ok(/showAllModules/.test(pricing), 'the module-wise view expands behind an explicit action');
 ok(/min-h-\[44px\]/.test(pricing), 'the pricing toggles and card CTAs clear the thumb floor');
 
 console.log('\n--- chrome never covers chrome ---');

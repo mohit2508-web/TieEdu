@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { ShieldCheck, Lock, Server, Heart } from 'lucide-react';
+import { Heart } from 'lucide-react';
 import { TieEduLogo } from '@/components/common/TieEduLogo';
 import { useAuth } from '@/context/AuthContext';
 import { ALL_NAV_ITEMS, type NavItem } from '@/lib/navConfig';
@@ -25,39 +25,7 @@ export const Footer: React.FC = () => {
     <footer className="bg-app border-t border-line mt-16 pt-12 pb-8">
       <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12">
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pb-10 border-b border-line">
-          <div className="vault-card !shadow-none p-5 flex items-start gap-4">
-            <div className="w-11 h-11 rounded-2xl bg-surface-hover text-success flex items-center justify-center shrink-0">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-sm font-bold text-heading">Sourced, or labelled</h2>
-              <p className="text-sm text-[--text-muted] mt-1 leading-relaxed">Every figure shows where it came from. Anything not yet confirmed says so.</p>
-            </div>
-          </div>
-
-          <div className="vault-card !shadow-none p-5 flex items-start gap-4">
-            <div className="w-11 h-11 rounded-2xl bg-warning-soft text-amber-deep flex items-center justify-center shrink-0">
-              <Lock className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-sm font-bold text-heading">View-Only PDF Security</h2>
-              <p className="text-sm text-[--text-muted] mt-1 leading-relaxed">Watermarked licensed PDFs, server-side unlock checks — no raw download paths.</p>
-            </div>
-          </div>
-
-          <div className="vault-card !shadow-none p-5 flex items-start gap-4">
-            <div className="w-11 h-11 rounded-2xl bg-signal-soft text-link flex items-center justify-center shrink-0">
-              <Server className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-sm font-bold text-heading">Honest, Server-Driven</h2>
-              <p className="text-sm text-[--text-muted] mt-1 leading-relaxed">Pricing, coupons and unlocks are verified by the backend — no bypasses.</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="pt-6 flex flex-col lg:flex-row items-center justify-between gap-5 text-sm text-[var(--text-muted)]">
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-5 text-sm text-[var(--text-muted)]">
           <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-center sm:gap-4">
             <div className="flex items-center gap-3">
               <TieEduLogo size="sm" />
