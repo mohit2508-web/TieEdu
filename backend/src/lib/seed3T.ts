@@ -9,6 +9,7 @@ import { PROFILES } from '../data/companyProfiles2026';
 import { INFOSYS_SE_BANK } from '../data/companyTests/infosysSE';
 import { TECHNICAL, HR, type PrepItem } from '../data/interviewPrep/infosysSE';
 import { LESSONS, type Lesson } from '../data/interviewPrep/infosysSELessons';
+import { FEED_V2 } from '../data/feedV2';
 
 export function seedCompanyProfiles(db: any, onlyMissing = false): { created: number; updated: number } {
   const FACT_CHECKED = '2026-10-27';
@@ -258,9 +259,32 @@ export function seedCourseCovers(db: any): number {
   return n;
 }
 
+/**
+ * Feed v2, once per database: the old demo drops move to "archived" (kept and
+ * restorable in Admin → Drops, never deleted) and the new set is published.
+ */
+export function seedFeedV2(db: any): number {
+  if (db.feed_v2_seeded) return 0;
+  const now = new Date().toISOString();
+  db.drops = Array.isArray(db.drops) ? db.drops : [];
+  for (const d of db.drops) if (d.status !== 'archived') { d.status = 'archived'; d.updated_at = now; }
+  FEED_V2.forEach(([type, headline, bullets, cta_route, pinned, priority, sponsored], i) => {
+    db.drops.push({
+      id: `drop-v2-${String(i + 1).padStart(2, '0')}`, type, headline, bullets, image_alt: headline,
+      cta_route, target_slug: cta_route.startsWith('/company/') ? cta_route.split('/')[2].split('#')[0] : undefined,
+      sponsored: !!sponsored, sponsor_name: sponsored ? 'TieEdu' : undefined, pinned, priority,
+      status: 'published', publish_at: now, expires_at: null, audience: {}, tags: ['feed-v2'],
+      stats: { views: 0, unique_viewers: 0, cta_clicks: 0, shares: 0, saves: 0, dwell_ms_total: 0 },
+      author_id: 'system', source: { kind: 'manual' }, created_at: now, updated_at: now,
+    });
+  });
+  db.feed_v2_seeded = now;
+  return FEED_V2.length;
+}
+
 /** Server start: add any missing 3T content. Returns true when something was added. */
 export function seedMissing3T(db: any): boolean {
-  const covers = seedCourseCovers(db);
+  const covers = seedCourseCovers(db) + seedFeedV2(db);
   const p = seedCompanyProfiles(db, true);
   const t = COMPANY_TESTS.reduce((n, k) => n + seedCompanyTest(db, k, true), 0);
   const i = seedInterviewPrep(db, true);

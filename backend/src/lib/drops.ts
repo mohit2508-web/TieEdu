@@ -340,6 +340,7 @@ export interface DropInput {
   cta_label?: unknown;
   cta_route?: unknown;
   cta_url?: unknown;
+  video_url?: unknown;
   target_slug?: unknown;
   body_md?: unknown;
   deadline_at?: unknown;
@@ -441,6 +442,16 @@ export const validateDropInput = (input: DropInput, opts: { requireImage?: boole
     cta_url = safe || undefined;
   }
 
+  const videoRaw = String(input.video_url || '').trim();
+  let video_url: string | undefined;
+  if (videoRaw) {
+    const safe = safeUrl(videoRaw);
+    if (!safe || !(/(youtube\.com|youtu\.be)\//i.test(safe) || /\.mp4(\?|$)/i.test(safe))) {
+      return { ok: false, error: 'Video link YouTube ya .mp4 hona chahiye' };
+    }
+    video_url = safe;
+  }
+
   if (!cta_route && !cta_url && !String(input.target_slug || '').trim()) {
     // A drop with no destination still renders, but Read More needs body_md.
     if (!String(input.body_md || '').trim()) {
@@ -481,6 +492,7 @@ export const validateDropInput = (input: DropInput, opts: { requireImage?: boole
     cta_label: String(input.cta_label || '').trim().slice(0, 32) || undefined,
     cta_route,
     cta_url,
+    video_url,
     target_slug: String(input.target_slug || '').trim().toLowerCase().slice(0, 80) || undefined,
     body_md: body || undefined,
     deadline_at,

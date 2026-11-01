@@ -1025,6 +1025,8 @@ export interface Drop {
   cta_route?: string;
   /** External target (apply links, scholarships). Opened new-tab. */
   cta_url?: string;
+  /** YouTube or direct .mp4 link; the card plays it in place of the image. */
+  video_url?: string;
   /** The entity this drop points at — company/course/skill slug. */
   target_slug?: string;
   /** Read More full article, rendered as markdown. */

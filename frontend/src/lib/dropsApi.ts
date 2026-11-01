@@ -54,6 +54,7 @@ export interface DropFeedItem {
   cta_label: string;
   cta_route: string | null;
   cta_url: string | null;
+  video_url?: string | null;
   target_slug: string | null;
   deadline_at: string | null;
   sponsored: boolean;
@@ -158,6 +159,7 @@ export interface DropWriteInput {
   cta_label?: string;
   cta_route?: string;
   cta_url?: string;
+  video_url?: string;
   target_slug?: string;
   body_md?: string;
   deadline_at?: string;

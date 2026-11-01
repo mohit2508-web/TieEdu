@@ -38,6 +38,7 @@ const EMPTY_FORM = {
   cta_label: 'Open',
   cta_route: '',
   cta_url: '',
+  video_url: '',
   target_slug: '',
   deadline_at: '',
   sponsored: false,
@@ -156,6 +157,7 @@ export const DropsTab: React.FC = () => {
       cta_label: d.cta_label,
       cta_route: d.cta_route || '',
       cta_url: d.cta_url || '',
+      video_url: (d as any).video_url || '',
       target_slug: d.target_slug || '',
       deadline_at: toLocalInput(d.deadline_at),
       sponsored: d.sponsored,
@@ -211,6 +213,7 @@ export const DropsTab: React.FC = () => {
         cta_label: form.cta_label.trim() || 'Open',
         cta_route: form.cta_route.trim() || undefined,
         cta_url: form.cta_url.trim() || undefined,
+        video_url: form.video_url.trim() || undefined,
         target_slug: form.target_slug.trim() || undefined,
         deadline_at: fromLocalInput(form.deadline_at) || undefined,
         sponsored: form.sponsored,
@@ -455,6 +458,10 @@ export const DropsTab: React.FC = () => {
               <label className={labelCls}>External URL (wins over route)</label>
               <input className={inputCls} placeholder="https://…" value={form.cta_url} onChange={(e) => setForm({ ...form, cta_url: e.target.value })} />
             </div>
+          </div>
+          <div>
+            <label className={labelCls}>Video (YouTube or .mp4, plays in the card instead of the image)</label>
+            <input className={inputCls} placeholder="https://youtu.be/…" value={form.video_url} onChange={(e) => setForm({ ...form, video_url: e.target.value })} />
           </div>
 
           {/* Body */}

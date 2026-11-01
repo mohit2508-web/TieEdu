@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { DropVideo } from './DropVideo';
 import {
   ArrowUpRight,
   Bookmark,
@@ -175,7 +176,9 @@ export const DropCard: React.FC<DropCardProps> = ({
         onPointerUp={onMediaPointerUp}
         onPointerCancel={onMediaPointerCancel}
       >
-        {item.image_url && (
+        {item.video_url ? (
+          <DropVideo url={item.video_url} title={item.headline} />
+        ) : item.image_url && (
           // eslint-disable-next-line @next/next/no-img-element -- a CMS creative with no declared dimensions, filling the 9:16 frame
           <img
             src={apiAssetUrl(item.image_url)}
