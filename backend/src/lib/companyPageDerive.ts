@@ -150,6 +150,8 @@ export function derivePageContent(db: any, company: any): PageContent {
     const skills = skillsFor(st.key);
     const p = st.step || {};
     const useMock = !!companyMock && !mockUsed && ['mcq', 'pseudocode'].includes(p.test_type);
+    // Interview rounds are practised in the mock interview, not a quiz.
+    const interview = !useMock && ['live_interview', 'video_interview'].includes(p.test_type);
     if (useMock) mockUsed = true;
     // One pattern row ("MCQ test · 90 Qs · 90 min") when the admin set a test type.
     const pattern = p.test_type
@@ -174,11 +176,12 @@ export function derivePageContent(db: any, company: any): PageContent {
       module_ids: modulesFor(st.key),
       test_text: useMock
         ? `The full ${companyMock.name} in the real pattern, ${companyMock.totalQuestions} questions in ${companyMock.avgCompletionTime} minutes. Timed, in secure mode.`
+        : interview ? 'Practise answering out loud in a mock interview, then compare with the model answers above.'
         : skills.length ? 'A free skill test on this round’s topics. Timed, in secure mode.' : '',
-      test_label: useMock ? 'Start the full mock' : skills.length ? 'Take the skill test' : '',
-      test_href: useMock ? `/skill-test/${companyMock.slug}` : skills.length ? `/skill-test/${skills[0]}` : '',
+      test_label: useMock ? 'Start the full mock' : interview ? 'Start a mock interview' : skills.length ? 'Take the skill test' : '',
+      test_href: useMock ? `/skill-test/${companyMock.slug}` : interview ? '/mock-interview' : skills.length ? `/skill-test/${skills[0]}` : '',
       skill_slugs: skills,
-      track_text: skills.length ? 'Take the skill test to see your weakest topics here.' : '',
+      track_text: useMock ? 'Take the mock to see your weakest sections here.' : interview ? 'Answer quality over attempts, from your mock interviews.' : skills.length ? 'Take the skill test to see your weakest topics here.' : '',
       tip: '',
     };
   });
