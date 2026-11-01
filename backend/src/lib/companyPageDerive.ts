@@ -306,13 +306,18 @@ export function derivePageContent(db: any, company: any): PageContent {
         title: 'Start free. Go deeper when you’re ready.',
         free_title: 'Free',
         free_price_label: '₹0',
-        free_features: free.map((m) => String(m.title).slice(0, 60)).slice(0, 8),
+        // With a company mock, Free and Pack spell out the 3T split (plan §3, §8).
+        free_features: companyMock
+          ? [`1 full ${companyMock.name} (real pattern)`, 'Readiness check and basic Track score', 'Round-by-round plan and daily countdown', '3 sample answers per interview round', ...free.map((m) => String(m.title).slice(0, 60))].slice(0, 8)
+          : free.map((m) => String(m.title).slice(0, 60)).slice(0, 8),
         free_cta_label: free.length ? 'Read free' : '',
         free_cta_href: '',
         paid_title: '{company} Pack',
         paid_badge: '',
         paid_price_note: 'one-time · lifetime access',
-        paid_features: ['Everything in Free', ...premium.map((m) => String(m.title).slice(0, 60))].slice(0, 8),
+        paid_features: companyMock
+          ? ['Everything in Free', 'Unlimited full mocks, fresh questions every attempt', ...premium.map((m) => `${String(m.title).slice(0, 48)} (${(m.items || []).length})`), 'Explanations and memory tricks for every question'].slice(0, 8)
+          : ['Everything in Free', ...premium.map((m) => String(m.title).slice(0, 60))].slice(0, 8),
         paid_cta_label: 'Get the pack',
         preview_label: '',
         preview_href: '',

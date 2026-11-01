@@ -13,6 +13,8 @@ const SETS: Array<{ slug: string; id: string; type: string; round: string; title
   { slug: 'infosys-systems-engineer', id: 'mod-prep-infosys-se-hr', type: 'hr_question', round: 'HR', title: 'HR interview: questions and model answers', order: 3, items: HR },
 ];
 
+const FREE_PREVIEW = 3;
+
 const md = ([, , , covers, sample, follow]: PrepItem) =>
   `**What a good answer covers**\n${covers.map((c) => `- ${c}`).join('\n')}\n\n**Sample answer**\n\n> ${sample}\n\n**Follow-up to expect:** ${follow}`;
 
@@ -23,9 +25,10 @@ for (const set of SETS) {
   company.modules = Array.isArray(company.modules) ? company.modules : [];
   const module = {
     id: set.id, company_id: company.id, module_type: set.type, round_type: set.round, title: set.title,
-    sort_order: set.order, is_premium: false,
+    // Part of the company pack: the first FREE_PREVIEW answers stay readable as a sample.
+    sort_order: set.order, is_premium: true,
     items: set.items.map((it, i) => ({
-      id: `${set.id}-${i + 1}`, module_id: set.id, question_text: it[0], is_free_preview: true,
+      id: `${set.id}-${i + 1}`, module_id: set.id, question_text: it[0], is_free_preview: i < FREE_PREVIEW,
       difficulty: it[1], role_tag: 'Systems Engineer', frequency_tag: it[2], round_type: set.round, status: 'published',
       comments_count: 0, upvotes_count: 0,
       blocks: [{ id: `${set.id}-${i + 1}-b1`, block_type: 'markdown', block_order: 1, payload: { text: md(it) } }],

@@ -1,4 +1,5 @@
 ﻿import { Router, Request, Response } from 'express';
+import { ownedModuleIdsFor, unlockedCompanyIds } from '../payments/orders';
 import crypto from 'crypto';
 import { loadDb, saveDb } from '../data/db';
 import { touchStreak } from '../lib/streak';
@@ -90,6 +91,28 @@ skillTestRouter.post('/assessments/:slug/start', requireAuth, (req: Request, res
   );
   if (!assessment.allowRetake || priorAttempts.length >= assessment.maxRetakes) {
     return res.status(403).json({ error: 'Retake limit reached for this assessment' });
+  }
+
+  // Company mocks (3T plan §3): the first attempt(s) are free; more need that
+  // company's pack. Admins and pack owners are never limited.
+  const companySlug = (skill as any).company_slug;
+  if (companySlug) {
+    const company = (db.companies || []).find((c: any) => c.slug === companySlug);
+    const user = (db.users || []).find((u: any) => u.id === userId);
+    const premiumIds = (company?.modules || []).filter((m: any) => m.is_premium).map((m: any) => m.id);
+    const owned = ownedModuleIdsFor(db, userId);
+    const unlocked = !company
+      || user?.role === 'admin'
+      || unlockedCompanyIds(db, userId).includes(company.id)
+      || (premiumIds.length > 0 && premiumIds.every((id: string) => owned.includes(id)));
+    const freeAttempts = Number((assessment as any).freeAttempts ?? 1);
+    if (!unlocked && priorAttempts.length >= freeAttempts) {
+      return res.status(402).json({
+        error: `Your free ${skill.name} attempt is used. Get the ${company.name} pack for unlimited mocks with fresh questions.`,
+        code: 'pack_required',
+        company_slug: companySlug,
+      });
+    }
   }
 
   // Blueprint-based question selection

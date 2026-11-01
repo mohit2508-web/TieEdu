@@ -41,12 +41,14 @@ function AssessmentPage() {
   const [writingCfg, setWritingCfg] = useState<WritingConfig | null>(null);
   const [showSectionSubmit, setShowSectionSubmit] = useState(false);
   const [testTitle, setTestTitle] = useState('');
+  const [companySlug, setCompanySlug] = useState('');
   useEffect(() => {
     if (!slug) return;
     fetchSkillDetailApi(String(slug))
       .then(({ skill, assessment }) => {
         const a = assessment as any;
         if (skill?.name) setTestTitle(skill.name);
+        if ((skill as any)?.company_slug) setCompanySlug((skill as any).company_slug);
         if (Array.isArray(a?.sections) && a.sections.length) setSectionsCfg(a.sections);
         if (a?.writing?.tasks?.length) setWritingCfg(a.writing);
       })
@@ -263,6 +265,11 @@ function AssessmentPage() {
             <p className="mt-1 text-sm text-gray-500">30 Questions · 30 Minutes · Passing 60%</p>
           )}
           {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+          {error && companySlug && /pack/i.test(error) && (
+            <Link href={`/company/${companySlug}#prep-pack`} className="btn btn-primary focus-ring mt-3 inline-flex min-h-[44px] px-5">
+              Get the pack
+            </Link>
+          )}
           <button
             onClick={handleStart}
             disabled={loading}
