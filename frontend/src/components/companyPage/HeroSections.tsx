@@ -4,6 +4,7 @@ import { ArrowRight } from 'lucide-react';
 import type { CpSection } from '@/types/companyPage';
 import { CpLang, CpLink, DEFAULT_NAV_LABEL, Stamp, cx, roundKey, stationsForRole, useCp } from './shared';
 import s from './companyPage.module.css';
+import { companyLogoSrc } from '@/lib/companyLogo';
 
 // ---------------------------------------------------------------------------
 // Hero
@@ -88,9 +89,9 @@ export function Hero({
               </div>
             )}
           </div>
-          {showLogo && company.logo_url && (
-            // eslint-disable-next-line @next/next/no-img-element -- admin-supplied logo URL, may be any host
-            <img className={s.heroLogo} src={company.logo_url} alt={`${company.name} logo`} />
+          {showLogo && companyLogoSrc(company.name, company.logo_url) && (
+            // eslint-disable-next-line @next/next/no-img-element -- admin-supplied or brand-icon URL, may be any host
+            <img className={s.heroLogo} src={companyLogoSrc(company.name, company.logo_url)!} alt={`${company.name} logo`} referrerPolicy="no-referrer" />
           )}
           {d.show_chips && (
             <div className={s.tChips} aria-label="Train, Test, Track">

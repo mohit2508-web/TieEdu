@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { companyLogoSrc } from '@/lib/companyLogo';
 
 const TILE_COLORS = [
   'bg-brand-ink',
@@ -10,11 +11,6 @@ const TILE_COLORS = [
   'bg-success',
   'bg-heading',
 ];
-
-const isRealUrl = (src?: string | null): boolean => {
-  if (!src || !src.trim()) return false;
-  return src.startsWith('http://') || src.startsWith('https://') || src.startsWith('data:image/');
-};
 
 function tileIndex(name: string): number {
   let h = 0;
@@ -36,16 +32,19 @@ interface BrandTileProps {
   title?: string;
 }
 
-// Shows the company logo image ONLY when a real URL exists.
-// Otherwise renders an honest initials tile — never a placeholder photo.
+// Shows the company's real logo: the admin-entered URL, else the brand icon of
+// a known company (see lib/companyLogo). If neither exists or the image fails
+// to load, renders an honest initials tile — never a placeholder photo.
 export const BrandTile: React.FC<BrandTileProps> = ({ name, src, className = 'w-10 h-10 rounded-xl', title }) => {
   const safeName = name || 'Company';
-  if (isRealUrl(src)) {
+  const logo = companyLogoSrc(safeName, src);
+  const [failed, setFailed] = useState<string | null>(null);
+  if (logo && failed !== logo) {
     return (
       /*
        * Not migrated to `next/image`, and this one would actively break.
        *
-       * `isRealUrl` accepts `http://`, `https://` and `data:image/`, so this
+       * `companyLogoSrc` accepts `http://`, `https://` and `data:image/`, so this
        * renders logos from arbitrary third-party hosts as well as our own. The
        * optimizer only fetches hosts listed in `images.remotePatterns` — which is
        * deliberately scoped to the API origin rather than `https://**` — and
@@ -58,12 +57,14 @@ export const BrandTile: React.FC<BrandTileProps> = ({ name, src, className = 'w-
        */
       // eslint-disable-next-line @next/next/no-img-element -- arbitrary third-party host, see above
       <img
-        src={src!}
+        src={logo}
         alt={safeName}
         title={title || safeName}
         loading="lazy"
         decoding="async"
-        className={`object-cover border border-line bg-white ${className}`}
+        referrerPolicy="no-referrer"
+        onError={() => setFailed(logo)}
+        className={`object-contain border border-line bg-white ${className}`}
       />
     );
   }

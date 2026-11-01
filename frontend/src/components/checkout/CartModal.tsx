@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import Image from 'next/image';
 import { Company, ContentModule, CartItem, CompanyModuleItem, CourseCartItem } from '@/types';
 import { BrandTile } from '@/components/common/BrandTile';
 import {
@@ -606,16 +605,8 @@ export const CartModal: React.FC = () => {
                   return (
                     <div key={idx} className="flex items-center justify-between p-3.5 bg-app-warm rounded-xl border border-gray-200 text-sm hover:border-signal/40 transition-all">
                       <div className="flex items-center gap-3 min-w-0">
-                        {logoUrl ? (
-                          <Image
-                            src={logoUrl}
-                            alt={name}
-                            width={40}
-                            height={40}
-                            sizes="40px"
-                            loading="lazy"
-                            className="w-10 h-10 rounded-lg object-cover border bg-white p-0.5"
-                          />
+                        {logoUrl !== null ? (
+                          <BrandTile name={name} src={logoUrl} className="w-10 h-10 rounded-lg p-0.5" />
                         ) : (
                           <div className="w-10 h-10 rounded-lg bg-brand-ink text-white flex items-center justify-center font-bold text-xs">
                             {isModule ? 'PK' : isCourse ? 'CRS' : 'PRO'}

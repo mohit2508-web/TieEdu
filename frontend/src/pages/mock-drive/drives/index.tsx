@@ -8,6 +8,7 @@ import type { DriveListItem } from '@/types/drives';
 import { SegmentedControl } from '@/components/apple/SegmentedControl';
 import EmptyState from '@/components/apple/EmptyState';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { companyLogoSrc } from '@/lib/companyLogo';
 
 type Filter = 'all' | 'open' | 'registered' | 'upcoming';
 type Sort = 'deadline' | 'newest' | 'ctc';
@@ -158,9 +159,9 @@ function DrivesListScreen() {
                           className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[11px] text-sm font-bold"
                           style={{ background: 'var(--apple-blue-soft)', color: 'var(--apple-blue)' }}
                         >
-                          {d.company_logo_url ? (
+                          {companyLogoSrc(d.company_name, d.company_logo_url) ? (
                             // eslint-disable-next-line @next/next/no-img-element -- company logo from any host an admin enters; the optimizer only serves allow-listed hosts
-                            <img src={d.company_logo_url} alt="" className="h-full w-full object-cover" />
+                            <img src={companyLogoSrc(d.company_name, d.company_logo_url)!} alt="" referrerPolicy="no-referrer" className="h-full w-full bg-white object-contain p-1" />
                           ) : (
                             <Building2 size={20} strokeWidth={1.9} />
                           )}

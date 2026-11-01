@@ -14,6 +14,7 @@ import { LaunchOverlay } from '@/components/drives/LaunchOverlay';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { fetchDriveDetailApi, launchDriveTestApi } from '@/lib/drivesApi';
 import type { DriveDetail, DriveRound } from '@/types/drives';
+import { companyLogoSrc } from '@/lib/companyLogo';
 
 const inr = (n: number) =>
   new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n);
@@ -117,9 +118,9 @@ function DriveDetailScreen() {
               className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-[12px] text-base font-bold"
               style={{ background: 'var(--apple-blue-soft)', color: 'var(--apple-blue)' }}
             >
-              {drive.company_logo_url ? (
+              {companyLogoSrc(drive.company_name, drive.company_logo_url) ? (
                 // eslint-disable-next-line @next/next/no-img-element -- company logo from any host an admin enters; the optimizer only serves allow-listed hosts
-                <img src={drive.company_logo_url} alt="" className="h-full w-full object-cover" />
+                <img src={companyLogoSrc(drive.company_name, drive.company_logo_url)!} alt="" referrerPolicy="no-referrer" className="h-full w-full bg-white object-contain p-1" />
               ) : (
                 <Building2 size={22} strokeWidth={1.9} />
               )}

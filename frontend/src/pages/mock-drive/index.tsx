@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { fetchDriveHomeApi } from '@/lib/drivesApi';
 import { useAuth } from '@/context/AuthContext';
 import type { DriveHome, DriveNeedsAction } from '@/types/drives';
+import { companyLogoSrc } from '@/lib/companyLogo';
 
 const firstName = (name?: string | null) =>
   name ? name.trim().split(/\s+/)[0] : 'there';
@@ -323,19 +324,22 @@ const HeroStat: React.FC<{ label: string; value: number | null; loading: boolean
   </div>
 );
 
-const CompanyLogo: React.FC<{ name: string | null; url: string | null }> = ({ name, url }) => (
+const CompanyLogo: React.FC<{ name: string | null; url: string | null }> = ({ name, url: rawUrl }) => {
+  const url = companyLogoSrc(name, rawUrl);
+  return (
   <span
     className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[12px] text-base font-bold"
     style={{ background: 'var(--apple-fill)', color: 'var(--apple-blue)' }}
   >
     {url ? (
       // eslint-disable-next-line @next/next/no-img-element -- company logo from any host an admin enters; the optimizer only serves allow-listed hosts
-      <img src={url} alt={name || 'Company'} className="h-full w-full object-cover" />
+      <img src={url} alt={name || 'Company'} referrerPolicy="no-referrer" className="h-full w-full bg-white object-contain p-1" />
     ) : (
       (name || '?').slice(0, 1).toUpperCase()
     )}
   </span>
-);
+  );
+};
 
 const NEEDS_STYLE: Record<DriveNeedsAction['type'], { bg: string; fg: string; icon: React.ReactNode }> = {
   pay: { bg: 'var(--apple-red-soft)', fg: 'var(--apple-red)', icon: <IndianRupee size={16} /> },
