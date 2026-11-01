@@ -9,7 +9,7 @@ import {
 import { ContentBlockRenderer } from '@/components/blocks/ContentBlockRenderer';
 import { Sheet } from '@/components/common/Sheet';
 import { useAuth } from '@/context/AuthContext';
-import { StudyPlanView } from '@/types';
+import { StudyPlanView, TEST_TYPE_LABEL, type RoundStep } from '@/types';
 import { Calendar, CheckCircle2, Target, ChevronDown, Info, LogIn, CircleDot, PartyPopper, AlertTriangle, CalendarRange, RefreshCw, X, History, Circle, Loader2, Undo2, CalendarDays } from 'lucide-react';
 
 const ROLE_SUGGESTIONS = ['SDE', 'SDE-1', 'SDE-2', 'Frontend', 'Backend', 'Full Stack', 'Data Analyst', 'Product Manager'];
@@ -19,7 +19,7 @@ const phaseAnchor = (order: number) => `phase-${order}`;
 
 export default function StudyPlanPage() {
   const { user } = useAuth();
-  const [companies, setCompanies] = useState<{ id: string; name: string }[]>([]);
+  const [companies, setCompanies] = useState<{ id: string; name: string; slug: string; rounds: RoundStep[] }[]>([]);
   const [targetCompany, setTargetCompany] = useState('');
   const [targetRole, setTargetRole] = useState('SDE');
   const [interviewDate, setInterviewDate] = useState('');
@@ -46,9 +46,13 @@ export default function StudyPlanPage() {
   useEffect(() => {
     fetchCompanies()
       .then((list) => {
-        const comps = (list || []).map((c) => ({ id: c.id, name: c.name }));
+        const comps = (list || []).map((c) => ({ id: c.id, name: c.name, slug: c.slug, rounds: c.rounds_pipeline || [] }));
         setCompanies(comps);
-        if (comps.length > 0) setTargetCompany((prev) => prev || comps[0].name);
+        // ?company=<slug> arrives from a company page's "Plan my days" button.
+        const fromQuery = new URLSearchParams(window.location.search).get('company');
+        const picked = fromQuery ? comps.find((c) => c.slug === fromQuery) : null;
+        if (picked) setTargetCompany(picked.name);
+        else if (comps.length > 0) setTargetCompany((prev) => prev || comps[0].name);
       })
       .catch(() => {});
   }, []);
@@ -322,6 +326,25 @@ export default function StudyPlanPage() {
                       <option key={c.id} value={c.name}>{c.name}</option>
                     ))}
                   </select>
+                  {/* 3T §3: the whole journey shows the moment a company is picked. */}
+                  {(() => {
+                    const sel = companies.find((c) => c.name === targetCompany);
+                    if (!sel || sel.rounds.length === 0) return null;
+                    return (
+                      <ol className="mt-3 space-y-1.5 rounded-xl border border-line bg-card p-3" aria-label={`${sel.name} rounds`}>
+                        {sel.rounds.map((r, i) => (
+                          <li key={i} className="flex items-baseline gap-2 text-sm">
+                            <span className="font-display font-bold text-amber-deep">{i + 1}</span>
+                            <span className="flex-1 text-heading">{r.title}</span>
+                            <span className="text-xs text-muted">
+                              {[r.test_type ? TEST_TYPE_LABEL[r.test_type] : null, r.question_count ? `${r.question_count} Qs` : null, r.duration_minutes ? `${r.duration_minutes} min` : null].filter(Boolean).join(' · ')}
+                              {r.elimination ? ' · eliminatory' : ''}
+                            </span>
+                          </li>
+                        ))}
+                      </ol>
+                    );
+                  })()}
                 </div>
 
                 <div>

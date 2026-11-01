@@ -321,7 +321,7 @@ export function derivePageContent(db: any, company: any): PageContent {
       title: 'Didn’t clear this time?',
       body: 'Your Track results show which round to fix. Get a comeback plan and see which other drives are open now.',
       cta_label: 'Get my comeback plan',
-      cta_href: '/study-plan',
+      cta_href: `/study-plan?company=${encodeURIComponent(company.slug)}`,
     })
   );
   sections.push(
