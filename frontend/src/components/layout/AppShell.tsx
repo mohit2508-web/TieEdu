@@ -4,6 +4,7 @@ import React from 'react';
 import { useRouter } from 'next/router';
 import { isShellExcluded, isRootDepth } from '@/lib/navConfig';
 import { Header } from '@/components/layout/Header';
+import { TargetSheet } from '@/components/prep/TargetSheet';
 import { MobileTabBar } from '@/components/layout/MobileTabBar';
 import { MobileNavDrawer } from '@/components/layout/MobileNavDrawer';
 import { SectionSubnav } from '@/components/layout/SectionSubnav';
@@ -112,6 +113,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
         Skip to content
       </a>
       <Header />
+      <TargetSheet />
 
       {/*
         A plain div, not `<main>`. Seven pages (`/`, both `[slug]` routes, and

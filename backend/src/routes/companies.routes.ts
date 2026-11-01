@@ -136,13 +136,15 @@ companiesRouter.get('/:slug', optionalAuth, (req: Request, res: Response) => {
   if (sanitizedCompany.modules) {
     sanitizedCompany.modules.forEach((mod: any) => {
       const owned = isUnlocked || ownedModuleIds.includes(mod.id);
-      if (mod.is_premium !== true || owned) return;
+      // pack_gated: free module (outside the price ladder) whose items beyond the free preview need the pack.
+      if ((mod.is_premium !== true && mod.pack_gated !== true) || owned) return;
 
       // Redact the round pack guide (section_data) — previously leaked in full.
       mod.section_data = null;
 
       if (mod.items) {
         mod.items.forEach((item: any) => {
+          if (!item.is_free_preview && item.lesson) item.lesson = { section: item.lesson.section, title: item.lesson.title, locked: true };
           if (!item.is_free_preview && item.blocks) {
             item.blocks.forEach((block: any) => {
               if (!block.payload) return;

@@ -18,7 +18,12 @@ function SkillDetail() {
     if (!router.isReady || typeof slug !== 'string') return;
     setLoading(true);
     fetchSkillDetailApi(slug)
-      .then((d) => { setSkill(d.skill); setTopics(d.topics); setAssessment(d.assessment); })
+      .then((d) => {
+        // Company tests live inside the company plan (INFOSYS_SE_3T_UX_PLAN §4).
+        const company = (d.skill as { company_slug?: string })?.company_slug;
+        if (company) { router.replace(`/prep/${company}?tab=test`); return; }
+        setSkill(d.skill); setTopics(d.topics); setAssessment(d.assessment);
+      })
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false));
   }, [router.isReady, slug]);

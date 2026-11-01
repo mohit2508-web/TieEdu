@@ -58,7 +58,7 @@ export function buildPrep(db: any, userId: string, slug: string, owned: boolean)
   // ---- content
   const lessonMod = (company.modules || []).find((m: any) => m.id === cfg.lessonModule);
   const lessons = (lessonMod?.items || []).map((it: any) => ({
-    id: it.id, title: String(it.question_text || ''), section: lessonSection(String(it.question_text || '')), done: p.lessons_done.includes(it.id),
+    id: it.id, title: String(it.question_text || ''), section: lessonSection(String(it.question_text || '')), done: p.lessons_done.includes(it.id), free: !!it.is_free_preview,
   }));
   const skills = (db.skills || []).filter((s: any) => s.company_slug === slug && s.status === 'active');
   const fullMock = skills.find((s: any) => s.prep_role !== 'sectional');
@@ -141,13 +141,22 @@ export function buildPrep(db: any, userId: string, slug: string, owned: boolean)
     plan.push({ day: d + 1, date, phase, items });
   }
   const todayPlan = plan.find((x) => x.date === today) || plan[0];
+  // Readiness history, one value per day: drives "+6% this week" and "was → now" after a test.
+  p.readiness_log = Array.isArray(p.readiness_log) ? p.readiness_log : [];
+  const lastLog = p.readiness_log[p.readiness_log.length - 1];
+  if (lastLog?.date === today) lastLog.score = readiness; else p.readiness_log.push({ date: today, score: readiness });
+  p.readiness_log = p.readiness_log.slice(-90);
+  const weekAgo = [...p.readiness_log].reverse().find((x: any) => x.date <= addDays(today, -7)) || p.readiness_log[0];
+  const prevDay = p.readiness_log.length > 1 ? p.readiness_log[p.readiness_log.length - 2].score : null;
 
   return {
     company: { name: company.name, slug },
     owned,
     test_date: testDate,
     days_left: Math.max(0, diffDays(today, testDate)),
-    readiness: { score: readiness, band: band(readiness), test: Math.round(testScore), lessons: Math.round(lessonScore), consistency: Math.round(consistency) },
+    readiness: { score: readiness, band: band(readiness), test: Math.round(testScore), lessons: Math.round(lessonScore), consistency: Math.round(consistency), week_change: readiness - (weekAgo?.score ?? readiness), previous: prevDay },
+    attempts: attempts.slice(-20).reverse().map((a: any) => ({ id: a.id, slug: skills.find((s: any) => s.id === asmBySkill.get(a.assessmentId))?.slug, title: skills.find((s: any) => s.id === asmBySkill.get(a.assessmentId))?.name, score: Math.round(Number(a.score) || 0), at: a.submittedAt || a.updated_at })),
+    interview: cfg.interviewModules,
     sections,
     full_mock: fullMock ? { slug: fullMock.slug, attempts: mockAttempts.length, last: mockAttempts.length ? Number(mockAttempts[mockAttempts.length - 1].score) || 0 : null } : null,
     lessons,

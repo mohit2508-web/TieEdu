@@ -212,11 +212,11 @@ export function derivePageContent(db: any, company: any): PageContent {
         ? `Start with the free module: ${String(free[0].title)}.`
         : 'Pick a round below and start with its questions.',
       next_step_href: PREP_COMPANIES[company.slug] ? `/prep/${company.slug}` : '',
-      card_eyebrow: firstSkill ? 'Test · Free' : '',
+      card_eyebrow: PREP_COMPANIES[company.slug] && companyMock ? 'Step 1 · Free demo test' : firstSkill ? 'Test · Free' : '',
       // With a company mock, the hero card offers the real-pattern test itself.
       card_title: companyMock ? 'How ready are you for {company}?' : firstSkill ? 'Check your level for {company}' : '',
       card_meta: companyMock ? `${companyMock.totalQuestions} questions · ${companyMock.avgCompletionTime} minutes · the real pattern, timed` : '',
-      card_cta_label: companyMock ? 'Start the full mock' : firstSkill ? 'Take a free skill test' : '',
+      card_cta_label: PREP_COMPANIES[company.slug] && companyMock ? 'Take the free demo test' : companyMock ? 'Start the full mock' : firstSkill ? 'Take a free skill test' : '',
       card_cta_href: firstSkill,
       card_note: '',
     }),
@@ -303,6 +303,9 @@ export function derivePageContent(db: any, company: any): PageContent {
   }
 
   if (premium.length) {
+    const prep = PREP_COMPANIES[company.slug];
+    const prepLessons = prep ? ((modules.find((m: any) => m.id === prep.lessonModule)?.items) || []).length : 0;
+    const prepSectional = prep ? (db.skills || []).filter((x: any) => x.company_slug === company.slug && x.prep_role === 'sectional' && x.status === 'active').length : 0;
     sections.push(
       sec('prep_pack', {
         eyebrow: 'Prep pack',
@@ -310,7 +313,10 @@ export function derivePageContent(db: any, company: any): PageContent {
         free_title: 'Free',
         free_price_label: '₹0',
         // With a company mock, Free and Pack spell out the 3T split (plan §3, §8).
-        free_features: companyMock
+        // Prep companies (INFOSYS_SE_3T_UX_PLAN §2a): the plain free/pack split with real counts.
+        free_features: prep && companyMock
+          ? ['1 full demo test (real pattern) with section scores', 'First lesson of every section, with practice', 'Your day-by-day plan and readiness score', '3 sample answers per interview round']
+          : companyMock
           ? [`1 full ${companyMock.name} (real pattern)`, 'Readiness check and basic Track score', 'Round-by-round plan and daily countdown', '3 sample answers per interview round', ...free.map((m) => String(m.title).slice(0, 60))].slice(0, 8)
           : free.map((m) => String(m.title).slice(0, 60)).slice(0, 8),
         free_cta_label: free.length ? 'Read free' : '',
@@ -318,7 +324,9 @@ export function derivePageContent(db: any, company: any): PageContent {
         paid_title: '{company} Pack',
         paid_badge: '',
         paid_price_note: 'one-time · lifetime access',
-        paid_features: companyMock
+        paid_features: prep && companyMock
+          ? [`All ${prepLessons} topic lessons with worked examples and practice`, `${prepSectional} section tests, unlimited retakes`, 'Unlimited full mocks, fresh questions every attempt', 'Weak-area fix list and revision tests', ...premium.map((m) => `${String(m.title).replace(/:.*/, '')}: ${(m.items || []).length} model answers`)].slice(0, 8)
+          : companyMock
           ? ['Everything in Free', 'Unlimited full mocks, fresh questions every attempt', ...premium.map((m) => `${String(m.title).slice(0, 48)} (${(m.items || []).length})`), 'Explanations and memory tricks for every question'].slice(0, 8)
           : ['Everything in Free', ...premium.map((m) => String(m.title).slice(0, 60))].slice(0, 8),
         paid_cta_label: 'Get the pack',

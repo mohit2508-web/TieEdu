@@ -3,6 +3,7 @@ import { useSecureMode } from '@/hooks/useSecureMode';
 import { SecureModeWarning, SecureBadge } from '@/components/common/SecureModeWarning';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import { BuyPackSheet } from '@/components/prep/BuyPackSheet';
 import {
   ArrowLeft, ArrowRight, Clock, Flag, X, CheckCircle2,
   AlertTriangle, LayoutGrid, RotateCcw, LogIn,
@@ -42,6 +43,9 @@ function AssessmentPage() {
   const [showSectionSubmit, setShowSectionSubmit] = useState(false);
   const [testTitle, setTestTitle] = useState('');
   const [companySlug, setCompanySlug] = useState('');
+  const [packOpen, setPackOpen] = useState(false);
+  // Company tests open the pack sheet straight away when locked (INFOSYS_SE_3T_UX_PLAN §2a).
+  useEffect(() => { if (error && companySlug && /pack/i.test(error)) setPackOpen(true); }, [error, companySlug]);
   useEffect(() => {
     if (!slug) return;
     fetchSkillDetailApi(String(slug))
@@ -210,8 +214,8 @@ function AssessmentPage() {
           >
             Sign In / Sign Up
           </Link>
-          <Link href={`/skill-test/${slug}`} className="mt-3 block text-sm text-gray-500 hover:text-gray-700">
-            Back to skill
+          <Link href={companySlug ? `/prep/${companySlug}` : `/skill-test/${slug}`} className="mt-3 block text-sm text-gray-500 hover:text-gray-700">
+            {companySlug ? 'Back to my plan' : 'Back to skill'}
           </Link>
         </div>
       </div>
@@ -266,9 +270,12 @@ function AssessmentPage() {
           )}
           {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
           {error && companySlug && /pack/i.test(error) && (
-            <Link href={`/company/${companySlug}#prep-pack`} className="btn btn-primary focus-ring mt-3 inline-flex min-h-[44px] px-5">
-              Get the pack
-            </Link>
+            <>
+              <button type="button" onClick={() => setPackOpen(true)} className="btn btn-primary focus-ring mt-3 inline-flex min-h-[44px] px-5">
+                See what's in the pack
+              </button>
+              <BuyPackSheet open={packOpen} onClose={() => setPackOpen(false)} slug={companySlug} name="Infosys SE" what="This test" />
+            </>
           )}
           <button
             onClick={handleStart}
@@ -287,7 +294,7 @@ function AssessmentPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="text-center">
           <p className="text-gray-600">No questions available for this assessment.</p>
-          <Link href={`/skill-test/${slug}`} className="mt-3 inline-block text-link font-medium">Back</Link>
+          <Link href={companySlug ? `/prep/${companySlug}` : `/skill-test/${slug}`} className="mt-3 inline-block text-link font-medium">Back</Link>
         </div>
       </div>
     );

@@ -1,3 +1,4 @@
+import { PREP_SLUGS } from '@/lib/prepApi';
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -153,6 +154,11 @@ export default function CompanyVaultPage({
    * the item reader at their first item instead.
    */
   const showModule = (mod: ContentModule) => {
+    // Prep companies: lessons open in the lesson reader inside the plan (INFOSYS_SE_3T_UX_PLAN §3).
+    if ((mod as any).pack_gated && company && PREP_SLUGS.includes(company.slug) && (mod.items || []).length) {
+      router.push(`/prep/${company.slug}/learn/${mod.items![0].id}`);
+      return;
+    }
     const hasPack = Object.values((mod as any).section_data || {}).some((v: any) => (Array.isArray(v) ? v.length : v && Object.keys(v).length)) || ((mod as any).pdfs || []).length > 0;
     if (!hasPack && (mod.items || []).length) {
       setSelectedModule(null);
@@ -210,6 +216,12 @@ export default function CompanyVaultPage({
   }, [slug, company, user, reloadTick]);
 
   const vaultUnlocked = isUnlocked || !!company?.is_unlocked;
+  // INFOSYS_SE_3T_UX_PLAN §2b: a pack owner's company page is their prep dashboard (?view=info shows this page).
+  useEffect(() => {
+    if (user && company && vaultUnlocked && PREP_SLUGS.includes(company.slug) && router.query.view !== 'info') {
+      router.replace(`/prep/${company.slug}`);
+    }
+  }, [user, company, vaultUnlocked, router]);
   useEffect(() => {
     if (user?.id && company?.id && vaultUnlocked) markVaultSeen(company.id, user.id);
   }, [company?.id, vaultUnlocked, user?.id]);
@@ -289,6 +301,14 @@ export default function CompanyVaultPage({
     if (remainingPremium.length === 0) return;
     addToCart([completePackItem()], true);
   }, [remainingPremium.length, addToCart, completePackItem]);
+
+  // "Buy pack" from the prep screens lands here with ?buy=1: open checkout once the vault has loaded.
+  const buyHandledRef = useRef(false);
+  useEffect(() => {
+    if (router.query.buy !== '1' || buyHandledRef.current || !company || !user || remainingPremium.length === 0) return;
+    buyHandledRef.current = true;
+    handleAddCompletePack();
+  }, [router.query.buy, company, user, remainingPremium.length, handleAddCompletePack]);
 
   /**
    * Module ids the shared cart already covers, whether bought singly or in a pack.

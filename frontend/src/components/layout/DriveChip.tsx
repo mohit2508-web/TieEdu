@@ -1,34 +1,27 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
+import { useAuth } from '@/context/AuthContext';
+import { useTarget } from '@/lib/prepApi';
 
 /**
- * "39d · Infosys" in the header on every page (TRAIN_TEST_TRACK_PLAN §7).
- * The Today screen stores the nearest drive date (see DriveCountdown); the
- * header only reads it, so no extra request runs on every page.
+ * "Infosys SE · 50d" in the header (INFOSYS_SE_3T_UX_PLAN §1): the student's
+ * target company and days left, from the same value as Today and the plan.
  */
-export const NEXT_DRIVE_KEY = 'tieedu_next_drive';
-
 export const DriveChip: React.FC = () => {
-  const [drive, setDrive] = useState<{ company: string; slug: string; date: string } | null>(null);
-  useEffect(() => {
-    try {
-      const d = JSON.parse(window.localStorage.getItem(NEXT_DRIVE_KEY) || 'null');
-      if (d?.date) setDrive(d);
-    } catch { /* nothing stored */ }
-  }, []);
-  if (!drive) return null;
-  const today = new Date(new Date().toISOString().slice(0, 10));
-  const days = Math.round((new Date(drive.date).getTime() - today.getTime()) / 86400000);
-  if (days < 0) return null;
+  const { user } = useAuth();
+  const t = useTarget(!!user);
+  if (!t?.slug || t.days_left === undefined) return null;
+  const days = t.days_left;
   const tone = days <= 3 ? 'border-danger/40 text-danger' : days <= 7 ? 'border-signal text-amber-deep' : 'border-line text-heading';
+  const short = (t.name || '').replace(/\s*\(([^)]+)\)\s*$/, ' $1').replace('Systems Engineer', '').replace(/\s+/g, ' ').trim();
   return (
     <Link
-      href={`/company/${drive.slug}`}
-      title={`${days} days left for your ${drive.company} test`}
+      href={`/prep/${t.slug}`}
+      title={`${days} days left for your ${t.name} test · readiness ${t.readiness}%`}
       className={`focus-ring hidden h-10 items-center gap-1 rounded-full border bg-card px-3 text-sm font-bold tabular-nums lg:inline-flex ${tone}`}
     >
       {days === 0 ? 'Today' : `${days}d`}
-      <span className="max-w-[7rem] truncate font-medium text-muted">· {drive.company}</span>
+      <span className="max-w-[8rem] truncate font-medium text-muted">· {short}</span>
     </Link>
   );
 };

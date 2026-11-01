@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import { PrepResultPanel } from '@/components/prep/PrepResultPanel';
 import {
   Award, CheckCircle2, XCircle, MinusCircle, TrendingUp,
   BookOpen, ChevronRight, RotateCcw, Share2, Trophy,
@@ -81,7 +82,7 @@ function ResultPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="text-center">
           <p className="text-gray-600">{error || 'Result not found'}</p>
-          <Link href="/skill-test" className="mt-3 inline-block text-link font-medium">Back to Skill Test</Link>
+          <Link href={prepSlug ? `/prep/${prepSlug}` : '/skill-test'} className="mt-3 inline-block text-link font-medium">{prepSlug ? 'Back to my plan' : 'Back to Skill Test'}</Link>
         </div>
       </div>
     );
@@ -124,11 +125,6 @@ function ResultPage() {
             <p className="mt-2 text-xs font-semibold text-danger">
               Integrity flag: left the test {flags} time{flags === 1 ? '' : 's'}
             </p>
-          )}
-          {prepSlug && (
-            <Link href={`/prep/${prepSlug}`} className="btn btn-primary mt-4 inline-flex min-h-[48px] px-5">
-              See your updated readiness and what to fix next
-            </Link>
           )}
           <div className="mt-3">
             <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
@@ -229,7 +225,7 @@ function ResultPage() {
             ).map((item) => (
               <Link
                 key={item.key}
-                href="/courses"
+                href={prepSlug ? `/prep/${prepSlug}?tab=train` : '/courses'}
                 className="flex items-center justify-between rounded-xl bg-gray-50 border border-gray-200 p-3 hover:border-signal/30 transition-colors group"
               >
                 <div>
@@ -245,8 +241,11 @@ function ResultPage() {
           </div>
         </div>
 
-        {/* Certificate CTA */}
-        {passed && certificate && (
+        {/* Company tests stay inside the company: readiness, fix list, back to the plan. */}
+        {prepSlug && <PrepResultPanel slug={prepSlug} />}
+
+        {/* Certificate CTA (skill tests only) */}
+        {!prepSlug && passed && certificate && (
           <div className="mt-6 rounded-2xl bg-brand-ink p-6 text-center text-white shadow-sm">
             <Trophy className="mx-auto h-8 w-8" />
             <p className="mt-2 text-lg font-bold text-white">Congratulations!</p>
@@ -276,12 +275,14 @@ function ResultPage() {
           >
             <RotateCcw className="h-4 w-4" /> Retake Assessment
           </Link>
-          <Link
-            href="/skill-test"
-            className="flex items-center justify-center gap-2 rounded-full bg-signal py-3 text-sm font-semibold text-on-primary hover:bg-signal transition-colors"
-          >
-            Explore More Skills
-          </Link>
+          {!prepSlug && (
+            <Link
+              href="/skill-test"
+              className="flex items-center justify-center gap-2 rounded-full bg-signal py-3 text-sm font-semibold text-on-primary hover:bg-signal transition-colors"
+            >
+              Explore More Skills
+            </Link>
+          )}
         </div>
       </div>
     </div>

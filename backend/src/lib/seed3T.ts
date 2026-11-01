@@ -9,6 +9,7 @@ import { PROFILES } from '../data/companyProfiles2026';
 import { INFOSYS_SE_BANK } from '../data/companyTests/infosysSE';
 import { TECHNICAL, HR, type PrepItem } from '../data/interviewPrep/infosysSE';
 import { LESSONS, type Lesson } from '../data/interviewPrep/infosysSELessons';
+import { LESSON_EXTRAS } from '../data/interviewPrep/infosysSELessonExtras';
 import { FEED_V2 } from '../data/feedV2';
 
 export function seedCompanyProfiles(db: any, onlyMissing = false, only?: string[]): { created: number; updated: number } {
@@ -213,6 +214,37 @@ export function seedCompanyTest(db: any, key: string, onlyMissing = false): numb
 const lessonAsItem = ([section, title, rules, example, trap]: Lesson): PrepItem =>
   [`${section}: ${title}`, 'medium', 'high', rules, example, trap];
 
+/**
+ * The lesson reader's structured lesson (INFOSYS_SE_3T_UX_PLAN §3): what it is,
+ * rules, worked examples, trap, and 5 practice questions from the Infosys bank
+ * matching the topic (3 to 5, on-topic first).
+ */
+function structuredLessons() {
+  const used = new Set<number>();
+  const topic: Record<string, string> = { Math: 'math', Reasoning: 'reasoning', Verbal: 'verbal', Pseudocode: 'pseudocode', Puzzles: 'puzzle', Email: 'verbal' };
+  return LESSONS.map(([section, title, rules, example, trap]) => {
+    const x = LESSON_EXTRAS[title];
+    // Topic match first (an unused one, then one another lesson also uses), then any unused question of the section.
+    const all = INFOSYS_SE_BANK.map((q, i) => ({ q, i })).filter(({ q }) => q.topic === topic[section]);
+    const hit = ({ q }: { q: typeof INFOSYS_SE_BANK[number] }) => !!x?.match.test(q.question);
+    const order = [
+      ...all.filter((e) => hit(e) && !used.has(e.i)), ...all.filter((e) => hit(e) && used.has(e.i)),
+      ...all.filter((e) => !hit(e) && !used.has(e.i)), ...all.filter((e) => !hit(e) && used.has(e.i)),
+    ];
+    // Up to 5 on-topic questions; when the bank has fewer, fill to 3 with the section's others (never pad to 5 with off-topic ones).
+    const hits = all.filter(hit).length;
+    const pick = section === 'Email' ? [] : order.slice(0, Math.min(5, Math.max(3, hits)));
+    pick.forEach(({ i }) => used.add(i));
+    return {
+      section, title, what: x?.what || '', rules, examples: [example, ...(x?.examples || [])], trap,
+      practice: pick.map(({ q }) => ({ question: q.code ? q.question : q.question.replace(/\s*\n\s*/g, ' '), options: q.options, correct: q.correct, explanation: q.explanation, code: q.code })),
+    };
+  });
+}
+
+/** Bump when the lesson set changes: older copies on a live database are replaced on the next start. */
+const LESSON_VERSION = 3;
+
 const SETS: Array<{ slug: string; id: string; type: string; round: string; title: string; order: number; items: PrepItem[]; lesson?: boolean }> = [
   { slug: 'infosys-systems-engineer', id: 'mod-prep-infosys-se-oa', type: 'preparation_guide', round: 'OA', title: 'Online assessment: topic lessons', order: 1, items: LESSONS.map(lessonAsItem), lesson: true },
   { slug: 'infosys-systems-engineer', id: 'mod-prep-infosys-se-tech', type: 'technical_question', round: 'Technical', title: 'Technical interview: questions and model answers', order: 2, items: TECHNICAL },
@@ -231,13 +263,17 @@ export function seedInterviewPrep(db: any, onlyMissing = false): number {
     const company = (db.companies || []).find((c: any) => c.slug === set.slug);
     if (!company) continue;
     company.modules = Array.isArray(company.modules) ? company.modules : [];
-    if (onlyMissing && company.modules.some((m: any) => m.id === set.id)) continue;
+    const existing = company.modules.find((m: any) => m.id === set.id);
+    if (onlyMissing && existing && (!set.lesson || (existing.content_version || 1) >= LESSON_VERSION)) continue;
+    const rich = set.lesson ? structuredLessons() : [];
+    const firstOfSection = new Set(rich.map((l, i) => (rich.findIndex((r) => r.section === l.section) === i ? i : -1)).filter((i) => i >= 0));
     const module = {
       id: set.id, company_id: company.id, module_type: set.type, round_type: set.round, title: set.title,
       // Topic lessons are free (design: Free = topic notes); interview answers are in the pack, first FREE_PREVIEW readable.
-      sort_order: set.order, is_premium: !set.lesson,
+      // Lessons stay out of the price ladder (is_premium false) but are pack-gated: the first lesson of each section is free.
+      sort_order: set.order, is_premium: !set.lesson, pack_gated: !!set.lesson, content_version: set.lesson ? LESSON_VERSION : undefined,
       items: set.items.map((it, i) => ({
-        id: `${set.id}-${i + 1}`, module_id: set.id, question_text: it[0], is_free_preview: set.lesson || i < FREE_PREVIEW,
+        id: `${set.id}-${i + 1}`, module_id: set.id, question_text: it[0], is_free_preview: set.lesson ? firstOfSection.has(i) : i < FREE_PREVIEW, lesson: set.lesson ? rich[i] : undefined,
         difficulty: it[1], role_tag: 'Systems Engineer', frequency_tag: it[2], round_type: set.round, status: 'published',
         comments_count: 0, upvotes_count: 0,
         blocks: [{ id: `${set.id}-${i + 1}-b1`, block_type: 'markdown', block_order: 1, payload: { text: md(it, set.lesson) } }],
