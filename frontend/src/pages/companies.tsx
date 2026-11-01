@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { isCompanyStage } from '@/lib/onboardingApi';
 import { ForYou } from '@/components/personal/ForYou';
+import { AdSlot } from '@/components/ads/AdSlot';
 
 /**
  * /companies — every company page (UI_REDESIGN_PLAN_V2 §5, the Companies
@@ -224,6 +225,8 @@ export default function CompaniesPage() {
               </>
             )}
           </div>
+          {/* One ad, after the content (PROFESSIONAL_PLATFORM_PLAN §7.2). */}
+          <AdSlot className="mt-12" />
         </main>
         <Footer />
       </div>

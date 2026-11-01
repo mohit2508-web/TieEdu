@@ -17,6 +17,9 @@ import { appendAudit } from '../store/audit';
 export async function completePaidOrder(db: any, order: any, user_id: string) {
   order.status = 'paid';
   order.paid_at = order.paid_at || new Date().toISOString();
+  // Paying students never see ads (PROFESSIONAL_PLATFORM_PLAN §7.2).
+  const buyer = (db.users || []).find((u: any) => u.id === user_id);
+  if (buyer) buyer.has_paid = true;
 
   if (order.coupon_code) {
     const coupon = (db.coupons || []).find((c: any) => c.code === order.coupon_code);

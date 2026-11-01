@@ -23,6 +23,8 @@ export interface AuthUser {
   whatsapp?: { number: string; verified: boolean } | null;
   /** Set by the server until onboarding is finished or skipped. */
   needs_onboarding?: boolean;
+  /** Paid for anything; paying students see no ads. */
+  has_paid?: boolean;
 }
 
 export interface AuthLoginPayload {

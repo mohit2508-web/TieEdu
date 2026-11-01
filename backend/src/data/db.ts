@@ -114,6 +114,8 @@ export interface User {
   whatsapp?: { number: string; verified: boolean } | null;
   /** When onboarding was finished or skipped; absent = show onboarding. */
   onboarded_at?: string;
+  /** True once any order of theirs was paid; paying students see no ads. */
+  has_paid?: boolean;
   created_at: string;
 }
 
@@ -2275,6 +2277,13 @@ export function loadDb() {
           if (d && typeof d.telemetry_enabled !== 'boolean') d.telemetry_enabled = true;
           if (d && typeof d.install_surface !== 'string') d.install_surface = 'pwa';
         }
+        upgraded = true;
+      }
+      // One-time: flag students who already paid, so they never see ads.
+      if (!data.has_paid_backfilled_at) {
+        const paid = new Set((data.orders || []).filter((o: any) => o && o.status === 'paid').map((o: any) => o.user_id));
+        for (const u of data.users || []) if (paid.has(u.id)) u.has_paid = true;
+        data.has_paid_backfilled_at = new Date().toISOString();
         upgraded = true;
       }
       // The old study plan was retired (PROFESSIONAL_PLATFORM_PLAN §9); its

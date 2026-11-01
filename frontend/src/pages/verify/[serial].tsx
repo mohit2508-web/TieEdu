@@ -5,6 +5,7 @@ import { Footer } from '@/components/layout/Footer';
 import { ShieldCheck, ShieldAlert, ShieldX } from 'lucide-react';
 import { verifyCertificate } from '@/lib/coursesApi';
 import type { CertificateVerifyResponse } from '@/types';
+import { AdSlot } from '@/components/ads/AdSlot';
 
 /**
  * The public verification page.
@@ -188,6 +189,8 @@ export default function VerifyPage() {
           certificate themselves against it. The key id above identifies which key was used, and
           older certificates stay verifiable after we rotate to a new one.
         </p>
+        {/* One ad, after the content (PROFESSIONAL_PLATFORM_PLAN §7.2). */}
+        <AdSlot className="mt-12" />
       </main>
       <Footer />
     </>

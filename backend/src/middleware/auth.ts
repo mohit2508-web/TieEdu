@@ -102,6 +102,7 @@ export function safeUser(u: User) {
     notify: u.notify ?? null,
     whatsapp: u.whatsapp ? { number: u.whatsapp.number, verified: !!u.whatsapp.verified } : null,
     needs_onboarding: !u.onboarded_at && u.role === 'user',
+    has_paid: !!u.has_paid,
   };
 }
 

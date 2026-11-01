@@ -28,6 +28,7 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import type { CatalogFacets, CatalogFilters, CatalogSortKey, CourseCard, CourseCatalogResponse } from '@/types';
 import { ForYou } from '@/components/personal/ForYou';
+import { AdSlot } from '@/components/ads/AdSlot';
 
 const SITE_URL = 'https://tieedu.com';
 
@@ -507,6 +508,8 @@ export default function CoursesPage({ initialData }: { initialData: CourseCatalo
         </div>
 
         <CatalogueSeoCopy facets={facets} total={total} />
+        {/* One ad, after the content (PROFESSIONAL_PLATFORM_PLAN §7.2). */}
+        <AdSlot className="mt-12" />
       </main>
 
       {sheetOpen && (
