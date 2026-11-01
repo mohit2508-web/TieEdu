@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import {
   fetchCompanies,
   fetchInterviewModulesApi,
-  fetchMyStudyPlanApi,
   getInterviewCourseProgressApi,
 } from '@/lib/api';
 import { fetchMyCourses } from '@/lib/coursesApi';
@@ -55,7 +54,7 @@ export const useBriefingData = (enabled: boolean): UseBriefingDataResult => {
         companies,
         drops,
       ] = await Promise.all([
-        softTimeout(fetchMyStudyPlanApi()),
+        Promise.resolve(null), // the old study plan was retired
         softTimeout(fetchMyCourses()),
         softTimeout(fetchSkillsApi()),
         softTimeout(fetchMyAttemptsApi()),

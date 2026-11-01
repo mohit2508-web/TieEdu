@@ -1,16 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { loadDb } from '../data/db';
 import { totalXpForUser } from '../lib/xp';
-import { daysUntil, resolvePlan } from '../lib/studyPlanTemplates';
-import type { ContentBlockRecord } from '../data/db';
 
 export const gamificationRouter = Router();
-
-/** First markdown block of a phase, used only to fill the deprecated roadmap field. */
-function firstMarkdown(blocks: ContentBlockRecord[]): string {
-  const md = (blocks || []).find((b) => b.block_type === 'markdown');
-  return String(md?.payload?.text || '').trim();
-}
 
 // GET /api/leaderboard — Honest ranking of real registered accounts by XP.
 //
@@ -56,42 +48,5 @@ gamificationRouter.get('/leaderboard', (req: Request, res: Response) => {
     honest: true,
     entries: users,
     note: 'Ranked from live student accounts only. XP is derived from the verified activity ledger.',
-  });
-});
-
-// POST /api/gamification/study-plan — Deprecated alias for POST /api/study-plan/generate.
-//
-// Kept for one release so existing clients do not break. Content now comes from
-// admin-authored templates via resolvePlan(); the hardcoded roadmap survives only
-// as the final fallback inside that resolver. The legacy `roadmap` field is derived
-// from the resolved phases so older frontends keep rendering.
-gamificationRouter.post('/study-plan', (req: Request, res: Response) => {
-  const db = loadDb();
-  const targetCompany = req.body.targetCompany || 'Target Company';
-  const targetRole = req.body.targetRole || 'SDE';
-  // Same precedence as the canonical route: a real interview date wins over any
-  // client-supplied day count, so the two endpoints cannot disagree about how
-  // long the window is.
-  const fromCalendar = daysUntil(req.body.interviewDate || null);
-  const days = fromCalendar != null
-    ? Math.max(1, Math.min(365, fromCalendar))
-    : Math.max(1, Math.min(365, Number(req.body.daysRemaining) || 14));
-
-  const resolved = resolvePlan(db, { companyName: targetCompany, role: targetRole, totalDays: days });
-
-  const roadmap = resolved.phases.map((p) => ({
-    day: p.day_to ? `Day ${p.day_from}–${p.day_to}` : `Day ${p.day_from}+`,
-    focus: p.title,
-    detail: p.summary || firstMarkdown(p.blocks),
-  }));
-
-  res.json({
-    targetCompany,
-    targetRole,
-    daysRemaining: days,
-    source: resolved.source,
-    templateId: resolved.template?.id || null,
-    phases: resolved.phases,
-    roadmap
   });
 });

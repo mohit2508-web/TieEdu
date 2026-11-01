@@ -3,7 +3,6 @@ import { loadDb, saveDb } from '../data/db';
 import { completePaidOrder } from '../payments/orders';
 import { appendAudit, listAudit } from '../store/audit';
 import { AUDIT_CAP } from '../lib/audit';
-import { studyPlanAdminRouter } from './studyPlan.routes';
 import { validateSectionData } from '../lib/sectionData';
 import { notifyEvent } from '../lib/notify';
 import { createAutoDrop } from '../lib/autoDrops';
@@ -18,9 +17,6 @@ import { events as msgEvents, sendToUser } from '../lib/messaging';
 
 export const adminRouter = Router();
 
-// Study plan templates are mounted under /api/admin/study-plans, so they inherit
-// the requireAdmin guard applied to adminRouter in server.ts.
-adminRouter.use('/study-plans', studyPlanAdminRouter);
 
 // ------- Helpers -------
 

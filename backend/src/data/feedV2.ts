@@ -50,7 +50,7 @@ export const FEED_V2: FeedSeed[] = [
     '/company/cognizant-genc', false, 6],
   ['tieedu', 'Set your drive date, get a plan for every day',
     ['A countdown, one Train and one Test task a day', 'Readiness score that tells you what to fix'],
-    '/study-plan', false, 6],
+    '/', false, 6],
   ['course', 'Python Programming, from first script to packages',
     ['15 modules, hands-on, free', 'The language most coding rounds accept'],
     '/courses/python-programming', false, 7],

@@ -26,7 +26,6 @@ const ACTIONS = [
   { icon: GraduationCap, label: 'Free Course', href: '/interview-course', tint: 'text-amber-deep bg-warning-soft' },
   { icon: Building2, label: 'Companies', href: '/companies', tint: 'text-brand-ink bg-surface-hover' },
   { icon: Zap, label: 'Drops', href: '/drops', tint: 'text-danger bg-signal-soft' },
-  { icon: CalendarCheck, label: 'Study Plan', href: '/study-plan', tint: 'text-link bg-surface-hover' },
   { icon: IndianRupee, label: 'Pricing', href: '#pricing', tint: 'text-amber-deep bg-paper' },
 ];
 

@@ -92,12 +92,6 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>${baseUrl}/study-plan</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>${baseUrl}/courses</loc>
     <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>

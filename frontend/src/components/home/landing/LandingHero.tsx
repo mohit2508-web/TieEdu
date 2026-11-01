@@ -136,7 +136,7 @@ export const LandingHero: React.FC<{
         </div>
 
         <div className="mx-auto mt-14 flex max-w-xl flex-col items-center text-center">
-          <Button href="/study-plan" size="lg" icon={ArrowRight} iconEnd className="min-h-[52px] w-full sm:w-auto">
+          <Button href="/signup" size="lg" icon={ArrowRight} iconEnd className="min-h-[52px] w-full sm:w-auto">
             Plan my placement
           </Button>
           <p className="mt-3 text-sm text-muted">Free to start, no card needed.</p>

@@ -104,7 +104,7 @@ const SOON: Spec[] = [
   { t: 'course', h: 'Python course drops a new testing module this week', r: '/courses/python-programming', slug: 'python-programming', b: ['pytest from zero to fixtures', 'Includes a graded assignment'] },
   { t: 'contest', h: 'Debug-a-thon challenge starts Monday, prizes for top 20', r: '/skill-test', b: ['Five broken programs to fix', 'Leaderboard resets at start'] },
   { t: 'selected', h: 'Capgemini selection story: two attempts, one offer', r: '/company/capgemini', slug: 'capgemini', b: ['What the interviewer probed', 'How the second attempt differed'] },
-  { t: 'tieedu', h: 'Guided study plans are coming: pick a goal, get a schedule', r: '/study-plan', b: ['Built around your semester', 'Auto-tracks your lesson progress'] },
+  { t: 'tieedu', h: 'Guided study plans are coming: pick a goal, get a schedule', r: '/', b: ['Built around your semester', 'Auto-tracks your lesson progress'] },
   { t: 'college', h: 'Drive season starts on your campus next week', r: '/campus', b: ['Pre-registration opens Monday', 'Bring an updated one-page resume'], college: 'GLA University Mathura' },
 ];
 

@@ -230,7 +230,7 @@ check('isShellExcluded is prefix-aware so /admin/login is covered', () => {
 });
 
 check('ordinary product routes keep the site shell', () => {
-  for (const route of ['/', '/courses', '/study-plan', '/company/razorpay', '/verify', '/my-courses']) {
+  for (const route of ['/', '/courses', '/company/razorpay', '/verify', '/my-courses']) {
     eq(isShellExcluded(route), false, `${route} should keep the header`);
   }
 });
@@ -298,7 +298,6 @@ check('a page resolves to the section that owns it', () => {
     ['/courses', 'learn'],
     ['/courses/python', 'learn'],
     ['/tracks', 'learn'],
-    ['/study-plan', 'learn'],
     ['/interview-course', 'learn'],
     ['/skill-test', 'practise'],
     ['/skill-test/java', 'practise'],
@@ -352,7 +351,7 @@ check('only the free course and the skill test carry the free badge', () => {
 // route in the app is pinned below rather than spot-checked.
 // ---------------------------------------------------------------------------
 
-const ROOT_ROUTES = ['/', '/companies', '/tracks', '/skill-test', '/courses', '/study-plan', '/compare', '/account', '/my-courses', '/campus'];
+const ROOT_ROUTES = ['/', '/companies', '/tracks', '/skill-test', '/courses', '/compare', '/account', '/my-courses', '/campus'];
 
 check('top-level tab routes resolve to root depth', () => {
   for (const route of ROOT_ROUTES) {
@@ -396,7 +395,6 @@ check('the longest matching item wins over the home route', () => {
   // `/` is a prefix of everything. If `home` won the match, every route on
   // the site would resolve as a drill-down out of the home tab.
   eq(getNavigationDepth('/courses'), 'root');
-  eq(getNavigationDepth('/study-plan'), 'root');
   eq(getNavigationDepth('/account'), 'root');
 });
 

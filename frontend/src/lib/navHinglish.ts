@@ -41,7 +41,6 @@ export const ITEM_HI: Record<string, { label?: string; description: string }> = 
   drops: { description: 'Nayi jobs, drives aur updates ek jagah' },
   freeCourse: { description: 'Bina paise ke shuru karo' },
   courses: { description: 'Saare courses — coding, aptitude, core subjects' },
-  studyPlan: { description: 'Aapka week-by-week padhai plan' },
   myCourses: { description: 'Jo courses aapne shuru kiye' },
   myCertificates: { description: 'Aapke certificates, verify link ke saath' },
   account: { description: 'Profile, notifications aur settings' },

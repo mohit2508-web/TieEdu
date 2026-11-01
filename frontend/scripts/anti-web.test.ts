@@ -137,16 +137,6 @@ check('no window.alert / confirm / prompt on a student-facing page', () => {
   eq(offenders.join(', '), '', 'these still use a native dialog');
 });
 
-check('the study-plan reset is confirmed in a sheet, not a dialog', () => {
-  const src = read(path.join(SRC, 'pages', 'study-plan.tsx'));
-  ok(/<Sheet/.test(src), 'the destructive action must use the shared sheet');
-  ok(/confirmReset/.test(src), 'and be gated behind a confirmation state');
-  ok(
-    /data-sheet-autofocus/.test(src),
-    'focus lands on the action rather than the scrim, so a stray Enter cannot dismiss it'
-  );
-});
-
 // ------------------------------------------------------ no print (§8) -------
 
 // The one sanctioned print: exam-prep revision sheets, a real student need, with

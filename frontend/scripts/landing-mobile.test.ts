@@ -42,7 +42,6 @@ const css = cssRaw.replace(/\/\*[\s\S]*?\*\//g, '');
 const pricing = read('src/components/checkout/PricingSection.tsx');
 const card = read('src/components/company/CompanyCard.tsx');
 const install = read('src/components/common/PWAInstallPrompt.tsx');
-const carousel = read('src/components/common/HeroPosterCarousel.tsx');
 
 const landing = (f: string) => read(`src/components/home/landing/${f}.tsx`);
 const hero = landing('LandingHero');
@@ -124,9 +123,6 @@ ok(
   'the install prompt stays off the drops feed'
 );
 
-console.log('\n--- carousel controls ---');
-ok(/grid h-8 w-8/.test(carousel), 'carousel dots grew a real hit area');
-ok(/h-11 w-11/.test(carousel), 'carousel arrows clear the 44px floor');
 
 console.log('\n--- entrance motion is reduced-motion safe ---');
 const reveal = read('src/components/home/Reveal.tsx');

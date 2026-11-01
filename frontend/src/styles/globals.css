@@ -2846,6 +2846,12 @@ body {
      /companies collapsed to "Al", "IT S". Narrow icon buttons size themselves. */
 }
 
+/* Cookie banner (components/legal/CookieConsent): sits above the mobile tab
+   bar wherever that bar is on screen, at the very bottom everywhere else. */
+@media (max-width: 767px) {
+  body:has(.tab-bar) .consent-bar { bottom: var(--tabbar-total); }
+}
+
 /* ---- Dark mode: legacy palette remap ----------------------------------------
    §4.2 "a token swap, not a second design". ~1,500 older class uses name
    Tailwind's fixed palette (bg-white, bg-red-50, text-gray-600 …) instead of a
@@ -2982,9 +2988,3 @@ body {
   color: rgb(var(--rgb-money-ink));
 }
 
-
-/* Cookie banner (components/legal/CookieConsent): sits above the mobile tab
-   bar wherever that bar is on screen, at the very bottom everywhere else. */
-@media (max-width: 767px) {
-  body:has(.tab-bar) .consent-bar { bottom: var(--tabbar-total); }
-}

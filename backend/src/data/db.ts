@@ -2,7 +2,6 @@ import fs from 'fs';
 import path from 'path';
 import { getSeedCourses } from './seedCourses';
 import { getSeedTracks } from './seedTracks';
-import { seedStudyPlanTemplates } from './seedStudyPlans';
 
 export interface ReportItem {
   id: string;
@@ -2278,17 +2277,8 @@ export function loadDb() {
         }
         upgraded = true;
       }
-      // Starter roadmap, installed once. The seeded_at stamp is what keeps this
-      // from resurrecting a template an admin deliberately deleted: without it,
-      // an emptied collection would be re-seeded on every restart, exactly the
-      // bug the courses/coupons fallbacks above are documented to avoid.
-      if (!data.study_plan_seeded_at && (!data.study_plan_templates || data.study_plan_templates.length === 0)) {
-        const seed = seedStudyPlanTemplates();
-        data.study_plan_templates = seed.templates;
-        data.study_plan_phases = seed.phases;
-        data.study_plan_seeded_at = new Date().toISOString();
-        upgraded = true;
-      }
+      // The old study plan was retired (PROFESSIONAL_PLATFORM_PLAN §9); its
+      // study_plan_* collections are left in place, untouched, as the backup.
       if (!data.settings) { data.settings = initialDbData.settings; upgraded = true; }
       if (!Array.isArray(data.coupons) || data.coupons.length === 0) {
         data.coupons = initialDbData.coupons;

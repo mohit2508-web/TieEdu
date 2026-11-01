@@ -411,20 +411,6 @@ export const NAV_ITEMS: Record<string, NavItem> = {
     tab: true,
     keywords: ['catalog', 'catalogue', 'python', 'c programming', 'tracks'],
   },
-  studyPlan: {
-    id: 'studyPlan',
-    href: '/study-plan',
-    label: 'Study Plan',
-    icon: CalendarCheck,
-    match: 'prefix',
-    description: 'Your phased preparation plan and progress',
-    primary: true,
-    /*
-      Reached through the Learn section's sub-tabs, like every item that is
-      not itself a section landing page.
-    */
-    keywords: ['plan', 'schedule', 'phases', 'progress', 'timeline'],
-  },
   myCourses: {
     id: 'myCourses',
     href: '/my-courses',
@@ -522,7 +508,7 @@ export interface NavSection {
 
 export const NAV_SECTIONS: NavSection[] = [
   { id: 'home', label: 'Home', icon: House, itemIds: ['home'] },
-  { id: 'learn', label: 'Learn', icon: BookOpen, itemIds: ['courses', 'tracks', 'freeCourse', 'studyPlan', 'calendar', 'myCourses', 'myCertificates'] },
+  { id: 'learn', label: 'Learn', icon: BookOpen, itemIds: ['courses', 'tracks', 'freeCourse', 'calendar', 'myCourses', 'myCertificates'] },
   { id: 'practise', label: 'Practise', icon: Target, itemIds: ['skillTest', 'daily', 'mockInterview', 'peerMock', 'englishCoach', 'drives'] },
   { id: 'companies', label: 'Companies', icon: Building2, itemIds: ['companies', 'compare', 'talent'], extraPrefixes: ['/company'] },
   { id: 'feed', label: 'Feed', icon: Newspaper, itemIds: ['drops'] },

@@ -33,7 +33,7 @@ export const RoutePath: React.FC = () => (
 
       <div className="mt-8 flex flex-col items-start gap-4 border-t border-line pt-6 sm:flex-row sm:items-center sm:justify-between">
         <Stamp kind="pending">Sample plan · yours uses your company and date</Stamp>
-        <Button href="/study-plan" icon={ArrowRight} iconEnd>
+        <Button href="/signup" icon={ArrowRight} iconEnd>
           Make my plan
         </Button>
       </div>

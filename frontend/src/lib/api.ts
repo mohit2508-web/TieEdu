@@ -1,4 +1,4 @@
-import { Company, ComparisonMatrix, HeroPoster, HeroPosterAdmin, InterviewReport, PricingPlan, PricingCatalog, StudyPlanTemplateMeta } from '@/types';
+import { Company, ComparisonMatrix, InterviewReport, PricingPlan, PricingCatalog } from '@/types';
 import { getAccessToken, getUserId, apiRefresh, setAuthSession, AuthUser } from './auth';
 import { API_BASE_URL, apiAssetUrl, isApiAssetUrl } from './assetUrl';
 
@@ -586,206 +586,12 @@ export const updateCouponApi = async (couponId: string, data: any) =>
 export const deleteCouponApi = async (couponId: string) =>
   adminFetch(`/admin/coupons/${couponId}`, { method: 'DELETE' });
 
-// ============================================================================
-// HERO POSTERS — admin-authored creatives that rotate in the landing hero
-// ============================================================================
-
-export const fetchHeroPostersApi = async (): Promise<HeroPoster[]> => {
-  // Plain fetch on purpose: this runs for logged-out visitors on the homepage,
-  // and a 401-refresh dance would be pure noise. A failed request just means
-  // "no posters", which the hero handles by falling back to the orbit.
-  try {
-    const res = await fetch(`${API_BASE_URL}/posters`);
-    if (!res.ok) return [];
-    const data = await res.json();
-    return Array.isArray(data) ? data : [];
-  } catch {
-    return [];
-  }
-};
-
-export const fetchAdminPostersApi = async (): Promise<HeroPosterAdmin[]> => {
-  const data = await adminFetch('/posters/admin');
-  return Array.isArray(data) ? data : [];
-};
-
-export const createHeroPosterApi = async (data: any) =>
-  adminFetch('/posters/admin', { method: 'POST', body: JSON.stringify(data) });
-
-export const updateHeroPosterApi = async (posterId: string, data: any) =>
-  adminFetch(`/posters/admin/${encodeURIComponent(posterId)}`, { method: 'PUT', body: JSON.stringify(data) });
-
-export const deleteHeroPosterApi = async (posterId: string) =>
-  adminFetch(`/posters/admin/${encodeURIComponent(posterId)}`, { method: 'DELETE' });
-
-/**
- * Upload a poster image. Uses XHR rather than `apiFetch` because adminFetch
- * always sets a JSON content type, which multipart uploads cannot have, and
- * because the progress callback is what makes a 6MB upload feel honest.
- */
-export const uploadPosterImageApi = async (file: File, onProgress?: (percent: number) => void) => {
-  const form = new FormData();
-  form.append('file', file);
-
-  return new Promise<{ stored_name: string; file_name: string; size_bytes: number }>((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', `${API_BASE_URL}/posters/admin/upload`);
-    xhr.timeout = 120000;
-    const token = getAccessToken();
-    if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-    xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100));
-    };
-    xhr.onload = () => {
-      try {
-        const data = JSON.parse(xhr.responseText);
-        if (xhr.status === 401) return reject(new Error('Session expired — dobara admin login karo'));
-        if (xhr.status === 413) return reject(new Error('Image 6MB se bada hai'));
-        if (xhr.status >= 200 && xhr.status < 300) return resolve(data);
-        reject(new Error(data?.error || `Upload failed (Status ${xhr.status})`));
-      } catch {
-        reject(new Error(`Upload failed with server status ${xhr.status}`));
-      }
-    };
-    xhr.onerror = () => reject(new Error('Network error during upload'));
-    xhr.ontimeout = () => reject(new Error('Upload timed out after 120 seconds'));
-    xhr.send(form);
-  });
-};
-
 export const fetchLeaderboardApi = async () => {
   const res = await fetch(`${API_BASE_URL}/gamification/leaderboard`);
   if (!res.ok) throw new Error('Leaderboard unavailable');
   const data = await res.json();
   return Array.isArray(data) ? data : (data?.entries || []);
 };
-
-export const generateStudyPlanApi = async (payload: {
-  targetCompany: string;
-  targetRole: string;
-  /**
-   * Optional hint, only used when there is no interview date. The server is
-   * authoritative: a supplied `interviewDate` always wins, so the client no
-   * longer has to guess (and get wrong) a day count.
-   */
-  daysRemaining?: number;
-  interviewDate?: string | null;
-}) => {
-  const res = await apiFetch(`${API_BASE_URL}/study-plan/generate`, {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-  if (!res.ok) {
-    let message = 'Study plan generation failed';
-    try { message = (await res.json()).error || message; } catch { /* ignore */ }
-    throw new Error(message);
-  }
-  return await res.json();
-};
-
-export const fetchStudyPlanTemplatesApi = async (): Promise<StudyPlanTemplateMeta[]> => {
-  const res = await apiFetch(`${API_BASE_URL}/study-plan/templates`);
-  return (await res.json())?.templates || [];
-};
-
-export const fetchMyStudyPlanApi = async () => {
-  const res = await apiFetch(`${API_BASE_URL}/study-plan/enrollment`);
-  return await res.json();
-};
-
-export const saveMyStudyPlanApi = async (payload: {
-  targetCompany: string;
-  targetRole: string;
-  interviewDate?: string | null;
-}) => {
-  const res = await apiFetch(`${API_BASE_URL}/study-plan/enrollment`, {
-    method: 'PUT',
-    body: JSON.stringify(payload),
-  });
-  if (!res.ok) {
-    let message = 'Could not save your plan';
-    try { message = (await res.json()).error || message; } catch { /* ignore */ }
-    throw new Error(message);
-  }
-  return await res.json();
-};
-
-export const setStudyPlanPhaseApi = async (phaseId: string, completed: boolean) => {
-  const res = await apiFetch(`${API_BASE_URL}/study-plan/enrollment/phases/${encodeURIComponent(phaseId)}`, {
-    method: 'PUT',
-    body: JSON.stringify({ completed }),
-  });
-  if (!res.ok) {
-    let message = 'Could not update progress';
-    try { message = (await res.json()).error || message; } catch { /* ignore */ }
-    throw new Error(message);
-  }
-  return await res.json();
-};
-
-export const resetMyStudyPlanApi = async () => {
-  const res = await apiFetch(`${API_BASE_URL}/study-plan/enrollment`, { method: 'DELETE' });
-  if (!res.ok) {
-    let message = 'Could not reset your plan';
-    try { message = (await res.json()).error || message; } catch { /* ignore */ }
-    throw new Error(message);
-  }
-  return await res.json();
-};
-
-// ---------- Study plan admin ----------
-
-export const adminListStudyPlansApi = async (status?: string) =>
-  adminFetch(`/admin/study-plans${status ? `?status=${encodeURIComponent(status)}` : ''}`);
-
-export const adminGetStudyPlanApi = async (id: string) =>
-  adminFetch(`/admin/study-plans/${encodeURIComponent(id)}`);
-
-export const adminCreateStudyPlanApi = async (data: any) =>
-  adminFetch('/admin/study-plans', { method: 'POST', body: JSON.stringify(data) });
-
-export const adminUpdateStudyPlanApi = async (id: string, data: any) =>
-  adminFetch(`/admin/study-plans/${encodeURIComponent(id)}`, { method: 'PUT', body: JSON.stringify(data) });
-
-export const adminDeleteStudyPlanApi = async (id: string, hard = false) =>
-  adminFetch(`/admin/study-plans/${encodeURIComponent(id)}${hard ? '?hard=1' : ''}`, { method: 'DELETE' });
-
-export const adminAddStudyPlanPhaseApi = async (templateId: string, data: any) =>
-  adminFetch(`/admin/study-plans/${encodeURIComponent(templateId)}/phases`, {
-    method: 'POST', body: JSON.stringify(data),
-  });
-
-export const adminUpdateStudyPlanPhaseApi = async (templateId: string, phaseId: string, data: any) =>
-  adminFetch(`/admin/study-plans/${encodeURIComponent(templateId)}/phases/${encodeURIComponent(phaseId)}`, {
-    method: 'PUT', body: JSON.stringify(data),
-  });
-
-export const adminDeleteStudyPlanPhaseApi = async (templateId: string, phaseId: string) =>
-  adminFetch(`/admin/study-plans/${encodeURIComponent(templateId)}/phases/${encodeURIComponent(phaseId)}`, {
-    method: 'DELETE',
-  });
-
-export const adminReorderStudyPlanPhasesApi = async (templateId: string, phaseIds: string[]) =>
-  adminFetch(`/admin/study-plans/${encodeURIComponent(templateId)}/phases/reorder`, {
-    method: 'POST', body: JSON.stringify({ phase_ids: phaseIds }),
-  });
-
-export const adminAddStudyPlanBlockApi = async (templateId: string, phaseId: string, data: any) =>
-  adminFetch(`/admin/study-plans/${encodeURIComponent(templateId)}/phases/${encodeURIComponent(phaseId)}/blocks`, {
-    method: 'POST', body: JSON.stringify(data),
-  });
-
-export const adminUpdateStudyPlanBlockApi = async (templateId: string, phaseId: string, blockId: string, data: any) =>
-  adminFetch(
-    `/admin/study-plans/${encodeURIComponent(templateId)}/phases/${encodeURIComponent(phaseId)}/blocks/${encodeURIComponent(blockId)}`,
-    { method: 'PUT', body: JSON.stringify(data) }
-  );
-
-export const adminDeleteStudyPlanBlockApi = async (templateId: string, phaseId: string, blockId: string) =>
-  adminFetch(
-    `/admin/study-plans/${encodeURIComponent(templateId)}/phases/${encodeURIComponent(phaseId)}/blocks/${encodeURIComponent(blockId)}`,
-    { method: 'DELETE' }
-  );
 
 export const fetchInterviewModulesApi = async () => {
   try {
@@ -1234,3 +1040,24 @@ export const fetchOfferWallApi = async (limit = 8): Promise<OfferStoryPublic[]> 
     return [];
   }
 };
+
+// ============================================================================
+// SUPPORT INBOX + MESSAGE LOG (admin) — PROFESSIONAL_PLATFORM_PLAN §8, §4.1
+// ============================================================================
+
+export interface SupportRequestRow {
+  id: string; ref: string; name: string; email: string; topic: string; message: string;
+  user_id: string | null; status: 'open' | 'resolved'; created_at: string; updated_at?: string;
+}
+export const fetchSupportRequestsApi = async (): Promise<{ requests: SupportRequestRow[] }> => adminFetch('/admin/support');
+export const setSupportStatusApi = async (id: string, status: 'open' | 'resolved') =>
+  adminFetch(`/admin/support/${encodeURIComponent(id)}`, { method: 'PUT', body: JSON.stringify({ status }) });
+
+export interface MessageLogRowView {
+  id: string; user_id: string; email: string | null; type: string; topic: string;
+  channel: 'email' | 'push' | 'whatsapp'; status: 'sent' | 'skipped'; reason?: string; transactional: boolean; at: string;
+}
+export const fetchMessageLogApi = async (q: { status?: string; channel?: string } = {}): Promise<{
+  rows: MessageLogRowView[];
+  week: { totals: Record<string, { sent: number; skipped: number }>; reasons: Record<string, number> };
+}> => adminFetch(`/admin/messages/log?${new URLSearchParams(q as Record<string, string>).toString()}`);

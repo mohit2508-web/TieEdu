@@ -42,7 +42,6 @@ const GLOBAL_KEYWORDS: Record<string, string[]> = {
   compare: ['vs', 'versus', 'difference', 'side by side'],
   freeCourse: ['free', 'xp', 'practice', 'interview'],
   courses: ['catalog', 'python', 'c programming', 'paid'],
-  studyPlan: ['plan', 'schedule', 'phases', 'timeline', 'progress'],
   myCourses: ['enrolled', 'certificates', 'certificate'],
   account: ['profile', 'orders', 'unlocks', 'password', 'settings'],
   campus: ['tpo', 'cohort', 'college'],

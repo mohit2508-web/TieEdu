@@ -63,7 +63,8 @@ test('mySubscriptions never returns the delivery keys', () => {
 
 test('the Notifications tab is in the admin nav', () => {
   assert.match(view, /id:\s*'notifications'/);
-  assert.match(view, /label:\s*'Notifications'/);
+  // Under Messaging since the admin restructure (PROFESSIONAL_PLATFORM_PLAN §9).
+  assert.match(view, /label:\s*'App notifications'/);
 });
 
 test('the tab is actually rendered when selected', () => {
