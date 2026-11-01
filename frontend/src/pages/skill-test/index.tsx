@@ -140,7 +140,8 @@ export default function SkillTestLanding() {
     setLoading(true);
     fetchSkillsApi()
       .then((data) => {
-        setSkills(data.filter((s) => s.status === 'active').map(toCard));
+        // Company mocks live inside their company page, not in the skills catalogue.
+        setSkills(data.filter((s) => s.status === 'active' && s.category !== 'Company mocks').map(toCard));
         setFailed(false);
       })
       .catch(() => setFailed(true))

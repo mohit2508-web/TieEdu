@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
 import { Footer } from '@/components/layout/Footer';
-import { PricingSection } from '@/components/checkout/PricingSection';
 import { HomeFaq } from '@/components/home/HomeFaq';
 import { HomeMobileCtaBar } from '@/components/home/HomeMobileCtaBar';
 import { VaultRail } from '@/components/home/VaultRail';
@@ -145,16 +144,6 @@ export default function Home() {
           <ResearchBento />
           <RoundBars companies={companies} />
           <OfferStories total={stats?.offer_stories} />
-
-          {/* E13: pricing on graph paper with the two soft blobs behind it. */}
-          <div className="relative overflow-hidden border-y border-line bg-app-warm">
-            <div className="grid-paper mask-fade-b pointer-events-none absolute inset-0" aria-hidden />
-            <div className="pointer-events-none absolute -left-24 top-10 h-72 w-72 rounded-full bg-signal/30 blur-3xl" aria-hidden />
-            <div className="pointer-events-none absolute -right-24 bottom-10 h-72 w-72 rounded-full bg-secondary/25 blur-3xl" aria-hidden />
-            <div className="relative">
-              <PricingSection />
-            </div>
-          </div>
 
           <HomeFaq />
           <ClosingBand />

@@ -22,6 +22,9 @@ import type { Company } from '@/types';
 
 type SortKey = 'popular' | 'name' | 'ctc';
 
+/** The company TieEdu is completing first (INFOSYS_SE_PREP_PLAN.md) leads the list. */
+const FOCUS_SLUG = 'infosys-systems-engineer';
+
 const SORTS: Array<[SortKey, string]> = [
   ['popular', 'Most unlocked'],
   ['ctc', 'Highest CTC'],
@@ -79,7 +82,7 @@ export default function CompaniesPage() {
     const by: Record<SortKey, (a: Company, b: Company) => number> = {
       // The real 2026–27 programs (imported profiles carry company_group) come
       // before the older demo pages, then most unlocked first.
-      popular: (a, b) => (Number(!!(b as any).company_group) - Number(!!(a as any).company_group)) || (b.unlock_count || 0) - (a.unlock_count || 0),
+      popular: (a, b) => (Number(b.slug === FOCUS_SLUG) - Number(a.slug === FOCUS_SLUG)) || (Number(!!(b as any).company_group) - Number(!!(a as any).company_group)) || (b.unlock_count || 0) - (a.unlock_count || 0),
       ctc: (a, b) => (b.ctc_max ?? -1) - (a.ctc_max ?? -1),
       name: (a, b) => a.name.localeCompare(b.name),
     };

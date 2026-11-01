@@ -48,7 +48,8 @@ const landing = (f: string) => read(`src/components/home/landing/${f}.tsx`);
 const hero = landing('LandingHero');
 
 console.log('\n--- the Warm Paper landing, in the plan\'s order (UI_REDESIGN_PLAN_V3 §11) ---');
-const ORDER = ['PromoBar', 'LandingHero', 'ToolFan', 'RoutePath', 'CompanyCount', 'VaultRail', 'AudienceGrid', 'PractiseDemo', 'ResearchBento', 'RoundBars', 'OfferStories', 'PricingSection', 'HomeFaq', 'ClosingBand'];
+// Pricing left the home page (owner, 2026-11-01): it lives inside each company page.
+const ORDER = ['PromoBar', 'LandingHero', 'ToolFan', 'RoutePath', 'CompanyCount', 'VaultRail', 'AudienceGrid', 'PractiseDemo', 'ResearchBento', 'RoundBars', 'OfferStories', 'HomeFaq', 'ClosingBand'];
 const at = ORDER.map((c) => home.indexOf(`<${c}`));
 ok(at.every((i) => i > 0), `every section is on the page: ${ORDER.filter((_, i) => at[i] < 0).join(', ') || 'all'}`);
 ok(at.every((i, k) => k === 0 || i > at[k - 1]), 'the sections follow the plan order');

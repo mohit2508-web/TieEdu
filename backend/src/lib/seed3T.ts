@@ -160,7 +160,7 @@ export function seedCompanyTest(db: any, key: string, onlyMissing = false): numb
     name: cfg.name, category: 'Company mocks', description: cfg.description, shortDescription: `${cfg.name} mock`,
     status: 'active', isPopular: true, certificateAvailable: false, displayOrder: 0,
     tags: ['company', key, cfg.company_slug], totalQuestions: cfg.sections.reduce((n, s) => n + s.count, 0),
-    avgCompletionTime: cfg.minutes, company_slug: cfg.company_slug, updated_at: now,
+    avgCompletionTime: cfg.minutes, company_slug: cfg.company_slug, prep_role: 'full', updated_at: now,
   });
 
   const topicId: Record<string, string> = {};
@@ -282,11 +282,82 @@ export function seedFeedV2(db: any): number {
   return FEED_V2.length;
 }
 
+/**
+ * Sectional tests for a company mock: one short test per section, drawn from
+ * that section's questions in the full mock's bank. Pack owners take them as
+ * often as they like; they feed the prep hub's section scores.
+ */
+const SECTIONAL: Record<string, Array<{ key: string; name: string; count: number; minutes: number }>> = {
+  'infosys-se': [
+    { key: 'math', name: 'Mathematical Ability', count: 10, minutes: 15 },
+    { key: 'reasoning', name: 'Reasoning Ability', count: 10, minutes: 12 },
+    { key: 'verbal', name: 'Verbal Ability', count: 10, minutes: 10 },
+    { key: 'pseudocode', name: 'Pseudocode', count: 5, minutes: 10 },
+    { key: 'puzzle', name: 'Puzzle Solving', count: 4, minutes: 10 },
+  ],
+};
+
+export function seedSectionalTests(db: any, key: string, onlyMissing = false): number {
+  const cfg = CONFIGS[key];
+  const bank = BANKS[key];
+  const now = new Date().toISOString();
+  const mk = (p: string) => `${p}-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`;
+  let made = 0;
+  for (const sec of SECTIONAL[key] || []) {
+    const slug = `${cfg.slug}-${sec.key}`;
+    let skill = db.skills.find((s: any) => s.slug === slug);
+    if (skill && onlyMissing) continue;
+    if (!skill) { skill = { id: mk('skl'), slug, created_at: now }; db.skills.push(skill); }
+    Object.assign(skill, {
+      name: `${cfg.name.replace(' Online Assessment', '')} · ${sec.name}`, category: 'Company mocks',
+      description: `${sec.name} sectional test for ${cfg.name}: ${sec.count} questions in ${sec.minutes} minutes.`,
+      shortDescription: `${sec.name} test`, status: 'active', isPopular: false, certificateAvailable: false, displayOrder: 0,
+      tags: ['company', key, cfg.company_slug, 'sectional'], totalQuestions: sec.count, avgCompletionTime: sec.minutes,
+      company_slug: cfg.company_slug, prep_role: 'sectional', section_key: sec.key, updated_at: now,
+    });
+    let t = db.topics.find((x: any) => x.skillId === skill.id && x.slug === sec.key);
+    if (!t) { t = { id: mk('top'), skillId: skill.id, slug: sec.key, created_at: now }; db.topics.push(t); }
+    Object.assign(t, { name: sec.name, displayOrder: 1, isActive: true, updated_at: now });
+    db.questions = db.questions.filter((q: any) => q.skillId !== skill.id);
+    for (const q of bank.filter((x: any) => x.topic === sec.key)) {
+      db.questions.push({
+        id: mk('qst'), skillId: skill.id, topicId: t.id, type: 'single_choice', difficulty: q.difficulty,
+        question: q.question, options: q.options.map((text: string, i: number) => ({ text, isCorrect: i === q.correct })),
+        explanation: q.explanation, tags: [key, q.topic, q.source, 'sectional'], status: 'approved', version: 1,
+        usageCount: 0, correctCount: 0, difficultyScore: 0, created_at: now, updated_at: now,
+      });
+    }
+    let asm = db.assessments.find((a: any) => a.skillId === skill.id && a.isDefault);
+    if (!asm) { asm = { id: mk('asm'), skillId: skill.id, created_at: now }; db.assessments.push(asm); }
+    Object.assign(asm, {
+      title: skill.name, description: skill.description, durationMinutes: sec.minutes, totalQuestions: sec.count, passingScore: 60,
+      topicBlueprint: [{ topicId: t.id, questionCount: sec.count }], difficultyBlueprint: { beginner: 0, intermediate: 0, advanced: 0, expert: 0 },
+      certificateThresholds: { pass: 60, proficient: 75, advanced: 85, expert: 90 }, isActive: true, isDefault: true,
+      allowRetake: true, maxRetakes: 500, freeAttempts: 0, shuffleQuestions: true, shuffleOptions: true, showExplanationAfterSubmit: true,
+      requireFullScreen: true, tabSwitchLimit: 3, instructions: [`${sec.count} questions · ${sec.minutes} minutes`, 'Secure mode: stay in fullscreen.'], updated_at: now,
+    });
+    made++;
+  }
+  return made;
+}
+
+/** Focus (owner, 2026-11-01): only these programs are public for now; the rest become drafts once (restorable in Admin). */
+const FOCUS = ['infosys-systems-engineer', 'tcs-nqt', 'accenture', 'wipro-elite-nth', 'cognizant-genc'];
+export function applyCompanyFocus(db: any): number {
+  if (db.company_focus_applied) return 0;
+  let n = 0;
+  for (const c of db.companies || []) if (!FOCUS.includes(c.slug) && c.status === 'published') { c.status = 'draft'; n++; }
+  db.company_focus_applied = new Date().toISOString();
+  return n;
+}
+
 /** Server start: add any missing 3T content. Returns true when something was added. */
 export function seedMissing3T(db: any): boolean {
   const covers = seedCourseCovers(db) + seedFeedV2(db);
+  const t0 = COMPANY_TESTS.reduce((n, k) => n + seedSectionalTests(db, k, true), 0);
   const p = seedCompanyProfiles(db, true);
   const t = COMPANY_TESTS.reduce((n, k) => n + seedCompanyTest(db, k, true), 0);
   const i = seedInterviewPrep(db, true);
-  return covers + p.created + t + i > 0;
+  const focus = applyCompanyFocus(db);
+  return covers + t0 + focus + p.created + t + i > 0;
 }

@@ -24,6 +24,7 @@
  * radar, daily practice) works on it unchanged.
  */
 import { CompanyPageDoc, PageContent, PageSection, SectionType, findPage, newId, sanitizeContent } from './companyPage';
+import { PREP_COMPANIES } from './prep';
 
 type RoundKey = 'OA' | 'Technical' | 'SystemDesign' | 'HR';
 
@@ -144,7 +145,7 @@ export function derivePageContent(db: any, company: any): PageContent {
 
   // A company mock (scripts/importCompanyTest.ts) replaces the generic skill test
   // on the first MCQ-style round: that is the online assessment it mirrors.
-  const companyMock = (Array.isArray(db.skills) ? db.skills : []).find((s: any) => s?.company_slug === company.slug && s?.status === 'active');
+  const companyMock = (Array.isArray(db.skills) ? db.skills : []).find((s: any) => s?.company_slug === company.slug && s?.status === 'active' && s?.prep_role !== 'sectional');
   let mockUsed = false;
   const roundStations = stations.map((st) => {
     const skills = skillsFor(st.key);
@@ -204,11 +205,13 @@ export function derivePageContent(db: any, company: any): PageContent {
       intro: company.tagline ? String(company.tagline) : '',
       subtitle: '',
       show_chips: true,
-      next_step_label: 'Your next step',
-      next_step_text: free.length
+      next_step_label: PREP_COMPANIES[company.slug] ? 'Your prep plan' : 'Your next step',
+      next_step_text: PREP_COMPANIES[company.slug]
+        ? 'A day-by-day plan to your test date, your readiness score and what to fix next.'
+        : free.length
         ? `Start with the free module: ${String(free[0].title)}.`
         : 'Pick a round below and start with its questions.',
-      next_step_href: '',
+      next_step_href: PREP_COMPANIES[company.slug] ? `/prep/${company.slug}` : '',
       card_eyebrow: firstSkill ? 'Test · Free' : '',
       // With a company mock, the hero card offers the real-pattern test itself.
       card_title: companyMock ? 'How ready are you for {company}?' : firstSkill ? 'Check your level for {company}' : '',

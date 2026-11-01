@@ -1,4 +1,5 @@
 import { DriveCountdown } from './DriveCountdown';
+import { PrepCard } from './PrepCard';
 import { readinessBand, BAND_CLASS } from '@/lib/readiness';
 import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -8,7 +9,7 @@ import { DailyChallengeCard } from '@/components/today/DailyChallengeCard';
 import { fetchToday, saveGradYear, TodayView } from '@/lib/todayApi';
 import { cn } from '@/lib/cn';
 import { PassportCard } from './PassportCard';
-import { ParentLinkCard } from './ParentLinkCard';
+
 import { CollegeNudgesCard } from './CollegeNudgesCard';
 import { CollegePulseLine } from './CollegePulseLine';
 import { useLang, type Lang } from '@/lib/lang';
@@ -207,6 +208,9 @@ export const TodayScreen: React.FC<{ ready: boolean }> = ({ ready }) => {
         <CollegePulseLine ready={ready} />
       </header>
 
+      {/* The focus company's prep: readiness, days left, today's task. */}
+      <PrepCard />
+
       {/* 3T §7: the nearest drive date, struck down by one each day. */}
       {week.test_dates.length > 0 && (() => {
         const next = [...week.test_dates].sort((a, b) => a.days_left - b.days_left).find((t) => t.days_left >= 0);
@@ -399,7 +403,7 @@ export const TodayScreen: React.FC<{ ready: boolean }> = ({ ready }) => {
         )}
 
         <PassportCard ready={ready} />
-        <ParentLinkCard ready={ready} />
+
       </div>
     </main>
   );

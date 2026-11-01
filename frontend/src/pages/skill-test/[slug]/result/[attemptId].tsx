@@ -5,7 +5,7 @@ import {
   Award, CheckCircle2, XCircle, MinusCircle, TrendingUp,
   BookOpen, ChevronRight, RotateCcw, Share2, Trophy,
 } from 'lucide-react';
-import { getResultApi, SkillTestAttempt, SkillTestCertificate, SkillTestRecommendation, TopicPerformance } from '@/lib/skillTestApi';
+import { getResultApi, fetchSkillDetailApi, SkillTestAttempt, SkillTestCertificate, SkillTestRecommendation, TopicPerformance } from '@/lib/skillTestApi';
 
 import { nameFromSlug, withPageTitle } from '@/components/common/withPageTitle';
 function getLevel(score: number) {
@@ -46,6 +46,12 @@ function ResultPage() {
   const correct = attempt?.correctAnswers ?? (Number(router.query.correct) || 0);
   // Secure-mode strikes from this attempt (§5.2). Shown as a flag, not a verdict.
   const flags = Number(router.query.flags) || 0;
+  // Company tests send the student back to their prep plan (Track step of the loop).
+  const [prepSlug, setPrepSlug] = useState('');
+  useEffect(() => {
+    if (!slug) return;
+    fetchSkillDetailApi(String(slug)).then(({ skill }) => setPrepSlug((skill as any)?.company_slug || '')).catch(() => {});
+  }, [slug]);
   const incorrect = attempt?.incorrectAnswers ?? (attempt?.totalQuestions ?? 30) - correct;
   const total = attempt?.totalQuestions ?? 30;
   const passed = attempt?.passFail === 'pass' || score >= 60;
@@ -118,6 +124,11 @@ function ResultPage() {
             <p className="mt-2 text-xs font-semibold text-danger">
               Integrity flag: left the test {flags} time{flags === 1 ? '' : 's'}
             </p>
+          )}
+          {prepSlug && (
+            <Link href={`/prep/${prepSlug}`} className="btn btn-primary mt-4 inline-flex min-h-[48px] px-5">
+              See your updated readiness and what to fix next
+            </Link>
           )}
           <div className="mt-3">
             <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${

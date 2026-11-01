@@ -43,21 +43,31 @@ export const CompanyListCard: React.FC<{ company: Company }> = ({ company }) => 
   return (
     <Link
       href={`/company/${company.slug}`}
-      className="group focus-ring relative flex h-full flex-col overflow-hidden rounded-card border border-line bg-card p-5 shadow-edge-neutral transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-1 hover:border-signal/60 hover:shadow-[var(--shadow-pop)] motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+      className="group focus-ring relative flex h-full flex-col overflow-hidden rounded-card border border-line bg-card shadow-edge-neutral transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-1 hover:border-signal/60 hover:shadow-[var(--shadow-pop)] motion-reduce:transition-none motion-reduce:hover:translate-y-0"
     >
-      <div className="flex items-start gap-3">
-        <BrandTile name={company.name} src={company.logo_url} className="h-14 w-14 shrink-0 rounded-2xl p-1.5" />
-        <div className="min-w-0 flex-1">
-          <h2 className="truncate font-display text-lg font-bold text-heading">{company.name}</h2>
-          <p className="mt-0.5 truncate text-sm text-muted">{industryGroup(company.industry)}</p>
-        </div>
-        <span
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-line text-muted transition-colors group-hover:border-signal group-hover:bg-signal group-hover:text-heading"
-          aria-hidden
-        >
+      {/* Coloured band with the logo tile: the card's identity at a glance. */}
+      <div className="relative h-20 bg-gradient-to-br from-brand-ink to-secondary">
+        <div className="grid-paper-on-hero absolute inset-0 opacity-60" aria-hidden />
+        <span className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white transition-colors group-hover:bg-signal group-hover:text-heading" aria-hidden>
           <ArrowUpRight className="h-4 w-4" />
         </span>
       </div>
+      <div className="flex flex-1 flex-col px-5 pb-5">
+        <div className="relative z-[1] -mt-8 flex items-end gap-3">
+          <BrandTile name={company.name} src={company.logo_url} className="h-16 w-16 shrink-0 rounded-2xl border-4 border-card bg-card p-1.5 shadow-edge-neutral" />
+          <div className="min-w-0 flex-1 pb-1">
+            <p className="truncate text-sm text-muted">{industryGroup(company.industry)}</p>
+          </div>
+        </div>
+        <h2 className="mt-3 line-clamp-2 font-display text-lg font-bold leading-snug text-heading">{company.name}</h2>
+        {company.tagline && <p className="mt-1 line-clamp-2 text-sm text-body">{company.tagline}</p>}
+        {(company.tags || []).filter((t) => /₹/.test(t)).length > 0 && (
+          <ul className="mt-3 flex flex-wrap gap-1.5">
+            {(company.tags || []).filter((t) => /₹/.test(t)).slice(0, 3).map((t) => (
+              <li key={t} className="rounded-full bg-signal-soft px-2.5 py-0.5 text-xs font-semibold text-amber-deep">{t}</li>
+            ))}
+          </ul>
+        )}
 
       <div className="mt-5">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted">CTC</p>
@@ -94,16 +104,18 @@ export const CompanyListCard: React.FC<{ company: Company }> = ({ company }) => 
         )}
       </div>
 
+      {/* Only facts the page has: no "—" or "0 modules" filler. */}
+      {(company.avg_process_days != null || modules > 0 || company.unlock_count > 0) && (
       <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-line pt-4 text-sm text-body">
-        <span className="inline-flex items-center gap-1.5">
+        {company.avg_process_days != null && <span className="inline-flex items-center gap-1.5">
           <Timer className="h-4 w-4 text-muted" aria-hidden />
           {company.avg_process_days != null ? `${company.avg_process_days} days` : '—'}
           <span className="sr-only">process</span>
-        </span>
-        <span className="inline-flex items-center gap-1.5">
+        </span>}
+        {modules > 0 && <span className="inline-flex items-center gap-1.5">
           <Layers className="h-4 w-4 text-muted" aria-hidden />
           {modules} module{modules === 1 ? '' : 's'}
-        </span>
+        </span>}
         {company.unlock_count > 0 && (
           <span className="inline-flex items-center gap-1.5 text-muted">
             <Users className="h-4 w-4" aria-hidden />
@@ -111,9 +123,12 @@ export const CompanyListCard: React.FC<{ company: Company }> = ({ company }) => 
           </span>
         )}
       </div>
+      )}
 
-      <div className="mt-3">
+      <div className="mt-auto flex items-center justify-between gap-2 pt-3">
         {checked ? <Stamp kind="verified" flat>{checked}</Stamp> : <Stamp kind="pending" flat>Being verified</Stamp>}
+      </div>
+      <span className="btn btn-primary mt-4 w-full min-h-[44px]" aria-hidden>Start prep</span>
       </div>
     </Link>
   );

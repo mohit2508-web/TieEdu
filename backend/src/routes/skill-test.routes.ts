@@ -108,7 +108,9 @@ skillTestRouter.post('/assessments/:slug/start', requireAuth, (req: Request, res
     const freeAttempts = Number((assessment as any).freeAttempts ?? 1);
     if (!unlocked && priorAttempts.length >= freeAttempts) {
       return res.status(402).json({
-        error: `Your free ${skill.name} attempt is used. Get the ${company.name} pack for unlimited mocks with fresh questions.`,
+        error: freeAttempts > 0
+          ? `Your free ${skill.name} attempt is used. Get the ${company.name} pack for unlimited mocks with fresh questions.`
+          : `${skill.name} is part of the ${company.name} pack. Get the pack to take it as often as you like.`,
         code: 'pack_required',
         company_slug: companySlug,
       });
