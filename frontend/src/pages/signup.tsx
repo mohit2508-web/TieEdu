@@ -161,7 +161,7 @@ export default function SignupPage() {
                   className="mt-0.5 w-4 h-4 rounded border-line text-link focus:ring-signal shrink-0"
                 />
                 <label htmlFor="tc-checkbox" className="text-sm text-body leading-snug cursor-pointer select-none">
-                  I agree to the <span className="font-semibold text-link underline underline-offset-2">Terms &amp; Conditions</span> and <span className="font-semibold text-link underline underline-offset-2">Privacy Policy</span>.
+                  I agree to the <Link href="/terms" target="_blank" className="font-semibold text-link underline underline-offset-2">Terms &amp; Conditions</Link> and <Link href="/privacy" target="_blank" className="font-semibold text-link underline underline-offset-2">Privacy Policy</Link>.
                 </label>
               </div>
 
