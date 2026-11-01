@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
 import { RefreshCw, WifiOff, X } from 'lucide-react';
 import { DropsFeed } from '@/components/drops/DropsFeed';
+import { DropsAside } from '@/components/drops/DropsAside';
 import { DropsFilterBar, type DropsFilter } from '@/components/drops/DropsFilterBar';
 import { DropDetailSheet } from '@/components/drops/DropDetailSheet';
 import { DropNotInterestedSheet } from '@/components/drops/DropNotInterestedSheet';
@@ -423,6 +424,7 @@ export default function DropsPage() {
             />
           </div>
         </div>
+        <DropsAside items={items} onOpen={(i) => { if (items[i]) handleReadMore(items[i]); }} />
       </div>
 
       <DropDetailSheet

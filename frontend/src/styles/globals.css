@@ -2190,7 +2190,17 @@ code, pre, kbd, samp, .font-mono {
 .drops-filters--rail .drops-filter-chip {
   width: 100%;
   justify-content: flex-start;
+  /* A light list, not a stack of grey pills: quiet until hovered or chosen. */
+  min-height: 40px;
+  padding: 8px 12px;
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  font-size: 14px;
 }
+.drops-filters--rail .drops-filter-chip:hover { background: var(--bg-surface-hover); }
+/* The chosen filter keeps its strong ink style (restated: the quiet rule above is more specific). */
+.drops-filters--rail .drops-filter-chip[aria-pressed='true'] { background: var(--brand-ink); color: #fff; }
 /*
  * The under-header chip strip is the mobile control; the desktop rail replaces
  * it. Written as a media query on the modifier (not a `md:hidden` utility)
@@ -2457,6 +2467,32 @@ code, pre, kbd, samp, .font-mono {
 /* Desktop: the feed sits in a centred column with a filter rail beside it. */
 @media (max-width: 767px) {
   .drops-rail { display: none; }
+}
+
+/* Redesign plan §5: on desktop the feed is a centred phone-shaped column, not a
+   full-width poster; the right rail (deadlines, your drive) appears from 1280px. */
+@media (min-width: 1024px) {
+  .drops-page { width: 100%; max-width: 520px; margin-inline: auto; }
+  .drop-slide { padding: 14px 0; }
+  .drop-card {
+    border-radius: 24px;
+    overflow: hidden;
+    border: 1px solid var(--border-subtle);
+    box-shadow: var(--shadow-pop);
+  }
+}
+.drops-aside { display: none; }
+@media (min-width: 1280px) {
+  .drops-aside {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    gap: 16px;
+    width: 300px;
+    overflow-y: auto;
+    padding: 18px 16px;
+    border-left: 1px solid var(--border-subtle);
+  }
 }
 
 /* ============================================
