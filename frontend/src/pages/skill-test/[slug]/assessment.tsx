@@ -9,9 +9,10 @@ import {
 } from 'lucide-react';
 import { isSignedIn } from '@/lib/auth';
 import {
-  startAssessmentApi, saveAttemptApi, submitAttemptApi,
+  startAssessmentApi, saveAttemptApi, submitAttemptApi, fetchSkillDetailApi,
   SkillTestAttempt, SafeQuestion,
 } from '@/lib/skillTestApi';
+import { useSections, SectionBar, SectionSubmitSheet, WritingTask, type TestSection, type WritingConfig } from '@/components/skill-test/Sectional';
 
 import { nameFromSlug, withPageTitle } from '@/components/common/withPageTitle';
 type AnswerState = Record<string, string[]>; // questionId -> selected option indexes (as strings)
@@ -35,6 +36,22 @@ function AssessmentPage() {
   const [showSubmit, setShowSubmit] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [started, setStarted] = useState(false);
+  // Sectional mode (company mocks): per-section timers, no going back, optional writing task.
+  const [sectionsCfg, setSectionsCfg] = useState<TestSection[] | null>(null);
+  const [writingCfg, setWritingCfg] = useState<WritingConfig | null>(null);
+  const [showSectionSubmit, setShowSectionSubmit] = useState(false);
+  const [testTitle, setTestTitle] = useState('');
+  useEffect(() => {
+    if (!slug) return;
+    fetchSkillDetailApi(String(slug))
+      .then(({ skill, assessment }) => {
+        const a = assessment as any;
+        if (skill?.name) setTestTitle(skill.name);
+        if (Array.isArray(a?.sections) && a.sections.length) setSectionsCfg(a.sections);
+        if (a?.writing?.tasks?.length) setWritingCfg(a.writing);
+      })
+      .catch(() => { /* plain single-timer mode */ });
+  }, [slug]);
 
   const saveTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const answeredRef = useRef<AnswerState>({});
@@ -131,6 +148,14 @@ function AssessmentPage() {
 
   secureStrikesRef.current = secure.strikes;
 
+  const sec = useSections({ attemptId: attempt?.id ?? null, questions, sections: sectionsCfg, active: started && !submitting });
+  // A new section opens on its first question.
+  useEffect(() => { if (sec.enabled) setCurrent(sec.range[0]); }, [sec.enabled, sec.idx]); // eslint-disable-line react-hooks/exhaustive-deps
+  // All sections closed with no writing task: submit.
+  useEffect(() => {
+    if (sec.enabled && sec.done && !writingCfg && started && !submitting) doSubmit(answeredRef.current, timeLeftRef.current);
+  }, [sec.enabled, sec.done]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // auto submit when timer hits 0
   useEffect(() => {
     if (timeLeft === 0 && started && attempt && attempt.status === 'in_progress') {
@@ -198,8 +223,45 @@ function AssessmentPage() {
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-signal-soft text-link">
             <Clock className="h-7 w-7" />
           </div>
-          <h1 className="mt-4 text-xl font-bold text-gray-900">{skillName} Assessment</h1>
-          <p className="mt-1 text-sm text-gray-500">30 Questions · 30 Minutes · Passing 60%</p>
+          <h1 className="mt-4 text-xl font-bold text-gray-900">{testTitle || `${skillName} Assessment`}</h1>
+          {sectionsCfg ? (
+            <>
+              <p className="mt-1 text-sm text-gray-500">
+                {sectionsCfg.reduce((n, s) => n + s.count, 0)} questions · {sectionsCfg.reduce((n, s) => n + s.minutes, 0)} minutes
+              </p>
+              {/* The real paper's pattern, section by section. */}
+              <table className="mt-4 w-full text-left text-sm">
+                <thead>
+                  <tr className="border-b border-gray-200 text-xs uppercase tracking-wider text-gray-500">
+                    <th className="py-2 font-semibold">Section</th>
+                    <th className="py-2 text-right font-semibold">Qs</th>
+                    <th className="py-2 text-right font-semibold">Time</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sectionsCfg.map((s, i) => (
+                    <tr key={s.topicId} className="border-b border-gray-100">
+                      <td className="py-2 text-gray-900">{String.fromCharCode(65 + i)}. {s.name}</td>
+                      <td className="py-2 text-right tabular-nums">{s.count}</td>
+                      <td className="py-2 text-right tabular-nums">{s.minutes} min</td>
+                    </tr>
+                  ))}
+                  {writingCfg && (
+                    <tr>
+                      <td className="py-2 text-gray-500" colSpan={3}>Then: {writingCfg.title} (optional, {writingCfg.words[0]}–{writingCfg.words[1]} words)</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+              <ul className="mt-4 space-y-1 text-left text-xs text-gray-500">
+                <li>Each section has its own timer. When it ends, the next section opens.</li>
+                <li>A submitted section cannot be reopened.</li>
+                <li>Secure mode: stay in fullscreen. Leaving the test 3 times submits it.</li>
+              </ul>
+            </>
+          ) : (
+            <p className="mt-1 text-sm text-gray-500">30 Questions · 30 Minutes · Passing 60%</p>
+          )}
           {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
           <button
             onClick={handleStart}
@@ -224,6 +286,15 @@ function AssessmentPage() {
     );
   }
 
+  if (sec.enabled && sec.done && writingCfg && attempt) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <SecureModeWarning message={secure.warning} onResume={() => { secure.dismissWarning(); secure.enterFullscreen(); }} />
+        <WritingTask config={writingCfg} attemptId={attempt.id} submitting={submitting} onSubmit={() => doSubmit(answers, timeLeft)} />
+      </div>
+    );
+  }
+
   const q = questions[current];
   const selected = answers[q.id] || [];
   const isMarked = !!marked[q.id];
@@ -236,7 +307,7 @@ function AssessmentPage() {
       <div className="sticky top-0 z-40 bg-white border-b border-gray-200">
         <div className="mx-auto max-w-3xl px-4 py-2.5 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0">
-            <span className="text-sm font-semibold text-gray-900 truncate">{skillName}</span>
+            <span className="text-sm font-semibold text-gray-900 truncate">{testTitle || skillName}</span>
             <SecureBadge />
           </div>
           <div className="flex items-center gap-3 flex-none">
@@ -251,6 +322,7 @@ function AssessmentPage() {
             </span>
           </div>
         </div>
+        {sec.enabled && sectionsCfg && <SectionBar sections={sectionsCfg} idx={sec.idx} secLeft={sec.secLeft} />}
         <div className="h-1 bg-gray-100">
           <div className="h-full bg-signal transition-all duration-300" style={{ width: `${((current + 1) / questions.length) * 100}%` }} />
         </div>
@@ -329,8 +401,8 @@ function AssessmentPage() {
       <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 safe-area-bottom">
         <div className="mx-auto max-w-3xl px-4 py-3 flex items-center gap-2">
           <button
-            onClick={() => setCurrent((c) => Math.max(0, c - 1))}
-            disabled={current === 0}
+            onClick={() => setCurrent((c) => Math.max(sec.range[0], c - 1))}
+            disabled={current <= sec.range[0]}
             className="flex items-center gap-1 rounded-full border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed min-h-[44px]"
           >
             <ArrowLeft className="h-4 w-4" /> Prev
@@ -343,7 +415,7 @@ function AssessmentPage() {
             <LayoutGrid className="h-4 w-4" /> Palette
           </button>
 
-          {current < questions.length - 1 ? (
+          {current < (sec.enabled ? sec.range[1] : questions.length - 1) ? (
             <button
               onClick={() => setCurrent((c) => c + 1)}
               className="flex items-center gap-1 rounded-full bg-signal px-5 py-2.5 text-sm font-semibold text-on-primary hover:bg-signal min-h-[44px]"
@@ -352,10 +424,10 @@ function AssessmentPage() {
             </button>
           ) : (
             <button
-              onClick={() => setShowSubmit(true)}
+              onClick={() => (sec.enabled ? setShowSectionSubmit(true) : setShowSubmit(true))}
               className="flex items-center gap-1 rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 min-h-[44px]"
             >
-              Submit
+              {sec.enabled ? 'Submit section' : 'Submit'}
             </button>
           )}
         </div>
@@ -375,6 +447,7 @@ function AssessmentPage() {
             <div className="px-4 py-4">
               <div className="flex flex-wrap gap-2">
                 {questions.map((qq, qi) => {
+                  if (sec.enabled && (qi < sec.range[0] || qi > sec.range[1])) return null;
                   const isA = answers[qq.id]?.length > 0;
                   const isM = marked[qq.id];
                   const isActive = qi === current;
@@ -404,6 +477,17 @@ function AssessmentPage() {
       )}
 
       {/* Submit Confirmation */}
+      {sec.enabled && sec.section && (
+        <SectionSubmitSheet
+          open={showSectionSubmit}
+          name={sec.section.name}
+          unanswered={questions.slice(sec.range[0], sec.range[1] + 1).filter((qq) => !(answers[qq.id]?.length)).length}
+          last={sec.idx === (sectionsCfg?.length || 1) - 1}
+          onCancel={() => setShowSectionSubmit(false)}
+          onConfirm={() => { setShowSectionSubmit(false); sec.advance(); }}
+        />
+      )}
+
       {showSubmit && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4" role="dialog" aria-modal="true">
           <div className="absolute inset-0 bg-black/40" onClick={() => !submitting && setShowSubmit(false)} />
