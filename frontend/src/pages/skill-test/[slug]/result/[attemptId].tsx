@@ -44,6 +44,8 @@ function ResultPage() {
 
   const score = attempt?.score ?? (Number(router.query.score) || 0);
   const correct = attempt?.correctAnswers ?? (Number(router.query.correct) || 0);
+  // Secure-mode strikes from this attempt (§5.2). Shown as a flag, not a verdict.
+  const flags = Number(router.query.flags) || 0;
   const incorrect = attempt?.incorrectAnswers ?? (attempt?.totalQuestions ?? 30) - correct;
   const total = attempt?.totalQuestions ?? 30;
   const passed = attempt?.passFail === 'pass' || score >= 60;
@@ -112,6 +114,11 @@ function ResultPage() {
           <p className="mt-3 text-sm text-gray-600">
             {correct} correct · {total - correct} incorrect · Score: <strong>{score}/100</strong>
           </p>
+          {flags > 0 && (
+            <p className="mt-2 text-xs font-semibold text-danger">
+              Integrity flag: left the test {flags} time{flags === 1 ? '' : 's'}
+            </p>
+          )}
           <div className="mt-3">
             <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
               passed ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'

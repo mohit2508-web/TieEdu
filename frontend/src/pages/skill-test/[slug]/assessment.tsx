@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useSecureMode } from '@/hooks/useSecureMode';
+import { SecureModeWarning, SecureBadge } from '@/components/common/SecureModeWarning';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import {
@@ -38,11 +40,15 @@ function AssessmentPage() {
   const answeredRef = useRef<AnswerState>({});
 
   useEffect(() => { answeredRef.current = answers; }, [answers]);
+  const timeLeftRef = useRef(timeLeft);
+  const secureStrikesRef = useRef(0);
+  timeLeftRef.current = timeLeft;
 
   const skillName = String(slug || '').replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 
   const handleStart = async () => {
     if (!isSignedIn()) { setNeedsAuth(true); return; }
+    secure.enterFullscreen();
     setLoading(true);
     setError(null);
     try {
@@ -109,7 +115,7 @@ function AssessmentPage() {
     try {
       const res = await submitAttemptApi(attempt.id, buildPayload(answersState, marked, time));
       const a = res.attempt;
-      router.push(`/skill-test/${slug}/result/${a.id}?score=${a.score ?? 0}&correct=${a.correctAnswers ?? 0}`);
+      router.push(`/skill-test/${slug}/result/${a.id}?score=${a.score ?? 0}&correct=${a.correctAnswers ?? 0}&flags=${secureStrikesRef.current}`);
     } catch (e: any) {
       setError(e?.message || 'Submit failed. Please retry.');
       setSubmitting(false);
@@ -117,6 +123,13 @@ function AssessmentPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [attempt, submitting, marked, questions, slug]);
+
+  const secure = useSecureMode({
+    active: started && !submitting,
+    onLimit: () => doSubmit(answeredRef.current, timeLeftRef.current),
+  });
+
+  secureStrikesRef.current = secure.strikes;
 
   // auto submit when timer hits 0
   useEffect(() => {
@@ -218,11 +231,13 @@ function AssessmentPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
+      <SecureModeWarning message={secure.warning} onResume={() => { secure.dismissWarning(); secure.enterFullscreen(); }} />
       {/* Header */}
       <div className="sticky top-0 z-40 bg-white border-b border-gray-200">
         <div className="mx-auto max-w-3xl px-4 py-2.5 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0">
             <span className="text-sm font-semibold text-gray-900 truncate">{skillName}</span>
+            <SecureBadge />
           </div>
           <div className="flex items-center gap-3 flex-none">
             <span className="text-sm text-gray-600">
