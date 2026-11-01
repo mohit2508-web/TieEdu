@@ -142,9 +142,15 @@ export function derivePageContent(db: any, company: any): PageContent {
     }));
   }
 
+  // A company mock (scripts/importCompanyTest.ts) replaces the generic skill test
+  // on the first MCQ-style round: that is the online assessment it mirrors.
+  const companyMock = (Array.isArray(db.skills) ? db.skills : []).find((s: any) => s?.company_slug === company.slug && s?.status === 'active');
+  let mockUsed = false;
   const roundStations = stations.map((st) => {
     const skills = skillsFor(st.key);
     const p = st.step || {};
+    const useMock = !!companyMock && !mockUsed && ['mcq', 'pseudocode'].includes(p.test_type);
+    if (useMock) mockUsed = true;
     // One pattern row ("MCQ test · 90 Qs · 90 min") when the admin set a test type.
     const pattern = p.test_type
       ? [{
@@ -166,9 +172,11 @@ export function derivePageContent(db: any, company: any): PageContent {
       weight: typeof p.weight === 'number' ? p.weight : null,
       train_text: topics.length ? `${topics.join(', ')}.` : st.train || 'Questions from this round, with worked answers.',
       module_ids: modulesFor(st.key),
-      test_text: skills.length ? 'A free skill test on this round’s topics. Timed, in secure mode.' : '',
-      test_label: skills.length ? 'Take the skill test' : '',
-      test_href: skills.length ? `/skill-test/${skills[0]}` : '',
+      test_text: useMock
+        ? `The full ${companyMock.name} in the real pattern, ${companyMock.totalQuestions} questions in ${companyMock.avgCompletionTime} minutes. Timed, in secure mode.`
+        : skills.length ? 'A free skill test on this round’s topics. Timed, in secure mode.' : '',
+      test_label: useMock ? 'Start the full mock' : skills.length ? 'Take the skill test' : '',
+      test_href: useMock ? `/skill-test/${companyMock.slug}` : skills.length ? `/skill-test/${skills[0]}` : '',
       skill_slugs: skills,
       track_text: skills.length ? 'Take the skill test to see your weakest topics here.' : '',
       tip: '',

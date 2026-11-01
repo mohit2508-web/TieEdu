@@ -266,7 +266,20 @@ function AssessmentPage() {
       <div className="flex-1 mx-auto w-full max-w-3xl px-4 py-4 pb-24">
         <div className="rounded-2xl bg-white border border-gray-200 p-4 sm:p-6 shadow-sm">
           <div className="flex items-start justify-between gap-3">
-            <p className="text-base font-medium text-gray-900 leading-relaxed">{q.question}</p>
+            {(() => {
+              // Company mocks carry passages, tables and pseudocode: keep line breaks,
+              // and show the code part (after the prompt) as a code block.
+              const isCode = /pseudocode\?/.test(q.question);
+              const cut = isCode ? q.question.indexOf('\n\n') : -1;
+              return cut > 0 ? (
+                <>
+                  <p className="text-base font-medium text-gray-900 leading-relaxed whitespace-pre-wrap">{q.question.slice(0, cut)}</p>
+                  <pre className="mt-3 overflow-x-auto rounded-xl bg-gray-900 p-4 font-mono text-sm leading-relaxed text-gray-100">{q.question.slice(cut + 2)}</pre>
+                </>
+              ) : (
+                <p className="text-base font-medium text-gray-900 leading-relaxed whitespace-pre-wrap">{q.question}</p>
+              );
+            })()}
             <button
               onClick={() => toggleMark(q.id)}
               className={`flex-none rounded-lg p-2 transition-colors ${isMarked ? 'bg-amber-100 text-amber-600' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
