@@ -13,7 +13,7 @@ const LIST_KEEP_KEYS = [
   'hq', 'founded_year', 'employee_band', 'fact_checked_at', 'metric_sources',
   'status', 'last_updated_days_ago', 'comparison_metrics', 'verification_level',
   'industry', 'tags', 'difficulty_rating', 'avg_process_days', 'avg_rounds',
-  'ctc_min', 'ctc_max', 'rounds_pipeline',
+  'ctc_min', 'ctc_max', 'rounds_pipeline', 'company_group',
 ];
 
 function attachLiveStats(db: any, company: any) {

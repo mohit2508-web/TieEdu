@@ -77,7 +77,9 @@ export default function CompaniesPage() {
           (c.tags || []).some((t) => t.toLowerCase().includes(q)))
     );
     const by: Record<SortKey, (a: Company, b: Company) => number> = {
-      popular: (a, b) => (b.unlock_count || 0) - (a.unlock_count || 0),
+      // The real 2026–27 programs (imported profiles carry company_group) come
+      // before the older demo pages, then most unlocked first.
+      popular: (a, b) => (Number(!!(b as any).company_group) - Number(!!(a as any).company_group)) || (b.unlock_count || 0) - (a.unlock_count || 0),
       ctc: (a, b) => (b.ctc_max ?? -1) - (a.ctc_max ?? -1),
       name: (a, b) => a.name.localeCompare(b.name),
     };

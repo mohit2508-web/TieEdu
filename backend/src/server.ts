@@ -38,7 +38,7 @@ import { unlockRouter } from './routes/unlock.routes';
 import { notificationsRouter } from './routes/notifications.routes';
 import { authRouter } from './routes/auth.routes';
 import { requireAdmin, requireAuth, optionalAuth, assertAuthConfigured } from './middleware/auth';
-import { loadDb, saveDb, setMirrorHook } from './data/db';
+import { loadDb, saveDb, safeSaveDb, setMirrorHook } from './data/db';
 import { devicesRouter, adminDevicesRouter } from './routes/devices.routes';
 import { storage } from './store';
 import { skillTestRouter } from './routes/skill-test.routes';
@@ -52,6 +52,7 @@ import { meRouter, parentRouter, parentEmailRouter, passportRouter } from './rou
 import { startWeeklyRecapScheduler } from './lib/recapPush';
 import { startParentWhatsappScheduler } from './lib/parentWhatsappScheduler';
 import { startCountdownPushScheduler } from './lib/countdownPushScheduler';
+import { seedMissing3T } from './lib/seed3T';
 import { startStudyReminderScheduler } from './lib/studyReminderScheduler';
 import { collegesRouter, collegesAdminRouter } from './routes/colleges.routes';
 import { campusPagesRouter } from './routes/campusPages.routes';
@@ -398,6 +399,15 @@ export const httpServer = app.listen(PORT, async () => {
   startWeeklyRecapScheduler();
   startParentWhatsappScheduler();
   startCountdownPushScheduler();
+  // 3T content (company profiles, mock tests, interview prep) ships with the
+  // code: add whatever this database is missing. Existing records are never
+  // touched, so admin edits survive every deploy.
+  try {
+    const db = loadDb();
+    if (seedMissing3T(db)) { safeSaveDb(db); console.log('[3T] added missing company content'); }
+  } catch (e: any) {
+    console.warn('[3T] seeding skipped:', e?.message);
+  }
   startStudyReminderScheduler();
   if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
     console.warn('🔐 [Auth] JWT_SECRET env missing in production — auth is FAIL-CLOSED. Set JWT_SECRET (32+ chars) now.');
