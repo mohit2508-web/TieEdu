@@ -3,7 +3,7 @@ import { Check } from 'lucide-react';
 import { Sheet } from '@/components/ui';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
-import { yearOptions } from '@/lib/onboardingApi';
+import { isCompanyStage } from '@/lib/onboardingApi';
 import { fetchTarget, saveTarget, OPEN_TARGET_EVENT } from '@/lib/prepApi';
 
 /**
@@ -23,9 +23,7 @@ const QUIET_PATHS = ['/welcome', '/login', '/signup', '/forgot-password', '/rese
  * nothing from a company picker). It can still be opened by hand any time.
  */
 function shouldAutoAsk(user: { needs_onboarding?: boolean; grad_year?: number | null }): boolean {
-  if (user.needs_onboarding || !user.grad_year) return false;
-  const thirdYear = yearOptions().find((y) => y.label === '3rd year')!.grad_year;
-  return user.grad_year <= thirdYear;
+  return !user.needs_onboarding && isCompanyStage(user.grad_year);
 }
 
 export const TargetSheet: React.FC = () => {

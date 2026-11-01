@@ -18,6 +18,7 @@ import { endOnLinkChange, ParentWaError, parentWaStatus, setStudentAllowed, stud
 import { rateLimit, safeUser } from '../middleware/auth';
 import { OnboardingError, parseOnboarding } from '../lib/onboarding';
 import { TOPICS as MESSAGE_TOPICS, topicPrefs } from '../lib/messaging';
+import { buildForYou, recordInterest } from '../lib/forYou';
 
 /**
  * The signed-in student's own surfaces (UI_REDESIGN_PLAN_V2 Phase 3).
@@ -534,4 +535,25 @@ meRouter.put('/notification-settings', rateLimit(30), (req: Request, res: Respon
   }
   saveDb(db);
   res.json({ prefs: topicPrefs(user), channels: user.notify || { email: true, push: true, whatsapp: false } });
+});
+
+/**
+ * POST /api/me/interest { kind: 'course'|'company', slug } — a page view for
+ * "Recently viewed" and recommendations (PROFESSIONAL_PLATFORM_PLAN §3).
+ * GET  /api/me/for-you — recent, recommended courses, companies (3rd year+).
+ */
+meRouter.post('/interest', rateLimit(60), (req: Request, res: Response) => {
+  const db = loadDb();
+  const user = (db.users || []).find((u: any) => u.id === req.user!.id);
+  if (!user) return res.status(404).json({ error: 'Account not found.' });
+  if (recordInterest(user, req.body?.kind, String(req.body?.slug || ''))) saveDb(db);
+  res.status(204).end();
+});
+
+meRouter.get('/for-you', (req: Request, res: Response) => {
+  const db = loadDb();
+  const user = (db.users || []).find((u: any) => u.id === req.user!.id);
+  if (!user) return res.status(404).json({ error: 'Account not found.' });
+  res.setHeader('Cache-Control', 'private, no-store');
+  res.json(buildForYou(db, user));
 });

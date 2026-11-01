@@ -4,6 +4,8 @@ import { ArrowRight } from 'lucide-react';
 import { ProgressRing } from '@/components/ui';
 import { readinessBand, BAND_CLASS } from '@/lib/readiness';
 import { fetchPrep, prepHref, useTarget, OPEN_TARGET_EVENT, type PrepView } from '@/lib/prepApi';
+import { useAuth } from '@/context/AuthContext';
+import { isCompanyStage } from '@/lib/onboardingApi';
 
 /**
  * Today screen (INFOSYS_SE_PREP_PLAN.md §1): how ready the student is for the
@@ -11,10 +13,13 @@ import { fetchPrep, prepHref, useTarget, OPEN_TARGET_EVENT, type PrepView } from
  */
 export const PrepCard: React.FC = () => {
   const target = useTarget(true);
+  const { user } = useAuth();
   const slug = target?.slug || '';
   const [p, setP] = useState<PrepView | null>(null);
   useEffect(() => { if (slug) fetchPrep(slug).then(setP).catch(() => setP(null)); else setP(null); }, [slug]);
+  // Only ask from 3rd year: a first-year gains nothing from a company plan.
   if (target && !target.slug) {
+    if (!isCompanyStage(user?.grad_year)) return null;
     return (
       <section className="mt-6 flex flex-col gap-4 rounded-card border border-signal/40 bg-card p-5 shadow-edge-neutral sm:flex-row sm:items-center sm:p-6">
         <div className="min-w-0 flex-1">

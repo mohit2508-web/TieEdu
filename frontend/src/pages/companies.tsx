@@ -9,6 +9,10 @@ import { fetchCompanies } from '@/lib/api';
 import { industryGroup } from '@/lib/industryGroup';
 import { useCartScope } from '@/context/CartContext';
 import type { Company } from '@/types';
+import Link from 'next/link';
+import { useAuth } from '@/context/AuthContext';
+import { isCompanyStage } from '@/lib/onboardingApi';
+import { ForYou } from '@/components/personal/ForYou';
 
 /**
  * /companies — every company page (UI_REDESIGN_PLAN_V2 §5, the Companies
@@ -33,6 +37,9 @@ const SORTS: Array<[SortKey, string]> = [
 
 export default function CompaniesPage() {
   const router = useRouter();
+  const { user } = useAuth();
+  // 1st/2nd years: companies stay open, but we say what matters now first.
+  const earlyYears = !!user?.grad_year && !isCompanyStage(user.grad_year);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -114,6 +121,18 @@ export default function CompaniesPage() {
                 : `${companies.length} companies, each with its rounds, questions and what it pays.`
             }
           />
+
+          {earlyYears && (
+            <div className="mt-6 rounded-3xl border border-[var(--brand-accent)]/40 bg-[var(--brand-accent)]/10 p-5 sm:p-6">
+              <p className="font-display text-xl font-extrabold text-heading">Company prep starts in 3rd year</p>
+              <p className="mt-1 max-w-2xl text-base text-body">
+                Right now the biggest win is strong foundations — coding, DSA basics and your core subjects. Look
+                around here if you are curious; when you reach 3rd year we will help you pick target companies.
+              </p>
+              <Link href="/courses" className="btn btn-primary mt-4 min-h-[44px] px-5 text-sm">See courses for your year</Link>
+              <ForYou bare className="mt-6" show={['courses']} />
+            </div>
+          )}
 
           {!loading && companies.length > 0 && (
             <dl className="mt-6 flex flex-wrap gap-3">

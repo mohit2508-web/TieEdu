@@ -7,6 +7,7 @@ import { API_BASE_URL, apiFetch } from '@/lib/api';
 import { LEGAL } from '@/lib/legal';
 import { OPEN_COOKIE_SETTINGS_EVENT } from '@/lib/legalEvents';
 import { readConsent, saveConsent, useConsent, type ConsentCategory, type ConsentState } from '@/lib/consent';
+import { clearLocalRecent } from '@/lib/forYouApi';
 import { cn } from '@/lib/cn';
 
 /**
@@ -50,6 +51,8 @@ export const CookieConsent: React.FC = () => {
     const before = readConsent();
     const saved: ConsentState = saveConsent(choice);
     setOpen(false);
+    // Withdrawing personalisation forgets this browser's recently viewed list.
+    if (!saved.personalisation) clearLocalRecent();
     // Withdrawing analytics also clears the server-set visit cookie.
     if (before?.analytics && !saved.analytics) {
       void fetch(`${API_BASE_URL}/email/forget`, { method: 'POST', credentials: 'include' }).catch(() => {});

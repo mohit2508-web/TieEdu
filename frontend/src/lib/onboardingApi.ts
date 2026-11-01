@@ -54,3 +54,13 @@ export async function saveOnboarding(input: OnboardingInput): Promise<AuthUser> 
   if (!res.ok) throw new Error(body?.error || `Could not save (${res.status})`);
   return body.user as AuthUser;
 }
+
+/**
+ * Company prep is for 3rd year and later (PROFESSIONAL_PLATFORM_PLAN §3.2).
+ * Unknown year → false: the Today screen asks for the year first.
+ */
+export function isCompanyStage(gradYear: number | null | undefined, now = new Date()): boolean {
+  if (!gradYear) return false;
+  const thirdYear = yearOptions(now).find((y) => y.label === '3rd year')!.grad_year;
+  return gradYear <= thirdYear;
+}

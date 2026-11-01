@@ -32,6 +32,7 @@ import { CampusIntelCard } from '@/components/company/CampusIntelCard';
 import { GuaranteeStrip } from '@/components/company/GuaranteeStrip';
 import type { RoundOffer } from '@/components/companyPage/shared';
 import { ArrowLeft, CheckCircle2, ChevronRight, ChevronLeft, Bookmark, List, ShoppingBag } from 'lucide-react';
+import { useTrackView } from '@/lib/forYouApi';
 
 /*
  * The cart, the search palette, the leaderboard and the header are all mounted
@@ -99,6 +100,7 @@ export default function CompanyVaultPage({
   const { openOverlay, setDrillTitle } = useShell();
 
   const [company, setCompany] = useState<Company | null>(initialCompany);
+  useTrackView('company', company?.slug, company?.name, !!company);
   const [allCompanies, setAllCompanies] = useState<Company[]>([]);
   const [activeRoundTab, setActiveRoundTab] = useState<'all' | RoundType>('all');
 

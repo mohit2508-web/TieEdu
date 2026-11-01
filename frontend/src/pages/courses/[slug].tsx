@@ -66,6 +66,7 @@ import type {
   LessonCompletionState,
   LessonProgressResponse,
 } from '@/types';
+import { useTrackView } from '@/lib/forYouApi';
 
 const SITE_URL = 'https://tieedu.com';
 
@@ -103,6 +104,8 @@ export default function CoursePage({
   const isAdmin = user?.role === 'admin';
 
   const [course, setCourse] = useState<CourseDetail | null>(initialCourse);
+  // Recently viewed / recommendations (PROFESSIONAL_PLATFORM_PLAN §3).
+  useTrackView('course', course?.slug, course?.title, !!course);
   const [related, setRelated] = useState<CourseCard[]>(initialRelated);
   const [fetchedLesson, setFetchedLesson] = useState<CourseLessonView | null>(null);
   // A preview is already something to render, so it must not read as "still

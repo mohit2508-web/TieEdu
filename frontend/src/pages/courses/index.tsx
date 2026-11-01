@@ -27,6 +27,7 @@ import {
 } from '@/lib/catalogState';
 import { useAuth } from '@/context/AuthContext';
 import type { CatalogFacets, CatalogFilters, CatalogSortKey, CourseCard, CourseCatalogResponse } from '@/types';
+import { ForYou } from '@/components/personal/ForYou';
 
 const SITE_URL = 'https://tieedu.com';
 
@@ -285,6 +286,8 @@ export default function CoursesPage({ initialData }: { initialData: CourseCatalo
             anyone can verify.
           </p>
         </header>
+
+        <ForYou className="mt-8" show={['courses', 'recent']} />
 
         {continueLearning.length > 0 && (
           <section aria-labelledby="continue-heading" className="mt-9">

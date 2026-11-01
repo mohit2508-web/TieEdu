@@ -12,6 +12,7 @@ import { PassportCard } from './PassportCard';
 import { CollegeNudgesCard } from './CollegeNudgesCard';
 import { CollegePulseLine } from './CollegePulseLine';
 import { useLang, type Lang } from '@/lib/lang';
+import { ForYou } from '@/components/personal/ForYou';
 
 /**
  * Today — the signed-in home (UI_REDESIGN_PLAN_V2 §6.1).
@@ -209,6 +210,7 @@ export const TodayScreen: React.FC<{ ready: boolean }> = ({ ready }) => {
 
       {/* The target company's prep: readiness, days left, today's task (one source for days left). */}
       <PrepCard />
+      <ForYou className="mt-6" show={['courses', 'companies', 'recent']} />
 
       {/* The route: where you are, then the one thing to do next. */}
       <Card variant="ink" pad="lg" className="mt-6">
