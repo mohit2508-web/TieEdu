@@ -12,7 +12,7 @@ import { fetchCourseCatalog } from '@/lib/coursesApi';
 import { parseCatalogQuery } from '@/lib/catalogState';
 import type { CourseCatalogResponse } from '@/types';
 
-const SITE_URL = 'https://tieedu.com';
+const SITE_URL = 'https://tieedu.in';
 
 /**
  * Branch landing page: `/courses/branch/cse`.

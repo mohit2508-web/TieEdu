@@ -68,7 +68,7 @@ import type {
 } from '@/types';
 import { useTrackView } from '@/lib/forYouApi';
 
-const SITE_URL = 'https://tieedu.com';
+const SITE_URL = 'https://tieedu.in';
 
 export default function CoursePage({
   initialCourse,

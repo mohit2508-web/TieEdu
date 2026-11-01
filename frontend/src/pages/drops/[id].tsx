@@ -10,7 +10,7 @@ import { serverApiBase } from '@/lib/companyPagesApi';
 import { DROP_TYPE_META, fetchDropDetailApi, postDropEventApi, type DropDetail } from '@/lib/dropsApi';
 import { formatDay } from '@/lib/date';
 
-const SITE_URL = 'https://tieedu.com';
+const SITE_URL = 'https://tieedu.in';
 
 /**
  * The shareable page behind `/drops/:id`.

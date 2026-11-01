@@ -30,7 +30,7 @@ import type { CatalogFacets, CatalogFilters, CatalogSortKey, CourseCard, CourseC
 import { ForYou } from '@/components/personal/ForYou';
 import { AdSlot } from '@/components/ads/AdSlot';
 
-const SITE_URL = 'https://tieedu.com';
+const SITE_URL = 'https://tieedu.in';
 
 const EMPTY_FACETS: CatalogFacets = { branch: [], bucket: [], category: [], tag: [], type: [], level: [] };
 
@@ -628,7 +628,7 @@ const CatalogueSeoCopy: React.FC<{ facets: CatalogFacets; total: number }> = ({ 
             ? 'All of these courses are free to start.'
             : `${freeCount} of these courses are free to start.`}{' '}
           Finishing any of them issues a certificate signed by TieEdu, and its serial can be checked
-          by anyone at tieedu.com/verify without an account.
+          by anyone at tieedu.in/verify without an account.
         </p>
         {levels.length > 0 && topics.length > 0 && (
           <p>

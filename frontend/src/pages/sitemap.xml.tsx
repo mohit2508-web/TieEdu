@@ -7,7 +7,7 @@ export default function Sitemap() {
 }
 
 export const getServerSideProps: GetServerSideProps = async ({ res }) => {
-  const baseUrl = 'https://tieedu.com';
+  const baseUrl = 'https://tieedu.in';
   const today = new Date().toISOString().split('T')[0];
 
   let companies: { slug: string }[] = [];

@@ -45,7 +45,7 @@ export const ShareSaveButtons: React.FC<{ courseSlug: string; courseTitle: strin
     setCanShare(typeof navigator.share === 'function');
   }, [courseSlug]);
 
-  const pageUrl = typeof window !== 'undefined' ? window.location.href : `https://tieedu.com/courses/${courseSlug}`;
+  const pageUrl = typeof window !== 'undefined' ? window.location.href : `https://tieedu.in/courses/${courseSlug}`;
 
   const share = useCallback(async () => {
     const shareData = { title: courseTitle, url: pageUrl };

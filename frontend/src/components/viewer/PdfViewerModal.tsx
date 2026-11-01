@@ -75,7 +75,7 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
   const [dimensions, setDimensions] = useState({ w: 720, h: 900 });
 
   const studentName = user?.name || 'Authorized Student';
-  const studentEmail = user?.email || 'student@tieedu.com';
+  const studentEmail = user?.email || 'student@tieedu.in';
   const rawId = user?.id || 'GUEST';
   const licenseId = user?.license_id || `LIC-${rawId.slice(-6).toUpperCase()}`;
   const rollNo = user?.roll_no || `ROLL-${rawId.slice(-6).toUpperCase()}`;

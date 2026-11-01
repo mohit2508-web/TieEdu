@@ -103,7 +103,7 @@ export default function InterviewCoursePage() {
               provider: {
                 '@type': 'Organization',
                 name: 'TiEedu Placement Intelligence',
-                sameAs: 'https://tieedu.com'
+                sameAs: 'https://tieedu.in'
               }
             })
           }}

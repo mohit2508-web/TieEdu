@@ -112,7 +112,7 @@ function SearchSnippet({ title, description, slug }: { title: string; descriptio
   return (
     <div className="mb-5 rounded-xl border border-gray-200 p-3.5 bg-white" aria-label="Search result preview">
       <div className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Google preview</div>
-      <div className="text-xs text-gray-600">tieedu.com › company › {slug}</div>
+      <div className="text-xs text-gray-600">tieedu.in › company › {slug}</div>
       <div className="text-lg leading-snug text-[#1a0dab] mt-0.5">{cut(title || 'Untitled page', 60)}</div>
       <div className="text-sm leading-snug text-gray-700 mt-0.5">{cut(description || 'No description — Google will pick text from the page.', 158)}</div>
     </div>

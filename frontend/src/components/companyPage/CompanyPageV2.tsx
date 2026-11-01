@@ -72,7 +72,7 @@ const display = localFont({
   fallback: ['system-ui', 'Segoe UI', 'Arial', 'sans-serif'],
 });
 
-const SITE_URL = 'https://tieedu.com';
+const SITE_URL = 'https://tieedu.in';
 // Stable default: a fresh [] per render would re-run the radar sync effect forever.
 const NO_RADAR: CpRadarItem[] = [];
 
