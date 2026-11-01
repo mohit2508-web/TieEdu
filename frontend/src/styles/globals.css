@@ -706,6 +706,23 @@ body {
   .lb-btn:hover .lb-btn__disc svg { animation: none; }
 }
 
+/* --- Study circuit (home "Exam prep"): lit trace, pulse, readiness ring ---- */
+.circuit-trace-on { stroke: rgb(var(--rgb-signal)); }
+.circuit-trace { stroke: var(--border-strong); }
+.circuit-pulse {
+  stroke: var(--amber-deep);
+  stroke-dasharray: 0.12 2;
+  animation: circuit-current 2.4s linear infinite;
+}
+.circuit-ring-bg { fill: var(--brand-ink); stroke: rgb(255 255 255 / 0.15); }
+.circuit-ring-fill { stroke: rgb(var(--rgb-signal)); }
+.circuit-lift { animation: circuit-lift 420ms var(--ease-out) both; }
+@keyframes circuit-current { from { stroke-dashoffset: 0; } to { stroke-dashoffset: -2.12; } }
+@keyframes circuit-lift { from { opacity: 0; translate: 0 8px; } to { opacity: 1; translate: 0 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .circuit-pulse, .circuit-lift { animation: none; }
+}
+
 /* --- Drive countdown moment (3T plan §7) -------------------------------- */
 .cd-cross path {
   fill: none;

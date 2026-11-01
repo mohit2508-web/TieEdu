@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
-import { Button, ProgressBar, RouteLine, Stamp } from '@/components/ui';
+import { Button, Stamp } from '@/components/ui';
+import { StudyCircuit } from './StudyCircuit';
 import { LandingHead, LandingSection } from './LandingHead';
 
 /**
@@ -23,28 +24,11 @@ export const RoutePath: React.FC = () => (
           <p className="eyebrow">Sample route · Infosys</p>
           <p className="mt-1 font-display text-h2 text-heading">Systems engineer, 2026 drive</p>
         </div>
-        <div className="w-full rounded-card border border-line bg-app p-4 sm:w-72">
-          <p className="eyebrow">Test day</p>
-          <p className="font-display text-h3 text-heading">In 6 days</p>
-          <ProgressBar value={77} goal={90} label="Ready now" className="mt-3" />
-          <p className="mt-2 text-caption text-muted">
-            Ready <span className="font-semibold text-heading">77%</span> now · goal 90%
-          </p>
-        </div>
       </div>
 
-      <div className="mt-10 overflow-x-auto pb-2">
-        <div className="min-w-[640px]">
-          <RouteLine
-            stations={[
-              { label: 'Aptitude', note: 'Done', state: 'done' },
-              { label: 'Coding', note: 'Done', state: 'done' },
-              { label: 'Technical', note: 'Start · 9 min', state: 'current' },
-              { label: 'HR', note: 'Next 3 days', state: 'next' },
-              { label: 'Offer', state: 'next' },
-            ]}
-          />
-        </div>
+      {/* The plan as a circuit: done steps lit, today's step as a ticket, readiness at the end. */}
+      <div className="mt-10">
+        <StudyCircuit />
       </div>
 
       <div className="mt-8 flex flex-col items-start gap-4 border-t border-line pt-6 sm:flex-row sm:items-center sm:justify-between">
