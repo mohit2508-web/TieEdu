@@ -48,6 +48,7 @@ import {
   updateProfile,
 } from '../lib/companyPageStudent';
 import { studentPage } from '../lib/companyPageDerive';
+import { pingIndexNow } from '../lib/indexNow';
 
 // Evening streak reminders for live pages that opt in. Idempotent; unref'd.
 startStreakReminderScheduler();
@@ -380,6 +381,7 @@ companyPagesAdminRouter.post('/:companyId/publish', requirePermission('companies
   });
   saveDb(db);
   res.json(view(existing, true));
+  pingIndexNow([`/company/${company.slug}`, '/companies', '/sitemap.xml']);
   await audit;
   // New admin-entered drive updates reach watchers only on a live page, and
   // only once — the first publish that contains them.

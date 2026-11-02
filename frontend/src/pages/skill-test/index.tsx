@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { ArrowRight, BadgeCheck, Briefcase, BrainCircuit, Building2, ClipboardCheck, Cloud, Code2, Cpu, Database, Globe, Palette, Search, SearchX, Smartphone, Target, X, type LucideIcon } from 'lucide-react';
 import { Chip, EmptyState, RouteLine, SectionHead, SkeletonCard } from '@/components/ui';
 import { fetchSkillsApi, SkillTestSkill } from '@/lib/skillTestApi';
+import type { GetServerSideProps } from 'next';
+import { serverApiBase } from '@/lib/companyPagesApi';
 
 /**
  * /skill-test — the Practise section's landing page (UI_REDESIGN_PLAN_V2 §7,
@@ -129,15 +131,18 @@ const MockCard: React.FC<{ skill: CardSkill }> = ({ skill }) => (
   </Link>
 );
 
-export default function SkillTestLanding() {
-  const [skills, setSkills] = useState<CardSkill[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function SkillTestLanding({ initialSkills = [] }: { initialSkills?: SkillTestSkill[] }) {
+  // Server-rendered list (SEO_GROWTH_PLAN S3): Google sees every test link.
+  const [skills, setSkills] = useState<CardSkill[]>(() =>
+    initialSkills.filter((s) => s.status === 'active' && s.category !== 'Company mocks').map(toCard)
+  );
+  const [loading, setLoading] = useState(initialSkills.length === 0);
   const [failed, setFailed] = useState(false);
   const [query, setQuery] = useState('');
   const [activeCat, setActiveCat] = useState('All');
 
   const load = useCallback(() => {
-    setLoading(true);
+    if (!initialSkills.length) setLoading(true);
     fetchSkillsApi()
       .then((data) => {
         // Company mocks live inside their company page, not in the skills catalogue.
@@ -146,6 +151,7 @@ export default function SkillTestLanding() {
       })
       .catch(() => setFailed(true))
       .finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- initialSkills is the first-render snapshot
   }, []);
 
   useEffect(() => {
@@ -204,10 +210,37 @@ export default function SkillTestLanding() {
   return (
     <>
       <Head>
-        <title>Free skill tests with certificates | TieEdu</title>
+        <title>Free Skill Tests with Certificate — Java, Python, DBMS, Aptitude & more | TieEdu</title>
         <meta
           name="description"
-          content="Free skill tests for engineering students: programming, core CS, data and cloud. See your score by topic and earn a certificate anyone can verify."
+          content="Free online skill tests for engineering students: programming, core CS, aptitude, data and cloud. See your score by topic and earn a certificate anyone can verify."
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@graph': [
+                {
+                  '@type': 'ItemList',
+                  name: 'Free skill tests on TieEdu',
+                  itemListElement: skills.slice(0, 100).map((s, i) => ({
+                    '@type': 'ListItem',
+                    position: i + 1,
+                    name: `${s.name} skill test`,
+                    url: `https://tieedu.in/skill-test/${s.slug}`,
+                  })),
+                },
+                {
+                  '@type': 'BreadcrumbList',
+                  itemListElement: [
+                    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://tieedu.in' },
+                    { '@type': 'ListItem', position: 2, name: 'Skill tests', item: 'https://tieedu.in/skill-test' },
+                  ],
+                },
+              ],
+            }),
+          }}
         />
       </Head>
 
@@ -377,3 +410,23 @@ export default function SkillTestLanding() {
     </>
   );
 }
+
+/** Server fetch with a short timeout; a slow API never blocks the page. */
+async function serverGet(path: string): Promise<any> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 4000);
+  try {
+    const r = await fetch(`${serverApiBase()}${path}`, { signal: ctrl.signal });
+    return r.ok ? await r.json() : null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+export const getServerSideProps: GetServerSideProps = async ({ res }) => {
+  const data = await serverGet('/skill-test/skills');
+  res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600');
+  return { props: { initialSkills: Array.isArray(data) ? data : [] } };
+};

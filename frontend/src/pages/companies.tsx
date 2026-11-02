@@ -9,6 +9,8 @@ import { fetchCompanies } from '@/lib/api';
 import { industryGroup } from '@/lib/industryGroup';
 import { useCartScope } from '@/context/CartContext';
 import type { Company } from '@/types';
+import type { GetServerSideProps } from 'next';
+import { serverApiBase } from '@/lib/companyPagesApi';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { isCompanyStage } from '@/lib/onboardingApi';
@@ -36,13 +38,14 @@ const SORTS: Array<[SortKey, string]> = [
   ['name', 'A–Z'],
 ];
 
-export default function CompaniesPage() {
+export default function CompaniesPage({ initialCompanies = [] }: { initialCompanies?: Company[] }) {
   const router = useRouter();
   const { user } = useAuth();
   // 1st/2nd years: companies stay open, but we say what matters now first.
   const earlyYears = !!user?.grad_year && !isCompanyStage(user.grad_year);
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Server-rendered list (SEO_GROWTH_PLAN S3): Google sees every company link.
+  const [companies, setCompanies] = useState<Company[]>(initialCompanies);
+  const [loading, setLoading] = useState(initialCompanies.length === 0);
   const [error, setError] = useState(false);
   const [query, setQuery] = useState('');
   const [industry, setIndustry] = useState('All');
@@ -103,10 +106,37 @@ export default function CompaniesPage() {
   return (
     <>
       <Head>
-        <title>Companies — round-by-round placement prep | TieEdu</title>
+        <title>{`Company-wise Placement Preparation${companies.length ? ` — ${companies.slice(0, 3).map((c) => c.name.split(/[ (—-]/)[0]).filter((v, i, a) => a.indexOf(v) === i).join(', ')} & more` : ''} | TieEdu`}</title>
         <meta
           name="description"
-          content="Every company on TieEdu: rounds, questions, CTC and process length, with each figure marked as checked or still being verified."
+          content="Placement preparation company by company: every round, exam pattern, interview questions, CTC and hiring process for freshers — with each figure marked as checked or still being verified."
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@graph': [
+                {
+                  '@type': 'ItemList',
+                  name: 'Company-wise placement preparation on TieEdu',
+                  itemListElement: companies.slice(0, 50).map((c, i) => ({
+                    '@type': 'ListItem',
+                    position: i + 1,
+                    name: c.name,
+                    url: `https://tieedu.in/company/${c.slug}`,
+                  })),
+                },
+                {
+                  '@type': 'BreadcrumbList',
+                  itemListElement: [
+                    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://tieedu.in' },
+                    { '@type': 'ListItem', position: 2, name: 'Companies', item: 'https://tieedu.in/companies' },
+                  ],
+                },
+              ],
+            }),
+          }}
         />
       </Head>
 
@@ -233,3 +263,24 @@ export default function CompaniesPage() {
     </>
   );
 }
+
+/** Server fetch with a short timeout; a slow API never blocks the page. */
+async function serverGet(path: string): Promise<any> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 4000);
+  try {
+    const r = await fetch(`${serverApiBase()}${path}`, { signal: ctrl.signal });
+    return r.ok ? await r.json() : null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+export const getServerSideProps: GetServerSideProps = async ({ res }) => {
+  const data = await serverGet('/companies');
+  const list = Array.isArray(data) ? data : Array.isArray(data?.companies) ? data.companies : [];
+  res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600');
+  return { props: { initialCompanies: list } };
+};

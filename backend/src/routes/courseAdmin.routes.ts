@@ -79,6 +79,7 @@ import {
   siteUrlIsLocalhost,
   verificationUrlFor,
 } from '../lib/certificate';
+import { pingIndexNow } from '../lib/indexNow';
 
 export const courseAdminRouter = Router();
 
@@ -817,6 +818,7 @@ courseAdminRouter.put('/courses/:id', async (req: Request, res: Response) => {
        * is best effort by design; `notifyEvent` never throws.
        */
       setImmediate(() => {
+        pingIndexNow([`/courses/${course.slug}`, '/courses', '/sitemap.xml']);
         void notifyEvent(
           { type: 'course.published', title: course.title, courseId: course.id, slug: course.slug },
           { kind: 'all_students' }
