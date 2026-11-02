@@ -32,6 +32,7 @@ interface Guide {
   faq: Array<{ q: string; a: string }>;
   topics: Array<{ topic: string; label: string }>;
   cta: { label: string; href: string };
+  compare?: Array<{ pair: string; name: string }>;
 }
 
 const SITE = 'https://tieedu.in';
@@ -245,6 +246,20 @@ export default function CompanyGuidePage({ guide }: { guide: Guide }) {
                 </li>
               ))}
             </ul>
+            {guide.compare && guide.compare.length > 0 && (
+              <>
+                <h3 className="mt-6 font-bold text-heading">Compare {c.name} with</h3>
+                <ul className="mt-2 flex flex-wrap gap-2">
+                  {guide.compare.map((x) => (
+                    <li key={x.pair}>
+                      <Link href={`/compare/${x.pair}`} className="inline-flex min-h-[40px] items-center rounded-full border border-line bg-card px-4 text-sm font-semibold text-heading hover:border-[var(--brand-sky)]">
+                        vs {x.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
             {c.careers_link && (
               <p className="mt-4 text-sm text-muted">
                 Official careers page: <a href={c.careers_link} rel="nofollow noopener noreferrer" target="_blank" className="font-semibold text-link underline">{c.careers_link.replace(/^https?:\/\//, '')}</a>

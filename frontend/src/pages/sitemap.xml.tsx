@@ -97,6 +97,12 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
     entries.push({ loc: `${BASE}/courses/branch/${b}`, priority: 0.7, changefreq: 'weekly' });
   }
 
+  // Company-vs-company comparison pages.
+  const pairs = await getJson('/companies/compare/pairs');
+  for (const pair of Array.isArray(pairs?.pairs) ? pairs.pairs : []) {
+    entries.push({ loc: `${BASE}/compare/${pair}`, priority: 0.7, changefreq: 'monthly' });
+  }
+
   // Skill tests — server-rendered landing pages. Company tests live inside the
   // company plan (they redirect), so they are not listed on their own.
   const skills = await getJson('/skill-test/skills');

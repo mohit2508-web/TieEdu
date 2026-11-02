@@ -4,6 +4,7 @@ import { optionalAuth } from '../middleware/auth';
 import { deriveCompanyStats, publishedReports } from '../lib/stats';
 import { buildComparisonMatrix } from '../lib/compare';
 import { availableTopics, buildGuide, isGuideTopic } from '../lib/companyGuide';
+import { allPairs, buildComparison, parsePair } from '../lib/companyCompare';
 import { ownedModuleIdsFor, unlockedCompanyIds } from '../payments/orders';
 
 export const companiesRouter = Router();
@@ -195,6 +196,34 @@ companiesRouter.get('/:slug/guide/:topic', (req: Request, res: Response) => {
   const c = (db.companies || []).find((x: any) => x.slug === req.params.slug && x.status === 'published');
   const guide = c ? buildGuide(c, req.params.topic) : null;
   if (!guide) return res.status(404).json({ error: 'Not found' });
+  // "Compare with…" links: every comparison page this company is part of.
+  const byslug = new Map((db.companies || []).map((x: any) => [x.slug, x]));
+  const compare = allPairs(db.companies || [])
+    .filter((p) => p.split('-vs-').includes(c.slug))
+    .map((p) => {
+      const other: any = byslug.get(p.split('-vs-').find((s) => s !== c.slug) as string);
+      return { pair: p, name: other?.name || p };
+    });
   res.setHeader('Cache-Control', 'public, max-age=300');
-  res.json(guide);
+  res.json({ ...guide, compare });
+});
+
+// ---------------------------------------------------------------------------
+// Company comparisons (lib/companyCompare, SEO_GROWTH_PLAN §5.2).
+//   GET /api/companies/compare/pairs          → { pairs: ["a-vs-b", …] }
+//   GET /api/companies/compare/pair/:pair     → comparison (or { redirect })
+// ---------------------------------------------------------------------------
+companiesRouter.get('/compare/pairs', (_req: Request, res: Response) => {
+  const db = loadDb();
+  res.setHeader('Cache-Control', 'public, max-age=300');
+  res.json({ pairs: allPairs(db.companies || []) });
+});
+
+companiesRouter.get('/compare/pair/:pair', (req: Request, res: Response) => {
+  const db = loadDb();
+  const found = parsePair(String(req.params.pair || ''), db.companies || []);
+  if (!found) return res.status(404).json({ error: 'Not found' });
+  if (found.canonical !== req.params.pair) return res.json({ redirect: found.canonical });
+  res.setHeader('Cache-Control', 'public, max-age=300');
+  res.json(buildComparison(found.a, found.b));
 });
