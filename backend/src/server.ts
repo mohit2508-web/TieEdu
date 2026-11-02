@@ -84,8 +84,11 @@ const PORT = process.env.PORT || 5000;
 
 // Security + parsing
 app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
+// CORS_ORIGIN may list several origins, comma-separated
+// (e.g. "https://tieedu.in,https://www.tieedu.in"); unset allows any origin.
+const corsOrigins = (process.env.CORS_ORIGIN || '').split(',').map((o) => o.trim().replace(/\/+$/, '')).filter(Boolean);
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || true,
+  origin: corsOrigins.length === 0 ? true : corsOrigins.length === 1 ? corsOrigins[0] : corsOrigins,
   credentials: true,
   exposedHeaders: ['Content-Range', 'Accept-Ranges', 'Content-Length']
 }));
