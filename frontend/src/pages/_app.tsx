@@ -17,6 +17,7 @@ import { RouteTransition } from '@/components/layout/RouteTransition';
 import { PWAInstallPrompt } from '@/components/common/PWAInstallPrompt';
 import { useLeadTracking } from '@/hooks/useLeadTracking';
 import { CookieConsent } from '@/components/legal/CookieConsent';
+import { DeviceLimitSheet } from '@/components/auth/DeviceLimitSheet';
 import { canonicalFor, isNoindexPath } from '@/lib/seo';
 
 export default function App({ Component, pageProps }: AppProps) {
@@ -153,6 +154,7 @@ export default function App({ Component, pageProps }: AppProps) {
           </AppShell>
           {/* Outside AppShell so it also shows on shell-less pages (login, welcome). */}
           <CookieConsent />
+          <DeviceLimitSheet />
         </ShellProvider>
       </CartProvider>
     </AuthProvider>

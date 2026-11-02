@@ -737,6 +737,16 @@ const AccountPageContent: React.FC = () => {
                   </span>
                   <span aria-hidden="true" className="text-link">→</span>
                 </Link>
+                <Link
+                  href="/account/devices"
+                  className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-line bg-card p-4 transition-colors hover:border-[var(--brand-sky)]"
+                >
+                  <span>
+                    <span className="block font-bold text-heading">Your devices</span>
+                    <span className="block text-sm text-muted">See where you&rsquo;re signed in, and sign out of any device.</span>
+                  </span>
+                  <span aria-hidden="true" className="text-link">→</span>
+                </Link>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
                   <NotificationSettings />
                   <div className="mt-3"><CollegeNudgesCard ready settingsOnly /></div>

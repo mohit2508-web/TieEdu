@@ -213,6 +213,20 @@ export async function sendToUser(userId: string, ev: MessageEvent, now = new Dat
 const rupees = (paisa: number | undefined) => `₹${Math.round((paisa || 0) / 100).toLocaleString('en-IN')}`;
 
 export const events = {
+  newSignIn(device: string): MessageEvent {
+    const when = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
+    return {
+      type: 'account.new_sign_in',
+      topic: 'account',
+      transactional: true,
+      title: `New sign-in to TieEdu on ${device}`,
+      body: `Your TieEdu account was just signed in on ${device} (${when} IST).\n\nIf this was you, there is nothing to do.\n\nIf it was not you, reset your password now — that signs out every device — and then check Your devices in your account.`,
+      pushBody: `New sign-in on ${device}`,
+      url: '/account/devices',
+      ctaLabel: 'Review my devices',
+    };
+  },
+
   welcome(name: string): MessageEvent {
     return {
       type: 'account.welcome',

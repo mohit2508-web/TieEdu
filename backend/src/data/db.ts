@@ -965,6 +965,10 @@ export interface Session {
   replaced_by?: string;
   /** First session of this sign-in; every rotation inherits it, so logout can end them all. */
   family?: string;
+  /** "Chrome on Windows" — from the browser at sign-in; rotations inherit it. */
+  device_name?: string;
+  /** When this sign-in began (rotations inherit it; created_at is the last refresh). */
+  signed_in_at?: string;
 }
 
 // ============================================================================

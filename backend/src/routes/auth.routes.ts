@@ -8,6 +8,7 @@ import {
 } from '../middleware/auth';
 import { rateLimit } from '../middleware/auth';
 import { OAuth2Client } from 'google-auth-library';
+import { activeSignIns, checkSignInLimit, deviceNameFromUA, MAX_SIGNINS } from '../lib/signins';
 import { consumeAccountToken, issueAccountToken, sendPasswordResetEmail, sendVerifyEmail } from '../lib/accountTokens';
 import { events as msgEvents, sendToUser } from '../lib/messaging';
 
@@ -37,7 +38,7 @@ export const REFRESH_GRACE_MS = 2 * 60 * 1000;
 const usable = (s: Session, now = Date.now()) =>
   new Date(s.expires_at).getTime() >= now && (!s.rotated_at || now - Date.parse(s.rotated_at) <= REFRESH_GRACE_MS);
 
-function issueSession(userId: string, replaces?: string) {
+function issueSession(userId: string, replaces?: string, deviceName?: string) {
   const db = loadDb();
   const refreshToken = crypto.randomBytes(48).toString('base64url');
   const now = Date.now();
@@ -51,12 +52,16 @@ function issueSession(userId: string, replaces?: string) {
   // Drop rows that can never be used again (expired, or rotated past grace).
   db.sessions = (db.sessions || []).filter((s: Session) => usable(s, now));
   session.family = session.id;
+  session.device_name = deviceName || 'Unknown device';
+  session.signed_in_at = session.created_at;
   if (replaces) {
     const old = db.sessions.find((s: Session) => s.id === replaces);
     if (old) {
       old.rotated_at = old.rotated_at || new Date(now).toISOString();
       old.replaced_by = session.id;
       session.family = old.family || old.id;
+      session.device_name = old.device_name || session.device_name;
+      session.signed_in_at = old.signed_in_at || old.created_at;
     }
   }
   db.sessions.push(session);
@@ -132,8 +137,11 @@ authRouter.post('/login', rateLimit(10), (req: Request, res: Response) => {
   }
   if (user.disabled) return res.status(403).json({ error: 'Account disabled — contact support' });
 
-  const refreshToken = issueSession(user.id);
+  const gate = admitSignIn(user, req);
+  if (!gate.ok) return res.status(409).json(gate.body);
+  const refreshToken = issueSession(user.id, undefined, gate.device);
   setRefreshCookie(res, refreshToken);
+  gate.after();
   const unlocks = (db.unlocks || []).filter((u: any) => u.user_id === user.id && u.status === 'active').map((u: any) => u.company_id);
   return res.json({ status: 'success', user: safeUser(user), accessToken: signAccessToken(user), unlocked_company_ids: unlocks });
 });
@@ -389,8 +397,93 @@ authRouter.post('/google', rateLimit(10), async (req: Request, res: Response) =>
   if (created) void sendToUser(user.id, msgEvents.welcome(user.name));
 
   const signedIn = user;
-  const refreshToken = issueSession(signedIn.id);
+  const gate = admitSignIn(signedIn, req);
+  if (!gate.ok) return res.status(409).json(gate.body);
+  const refreshToken = issueSession(signedIn.id, undefined, gate.device);
+  gate.after();
   setRefreshCookie(res, refreshToken);
   const unlocks = (db.unlocks || []).filter((u: any) => u.user_id === signedIn.id && u.status === 'active').map((u: any) => u.company_id);
   return res.status(created ? 201 : 200).json({ status: 'success', created, user: safeUser(signedIn), accessToken: signAccessToken(signedIn), unlocked_company_ids: unlocks });
 });
+
+// ---------------------------------------------------------------------------
+// Sign-ins per account (EMAIL_LIFECYCLE_AND_DEVICES_PLAN §4): at most two at
+// once for students. A third sign-in is answered 409 with the two devices; the
+// client asks which to sign out and repeats the request with
+// `sign_out_device`. Only reached after the password / Google check passed, so
+// the device list is never shown to someone who does not own the account.
+// ---------------------------------------------------------------------------
+function admitSignIn(user: User, req: Request):
+  | { ok: true; device: string; after: () => void }
+  | { ok: false; body: Record<string, unknown> } {
+  const device = deviceNameFromUA(req.headers['user-agent'], req.body?.standalone === true);
+  const db = loadDb();
+  const current = activeSignIns(db.sessions || [], user.id, Date.now(), REFRESH_GRACE_MS);
+  const check = checkSignInLimit(user.role, current, req.body?.sign_out_device);
+  if (!check.ok) {
+    return {
+      ok: false,
+      body: {
+        error: `You are signed in on ${MAX_SIGNINS} devices. Sign out of one to continue.`,
+        code: 'device_limit',
+        devices: check.devices.map((d) => ({ id: d.id, name: d.device_name, signed_in_at: d.signed_in_at, last_active_at: d.last_active_at })),
+      },
+    };
+  }
+  if (check.signOut) {
+    db.sessions = (db.sessions || []).filter((s: Session) => (s.family || s.id) !== check.signOut);
+    saveDb(db);
+  }
+  // A security email when this is an extra device alongside other sign-ins.
+  const isNewDevice = current.length > 0 && !current.some((d) => d.device_name === device);
+  return {
+    ok: true,
+    device,
+    after: () => {
+      if (isNewDevice) void sendToUser(user.id, msgEvents.newSignIn(device));
+    },
+  };
+}
+
+const familyOfCookie = (req: Request): string | null => {
+  const token = req.cookies?.[COOKIE_NAME];
+  if (!token) return null;
+  const hit = (loadDb().sessions || []).find((s: Session) => s.token_hash === hashRefresh(token));
+  return hit ? hit.family || hit.id : null;
+};
+
+// GET /api/auth/devices — where this account is signed in.
+authRouter.get('/devices', requireAuth, (req: Request, res: Response) => {
+  const db = loadDb();
+  const mine = familyOfCookie(req);
+  const list = activeSignIns(db.sessions || [], req.user!.id, Date.now(), REFRESH_GRACE_MS).map((d) => ({
+    id: d.id,
+    name: d.device_name,
+    signed_in_at: d.signed_in_at,
+    last_active_at: d.last_active_at,
+    current: d.id === mine,
+  }));
+  res.setHeader('Cache-Control', 'private, no-store');
+  return res.json({ devices: list, limit: req.user!.role === 'admin' ? null : MAX_SIGNINS });
+});
+
+// POST /api/auth/devices/:id/sign-out — end one sign-in (not this one: use logout).
+authRouter.post('/devices/:id/sign-out', requireAuth, (req: Request, res: Response) => {
+  const db = loadDb();
+  const id = String(req.params.id || '');
+  const owned = (db.sessions || []).some((s: Session) => s.user_id === req.user!.id && (s.family || s.id) === id);
+  if (!owned) return res.status(404).json({ error: 'That sign-in was not found.' });
+  db.sessions = (db.sessions || []).filter((s: Session) => !(s.user_id === req.user!.id && (s.family || s.id) === id));
+  saveDb(db);
+  return res.json({ status: 'success' });
+});
+
+// POST /api/auth/devices/sign-out-others — keep only this device.
+authRouter.post('/devices/sign-out-others', requireAuth, (req: Request, res: Response) => {
+  const db = loadDb();
+  const mine = familyOfCookie(req);
+  db.sessions = (db.sessions || []).filter((s: Session) => s.user_id !== req.user!.id || (mine !== null && (s.family || s.id) === mine));
+  saveDb(db);
+  return res.json({ status: 'success' });
+});
+
