@@ -2177,7 +2177,7 @@ const initialDbData = {
   email_automation_fires: [],
   settings: {
     platform_name: 'TieEdu',
-    support_email: 'support@tieedu.in',
+    support_email: 'contact@tieedu.in',
     demo_mode: true
   }
 };

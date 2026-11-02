@@ -37,6 +37,9 @@ export const EMAIL_REPLY_TO = (): string | undefined => {
  */
 export function emailConfigError(): string | null {
   if (!API_KEY()) return 'RESEND_API_KEY is not set — outbound email is disabled.';
+  // Hard off switch for tests and scripts: a developer's .env carries the real
+  // key, and any test that signs a user up would otherwise send real mail.
+  if ((process.env.EMAIL_DISABLED || '').trim() === '1') return 'EMAIL_DISABLED=1 — outbound email is switched off.';
   return null;
 }
 

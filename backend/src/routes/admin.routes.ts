@@ -1074,7 +1074,7 @@ adminRouter.get('/settings', requirePermission('settings.read'), (req: Request, 
   const db = loadDb();
   const defaults = {
     platform_name: 'TieEdu',
-    support_email: 'support@tieedu.in',
+    support_email: 'contact@tieedu.in',
     support_phone: '',
     upi_id: '',
     upi_qr: '',

@@ -15,8 +15,12 @@ import path from 'node:path';
 
 const scratch = path.join(os.tmpdir(), `tieedu-email-${process.pid}.json`);
 process.env.DB_FILE = scratch;
-delete process.env.RESEND_API_KEY;
-delete process.env.EMAIL_LINK_SECRET;
+// Empty rather than deleted: dotenv refills a deleted variable when a later
+// import calls dotenv.config(), but never overwrites one that exists. Deleting
+// let the developer's real key back in and a test sent real mail.
+process.env.RESEND_API_KEY = '';
+process.env.EMAIL_LINK_SECRET = '';
+process.env.EMAIL_DISABLED = '1';
 
 const { renderTemplate, templatePreviewInfo } = require('../src/lib/email/render');
 const { TEMPLATES, TEMPLATE_LIST } = require('../src/lib/email/templates/registry');
@@ -304,7 +308,7 @@ const emptyStats = () => ({ queued: 0, sent: 0, delivered: 0, opened: 0, clicked
 const seedAutomationStore = () => {
   const now = new Date().toISOString();
   const db: any = {
-    settings: { platform_name: 'TieEdu', support_email: 'support@tieedu.in', demo_mode: false },
+    settings: { platform_name: 'TieEdu', support_email: 'contact@tieedu.in', demo_mode: false },
     email_leads: [
       { id: 'el-a', email: 'a@x.com', name: 'Aarav', status: 'active', source: 'csv:t.csv', tags: ['2nd'], year: '2', consent_at: now, created_at: now, updated_at: now },
       { id: 'el-b', email: 'b@x.com', name: 'Bela', status: 'active', source: 'csv:t.csv', tags: ['2nd'], year: '2', consent_at: now, created_at: now, updated_at: now },

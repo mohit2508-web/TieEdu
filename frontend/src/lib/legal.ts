@@ -9,11 +9,11 @@ export const LEGAL = {
   brand: 'TieEdu',
   companyName: 'TieEdu Technologies',
   siteUrl: 'https://tieedu.in',
-  supportEmail: 'support@tieedu.in',
+  supportEmail: 'contact@tieedu.in',
   /** Registered office address, one line. */
   address: null as string | null,
   /** Grievance Officer under the IT Rules / DPDP Act. Falls back to support email. */
-  grievanceOfficer: { name: null as string | null, email: 'support@tieedu.in' },
+  grievanceOfficer: { name: null as string | null, email: 'contact@tieedu.in' },
   /** Days within which a purchase can be refunded (matches the promise in our emails). */
   refundWindowDays: 7,
   /** How fast support replies, in working days. */

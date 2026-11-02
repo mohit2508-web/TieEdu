@@ -310,7 +310,7 @@ export const CartModal: React.FC = () => {
               finishPurchase();
             } catch {
               setIsProcessing(false);
-              setPayError('Payment could not be verified — contact support@tieedu.in for help.');
+              setPayError('Payment could not be verified — contact contact@tieedu.in for help.');
             }
           },
           modal: { ondismiss: () => setIsProcessing(false) },
@@ -444,7 +444,7 @@ export const CartModal: React.FC = () => {
                 </div>
               ) : (
                 <div className="bg-white/10 border border-white/20 rounded-xl p-4 text-sm">
-                  <p className="text-white/80">{merchantName} hasn&apos;t linked a UPI ID yet. Please contact support@tieedu.in to complete your purchase.</p>
+                  <p className="text-white/80">{merchantName} hasn&apos;t linked a UPI ID yet. Please contact contact@tieedu.in to complete your purchase.</p>
                 </div>
               )}
 
@@ -512,7 +512,7 @@ export const CartModal: React.FC = () => {
             </div>
             <h4 className="font-bold text-xl text-heading">Payment couldn&apos;t be verified</h4>
             <p className="text-sm text-body max-w-sm leading-relaxed">
-              {payError || 'Our team could not match this payment to a transfer. If you did pay, share your screenshot with the UTR at support@tieedu.in.'}
+              {payError || 'Our team could not match this payment to a transfer. If you did pay, share your screenshot with the UTR at contact@tieedu.in.'}
             </p>
             <div className="px-4 py-2.5 bg-app-warm border border-gray-200 rounded-xl text-sm text-body">
               Order <b className="text-brand-ink">{order?.id}</b>

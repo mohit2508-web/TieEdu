@@ -12,6 +12,7 @@
 // certificate must stop verifying, and XP must not be farmable.
 
 process.env.PORT = process.env.SMOKE_PORT || '5311';
+process.env.EMAIL_DISABLED = '1'; // signups here must never send real mail
 process.env.NEXT_PUBLIC_SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://tieedu.test';
 // A real Ed25519 keypair, generated per run. Certificates are signed and
 // verified in this file, so a fixed key would only hide a bug where a stale

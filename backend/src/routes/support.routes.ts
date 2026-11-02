@@ -50,7 +50,7 @@ supportRouter.post('/contact', rateLimit(3), (req: Request, res: Response) => {
   db.support_requests.push(row);
   saveDb(db);
 
-  const team = String(db.settings?.support_email || 'support@tieedu.in');
+  const team = String(db.settings?.support_email || 'contact@tieedu.in');
   void sendDriveEmail({
     to: team,
     subject: `[${row.ref}] ${topic}: ${name}`,

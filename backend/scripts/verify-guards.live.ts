@@ -56,6 +56,7 @@ process.env.JWT_SECRET = process.env.JWT_SECRET || 'guard-live-test-jwt-secret';
 process.env.ADMIN_PASSWORD = ADMIN_PASSWORD;
 process.env.ADMIN_EMAIL = ADMIN_EMAIL;
 process.env.PORT = process.env.GUARD_PORT || '5477';
+process.env.EMAIL_DISABLED = '1'; // signups here must never send real mail
 process.env.DB_FILE = SCRATCH;
 // Since M2 the server also writes grants to PostgreSQL on boot, so a scratch
 // ledger alone no longer keeps this suite out of a live cluster — it left a

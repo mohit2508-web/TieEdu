@@ -202,7 +202,7 @@ const Proof: React.FC<TemplateProps> = (p) => {
       <H2>Questions we get asked</H2>
       <FAQ q="Is it recorded? Can I go at my own pace?" a="Fully self-paced. Buy once, watch and rewatch — there is no expiry." />
       <FAQ q="Will this help in second year, or only in final-year placements?" a="The concepts are semester-one material for most colleges. Starting in second year is exactly why it works." />
-      <FAQ q="What if it is not for me?" a="Write to support@tieedu.in within 7 days of purchase and we refund it. No forms." />
+      <FAQ q="What if it is not for me?" a="Write to contact@tieedu.in within 7 days of purchase and we refund it. No forms." />
       <Button href={p.href(v.course_path)}>See the full breakdown</Button>
     </Layout>
   );

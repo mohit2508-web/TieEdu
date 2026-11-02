@@ -23,6 +23,7 @@ fs.copyFileSync(path.join(DATA_DIR, 'db.json'), SCRATCH);
 }
 process.env.JWT_SECRET = 'prep-live-secret';
 process.env.PORT = '5479';
+process.env.EMAIL_DISABLED = '1'; // signups here must never send real mail
 process.env.DB_FILE = SCRATCH;
 process.env.DATABASE_URL = '';
 
