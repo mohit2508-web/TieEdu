@@ -103,6 +103,42 @@ export default function Home() {
       <Head>
         <title>TieEdu — Placement preparation for engineering students</title>
         <meta name="description" content="Company-by-company placement prep for engineering students: round patterns, practice questions, free skill tests and courses, and a plan for your test date." />
+        <link rel="canonical" href="https://tieedu.in/" />
+        <meta property="og:site_name" content="TieEdu" />
+        <meta property="og:title" content="TieEdu — Placement preparation for engineering students" />
+        <meta property="og:url" content="https://tieedu.in/" />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://tieedu.in/email/logo.png" />
+        {/* Brand identity for search: tells Google that "TieEdu" is this site,
+            its logo and its official profiles (helps the brand-name search). */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@graph': [
+                {
+                  '@type': 'Organization',
+                  '@id': 'https://tieedu.in/#organization',
+                  name: 'TieEdu',
+                  alternateName: ['TieEdu Technologies', 'Tie Edu'],
+                  url: 'https://tieedu.in/',
+                  logo: 'https://tieedu.in/email/logo.png',
+                  email: 'contact@tieedu.in',
+                  sameAs: ['https://www.linkedin.com/company/tieedu/', 'https://x.com/TiEEdu', 'https://www.facebook.com/TiEEdu'],
+                },
+                {
+                  '@type': 'WebSite',
+                  '@id': 'https://tieedu.in/#website',
+                  name: 'TieEdu',
+                  alternateName: 'Tie Edu',
+                  url: 'https://tieedu.in/',
+                  publisher: { '@id': 'https://tieedu.in/#organization' },
+                },
+              ],
+            }),
+          }}
+        />
       </Head>
 
       {/*

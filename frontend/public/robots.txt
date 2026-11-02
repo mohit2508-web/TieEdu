@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://tieedu.com/sitemap.xml
+Sitemap: https://tieedu.in/sitemap.xml

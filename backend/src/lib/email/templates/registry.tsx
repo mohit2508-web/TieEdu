@@ -13,7 +13,7 @@
  * email, every site link through `p.href()` so it is tracked.
  */
 import React from 'react';
-import { Button, Check, FAQ, H2, Layout, Note, P, PriceRow, TemplateDef, TemplateProps, V, greeting } from './base';
+import { Button, Check, FAQ, H2, Headline, Layout, Note, P, PriceRow, TemplateDef, TemplateProps, V, greeting } from './base';
 import type { EmailTemplateId } from '../../../data/db';
 
 const DEFAULTS = {
@@ -267,7 +267,8 @@ const DriveUpdate: React.FC<TemplateProps> = (p) => {
   const ctaLabel = V(p, 'cta_label', 'Open your drive page');
   const paragraphs = body.split(/\n\s*\n/).filter((s) => s.trim());
   return (
-    <Layout preview={V(p, 'subject', 'Update on your TieEdu mock drive')} unsubUrl={p.unsubUrl} transactional={p.transactional}>
+    <Layout preview={V(p, 'body', V(p, 'subject', 'Update on your TieEdu mock drive')).slice(0, 110)} unsubUrl={p.unsubUrl} transactional={p.transactional}>
+      <Headline>{V(p, 'subject', 'Update on your TieEdu mock drive')}</Headline>
       <P>{greeting(p)}</P>
       {paragraphs.map((para, i) => (
         <P key={i}>{para.split(/\n/).map((line, j) => (
@@ -275,7 +276,7 @@ const DriveUpdate: React.FC<TemplateProps> = (p) => {
         ))}</P>
       ))}
       {ctaUrl ? <Button href={p.href(ctaUrl)}>{ctaLabel}</Button> : null}
-      <Note>{V(p, 'note', '') || `${v.drive_name || 'TieEdu'} · This is a transactional update about your mock drive registration.`}</Note>
+      <Note>{V(p, 'note', '') || `${v.drive_name || 'TieEdu'} · An update about your TieEdu account.`}</Note>
     </Layout>
   );
 };

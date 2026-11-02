@@ -4,9 +4,10 @@
  * Hand-rolled table layout rather than a framework: every major client (Gmail
  * web, Gmail app, Outlook, Apple Mail) is still on partial CSS support, and a
  * 600px single-column table with inline styles is the only construct that
- * renders identically everywhere. No remote images in the shell — a logo that
- * fails to load is the classic "looks broken in Outlook" mail; the wordmark is
- * live text, so the email survives image blocking.
+ * renders identically everywhere. The header carries the real TieEdu logo as a
+ * hosted PNG (EMAIL_LIFECYCLE_AND_DEVICES_PLAN §1) — SVG is not rendered by
+ * Gmail or Outlook — with alt text styled as the wordmark, so an inbox that
+ * blocks images still shows "TieEdu" in the brand colour, not a broken box.
  *
  * Every template receives `href()` rather than raw URLs. It rewrites through
  * the click endpoint (see lib/email/links.ts) so clicks are attributed to the
@@ -15,7 +16,7 @@
  * by a client, so it is a plain signed URL.
  */
 import React from 'react';
-import { Body, Container, Head, Heading, Hr, Html, Preview, Section, Text } from '@react-email/components';
+import { Body, Container, Head, Heading, Hr, Html, Img, Preview, Section, Text } from '@react-email/components';
 import type { EmailTemplateId } from '../../../data/db';
 
 export interface TemplateProps {
@@ -73,25 +74,54 @@ export const greeting = (p: TemplateProps): string => {
   return first ? `Hi ${first},` : 'Hi there,';
 };
 
+/**
+ * The call to action. A table cell carries the colour and padding, so Outlook
+ * (which ignores padding on links) still draws a full-size button; the link
+ * inside fills it so the whole button is clickable everywhere else.
+ */
 export const Button: React.FC<{ href: string; children: React.ReactNode }> = ({ href, children }) => (
-  <a
-    href={href}
-    style={{
-      display: 'inline-block',
-      background: ACTION,
-      color: DARK,
-      borderBottom: `3px solid ${ACTION_EDGE}`,
-      fontFamily: font,
-      fontSize: '15px',
-      fontWeight: 700,
-      textDecoration: 'none',
-      padding: '13px 30px',
-      borderRadius: '8px',
-      margin: '4px 0',
-    }}
-  >
+  <table role="presentation" cellPadding={0} cellSpacing={0} border={0} style={{ margin: '22px 0 8px' }}>
+    <tbody>
+      <tr>
+        <td
+          align="center"
+          // Legacy attribute Outlook reads; not in React's typings.
+          {...({ bgcolor: ACTION } as Record<string, string>)}
+          style={{ background: ACTION, borderRadius: '10px', borderBottom: `3px solid ${ACTION_EDGE}` }}
+        >
+          <a
+            href={href}
+            style={{
+              display: 'inline-block',
+              padding: '14px 34px',
+              fontFamily: font,
+              fontSize: '16px',
+              fontWeight: 700,
+              color: DARK,
+              textDecoration: 'none',
+              borderRadius: '10px',
+            }}
+          >
+            {children}
+          </a>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+);
+
+/** The one big line at the top of an email — what it is about, at a glance. */
+export const Headline: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <Heading as="h1" style={{ fontFamily: font, fontSize: '26px', lineHeight: '1.25', fontWeight: 800, color: DARK, margin: '6px 0 4px', letterSpacing: '-0.3px' }}>
     {children}
-  </a>
+  </Heading>
+);
+
+/** A soft panel for key facts: a score, a receipt, what a plan contains. */
+export const Card: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <Section style={{ background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: '12px', padding: '6px 20px', margin: '18px 0' }}>
+    {children}
+  </Section>
 );
 
 export const P: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -150,58 +180,82 @@ export const Layout: React.FC<{
   children: React.ReactNode;
   transactional?: boolean;
 }> = ({ preview, unsubUrl, children, transactional = false }) => {
-  const site = process.env.NEXT_PUBLIC_SITE_URL || '';
   const address = (process.env.EMAIL_POSTAL_ADDRESS || '').trim();
+  const site = (process.env.NEXT_PUBLIC_SITE_URL || 'https://tieedu.in').replace(/\/+$/, '');
+  const link = { color: MUTED, textDecoration: 'underline' } as const;
   return (
     <Html>
       <Head />
       <Preview>{preview}</Preview>
-      <Body style={{ background: '#FFF8EE', margin: 0, padding: '24px 12px' }}>
+      <Body style={{ background: '#FFF8EE', margin: 0, padding: '28px 12px' }}>
         <Container
           style={{
             background: '#FFFFFF',
             maxWidth: '600px',
             margin: '0 auto',
-            borderRadius: '12px',
+            borderRadius: '16px',
             border: `1px solid ${BORDER}`,
             overflow: 'hidden',
           }}
         >
-          <Section style={{ padding: '24px 32px 6px' }}>
-            <Text style={{ fontFamily: font, fontSize: '21px', fontWeight: 800, color: DARK, margin: 0 }}>
-              Tie<span style={{ color: LOGO }}>Edu</span>
-            </Text>
-            <Text style={{ fontFamily: font, fontSize: '12px', color: MUTED, margin: '2px 0 0' }}>
-              Placement prep, done properly.
-            </Text>
+          {/* Brand bar */}
+          <Section style={{ background: BRAND, height: '6px', lineHeight: '6px', fontSize: '1px' }}>&nbsp;</Section>
+
+          {/* Header: the real logo, on white so it never vanishes in dark mode */}
+          <Section style={{ padding: '22px 32px 8px', background: '#FFFFFF' }}>
+            <table role="presentation" width="100%" cellPadding={0} cellSpacing={0} border={0}>
+              <tbody>
+                <tr>
+                  <td>
+                    <a href={`${site}/`} style={{ textDecoration: 'none' }}>
+                      <Img
+                        src={`${site}/email/logo.png`}
+                        width="96"
+                        height="62"
+                        alt="TieEdu"
+                        style={{ display: 'block', border: 0, fontFamily: font, fontSize: '24px', fontWeight: 800, color: LOGO }}
+                      />
+                    </a>
+                  </td>
+                  <td align="right" style={{ fontFamily: font, fontSize: '12px', fontWeight: 700, letterSpacing: '1.5px', color: BRAND, textTransform: 'uppercase' }}>
+                    Train · Test · Track
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </Section>
-          <Hr style={{ borderColor: BORDER, margin: '14px 32px' }} />
-          <Section style={{ padding: '4px 32px 8px' }}>{children}</Section>
-          <Section style={{ background: SURFACE, padding: '18px 32px', borderTop: `1px solid ${BORDER}` }}>
-            <Text style={{ fontFamily: font, fontSize: '12px', lineHeight: '1.7', color: MUTED, margin: 0 }}>
-              {transactional
-                ? 'This is an account message from TieEdu about something on your account.'
-                : 'You are receiving this because your address was added to the TieEdu list.'}
-              {address ? (
-                <>
-                  <br />
-                  TieEdu, {address}
-                </>
-              ) : null}
-              <br />
-              {transactional ? (
-                <a href={`${site}/account/notifications`} style={{ color: MUTED, textDecoration: 'underline' }}>
-                  Email settings
-                </a>
-              ) : (
-                <a href={unsubUrl} style={{ color: MUTED, textDecoration: 'underline' }}>
-                  Unsubscribe
-                </a>
-              )}{' '}
+          <Hr style={{ borderColor: BORDER, margin: '10px 32px 4px' }} />
+
+          <Section style={{ padding: '10px 32px 18px' }}>{children}</Section>
+
+          {/* Footer */}
+          <Section style={{ background: SURFACE, padding: '22px 32px', borderTop: `1px solid ${BORDER}` }}>
+            <Text style={{ fontFamily: font, fontSize: '13px', lineHeight: '1.7', color: DARK, fontWeight: 700, margin: 0 }}>
+              TieEdu — placement prep, done properly.
+            </Text>
+            <Text style={{ fontFamily: font, fontSize: '12px', lineHeight: '1.8', color: MUTED, margin: '6px 0 0' }}>
+              <a href={`${site}/contact`} style={link}>Help &amp; support</a>
               &nbsp;·&nbsp;
-              <a href={`${site}/`} style={{ color: MUTED, textDecoration: 'underline' }}>
-                tieedu.in
-              </a>
+              <a href={`${site}/privacy`} style={link}>Privacy</a>
+              &nbsp;·&nbsp;
+              {transactional ? (
+                <a href={`${site}/account/notifications`} style={link}>Email settings</a>
+              ) : (
+                <a href={unsubUrl} style={link}>Unsubscribe</a>
+              )}
+              <br />
+              <a href="https://www.linkedin.com/company/tieedu/" style={link}>LinkedIn</a>
+              &nbsp;·&nbsp;
+              <a href="https://x.com/TiEEdu" style={link}>X</a>
+              &nbsp;·&nbsp;
+              <a href="https://www.facebook.com/TiEEdu" style={link}>Facebook</a>
+            </Text>
+            <Text style={{ fontFamily: font, fontSize: '11px', lineHeight: '1.7', color: MUTED, margin: '10px 0 0' }}>
+              {transactional
+                ? 'You are getting this because of activity on your TieEdu account.'
+                : 'You are getting this because you have a TieEdu account or signed up for updates.'}
+              <br />
+              © {new Date().getFullYear()} TieEdu Technologies{address ? ` · ${address}` : ''}
             </Text>
           </Section>
         </Container>
@@ -209,5 +263,3 @@ export const Layout: React.FC<{
     </Html>
   );
 };
-
-export type { EmailTemplateId };
