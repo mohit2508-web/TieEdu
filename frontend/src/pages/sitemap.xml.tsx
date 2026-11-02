@@ -72,6 +72,16 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
     entries.push({ loc: `${BASE}/company/${c.slug}`, priority: 0.9, changefreq: 'weekly', lastmod: day(c.fact_checked_at) });
   }
 
+  // Company guide pages (exam pattern, syllabus, …) — only topics with data.
+  const guides = await Promise.all(
+    companies.filter((c) => c?.slug).map(async (c) => ({ c, g: await getJson(`/companies/${c.slug}/guide`) }))
+  );
+  for (const { c, g } of guides) {
+    for (const t of Array.isArray(g?.topics) ? g.topics : []) {
+      entries.push({ loc: `${BASE}/company/${c.slug}/${t}`, priority: 0.8, changefreq: 'monthly', lastmod: day(c.fact_checked_at) });
+    }
+  }
+
   // Courses (paged: the catalogue returns 20 per call).
   for (let page = 1; page <= 50; page++) {
     const data: any = await getJson(`/courses?page=${page}`);

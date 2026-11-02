@@ -3,6 +3,7 @@ import { loadDb } from '../data/db';
 import { optionalAuth } from '../middleware/auth';
 import { deriveCompanyStats, publishedReports } from '../lib/stats';
 import { buildComparisonMatrix } from '../lib/compare';
+import { availableTopics, buildGuide, isGuideTopic } from '../lib/companyGuide';
 import { ownedModuleIdsFor, unlockedCompanyIds } from '../payments/orders';
 
 export const companiesRouter = Router();
@@ -173,4 +174,27 @@ companiesRouter.get('/:slug', optionalAuth, (req: Request, res: Response) => {
     unlocked_company_ids: userId ? unlockedCompanyIds(db, userId) : [],
     module_access: isUnlocked ? 'full' : 'preview',
   });
+});
+// ---------------------------------------------------------------------------
+// Company guide pages (lib/companyGuide, SEO_GROWTH_PLAN §5.1). Public, built
+// from the fact-checked company record; topics with no data are not offered.
+//   GET /api/companies/:slug/guide          → { topics: [...] }
+//   GET /api/companies/:slug/guide/:topic   → Guide
+// ---------------------------------------------------------------------------
+companiesRouter.get('/:slug/guide', (req: Request, res: Response) => {
+  const db = loadDb();
+  const c = (db.companies || []).find((x: any) => x.slug === req.params.slug && x.status === 'published');
+  if (!c) return res.status(404).json({ error: 'Company not found' });
+  res.setHeader('Cache-Control', 'public, max-age=300');
+  res.json({ topics: availableTopics(c) });
+});
+
+companiesRouter.get('/:slug/guide/:topic', (req: Request, res: Response) => {
+  if (!isGuideTopic(req.params.topic)) return res.status(404).json({ error: 'Not found' });
+  const db = loadDb();
+  const c = (db.companies || []).find((x: any) => x.slug === req.params.slug && x.status === 'published');
+  const guide = c ? buildGuide(c, req.params.topic) : null;
+  if (!guide) return res.status(404).json({ error: 'Not found' });
+  res.setHeader('Cache-Control', 'public, max-age=300');
+  res.json(guide);
 });

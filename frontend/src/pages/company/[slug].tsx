@@ -62,10 +62,14 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   // published AND switched on comes back here. Anything else — including the
   // lookup failing — renders the existing vault page unchanged.
   const api = serverApiBase();
-  const [companyResult, pageResult] = await Promise.allSettled([
+  const [companyResult, pageResult, guideResult] = await Promise.allSettled([
     fetch(`${api}/companies/${slug}`).then((res) => (res.ok ? res.json() : null)),
     fetchCompanyPage(slug, api),
+    // Guide pages for this company (SEO_GROWTH_PLAN §5.1), linked from the page.
+    fetch(`${api}/companies/${slug}/guide`).then((res) => (res.ok ? res.json() : null)),
   ]);
+  const guideTopics: string[] =
+    guideResult.status === 'fulfilled' && Array.isArray(guideResult.value?.topics) ? guideResult.value.topics : [];
   if (companyResult.status === 'fulfilled') initialCompany = companyResult.value;
   const live = pageResult.status === 'fulfilled' && pageResult.value.enabled ? pageResult.value : null;
   return {
@@ -75,9 +79,40 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       initialPage: live?.page || null,
       initialRadar: live?.radar || [],
       packPriceCap: live?.pack_price_cap ?? null,
+      guideTopics,
     },
   };
 };
+
+const GUIDE_LABEL: Record<string, string> = {
+  'exam-pattern': 'Exam pattern',
+  syllabus: 'Syllabus',
+  'interview-questions': 'Interview questions',
+  'hr-interview': 'HR interview',
+  'hiring-process': 'Hiring process',
+  'salary-eligibility': 'Salary & eligibility',
+  'prep-plan': 'Prep plan',
+};
+
+/** Links to this company's guide pages — in the server HTML, so search engines follow them. */
+const CompanyGuideLinks: React.FC<{ slug: string; name: string; topics: string[] }> = ({ slug, name, topics }) =>
+  topics.length ? (
+    <nav aria-label={`${name} guides`} className="rounded-3xl border border-line bg-card p-5 shadow-edge-neutral">
+      <p className="text-xs font-extrabold uppercase tracking-widest text-link">{name} guides</p>
+      <ul className="mt-3 flex flex-wrap gap-2">
+        {topics.map((t) => (
+          <li key={t}>
+            <Link
+              href={`/company/${slug}/${t}`}
+              className="inline-flex min-h-[40px] items-center rounded-full border border-line bg-app px-4 text-sm font-semibold text-heading hover:border-[var(--brand-sky)]"
+            >
+              {GUIDE_LABEL[t] || t}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  ) : null;
 
 export default function CompanyVaultPage({
   initialCompany,
@@ -85,6 +120,7 @@ export default function CompanyVaultPage({
   initialPage = null,
   initialRadar,
   packPriceCap = null,
+  guideTopics = [],
 }: {
   initialCompany: Company | null;
   initialSlug: string;
@@ -92,6 +128,7 @@ export default function CompanyVaultPage({
   initialRadar?: CpRadarItem[];
   /** A live company page's flat pack price; checkout applies the same cap server-side. */
   packPriceCap?: number | null;
+  guideTopics?: string[];
 }) {
   const router = useRouter();
   const { slug } = router.query;
@@ -735,6 +772,7 @@ export default function CompanyVaultPage({
               <div className="space-y-4 pt-6 empty:hidden">
                 {user && <CampusIntelCard slug={company.slug} company={company.name} />}
                 <GuaranteeStrip />
+                <CompanyGuideLinks slug={company.slug} name={company.name} topics={guideTopics} />
               </div>
             }
             company={company}
