@@ -17,6 +17,12 @@ export interface Profile {
   elig: { degrees: string; batches: string; cutoff: string; backlogs: string; gap: string };
   rounds: R[]; higher: string; difficulty: number; bond: string; training: string; window: string;
   seo: [string, string]; confidence: 'high' | 'medium' | 'low'; note: string; contest?: boolean;
+  /** Date the test pattern was checked, when it is surer than the rest of the profile. */
+  pattern_checked?: string;
+  /** Online test parts: [section, questions (may be a range), minutes, difficulty]. */
+  oa_pattern?: Array<[string, string, number, string]>;
+  /** Full syllabus: [section, topics[]]. */
+  syllabus?: Array<[string, string[]]>;
 }
 
 const APT = ['Quant', 'Logical reasoning', 'Verbal'];
@@ -130,25 +136,73 @@ export const PROFILES: Profile[] = [
   },
   {
     slug: 'mphasis-freshers', company: 'Mphasis', name: 'Mphasis Fresher Hiring (Software Engineer)', industry: 'IT Services & Consulting',
-    tagline: 'Standard or Advanced offer, decided by assessment rank',
+    tagline: 'Aptitude, programming MCQs and a spoken-English test, then coding and two interviews',
     about: 'Bengaluru-headquartered IT services company backed by Blackstone, known for banking, financial services and insurance work (~32,100 people). Hires B.Tech freshers as Software Engineers, with a higher Advanced track for top scorers.',
     hq: 'Bengaluru, India', founded: '2000', size: '~32,100', careers: 'https://careers.mphasis.com',
-    tags: ['Software Engineer ₹4.25 LPA', 'Advanced ₹6.25 LPA', '5 Rounds', 'PYQs'],
+    tags: ['Software Engineer ₹4.25 LPA', 'Advanced ₹6.25 LPA', '4 Rounds', 'SVAR spoken English'],
     program_type: 'Campus / off-campus hiring',
     roles: [['Software Engineer', '₹4.25 LPA'], ['Advanced track', '₹6.25 LPA']], ctc: [4.25, 6.25],
     elig: { degrees: 'B.E./B.Tech, M.E./M.Tech in CS, IT or ECE; MCA', batches: 'Current graduating batch', cutoff: '60% (6.0 CGPA) in 10th, 12th and degree', backlogs: 'No active backlogs', gap: '' },
     rounds: [
-      ['Aptitude test', 'OA', 'mcq', undefined, 60, true, APT],
-      ['Technical aptitude', 'Technical', 'mcq', undefined, 45, undefined, ['Programming logic', 'OOP', 'DBMS', 'Networking']],
-      ['Coding', 'Coding', 'coding', 2, 60, undefined, ['Easy–medium problems']],
-      ['Technical interview', 'Technical', 'live_interview', undefined, undefined, undefined, TECH_IV],
-      ['HR interview', 'HR', 'live_interview', undefined, undefined, undefined, HR_IV],
+      ['Online assessment', 'OA', 'mcq', undefined, 135, undefined, ['Quantitative Aptitude', 'Logical Reasoning', 'Verbal English', 'Computer Programming MCQs', 'SVAR spoken English']],
+      ['Coding round (conditional / role-specific)', 'Coding', 'coding', undefined, 45, undefined, ['Fixing logical errors', 'Fixing compilation errors', 'Completing partial functions', 'Arrays, strings, sorting, matrices']],
+      ['Technical interview', 'Technical', 'live_interview', undefined, undefined, undefined, ['CS fundamentals', 'Project work', 'Live coding / pseudocode', 'Language-specific concepts']],
+      ['HR interview', 'HR', 'live_interview', undefined, undefined, undefined, ['Behavioural questions', 'Background verification', 'Location preference', 'Communication and fit']],
+    ],
+    oa_pattern: [
+      ['Quantitative Aptitude', '20–25', 35, 'Medium'],
+      ['Logical Reasoning', '20–25', 35, 'Medium'],
+      ['Verbal English', '20–25', 25, 'Medium'],
+      ['Computer Programming MCQs', '15–20', 20, 'Medium–High'],
+      ['Automata / hands-on coding (optional)', '2–3', 45, 'Medium'],
+      ['SVAR spoken English test', 'Automated speaking & listening', 20, 'Easy'],
+    ],
+    syllabus: [
+      ['Quantitative Aptitude', [
+        'Number systems: divisibility, LCM & HCF, decimal fractions, numbers & powers, remainder theorem',
+        'Arithmetic: percentages, profit and loss, simple & compound interest, ratio & proportion, averages, alligations & mixtures',
+        'Time & motion: time, speed and distance, boats & streams, time and work, pipes & cisterns',
+        'Modern maths: permutations & combinations, probability, logarithms',
+        'Algebra & geometry: mensuration (area, volume), coordinate geometry, progressions (AP/GP)',
+        'Data interpretation: pie charts, bar graphs, tables, line charts',
+      ]],
+      ['Logical Reasoning', [
+        'Deductive logic: syllogisms, selection decision tables, logical word sequence, statements and conclusions',
+        'Inductive logic: number & letter series, coding-decoding, analogies and classification, pattern recognition',
+        'Analytical reasoning: blood relations, direction sense, seating arrangements (linear, circular, complex)',
+        'Critical reasoning: data sufficiency, inferred meaning, objective reasoning, odd man out',
+        'Clocks & calendars: clock angles, leap years, calendar date calculations',
+      ]],
+      ['Verbal English', [
+        'Vocabulary: synonyms and antonyms, idioms and phrases, one-word substitutions, contextual usage',
+        'Grammar & usage: error spotting, sentence improvement, prepositions & articles, tenses, subject–verb agreement',
+        'Reading: reading comprehension (inference and fact-based), fill in the blanks, para jumbles / sentence ordering',
+      ]],
+      ['Computer Programming MCQs', [
+        'Programming fundamentals: data types, operators, loops and if-else, functions, recursion',
+        'Data structures: arrays, strings, linked lists, stacks, queues, binary trees, searching and sorting',
+        'OOP: inheritance, polymorphism, abstraction, encapsulation, constructors / destructors',
+        'DBMS & SQL: relational concepts, primary / foreign keys, SELECT, JOIN, GROUP BY',
+        'Core CS: OS basics (process, threads, memory), pseudocode output prediction, finding code errors',
+      ]],
+      ['Automata Fix / Coding (C, C++, Java or Python)', [
+        'Logical error correction in given code',
+        'Compilation error correction without changing the algorithm',
+        'Code reuse: completing partial functions with given library functions or signatures',
+        'Focus areas: arrays, strings, sorting, matrix operations, basic maths logic',
+      ]],
+      ['SVAR spoken English', [
+        'Pronunciation & fluency: reading on-screen sentences aloud',
+        'Listening comprehension: repeating audio clips or answering questions on them',
+        'Extempore: speaking briefly on a simple everyday topic',
+      ]],
     ],
     higher: 'Rank in the assessments — roughly the top 10% get the Advanced offer',
     difficulty: 3, bond: '18-month service agreement, ₹75,000 penalty if broken — reported, verify in the offer letter',
     training: '~3 months structured training with certifications (reported)', window: 'Campus season; occasional off-campus drives',
-    seo: ['Mphasis Fresher Hiring: Software Engineer CTC & Rounds', 'Mphasis for B.Tech freshers: Software Engineer ₹4.25 LPA, Advanced track ₹6.25 LPA. Aptitude, technical aptitude, coding, technical and HR interview.'],
-    confidence: 'low', note: 'CTC, rounds and bond come from one third-party guide.',
+    seo: ['Mphasis Exam Pattern, Syllabus & Rounds for Freshers', 'Mphasis fresher hiring: online test (Quant, Reasoning, Verbal, Programming MCQs, SVAR spoken English), coding round, technical and HR interview.'],
+    confidence: 'low', pattern_checked: '2026-11-02',
+    note: "Test pattern and syllabus from the owner's Mphasis OA syllabus (Nov 2026). CTC, eligibility and bond still come from one third-party guide.",
   },
   {
     slug: 'tcs-codevita', company: 'TCS', name: 'TCS CodeVita', industry: 'IT Services & Consulting', contest: true,

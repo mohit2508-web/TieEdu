@@ -116,8 +116,8 @@ function questionsFrom(c: any, re: RegExp): { list: GuideQuestion[]; locked: num
 export function availableTopics(c: any): GuideTopic[] {
   const out: GuideTopic[] = [];
   const oa = oaOf(c);
-  if (oa && (oa.question_count || PREP_COMPANIES[c.slug])) out.push('exam-pattern');
-  if (sectionsFromLessons(c).length || (oa?.train_topics || []).length) out.push('syllabus');
+  if (oa && (oa.question_count || PREP_COMPANIES[c.slug] || c.profile?.oa_pattern?.length)) out.push('exam-pattern');
+  if (sectionsFromLessons(c).length || (oa?.train_topics || []).length || c.profile?.syllabus?.length) out.push('syllabus');
   if (moduleOf(c, /tech/i)?.items?.length || roundsOf(c).some((r) => /tech/i.test(r.round_type || ''))) out.push('interview-questions');
   if (moduleOf(c, /\bhr\b|-hr/i)?.items?.length || roundsOf(c).some((r) => /hr/i.test(r.round_type || ''))) out.push('hr-interview');
   if (roundsOf(c).length) out.push('hiring-process');
@@ -153,6 +153,35 @@ export function buildGuide(c: any, topic: GuideTopic): Guide | null {
 
   switch (topic) {
     case 'exam-pattern': {
+      // A published pattern document (ranges, time and difficulty per part) beats the mock's counts.
+      const pat: Array<{ section: string; questions: string; minutes: number; difficulty: string }> = Array.isArray(p.oa_pattern) ? p.oa_pattern : [];
+      if (pat.length) {
+        const mins = pat.filter((x) => !/optional/i.test(x.section)).reduce((n, x) => n + (Number(x.minutes) || 0), 0);
+        const optional = pat.filter((x) => /optional/i.test(x.section));
+        return {
+          ...base,
+          title: `${short} Exam Pattern ${y}: Sections, Questions & Time`,
+          h1: `${name} exam pattern ${y}`,
+          description: `${name} online test pattern: ${pat.map((x) => x.section.replace(/\s*\(.*\)/, '')).join(', ')} — questions, time and difficulty for each part.`,
+          intro: `The ${name} online assessment has ${pat.length} parts: ${pat.map((x) => x.section).join(', ')}. Here is each part's question count, time and difficulty.`,
+          sections: [
+            { heading: 'Section-wise pattern', table: { head: ['Section', 'Questions', 'Time', 'Difficulty'], rows: pat.map((x) => [x.section, x.questions, `${x.minutes} min`, x.difficulty]) } },
+            {
+              heading: 'At a glance',
+              bullets: [
+                `Total time: about ${mins} minutes${optional.length ? `, plus ${optional.map((x) => `${x.minutes} min for ${x.section.replace(/\s*\(optional\)/i, '')}`).join(', ')} where it is part of the drive` : ''}`,
+                'Question counts vary a little from drive to drive, so they are shown as ranges.',
+                oa?.pattern_checked_at ? `Pattern last checked: ${oa.pattern_checked_at}` : '',
+              ].filter(Boolean),
+            },
+            ...(rounds.length > 1 ? [{ heading: 'What comes after the test', paragraphs: [`The full process is ${roundLine}. See the hiring process page for each round.`] }] : []),
+          ],
+          faq: [
+            { q: `How many questions are in the ${name} online test?`, a: `${pat.map((x) => `${x.section}: ${x.questions} (${x.minutes} min)`).join('; ')}.` },
+            { q: `How long is the ${name} online test?`, a: `About ${mins} minutes${optional.length ? `, plus the ${optional.map((x) => x.section.replace(/\s*\(optional\)/i, '')).join(', ')} where it is included` : ''}.` },
+          ],
+        };
+      }
       const total = prep ? prep.sections.reduce((s, x) => s + x.weight, 0) : oa?.question_count;
       const rows = prep
         ? prep.sections.map((s) => [s.name, String(s.weight)])
@@ -189,7 +218,9 @@ export function buildGuide(c: any, topic: GuideTopic): Guide | null {
     }
 
     case 'syllabus': {
-      const groups = sectionsFromLessons(c);
+      // A full syllabus document wins over the lesson titles (it covers topics not yet taught).
+      const doc: Array<{ section: string; topics: string[] }> = Array.isArray(p.syllabus) ? p.syllabus : [];
+      const groups = doc.length ? doc.map((d) => ({ name: d.section, lessons: d.topics })) : sectionsFromLessons(c);
       return {
         ...base,
         title: `${short} Syllabus ${y}: Online Test & Interview Topics`,

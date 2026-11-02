@@ -5,7 +5,13 @@
  * module, tests = skills tagged with the company), so content an admin adds
  * appears in the plan on the next visit.
  */
+import { MPHASIS_BANK } from '../data/companyTests/mphasis';
+import { MPHASIS_LESSONS } from '../data/interviewPrep/mphasisLessons';
+
 export interface PrepSection { key: string; name: string; weight: number }
+
+/** Mphasis prep turns on once its lessons and a full mock's worth of questions exist. */
+const MPHASIS_READY = MPHASIS_LESSONS.length > 0 && MPHASIS_BANK.length >= 75;
 
 export const PREP_COMPANIES: Record<string, { sections: PrepSection[]; lessonModule: string; interviewModules: string[]; defaultDays: number }> = {
   'infosys-systems-engineer': {
@@ -20,10 +26,26 @@ export const PREP_COMPANIES: Record<string, { sections: PrepSection[]; lessonMod
     interviewModules: ['mod-prep-infosys-se-tech', 'mod-prep-infosys-se-hr'],
     defaultDays: 50,
   },
+  ...(MPHASIS_READY ? {
+    'mphasis-freshers': {
+      sections: [
+        { key: 'quant', name: 'Quantitative Aptitude', weight: 20 },
+        { key: 'reasoning', name: 'Logical Reasoning', weight: 20 },
+        { key: 'verbal', name: 'Verbal English', weight: 20 },
+        { key: 'programming', name: 'Computer Programming', weight: 15 },
+      ],
+      lessonModule: 'mod-prep-mphasis-oa',
+      interviewModules: ['mod-prep-mphasis-tech', 'mod-prep-mphasis-hr'],
+      defaultDays: 45,
+    },
+  } : {}),
 };
 
 /** Lesson titles start with their section ("Math: …"); map them to section keys. */
-const LESSON_SECTION: Record<string, string> = { math: 'math', reasoning: 'reasoning', verbal: 'verbal', pseudocode: 'pseudocode', puzzles: 'puzzle', email: 'verbal' };
+const LESSON_SECTION: Record<string, string> = {
+  math: 'math', reasoning: 'reasoning', verbal: 'verbal', pseudocode: 'pseudocode', puzzles: 'puzzle', email: 'verbal',
+  quant: 'quant', programming: 'programming', coding: 'programming', svar: 'verbal',
+};
 const lessonSection = (title: string) => LESSON_SECTION[(title.split(':')[0] || '').trim().toLowerCase()] || 'verbal';
 
 const ist = (d = new Date()) => new Date(d.getTime() + 5.5 * 3600000).toISOString().slice(0, 10);
@@ -131,7 +153,7 @@ export function buildPrep(db: any, userId: string, slug: string, owned: boolean)
     const phase = d < learnDays ? 'Learn' : d < learnDays + strengthenDays ? 'Strengthen' : 'Final';
     const items: Item[] = [];
     if (phase === 'Learn') { for (let k = 0; k < perDay && qi < queue.length; k++) items.push(queue[qi++]); }
-    if ((d + 1) % 7 === 0 || d === totalDays - 1) items.push({ kind: 'mock', ref: fullMock?.slug || '', title: 'Full mock: 54 Qs, real pattern', done: mockAttempts.some((a: any) => String(a.submittedAt || '').slice(0, 10) >= date) });
+    if ((d + 1) % 7 === 0 || d === totalDays - 1) items.push({ kind: 'mock', ref: fullMock?.slug || '', title: `Full mock: ${wTotal} Qs, real pattern`, done: mockAttempts.some((a: any) => String(a.submittedAt || '').slice(0, 10) >= date) });
     if (phase !== 'Learn' && items.length < 2) {
       const target = phase === 'Strengthen' ? weak : sections[d % sections.length];
       items.push({ kind: 'revision', ref: target.test_slug || '', title: `Revision test: ${target.name}`, done: false });
