@@ -50,11 +50,20 @@ export function templateHomePath(templateId: EmailTemplateId): string {
 }
 
 function buildProps(lead: EmailLead | null, messageId: string | undefined, vars: TemplateVars, templateId: EmailTemplateId): TemplateProps {
+  // No lead = an account message (reset, receipt, result, drive, support).
+  // Its links go straight to the site: a password-reset button routed through
+  // a tracking redirect reads as phishing to mail filters, and there is no
+  // campaign to attribute anyway.
+  const transactional = !lead;
   return {
     name: lead?.name || '',
-    href: (path: string) => wrapLink(safeTarget(path) || templateHomePath(templateId), messageId),
+    href: (path: string) =>
+      transactional
+        ? `${siteUrl()}${safeTarget(path) || templateHomePath(templateId)}`
+        : wrapLink(safeTarget(path) || templateHomePath(templateId), messageId),
     unsubUrl: lead ? unsubFor(lead.id) : `${siteUrl()}/`,
     vars,
+    transactional,
   };
 }
 

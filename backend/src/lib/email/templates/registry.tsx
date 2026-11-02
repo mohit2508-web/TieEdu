@@ -267,7 +267,7 @@ const DriveUpdate: React.FC<TemplateProps> = (p) => {
   const ctaLabel = V(p, 'cta_label', 'Open your drive page');
   const paragraphs = body.split(/\n\s*\n/).filter((s) => s.trim());
   return (
-    <Layout preview={V(p, 'subject', 'Update on your TieEdu mock drive')} unsubUrl={p.unsubUrl}>
+    <Layout preview={V(p, 'subject', 'Update on your TieEdu mock drive')} unsubUrl={p.unsubUrl} transactional={p.transactional}>
       <P>{greeting(p)}</P>
       {paragraphs.map((para, i) => (
         <P key={i}>{para.split(/\n/).map((line, j) => (

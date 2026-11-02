@@ -27,6 +27,11 @@ export interface TemplateProps {
   unsubUrl: string;
   /** Template-specific copy overrides. Missing keys fall back to copy defaults. */
   vars: Record<string, string>;
+  /**
+   * An account message (reset, receipt, result, drive, support) rather than
+   * marketing: direct links, and an account footer with no "Unsubscribe".
+   */
+  transactional?: boolean;
 }
 
 export interface TemplateDef {
@@ -143,7 +148,9 @@ export const Layout: React.FC<{
   preview: string;
   unsubUrl: string;
   children: React.ReactNode;
-}> = ({ preview, unsubUrl, children }) => {
+  transactional?: boolean;
+}> = ({ preview, unsubUrl, children, transactional = false }) => {
+  const site = process.env.NEXT_PUBLIC_SITE_URL || '';
   const address = (process.env.EMAIL_POSTAL_ADDRESS || '').trim();
   return (
     <Html>
@@ -172,7 +179,9 @@ export const Layout: React.FC<{
           <Section style={{ padding: '4px 32px 8px' }}>{children}</Section>
           <Section style={{ background: SURFACE, padding: '18px 32px', borderTop: `1px solid ${BORDER}` }}>
             <Text style={{ fontFamily: font, fontSize: '12px', lineHeight: '1.7', color: MUTED, margin: 0 }}>
-              You are receiving this because your address was added to the TieEdu list.
+              {transactional
+                ? 'This is an account message from TieEdu about something on your account.'
+                : 'You are receiving this because your address was added to the TieEdu list.'}
               {address ? (
                 <>
                   <br />
@@ -180,11 +189,17 @@ export const Layout: React.FC<{
                 </>
               ) : null}
               <br />
-              <a href={unsubUrl} style={{ color: MUTED, textDecoration: 'underline' }}>
-                Unsubscribe
-              </a>{' '}
+              {transactional ? (
+                <a href={`${site}/account/notifications`} style={{ color: MUTED, textDecoration: 'underline' }}>
+                  Email settings
+                </a>
+              ) : (
+                <a href={unsubUrl} style={{ color: MUTED, textDecoration: 'underline' }}>
+                  Unsubscribe
+                </a>
+              )}{' '}
               &nbsp;·&nbsp;
-              <a href={`${process.env.NEXT_PUBLIC_SITE_URL || ''}/`} style={{ color: MUTED, textDecoration: 'underline' }}>
+              <a href={`${site}/`} style={{ color: MUTED, textDecoration: 'underline' }}>
                 tieedu.in
               </a>
             </Text>
