@@ -1,142 +1,126 @@
 import { GetServerSideProps } from 'next';
-import { fetchCompanies } from '@/lib/api';
-import { fetchCourseCatalog } from '@/lib/coursesApi';
+import { serverApiBase } from '@/lib/companyPagesApi';
 
 export default function Sitemap() {
   return null;
 }
 
+type Entry = { loc: string; lastmod?: string | null; changefreq?: string; priority: number };
+
+const BASE = 'https://tieedu.in';
+
+const day = (v: unknown): string | null => {
+  if (typeof v !== 'string' || !v) return null;
+  const t = Date.parse(v);
+  return Number.isFinite(t) ? new Date(t).toISOString().slice(0, 10) : null;
+};
+
+async function getJson(path: string): Promise<any> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 5000);
+  try {
+    const r = await fetch(`${serverApiBase()}${path}`, { signal: ctrl.signal });
+    return r.ok ? await r.json() : null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * Every public, indexable page (SEO_GROWTH_PLAN §2.2). Private pages are not
+ * listed (they also carry noindex — see lib/seo). `lastmod` is written only
+ * where the data has a real date: a sitemap stamping "today" on every URL
+ * teaches search engines to ignore its dates.
+ */
 export const getServerSideProps: GetServerSideProps = async ({ res }) => {
-  const baseUrl = 'https://tieedu.in';
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toISOString().slice(0, 10);
+  const entries: Entry[] = [];
 
-  let companies: { slug: string }[] = [];
-  try {
-    companies = await fetchCompanies();
-  } catch {
-    companies = [];
+  // Hubs and evergreen pages.
+  const statics: Array<[string, number, string]> = [
+    ['/', 1.0, 'daily'],
+    ['/courses', 0.9, 'weekly'],
+    ['/companies', 0.9, 'weekly'],
+    ['/skill-test', 0.9, 'weekly'],
+    ['/compare', 0.8, 'weekly'],
+    ['/tracks', 0.8, 'weekly'],
+    ['/interview-course', 0.8, 'monthly'],
+    ['/mock-interview', 0.7, 'monthly'],
+    ['/drops', 0.6, 'daily'],
+    ['/verify', 0.5, 'monthly'],
+    ['/guarantee', 0.5, 'monthly'],
+    ['/colleges', 0.6, 'monthly'],
+    ['/recruiters', 0.5, 'monthly'],
+    ['/about', 0.6, 'monthly'],
+    ['/contact', 0.6, 'monthly'],
+    ['/privacy', 0.3, 'yearly'],
+    ['/terms', 0.3, 'yearly'],
+    ['/refund-policy', 0.3, 'yearly'],
+    ['/cookies', 0.3, 'yearly'],
+  ];
+  for (const [path, priority, changefreq] of statics) {
+    entries.push({ loc: `${BASE}${path === '/' ? '' : path}`, priority, changefreq, lastmod: path === '/' ? today : null });
   }
 
-  let courses: { slug: string }[] = [];
-  try {
-    // Public endpoint, no auth — the catalogue is the same list a visitor sees
-    // before signing in, so this never needs a token.
-    //
-    // Paged on purpose. The catalogue endpoint returns 20 rows per call by
-    // default, so a single request would quietly list only the first 20 courses
-    // and every one added after that would be missing from the sitemap. A
-    // sitemap that silently truncates is worse than none: it looks complete and
-    // is not.
-    let page = 1;
-    for (;;) {
-      const data: any = await fetchCourseCatalog({ page });
-      const batch = data?.courses || [];
-      courses.push(...batch.map((c: { slug: string }) => ({ slug: c.slug })));
-      if (!data?.has_more || batch.length === 0) break;
-      if (++page > 50) break; // ~1000 courses: far past what this site can host.
+  // Companies — the most valuable pages.
+  const companiesRaw = await getJson('/companies');
+  const companies: any[] = Array.isArray(companiesRaw) ? companiesRaw : Array.isArray(companiesRaw?.companies) ? companiesRaw.companies : [];
+  for (const c of companies) {
+    if (!c?.slug) continue;
+    entries.push({ loc: `${BASE}/company/${c.slug}`, priority: 0.9, changefreq: 'weekly', lastmod: day(c.fact_checked_at) });
+  }
+
+  // Courses (paged: the catalogue returns 20 per call).
+  for (let page = 1; page <= 50; page++) {
+    const data: any = await getJson(`/courses?page=${page}`);
+    const batch: any[] = data?.courses || [];
+    for (const c of batch) {
+      if (c?.slug) entries.push({ loc: `${BASE}/courses/${c.slug}`, priority: 0.8, changefreq: 'weekly', lastmod: day(c.updated_at) });
     }
-  } catch {
-    courses = [];
+    if (!data?.has_more || batch.length === 0) break;
   }
 
-  const companyUrls = companies.map(
-    (c) => `
-  <url>
-    <loc>${baseUrl}/company/${c.slug}</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>`
-  ).join('');
+  // Branch landing pages.
+  for (const b of ['year1', 'cse', 'ai-ds', 'ece', 'eee', 'mech', 'civil', 'career', 'tools']) {
+    entries.push({ loc: `${BASE}/courses/branch/${b}`, priority: 0.7, changefreq: 'weekly' });
+  }
 
-  // Course detail pages are indexable: a free course's syllabus and description
-  // are the same content a logged-out visitor can already read. Progress,
-  // certificates and the lesson bodies are not, and are not linked here.
-  const courseUrls = courses.map(
-    (c) => `
-  <url>
-    <loc>${baseUrl}/courses/${c.slug}</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>`
-  ).join('');
+  // Skill tests — server-rendered landing pages. Company tests live inside the
+  // company plan (they redirect), so they are not listed on their own.
+  const skills = await getJson('/skill-test/skills');
+  for (const s of Array.isArray(skills) ? skills : []) {
+    if (!s?.slug || s.company_slug) continue;
+    entries.push({ loc: `${BASE}/skill-test/${s.slug}`, priority: 0.7, changefreq: 'monthly', lastmod: day(s.updated_at) });
+  }
 
-  // Branch landing pages: one stable URL per branch, server-rendered with its
-  // own catalogue slice. Listed unconditionally — an empty branch page is a
-  // real page with an honest empty state, not an error.
-  const branchUrls = ['year1', 'cse', 'ai-ds', 'ece', 'eee', 'mech', 'civil', 'career', 'tools']
+  // Career tracks.
+  const tracksRaw = await getJson('/tracks');
+  const tracks: any[] = Array.isArray(tracksRaw) ? tracksRaw : Array.isArray(tracksRaw?.tracks) ? tracksRaw.tracks : [];
+  for (const t of tracks) {
+    if (t?.slug) entries.push({ loc: `${BASE}/tracks/${t.slug}`, priority: 0.7, changefreq: 'monthly', lastmod: day(t.updated_at) });
+  }
+
+  // De-duplicate, keep the first (highest-intent) entry for a URL.
+  const seen = new Set<string>();
+  const body = entries
+    .filter((e) => (seen.has(e.loc) ? false : (seen.add(e.loc), true)))
     .map(
-      (b) => `
-  <url>
-    <loc>${baseUrl}/courses/branch/${b}</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+      (e) => `  <url>
+    <loc>${e.loc}</loc>${e.lastmod ? `\n    <lastmod>${e.lastmod}</lastmod>` : ''}
+    <changefreq>${e.changefreq || 'weekly'}</changefreq>
+    <priority>${e.priority.toFixed(1)}</priority>
   </url>`
     )
-    .join('');
+    .join('\n');
 
-  const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
+  res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
+  res.write(`<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>${baseUrl}</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>always</changefreq>
-    <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>${baseUrl}/compare</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>${baseUrl}/courses</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>${baseUrl}/about</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>${baseUrl}/contact</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>${baseUrl}/privacy</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.3</priority>
-  </url>
-  <url>
-    <loc>${baseUrl}/terms</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.3</priority>
-  </url>
-  <url>
-    <loc>${baseUrl}/refund-policy</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.3</priority>
-  </url>
-  <url>
-    <loc>${baseUrl}/cookies</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.3</priority>
-  </url>
-  ${courseUrls}
-  ${branchUrls}
-  ${companyUrls}
-</urlset>`;
-
-  res.setHeader('Content-Type', 'text/xml');
-  res.write(sitemapXml);
+${body}
+</urlset>`);
   res.end();
-
-  return {
-    props: {}
-  };
+  return { props: {} };
 };

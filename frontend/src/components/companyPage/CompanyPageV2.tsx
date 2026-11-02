@@ -557,7 +557,7 @@ export function CompanyPageV2({
           {ogDescription && <meta property="og:description" content={ogDescription} />}
           <meta property="og:type" content="website" />
           <meta property="og:url" content={`${SITE_URL}/company/${slug}`} />
-          <link rel="canonical" href={`${SITE_URL}/company/${slug}`} />
+          <link key="canonical" rel="canonical" href={`${SITE_URL}/company/${slug}`} />
           {ogImage && <meta property="og:image" content={ogImage} />}
           <meta name="twitter:card" content={ogImage ? 'summary_large_image' : 'summary'} />
         </Head>

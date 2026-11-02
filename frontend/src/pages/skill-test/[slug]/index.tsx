@@ -1,21 +1,31 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
+import Head from 'next/head';
+import type { GetServerSideProps } from 'next';
+import { serverApiBase } from '@/lib/companyPagesApi';
 import Link from 'next/link';
 import { ArrowLeft, BrainCircuit, Award, Clock, FileText, ChevronRight } from 'lucide-react';
 import { fetchSkillDetailApi, SkillTestSkill, SkillTestTopic, SkillTestAssessment } from '@/lib/skillTestApi';
 
 import { nameFromSlug, withPageTitle } from '@/components/common/withPageTitle';
-function SkillDetail() {
+type SkillInitial = { skill: SkillTestSkill; topics: SkillTestTopic[]; assessment: SkillTestAssessment | null } | null;
+
+const SITE = 'https://tieedu.in';
+
+function SkillDetail({ initial = null }: { initial?: SkillInitial }) {
   const router = useRouter();
   const { slug } = router.query;
-  const [skill, setSkill] = useState<SkillTestSkill | null>(null);
-  const [topics, setTopics] = useState<SkillTestTopic[]>([]);
-  const [assessment, setAssessment] = useState<SkillTestAssessment | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Server-rendered (SEO_GROWTH_PLAN §2.1): Google gets the name, description
+  // and topics in the HTML; the browser only refetches if it has nothing.
+  const [skill, setSkill] = useState<SkillTestSkill | null>(initial?.skill ?? null);
+  const [topics, setTopics] = useState<SkillTestTopic[]>(initial?.topics ?? []);
+  const [assessment, setAssessment] = useState<SkillTestAssessment | null>(initial?.assessment ?? null);
+  const [loading, setLoading] = useState(!initial);
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
     if (!router.isReady || typeof slug !== 'string') return;
+    if (initial && initial.skill.slug === slug) return;
     setLoading(true);
     fetchSkillDetailApi(slug)
       .then((d) => {
@@ -26,7 +36,7 @@ function SkillDetail() {
       })
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false));
-  }, [router.isReady, slug]);
+  }, [router.isReady, slug, initial]);
 
   if (loading) {
     return (
@@ -49,8 +59,54 @@ function SkillDetail() {
     );
   }
 
+  const minutes = assessment?.durationMinutes ?? skill.avgCompletionTime;
+  const pageTitle = `${skill.name} Skill Test — Free Online Test with Certificate`;
+  const pageDesc = (
+    skill.shortDescription ||
+    skill.description ||
+    `Free ${skill.name} skill test: ${skill.totalQuestions} questions, ${minutes} minutes, with a verifiable certificate.`
+  ).replace(/\s+/g, ' ').slice(0, 158);
+  const url = `${SITE}/skill-test/${skill.slug}`;
+
   return (
     <div className="min-h-screen bg-gray-50">
+      <Head>
+        <title>{`${pageTitle} | TieEdu`}</title>
+        <meta name="description" content={pageDesc} />
+        <link rel="canonical" href={url} key="canonical" />
+        <meta property="og:title" content={pageTitle} key="og:title" />
+        <meta property="og:description" content={pageDesc} key="og:description" />
+        <meta property="og:url" content={url} key="og:url" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@graph': [
+                {
+                  '@type': 'Quiz',
+                  name: `${skill.name} skill test`,
+                  description: pageDesc,
+                  url,
+                  educationalLevel: 'Beginner to Expert',
+                  about: topics.slice(0, 12).map((t) => ({ '@type': 'Thing', name: t.name })),
+                  timeRequired: `PT${minutes}M`,
+                  isAccessibleForFree: true,
+                  provider: { '@type': 'Organization', name: 'TieEdu', url: SITE },
+                },
+                {
+                  '@type': 'BreadcrumbList',
+                  itemListElement: [
+                    { '@type': 'ListItem', position: 1, name: 'Home', item: SITE },
+                    { '@type': 'ListItem', position: 2, name: 'Skill tests', item: `${SITE}/skill-test` },
+                    { '@type': 'ListItem', position: 3, name: skill.name, item: url },
+                  ],
+                },
+              ],
+            }),
+          }}
+        />
+      </Head>
       <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
         <Link href="/skill-test" className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 text-sm font-medium">
           <ArrowLeft className="h-4 w-4" />
@@ -124,3 +180,29 @@ function SkillDetail() {
 export default withPageTitle(SkillDetail, (q) => `${nameFromSlug(q.slug)} skill test`,
   (q) => `Take the free ${nameFromSlug(q.slug)} skill test on TieEdu: see where you stand topic by topic and earn a verifiable certificate.`
 );
+
+/**
+ * Server render: the skill's real content is in the HTML for search engines.
+ * Company tests live inside their company plan, so they redirect here on the
+ * server too, instead of flashing this page first.
+ */
+export const getServerSideProps: GetServerSideProps = async ({ params, res }) => {
+  const slug = String(params?.slug || '');
+  if (!/^[a-z0-9-]{1,80}$/i.test(slug)) return { notFound: true };
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 4000);
+    const r = await fetch(`${serverApiBase()}/skill-test/skills/${encodeURIComponent(slug)}`, { signal: ctrl.signal });
+    clearTimeout(timer);
+    if (r.status === 404) return { notFound: true };
+    if (!r.ok) return { props: { initial: null } };
+    const d = await r.json();
+    const company = d?.skill?.company_slug;
+    if (company) return { redirect: { destination: `/prep/${company}?tab=test`, permanent: false } };
+    res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600');
+    return { props: { initial: { skill: d.skill, topics: d.topics || [], assessment: d.assessment ?? null } } };
+  } catch {
+    // API slow or down: render the page and let the browser fetch as before.
+    return { props: { initial: null } };
+  }
+};

@@ -103,8 +103,8 @@ export default function Home() {
       <Head>
         <title>TieEdu — Placement preparation for engineering students</title>
         <meta name="description" content="Company-by-company placement prep for engineering students: round patterns, practice questions, free skill tests and courses, and a plan for your test date." />
-        <link rel="canonical" href="https://tieedu.in/" />
-        <meta property="og:site_name" content="TieEdu" />
+        <link key="canonical" rel="canonical" href="https://tieedu.in/" />
+        <meta property="og:site_name" content="TieEdu" key="og:site_name" />
         <meta property="og:title" content="TieEdu — Placement preparation for engineering students" />
         <meta property="og:url" content="https://tieedu.in/" />
         <meta property="og:type" content="website" />

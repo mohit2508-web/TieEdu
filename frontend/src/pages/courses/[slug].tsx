@@ -583,7 +583,7 @@ export default function CoursePage({
       <Head>
         <title>{pageTitle}</title>
         <meta name="description" content={metaDescription} />
-        {pageSlug && <link rel="canonical" href={`${SITE_URL}/courses/${pageSlug}`} />}
+        {pageSlug && <link key="canonical" rel="canonical" href={`${SITE_URL}/courses/${pageSlug}`} />}
         <meta property="og:title" content={pageTitle} />
         <meta property="og:description" content={metaDescription} />
         {pageSlug && <meta property="og:url" content={`${SITE_URL}/courses/${pageSlug}`} />}

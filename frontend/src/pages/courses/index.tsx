@@ -245,7 +245,7 @@ export default function CoursesPage({ initialData }: { initialData: CourseCatalo
           name="description"
           content="Free, structured programming courses from TieEdu. Filter by topic, level and course type, and finish with a certificate whose signature anyone can verify."
         />
-        <link rel="canonical" href={`${SITE_URL}/courses`} />
+        <link key="canonical" rel="canonical" href={`${SITE_URL}/courses`} />
         <meta property="og:title" content="Courses · TieEdu" />
         <meta
           property="og:description"

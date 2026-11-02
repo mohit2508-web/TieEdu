@@ -112,7 +112,7 @@ export default function DropPage({ initialDrop, initialId }: { initialDrop: Drop
       <Head>
         <title>{`${drop.headline} · TieEdu`}</title>
         <meta name="description" content={description} />
-        <link rel="canonical" href={canonical} />
+        <link key="canonical" rel="canonical" href={canonical} />
         <meta property="og:type" content="article" />
         <meta property="og:title" content={drop.headline} />
         <meta property="og:description" content={description} />

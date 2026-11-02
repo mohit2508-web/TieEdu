@@ -85,7 +85,7 @@ export default function ContactPage() {
       <Head>
         <title>{`Contact & support · ${LEGAL.brand}`}</title>
         <meta name="description" content="Get help with payments, courses, certificates and drives, or reach the TieEdu team." />
-        <link rel="canonical" href={`${LEGAL.siteUrl}/contact`} />
+        <link key="canonical" rel="canonical" href={`${LEGAL.siteUrl}/contact`} />
       </Head>
       <main className="mx-auto w-full max-w-6xl px-4 pb-16 pt-8 sm:px-6 sm:pt-12">
         <header className="max-w-2xl">

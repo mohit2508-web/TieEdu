@@ -17,6 +17,7 @@ import { RouteTransition } from '@/components/layout/RouteTransition';
 import { PWAInstallPrompt } from '@/components/common/PWAInstallPrompt';
 import { useLeadTracking } from '@/hooks/useLeadTracking';
 import { CookieConsent } from '@/components/legal/CookieConsent';
+import { canonicalFor, isNoindexPath } from '@/lib/seo';
 
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
@@ -27,6 +28,8 @@ export default function App({ Component, pageProps }: AppProps) {
   // platform manifest does. The `$`-prefixed key makes next/head treat these
   // as one slot (see unique() in next/dist/shared/lib/head.js) instead of
   // letting both links coexist — browsers only honour the first.
+  const noindex = isNoindexPath(router.pathname) || isNoindexPath(router.asPath);
+
   const isSchoolRoute =
     router.pathname === '/school' || router.pathname.startsWith('/school/');
 
@@ -115,6 +118,16 @@ export default function App({ Component, pageProps }: AppProps) {
           key="viewport"
           content="width=device-width, initial-scale=1, viewport-fit=cover"
         />
+        {/* Site-wide SEO (lib/seo, SEO_GROWTH_PLAN §2): private pages are kept out
+            of search results; every public page gets a clean canonical, which a
+            page overrides by using the same key. */}
+        {noindex ? (
+          <meta name="robots" content="noindex, nofollow" key="robots" />
+        ) : (
+          <link rel="canonical" href={canonicalFor(router.asPath)} key="canonical" />
+        )}
+        <meta property="og:site_name" content="TieEdu" key="og:site_name" />
+        <meta name="twitter:card" content="summary_large_image" key="twitter:card" />
       </Head>
       {/*
         Order matters. `CartProvider` and `ShellProvider` sit inside `AuthProvider`

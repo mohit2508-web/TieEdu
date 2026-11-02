@@ -27,7 +27,7 @@ export const LegalPage: React.FC<{
     <Head>
       <title>{`${title} · ${LEGAL.brand}`}</title>
       <meta name="description" content={description} />
-      <link rel="canonical" href={`${LEGAL.siteUrl}${path}`} />
+      <link key="canonical" rel="canonical" href={`${LEGAL.siteUrl}${path}`} />
     </Head>
     <main className="mx-auto w-full max-w-6xl px-4 pb-16 pt-8 sm:px-6 sm:pt-12">
       <header className="max-w-3xl">
