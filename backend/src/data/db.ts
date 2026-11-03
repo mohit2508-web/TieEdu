@@ -385,6 +385,46 @@ export interface CourseExamConfig {
   bank: ExamQuestion[];
 }
 
+/**
+ * Pre-course readiness test. A secure, timed, module-tagged paper taken BEFORE
+ * the course: modules answered perfectly are tested out (credited in progress)
+ * and enough of them earn a cheaper personalised path. Graded only on the
+ * server; the bank is stripped by `sanitizeCourse` like every other key.
+ */
+export interface CourseReadinessConfig {
+  /** Questions drawn per testable module. */
+  per_module: number;
+  duration_minutes: number;
+  retake_cooldown_hours: number;
+  max_attempts: number;
+  /** Below this overall percent the learner is pointed at foundations first. */
+  foundation_below_percent: number;
+  /** Slug of the free course recommended to a not-yet-ready learner. */
+  foundation_course_slug?: string;
+  /** Modules that can never be tested out (e.g. the capstone defence). */
+  untestable_module_ids: string[];
+  /** Personalised-path price by number of modules tested out, highest `min` first wins. */
+  offer_tiers: { min_tested_out: number; price_inr: number }[];
+  /** Each question's `topic` is the module id it tests. */
+  bank: ExamQuestion[];
+}
+
+/** One readiness attempt. Written only by the server readiness engine. */
+export interface ReadinessAttempt {
+  id: string;
+  started_at: string;
+  submitted_at: string | null;
+  question_ids: string[];
+  graded: boolean;
+  score_percent: number | null;
+  /** module_id -> { correct, total } */
+  per_module: Record<string, { correct: number; total: number }>;
+  tested_out_module_ids: string[];
+  strikes: number;
+  /** True when integrity strikes voided the module credits. */
+  credits_voided: boolean;
+}
+
 /** Capstone project config for Premium / track courses. */
 export interface CourseProjectConfig {
   title: string;
@@ -609,6 +649,8 @@ export interface Course {
     exam?: CourseExamConfig;
     /** Capstone project config; absent means the course has no project. */
     project?: CourseProjectConfig;
+    /** Pre-course readiness test; absent means the course has none. */
+    readiness?: CourseReadinessConfig;
     /** Rewards this course issues, so copy only promises what it grants. */
     perks?: CoursePerk[];
     /** Semester Exam Mode payload (units / important Qs / PYQs). */

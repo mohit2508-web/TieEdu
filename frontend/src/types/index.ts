@@ -882,7 +882,10 @@ export interface CertificateReadiness {
 export interface CourseAccess {
   granted: boolean;
   reason: string | null;
+  /** What THIS learner pays — the personalised-path price after a readiness test, else the list price. */
   price_inr: number;
+  /** Present only when `price_inr` is a personalised price below the list price. */
+  list_price_inr?: number;
   is_free: boolean;
 }
 
@@ -1016,6 +1019,8 @@ export interface CourseDetail extends Omit<CourseCard, 'progress'> {
    * one. Kept as machine keys so the client renders its own copy.
    */
   certificate_readiness?: CertificateReadiness | null;
+  /** Pre-course readiness test state; absent/null when the course has none. */
+  readiness?: import('@/lib/coursesApi').ReadinessState | null;
 
   /**
    * The certificate tier this course issues — the same value the issuer uses

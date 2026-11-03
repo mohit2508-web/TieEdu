@@ -381,10 +381,13 @@ export function sanitizeCourse(course: Course) {
   // `exam` carries the answer keys, so it is replaced rather than spread. A
   // wholesale `...course` would ship every `correct_index` to the browser and
   // make the final exam decorative. The same is true of each module's `test`.
-  const { exam, ...rest } = course;
+  // `readiness` carries a bank with answer keys too; the learner only ever sees
+  // its shape, via the readiness routes.
+  const { exam, readiness, ...rest } = course;
   return {
     ...rest,
     exam: sanitizeExamForLearner(exam),
+    has_readiness: !!readiness,
     modules: orderedModules(course).map((m) => {
       // Strip the module-test bank the same way the course exam is stripped.
       const { test, ...modRest } = m;

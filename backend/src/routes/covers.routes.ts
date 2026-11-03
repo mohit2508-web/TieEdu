@@ -39,7 +39,52 @@ function wrap(text: string, width: number, max: number): string[] {
   return lines;
 }
 
+/**
+ * The AI.FIRST flagship cover — hand-designed rather than generated, because
+ * its title is a wordmark and its four pillars are the product.
+ */
+function aiFirstCoverSvg(): string {
+  const F = "Poppins, 'Segoe UI', Arial, sans-serif";
+  // A small neural-network motif: three layers of nodes, every edge drawn.
+  const layers = [[150, 290, 430], [110, 230, 350, 470], [170, 290, 410]];
+  const xs = [930, 1060, 1190];
+  const nodes = layers.flatMap((ys, li) => ys.map((y) => [xs[li], y] as const));
+  const edges: string[] = [];
+  for (let li = 0; li < layers.length - 1; li++)
+    for (const y1 of layers[li]) for (const y2 of layers[li + 1])
+      edges.push(`<line x1="${xs[li]}" y1="${y1}" x2="${xs[li + 1]}" y2="${y2}" stroke="#A78BFA" stroke-opacity=".35" stroke-width="2"/>`);
+  const pillars = ['UNDERSTAND', 'VERIFY', 'BUILD', 'ANSWER FOR IT'];
+  let px = 80;
+  const chips = pillars.map((p) => {
+    const w = 36 + p.length * 15;
+    const out = `<rect x="${px}" y="470" rx="20" height="42" width="${w}" fill="#fff" fill-opacity=".12" stroke="#fff" stroke-opacity=".25"/><text x="${px + w / 2}" y="498" text-anchor="middle" font-family="${F}" font-size="19" font-weight="700" fill="#fff" letter-spacing="1.5">${p}</text>`;
+    px += w + 14;
+    return out;
+  }).join('');
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0E0A2A"/><stop offset=".55" stop-color="#2E1F6B"/><stop offset="1" stop-color="#5B2DB8"/></linearGradient>
+    <radialGradient id="glow" cx=".78" cy=".4" r=".45"><stop offset="0" stop-color="#8B5CF6" stop-opacity=".55"/><stop offset="1" stop-color="#8B5CF6" stop-opacity="0"/></radialGradient>
+    <pattern id="p" width="40" height="40" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.6" fill="#fff" fill-opacity=".08"/></pattern>
+  </defs>
+  <rect width="1280" height="720" fill="url(#g)"/>
+  <rect width="1280" height="720" fill="url(#p)"/>
+  <rect width="1280" height="720" fill="url(#glow)"/>
+  ${edges.join('')}
+  ${nodes.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="15" fill="#1B1340" stroke="#C4B5FD" stroke-width="3"/><circle cx="${x}" cy="${y}" r="5" fill="#FDB022"/>`).join('')}
+  <rect x="80" y="84" rx="22" height="44" width="300" fill="#FDB022"/>
+  <text x="230" y="114" text-anchor="middle" font-family="${F}" font-size="21" font-weight="800" fill="#2A1E14" letter-spacing="1">FLAGSHIP COURSE</text>
+  <text x="76" y="290" font-family="${F}" font-size="150" font-weight="800" fill="#fff" letter-spacing="-5">AI<tspan fill="#FDB022">.</tspan>FIRST</text>
+  <text x="82" y="350" font-family="${F}" font-size="34" font-weight="600" fill="#fff" fill-opacity=".92">Future-Ready Intelligence, Skills &amp; Technology</text>
+  <text x="82" y="412" font-family="${F}" font-size="24" font-weight="500" fill="#DDD6FE">Understand it · verify it · build with it · answer for it</text>
+  ${chips}
+  <text x="82" y="620" font-family="${F}" font-size="24" font-weight="700" fill="#fff" fill-opacity=".9">12 modules  ·  48 lessons  ·  ~34 hours  ·  12 proofs of work  ·  3 pathways</text>
+  <text x="1200" y="636" text-anchor="end" font-family="${F}" font-size="30" font-weight="800" fill="#fff" fill-opacity=".9">TieEdu</text>
+</svg>`;
+}
+
 export function courseCoverSvg(course: { title: string; category?: string; level?: string; slug: string }): string {
+  if (course.slug === 'ai-first') return aiFirstCoverSvg();
   const hay = `${course.category || ''} ${course.slug}`;
   const [, from, to, glyph] = PALETTE.find(([re]) => re.test(hay)) || ['', '#0B4A43', '#14806F', '◆'];
   // Split "Title: subtitle" so the main name gets the big type.
