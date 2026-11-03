@@ -329,3 +329,88 @@ flags it and marks their results untrusted.
 **Not built:** the GitHub App (instant private-repo access without a bot collaborator) and a
 server-side sandbox runner. Tests rely on the student's GitHub Actions, which is free for public
 repos.
+
+---
+
+## 12. Pulse v2: simpler, no AI (built, 2026-11-03)
+
+> **Built.** What changed in code:
+> - `review.ts` was deleted.
+> - `store.ts` keeps repos per class (`p.repos`) and the teacher's marks per task
+>   (`p.results`). It filters each task by folder (`folderCommits` / `folderFiles` /
+>   `folderHint`), migrates v1 data once (`migrateV2`), and has `saveReview` and
+>   `duplicateTask`.
+> - `sync.ts` has `syncRepo` / `syncClass`.
+> - `github.ts` records the files each commit touched, and the grader runs tests per folder.
+> - `templates.ts` holds 5 C tasks.
+> - New routes: `/student/classes/:id/repo|recheck`, `/tasks/:id/students/:rid/review`,
+>   `/tasks/:id/duplicate`, `/templates`, `/teacher/tasks`, `/me/comments`. The AI settings
+>   route was removed.
+> - Frontend: Review mode (`components/pulse/ReviewMode.tsx`,
+>   `teacher/task/[taskId]/review`), a New-task chooser (template, copy or blank), the
+>   *Auto-run tests* switch, clickable dashboard grid cells, a "Reviewed" tile, a
+>   *Submitted · to review* status, and one-time class repo setup on the student page.
+> - Tests: 68 unit and 51 live.
+
+**Owner's direction:** no AI anywhere. The teacher does the analysis by hand, but everything must
+be visible and take little effort. Setup must not repeat for every task, for the teacher or the
+student.
+
+### 12.1 What is too heavy today
+| Who | Today, for **every task** |
+|---|---|
+| Teacher | write hints, write test cases, make a starter repo, add the workflow file, mark it as a template, share the link |
+| Student | make a new repo from the template, link it in Pulse, add `PULSE.txt`, push |
+
+### 12.2 The changes
+1. **No AI.** Remove the AI review, the admin switch and the `ANTHROPIC_API_KEY` dependency.
+   Requirement verdicts come only from the teacher.
+2. **One repo per student per class, not per task.** The student links their GitHub repo **once**
+   for the whole class (for example `c-lab-2026`). Each task is a **folder** in that repo, such as
+   `task-1/` and `task-2/`, which Pulse names automatically. Pulse reads only that folder for that
+   task: its code, commits that touched it, and its changes. Verification (`PULSE.txt`) and the
+   autograder file are also done **once**.
+3. **The teacher sets up a class repo once.** Pulse shows one ready-made "class template" page with
+   the exact two files to copy (the workflow and a README listing task folders), or the teacher
+   skips tests entirely (see 4). There is no per-task GitHub work.
+4. **Tests become optional for each task.** The *Auto-run tests* toggle is off by default. When
+   it's off, nothing on GitHub is needed beyond the repo; the teacher reviews by reading the code.
+   Hints are also optional, as a hint "found / not found" signal shown to the teacher, never a
+   verdict.
+5. **Fast manual review (Review mode).** One screen per student:
+   - the code of that task's folder on the left
+   - the requirement checklist on the right, with one click per item for ✓ Done / ~ Partly /
+     ✗ Missing
+   - a score box (filled in automatically from the ticks, editable)
+   - a feedback box with **saved comments** (the teacher's own one-click lines, such as "Check
+     fopen for NULL")
+   - **Save & next →**, with keyboard shortcuts 1/2/3 for verdicts and N for next
+   The dashboard shows **Reviewed 18/36**. The grid on the dashboard is also clickable: each cell
+   cycles ✓ ~ ✗.
+6. **Reuse instead of retyping.**
+   - **Duplicate task** (within the class or from another class), so last year's tasks are one
+     click away.
+   - A small built-in library of **C task templates** (title, description, requirements, optional
+     tests) to start from.
+7. **The student does setup once (a 3-step wizard).**
+   - Join (invite link or code)
+   - Paste the repo link (copy buttons for the two files)
+   - Push
+   After that, a new task appears as "create folder `task-3/` and push". Nothing else to do.
+8. **Kept as they are:** commits per day, timeline, code viewer, changes, copy detection (the
+   plain token comparison is not AI), bulk / late / backdated flags, CSV export, invites, join
+   code, co-teachers, and admin-made teacher logins.
+
+### 12.3 Effort after v2
+| | Once per class | Per task |
+|---|---|---|
+| Teacher | create class, invite students, (only if tests are wanted) set up the class repo once | title, description, deadline, requirements (or duplicate a task), optional tests, then review students with one click each |
+| Student | join, link one repo, add `PULSE.txt` | make a folder `task-N/` and push |
+
+### 12.4 Build notes
+- Data: `submission` moves from per task to per class (`pulse_class_repos`). Task results are
+  computed by filtering files and commits on `task.folder`. The grader runs only the tests of the
+  folder that changed.
+- Status *Not reviewed* is added for requirements the teacher hasn't marked yet. Score =
+  teacher ticks + (optional) tests + activity.
+- Existing live data is one test class, so it can be migrated or reset.

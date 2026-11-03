@@ -8,12 +8,12 @@
  * checklist. When Phase 3 lands, these types become the API's payload shape.
  */
 
-export type Verdict = 'met' | 'partial' | 'missing';
-export type PulseStatus = 'done' | 'progress' | 'unverified' | 'notStarted' | 'noRepo';
+export type Verdict = 'met' | 'partial' | 'missing' | 'unreviewed';
+export type PulseStatus = 'done' | 'progress' | 'submitted' | 'unverified' | 'notStarted' | 'noRepo';
 
 export interface Requirement { id: string; title: string; detail: string }
 export interface TestCase { id: string; name: string; input: string; expected: string; reqId: string | null }
-export interface Requirement2 extends Requirement { hints?: string[] }
+export type Requirement2 = Requirement;
 export interface Evidence { file: string; from: number; to: number }
 export interface ReqResult { verdict: Verdict; reason: string; evidence: Evidence | null }
 export interface TestResult { pass: boolean; got: string }
@@ -42,7 +42,10 @@ export interface PulseStudent {
   feedback: string | null;
   // Live data only (the API); the sample leaves them out.
   feedback_list?: { body: string; at: string }[];
-  sync?: { at: string | null; error: string | null; review: 'ai' | 'hints' | null; workflow_ok: boolean | null } | null;
+  sync?: { at: string | null; error: string | null; review?: null; workflow_ok: boolean | null } | null;
+  folder?: string;
+  folder_hint?: string | null;
+  reviewed?: boolean;
   override?: { score: number; reason: string; at: string } | null;
   notes?: { body: string; at: string }[];
   verify_code?: string | null;
@@ -61,6 +64,9 @@ export interface PulseTask {
   tests: TestCase[];
   starter: SourceFile[];
   class_id?: string;
+  folder?: string;
+  auto_tests?: boolean;
+  all_tests?: TestCase[];
   weights?: { tests: number; reqs: number; activity: number };
   published?: boolean;
 }
@@ -76,6 +82,8 @@ export const DEMO_TASK: PulseTask = {
   id: 'task-3',
   title: 'Task 3 — Student Record Manager',
   language: 'c',
+  folder: 'task-3',
+  auto_tests: true,
   summary:
     'A menu-driven C program that keeps student records (roll, name, marks): add, list, search by roll number, save to a file and load it back, rejecting bad input.',
   assignedAt: '2026-10-24T10:00:00+05:30',
@@ -306,7 +314,7 @@ int load_records(const char *path, Student list[]) {
   },
 };
 
-const REASONS: Record<string, Record<Verdict, string>> = {
+const REASONS: Record<string, Record<Exclude<Verdict, 'unreviewed'>, string>> = {
   R1: {
     met: 'Student is a typedef struct with int roll, char name[NAME_LEN] and float marks, declared in records.h as asked.',
     partial: 'A struct exists, but name is a char * that is never allocated, and marks is an int, not a float.',
@@ -456,7 +464,7 @@ const build = (): PulseStudent[] => {
     const built = level === 0 ? { files: DEMO_TASK.starter, evidence: {} as Record<string, Evidence | null> } : buildCode(v);
     const reqs: Record<string, ReqResult> = {};
     for (const req of DEMO_TASK.requirements) {
-      reqs[req.id] = { verdict: v[req.id], reason: level === 0 ? 'No code yet; only the starter file is in the repo.' : REASONS[req.id][v[req.id]], evidence: built.evidence[req.id] ?? null };
+      reqs[req.id] = { verdict: v[req.id], reason: level === 0 ? 'No code yet; only the starter file is in the repo.' : REASONS[req.id][v[req.id] as Exclude<Verdict, 'unreviewed'>], evidence: built.evidence[req.id] ?? null };
     }
 
     const passed = Object.values(tests).filter((t) => t.pass).length;
@@ -485,6 +493,8 @@ const build = (): PulseStudent[] => {
       files: noRepo ? [] : built.files,
       flags: [],
       feedback: status === 'done' && r() > 0.5 ? 'Clean work. Next time, split the readers into their own file.' : null,
+      folder: 'task-3',
+      reviewed: level > 0,
     };
   });
 
@@ -516,6 +526,7 @@ export const demoStudent = (id: string) => demoStudents().find((s) => s.id === i
 // ---------------------------------------------------------------------------
 export const STATUS_META: Record<PulseStatus, { label: string; color: string; soft: string; ink: string }> = {
   done: { label: 'Done', color: 'rgb(var(--rgb-success))', soft: 'bg-success-soft', ink: 'text-success' },
+  submitted: { label: 'Submitted · to review', color: 'rgb(var(--rgb-info))', soft: 'bg-info-soft', ink: 'text-info' },
   progress: { label: 'In progress', color: 'rgb(var(--rgb-signal))', soft: 'bg-warning-soft', ink: 'text-warning' },
   unverified: { label: 'Not verified', color: 'rgb(var(--rgb-rose))', soft: 'bg-rose-soft', ink: 'text-rose' },
   notStarted: { label: 'Not started', color: 'rgb(var(--rgb-danger))', soft: 'bg-danger-soft', ink: 'text-error' },
@@ -564,7 +575,8 @@ export const reqPoints = (s: PulseStudent) =>
 export const testsPassed = (s: PulseStudent) => Object.values(s.tests).filter((t) => t.pass).length;
 
 /** Everything a Pulse screen needs, from the sample or the API. */
-export interface PulseBundle { cls: PulseClass; task: PulseTask; students: PulseStudent[]; now: Date; lastSync?: string | null }
+export interface RepoInfo { repo: string | null; verified: boolean; verify_code: string | null; synced_at: string | null; error: string | null; workflow_ok: boolean | null; workflow_needed: boolean }
+export interface PulseBundle { cls: PulseClass; task: PulseTask; students: PulseStudent[]; now: Date; lastSync?: string | null; repo?: RepoInfo; position?: number; total?: number }
 export const demoBundle = (): PulseBundle => ({ cls: DEMO_CLASS, task: DEMO_TASK, students: demoStudents(), now: DEMO_NOW, lastSync: '2026-11-03T15:18:00+05:30' });
 
 /** Line diff (LCS) between the starter file and the student's file. */

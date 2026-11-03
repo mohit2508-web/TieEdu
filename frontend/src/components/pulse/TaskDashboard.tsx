@@ -10,7 +10,7 @@ import { PulseShell, StatusPill, FlagChip, Kpi, VERDICT_META } from '@/component
 import { ChartCard, Donut, Columns, HBars, MiniTable } from '@/components/pulse/charts';
 import {
   STATUS_META, commitsPerDay, relTime, fmtDateTime, reqPoints, testsPassed,
-  type PulseStatus, type PulseStudent, type PulseBundle, type PulseTask,
+  type PulseStatus, type PulseStudent, type PulseBundle, type PulseTask, type Verdict,
 } from '@/lib/pulse/demo';
 
 /**
@@ -28,10 +28,13 @@ export interface TaskDashboardProps {
   onSync?: () => Promise<void>;
   onExport?: () => void;
   extraActions?: React.ReactNode;
+  /** Live only: clicking a grid cell cycles ✓ → ~ → ✗ → not reviewed. */
+  onVerdict?: (studentId: string, reqId: string, verdict: Verdict | null) => Promise<void>;
 }
 
 type SortKey = 'name' | 'status' | 'reqs' | 'tests' | 'score' | 'commits' | 'last';
-const STATUS_ORDER: PulseStatus[] = ['done', 'progress', 'unverified', 'notStarted', 'noRepo'];
+const STATUS_ORDER: PulseStatus[] = ['done', 'progress', 'submitted', 'unverified', 'notStarted', 'noRepo'];
+const OPTIONAL: PulseStatus[] = ['unverified', 'submitted'];
 
 const csvFor = (task: PulseTask, list: PulseStudent[]) => {
   const head = ['Roll', 'Name', 'Repo', 'Status', ...task.requirements.map((r) => r.id), 'Tests passed', 'Score', 'Commits', 'Last activity', 'Flags'];
@@ -42,7 +45,7 @@ const csvFor = (task: PulseTask, list: PulseStudent[]) => {
   return [head, ...rows].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
 };
 
-export const TaskDashboard: React.FC<TaskDashboardProps> = ({ data, preview, studentHref, classHref, onSync, onExport, extraActions }) => {
+export const TaskDashboard: React.FC<TaskDashboardProps> = ({ data, preview, studentHref, classHref, onSync, onExport, extraActions, onVerdict }) => {
   const { cls, task, students, now } = data;
   const n = Math.max(1, students.length);
   const [statusFilter, setStatusFilter] = useState<PulseStatus | 'all' | 'flagged'>('all');
@@ -59,7 +62,11 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({ data, preview, stu
   const withRepo = students.filter((s) => s.repo);
   const working = students.filter((s) => s.commits.length);
   const avgReqs = working.length ? working.reduce((n, s) => n + reqPoints(s), 0) / working.length : 0;
+  const hasTests = task.auto_tests !== false && task.tests.length > 0;
   const allTestsPass = students.filter((s) => testsPassed(s) === task.tests.length).length;
+  const working2 = students.filter((s) => s.commits.length);
+  const reviewed = working2.filter((s) => s.reviewed ?? Object.values(s.reqs).some((r) => r.verdict !== 'unreviewed')).length;
+  const [busyCell, setBusyCell] = useState<string | null>(null);
   const flagged = students.filter((s) => s.flags.length);
   const daysLeft = Math.ceil((new Date(task.deadlineAt).getTime() - now.getTime()) / 86400000);
 
@@ -81,6 +88,8 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({ data, preview, stu
   const attention = [
     ...students.filter((s) => s.flags.some((f) => f.kind === 'claimed')).map((s) => ({ s, why: 'Linked another student’s repo' })),
     ...students.filter((s) => s.status === 'unverified').map((s) => ({ s, why: 'Repo not verified yet: work does not count' })),
+    ...students.filter((s) => s.status === 'submitted').map((s) => ({ s, why: 'Submitted: waiting for your review' })),
+    ...students.filter((s) => s.folder_hint).map((s) => ({ s, why: s.folder_hint as string })),
     ...students.filter((s) => s.status === 'noRepo').map((s) => ({ s, why: 'No repo linked' })),
     ...students.filter((s) => s.status === 'notStarted').map((s) => ({ s, why: 'Repo linked, no commits since the task was assigned' })),
     ...students.filter((s) => s.flags.some((f) => f.kind === 'failing')).map((s) => ({ s, why: 'Build fails, so every test fails' })),
@@ -169,8 +178,10 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({ data, preview, stu
         <Kpi tone="ink" icon={CheckCircle2} label="Completed" value={<>{counts.done}<span className="text-base text-hero-muted">/{students.length}</span></>} note={`${Math.round((counts.done / n) * 100)}% of the class`} />
         <Kpi icon={Users} label="Students" value={students.length} note={`${counts.notStarted + counts.noRepo} not started yet`} />
         <Kpi icon={GitBranch} label="Repos linked" value={withRepo.length} note={`${students.length - withRepo.length} missing`} />
-        <Kpi icon={ListChecks} label="Avg requirements" value={<>{avgReqs.toFixed(1)}<span className="text-base text-muted">/5</span></>} note="of students who started" />
-        <Kpi icon={FlaskConical} label="All tests pass" value={allTestsPass} note={`${task.tests.length} tests per student`} />
+        <Kpi icon={ListChecks} label="Avg requirements" value={<>{avgReqs.toFixed(1)}<span className="text-base text-muted">/{task.requirements.length}</span></>} note={`${reviewed}/${working2.length} reviewed`} />
+        {hasTests
+          ? <Kpi icon={FlaskConical} label="All tests pass" value={allTestsPass} note={`${task.tests.length} tests per student`} />
+          : <Kpi icon={FlaskConical} label="Reviewed" value={<>{reviewed}<span className="text-base text-muted">/{working2.length}</span></>} note="of students who submitted" />}
         <Kpi icon={FlagIcon} label="Integrity flags" value={flagged.length} note={`${similarPairs.length} copy pairs`} />
       </div>
 
@@ -183,7 +194,7 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({ data, preview, stu
         >
           <Donut
             centerLabel="students"
-            segments={STATUS_ORDER.filter((k) => k !== 'unverified' || counts[k] > 0).map((k) => ({ key: k, label: STATUS_META[k].label, value: counts[k], color: STATUS_META[k].color }))}
+            segments={STATUS_ORDER.filter((k) => !OPTIONAL.includes(k) || counts[k] > 0).map((k) => ({ key: k, label: STATUS_META[k].label, value: counts[k], color: STATUS_META[k].color }))}
             picked={STATUS_ORDER.includes(statusFilter as PulseStatus) ? statusFilter : null}
             onPick={(k) => setStatusFilter((p) => (p === k ? 'all' : (k as PulseStatus)))}
           />
@@ -235,26 +246,30 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({ data, preview, stu
       </div>
 
       {/* Matrix */}
-      <ChartCard className="mt-4" title="Every student × every requirement" note="✓ done · ~ partly · ✗ missing · tests passed on the right. Click a name to open their code.">
+      <ChartCard className="mt-4" title="Every student × every requirement" note={`✓ done · ~ partly · ✗ missing · ? not reviewed.${onVerdict ? ' Click a cell to change it.' : ''} Click a name to open their code.`}>
         <div className="overflow-x-auto">
           <div className="grid min-w-[420px] gap-x-10 gap-y-0.5 md:grid-cols-2 xl:w-fit">
             {students.map((s) => (
-              <Link key={s.id} href={studentHref(s.id)} className="flex items-center gap-2 rounded-well px-1.5 py-1 hover:bg-surface-hover">
-                <span className="w-36 truncate text-sm text-body">{s.name}</span>
+              <div key={s.id} className="flex items-center gap-2 rounded-well px-1.5 py-1 hover:bg-surface-hover">
+                <Link href={studentHref(s.id)} className="w-36 truncate text-sm text-body hover:text-link">{s.name}</Link>
                 <span className="flex gap-[2px]">
                   {task.requirements.map((r) => {
                     const v = s.reqs[r.id].verdict;
                     const m = VERDICT_META[v];
-                    return (
-                      <span key={r.id} title={`${r.id} ${r.title}: ${m.label}`}
-                        className={cn('flex h-6 w-9 items-center justify-center rounded-[5px] text-xs font-bold', s.status === 'noRepo' ? 'bg-surface-hover text-muted' : cn(m.soft, m.ink))}>
-                        {s.status === 'noRepo' ? '·' : m.symbol}
-                      </span>
+                    const cell = cn('flex h-6 w-9 items-center justify-center rounded-[5px] text-xs font-bold', s.status === 'noRepo' || !s.commits.length ? 'bg-surface-hover text-muted' : cn(m.soft, m.ink));
+                    const label = s.status === 'noRepo' || !s.commits.length ? '·' : m.symbol;
+                    const key = `${s.id}-${r.id}`;
+                    return onVerdict && s.commits.length ? (
+                      <button key={r.id} type="button" title={`${r.id} ${r.title}: ${m.label} — click to change`} disabled={busyCell === key}
+                        onClick={async () => { setBusyCell(key); try { const nx = ({ met: 'partial', partial: 'missing', missing: 'unreviewed', unreviewed: 'met' } as Record<Verdict, Verdict>)[v]; await onVerdict(s.id, r.id, nx === 'unreviewed' ? null : nx); } finally { setBusyCell(null); } }}
+                        className={cn(cell, 'transition-transform hover:scale-110 hover:ring-1 hover:ring-line-strong', busyCell === key && 'opacity-50')}>{label}</button>
+                    ) : (
+                      <span key={r.id} title={`${r.id} ${r.title}: ${m.label}`} className={cell}>{label}</span>
                     );
                   })}
                 </span>
-                <span className="ml-3 text-xs tabular-nums text-muted">{testsPassed(s)}/{task.tests.length} tests</span>
-              </Link>
+                {hasTests ? <span className="ml-3 text-xs tabular-nums text-muted">{testsPassed(s)}/{task.tests.length} tests</span> : null}
+              </div>
             ))}
           </div>
           <div className="mt-2 hidden gap-[2px] pl-[9.5rem] text-[10px] font-mono text-muted md:flex">
@@ -296,7 +311,7 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({ data, preview, stu
                 className="h-9 w-56 rounded-cell border border-line-strong/60 bg-card pl-8 pr-3 text-sm text-body placeholder:text-muted focus:outline focus:outline-2 focus:outline-[var(--focus)]" />
             </label>
             <div className="flex flex-wrap gap-1">
-              {(['all', ...STATUS_ORDER.filter((k) => k !== 'unverified' || counts[k] > 0), 'flagged'] as const).map((k) => (
+              {(['all', ...STATUS_ORDER.filter((k) => !OPTIONAL.includes(k) || counts[k] > 0), 'flagged'] as const).map((k) => (
                 <button key={k} type="button" onClick={() => setStatusFilter(k)} aria-pressed={statusFilter === k}
                   className={cn('h-9 rounded-full border px-3 text-xs font-semibold transition-colors',
                     statusFilter === k ? 'border-hero bg-hero text-hero-on' : 'border-line text-muted hover:text-heading')}>
@@ -313,7 +328,7 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({ data, preview, stu
                 <Th k="name">Student</Th>
                 <Th k="status">Status</Th>
                 <Th k="reqs">Requirements</Th>
-                <Th k="tests" right>Tests</Th>
+                {hasTests ? <Th k="tests" right>Tests</Th> : null}
                 <Th k="score" right>Score</Th>
                 <Th k="commits" right>Commits</Th>
                 <Th k="last">Last activity</Th>
@@ -341,16 +356,16 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({ data, preview, stu
                         <div className="flex h-2 w-28 gap-[2px]">
                           {task.requirements.map((r) => {
                             const v = s.reqs[r.id].verdict;
-                            return <span key={r.id} title={`${r.id}: ${VERDICT_META[v].label}`} className={cn('h-full flex-1 rounded-sm', v === 'met' ? 'bg-success' : v === 'partial' ? 'bg-signal' : 'bg-line')} />;
+                            return <span key={r.id} title={`${r.id}: ${VERDICT_META[v].label}`} className={cn('h-full flex-1 rounded-sm', v === 'met' ? 'bg-success' : v === 'partial' ? 'bg-signal' : v === 'missing' ? 'bg-danger/70' : 'bg-line')} />;
                           })}
                         </div>
                         <span className="text-xs tabular-nums text-muted">{pts}/5</span>
                       </div>
                     </td>
-                    <td className="px-3 py-2.5 text-right tabular-nums">
+                    {hasTests ? (<td className="px-3 py-2.5 text-right tabular-nums">
                       <span className={cn('font-semibold', testsPassed(s) === task.tests.length ? 'text-success' : 'text-heading')}>{testsPassed(s)}</span>
                       <span className="text-muted">/{task.tests.length}</span>
-                    </td>
+                    </td>) : null}
                     <td className="px-3 py-2.5 text-right font-display text-label tabular-nums text-heading">{s.status === 'noRepo' ? '—' : s.score}</td>
                     <td className="px-3 py-2.5 text-right tabular-nums text-body">{s.commits.length}</td>
                     <td className="px-3 py-2.5 text-xs text-muted">{relTime(s.lastActivity, now)}</td>

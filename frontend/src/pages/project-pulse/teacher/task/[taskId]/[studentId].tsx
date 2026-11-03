@@ -13,14 +13,15 @@ const Body: React.FC<{ taskId: string; sid: string; tab?: string }> = ({ taskId,
     <StudentDetail
       data={data}
       initialTab={tab}
+      reviewHref={`/project-pulse/teacher/task/${taskId}/review?s=${sid}`}
       classHref={`/project-pulse/teacher/task/${taskId}`}
       studentHref={(id, t) => `/project-pulse/teacher/task/${taskId}/${id}${t ? `?tab=${t}` : ''}`}
       actions={{
         feedback: (body) => after(() => pulseApi.feedback(taskId, sid, body))(),
         note: (body) => after(() => pulseApi.note(taskId, sid, body))(),
         override: (score, reason) => after(() => pulseApi.override(taskId, sid, { score, reason }))(),
-        verdict: (reqId, verdict) => after(() => pulseApi.override(taskId, sid, { req_id: reqId, verdict, reason: 'set by teacher' }))(),
-        sync: after(() => pulseApi.syncStudent(taskId, sid, true)),
+        verdict: (reqId, verdict) => after(() => pulseApi.review(taskId, sid, { verdicts: { [reqId]: verdict } }))(),
+        sync: after(() => pulseApi.syncStudent(taskId, sid)),
         verify: (on) => after(() => pulseApi.verify(taskId, sid, on))(),
       }}
     />

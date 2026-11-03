@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { Avatar } from '@/components/ui';
-import { PulseShell, StatusPill, VerdictTag, FlagChip, CodeViewer, Ring } from '@/components/pulse/PulseUi';
+import { PulseShell, StatusPill, VerdictTag, FlagChip, CodeViewer, Ring, VERDICT_META } from '@/components/pulse/PulseUi';
 import { ChartCard, Columns, MiniTable } from '@/components/pulse/charts';
 import {
   commitsPerDay, relTime, fmtDateTime, reqPoints, testsPassed, type Evidence, type PulseBundle, type Verdict,
@@ -44,9 +44,11 @@ export interface StudentDetailProps {
   studentHref: (id: string, tab?: string) => string;
   initialTab?: string;
   actions?: DetailActions;
+  /** Link to the fast Review mode for this task, starting at this student. */
+  reviewHref?: string;
 }
 
-export const StudentDetail: React.FC<StudentDetailProps> = ({ data, preview, classHref, studentHref, initialTab, actions }) => {
+export const StudentDetail: React.FC<StudentDetailProps> = ({ data, preview, classHref, studentHref, initialTab, actions, reviewHref }) => {
   const { cls, task, now } = data;
   const s = data.students[0] ?? null;
   const [busy, setBusy] = useState<string | null>(null);
@@ -92,6 +94,7 @@ export const StudentDetail: React.FC<StudentDetailProps> = ({ data, preview, cla
       crumbs={[{ href: classHref, label: `${cls.name} · ${task.title}` }]}
       actions={
         <div className="flex items-center gap-1">
+          {reviewHref ? <Link href={reviewHref} className="inline-flex h-9 items-center gap-1 rounded-cell bg-signal px-3 text-xs font-semibold text-on-primary shadow-edge-primary">Review mode</Link> : null}
           {actions && s.repo ? (
             <button type="button" disabled={!!busy} onClick={() => act('sync', actions.sync)} className="inline-flex h-9 items-center gap-1 rounded-cell border border-line bg-card px-2.5 text-xs font-semibold text-heading hover:bg-surface-hover disabled:opacity-60">
               <RotateCcw className={cn('h-4 w-4', busy === 'sync' && 'animate-spin')} /> {busy === 'sync' ? 'Syncing…' : 'Re-sync'}
@@ -175,15 +178,16 @@ export const StudentDetail: React.FC<StudentDetailProps> = ({ data, preview, cla
                             <p className="font-semibold text-heading">{r.title}</p>
                             <VerdictTag verdict={res.verdict} />
                             {actions ? (
-                              <select aria-label={`Teacher verdict for ${r.id}`} value="" disabled={!!busy}
-                                onChange={(e) => { const v = e.target.value; act(`v-${r.id}`, () => actions.verdict(r.id, v === 'auto' ? null : (v as Verdict))); }}
-                                className="h-7 rounded-well border border-line bg-card px-1.5 text-xs text-muted">
-                                <option value="">Change…</option>
-                                <option value="met">Mark done</option>
-                                <option value="partial">Mark partly</option>
-                                <option value="missing">Mark missing</option>
-                                <option value="auto">Back to automatic</option>
-                              </select>
+                              <span className="ml-auto inline-flex gap-1" role="group" aria-label={`Mark ${r.id}`}>
+                                {(['met', 'partial', 'missing'] as Verdict[]).map((v) => (
+                                  <button key={v} type="button" disabled={!!busy} aria-pressed={res.verdict === v}
+                                    onClick={() => act(`v-${r.id}`, () => actions.verdict(r.id, res.verdict === v ? null : v))}
+                                    className={cn('inline-flex h-7 items-center gap-1 rounded-well border px-2 text-xs font-semibold',
+                                      res.verdict === v ? cn(VERDICT_META[v].soft, VERDICT_META[v].ink, 'border-transparent') : 'border-line text-muted hover:text-heading')}>
+                                    {VERDICT_META[v].symbol} {VERDICT_META[v].label}
+                                  </button>
+                                ))}
+                              </span>
                             ) : null}
                           </div>
                           <p className="mt-0.5 text-xs text-muted">{r.detail}</p>
@@ -200,11 +204,11 @@ export const StudentDetail: React.FC<StudentDetailProps> = ({ data, preview, cla
                   })}
                 </ol>
                 <p className="border-t border-line bg-app-warm px-5 py-2.5 text-xs text-muted">
-                  Reviewed by AI at commit <span className="font-mono">{s.commits[0]?.sha ?? '—'}</span>. The teacher has the final say: override on the right.
+                  Marked by the teacher{actions ? ' (click a button; click it again to clear)' : ''}. Folder <span className="font-mono">{task.folder ?? 'task'}/</span>, latest commit <span className="font-mono">{s.commits[0]?.sha ?? '—'}</span>.
                 </p>
               </section>
 
-              <section className="rounded-card border border-line bg-card">
+              {task.auto_tests !== false && task.tests.length ? (<section className="rounded-card border border-line bg-card">
                 <h2 className="flex items-center justify-between border-b border-line px-5 py-3 font-display text-h3 text-heading">
                   Test cases <span className="text-sm font-semibold tabular-nums text-muted">{passed}/{task.tests.length} passed</span>
                 </h2>
@@ -233,13 +237,14 @@ export const StudentDetail: React.FC<StudentDetailProps> = ({ data, preview, cla
                   </table>
                 </div>
                 <p className="border-t border-line bg-app-warm px-5 py-2.5 text-xs text-muted">Run by the autograder workflow on GitHub Actions · gcc 13 · 5 s limit per test.</p>
-              </section>
+              </section>) : null}
             </div>
           ) : null}
 
           {tab === 'code' ? (
             <div className="space-y-3">
-              <div className="flex flex-wrap items-center gap-1.5">
+              {s.folder_hint ? <p className="rounded-cell bg-warning-soft px-4 py-2.5 text-sm text-signal-ink">{s.folder_hint}</p> : null}
+              {Object.values(s.reqs).some((x) => x.evidence) ? <div className="flex flex-wrap items-center gap-1.5">
                 <span className="text-xs text-muted">Jump to evidence:</span>
                 {task.requirements.map((r) => {
                   const e = s.reqs[r.id].evidence;
@@ -251,7 +256,7 @@ export const StudentDetail: React.FC<StudentDetailProps> = ({ data, preview, cla
                     </button>
                   );
                 })}
-              </div>
+              </div> : null}
               <CodeViewer files={s.files} starter={task.starter} highlight={hl} mode="code" />
               <p className="text-xs text-muted">Read-only copy of the latest commit. Every time a teacher opens a student’s code, it is written to the audit log.</p>
             </div>
@@ -328,7 +333,7 @@ export const StudentDetail: React.FC<StudentDetailProps> = ({ data, preview, cla
                 ['Commits', s.commits.length],
                 ['Last activity', relTime(s.lastActivity, now)],
                 ['Last synced', s.sync ? relTime(s.sync.at, now) : '—'],
-                ['Review by', s.sync?.review === 'ai' ? 'AI' : s.sync?.review === 'hints' ? 'Hints' : '—'],
+                ['Folder', `${task.folder ?? 'task'}/`],
                 ['First commit', s.commits.length ? fmtDateTime(s.commits[s.commits.length - 1].at) : '—'],
                 ['Builds', s.commits.length ? (s.compiles ? 'Yes' : 'No: gcc error') : '—'],
                 ['Files', s.files.length],

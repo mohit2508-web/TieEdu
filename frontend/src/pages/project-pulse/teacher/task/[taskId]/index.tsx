@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { Pencil } from 'lucide-react';
+import { Pencil, ClipboardCheck } from 'lucide-react';
 import { PulseGate, PulseLoadState, usePulseLoad } from '@/components/pulse/PulseGate';
 import { TaskDashboard } from '@/components/pulse/TaskDashboard';
 import { pulseApi } from '@/lib/pulse/api';
@@ -25,7 +25,8 @@ const Body: React.FC<{ id: string }> = ({ id }) => {
       studentHref={(sid, tab) => `/project-pulse/teacher/task/${id}/${sid}${tab ? `?tab=${tab}` : ''}`}
       onSync={async () => { await pulseApi.syncTask(id); await reload(); }}
       onExport={exportCsv}
-      extraActions={<Link href={`/project-pulse/teacher/task/${id}/edit`} className="inline-flex h-9 items-center gap-1.5 rounded-cell border border-line bg-card px-3 text-sm font-semibold text-heading hover:bg-surface-hover"><Pencil className="h-4 w-4" /> Edit task</Link>}
+      onVerdict={async (sid, reqId, verdict) => { await pulseApi.review(id, sid, { verdicts: { [reqId]: verdict } }); await reload(); }}
+      extraActions={<><Link href={`/project-pulse/teacher/task/${id}/review`} className="inline-flex h-9 items-center gap-1.5 rounded-cell bg-hero px-3 text-sm font-semibold text-hero-on"><ClipboardCheck className="h-4 w-4" /> Review</Link><Link href={`/project-pulse/teacher/task/${id}/edit`} className="inline-flex h-9 items-center gap-1.5 rounded-cell border border-line bg-card px-3 text-sm font-semibold text-heading hover:bg-surface-hover"><Pencil className="h-4 w-4" /> Edit task</Link></>}
     />
   );
 };

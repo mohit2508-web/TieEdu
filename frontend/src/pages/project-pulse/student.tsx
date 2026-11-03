@@ -15,7 +15,7 @@ import { fmtDateTime, STATUS_META } from '@/lib/pulse/demo';
  */
 
 const TaskView: React.FC<{ me: PulseMe; taskId: string }> = ({ me, taskId }) => {
-  const { data, error, reload, setData } = usePulseLoad(() => pulseApi.myTask(taskId), [taskId]);
+  const { data, error, reload } = usePulseLoad(() => pulseApi.myTask(taskId), [taskId]);
   if (!data) return <PulseLoadState title="My task" error={error} onRetry={reload} />;
   const tasks: MyTaskItem[] = me.tasks.map((t) => ({
     id: t.task_id, title: t.title, due: t.deadline_at, current: t.task_id === taskId, href: `/project-pulse/student?task=${t.task_id}`,
@@ -26,8 +26,8 @@ const TaskView: React.FC<{ me: PulseMe; taskId: string }> = ({ me, taskId }) => 
       data={data}
       tasks={tasks}
       workflowUrl={pulseApi.workflowUrl}
-      onLink={async (url) => { const r = await pulseApi.linkRepo(taskId, url); setData({ ...data, students: [r.student] }); return r.error; }}
-      onRecheck={async () => { const r = await pulseApi.recheck(taskId); setData({ ...data, students: [r.student] }); }}
+      onLink={async (url) => { const r = await pulseApi.linkRepo(data.cls.id, url); await reload(); return r.repo.error; }}
+      onRecheck={async () => { await pulseApi.recheck(data.cls.id); await reload(); }}
     />
   );
 };

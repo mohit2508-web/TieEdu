@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { Plus, Send, Check, Trash2, Copy, KeyRound, UserPlus, ChevronRight, Pencil } from 'lucide-react';
+import { Plus, Send, Check, Trash2, Copy, KeyRound, UserPlus, ChevronRight, Pencil, ClipboardCheck, GitBranch } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { PulseShell } from '@/components/pulse/PulseUi';
 import { PulseGate, PulseLoadState, usePulseLoad } from '@/components/pulse/PulseGate';
@@ -57,15 +57,17 @@ const ClassBody: React.FC<{ id: string }> = ({ id }) => {
               <Link href={`/project-pulse/teacher/task/${t.id}`} className="min-w-0 flex-1">
                 <span className="font-semibold text-heading hover:text-link">{t.title}</span>
                 {!t.published ? <span className="ml-2 rounded-full bg-surface-hover px-2 py-0.5 text-xs font-semibold text-muted">Draft</span> : null}
-                <span className="block text-xs text-muted">Due {fmtDateTime(t.deadline_at)} · {t.linked} repos linked · {t.done} done</span>
+                <span className="block text-xs text-muted"><span className="font-mono">{t.folder}/</span> · due {fmtDateTime(t.deadline_at)} · {t.started} started · {t.reviewed} reviewed · {t.done} done{t.auto_tests ? ' · auto tests' : ''}</span>
               </Link>
               <div className="flex gap-1.5">
+                <Link href={`/project-pulse/teacher/task/${t.id}/review`} className={ghost}><ClipboardCheck className="h-3.5 w-3.5" /> Review</Link>
                 <Link href={`/project-pulse/teacher/task/${t.id}/edit`} className={ghost}><Pencil className="h-3.5 w-3.5" /> Edit</Link>
+                <button type="button" disabled={busy} className={ghost} onClick={() => run(() => pulseApi.duplicate(t.id), 'Copied as a draft with a new folder. Edit it, then publish.')}><Copy className="h-3.5 w-3.5" /> Duplicate</button>
                 <Link href={`/project-pulse/teacher/task/${t.id}`} className={ghost}>Dashboard <ChevronRight className="h-3.5 w-3.5" /></Link>
               </div>
             </li>
           ))}
-          {!cls.tasks.length ? <li className="px-5 py-6 text-sm text-muted">No tasks yet. Create one, add its requirements and test cases, then publish it.</li> : null}
+          {!cls.tasks.length ? <li className="px-5 py-6 text-sm text-muted">No tasks yet. Click New task: pick a ready-made C task, copy an old one, or start blank. Then publish.</li> : null}
         </ul>
       </section>
 
@@ -76,13 +78,14 @@ const ClassBody: React.FC<{ id: string }> = ({ id }) => {
           </h2>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[560px] text-sm">
-              <thead className="bg-app-warm text-left text-xs text-muted"><tr><th className="px-4 py-2">Name</th><th className="px-4 py-2">Email</th><th className="px-4 py-2">Roll</th><th className="px-4 py-2">Status</th><th className="px-4 py-2" /></tr></thead>
+              <thead className="bg-app-warm text-left text-xs text-muted"><tr><th className="px-4 py-2">Name</th><th className="px-4 py-2">Email</th><th className="px-4 py-2">Roll</th><th className="px-4 py-2">Repo</th><th className="px-4 py-2">Status</th><th className="px-4 py-2" /></tr></thead>
               <tbody>
                 {cls.roster.map((r) => (
                   <tr key={r.id} className="border-t border-line">
                     <td className="px-4 py-2 font-semibold text-heading">{r.name}</td>
                     <td className="px-4 py-2 font-mono text-xs text-body">{r.email}</td>
                     <td className="px-4 py-2 font-mono text-xs text-muted">{r.roll_no || '—'}</td>
+                    <td className="px-4 py-2 text-xs">{r.repo ? <span className={cn('inline-flex items-center gap-1', r.verified ? 'text-success' : 'text-warning')} title={r.repo}><GitBranch className="h-3.5 w-3.5" />{r.verified ? 'verified' : 'not verified'}</span> : <span className="text-muted">—</span>}</td>
                     <td className="px-4 py-2">
                       <span className={cn('rounded-full px-2 py-0.5 text-xs font-semibold', r.status === 'active' ? 'bg-success-soft text-success' : r.status === 'pending' ? 'bg-warning-soft text-warning' : 'bg-surface-hover text-muted')}>
                         {r.status === 'active' ? 'Joined' : r.status === 'pending' ? 'Asked to join' : 'Invited'}
@@ -98,7 +101,7 @@ const ClassBody: React.FC<{ id: string }> = ({ id }) => {
                     </td>
                   </tr>
                 ))}
-                {!cls.roster.length ? <tr><td colSpan={5} className="px-4 py-6 text-sm text-muted">Nobody yet. Invite students on the right.</td></tr> : null}
+                {!cls.roster.length ? <tr><td colSpan={6} className="px-4 py-6 text-sm text-muted">Nobody yet. Invite students on the right.</td></tr> : null}
               </tbody>
             </table>
           </div>

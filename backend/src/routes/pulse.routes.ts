@@ -1,31 +1,24 @@
 import { Router, Request, Response, NextFunction } from 'express';
+import bcrypt from 'bcryptjs';
 import { loadDb, saveDb } from '../data/db';
 import { requireAuth, rateLimit } from '../middleware/auth';
 import { pushAudit } from '../lib/audit';
 import { sendDriveEmail } from '../lib/driveEmail';
-import {
-  PulseError, pulseOf, isAdmin, isTeacher, canTeach, teachClass, teachTask, studentTask, appointTeacher, revokeTeacher, teacherList,
-  createClass, updateClass, addCoTeacher, inviteStudents, reissueInvite, rosterRow, join, normaliseTask, studentView, taskView, classView,
-  subFor, linkRepo, newId, CSV_HEAD, csvRow, toCsv, dropFiles, createTeacherAccount, coRequestList, decideCoRequest,
-} from '../lib/pulse/store';
 import { issueAccountToken } from '../lib/accountTokens';
-import bcrypt from 'bcryptjs';
-
-const checkPassword = (pw: unknown) => {
-  const s = String(pw ?? '');
-  if (s.length < 8) throw new PulseError(400, 'Password must be at least 8 characters.');
-  if (s.length > 128) throw new PulseError(400, 'Password is too long.');
-  return s;
-};
+import {
+  PulseError, pulseOf, isAdmin, isTeacher, canTeach, teachClass, teachTask, studentTask, studentClass, revokeTeacher, teacherList,
+  createClass, updateClass, addCoTeacher, inviteStudents, reissueInvite, rosterRow, join, normaliseTask, duplicateTask, studentView, taskView, classView,
+  repoFor, resultFor, linkClassRepo, saveReview, newId, CSV_HEAD, csvRow, toCsv, createTeacherAccount, coRequestList, decideCoRequest, isVerified,
+} from '../lib/pulse/store';
 import { parseRepo, workflowYaml, GRADER_JS } from '../lib/pulse/github';
-import { syncSubmission, syncTask, releaseOthers } from '../lib/pulse/sync';
-import { aiEnabled } from '../lib/pulse/review';
+import { syncRepo, syncTask, releaseOthers } from '../lib/pulse/sync';
+import { TEMPLATES, templateInput } from '../lib/pulse/templates';
 
 /**
- * Project Pulse API (PROJECT_PULSE_PLAN.md §8). Everything is signed-in except
- * the three autograder endpoints a student's GitHub Action calls. Access is
- * checked by lib/pulse/store on every request: teachers see only their classes,
- * students only their own submission.
+ * Project Pulse API (PROJECT_PULSE_PLAN.md §8, §12). Everything is signed-in except
+ * the autograder endpoints a student's GitHub Action calls. Access is checked by
+ * lib/pulse/store on every request: teachers see only their classes, students
+ * only their own work. No AI anywhere: requirements are marked by the teacher.
  */
 export const pulseRouter = Router();
 
@@ -41,11 +34,17 @@ const u = (req: Request) => req.user as any;
 const actor = (req: Request) => `user:${req.userId}`;
 const site = () => (process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || '').replace(/\/$/, '');
 const apiBase = (req: Request) => (process.env.PULSE_API_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
+const checkPassword = (pw: unknown) => {
+  const s = String(pw ?? '');
+  if (s.length < 8) throw new PulseError(400, 'Password must be at least 8 characters.');
+  if (s.length > 128) throw new PulseError(400, 'Password is too long.');
+  return s;
+};
 
 const sendInvite = (cls: any, row: any, token: string, teacher: any) => sendDriveEmail({
   to: row.email,
   subject: `${teacher?.name || 'Your teacher'} invited you to ${cls.name} on Project Pulse`,
-  body: `Hi ${row.name},\n\nYou have been added to ${cls.name} (${cls.subject}) on TieEdu Project Pulse. Your teacher will see the progress of your coding tasks from your GitHub repo.\n\nOpen the link and sign in with this email (${row.email}) to join.\n\nOr go to ${site() || 'tieedu.in'}/project-pulse/join and enter the class code: ${cls.join_code}`,
+  body: `Hi ${row.name},\n\nYou have been added to ${cls.name} (${cls.subject}) on TieEdu Project Pulse. You will link one GitHub repo for the whole class, and put each task in its own folder.\n\nOpen the link and sign in with this email (${row.email}) to join.\n\nOr go to ${site() || 'tieedu.in'}/project-pulse/join and enter the class code: ${cls.join_code}`,
   driveName: 'Project Pulse',
   url: `/project-pulse/join?token=${encodeURIComponent(token)}`,
   ctaLabel: 'Join the class',
@@ -69,6 +68,16 @@ const sendTeacherWelcome = (db: any, user: any) => {
   return { link, mail };
 };
 
+const classTasks = (db: any, classId: string) => pulseOf(db).tasks.filter((t) => t.class_id === classId);
+const repoInfo = (db: any, cls: any, row: any) => {
+  const rec = repoFor(db, cls.id, row.id);
+  return {
+    repo: rec?.repo ?? null, verified: isVerified(rec), verify_code: rec?.verify_code ?? null,
+    synced_at: rec?.last_sync_at ?? null, error: rec?.sync_error ?? null, workflow_ok: rec?.snap?.workflow_ok ?? null,
+    workflow_needed: classTasks(db, cls.id).some((t) => t.published && t.auto_tests),
+  };
+};
+
 // ---------------------------------------------------------------------------
 // Public: autograder (called from the student's GitHub Action)
 // ---------------------------------------------------------------------------
@@ -78,18 +87,19 @@ pulseRouter.get('/autograde/workflow.yml', (req, res) => { res.type('text/yaml')
 pulseRouter.get('/autograde/tests', rateLimit(60), h((req, res) => {
   const repo = parseRepo(String(req.query.repo || ''))?.toLowerCase();
   const p = pulseOf(loadDb());
-  const sub = repo && p.subs.find((s) => s.repo.toLowerCase() === repo);
-  const task = sub && p.tasks.find((t) => t.id === sub.task_id);
-  if (!task) throw new PulseError(404, 'Not linked.');
-  res.json({ tests: task.tests.map((t: any) => ({ id: t.id, input: t.input, expected: t.expected })) });
+  const classes = new Set(p.repos.filter((r) => repo && r.repo.toLowerCase() === repo).map((r) => r.class_id));
+  if (!classes.size) throw new PulseError(404, 'Not linked.');
+  const tasks = p.tasks.filter((t) => classes.has(t.class_id) && t.published && t.auto_tests && t.tests.length)
+    .map((t) => ({ folder: t.folder, tests: t.tests.map((x: any) => ({ id: x.id, input: x.input, expected: x.expected })) }));
+  res.json({ tasks });
 }));
 
 pulseRouter.post('/autograde/ping', rateLimit(30), h((req, res) => {
   const repo = parseRepo(String(req.body?.repo || ''))?.toLowerCase();
-  const subs = repo ? pulseOf(loadDb()).subs.filter((s) => s.repo.toLowerCase() === repo) : [];
+  const recs = repo ? pulseOf(loadDb()).repos.filter((r) => r.repo.toLowerCase() === repo) : [];
   // Wait a little: GitHub can take a few seconds to show the statuses just posted.
-  for (const s of subs) setTimeout(() => { syncSubmission(s.id).catch(() => {}); }, 8000);
-  res.status(202).json({ queued: subs.length });
+  for (const r of recs) setTimeout(() => { syncRepo(r.id).catch(() => {}); }, 8000);
+  res.status(202).json({ queued: recs.length });
 }));
 
 // ---------------------------------------------------------------------------
@@ -102,21 +112,20 @@ pulseRouter.get('/me', h((req, res) => {
   const p = pulseOf(db);
   const me = u(req);
   const teaching = isTeacher(db, me) ? p.classes.filter((c) => !c.archived_at && canTeach(db, me, c)).map((c) => ({
-    ...classView(db, c), role: c.owner_id === me.id ? 'owner' : isAdmin(me) && c.owner_id !== me.id && !(c.co_teachers || []).includes(me.id) ? 'admin' : 'co',
+    ...classView(db, c), role: c.owner_id === me.id ? 'owner' : (c.co_teachers || []).includes(me.id) ? 'co' : 'admin',
     students: p.roster.filter((r) => r.class_id === c.id && r.status === 'active').length,
     pending: p.roster.filter((r) => r.class_id === c.id && r.status === 'pending').length,
-    tasks: p.tasks.filter((t) => t.class_id === c.id).length,
+    tasks: classTasks(db, c.id).length,
   })) : [];
-  const studying = p.roster.filter((r) => r.user_id === me.id && r.status === 'active').flatMap((r) => {
-    const cls = p.classes.find((c) => c.id === r.class_id);
-    if (!cls || cls.archived_at) return [];
-    return p.tasks.filter((t) => t.class_id === cls.id && t.published).map((t) => {
-      const v = studentView(db, t, r, 'student');
-      return { task_id: t.id, title: t.title, class: classView(db, cls), deadline_at: t.deadline_at, assigned_at: t.assigned_at, status: v.status, score: v.score, repo: v.repo };
-    });
-  });
+  const rows = p.roster.filter((r) => r.user_id === me.id && r.status === 'active');
+  const joined = rows.map((r) => ({ row: r, cls: p.classes.find((c) => c.id === r.class_id) })).filter((x) => x.cls && !x.cls.archived_at);
+  const studying = joined.flatMap(({ row, cls }) => classTasks(db, cls.id).filter((t) => t.published).map((t) => {
+    const v = studentView(db, t, row, 'student');
+    return { task_id: t.id, title: t.title, folder: t.folder, class: classView(db, cls), deadline_at: t.deadline_at, assigned_at: t.assigned_at, status: v.status, score: v.score, repo: v.repo };
+  }));
+  const studentClasses = joined.map(({ row, cls }) => ({ class: classView(db, cls), ...repoInfo(db, cls, row) }));
   const pendingJoins = p.roster.filter((r) => r.user_id === me.id && r.status === 'pending').map((r) => p.classes.find((c) => c.id === r.class_id)?.name).filter(Boolean);
-  res.json({ is_admin: isAdmin(me), is_teacher: isTeacher(db, me), classes: teaching, tasks: studying, pending_joins: pendingJoins, ai_review: aiEnabled(db) });
+  res.json({ is_admin: isAdmin(me), is_teacher: isTeacher(db, me), classes: teaching, tasks: studying, student_classes: studentClasses, pending_joins: pendingJoins });
 }));
 
 pulseRouter.post('/join', rateLimit(20), h((req, res) => {
@@ -126,13 +135,26 @@ pulseRouter.post('/join', rateLimit(20), h((req, res) => {
   res.json(out);
 }));
 
+/** The teacher's own one-click feedback lines. */
+pulseRouter.get('/me/comments', h((req, res) => {
+  res.json({ comments: pulseOf(loadDb()).settings[`comments:${req.userId}`] || [] });
+}));
+pulseRouter.put('/me/comments', h((req, res) => {
+  const db = loadDb();
+  if (!isTeacher(db, u(req))) throw new PulseError(403, 'Teachers only.');
+  const list = (Array.isArray(req.body?.comments) ? req.body.comments : []).map((c: any) => String(c).trim().slice(0, 200)).filter(Boolean).slice(0, 30);
+  pulseOf(db).settings[`comments:${req.userId}`] = list;
+  saveDb(db);
+  res.json({ comments: list });
+}));
+
 // ---- Admin -----------------------------------------------------------------
 const adminOnly = (req: Request) => { if (!isAdmin(u(req))) throw new PulseError(403, 'Admins only.'); };
 
 pulseRouter.get('/admin/teachers', h((req, res) => {
   adminOnly(req);
   const db = loadDb();
-  res.json({ teachers: teacherList(db), co_requests: coRequestList(db), ai_review: db.pulse?.settings?.ai_review === true, ai_key: !!process.env.ANTHROPIC_API_KEY, github_token: !!process.env.PULSE_GITHUB_TOKEN });
+  res.json({ teachers: teacherList(db), co_requests: coRequestList(db), github_token: !!process.env.PULSE_GITHUB_TOKEN });
 }));
 pulseRouter.post('/admin/teachers', h(async (req, res) => {
   adminOnly(req);
@@ -168,6 +190,14 @@ pulseRouter.post('/admin/teachers/:userId/password', h((req, res) => {
   saveDb(db);
   res.json({ teachers: teacherList(db) });
 }));
+pulseRouter.delete('/admin/teachers/:userId', h((req, res) => {
+  adminOnly(req);
+  const db = loadDb();
+  revokeTeacher(db, String(req.params.userId));
+  pushAudit(db, { actor: actor(req), action: 'pulse.teacher_revoked', target: String(req.params.userId) });
+  saveDb(db);
+  res.json({ teachers: teacherList(db) });
+}));
 pulseRouter.get('/admin/co-requests', h((req, res) => {
   adminOnly(req);
   res.json({ requests: coRequestList(loadDb()) });
@@ -183,38 +213,27 @@ pulseRouter.post('/admin/co-requests/:id', h(async (req, res) => {
   const emailed = welcome ? await welcome.mail : false;
   res.json({ requests: coRequestList(db), teachers: teacherList(db), created, emailed, link: welcome?.link ?? null });
 }));
-pulseRouter.delete('/admin/teachers/:userId', h((req, res) => {
-  adminOnly(req);
-  const db = loadDb();
-  revokeTeacher(db, String(req.params.userId));
-  pushAudit(db, { actor: actor(req), action: 'pulse.teacher_revoked', target: String(req.params.userId) });
-  saveDb(db);
-  res.json({ teachers: teacherList(db) });
-}));
-pulseRouter.put('/admin/settings', h((req, res) => {
-  adminOnly(req);
-  const db = loadDb();
-  pulseOf(db).settings.ai_review = req.body?.ai_review === true;
-  saveDb(db);
-  res.json({ ai_review: pulseOf(db).settings.ai_review });
-}));
 
 // ---- Classes & roster --------------------------------------------------------
 const classDetail = (db: any, me: any, cls: any) => {
   const p = pulseOf(db);
   const name = (id: string) => (db.users || []).find((x: any) => x.id === id)?.name || '—';
+  const active = p.roster.filter((r) => r.class_id === cls.id && r.status === 'active');
   return {
     ...classView(db, cls), join_code: cls.join_code, archived: !!cls.archived_at, is_owner: cls.owner_id === me.id || isAdmin(me),
     co_teachers: (cls.co_teachers || []).map((id: string) => ({ id, name: name(id) })),
     co_requests: coRequestList(db, { class_id: cls.id }),
-    roster: p.roster.filter((r) => r.class_id === cls.id && r.status !== 'removed').map((r) => ({
-      id: r.id, name: r.name, email: r.email, roll_no: r.roll_no, status: r.status, invited_at: r.invited_at, joined_at: r.joined_at,
-    })),
-    tasks: p.tasks.filter((t) => t.class_id === cls.id).map((t) => ({
-      id: t.id, title: t.title, assigned_at: t.assigned_at, deadline_at: t.deadline_at, published: t.published,
-      linked: p.subs.filter((s) => s.task_id === t.id).length,
-      done: p.roster.filter((r) => r.class_id === cls.id && r.status === 'active' && studentView(db, t, r, 'teacher').status === 'done').length,
-    })),
+    roster: p.roster.filter((r) => r.class_id === cls.id && r.status !== 'removed').map((r) => {
+      const rec = repoFor(db, cls.id, r.id);
+      return { id: r.id, name: r.name, email: r.email, roll_no: r.roll_no, status: r.status, invited_at: r.invited_at, joined_at: r.joined_at,
+        repo: rec?.repo ?? null, verified: isVerified(rec) };
+    }),
+    repos_linked: p.repos.filter((r) => r.class_id === cls.id).length,
+    tasks: classTasks(db, cls.id).map((t) => {
+      const views = active.map((r) => studentView(db, t, r, 'teacher'));
+      return { id: t.id, title: t.title, folder: t.folder, auto_tests: !!t.auto_tests, assigned_at: t.assigned_at, deadline_at: t.deadline_at, published: t.published,
+        started: views.filter((v) => v.commits.length).length, reviewed: views.filter((v) => v.reviewed).length, done: views.filter((v) => v.status === 'done').length };
+    }),
   };
 };
 
@@ -290,34 +309,50 @@ pulseRouter.delete('/roster/:id', h((req, res) => {
 }));
 
 // ---- Tasks -------------------------------------------------------------------
+pulseRouter.get('/templates', h((_req, res) => {
+  res.json({ templates: TEMPLATES.map((t) => ({ id: t.id, title: t.title, level: t.level, summary: t.summary, input: templateInput(t) })) });
+}));
+/** Every task across the classes this teacher teaches — the source list for "copy a task". */
+pulseRouter.get('/teacher/tasks', h((req, res) => {
+  const db = loadDb();
+  const p = pulseOf(db);
+  const mine = p.classes.filter((c) => canTeach(db, u(req), c));
+  res.json({ tasks: p.tasks.filter((t) => mine.some((c) => c.id === t.class_id)).map((t) => ({
+    id: t.id, title: t.title, class_id: t.class_id, class_name: mine.find((c) => c.id === t.class_id)?.name || '', created_at: t.created_at,
+  })) });
+}));
 pulseRouter.post('/classes/:id/tasks', h((req, res) => {
   const db = loadDb();
   const cls = teachClass(db, u(req), String(req.params.id));
-  const task = { id: newId('task'), class_id: cls.id, created_by: req.userId, created_at: new Date().toISOString(), ...normaliseTask(req.body) };
+  const task = { id: newId('task'), class_id: cls.id, created_by: req.userId, created_at: new Date().toISOString(), ...normaliseTask(req.body, {}, { db, classId: cls.id }) };
   pulseOf(db).tasks.push(task);
   saveDb(db);
-  res.status(201).json(taskView(task, 'teacher'));
+  res.status(201).json(taskView(task));
+}));
+pulseRouter.post('/tasks/:id/duplicate', h((req, res) => {
+  const db = loadDb();
+  const { task } = teachTask(db, u(req), String(req.params.id));
+  const target = teachClass(db, u(req), String(req.body?.class_id || task.class_id));
+  const copy = duplicateTask(db, task, target.id, req.userId!);
+  saveDb(db);
+  res.status(201).json(taskView(copy));
 }));
 pulseRouter.get('/tasks/:id', h((req, res) => {
   const { task } = teachTask(loadDb(), u(req), String(req.params.id));
-  res.json(taskView(task, 'teacher'));
+  res.json(taskView(task));
 }));
 pulseRouter.put('/tasks/:id', h((req, res) => {
   const db = loadDb();
   const { task } = teachTask(db, u(req), String(req.params.id));
-  const changedReqs = JSON.stringify(task.requirements) !== JSON.stringify(normaliseTask(req.body, task).requirements);
-  Object.assign(task, normaliseTask(req.body, task), { updated_at: new Date().toISOString() });
-  // New requirements invalidate cached reviews.
-  if (changedReqs) for (const s of pulseOf(db).subs) if (s.task_id === task.id && s.snap) s.snap.review_sha = '';
+  Object.assign(task, normaliseTask(req.body, task, { db, classId: task.class_id, selfId: task.id }), { updated_at: new Date().toISOString() });
   saveDb(db);
-  res.json(taskView(task, 'teacher'));
+  res.json(taskView(task));
 }));
 pulseRouter.delete('/tasks/:id', h((req, res) => {
   const db = loadDb();
   const { task } = teachTask(db, u(req), String(req.params.id));
   const p = pulseOf(db);
-  p.subs.filter((s) => s.task_id === task.id).forEach((s) => dropFiles(s.id));
-  p.subs = p.subs.filter((s) => s.task_id !== task.id);
+  p.results = p.results.filter((r) => r.task_id !== task.id);
   p.tasks = p.tasks.filter((t) => t.id !== task.id);
   delete p.similarity[task.id];
   pushAudit(db, { actor: actor(req), action: 'pulse.task_deleted', target: task.id });
@@ -331,21 +366,20 @@ pulseRouter.get('/tasks/:id/dashboard', h((req, res) => {
   const db = loadDb();
   const { task, cls } = teachTask(db, u(req), String(req.params.id));
   const students = rosterOf(db, cls).map((r) => studentView(db, task, r, 'teacher'));
-  const lastSync = pulseOf(db).subs.filter((s) => s.task_id === task.id).map((s) => s.last_sync_at).filter(Boolean).sort().pop() ?? null;
-  res.json({ cls: classView(db, cls), task: taskView(task, 'teacher'), students, now: new Date().toISOString(), last_sync: lastSync });
+  const lastSync = pulseOf(db).repos.filter((r) => r.class_id === cls.id).map((r) => r.last_sync_at).filter(Boolean).sort().pop() ?? null;
+  res.json({ cls: classView(db, cls), task: taskView(task), students, now: new Date().toISOString(), last_sync: lastSync });
 }));
 
 pulseRouter.get('/tasks/:id/export.csv', h((req, res) => {
   const db = loadDb();
   const { task, cls } = teachTask(db, u(req), String(req.params.id));
   const rows = rosterOf(db, cls).map((r) => csvRow(task, studentView(db, task, r, 'teacher')));
-  res.type('text/csv').attachment(`pulse-${task.id}.csv`).send(toCsv([CSV_HEAD(task), ...rows]));
+  res.type('text/csv').attachment(`pulse-${task.folder}.csv`).send(toCsv([CSV_HEAD(task), ...rows]));
 }));
 
 pulseRouter.post('/tasks/:id/sync', rateLimit(6), h(async (req, res) => {
   const { task } = teachTask(loadDb(), u(req), String(req.params.id));
-  const n = await syncTask(task.id, req.body?.force === true);
-  res.json({ synced: n });
+  res.json({ synced: await syncTask(task.id) });
 }));
 
 pulseRouter.get('/tasks/:id/students/:rid', h((req, res) => {
@@ -358,71 +392,76 @@ pulseRouter.get('/tasks/:id/students/:rid', h((req, res) => {
   pushAudit(db, { actor: actor(req), action: 'pulse.code_viewed', target: list[i].id, detail: task.id });
   saveDb(db);
   res.json({
-    cls: classView(db, cls), task: taskView(task, 'teacher'), student, now: new Date().toISOString(),
-    prev: list[(i - 1 + list.length) % list.length].id, next: list[(i + 1) % list.length].id,
+    cls: classView(db, cls), task: taskView(task), student, now: new Date().toISOString(),
+    prev: list[(i - 1 + list.length) % list.length].id, next: list[(i + 1) % list.length].id, position: i + 1, total: list.length,
   });
 }));
 
-const teacherSub = (db: any, req: Request) => {
-  const { task } = teachTask(db, u(req), String(req.params.id));
-  const sub = subFor(db, task.id, String(req.params.rid));
-  if (!sub) throw new PulseError(400, 'This student has not linked a repo yet.');
-  return { task, sub };
+const teacherRow = (db: any, req: Request) => {
+  const { task, cls } = teachTask(db, u(req), String(req.params.id));
+  const row = rosterOf(db, cls).find((r) => r.id === String(req.params.rid));
+  if (!row) throw new PulseError(404, 'Student not found.');
+  return { task, cls, row, rec: repoFor(db, cls.id, row.id) };
 };
 
 pulseRouter.post('/tasks/:id/students/:rid/sync', rateLimit(20), h(async (req, res) => {
-  const { sub } = teacherSub(loadDb(), req);
-  await syncSubmission(sub.id, { force: req.body?.force === true });
+  const { rec } = teacherRow(loadDb(), req);
+  if (!rec) throw new PulseError(400, 'This student has not linked a repo yet.');
+  await syncRepo(rec.id);
   res.json({ ok: true });
 }));
 pulseRouter.post('/tasks/:id/students/:rid/verify', h((req, res) => {
   const db = loadDb();
-  const { sub } = teacherSub(db, req);
+  const { rec } = teacherRow(db, req);
+  if (!rec) throw new PulseError(400, 'This student has not linked a repo yet.');
   const on = req.body?.verified === true;
-  sub.verified_by_teacher = on;
-  if (req.body?.reset_owner === true) sub.verified_owner = null;
-  if (on) releaseOthers(pulseOf(db), sub);
-  pushAudit(db, { actor: actor(req), action: on ? 'pulse.repo_verified_by_teacher' : 'pulse.repo_unverified_by_teacher', target: sub.id, detail: sub.repo });
+  rec.verified_by_teacher = on;
+  if (req.body?.reset_owner === true) rec.verified_owner = null;
+  if (on) releaseOthers(pulseOf(db), rec);
+  pushAudit(db, { actor: actor(req), action: on ? 'pulse.repo_verified_by_teacher' : 'pulse.repo_unverified_by_teacher', target: rec.id, detail: rec.repo });
   saveDb(db);
   res.json({ ok: true });
 }));
+/** One call per student in Review mode: verdicts, score, feedback. */
+pulseRouter.post('/tasks/:id/students/:rid/review', h((req, res) => {
+  const db = loadDb();
+  const { task, row } = teacherRow(db, req);
+  saveReview(db, task, row, req.body, req.userId!);
+  pushAudit(db, { actor: actor(req), action: 'pulse.reviewed', target: row.id, detail: task.id });
+  saveDb(db);
+  res.json({ student: studentView(db, task, row, 'teacher') });
+}));
 pulseRouter.post('/tasks/:id/students/:rid/feedback', h((req, res) => {
   const db = loadDb();
-  const { sub } = teacherSub(db, req);
+  const { task, row } = teacherRow(db, req);
   const body = String(req.body?.body || '').trim().slice(0, 2000);
   if (!body) throw new PulseError(400, 'Write some feedback first.');
-  sub.feedback.push({ id: newId('fb'), by: req.userId, body, at: new Date().toISOString() });
+  resultFor(db, task.id, row.id, true).feedback.push({ id: newId('fb'), by: req.userId, body, at: new Date().toISOString() });
   saveDb(db);
   res.json({ ok: true });
 }));
 pulseRouter.post('/tasks/:id/students/:rid/note', h((req, res) => {
   const db = loadDb();
-  const { sub } = teacherSub(db, req);
+  const { task, row } = teacherRow(db, req);
   const body = String(req.body?.body || '').trim().slice(0, 2000);
   if (!body) throw new PulseError(400, 'Write a note first.');
-  sub.notes = [...(sub.notes || []), { id: newId('nt'), by: req.userId, body, at: new Date().toISOString() }];
+  resultFor(db, task.id, row.id, true).notes.push({ id: newId('nt'), by: req.userId, body, at: new Date().toISOString() });
   saveDb(db);
   res.json({ ok: true });
 }));
 pulseRouter.post('/tasks/:id/students/:rid/override', h((req, res) => {
   const db = loadDb();
-  const { task, sub } = teacherSub(db, req);
+  const { task, row } = teacherRow(db, req);
   const reason = String(req.body?.reason || '').trim().slice(0, 300);
   if (req.body?.req_id) {
-    const v = req.body.verdict;
-    if (!task.requirements.some((r: any) => r.id === req.body.req_id)) throw new PulseError(400, 'Unknown requirement.');
-    if (v === null) delete sub.req_overrides[req.body.req_id];
-    else if (['met', 'partial', 'missing'].includes(v)) sub.req_overrides[req.body.req_id] = { verdict: v, reason, by: req.userId, at: new Date().toISOString() };
-    else throw new PulseError(400, 'Verdict must be met, partial or missing.');
+    saveReview(db, task, row, { verdicts: { [req.body.req_id]: req.body.verdict ?? null }, reasons: { [req.body.req_id]: reason } }, req.userId!);
   } else if (req.body?.score === null) {
-    sub.override = null;
+    saveReview(db, task, row, { score: null }, req.userId!);
   } else {
-    const score = Number(req.body?.score);
-    if (!Number.isInteger(score) || score < 0 || score > 100) throw new PulseError(400, 'Score must be 0–100.');
     if (!reason) throw new PulseError(400, 'Give a reason; it is kept in the log.');
-    sub.override = { score, reason, by: req.userId, at: new Date().toISOString() };
+    saveReview(db, task, row, { score: req.body?.score, reason }, req.userId!);
   }
-  pushAudit(db, { actor: actor(req), action: 'pulse.override', target: sub.id, detail: reason, meta: req.body });
+  pushAudit(db, { actor: actor(req), action: 'pulse.override', target: row.id, detail: reason, meta: req.body });
   saveDb(db);
   res.json({ ok: true });
 }));
@@ -431,28 +470,27 @@ pulseRouter.post('/tasks/:id/students/:rid/override', h((req, res) => {
 pulseRouter.get('/student/tasks/:id', h((req, res) => {
   const db = loadDb();
   const { task, row, cls } = studentTask(db, u(req), String(req.params.id));
-  res.json({ cls: classView(db, cls), task: taskView(task, 'student'), student: studentView(db, task, row, 'student'), now: new Date().toISOString() });
+  res.json({ cls: classView(db, cls), task: taskView(task), student: studentView(db, task, row, 'student'), repo: repoInfo(db, cls, row), now: new Date().toISOString() });
 }));
-pulseRouter.post('/student/tasks/:id/repo', rateLimit(10), h(async (req, res) => {
+pulseRouter.post('/student/classes/:id/repo', rateLimit(10), h(async (req, res) => {
   const db = loadDb();
-  const { task, row } = studentTask(db, u(req), String(req.params.id));
+  const { cls, row } = studentClass(db, u(req), String(req.params.id));
   const repo = parseRepo(String(req.body?.url || ''));
-  if (!repo) throw new PulseError(400, 'Paste the full repo link, like https://github.com/your-name/c-task-3');
-  const sub = linkRepo(db, task, row, repo);
+  if (!repo) throw new PulseError(400, 'Paste the full repo link, like https://github.com/your-name/c-lab-2026');
+  const rec = linkClassRepo(db, cls, row, repo);
   saveDb(db);
-  await syncSubmission(sub.id);
-  const fresh = loadDb();
-  res.json({ student: studentView(fresh, task, row, 'student'), error: subFor(fresh, task.id, row.id)?.sync_error ?? null });
+  await syncRepo(rec.id);
+  res.json({ repo: repoInfo(loadDb(), cls, row) });
 }));
-pulseRouter.post('/student/tasks/:id/recheck', rateLimit(10), h(async (req, res) => {
+pulseRouter.post('/student/classes/:id/recheck', rateLimit(10), h(async (req, res) => {
   const db = loadDb();
-  const { task, row } = studentTask(db, u(req), String(req.params.id));
-  const sub = subFor(db, task.id, row.id);
-  if (!sub) throw new PulseError(400, 'Link your repo first.');
-  const last = sub.last_recheck_at ? Date.now() - new Date(sub.last_recheck_at).getTime() : Infinity;
-  if (last < 10 * 60000) throw new PulseError(429, `You can re-check again in ${Math.ceil((10 * 60000 - last) / 60000)} min.`);
-  sub.last_recheck_at = new Date().toISOString();
+  const { cls, row } = studentClass(db, u(req), String(req.params.id));
+  const rec = repoFor(db, cls.id, row.id);
+  if (!rec) throw new PulseError(400, 'Link your repo first.');
+  const last = rec.last_recheck_at ? Date.now() - new Date(rec.last_recheck_at).getTime() : Infinity;
+  if (last < 5 * 60000) throw new PulseError(429, `You can re-check again in ${Math.ceil((5 * 60000 - last) / 60000)} min.`);
+  rec.last_recheck_at = new Date().toISOString();
   saveDb(db);
-  await syncSubmission(sub.id);
-  res.json({ student: studentView(loadDb(), task, row, 'student') });
+  await syncRepo(rec.id);
+  res.json({ repo: repoInfo(loadDb(), cls, row) });
 }));

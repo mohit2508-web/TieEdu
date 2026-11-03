@@ -1,4 +1,4 @@
-import { PulseError, type Commit, type FileCache } from './store';
+import { PulseError, type RepoCommit, type FileCache } from './store';
 
 /**
  * Project Pulse — reading a student's repo from GitHub (PROJECT_PULSE_PLAN.md §6),
@@ -12,9 +12,9 @@ import { PulseError, type Commit, type FileCache } from './store';
 
 const API = 'https://api.github.com';
 const SOURCE_RE = /(\.(c|h|md|txt)$)|((^|\/)(Makefile|README)$)|(^\.github\/workflows\/pulse-autograde\.yml$)/i;
-const MAX_FILES = 60;
+const MAX_FILES = 300;
 const MAX_FILE_BYTES = 200_000;
-const MAX_NEW_STATS = 40;
+const MAX_NEW_STATS = 120;
 
 export const parseRepo = (input: string): string | null => {
   const m = String(input || '').trim().match(/^(?:https?:\/\/)?(?:www\.)?github\.com\/([\w.-]+)\/([\w.-]+?)(?:\.git)?\/?$/i)
@@ -38,7 +38,8 @@ export interface RepoData {
   headSha: string;
   owner: string;
   isPrivate: boolean;
-  commits: Commit[];
+  commits: RepoCommit[];
+  dirs: string[];
   files: FileCache['files'];
   statuses: Record<string, { state: string; description: string }>;
   stats: FileCache['stats'];
@@ -48,7 +49,7 @@ export async function fetchRepo(repo: string, sinceIso: string, cache: FileCache
   const meta = await gh(`/repos/${repo}`);
   const branch = encodeURIComponent(meta.default_branch || 'main');
   const head = await gh(`/repos/${repo}/commits?sha=${branch}&per_page=1`);
-  if (!head || !head.length) return { headSha: '', owner: String(meta.owner?.login || repo.split('/')[0]), isPrivate: !!meta.private, commits: [], files: [], statuses: {}, stats: cache.stats };
+  if (!head || !head.length) return { headSha: '', owner: String(meta.owner?.login || repo.split('/')[0]), isPrivate: !!meta.private, commits: [], dirs: [], files: [], statuses: {}, stats: cache.stats };
   const headSha: string = head[0].sha;
 
   const raw: any[] = [];
@@ -61,21 +62,25 @@ export async function fetchRepo(repo: string, sinceIso: string, cache: FileCache
   const stats = { ...cache.stats };
   let fetched = 0;
   for (const c of raw) {
-    if (stats[c.sha] || fetched >= MAX_NEW_STATS) continue;
+    // Which files each commit touched decides which task (folder) it counts for. Cached by sha: a commit never changes.
+    if (stats[c.sha]?.files || fetched >= MAX_NEW_STATS) continue;
     const one = await gh(`/repos/${repo}/commits/${c.sha}`);
-    stats[c.sha] = { add: one?.stats?.additions ?? 0, del: one?.stats?.deletions ?? 0 };
+    stats[c.sha] = { add: one?.stats?.additions ?? 0, del: one?.stats?.deletions ?? 0,
+      files: (one?.files || []).slice(0, 300).map((f: any) => ({ p: String(f.filename), a: f.additions ?? 0, d: f.deletions ?? 0 })) };
     fetched++;
   }
-  const commits: Commit[] = raw.map((c) => ({
+  const commits: RepoCommit[] = raw.map((c) => ({
     sha: String(c.sha).slice(0, 7),
     at: c.commit?.author?.date || c.commit?.committer?.date,
     pushed: c.commit?.committer?.date || c.commit?.author?.date,
     message: String(c.commit?.message || '').split('\n')[0].slice(0, 140),
     add: stats[c.sha]?.add ?? 0,
     del: stats[c.sha]?.del ?? 0,
+    files: stats[c.sha]?.files ?? [],
   }));
 
   const tree = await gh(`/repos/${repo}/git/trees/${headSha}?recursive=1`);
+  const dirs = (tree?.tree || []).filter((b: any) => b.type === 'tree' && !String(b.path).includes('/')).map((b: any) => String(b.path));
   const blobs = (tree?.tree || []).filter((b: any) => b.type === 'blob' && SOURCE_RE.test(b.path) && (b.size ?? 0) <= MAX_FILE_BYTES).slice(0, MAX_FILES);
   const known = new Map(cache.files.map((f) => [f.sha, f.code]));
   const files: FileCache['files'] = [];
@@ -92,14 +97,14 @@ export async function fetchRepo(repo: string, sinceIso: string, cache: FileCache
   const statuses: RepoData['statuses'] = {};
   for (const s of statusList) if (!statuses[s.context]) statuses[s.context] = { state: s.state, description: s.description || '' };
 
-  return { headSha, owner: String(meta.owner?.login || repo.split('/')[0]), isPrivate: !!meta.private, commits, files, statuses, stats };
+  return { headSha, owner: String(meta.owner?.login || repo.split('/')[0]), isPrivate: !!meta.private, commits, dirs, files, statuses, stats };
 }
 
 // ---------------------------------------------------------------------------
-// The autograder. The workflow file is fixed; Pulse checks it is unchanged, so a
-// student cannot edit it to report passes. It runs the grader script served by
-// this API, which fetches the teacher's tests, compiles with gcc and posts one
-// commit status per test (pulse/build, pulse/T1, …), then pings Pulse to re-sync.
+// The autograder (only for tasks with "Auto-run tests" on). The workflow file is
+// fixed and added once per class repo; Pulse checks it is unchanged. It runs the
+// grader served by this API, which fetches each task's tests, compiles that task's
+// folder with gcc and posts statuses pulse/<folder>/build, pulse/<folder>/T1 …
 // ---------------------------------------------------------------------------
 export const WORKFLOW_PATH = '.github/workflows/pulse-autograde.yml';
 
@@ -140,27 +145,31 @@ const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => e.
 const norm = (s) => s.split('\\n').map((l) => l.trim().replace(/\\s+/g, ' ')).filter(Boolean);
 (async () => {
   const r = await fetch(API + '/api/pulse/autograde/tests?repo=' + encodeURIComponent(repo));
-  if (!r.ok) { console.log('This repo is not linked to a Project Pulse task.'); return; }
-  const { tests } = await r.json();
-  const srcs = walk('.').filter((f) => f.endsWith('.c'));
-  const bin = path.resolve('pulse_bin');
-  const b = spawnSync('gcc', ['-Wall', '-Wextra', '-Werror', '-o', bin, ...srcs, '-lm'], { encoding: 'utf8' });
-  const built = b.status === 0 && srcs.length > 0;
-  const err = (b.stderr || 'no .c files found').split('\\n').find((l) => /error/.test(l)) || 'build failed';
-  await status('build', built ? 'success' : 'failure', built ? 'compiled with gcc -Wall -Wextra -Werror' : err);
-  for (const t of tests) {
-    if (!built) { await status(t.id, 'failure', 'not run: build failed'); continue; }
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'pulse-'));
-    let out = '';
-    for (const run of t.input.split(/\\n?---run---\\n?/)) {
-      const p = spawnSync(bin, [], { input: run.replace(/\\n?$/, '\\n'), cwd: dir, encoding: 'utf8', timeout: 5000, maxBuffer: 1 << 20 });
-      out = p.error && p.error.code === 'ETIMEDOUT' ? '__TIMEOUT__' : (p.stdout || '') + (p.stderr || '');
+  if (!r.ok) { console.log('This repo is not linked to a Project Pulse class.'); return; }
+  const { tasks } = await r.json();
+  for (const task of tasks) {
+    if (!fs.existsSync(task.folder)) { console.log(task.folder + '/: not in the repo yet'); continue; }
+    const srcs = walk(task.folder).filter((f) => f.endsWith('.c'));
+    const bin = path.resolve('pulse_bin_' + task.folder.replace(/[^\w-]/g, '_'));
+    const b = spawnSync('gcc', ['-Wall', '-Wextra', '-Werror', '-o', bin, ...srcs, '-lm'], { encoding: 'utf8' });
+    const built = b.status === 0 && srcs.length > 0;
+    const err = (b.stderr || 'no .c files found').split('\n').find((l) => /error/.test(l)) || 'build failed';
+    const ctx = (id) => task.folder + '/' + id;
+    await status(ctx('build'), built ? 'success' : 'failure', built ? 'compiled with gcc -Wall -Wextra -Werror' : err);
+    for (const t of task.tests) {
+      if (!built) { await status(ctx(t.id), 'failure', 'not run: build failed'); continue; }
+      const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'pulse-'));
+      let out = '';
+      for (const run of t.input.split(/\n?---run---\n?/)) {
+        const p = spawnSync(bin, [], { input: run.replace(/\n?$/, '\n'), cwd: dir, encoding: 'utf8', timeout: 5000, maxBuffer: 1 << 20 });
+        out = p.error && p.error.code === 'ETIMEDOUT' ? '__TIMEOUT__' : (p.stdout || '') + (p.stderr || '');
+      }
+      const got = norm(out), want = norm(t.expected);
+      let i = 0; for (const line of got) if (i < want.length && line.includes(want[i])) i++;
+      const pass = out !== '__TIMEOUT__' && i === want.length;
+      await status(ctx(t.id), pass ? 'success' : 'failure', pass ? 'as expected' : out === '__TIMEOUT__' ? 'timed out after 5 s' : 'missing: ' + want[i] + ' | got: ' + (got.slice(-2).join(' / ') || '(no output)'));
+      console.log(task.folder, t.id, pass ? 'PASS' : 'FAIL');
     }
-    const got = norm(out), want = norm(t.expected);
-    let i = 0; for (const line of got) if (i < want.length && line.includes(want[i])) i++;
-    const pass = out !== '__TIMEOUT__' && i === want.length;
-    await status(t.id, pass ? 'success' : 'failure', pass ? 'as expected' : out === '__TIMEOUT__' ? 'timed out after 5 s' : 'missing: ' + want[i] + ' | got: ' + (got.slice(-2).join(' / ') || '(no output)'));
-    console.log(t.id, pass ? 'PASS' : 'FAIL');
   }
   await fetch(API + '/api/pulse/autograde/ping', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ repo }) }).catch(() => {});
 })();

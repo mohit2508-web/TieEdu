@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import { Activity, ShieldAlert, CheckCircle2, CircleDashed, XCircle, Copy, Clock3, Layers, History, AlertTriangle, FileCode2, Info } from 'lucide-react';
+import { Activity, ShieldAlert, Inbox, CheckCircle2, CircleDashed, XCircle, Copy, Clock3, Layers, History, AlertTriangle, FileCode2, Info } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { STATUS_META, lineDiff, type PulseStatus, type Verdict, type Flag, type SourceFile, type Evidence } from '@/lib/pulse/demo';
 
@@ -78,7 +78,7 @@ export const PulseShell: React.FC<{
 
 export const StatusPill: React.FC<{ status: PulseStatus; className?: string }> = ({ status, className }) => {
   const m = STATUS_META[status];
-  const Icon = status === 'done' ? CheckCircle2 : status === 'progress' ? CircleDashed : status === 'notStarted' ? XCircle : status === 'unverified' ? ShieldAlert : AlertTriangle;
+  const Icon = status === 'done' ? CheckCircle2 : status === 'progress' ? CircleDashed : status === 'notStarted' ? XCircle : status === 'unverified' ? ShieldAlert : status === 'submitted' ? Inbox : AlertTriangle;
   return (
     <span className={cn('inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold', m.soft, m.ink, className)}>
       <Icon className="h-3.5 w-3.5" aria-hidden /> {m.label}
@@ -90,6 +90,7 @@ export const VERDICT_META: Record<Verdict, { label: string; ink: string; soft: s
   met: { label: 'Done', ink: 'text-success', soft: 'bg-success-soft', symbol: '✓', Icon: CheckCircle2 },
   partial: { label: 'Partly', ink: 'text-warning', soft: 'bg-warning-soft', symbol: '~', Icon: CircleDashed },
   missing: { label: 'Missing', ink: 'text-error', soft: 'bg-danger-soft', symbol: '✗', Icon: XCircle },
+  unreviewed: { label: 'Not reviewed', ink: 'text-muted', soft: 'bg-surface-hover', symbol: '?', Icon: CircleDashed },
 };
 
 export const VerdictTag: React.FC<{ verdict: Verdict }> = ({ verdict }) => {

@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { Plus, Users, ListChecks, ChevronRight, ShieldCheck, Trash2, Sparkles, Github, Copy, Check, Send, KeyRound } from 'lucide-react';
+import { Plus, Users, ListChecks, ChevronRight, ShieldCheck, Trash2, Github, Copy, Check, Send, KeyRound } from 'lucide-react';
 import { PulseShell } from '@/components/pulse/PulseUi';
 import { PulseGate, PulseLoadState, usePulseLoad } from '@/components/pulse/PulseGate';
 import { pulseApi, type PulseMe } from '@/lib/pulse/api';
 
 /**
  * Project Pulse — teacher home: my classes, create a class; for admins also
- * appoint teachers and switch AI review on (PROJECT_PULSE_PLAN.md §2).
+ * create teacher logins and approve co-teachers (PROJECT_PULSE_PLAN.md §2). No AI.
  */
 
 const input = 'h-10 w-full rounded-cell border border-line-strong/60 bg-card px-3 text-sm text-body focus:outline focus:outline-2 focus:outline-[var(--focus)]';
@@ -105,12 +105,7 @@ const AdminPanel: React.FC = () => {
         ))}
         {!data.teachers.length ? <li className="py-3 text-sm text-muted">No teachers yet.</li> : null}
       </ul>
-      <div className="mt-4 grid gap-3 border-t border-line pt-4 sm:grid-cols-2">
-        <label className="flex items-start gap-3 rounded-cell bg-app-warm p-3 text-sm">
-          <input type="checkbox" className="mt-1" checked={data.ai_review} disabled={!data.ai_key} onChange={(e) => run(() => pulseApi.setAi(e.target.checked))} />
-          <span><span className="flex items-center gap-1 font-semibold text-heading"><Sparkles className="h-4 w-4" /> AI requirement review</span>
-            <span className="text-xs text-muted">{data.ai_key ? 'Claude reads each repo against the requirements. Off: the teacher’s hints decide.' : 'Needs ANTHROPIC_API_KEY on the server.'}</span></span>
-        </label>
+      <div className="mt-4 border-t border-line pt-4">
         <p className="flex items-start gap-3 rounded-cell bg-app-warm p-3 text-sm">
           <Github className="mt-0.5 h-4 w-4 shrink-0" />
           <span><span className="font-semibold text-heading">GitHub access: {data.github_token ? 'token set' : 'no token'}</span>

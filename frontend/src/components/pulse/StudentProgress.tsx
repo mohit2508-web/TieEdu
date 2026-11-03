@@ -6,7 +6,7 @@ import {
 import { cn } from '@/lib/cn';
 import { PulseShell, StatusPill, VerdictTag, Ring } from '@/components/pulse/PulseUi';
 import { ChartCard, Columns, MiniTable } from '@/components/pulse/charts';
-import { commitsPerDay, relTime, fmtDateTime, reqPoints, testsPassed, STATUS_META, type PulseBundle } from '@/lib/pulse/demo';
+import { commitsPerDay, relTime, fmtDateTime, reqPoints, testsPassed, type PulseBundle } from '@/lib/pulse/demo';
 
 /**
  * Project Pulse — the student's own view (PROJECT_PULSE_PLAN.md §3.4).
@@ -27,10 +27,12 @@ export interface StudentProgressProps {
 }
 
 export const StudentProgress: React.FC<StudentProgressProps> = ({ data, tasks, preview, workflowUrl, onLink, onRecheck }) => {
+  // One repo for the whole class (v2): its state comes with the task, from the class.
+  const repo = data.repo ?? { repo: data.students[0]?.repo ?? null, verified: true, verify_code: null, synced_at: null, error: null, workflow_ok: true, workflow_needed: false };
   const { cls, task, now } = data;
   const me = data.students[0];
   const [previewLinked, setPreviewLinked] = useState(true);
-  const linked = preview ? previewLinked : !!me.repo;
+  const linked = preview ? previewLinked : !!repo.repo;
   const [editing, setEditing] = useState(false);
   const [url, setUrl] = useState('');
   const [urlError, setUrlError] = useState<string | null>(null);
@@ -43,6 +45,7 @@ export const StudentProgress: React.FC<StudentProgressProps> = ({ data, tasks, p
   const missing = task.requirements.filter((r) => me.reqs[r.id].verdict !== 'met');
   const passed = testsPassed(me);
   const nReq = task.requirements.length;
+  const hasTests = task.auto_tests !== false && task.tests.length > 0;
 
   const link = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,12 +78,12 @@ export const StudentProgress: React.FC<StudentProgressProps> = ({ data, tasks, p
         ) : null}
       </div>
       {notice ? <p role="status" className="mb-4 rounded-cell bg-secondary-soft px-4 py-2.5 text-sm text-secondary">{notice}</p> : null}
-      {me.sync?.error ? <p className="mb-4 rounded-cell bg-warning-soft px-4 py-2.5 text-sm text-signal-ink">Last check failed: {me.sync.error}</p> : null}
+      {repo.error ? <p className="mb-4 rounded-cell bg-warning-soft px-4 py-2.5 text-sm text-signal-ink">Last check failed: {repo.error}</p> : null}
 
       {!preview && me.status === 'unverified' ? (
         <section className="mb-4 rounded-card border border-rose/30 bg-rose-soft p-4 text-sm text-rose">
           <p className="font-display text-h3">Your work does not count yet</p>
-          <p className="mt-1">Prove this repo is yours: add a file <span className="font-mono">PULSE.txt</span> containing <span className="font-mono font-bold">{me.verify_code}</span> to the repo and push. Then press Re-check. If the repo belongs to someone else, it is unlinked as soon as its owner verifies it, and your teacher is told.</p>
+          <p className="mt-1">Prove this repo is yours: add a file <span className="font-mono">PULSE.txt</span> containing <span className="font-mono font-bold">{repo.verify_code}</span> to the repo and push. Then press Re-check. If the repo belongs to someone else, it is unlinked as soon as its owner verifies it, and your teacher is told.</p>
         </section>
       ) : null}
       {/* Repo */}
@@ -89,12 +92,12 @@ export const StudentProgress: React.FC<StudentProgressProps> = ({ data, tasks, p
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-tile bg-secondary-soft text-secondary"><GitBranch className="h-5 w-5" /></span>
             <div className="min-w-0 flex-1">
-              <p className="text-xs text-muted">Your repo for {task.title}</p>
-              <a href={`https://github.com/${me.repo}`} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1 font-mono text-sm text-link hover:underline">
-                github.com/{me.repo} <ExternalLink className="h-3.5 w-3.5" />
+              <p className="text-xs text-muted">Your repo for {cls.name} · every task is a folder in it</p>
+              <a href={`https://github.com/${repo.repo}`} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1 font-mono text-sm text-link hover:underline">
+                github.com/{repo.repo} <ExternalLink className="h-3.5 w-3.5" />
               </a>
-              <p className={cn('mt-0.5 flex items-center gap-1 text-xs', me.verified || preview ? 'text-success' : 'text-muted')}>
-                <BadgeCheck className="h-3.5 w-3.5" /> {me.verified || preview ? 'Ownership verified' : 'Not verified yet'} · checked {preview ? relTime(me.lastActivity, now) : relTime(me.sync?.at ?? null, now)}
+              <p className={cn('mt-0.5 flex items-center gap-1 text-xs', repo.verified || preview ? 'text-success' : 'text-muted')}>
+                <BadgeCheck className="h-3.5 w-3.5" /> {repo.verified || preview ? 'Ownership verified' : 'Not verified yet'} · checked {preview ? relTime(me.lastActivity, now) : relTime(repo.synced_at, now)}
               </p>
             </div>
             <div className="flex gap-2">
@@ -105,27 +108,28 @@ export const StudentProgress: React.FC<StudentProgressProps> = ({ data, tasks, p
               </button>
             </div>
           </div>
-          {!preview && (!me.verified || me.sync?.workflow_ok === false || (task.tests.length > 0 && me.sync?.workflow_ok == null)) ? (
+          {!preview && (!repo.verified || (repo.workflow_needed && repo.workflow_ok !== true)) ? (
             <ol className="mt-4 space-y-2 border-t border-line pt-4 text-sm text-body">
-              {!me.verified && me.verify_code ? (
+              <li className="text-xs font-semibold uppercase tracking-widest text-muted">One-time setup for this class</li>
+              {!repo.verified && repo.verify_code ? (
                 <li className="flex gap-2"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-secondary" />
-                  <span>Prove the repo is yours: add a file <code className="rounded bg-app-warm px-1 font-mono">PULSE.txt</code> containing <code className="rounded bg-app-warm px-1 font-mono font-semibold">{me.verify_code}</code>, then push.</span></li>
+                  <span>Prove the repo is yours: add a file <code className="rounded bg-app-warm px-1 font-mono">PULSE.txt</code> containing <code className="rounded bg-app-warm px-1 font-mono font-semibold">{repo.verify_code}</code> at the top of the repo, then push.</span></li>
               ) : null}
-              {task.tests.length && me.sync?.workflow_ok !== true ? (
+              {repo.workflow_needed && repo.workflow_ok !== true ? (
                 <li className="flex gap-2"><FileCode2 className="mt-0.5 h-4 w-4 shrink-0 text-secondary" />
-                  <span>Turn on the autograder: save <a href={workflowUrl} className="font-semibold text-link underline">pulse-autograde.yml</a> as <code className="rounded bg-app-warm px-1 font-mono">.github/workflows/pulse-autograde.yml</code> in your repo, unchanged, and push. Tests then run on every push.</span></li>
+                  <span>Turn on the autograder: save <a href={workflowUrl} className="font-semibold text-link underline">pulse-autograde.yml</a> as <code className="rounded bg-app-warm px-1 font-mono">.github/workflows/pulse-autograde.yml</code> in your repo, unchanged, and push. Your teacher’s tests then run on every push, for every task folder.</span></li>
               ) : null}
             </ol>
           ) : null}
         </section>
       ) : (
         <section className="mb-5 rounded-band border border-line bg-card p-6">
-          <h2 className="font-display text-h2 text-heading">{me.repo ? 'Change your repo' : 'Link your repo to start tracking'}</h2>
-          <p className="mt-1 text-sm text-muted">Do {task.title} in your own GitHub repo. Link it once and every push is checked automatically.</p>
+          <h2 className="font-display text-h2 text-heading">{repo.repo ? 'Change your class repo' : 'Link your repo once for this class'}</h2>
+          <p className="mt-1 text-sm text-muted">Make one public GitHub repo (for example <span className="font-mono">c-lab-2026</span>) and paste its link. Every task of {cls.name} is a folder in it — {task.folder ? <span className="font-mono">{task.folder}/</span> : null} for this one — so you do this only once.</p>
           <form onSubmit={link} className="mt-5 max-w-xl">
             <label htmlFor="repo-url" className="flex items-center gap-1.5 font-semibold text-heading"><Link2 className="h-4 w-4" /> Your GitHub repo link</label>
             <p className="mt-1 text-xs text-muted">Public repo, or private with the TieEdu bot added as a collaborator (ask your teacher).</p>
-            <input id="repo-url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://github.com/your-name/c-task-3"
+            <input id="repo-url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://github.com/your-name/c-lab-2026"
               aria-invalid={!!urlError} aria-describedby={urlError ? 'repo-url-err' : undefined}
               className="mt-3 h-10 w-full rounded-cell border border-line-strong/60 bg-card px-3 font-mono text-sm text-body focus:outline focus:outline-2 focus:outline-[var(--focus)]" />
             {urlError ? <p id="repo-url-err" className="mt-1 text-xs text-error">{urlError}</p> : null}
@@ -138,6 +142,14 @@ export const StudentProgress: React.FC<StudentProgressProps> = ({ data, tasks, p
       )}
 
       {linked && !editing ? (
+        <section className="mb-4 flex flex-col gap-2 rounded-card border border-secondary/30 bg-secondary-soft p-4 text-sm text-secondary sm:flex-row sm:items-center">
+          <span className="font-semibold">This task:</span>
+          <span className="flex-1">put your code in the folder <code className="rounded bg-card px-1.5 py-0.5 font-mono font-bold">{task.folder ?? 'task'}/</code> of your repo and push. Push as often as you like before {fmtDateTime(task.deadlineAt)}.</span>
+          {me.folder_hint ? <span className="rounded-well bg-warning-soft px-2.5 py-1 text-xs font-semibold text-signal-ink">{me.folder_hint}</span> : null}
+        </section>
+      ) : null}
+
+      {linked && !editing ? (
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div className="min-w-0 space-y-4">
             {/* Headline */}
@@ -145,16 +157,18 @@ export const StudentProgress: React.FC<StudentProgressProps> = ({ data, tasks, p
               <div className="rounded-full bg-card p-1"><Ring value={reqPoints(me)} max={nReq} size={112} label="Requirements" sub="requirements" /></div>
               <div className="flex-1">
                 <StatusPill status={me.status} />
-                <h2 className="mt-2 font-display text-h1">{task.title.replace(/^Task \d+ — /, '')}</h2>
+                <h2 className="mt-2 font-display text-h1 text-hero-on">{task.title.replace(/^Task \d+ — /, '')}</h2>
                 <p className="mt-1 text-sm text-hero-muted">
-                  {missing.length ? `${missing.length} requirement${missing.length > 1 ? 's' : ''} left · ${passed}/${task.tests.length} tests passing` : 'Every requirement is done.'}
+                  {me.status === 'notStarted' ? `Nothing in ${task.folder ?? 'the task folder'}/ yet.`
+                    : me.status === 'submitted' ? 'Submitted. Your teacher will review it.'
+                    : missing.length ? `${missing.length} requirement${missing.length > 1 ? 's' : ''} not done yet${hasTests ? ` · ${passed}/${task.tests.length} tests passing` : ''}` : 'Every requirement is done.'}
                 </p>
-                <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-hero-edge px-3 py-1 text-xs font-semibold">
+                <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-hero-edge px-3 py-1 text-xs font-semibold text-hero-on">
                   <CalendarClock className="h-3.5 w-3.5" /> {daysLeft} days left · due {fmtDateTime(task.deadlineAt)}
                 </p>
               </div>
               <div className="text-center">
-                <p className="font-display text-display tabular-nums">{me.score}</p>
+                <p className="font-display text-display tabular-nums text-hero-on">{me.score}</p>
                 <p className="text-xs text-hero-muted">score so far /100</p>
               </div>
             </section>
@@ -174,7 +188,7 @@ export const StudentProgress: React.FC<StudentProgressProps> = ({ data, tasks, p
                         {res.evidence ? <span className="ml-auto font-mono text-xs text-muted">{res.evidence.file}:{res.evidence.from}</span> : null}
                       </div>
                       <p className="mt-1 text-xs text-muted">{r.detail}</p>
-                      <p className={cn('mt-2 rounded-well px-3 py-2 text-sm', res.verdict === 'met' ? 'bg-success-soft text-success' : 'bg-warning-soft text-signal-ink')}>
+                      <p className={cn('mt-2 rounded-well px-3 py-2 text-sm', res.verdict === 'met' ? 'bg-success-soft text-success' : res.verdict === 'unreviewed' ? 'bg-surface-hover text-muted' : 'bg-warning-soft text-signal-ink')}>
                         {res.verdict !== 'met' ? <Lightbulb className="mr-1 inline h-4 w-4 align-[-3px]" /> : null}
                         {res.reason}
                       </p>
@@ -182,10 +196,11 @@ export const StudentProgress: React.FC<StudentProgressProps> = ({ data, tasks, p
                   );
                 })}
               </ol>
-              <p className="border-t border-line bg-app-warm px-5 py-2.5 text-xs text-muted">Checked automatically after your last push. Your teacher reviews it and has the final say.</p>
+              <p className="border-t border-line bg-app-warm px-5 py-2.5 text-xs text-muted">Your teacher marks each requirement after reading your code. Commits and files are checked automatically after every push.</p>
             </section>
 
-            {/* Tests */}
+            {/* Tests (only when the teacher turned them on) */}
+            {hasTests ? (
             <section className="rounded-card border border-line bg-card">
               <h2 className="flex items-center justify-between border-b border-line px-5 py-3 font-display text-h3 text-heading">
                 Test results <span className="text-sm font-semibold tabular-nums text-muted">{passed}/{task.tests.length}</span>
@@ -207,6 +222,7 @@ export const StudentProgress: React.FC<StudentProgressProps> = ({ data, tasks, p
                 })}
               </ul>
             </section>
+            ) : null}
 
             {/* Activity */}
             <ChartCard title="My commits per day" note={`${me.commits.length} commits since the task was assigned`}
