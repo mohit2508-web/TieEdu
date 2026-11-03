@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { Plus, Users, ListChecks, ChevronRight, ShieldCheck, Trash2, Sparkles, Github, Copy, Check, Send } from 'lucide-react';
+import { Plus, Users, ListChecks, ChevronRight, ShieldCheck, Trash2, Sparkles, Github, Copy, Check, Send, KeyRound } from 'lucide-react';
 import { PulseShell } from '@/components/pulse/PulseUi';
 import { PulseGate, PulseLoadState, usePulseLoad } from '@/components/pulse/PulseGate';
 import { pulseApi, type PulseMe } from '@/lib/pulse/api';
@@ -27,7 +27,7 @@ const LinkBox: React.FC<{ title: string; link: string; emailed: boolean }> = ({ 
 
 const AdminPanel: React.FC = () => {
   const { data, error, setData } = usePulseLoad(() => pulseApi.teachers(), []);
-  const [form, setForm] = useState({ name: '', email: '', college: '' });
+  const [form, setForm] = useState({ name: '', email: '', college: '', password: '' });
   const [msg, setMsg] = useState<string | null>(null);
   const [link, setLink] = useState<{ title: string; link: string; emailed: boolean } | null>(null);
   const [busy, setBusy] = useState(false);
@@ -38,20 +38,22 @@ const AdminPanel: React.FC = () => {
     try { const out = await fn(); if (out) setData({ ...data, ...out }); } catch (e: any) { setMsg(e?.message || 'Failed'); } finally { setBusy(false); }
   };
   const create = () => run(async () => {
-    const r = await pulseApi.appoint(form);
-    setForm({ name: '', email: '', college: '' });
+    const r = await pulseApi.appoint({ ...form, password: form.password || undefined });
+    setForm({ name: '', email: '', college: '', password: '' });
     setLink(r.created && r.link ? { title: `Login created for ${form.email}`, link: r.link, emailed: r.emailed } : null);
-    if (!r.created) setMsg(`${form.email} already had a TieEdu account; they are now a teacher and can sign in as usual.`);
+    if (r.password_set) setMsg(`Login created. Give ${form.email} the password you set; they sign in at tieedu.in/login.`);
+    else if (!r.created) setMsg(`${form.email} already had a TieEdu account; they are now a teacher and sign in with their own password${form.password ? ' (the password you typed was not used; use Set password if needed)' : ''}.`);
     return { teachers: r.teachers };
   });
   return (
     <section className="mt-8 rounded-card border border-line bg-card p-5">
       <h2 className="flex items-center gap-2 font-display text-h3 text-heading"><ShieldCheck className="h-4 w-4" /> Admin · teachers <span className="text-sm font-semibold text-muted">({data.teachers.length})</span></h2>
-      <p className="mt-0.5 text-xs text-muted">Teachers cannot register themselves. Create each login here; they get an email to set their password. Every teacher sees only their own classes. No limit on how many.</p>
-      <form className="mt-4 grid gap-2 md:grid-cols-[1fr_1fr_1fr_auto]" onSubmit={(e) => { e.preventDefault(); create(); }}>
+      <p className="mt-0.5 text-xs text-muted">Teachers cannot register themselves. Create each login here: type a password and give it to them, or leave it empty to email them a set-password link. Every teacher sees only their own classes. No limit on how many.</p>
+      <form className="mt-4 grid gap-2 md:grid-cols-[1fr_1fr_1fr_1fr_auto]" onSubmit={(e) => { e.preventDefault(); create(); }}>
         <input className={input} required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Teacher’s full name" aria-label="Teacher name" />
         <input className={input} type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="teacher@college.edu.in" aria-label="Teacher email" />
         <input className={input} value={form.college} onChange={(e) => setForm({ ...form, college: e.target.value })} placeholder="College (optional)" aria-label="College" />
+        <input className={input} type="text" autoComplete="new-password" minLength={8} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Password (8+), or empty to email a link" aria-label="Password for the teacher" />
         <button className={primary} type="submit" disabled={busy}><Plus className="h-4 w-4" /> Create teacher login</button>
       </form>
       {msg ? <p className="mt-2 text-sm text-muted">{msg}</p> : null}
@@ -93,6 +95,10 @@ const AdminPanel: React.FC = () => {
                   <Send className="h-3.5 w-3.5" /> Send login link
                 </button>
               ) : null}
+              <button type="button" disabled={busy} className="inline-flex h-8 items-center gap-1 rounded-well border border-line px-2.5 text-xs font-semibold text-heading hover:bg-surface-hover"
+                onClick={() => { const pw = window.prompt(`New password for ${t.name} (${t.email}), 8+ characters. Give it to them yourself.`); if (pw) run(async () => { const x = await pulseApi.setPassword(t.user_id, pw); setMsg(`Password set for ${t.email}.`); return { teachers: x.teachers }; }); }}>
+                <KeyRound className="h-3.5 w-3.5" /> Set password
+              </button>
               <button type="button" onClick={() => { if (window.confirm(`Remove ${t.name} as a teacher? They lose the teacher portal at once.`)) run(() => pulseApi.revoke(t.user_id)); }} aria-label={`Remove ${t.name}`} className="rounded-well p-2 text-muted hover:bg-danger-soft hover:text-error"><Trash2 className="h-4 w-4" /></button>
             </span>
           </li>

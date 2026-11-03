@@ -9,6 +9,14 @@ import {
   subFor, linkRepo, newId, CSV_HEAD, csvRow, toCsv, dropFiles, createTeacherAccount, coRequestList, decideCoRequest,
 } from '../lib/pulse/store';
 import { issueAccountToken } from '../lib/accountTokens';
+import bcrypt from 'bcryptjs';
+
+const checkPassword = (pw: unknown) => {
+  const s = String(pw ?? '');
+  if (s.length < 8) throw new PulseError(400, 'Password must be at least 8 characters.');
+  if (s.length > 128) throw new PulseError(400, 'Password is too long.');
+  return s;
+};
 import { parseRepo, workflowYaml, GRADER_JS } from '../lib/pulse/github';
 import { syncSubmission, syncTask, releaseOthers } from '../lib/pulse/sync';
 import { aiEnabled } from '../lib/pulse/review';
@@ -129,12 +137,15 @@ pulseRouter.get('/admin/teachers', h((req, res) => {
 pulseRouter.post('/admin/teachers', h(async (req, res) => {
   adminOnly(req);
   const db = loadDb();
+  // An admin-set password applies only to a login created here, never to someone's existing account.
+  const password = req.body?.password ? checkPassword(req.body.password) : null;
   const { user, created } = createTeacherAccount(db, u(req), req.body);
-  pushAudit(db, { actor: actor(req), action: created ? 'pulse.teacher_created' : 'pulse.teacher_appointed', target: user.id });
-  const welcome = created ? sendTeacherWelcome(db, user) : null;
+  if (created && password) { user.password_hash = bcrypt.hashSync(password, 12); user.email_verified = true; }
+  pushAudit(db, { actor: actor(req), action: created ? 'pulse.teacher_created' : 'pulse.teacher_appointed', target: user.id, detail: created && password ? 'password set by admin' : '' });
+  const welcome = created && !password ? sendTeacherWelcome(db, user) : null;
   saveDb(db);
   const emailed = welcome ? await welcome.mail : false;
-  res.status(201).json({ teachers: teacherList(db), created, emailed, link: welcome?.link ?? null });
+  res.status(201).json({ teachers: teacherList(db), created, password_set: created && !!password, emailed, link: welcome?.link ?? null });
 }));
 pulseRouter.post('/admin/teachers/:userId/login-link', h(async (req, res) => {
   adminOnly(req);
@@ -144,6 +155,18 @@ pulseRouter.post('/admin/teachers/:userId/login-link', h(async (req, res) => {
   const welcome = sendTeacherWelcome(db, user);
   saveDb(db);
   res.json({ emailed: await welcome.mail, link: welcome.link });
+}));
+pulseRouter.post('/admin/teachers/:userId/password', h((req, res) => {
+  adminOnly(req);
+  const db = loadDb();
+  const user = (db.users || []).find((x: any) => x.id === String(req.params.userId));
+  if (!user || !teacherList(db).some((t) => t.user_id === user.id)) throw new PulseError(404, 'Teacher not found.');
+  if (user.role === 'admin') throw new PulseError(403, 'Admin passwords are not changed here.');
+  user.password_hash = bcrypt.hashSync(checkPassword(req.body?.password), 12);
+  user.email_verified = true;
+  pushAudit(db, { actor: actor(req), action: 'pulse.teacher_password_set', target: user.id });
+  saveDb(db);
+  res.json({ teachers: teacherList(db) });
 }));
 pulseRouter.get('/admin/co-requests', h((req, res) => {
   adminOnly(req);

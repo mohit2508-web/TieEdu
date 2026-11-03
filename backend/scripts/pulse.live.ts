@@ -107,6 +107,15 @@ const check = (name: string, ok: boolean, info?: unknown) => { if (ok) pass++; e
   const made = await api('u_admin', 'POST', '/admin/teachers', { email: 'fresh@pulse.test', name: 'Fresh Teacher' });
   check('admin creates a new teacher login with a 7-day link', made.status === 201 && made.json.created === true && String(made.json.link).includes('/reset-password?token='), made.json);
   check('teacher cannot create teacher logins', (await api('u_teach', 'POST', '/admin/teachers', { email: 'x@pulse.test', name: 'X Y' })).status === 403);
+  const loginAs = (email: string, password: string) => fetch('http://localhost:5099/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) }).then((r) => r.status);
+  const withPw = await api('u_admin', 'POST', '/admin/teachers', { email: 'pw@pulse.test', name: 'PW Teacher', password: 'Teacher@123' });
+  check('admin creates a teacher with a password', withPw.json.created === true && withPw.json.password_set === true && withPw.json.link === null, withPw.json);
+  check('that teacher logs in with it', (await loginAs('pw@pulse.test', 'Teacher@123')) === 200);
+  check('short password refused', (await api('u_admin', 'POST', '/admin/teachers', { email: 'short@pulse.test', name: 'Short PW', password: 'abc' })).status === 400);
+  const freshId = withPw.json.teachers.find((t: any) => t.email === 'fresh@pulse.test').user_id;
+  check('teacher cannot set passwords', (await api('u_teach', 'POST', `/admin/teachers/${freshId}/password`, { password: 'Another@123' })).status === 403);
+  check('admin sets a password for a teacher', (await api('u_admin', 'POST', `/admin/teachers/${freshId}/password`, { password: 'Another@123' })).status === 200);
+  check('they log in with the new password', (await loginAs('fresh@pulse.test', 'Another@123')) === 200);
   const co = await api('u_teach', 'POST', `/classes/${cls.id}/co-teachers`, { email: 'co@pulse.test', name: 'Co Teacher' });
   check('co-teacher without a login becomes an admin request', co.json.result === 'requested' && co.json.co_requests.length === 1, co.json);
   check('teacher cannot approve requests', (await api('u_teach', 'GET', '/admin/co-requests')).status === 403);

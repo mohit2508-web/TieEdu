@@ -47,7 +47,11 @@ pulse of each student's project, and doesn't tie the feature to GitHub, so GitLa
 3. Teachers whose password isn't set show **"Password not set yet"** with a *Send login link* button.
 4. The admin can remove a teacher at any time. They lose the teacher portal immediately; their
    classes stay.
-5. Nobody ever sees or sends a password.
+5. **The admin can set the password themselves** (current setup). Type it in the *Password* box
+   when creating the login, or use **Set password** on any teacher in the list (8+ characters), then
+   give it to the teacher. With the box empty, the emailed set-password link is used instead. An
+   admin-typed password is applied only to a login created there, never to an existing account
+   (use Set password for that). Every password set is written to the audit log.
 
 ### 2.2 Co-teachers (unlimited)
 - The class owner enters the co-teacher's name and email.

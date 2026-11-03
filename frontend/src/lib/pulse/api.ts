@@ -50,7 +50,8 @@ export const pulseApi = {
   join: (body: { token?: string; code?: string; roll_no?: string }) => post<{ status: 'active' | 'pending'; class_id: string }>('/join', body),
 
   teachers: () => call<{ teachers: TeacherRow[]; co_requests: CoRequest[]; ai_review: boolean; ai_key: boolean; github_token: boolean }>('/admin/teachers'),
-  appoint: (body: { email: string; name?: string; college?: string }) => post<{ teachers: TeacherRow[] } & Welcome>('/admin/teachers', body),
+  appoint: (body: { email: string; name?: string; college?: string; password?: string }) => post<{ teachers: TeacherRow[]; password_set: boolean } & Welcome>('/admin/teachers', body),
+  setPassword: (userId: string, password: string) => post<{ teachers: TeacherRow[] }>(`/admin/teachers/${userId}/password`, { password }),
   loginLink: (userId: string) => post<{ emailed: boolean; link: string }>(`/admin/teachers/${userId}/login-link`),
   decideCo: (id: string, approve: boolean) => post<{ requests: CoRequest[]; teachers: TeacherRow[] } & Welcome>(`/admin/co-requests/${id}`, { approve }),
   revoke: (userId: string) => call<{ teachers: TeacherRow[] }>(`/admin/teachers/${userId}`, { method: 'DELETE' }),
