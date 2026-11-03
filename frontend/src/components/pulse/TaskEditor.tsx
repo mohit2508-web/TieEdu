@@ -101,8 +101,16 @@ export const TaskEditor: React.FC<{ initial: TaskInput; onSave: (t: TaskInput) =
                 <button type="button" onClick={() => del('tests', i)} aria-label={`Remove T${i + 1}`} className="rounded-well p-2 text-muted hover:text-error"><Trash2 className="h-4 w-4" /></button>
               </div>
               <div className="mt-2 grid gap-2 md:grid-cols-2">
-                <textarea className={`${input} py-1.5 font-mono text-xs`} rows={4} value={x.input} onChange={(e) => upd('tests', i, { input: e.target.value })} placeholder={'3\n999\n0'} aria-label={`T${i + 1} input`} />
-                <textarea className={`${input} py-1.5 font-mono text-xs`} rows={4} value={x.expected} onChange={(e) => upd('tests', i, { expected: e.target.value })} placeholder="Not found" aria-label={`T${i + 1} expected output`} />
+                <label>
+                  <span className={label}>Input typed into the program (stdin) — leave empty if it asks for nothing</span>
+                  <textarea className={`${input} mt-1 py-1.5 font-mono text-xs`} rows={4} value={x.input} onChange={(e) => upd('tests', i, { input: e.target.value })} placeholder={'e.g.\n3\n999\n0'} />
+                </label>
+                <label>
+                  <span className={label}>Expected output — required; the test passes when this appears</span>
+                  <textarea className={`${input} mt-1 py-1.5 font-mono text-xs`} rows={4} value={x.expected} onChange={(e) => upd('tests', i, { expected: e.target.value })} placeholder={'e.g.\nNot found'}
+                    aria-invalid={!x.expected.trim()} />
+                  {!x.expected.trim() ? <span className="mt-1 block text-xs font-semibold text-error">Empty: this test will not be saved until you fill it.</span> : null}
+                </label>
               </div>
             </li>
           ))}
