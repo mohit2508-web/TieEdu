@@ -7,7 +7,7 @@
 
 import {
   PulseError, pulseOf, appointTeacher, createClass, inviteStudents, join, normaliseTask, teachClass, teachTask, studentTask,
-  studentView, linkRepo, scoreFor, statusFor, effectiveReqs, newId, subFor,
+  studentView, linkRepo, scoreFor, statusFor, effectiveReqs, newId, subFor, createTeacherAccount, addCoTeacher, decideCoRequest, coRequestList, isTeacher,
 } from '../src/lib/pulse/store';
 import { hintReview } from '../src/lib/pulse/review';
 import { similarPairs, tokens } from '../src/lib/pulse/similarity';
@@ -145,6 +145,22 @@ check('edited workflow → untrusted', testsFrom(taskA, { 'pulse/T1': { state: '
 check('our workflow is intact on any host', workflowIntact(workflowYaml('https://api.example.in')), true);
 check('an edited workflow is not', workflowIntact(workflowYaml('x').replace('node /tmp/pulse-grader.js', 'echo pass')), false);
 check('repo URLs parse', [parseRepo('https://github.com/asha/c-task.git'), parseRepo('asha/c-task'), parseRepo('https://gitlab.com/a/b')], ['asha/c-task', 'asha/c-task', null]);
+
+// --- admin-made teachers & co-teacher requests --------------------------------
+status('teacher login needs a name when the account is new', () => createTeacherAccount(db, admin, { email: 'new@x.in' }), 400);
+const made = createTeacherAccount(db, admin, { email: 'New.Teacher@x.in', name: 'New Teacher' });
+check('admin creates a passwordless teacher login', [made.created, made.user.email, made.user.password_hash, isTeacher(db, made.user)], [true, 'new.teacher@x.in', undefined, true]);
+check('appointing an existing account creates nothing', createTeacherAccount(db, admin, { email: 'asha@x.in' }).created, false);
+check('existing teacher is added as co-teacher at once', addCoTeacher(db, classA, t1, { email: 'teach2@x.in' }), 'added');
+status('co-teacher needs a name when they have no login', () => addCoTeacher(db, classA, t1, { email: 'co@x.in' }), 400);
+check('anyone else becomes a request for the admin', addCoTeacher(db, classA, t1, { email: 'co@x.in', name: 'Co Teacher' }), 'requested');
+check('a repeat request is not duplicated', [addCoTeacher(db, classA, t1, { email: 'co@x.in', name: 'Co Teacher' }), coRequestList(db).length], ['requested', 1]);
+status('only the owner adds co-teachers', () => addCoTeacher(db, classA, t2, { email: 'x@x.in', name: 'X Y' }), 403);
+const reqId = coRequestList(db)[0].id;
+const approved = decideCoRequest(db, admin, reqId, true);
+check('approval creates the login and adds them to the class', [approved.created, classA.co_teachers.includes(approved.user.id), coRequestList(db).length], [true, true, 0]);
+check('the co-teacher can open the class', teachClass(db, approved.user, classA.id).id, classA.id);
+status('a decided request cannot be decided again', () => decideCoRequest(db, admin, reqId, false), 404);
 
 console.log(`pulse: ${pass} passed, ${fail} failed`);
 if (fail) process.exit(1);

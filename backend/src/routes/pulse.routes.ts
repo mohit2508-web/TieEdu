@@ -6,8 +6,9 @@ import { sendDriveEmail } from '../lib/driveEmail';
 import {
   PulseError, pulseOf, isAdmin, isTeacher, canTeach, teachClass, teachTask, studentTask, appointTeacher, revokeTeacher, teacherList,
   createClass, updateClass, addCoTeacher, inviteStudents, reissueInvite, rosterRow, join, normaliseTask, studentView, taskView, classView,
-  subFor, linkRepo, newId, CSV_HEAD, csvRow, toCsv, dropFiles,
+  subFor, linkRepo, newId, CSV_HEAD, csvRow, toCsv, dropFiles, createTeacherAccount, coRequestList, decideCoRequest,
 } from '../lib/pulse/store';
+import { issueAccountToken } from '../lib/accountTokens';
 import { parseRepo, workflowYaml, GRADER_JS } from '../lib/pulse/github';
 import { syncSubmission, syncTask, releaseOthers } from '../lib/pulse/sync';
 import { aiEnabled } from '../lib/pulse/review';
@@ -36,12 +37,29 @@ const apiBase = (req: Request) => (process.env.PULSE_API_URL || `${req.protocol}
 const sendInvite = (cls: any, row: any, token: string, teacher: any) => sendDriveEmail({
   to: row.email,
   subject: `${teacher?.name || 'Your teacher'} invited you to ${cls.name} on Project Pulse`,
-  body: `Hi ${row.name},\n\nYou have been added to ${cls.name} (${cls.subject}) on TieEdu Project Pulse. Your teacher will see the progress of your coding tasks from your GitHub repo.\n\nOpen the link and sign in with this email (${row.email}) to join.`,
+  body: `Hi ${row.name},\n\nYou have been added to ${cls.name} (${cls.subject}) on TieEdu Project Pulse. Your teacher will see the progress of your coding tasks from your GitHub repo.\n\nOpen the link and sign in with this email (${row.email}) to join.\n\nOr go to ${site() || 'tieedu.in'}/project-pulse/join and enter the class code: ${cls.join_code}`,
   driveName: 'Project Pulse',
   url: `/project-pulse/join?token=${encodeURIComponent(token)}`,
   ctaLabel: 'Join the class',
   note: 'Only you and your teachers can see your work. The link works once.',
 });
+
+/** A new teacher's welcome: a 7-day link to set their password (the normal reset page). */
+const WELCOME_TTL_MIN = 7 * 24 * 60;
+const sendTeacherWelcome = (db: any, user: any) => {
+  const token = issueAccountToken(db, user.id, 'reset', new Date(), WELCOME_TTL_MIN);
+  const link = `${site()}/reset-password?token=${encodeURIComponent(token)}`;
+  const mail = sendDriveEmail({
+    to: user.email,
+    subject: 'Your TieEdu Project Pulse teacher login',
+    body: `Hi ${user.name},\n\nTieEdu has created your teacher login for Project Pulse (${user.email}). Set your password with the link below; it works once and expires in 7 days.\n\nThen sign in and open Project Pulse → Teacher portal to create your classes.`,
+    driveName: 'Project Pulse',
+    url: `/reset-password?token=${encodeURIComponent(token)}`,
+    ctaLabel: 'Set my password',
+    note: 'Only TieEdu admins can create teacher logins. If you did not expect this, ignore it.',
+  });
+  return { link, mail };
+};
 
 // ---------------------------------------------------------------------------
 // Public: autograder (called from the student's GitHub Action)
@@ -106,15 +124,41 @@ const adminOnly = (req: Request) => { if (!isAdmin(u(req))) throw new PulseError
 pulseRouter.get('/admin/teachers', h((req, res) => {
   adminOnly(req);
   const db = loadDb();
-  res.json({ teachers: teacherList(db), ai_review: db.pulse?.settings?.ai_review === true, ai_key: !!process.env.ANTHROPIC_API_KEY, github_token: !!process.env.PULSE_GITHUB_TOKEN });
+  res.json({ teachers: teacherList(db), co_requests: coRequestList(db), ai_review: db.pulse?.settings?.ai_review === true, ai_key: !!process.env.ANTHROPIC_API_KEY, github_token: !!process.env.PULSE_GITHUB_TOKEN });
 }));
-pulseRouter.post('/admin/teachers', h((req, res) => {
+pulseRouter.post('/admin/teachers', h(async (req, res) => {
   adminOnly(req);
   const db = loadDb();
-  const user = appointTeacher(db, u(req), req.body?.email);
-  pushAudit(db, { actor: actor(req), action: 'pulse.teacher_appointed', target: user.id });
+  const { user, created } = createTeacherAccount(db, u(req), req.body);
+  pushAudit(db, { actor: actor(req), action: created ? 'pulse.teacher_created' : 'pulse.teacher_appointed', target: user.id });
+  const welcome = created ? sendTeacherWelcome(db, user) : null;
   saveDb(db);
-  res.status(201).json({ teachers: teacherList(db) });
+  const emailed = welcome ? await welcome.mail : false;
+  res.status(201).json({ teachers: teacherList(db), created, emailed, link: welcome?.link ?? null });
+}));
+pulseRouter.post('/admin/teachers/:userId/login-link', h(async (req, res) => {
+  adminOnly(req);
+  const db = loadDb();
+  const user = (db.users || []).find((x: any) => x.id === String(req.params.userId));
+  if (!user || !teacherList(db).some((t) => t.user_id === user.id)) throw new PulseError(404, 'Teacher not found.');
+  const welcome = sendTeacherWelcome(db, user);
+  saveDb(db);
+  res.json({ emailed: await welcome.mail, link: welcome.link });
+}));
+pulseRouter.get('/admin/co-requests', h((req, res) => {
+  adminOnly(req);
+  res.json({ requests: coRequestList(loadDb()) });
+}));
+pulseRouter.post('/admin/co-requests/:id', h(async (req, res) => {
+  adminOnly(req);
+  const db = loadDb();
+  const approve = req.body?.approve === true;
+  const { user, created } = decideCoRequest(db, u(req), String(req.params.id), approve);
+  pushAudit(db, { actor: actor(req), action: approve ? 'pulse.co_teacher_approved' : 'pulse.co_teacher_rejected', target: String(req.params.id) });
+  const welcome = created ? sendTeacherWelcome(db, user) : null;
+  saveDb(db);
+  const emailed = welcome ? await welcome.mail : false;
+  res.json({ requests: coRequestList(db), teachers: teacherList(db), created, emailed, link: welcome?.link ?? null });
 }));
 pulseRouter.delete('/admin/teachers/:userId', h((req, res) => {
   adminOnly(req);
@@ -139,6 +183,7 @@ const classDetail = (db: any, me: any, cls: any) => {
   return {
     ...classView(db, cls), join_code: cls.join_code, archived: !!cls.archived_at, is_owner: cls.owner_id === me.id || isAdmin(me),
     co_teachers: (cls.co_teachers || []).map((id: string) => ({ id, name: name(id) })),
+    co_requests: coRequestList(db, { class_id: cls.id }),
     roster: p.roster.filter((r) => r.class_id === cls.id && r.status !== 'removed').map((r) => ({
       id: r.id, name: r.name, email: r.email, roll_no: r.roll_no, status: r.status, invited_at: r.invited_at, joined_at: r.joined_at,
     })),
@@ -170,9 +215,9 @@ pulseRouter.patch('/classes/:id', h((req, res) => {
 pulseRouter.post('/classes/:id/co-teachers', h((req, res) => {
   const db = loadDb();
   const cls = teachClass(db, u(req), String(req.params.id));
-  addCoTeacher(db, cls, u(req), req.body?.email);
+  const result = addCoTeacher(db, cls, u(req), req.body);
   saveDb(db);
-  res.json(classDetail(db, u(req), cls));
+  res.json({ ...classDetail(db, u(req), cls), result });
 }));
 pulseRouter.post('/classes/:id/roster', rateLimit(10), h(async (req, res) => {
   const db = loadDb();

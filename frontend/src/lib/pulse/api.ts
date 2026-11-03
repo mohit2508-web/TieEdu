@@ -25,10 +25,13 @@ export interface ClassDetail extends PulseClass {
   archived: boolean;
   is_owner: boolean;
   co_teachers: { id: string; name: string }[];
+  co_requests: CoRequest[];
   roster: RosterRow[];
   tasks: { id: string; title: string; assigned_at: string; deadline_at: string; published: boolean; linked: number; done: number }[];
 }
-export interface TeacherRow { user_id: string; name: string; email: string; granted_at: string; classes: number }
+export interface TeacherRow { user_id: string; name: string; email: string; granted_at: string; classes: number; co_teaching: number; has_password: boolean }
+export interface CoRequest { id: string; name: string; email: string; at: string; class_id: string; class_name: string; requested_by: string }
+type Welcome = { created: boolean; emailed: boolean; link: string | null };
 export interface TaskInput {
   title: string; summary: string; assigned_at: string; deadline_at: string; published: boolean;
   requirements: { title: string; detail: string; hints: string[] }[];
@@ -46,15 +49,17 @@ export const pulseApi = {
   me: () => call<PulseMe>('/me'),
   join: (body: { token?: string; code?: string; roll_no?: string }) => post<{ status: 'active' | 'pending'; class_id: string }>('/join', body),
 
-  teachers: () => call<{ teachers: TeacherRow[]; ai_review: boolean; ai_key: boolean; github_token: boolean }>('/admin/teachers'),
-  appoint: (email: string) => post<{ teachers: TeacherRow[] }>('/admin/teachers', { email }),
+  teachers: () => call<{ teachers: TeacherRow[]; co_requests: CoRequest[]; ai_review: boolean; ai_key: boolean; github_token: boolean }>('/admin/teachers'),
+  appoint: (body: { email: string; name?: string; college?: string }) => post<{ teachers: TeacherRow[] } & Welcome>('/admin/teachers', body),
+  loginLink: (userId: string) => post<{ emailed: boolean; link: string }>(`/admin/teachers/${userId}/login-link`),
+  decideCo: (id: string, approve: boolean) => post<{ requests: CoRequest[]; teachers: TeacherRow[] } & Welcome>(`/admin/co-requests/${id}`, { approve }),
   revoke: (userId: string) => call<{ teachers: TeacherRow[] }>(`/admin/teachers/${userId}`, { method: 'DELETE' }),
   setAi: (on: boolean) => post<{ ai_review: boolean }>('/admin/settings', { ai_review: on }, 'PUT'),
 
   createClass: (body: { name: string; subject: string }) => post<ClassDetail>('/classes', body),
   cls: (id: string) => call<ClassDetail>(`/classes/${id}`),
   updateClass: (id: string, body: Record<string, unknown>) => post<ClassDetail>(`/classes/${id}`, body, 'PATCH'),
-  addCoTeacher: (id: string, email: string) => post<ClassDetail>(`/classes/${id}/co-teachers`, { email }),
+  addCoTeacher: (id: string, body: { email: string; name: string }) => post<ClassDetail & { result: 'added' | 'requested' }>(`/classes/${id}/co-teachers`, body),
   invite: (id: string, entries: { email: string; name?: string; roll_no?: string }[]) =>
     post<ClassDetail & { invited: number; emailed: number; skipped: string[]; links: { email: string; link: string }[] }>(`/classes/${id}/roster`, { entries }),
   resend: (rowId: string) => post<{ emailed: boolean; link: string }>(`/roster/${rowId}/resend`),

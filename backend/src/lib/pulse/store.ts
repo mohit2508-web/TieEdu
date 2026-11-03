@@ -56,10 +56,12 @@ export const pulseOf = (db: any) => {
   if (!p.similarity) p.similarity = {};
   if (!p.settings) p.settings = {};
   if (!Array.isArray(p.alerts)) p.alerts = [];
+  if (!Array.isArray(p.co_requests)) p.co_requests = [];
   return p as {
     teachers: any[]; classes: any[]; roster: any[]; tasks: any[]; subs: any[];
     similarity: Record<string, { a: string; b: string; score: number }[]>; settings: any;
     alerts: { task_id: string; roster_id: string; text: string; at: string }[];
+    co_requests: { id: string; class_id: string; requested_by: string; name: string; email: string; status: 'pending' | 'approved' | 'rejected'; at: string; decided_at?: string }[];
   };
 };
 
@@ -115,10 +117,33 @@ export const studentTask = (db: any, u: U, taskId: string) => {
 // ---------------------------------------------------------------------------
 // Admin: teachers
 // ---------------------------------------------------------------------------
+/**
+ * Teachers never register themselves: the admin creates (or appoints) them.
+ * A new account has no password; the teacher sets one from the emailed link.
+ * Returns `created` so the caller sends the set-password link.
+ */
+export const createTeacherAccount = (db: any, admin: U, body: { email?: string; name?: string; college?: string }) => {
+  const e = email(body?.email);
+  if (!validEmail(e)) throw new PulseError(400, 'Enter a valid email.');
+  let user = (db.users || []).find((x: any) => String(x.email || '').toLowerCase() === e);
+  let created = false;
+  if (!user) {
+    const name = clean(body?.name, 80);
+    if (name.length < 2) throw new PulseError(400, 'Enter the teacher’s name to create their login.');
+    user = { id: `user-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`, name, email: e, role: 'user', xp: 0, streak: 0,
+      college: clean(body?.college, 120) || undefined, created_at: iso(), created_by: `pulse-admin:${admin.id}` };
+    db.users = db.users || [];
+    db.users.push(user);
+    created = true;
+  }
+  appointTeacher(db, admin, e);
+  return { user, created };
+};
+
 export const appointTeacher = (db: any, admin: U, rawEmail: string) => {
   const e = email(rawEmail);
   const user = (db.users || []).find((x: any) => String(x.email || '').toLowerCase() === e);
-  if (!user) throw new PulseError(404, 'No TieEdu account with that email. Ask them to sign up first.');
+  if (!user) throw new PulseError(404, 'No TieEdu account with that email.');
   const p = pulseOf(db);
   const row = p.teachers.find((t) => t.user_id === user.id);
   if (row) { row.revoked_at = null; row.granted_by = admin.id; row.granted_at = iso(); }
@@ -131,8 +156,9 @@ export const revokeTeacher = (db: any, userId: string) => {
 };
 export const teacherList = (db: any) => pulseOf(db).teachers.filter((t) => !t.revoked_at).map((t) => {
   const u = (db.users || []).find((x: any) => x.id === t.user_id) || {};
-  return { user_id: t.user_id, name: u.name || '—', email: u.email || '—', granted_at: t.granted_at,
-    classes: pulseOf(db).classes.filter((c) => c.owner_id === t.user_id && !c.archived_at).length };
+  const live = pulseOf(db).classes.filter((c) => !c.archived_at);
+  return { user_id: t.user_id, name: u.name || '—', email: u.email || '—', granted_at: t.granted_at, has_password: !!u.password_hash || !!u.google_id,
+    classes: live.filter((c) => c.owner_id === t.user_id).length, co_teaching: live.filter((c) => (c.co_teachers || []).includes(t.user_id)).length };
 });
 
 // ---------------------------------------------------------------------------
@@ -155,12 +181,47 @@ export const updateClass = (cls: any, body: any) => {
   if (body?.archived !== undefined) cls.archived_at = body.archived ? iso() : null;
   if (body?.new_code) cls.join_code = joinCode();
 };
-export const addCoTeacher = (db: any, cls: any, u: U, rawEmail: string) => {
+export const addCoTeacher = (db: any, cls: any, u: U, body: { email?: string; name?: string }): 'added' | 'requested' => {
   if (cls.owner_id !== u.id && !isAdmin(u)) throw new PulseError(403, 'Only the class owner can add co-teachers.');
-  const e = email(rawEmail);
+  const e = email(body?.email);
+  if (!validEmail(e)) throw new PulseError(400, 'Enter a valid email.');
   const user = (db.users || []).find((x: any) => String(x.email || '').toLowerCase() === e);
-  if (!user || !isTeacher(db, user)) throw new PulseError(400, 'That person is not an appointed teacher.');
-  if (!cls.co_teachers.includes(user.id) && user.id !== cls.owner_id) cls.co_teachers.push(user.id);
+  if (user && isTeacher(db, user)) {
+    if (user.id === cls.owner_id) throw new PulseError(400, 'That is the class owner.');
+    if (!cls.co_teachers.includes(user.id)) cls.co_teachers.push(user.id);
+    return 'added';
+  }
+  const p = pulseOf(db);
+  const open = p.co_requests.find((r) => r.class_id === cls.id && r.email === e && r.status === 'pending');
+  if (!open) {
+    const name = clean(body?.name, 80) || user?.name || '';
+    if (name.length < 2) throw new PulseError(400, 'Enter the co-teacher’s name; the admin creates their login.');
+    p.co_requests.push({ id: newId('coreq'), class_id: cls.id, requested_by: u.id, name, email: e, status: 'pending', at: iso() });
+  }
+  return 'requested';
+};
+
+export const coRequestList = (db: any, filter?: { class_id?: string }) => {
+  const p = pulseOf(db);
+  const userName = (id: string) => (db.users || []).find((x: any) => x.id === id)?.name || '—';
+  return p.co_requests.filter((r) => r.status === 'pending' && (!filter?.class_id || r.class_id === filter.class_id)).map((r) => ({
+    id: r.id, name: r.name, email: r.email, at: r.at, class_id: r.class_id,
+    class_name: p.classes.find((c) => c.id === r.class_id)?.name || '—', requested_by: userName(r.requested_by),
+  }));
+};
+
+/** Admin decides a co-teacher request; approving creates the login and adds them to the class. */
+export const decideCoRequest = (db: any, admin: U, id: string, approve: boolean) => {
+  const p = pulseOf(db);
+  const r = p.co_requests.find((x) => x.id === id && x.status === 'pending');
+  if (!r) throw new PulseError(404, 'Request not found.');
+  r.status = approve ? 'approved' : 'rejected';
+  r.decided_at = iso();
+  if (!approve) return { created: false, user: null as any };
+  const out = createTeacherAccount(db, admin, { email: r.email, name: r.name });
+  const cls = p.classes.find((c) => c.id === r.class_id);
+  if (cls && out.user.id !== cls.owner_id && !cls.co_teachers.includes(out.user.id)) cls.co_teachers.push(out.user.id);
+  return out;
 };
 
 /** Adds invites; returns the new rows with their one-time tokens (to email). */

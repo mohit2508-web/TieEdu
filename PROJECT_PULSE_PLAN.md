@@ -30,40 +30,45 @@ pulse of each student's project, and doesn't tie the feature to GitHub, so GitLa
 
 ## 2. Roles and access (the rule everything else follows)
 
-| Role | Who makes them | What they can see | What they can do |
-|---|---|---|---|
-| **Admin** (TieEdu staff) | already exists (`users.role = 'admin'`) | everything | appoint and remove teachers |
-| **Teacher** | appointed by admin | **only the classes they own or co-teach**: every student's progress, code, tests, AI review, integrity flags | create classes and tasks, invite or remove students, override marks, write feedback, export CSV |
-| **Student** | invited by a teacher | **only their own** repo, progress, tests, feedback | link their repo, see their own progress, request a re-check |
-| Everyone else | — | the public landing page only | — |
+| Role | Who creates them | How many | What they see | What they can do |
+|---|---|---|---|---|
+| **Admin** (TieEdu staff) | already exists (`users.role = 'admin'`) | — | everything | create teacher logins, approve co-teachers, remove teachers, AI switch |
+| **Teacher** | **only the admin**, from Teacher portal → Admin · teachers | unlimited | **only their own classes** (each teacher has their own portal) | classes, tasks, invite students, email the join code, request co-teachers, marks, feedback, CSV |
+| **Co-teacher** | requested by a class owner; **approved by the admin** if they have no teacher login yet | unlimited per class | that class only, the same as its owner | the same as the owner, except adding more co-teachers or archiving the class |
+| **Student** | invited by a teacher (email) or by join code (teacher approves) | unlimited | **only their own work** | link repo, see progress, re-check |
 
-### 2.1 Access rules (hard requirements)
+### 2.1 Teacher logins (admin only)
+1. Teachers **cannot register**. The normal TieEdu sign-up never makes anyone a teacher.
+2. The admin enters the teacher's **name, email and college** and clicks *Create teacher login*.
+   - If no TieEdu account has that email, one is created **without a password**. The teacher gets
+     an email: "Set my password". It's a one-time link valid for **7 days** that uses the normal
+     reset page. The link is also shown to the admin, so it can be shared on WhatsApp.
+   - If the email already has an account, it is made a teacher and they sign in as usual.
+3. Teachers whose password isn't set show **"Password not set yet"** with a *Send login link* button.
+4. The admin can remove a teacher at any time. They lose the teacher portal immediately; their
+   classes stay.
+5. Nobody ever sees or sends a password.
 
-1. **Invite-only.** Only a student the teacher put on a class roster can open the student view. A
-   TieEdu account alone is not enough.
-2. Each invite is tied to one **email**. The student must sign in to TieEdu with that same email (or
-   enter a single-use join code the teacher shares, which the teacher must then approve).
-3. A teacher is a **TieEdu user with an admin-granted Pulse teacher record**. Teachers cannot appoint
-   other teachers; they can only add co-teachers to their own class, and the owner approves.
-4. Every API call checks access on the server: `teacher ∈ class.teachers` or
-   `student ∈ class.roster AND student_id = self`. The frontend only hides things; the server is the
-   rule.
-5. A student never sees another student's name, code, score, or rank. There is no class leaderboard.
-6. Removing a student from a roster cuts access immediately. Their submissions are kept for 180 days
-   for the teacher's records, then deleted.
-7. Every teacher view of a student's code goes into the existing audit ledger (`lib/audit.ts`).
+### 2.2 Co-teachers (unlimited)
+- The class owner enters the co-teacher's name and email.
+  - **Already a teacher:** added at once.
+  - **Not a teacher:** a **request goes to the admin** and shows on the class page as "waiting for
+    admin". When the admin clicks **Approve**, the login is created (set-password email, as in
+    §2.1) and the person is added to the class. **Reject** discards the request.
+- So every teacher login, including co-teachers', is approved by an admin.
 
-### 2.2 How a student gets in (flow)
+### 2.3 Students
+1. **Invite by email:** the teacher pastes "email, name, roll no" lines. Each student gets an email
+   with a **one-time join link** and the **class join code**. They sign in with that same email.
+2. **Join code:** students enter it at `/project-pulse/join`. If the teacher invited their email,
+   they get in at once; anyone else waits for the teacher's approval.
+3. Students never see another student's name, code, score or rank. Removing a student cuts access
+   immediately.
 
-```
-Teacher: Class → "Invite students" → paste emails / upload CSV (name, email, roll no)
-   ↓ TieEdu sends invite email (existing email lib) with link /project-pulse/join?token=…
-Student: opens link → signs in / signs up with THAT email → lands on /project-pulse/student
-   ↓ "Link your repo": pastes github.com/<user>/<repo>  (or "Connect GitHub" OAuth — proves ownership)
-   ↓ Pulse verifies the repo exists + is reachable → first sync → progress shows
-```
-
----
+### 2.4 Server rule
+Every API call checks access on the server: admin, `teacher ∈ class owner/co-teachers`, or
+`student = this roster row, active`. The frontend only hides things. Every teacher login created,
+appointment, co-teacher decision, override and code view goes into the audit log.
 
 ## 3. Screens (Phase 0 builds all of them on sample data)
 

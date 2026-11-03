@@ -28,7 +28,7 @@ const ClassBody: React.FC<{ id: string }> = ({ id }) => {
   const [links, setLinks] = useState<{ email: string; link: string }[]>([]);
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [coEmail, setCoEmail] = useState('');
+  const [co, setCo] = useState({ name: '', email: '' });
   if (!cls) return <PulseLoadState title="Class" error={error} onRetry={reload} />;
 
   const run = async (fn: () => Promise<unknown>, ok?: string) => {
@@ -110,7 +110,7 @@ const ClassBody: React.FC<{ id: string }> = ({ id }) => {
             <p className="mt-1 text-xs text-muted">One per line: <span className="font-mono">email, name, roll no</span>. Paste from a spreadsheet works.</p>
             <textarea value={text} onChange={(e) => setText(e.target.value)} rows={6} className={`${input} mt-2 py-2 font-mono text-xs`}
               placeholder={'asha@college.edu.in, Asha Rao, 22CS101\nravi@college.edu.in, Ravi K, 22CS102'} aria-label="Students to invite" />
-            <button type="button" disabled={!entries.length || busy} onClick={invite} className={`${primary} mt-2 w-full`}><Send className="h-4 w-4" /> Invite {entries.length || ''}</button>
+            <button type="button" disabled={!entries.length || busy} onClick={invite} className={`${primary} mt-2 w-full`}><Send className="h-4 w-4" /> Invite {entries.length || ''} &amp; email the join code</button>
             {links.length ? (
               <details className="mt-3 rounded-well bg-app-warm p-2 text-xs" open>
                 <summary className="cursor-pointer font-semibold text-heading">One-time join links ({links.length})</summary>
@@ -129,17 +129,28 @@ const ClassBody: React.FC<{ id: string }> = ({ id }) => {
           <section className="rounded-card border border-line bg-card p-4">
             <h2 className="flex items-center gap-1.5 font-display text-h3 text-heading"><KeyRound className="h-4 w-4" /> Join code</h2>
             <p className="mt-2 font-mono text-2xl font-bold tracking-widest text-heading">{cls.join_code}</p>
-            <p className="mt-1 text-xs text-muted">Students enter it at /project-pulse/join. You approve each one before they get in.</p>
+            <p className="mt-1 text-xs text-muted">Every invite email includes this code. Students you invited by email get in at once with it; anyone else who uses it waits for your approval.</p>
             <button type="button" disabled={busy} className={`${ghost} mt-2`} onClick={() => run(() => pulseApi.updateClass(cls.id, { new_code: true }), 'New code made; the old one stops working.')}>New code</button>
           </section>
 
           {cls.is_owner ? (
             <section className="rounded-card border border-line bg-card p-4">
               <h2 className="font-display text-h3 text-heading">Co-teachers</h2>
-              <ul className="mt-2 space-y-1 text-sm">{cls.co_teachers.map((t) => <li key={t.id}>{t.name}</li>)}{!cls.co_teachers.length ? <li className="text-muted">None</li> : null}</ul>
-              <form className="mt-2 flex gap-2" onSubmit={(e) => { e.preventDefault(); run(async () => { await pulseApi.addCoTeacher(cls.id, coEmail); setCoEmail(''); }, 'Co-teacher added.'); }}>
-                <input className={`${input} h-9`} type="email" required value={coEmail} onChange={(e) => setCoEmail(e.target.value)} placeholder="Appointed teacher’s email" aria-label="Co-teacher email" />
-                <button className={ghost} disabled={busy}>Add</button>
+              <p className="mt-0.5 text-xs text-muted">As many as you need. They see and manage this class like you. Someone without a teacher login is sent to the TieEdu admin to approve.</p>
+              <ul className="mt-2 space-y-1 text-sm">
+                {cls.co_teachers.map((t) => <li key={t.id}>{t.name}</li>)}
+                {cls.co_requests.map((r) => <li key={r.id} className="text-muted">{r.name} · <span className="text-warning">waiting for admin</span></li>)}
+                {!cls.co_teachers.length && !cls.co_requests.length ? <li className="text-muted">None</li> : null}
+              </ul>
+              <form className="mt-2 space-y-2" onSubmit={(e) => { e.preventDefault(); run(async () => {
+                const r = await pulseApi.addCoTeacher(cls.id, co); setCo({ name: '', email: '' });
+                setMsg(r.result === 'added' ? `${co.email} added as co-teacher.` : `Request sent to the TieEdu admin for ${co.email}. They are added once approved.`);
+              }); }}>
+                <input className={`${input} h-9`} required value={co.name} onChange={(e) => setCo({ ...co, name: e.target.value })} placeholder="Co-teacher’s name" aria-label="Co-teacher name" />
+                <div className="flex gap-2">
+                  <input className={`${input} h-9`} type="email" required value={co.email} onChange={(e) => setCo({ ...co, email: e.target.value })} placeholder="Their email" aria-label="Co-teacher email" />
+                  <button className={ghost} disabled={busy}>Add</button>
+                </div>
               </form>
               <button type="button" disabled={busy} className="mt-4 text-xs font-semibold text-error hover:underline"
                 onClick={() => { if (window.confirm('Archive this class? Students lose access; data is kept.')) run(() => pulseApi.updateClass(cls.id, { archived: !cls.archived }), cls.archived ? 'Class restored.' : 'Class archived.'); }}>

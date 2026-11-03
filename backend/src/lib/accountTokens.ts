@@ -24,7 +24,8 @@ const TTL_MIN: Record<AccountTokenKind, number> = { reset: 30, verify: 60 * 24 *
 
 const sha = (t: string) => crypto.createHash('sha256').update(t).digest('hex');
 
-export function issueAccountToken(db: any, userId: string, kind: AccountTokenKind, now = new Date()): string {
+/** `ttlMinutes` overrides the default life, e.g. a 7-day welcome link for an account an admin created. */
+export function issueAccountToken(db: any, userId: string, kind: AccountTokenKind, now = new Date(), ttlMinutes?: number): string {
   const token = crypto.randomBytes(32).toString('base64url');
   db.account_tokens = (Array.isArray(db.account_tokens) ? db.account_tokens : []).filter(
     // Drop this user's older tokens of the same kind, and anything long expired.
@@ -35,7 +36,7 @@ export function issueAccountToken(db: any, userId: string, kind: AccountTokenKin
     user_id: userId,
     kind,
     created_at: now.toISOString(),
-    expires_at: new Date(now.getTime() + TTL_MIN[kind] * 60_000).toISOString(),
+    expires_at: new Date(now.getTime() + (ttlMinutes ?? TTL_MIN[kind]) * 60_000).toISOString(),
     used_at: null,
   } satisfies AccountToken);
   return token;

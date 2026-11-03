@@ -104,6 +104,17 @@ const check = (name: string, ok: boolean, info?: unknown) => { if (ok) pass++; e
   check('workflow file served', wf.includes('pulse-autograde') && wf.includes('PULSE_API: http://localhost:5099'));
   check('grader served', (await fetch(`${base}/autograde/grader.js`).then((r) => r.text())).includes('gcc'));
 
+  const made = await api('u_admin', 'POST', '/admin/teachers', { email: 'fresh@pulse.test', name: 'Fresh Teacher' });
+  check('admin creates a new teacher login with a 7-day link', made.status === 201 && made.json.created === true && String(made.json.link).includes('/reset-password?token='), made.json);
+  check('teacher cannot create teacher logins', (await api('u_teach', 'POST', '/admin/teachers', { email: 'x@pulse.test', name: 'X Y' })).status === 403);
+  const co = await api('u_teach', 'POST', `/classes/${cls.id}/co-teachers`, { email: 'co@pulse.test', name: 'Co Teacher' });
+  check('co-teacher without a login becomes an admin request', co.json.result === 'requested' && co.json.co_requests.length === 1, co.json);
+  check('teacher cannot approve requests', (await api('u_teach', 'GET', '/admin/co-requests')).status === 403);
+  const reqs = await api('u_admin', 'GET', '/admin/co-requests');
+  const ok = await api('u_admin', 'POST', `/admin/co-requests/${reqs.json.requests[0].id}`, { approve: true });
+  check('admin approves: login created and added to class', ok.json.created === true && (await api('u_teach', 'GET', `/classes/${cls.id}`)).json.co_teachers.length === 1, ok.json);
+  check('existing teacher added as co-teacher at once', (await api('u_teach', 'POST', `/classes/${cls.id}/co-teachers`, { email: 'teach2@pulse.test', name: 'Prof U' })).json.result === 'added');
+  check('co-teacher can now open the class', (await api('u_teach2', 'GET', `/classes/${cls.id}`)).status === 200);
   await api('u_teach', 'DELETE', `/roster/${rid}`);
   check('removed student loses access at once', (await api('u_stu', 'GET', `/student/tasks/${task.id}`)).status === 404);
 
