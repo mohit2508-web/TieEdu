@@ -42,6 +42,7 @@ const COLUMNS: Col[] = [
     links: [
       { href: '/colleges', label: 'Colleges & TPOs' },
       { href: '/recruiters', label: 'Recruiters' },
+      { href: '/project-pulse', label: 'Project Pulse' },
       { href: '/guarantee', label: 'Accuracy guarantee', navId: 'guarantee' },
     ],
   },

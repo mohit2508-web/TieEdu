@@ -69,6 +69,8 @@ import { seedSkillTest } from './data/seedSkillTest';
 import { runMigrations } from './db/migrate';
 import { runPlacementBoot } from './placement/seed';
 import { schoolRouter } from './routes/school.routes';
+import { pulseRouter } from './routes/pulse.routes';
+import { startPulseScheduler } from './lib/pulse/sync';
 import { runSchoolBoot } from './school/seed';
 import { backfillDevicesFromJson } from './store/devices';
 import { backfillSubscriptionsFromJson } from './store/push';
@@ -174,6 +176,8 @@ app.use('/api/admin/drives', requireAdmin, driveAdminRouter);
 // TieEdu Schools router applies requireSchoolAuth itself — session + a school
 // membership, which is neither requireAuth nor requireAdmin.
 app.use('/api/school', schoolRouter);
+// Project Pulse (PROJECT_PULSE_PLAN.md): its own auth inside; autograder endpoints are public.
+app.use('/api/pulse', pulseRouter);
 // Public beacon + self-service endpoints. Not behind requireAdmin: the install
 // beacon must work before anyone has an account.
 app.use('/api/devices', devicesRouter);
@@ -417,6 +421,7 @@ export const httpServer = app.listen(PORT, async () => {
     console.warn('[3T] seeding skipped:', e?.message);
   }
   startStudyReminderScheduler();
+  startPulseScheduler();
   if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
     console.warn('🔐 [Auth] JWT_SECRET env missing in production — auth is FAIL-CLOSED. Set JWT_SECRET (32+ chars) now.');
   }

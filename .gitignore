@@ -11,6 +11,8 @@ frontend/public/pdfjs/
 # ---- backend build / runtime ----
 backend/dist/
 backend/data/db.json
+# Project Pulse: cached copies of student repos (live data)
+backend/data/pulse/
 # Smoke/integration runs copy the whole store to a pid-keyed scratch file and
 # delete it on the way out. A run that dies first (ts-node compile error, Ctrl+C)
 # leaves it behind, and each one is a full copy of the store — every learner's
