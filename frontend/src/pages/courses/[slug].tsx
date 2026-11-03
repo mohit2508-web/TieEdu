@@ -20,6 +20,7 @@ import { decideCoursePage } from '@/lib/courseSsr';
 import { applyLessonState } from '@/lib/lessonProgress';
 import { CourseThumbnailEditor } from '@/components/courses/CourseThumbnailEditor';
 import { ExamCard } from '@/components/courses/ExamCard';
+import { ReadinessCard } from '@/components/courses/ReadinessCard';
 import { ModuleTestCard } from '@/components/courses/ModuleTestCard';
 import { CouponBanner } from '@/components/courses/CouponBanner';
 import { ProjectSubmit } from '@/components/courses/ProjectSubmit';
@@ -248,7 +249,9 @@ export default function CoursePage({
             id: course.id,
             slug: course.slug,
             name: course.title,
-            price: course.price_inr,
+            // The personalised-path price when the learner chose one after the
+            // readiness test; the server prices the order the same way.
+            price: course.access?.price_inr ?? course.price_inr,
             lesson_count: course.stats?.lesson_count,
           }
         : null,
@@ -453,7 +456,7 @@ export default function CoursePage({
     if (locked) {
       return (
         <PayWall
-          priceInr={course.price_inr}
+          priceInr={course.access?.price_inr ?? course.price_inr}
           reason={course.access?.reason || 'This course is not part of your plan.'}
           onBuy={buy}
           buying={enrolling}
@@ -504,7 +507,7 @@ export default function CoursePage({
 
     if (locked) {
       return (
-        <CourseMobileActionBar note={course.is_free ? 'Free course' : formatPrice(course.price_inr)}>
+        <CourseMobileActionBar note={course.is_free ? 'Free course' : formatPrice(course.access?.price_inr ?? course.price_inr)}>
           <CtaButton tone={cta.tone} onClick={buy} disabled={enrolling} className="w-full py-3 disabled:opacity-50">
             {enrolling ? 'Adding…' : 'Buy this course'}
           </CtaButton>
@@ -514,7 +517,7 @@ export default function CoursePage({
 
     return (
       <CourseMobileActionBar
-        note={course.is_free ? 'Free · lifetime access' : `${formatPrice(course.price_inr)} · one-time`}
+        note={course.is_free ? 'Free · lifetime access' : `${formatPrice(course.access?.price_inr ?? course.price_inr)} · one-time`}
       >
         <CtaButton tone={pageTone} onClick={enrol} disabled={enrolling} className="w-full py-3 disabled:opacity-50">
           {enrolling ? 'Starting…' : cta.label}
@@ -843,7 +846,7 @@ export default function CoursePage({
                       {course.category}
                     </span>
                     <span className="rounded-full bg-[var(--brand-accent)] px-3 py-1 text-xs font-extrabold uppercase tracking-widest text-[var(--accent-ink)]">
-                      {course.is_free ? 'Free' : formatPrice(course.price_inr)}
+                      {course.is_free ? 'Free' : formatPrice(course.access?.price_inr ?? course.price_inr)}
                     </span>
                     <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-white/90 ring-1 ring-white/20">
                       {formatLevel(course.level)}
@@ -951,6 +954,15 @@ export default function CoursePage({
                   themselves are for enrolled learners. {course.access?.reason}
                 </p>
               </div>
+            )}
+
+            {course.readiness && !progress?.is_complete && (
+              <ReadinessCard
+                courseSlug={course.slug}
+                readiness={course.readiness}
+                listPrice={course.price_inr}
+                owned={course.access?.granted === true}
+              />
             )}
 
             {isAdmin && (
@@ -1308,7 +1320,7 @@ export default function CoursePage({
                       {course.is_free ? 'Price' : 'One-time · lifetime access'}
                     </p>
                     <div className="mt-1 font-display text-4xl font-extrabold leading-none tracking-tight">
-                      {course.is_free ? 'Free' : formatPrice(course.price_inr)}
+                      {course.is_free ? 'Free' : formatPrice(course.access?.price_inr ?? course.price_inr)}
                     </div>
                   </div>
                   <div className="p-5">

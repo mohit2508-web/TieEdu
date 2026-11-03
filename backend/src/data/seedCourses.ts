@@ -41,6 +41,7 @@ import { getDeepLearningCourse } from './dlCourse';
 import { getGenAIEssentialsCourse } from './genaiEssCourse';
 import { getPromptEngineeringMasterclassCourse } from './promptEngCourse';
 import { getLLMAppsCourse } from './llmAppsCourse';
+import { getAIFirstCourse } from './aiFirstCourse';
 
 let blockSeq = 0;
 const blk = (
@@ -1051,6 +1052,9 @@ Pass this and the course is complete: you will be able to download your TieEdu c
     getPromptEngineeringMasterclassCourse(),
     // AI series 7 of 20 — Building apps with LLMs (production mini-apps).
     getLLMAppsCourse(),
+    // Flagship paid course (₹99) — AI.FIRST, 12 modules / 48 lessons, with a
+    // pre-course readiness test that can test learners out of modules.
+    getAIFirstCourse(),
     // The one paid course. It is seeded so the purchase path is exercised against
     // a genuinely stored price rather than a fixture, and so the `paid` filter in
     // the catalogue has something real to return.

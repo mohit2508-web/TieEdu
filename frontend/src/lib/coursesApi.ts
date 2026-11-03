@@ -845,3 +845,94 @@ export const deleteInstructor = async (instructorId: string) => {
 };
 
 export type { CourseModule, CourseLessonView };
+
+// ---------------------------------------------------------------------------
+// Readiness test — the secure paper before the course (backend lib/readiness).
+// ---------------------------------------------------------------------------
+
+export type ReadinessModuleStatus = 'tested_out' | 'review' | 'learn' | 'not_tested';
+
+export interface ReadinessReport {
+  attempt_id: string;
+  submitted_at: string | null;
+  score_percent: number;
+  verdict: 'foundations' | 'ready' | 'ahead';
+  strikes: number;
+  credits_voided: boolean;
+  modules: { module_id: string; title: string; correct: number; total: number; status: ReadinessModuleStatus }[];
+  tested_out_count: number;
+  hours_saved: number;
+  list_price_inr: number;
+  offer_price_inr: number | null;
+  foundation_course_slug: string | null;
+}
+
+export interface ReadinessState {
+  question_count: number;
+  duration_minutes: number;
+  per_module: number;
+  modules_tested: number;
+  max_attempts: number;
+  retake_cooldown_hours: number;
+  offer_tiers: { min_tested_out: number; price_inr: number; label: string }[];
+  attempts_used: number;
+  in_progress_attempt_id: string | null;
+  can_start: boolean;
+  next_start_at: string | null;
+  block_reason: string | null;
+  latest: ReadinessReport | null;
+  path_choice: 'full' | 'personalised' | null;
+}
+
+export interface ReadinessQuestion {
+  id: string;
+  prompt: string;
+  options: string[];
+  module_id: string | null;
+  module_title: string | null;
+}
+
+export const fetchReadiness = async (
+  slug: string
+): Promise<{ course: { id: string; slug: string; title: string; price_inr: number }; readiness: ReadinessState; owned: boolean }> => {
+  const res = await apiFetch(`${COURSES}/${encodeURIComponent(slug)}/readiness`);
+  if (!res.ok) throw await apiError(res, 'Could not load the readiness test');
+  return res.json();
+};
+
+export const startReadiness = async (
+  slug: string
+): Promise<{ attempt_id: string; started_at: string; deadline_at: string; duration_minutes: number; questions: ReadinessQuestion[]; resumed: boolean }> => {
+  const res = await apiFetch(`${COURSES}/${encodeURIComponent(slug)}/readiness/start`, {
+    method: 'POST',
+    body: JSON.stringify({}),
+  });
+  if (!res.ok) throw await apiError(res, 'Could not start the readiness test');
+  return res.json();
+};
+
+export const submitReadiness = async (
+  slug: string,
+  attemptId: string,
+  answers: Record<string, number>,
+  strikes: number
+): Promise<{ report: ReadinessReport; late: boolean }> => {
+  const res = await apiFetch(`${COURSES}/${encodeURIComponent(slug)}/readiness/submit`, {
+    method: 'POST',
+    body: JSON.stringify({ attempt_id: attemptId, answers, strikes }),
+  });
+  if (!res.ok) throw await apiError(res, 'Could not submit the readiness test');
+  return res.json();
+};
+
+export const chooseReadinessPath = async (
+  slug: string,
+  path: 'full' | 'personalised'
+): Promise<{ path_choice: 'full' | 'personalised'; price_inr: number }> => {
+  const res = await apiFetch(`${COURSES}/${encodeURIComponent(slug)}/readiness/path`, {
+    method: 'POST',
+    body: JSON.stringify({ path }),
+  });
+  if (!res.ok) throw await apiError(res, 'Could not save your path');
+  return res.json();
+};

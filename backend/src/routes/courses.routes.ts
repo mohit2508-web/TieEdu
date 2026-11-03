@@ -24,6 +24,17 @@ import { awardAndCommit, levelFor, totalXpForUser, xpHistory, XP } from '../lib/
 import { grantCoursePerks, listRewards, isRewardCode } from '../lib/perks';
 import { activeOfferBadgeFor } from '../lib/coupons';
 import {
+  applyReadinessCredits,
+  effectiveCoursePrice,
+  isLessonClosedByPath,
+  readinessConfigOf,
+  readinessRecord,
+  readinessStateFor,
+  startReadiness,
+  submitReadiness,
+  currentOffer,
+} from '../lib/readiness';
+import {
   MAX_HEARTBEAT_CREDIT_SECONDS,
   certificateReadiness,
   completionState,
@@ -31,6 +42,7 @@ import {
   courseLockReason,
   courseStats,
   drawExamQuestions,
+  formatInr,
   effectiveVideoSeconds,
   examConfigOf,
   examStateForLearner,
@@ -116,6 +128,27 @@ function lessonView(progress: any, lesson: CourseLesson) {
  * the question list — prompts and options only, never `correct_index` or
  * `explanation`, which stay server-side until an attempt has been graded.
  */
+/**
+ * `courseAccessState` with the price this learner would actually pay — the
+ * personalised-path offer after a readiness test, otherwise the list price —
+ * so every "Buy ₹N" button and every cart line agrees with checkout.
+ */
+function accessFor(db: any, userId: string | null, course: Course, role?: string) {
+  const access = courseAccessState(db, userId, course, { role });
+  if (access.granted || access.is_free) return access;
+  const effective = effectiveCoursePrice(db, userId, course);
+  if (effective.price_inr === access.price_inr) return access;
+  return {
+    ...access,
+    price_inr: effective.price_inr,
+    list_price_inr: access.price_inr,
+    reason: `Your personalised path costs ${formatInr(effective.price_inr)}. Buy it to enrol.`,
+  };
+}
+
+/** Lesson stub reason for a module a personalised-path buyer skipped. */
+const CLOSED_BY_PATH = 'Credited by your readiness test — you chose the personalised path, so this module is marked done.';
+
 function playerLessonView(progress: any, lesson: CourseLesson) {
   const view = sanitizeLesson(lesson);
   return {
@@ -165,7 +198,7 @@ function lockedLessonStub(lesson: CourseLesson, progress: any, lockReason = '') 
 function courseView(db: any, userId: string | null, course: Course, role?: string) {
   const progress = userId ? getProgress(db, userId, course.id) : null;
   const state = completionState(db, userId, course);
-  const access = courseAccessState(db, userId, course, { role });
+  const access = accessFor(db, userId, course, role);
 
   // The learner's own certificate, if it has already been issued. Without this
   // the page cannot tell "claim your certificate" from "download your
@@ -273,6 +306,7 @@ function courseView(db: any, userId: string | null, course: Course, role?: strin
               // the blocks contain the teaching content and the video object holds
               // the URL. Browsing the syllabus must not hand over the course.
               if (!access.granted) return lockedLessonStub(l, progress, access.reason || 'Enrol to unlock.');
+              if (isLessonClosedByPath(db, userId, course, m.id)) return lockedLessonStub(l, progress, CLOSED_BY_PATH);
               return gate.unlocked
                 ? lessonView(progress, l)
                 : lockedLessonStub(l, progress, gate.reason);
@@ -297,6 +331,8 @@ function courseView(db: any, userId: string | null, course: Course, role?: strin
       certificate_readiness:
         userId && course.certificate_eligible ? certificateReadiness(db, userId, course) : null,
       lock_reason: userId ? courseLockReason(db, userId, course) : null,
+      // Pre-course readiness test state (null when the course has none).
+      readiness: readinessStateFor(db, userId, course),
     };
 
     // Drop the long-form keys that hold nothing, so the client can decide whether
@@ -430,7 +466,7 @@ function catalogCard(
     progress: userId ? completionState(db, userId, course) : null,
     // The catalog needs the same verdict the detail page gives, so a card
     // can say "Buy ₹1,299" instead of showing an enrol button that 402s.
-    access: courseAccessState(db, userId, course, { role }),
+    access: accessFor(db, userId, course, role),
     lock_reason: userId ? courseLockReason(db, userId, course) : null,
   };
 }
@@ -810,9 +846,97 @@ coursesRouter.post('/:slug/enroll', requireAuth, (req: Request, res: Response) =
 
   const progress = getOrCreateProgress(db, userId, course);
   progress.updated_at = new Date().toISOString();
+  // Modules tested out in the readiness test arrive already complete.
+  applyReadinessCredits(db, userId, course);
   saveDb(db);
 
-  res.json({ status: 'success', progress, next_lesson_id: orderedLessons(course)[0]?.id || null });
+  res.json({
+    status: 'success',
+    progress,
+    next_lesson_id: completionState(db, userId, course).next_lesson_id || orderedLessons(course)[0]?.id || null,
+  });
+});
+
+// ============================================================================
+// READINESS TEST — the secure paper before the course (lib/readiness.ts).
+//
+// Open to any signed-in learner BEFORE buying: the point is to tell them what
+// they already know, and to price a personalised path from it. Graded only
+// here; the bank's keys never leave before submit.
+// ============================================================================
+
+coursesRouter.get('/:slug/readiness', optionalAuth, (req: Request, res: Response) => {
+  const db = loadDb();
+  const course = findBySlug(db, req.params.slug);
+  if (!course || !course.published) return res.status(404).json({ error: 'Course not found' });
+  const state = readinessStateFor(db, req.user?.id || null, course);
+  if (!state) return res.status(404).json({ error: 'This course has no readiness test.' });
+  res.json({
+    status: 'success',
+    course: { id: course.id, slug: course.slug, title: course.title, price_inr: course.price_inr },
+    readiness: state,
+    owned: req.user ? courseAccessState(db, req.user.id, course, { role: req.user.role }).granted : false,
+  });
+});
+
+coursesRouter.post('/:slug/readiness/start', requireAuth, rateLimit(20), (req: Request, res: Response) => {
+  const db = loadDb();
+  const course = findBySlug(db, req.params.slug);
+  if (!course || !course.published) return res.status(404).json({ error: 'Course not found' });
+  const out = startReadiness(db, req.user!.id, course);
+  if ('error' in out) return res.status(409).json({ error: out.error });
+  saveDb(db);
+  res.status(out.resumed ? 200 : 201).json({
+    status: 'success',
+    attempt_id: out.attempt.id,
+    started_at: out.attempt.started_at,
+    deadline_at: out.deadline_at,
+    duration_minutes: readinessConfigOf(course)!.duration_minutes,
+    questions: out.questions,
+    resumed: out.resumed,
+  });
+});
+
+coursesRouter.post('/:slug/readiness/submit', requireAuth, (req: Request, res: Response) => {
+  const db = loadDb();
+  const course = findBySlug(db, req.params.slug);
+  if (!course || !course.published) return res.status(404).json({ error: 'Course not found' });
+  const { attempt_id, answers, strikes } = req.body || {};
+  if (!attempt_id || typeof answers !== 'object' || !answers) {
+    return res.status(400).json({ error: 'attempt_id and answers required' });
+  }
+  const out = submitReadiness(db, req.user!.id, course, String(attempt_id), answers, Number(strikes) || 0);
+  if ('error' in out) return res.status(404).json({ error: out.error });
+  saveDb(db);
+  // Per-question keys are deliberately NOT returned: the bank is small enough
+  // that revealing answers would let a retake test out on memory, not skill.
+  // The report carries per-module scores, which is what the learner acts on.
+  res.json({ status: 'success', report: out.report, late: out.late });
+});
+
+/**
+ * POST /:slug/readiness/path — { path: 'full' | 'personalised' }.
+ * The choice only moves the price until the course is bought; after that the
+ * order line is the record and this refuses.
+ */
+coursesRouter.post('/:slug/readiness/path', requireAuth, (req: Request, res: Response) => {
+  const db = loadDb();
+  const userId = req.user!.id;
+  const course = findBySlug(db, req.params.slug);
+  if (!course || !course.published) return res.status(404).json({ error: 'Course not found' });
+  if (!readinessConfigOf(course)) return res.status(404).json({ error: 'This course has no readiness test.' });
+  const path = req.body?.path;
+  if (path !== 'full' && path !== 'personalised') return res.status(400).json({ error: "path must be 'full' or 'personalised'" });
+  if (courseAccessState(db, userId, course, { role: req.user!.role }).granted) {
+    return res.status(409).json({ error: 'You already own this course — the path was fixed at purchase.' });
+  }
+  if (path === 'personalised' && !currentOffer(db, userId, course)) {
+    return res.status(409).json({ error: 'No personalised path is available on your latest readiness result.' });
+  }
+  const rec = readinessRecord(db, userId, course.id, true)!;
+  rec.path_choice = path;
+  saveDb(db);
+  res.json({ status: 'success', path_choice: path, price_inr: effectiveCoursePrice(db, userId, course).price_inr });
 });
 
 // ============================================================================
@@ -831,7 +955,7 @@ coursesRouter.get('/lessons/:lessonId', optionalAuth, (req: Request, res: Respon
   const userId = req.user?.id || null;
   const progress = userId ? getProgress(db, userId, course.id) : null;
 
-  const access = courseAccessState(db, userId, course, { role: req.user?.role });
+  const access = accessFor(db, userId, course, req.user?.role);
   // Order matters: a paid course reports "buy it" even to a signed-in learner
   // who has not enrolled, because that is the more actionable message than the
   // prerequisite one they cannot act on either.
@@ -840,6 +964,9 @@ coursesRouter.get('/lessons/:lessonId', optionalAuth, (req: Request, res: Respon
     : userId
       ? isLessonUnlocked(progress, course, lesson.id)
       : { unlocked: false, index: 0, reason: 'Sign in to start this course.' };
+  if (gate.unlocked && isLessonClosedByPath(db, userId, course, module.id)) {
+    Object.assign(gate, { unlocked: false, reason: CLOSED_BY_PATH });
+  }
 
   res.json({
     status: 'success',

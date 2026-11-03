@@ -18,6 +18,7 @@ import {
   publicOfferFor,
 } from '../lib/coupons';
 import { events as msgEvents, sendToUser } from '../lib/messaging';
+import { effectiveCoursePrice, type ReadinessPath } from '../lib/readiness';
 
 export const checkoutRouter = Router();
 
@@ -123,8 +124,17 @@ export function summarizePack(items: CartItem[], capFor?: (companyId: string) =>
  * enrolled in directly, and a ₹0 line in a real order is just noise on the
  * receipt.
  */
-function summarizeCourseLines(db: any, items: CartItem[]) {
-  const lines: { course_id: string; slug: string; title: string; price: number }[] = [];
+type CourseLine = {
+  course_id: string;
+  slug: string;
+  title: string;
+  price: number;
+  readiness_path: ReadinessPath;
+  credited_module_ids: string[];
+};
+
+function summarizeCourseLines(db: any, items: CartItem[], userId: string | null = null) {
+  const lines: CourseLine[] = [];
   const seen = new Set<string>();
   let subtotal = 0;
 
@@ -138,12 +148,22 @@ function summarizeCourseLines(db: any, items: CartItem[]) {
     // block checkout of everything else in the basket.
     if (!course) continue;
     if (course.is_free) continue;
-    const price = Math.max(0, Number(course.price_inr) || 0);
+    // A learner who chose the personalised path after a readiness test pays the
+    // offer price; that too is read from stored state, never from the cart.
+    const effective = effectiveCoursePrice(db, userId, course);
+    const price = Math.max(0, effective.price_inr);
     if (price === 0) continue;
     if (seen.has(course.id)) continue;
     seen.add(course.id);
 
-    lines.push({ course_id: course.id, slug: course.slug, title: course.title, price });
+    lines.push({
+      course_id: course.id,
+      slug: course.slug,
+      title: course.title,
+      price,
+      readiness_path: effective.path,
+      credited_module_ids: effective.credited_module_ids,
+    });
     subtotal += price;
   }
 
@@ -151,13 +171,17 @@ function summarizeCourseLines(db: any, items: CartItem[]) {
 }
 
 /** Order lines for course purchases, in the same shape as `buildOrderLines`. */
-function buildCourseOrderLines(courses: { course_id: string; slug: string; title: string; price: number }[]) {
+function buildCourseOrderLines(courses: CourseLine[]) {
   return courses.map((c) => ({
     kind: 'course' as const,
     id: c.course_id,
     course_id: c.course_id,
     name: c.title,
     price: c.price,
+    // Frozen at purchase: which modules a personalised-path buyer skips.
+    ...(c.readiness_path === 'personalised'
+      ? { readiness_path: c.readiness_path, credited_module_ids: c.credited_module_ids }
+      : {}),
   }));
 }
 
@@ -351,7 +375,7 @@ checkoutRouter.post('/create-order', async (req: Request, res: Response) => {
   // Testing for the PRESENCE of course lines rather than the value of their sum
   // is what makes that impossible.
   const pack = summarizePack(unowned as CartItem[], (companyId) => companyPackCap(db, companyId));
-  const courses = summarizeCourseLines(db, unowned as CartItem[]);
+  const courses = summarizeCourseLines(db, unowned as CartItem[], user_id);
   const hasCourseLines = unowned.some((it: CartItem) => it.kind === 'course');
   const hasLadderableItems = unowned.some((it: CartItem) => it.kind !== 'plan' && it.kind !== 'course');
 
