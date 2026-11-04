@@ -54,7 +54,7 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({ data, preview, stu
   const [syncing, setSyncing] = useState(false);
 
   const counts = useMemo(() => {
-    const c = { done: 0, progress: 0, unverified: 0, notStarted: 0, noRepo: 0 } as Record<PulseStatus, number>;
+    const c = { done: 0, progress: 0, submitted: 0, unverified: 0, notStarted: 0, noRepo: 0 } as Record<PulseStatus, number>;
     students.forEach((s) => { c[s.status]++; });
     return c;
   }, [students]);
@@ -91,7 +91,7 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({ data, preview, stu
     ...students.filter((s) => s.status === 'submitted').map((s) => ({ s, why: 'Submitted: waiting for your review' })),
     ...students.filter((s) => s.folder_hint).map((s) => ({ s, why: s.folder_hint as string })),
     ...students.filter((s) => s.status === 'noRepo').map((s) => ({ s, why: 'No repo linked' })),
-    ...students.filter((s) => s.status === 'notStarted').map((s) => ({ s, why: 'Repo linked, no commits since the task was assigned' })),
+    ...students.filter((s) => s.status === 'notStarted' && !s.folder_hint).map((s) => ({ s, why: 'Repo linked, no commits since the task was assigned' })),
     ...students.filter((s) => s.flags.some((f) => f.kind === 'failing')).map((s) => ({ s, why: 'Build fails, so every test fails' })),
     ...students.filter((s) => s.flags.some((f) => f.kind === 'inactive')).map((s) => ({ s, why: s.flags.find((f) => f.kind === 'inactive')!.text })),
   ];
@@ -217,12 +217,13 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({ data, preview, stu
         >
           <HBars items={reqBars} />
           <p className="mt-4 rounded-well bg-info-soft px-3 py-2 text-xs text-info">
-            <span className="font-semibold">Hardest: {hardest.key} {hardest.label}.</span> Only {hardest.value}% have it fully. Worth re-teaching in class.
+            {reqBars.some((b) => b.met || b.part) ? <><span className="font-semibold">Hardest: {hardest.key} {hardest.label}.</span> Only {hardest.value}% have it fully. Worth re-teaching in class.</>
+              : 'Bars fill in as you mark requirements in Review mode.'}
           </p>
         </ChartCard>
         <ChartCard
           title="Score distribution"
-          note="Students who started · 50% tests, 40% requirements, 10% activity"
+          note={`Students who started · ${task.weights ? `${task.weights.reqs}% your marks${hasTests ? `, ${task.weights.tests}% tests` : ''}, ${task.weights.activity}% activity` : '50% tests, 40% requirements, 10% activity'}`}
           table={<MiniTable head={['Score', 'Students']} rows={bands.map((b) => [b.label, b.value ?? 0])} />}
         >
           <Columns data={bands} unit="students" height={210} />
@@ -359,7 +360,7 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({ data, preview, stu
                             return <span key={r.id} title={`${r.id}: ${VERDICT_META[v].label}`} className={cn('h-full flex-1 rounded-sm', v === 'met' ? 'bg-success' : v === 'partial' ? 'bg-signal' : v === 'missing' ? 'bg-danger/70' : 'bg-line')} />;
                           })}
                         </div>
-                        <span className="text-xs tabular-nums text-muted">{pts}/5</span>
+                        <span className="text-xs tabular-nums text-muted">{pts}/{task.requirements.length}</span>
                       </div>
                     </td>
                     {hasTests ? (<td className="px-3 py-2.5 text-right tabular-nums">

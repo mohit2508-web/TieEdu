@@ -142,7 +142,7 @@ export const StudentDetail: React.FC<StudentDetailProps> = ({ data, preview, cla
           </div>
         </div>
         <div className="flex items-center gap-5">
-          <Ring value={reqPoints(s)} max={5} size={96} label="Requirements" />
+          <Ring value={reqPoints(s)} max={task.requirements.length} size={96} label="Requirements" />
           <Ring value={passed} max={task.tests.length} size={96} label="Tests" />
           <div className="text-center">
             <p className="font-display text-display tabular-nums text-heading">{s.status === 'noRepo' ? '—' : s.score}</p>

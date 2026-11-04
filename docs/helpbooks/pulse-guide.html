@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Project Pulse Guide</title>
+<link rel="stylesheet" href="helpbook.css">
+<style>
+  .shot { margin: 5mm 0 7mm; break-inside: avoid; }
+  .shot .frame { position: relative; border: 1px solid var(--line); border-radius: 3mm; overflow: hidden; }
+  .shot img { display: block; width: 100%; }
+  .shot .mk { position: absolute; border: 2px solid #e07b00; border-radius: 2mm; box-shadow: 0 0 0 2px rgba(255,255,255,.75); }
+  .shot .mk b { position: absolute; left: -3.2mm; top: -3.2mm; width: 6.4mm; height: 6.4mm; border-radius: 50%; background: #e07b00; color: #fff;
+    font: 700 8.5pt/6.4mm "Poppins", sans-serif; text-align: center; box-shadow: 0 0 0 1.5px #fff; }
+  .shot figcaption { margin-top: 2mm; font-size: 9pt; color: var(--muted); }
+  .legend { list-style: none; padding: 0; margin: 2.5mm 0 0; display: grid; grid-template-columns: 1fr 1fr; gap: 1.5mm 6mm; }
+  .legend li { display: flex; gap: 2.5mm; font-size: 9.5pt; line-height: 1.4; }
+  .legend b { flex: none; width: 5.2mm; height: 5.2mm; border-radius: 50%; background: #e07b00; color: #fff; font: 700 8pt/5.2mm "Poppins", sans-serif; text-align: center; }
+  table.flow { width: 100%; border-collapse: collapse; font-size: 9.5pt; margin: 3mm 0; }
+  table.flow th, table.flow td { border: 1px solid var(--line); padding: 2mm 3mm; text-align: left; vertical-align: top; }
+  table.flow th { background: var(--soft); color: var(--ink); }
+  pre.tree { background: var(--soft); border: 1px solid var(--line); border-radius: 2mm; padding: 3mm 4mm; font-size: 9pt; line-height: 1.5; }
+  .part { page-break-before: always; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div>
+    <div class="bar"></div>
+    <div class="brand">TieEdu</div>
+    <h1>Project Pulse Guide</h1>
+    <p class="sub">How admins, teachers and students use Project Pulse to give C programming tasks, follow every student’s GitHub work, and review it, screen by screen.</p>
+    <span class="who">For TieEdu admins, teachers and students</span>
+  </div>
+  <div class="foot">TieEdu · Project Pulse v2 · November 2026. Screenshots use a sample class; your screens show your own class.</div>
+</div>
+
+<div class="toc">
+  <h2>Contents</h2>
+  <ol>
+    <li>How Project Pulse works, in one page</li>
+    <li>Admin: teacher logins and co-teachers</li>
+    <li>Teacher: set up a class (once)</li>
+    <li>Teacher: give a task (every task)</li>
+    <li>Teacher: follow the class on the dashboard</li>
+    <li>Teacher: review students, one click per requirement</li>
+    <li>Teacher: one student in full detail</li>
+    <li>Student: join and set up your repo (once)</li>
+    <li>Student: do a task and see your progress</li>
+    <li>Questions and fixes</li>
+  </ol>
+</div>
+
+<section class="chapter">
+  <h2>1. How Project Pulse works, in one page</h2>
+  <p class="lead">A teacher gives a C task. Each student keeps <strong>one GitHub repo for the whole class</strong> and puts each task in its own folder. Pulse reads every repo, so the teacher sees on one screen who started, who is behind, and every line of code. The teacher marks each requirement by hand. There is no AI.</p>
+  <pre class="tree">c-lab-2026/            ← one repo per student, for the whole class
+├── PULSE.txt          ← added once: proves the repo is the student’s
+├── task-1/  main.c    ← Task 1
+├── task-2/  main.c    ← Task 2
+└── task-3/  …         ← new task: the student makes this folder and pushes</pre>
+  <table class="flow">
+    <tr><th></th><th>Once</th><th>For every task</th></tr>
+    <tr><td><strong>Admin</strong></td><td>Create each teacher’s login</td><td>—</td></tr>
+    <tr><td><strong>Teacher</strong></td><td>Create the class, invite students</td><td>Pick a template or copy a task, set the deadline, publish; then review with one click per requirement</td></tr>
+    <tr><td><strong>Student</strong></td><td>Join, link one repo, add <code>PULSE.txt</code></td><td>Make the folder <code>task-N/</code> and push code</td></tr>
+  </table>
+  <table class="flow">
+    <tr><th>What Pulse shows</th><th>How it knows</th></tr>
+    <tr><td>Started or not</td><td>Commits that changed the task’s folder after the task was assigned</td></tr>
+    <tr><td>Work over time</td><td>Each of those commits: date, time, lines added and removed</td></tr>
+    <tr><td>The code and what changed</td><td>The files in the task’s folder, compared with the starter code</td></tr>
+    <tr><td>Late, bulk and backdated work</td><td>Commits after the deadline; one huge commit; dates that don’t match</td></tr>
+    <tr><td>Possible copying</td><td>Each student’s folder compared with every other student’s (renamed variables still match)</td></tr>
+    <tr><td>Requirements done</td><td><strong>The teacher’s marks</strong>: ✓ Done, ~ Partly or ✗ Missing</td></tr>
+    <tr><td>Test results (optional)</td><td>Only if the teacher turns on <em>Auto-run tests</em> for that task</td></tr>
+  </table>
+  <div class="note"><span class="label">Who sees what</span>Admins see everything. A teacher sees only their own classes. A student sees only their own work: never another student’s name, code, score or rank, and never the teacher’s private notes or copy flags.</div>
+  <div class="tip"><span class="label">When it updates</span>Every 20 minutes automatically, when the teacher presses <strong>Sync now</strong>, and when a student presses <strong>Re-check my repo</strong>.</div>
+</section>
+
+<section class="chapter part">
+  <h2>2. Admin: teacher logins and co-teachers</h2>
+  <p>Teachers can’t sign themselves up. Only an admin creates their login. Open <strong>Project Pulse → Teacher portal</strong> (tieedu.in/project-pulse/teacher) and scroll to <strong>Admin · teachers</strong>.</p>
+  <figure class="shot"><div class="frame"><img src="pulse-guide/admin-panel.png" alt="Admin · teachers, at the bottom of the Teacher portal (admins only)."><span class="mk" style="left:1.73%;top:14.61%;width:96.55%;height:7.59%"><b>1</b></span><span class="mk" style="left:63.23%;top:14.61%;width:19.84%;height:7.59%"><b>2</b></span><span class="mk" style="left:83.73%;top:14.61%;width:14.55%;height:7.59%"><b>3</b></span><span class="mk" style="left:1.73%;top:26.00%;width:96.55%;height:19.35%"><b>4</b></span><span class="mk" style="left:30.72%;top:71.16%;width:10.16%;height:4.55%"><b>5</b></span><span class="mk" style="left:76.45%;top:70.40%;width:9.57%;height:6.07%"><b>6</b></span><span class="mk" style="left:86.35%;top:50.28%;width:8.97%;height:6.07%"><b>7</b></span><span class="mk" style="left:95.64%;top:50.28%;width:2.63%;height:6.07%"><b>8</b></span><span class="mk" style="left:1.73%;top:84.63%;width:96.55%;height:11.39%"><b>9</b></span></div>
+<figcaption>Admin · teachers, at the bottom of the Teacher portal (admins only).</figcaption><ol class="legend"><li><b>1</b><span>Type the teacher’s <strong>name, email and college</strong>.</span></li><li><b>2</b><span><strong>Password</strong> (8+ characters): you set it and give it to the teacher yourself. Leave it empty to email them a one-time “Set my password” link (valid 7 days) instead.</span></li><li><b>3</b><span><strong>Create teacher login</strong>. The teacher can now sign in at tieedu.in/login.</span></li><li><b>4</b><span><strong>Co-teacher requests</strong> from teachers. <strong>Approve</strong> creates the person’s login and adds them to that class; <strong>Reject</strong> discards it.</span></li><li><b>5</b><span><strong>Password not set yet</strong>: this teacher hasn’t used their emailed link.</span></li><li><b>6</b><span><strong>Send login link</strong>: email a fresh set-password link and show it to copy.</span></li><li><b>7</b><span><strong>Set password</strong>: give a teacher a new password (for example if they forgot theirs).</span></li><li><b>8</b><span><strong>Remove</strong> a teacher. They lose the teacher portal at once; their classes stay.</span></li><li><b>9</b><span>Shows whether the GitHub token is set on the server (needed for 5,000 GitHub requests an hour).</span></li></ol></figure>
+  <div class="tip"><span class="label">How many teachers</span>No limit. Each teacher has their own portal and sees only their own classes.</div>
+</section>
+
+<section class="chapter part">
+  <h2>3. Teacher: set up a class (once)</h2>
+  <ol class="steps"><li>Sign in at <strong>tieedu.in/login</strong> with the email and password the admin gave you.</li><li>Open <strong>Project Pulse → Teacher portal</strong>.</li><li>In <strong>New class</strong>, type a name (for example “CSE 2A · 2026”) and a subject, then click <strong>Create class</strong>.</li></ol>
+  <figure class="shot"><div class="frame"><img src="pulse-guide/teacher-home.png" alt="My classes: your teacher home."><span class="mk" style="left:2.50%;top:32.23%;width:31.04%;height:57.18%"><b>1</b></span><span class="mk" style="left:13.40%;top:53.67%;width:6.20%;height:5.29%"><b>2</b></span><span class="mk" style="left:34.48%;top:32.23%;width:31.04%;height:57.18%"><b>3</b></span></div>
+<figcaption>My classes: your teacher home.</figcaption><ol class="legend"><li><b>1</b><span>A class card: open it to manage students and tasks.</span></li><li><b>2</b><span>Students who used the join code and are waiting for your approval.</span></li><li><b>3</b><span><strong>New class</strong>: create another class.</span></li></ol></figure>
+  <p>Open the class. Everything about it is on one page:</p>
+  <figure class="shot"><div class="frame"><img src="pulse-guide/class-page.png" alt="The class page."><span class="mk" style="left:88.94%;top:4.93%;width:8.56%;height:3.48%"><b>1</b></span><span class="mk" style="left:2.58%;top:16.49%;width:94.84%;height:5.63%"><b>2</b></span><span class="mk" style="left:4.14%;top:17.53%;width:64.49%;height:3.54%"><b>3</b></span><span class="mk" style="left:80.92%;top:17.91%;width:6.98%;height:2.78%"><b>4</b></span><span class="mk" style="left:36.02%;top:36.30%;width:9.75%;height:3.91%"><b>5</b></span><span class="mk" style="left:59.34%;top:49.12%;width:6.51%;height:2.78%"><b>6</b></span><span class="mk" style="left:70.94%;top:29.31%;width:26.56%;height:23.53%"><b>7</b></span><span class="mk" style="left:70.94%;top:29.31%;width:26.56%;height:23.53%"><b>8</b></span><span class="mk" style="left:70.94%;top:71.95%;width:26.56%;height:24.57%"><b>9</b></span></div>
+<figcaption>The class page.</figcaption><ol class="legend"><li><b>1</b><span><strong>New task</strong>: give the class a task (chapter 4).</span></li><li><b>2</b><span>Each task with its folder, deadline, and how many students have started, been reviewed or finished.</span></li><li><b>3</b><span><strong>Review</strong>: go straight to Review mode for this task.</span></li><li><b>4</b><span><strong>Duplicate</strong>: copy the task as a draft, with a new folder and the same number of days.</span></li><li><b>5</b><span><strong>Repo</strong>: whether each student has linked their repo and proved it is theirs.</span></li><li><b>6</b><span><strong>Approve</strong> a student who asked to join with the code.</span></li><li><b>7</b><span><strong>Invite students</strong>: paste one line per student, <code>email, name, roll no</code>. Each gets an email with a one-time join link and the class code. The links also appear here to share on WhatsApp.</span></li><li><b>8</b><span><strong>Join code</strong>: students can type it at tieedu.in/project-pulse/join. Invited emails get in at once; anyone else waits for your approval. <strong>New code</strong> stops the old one working.</span></li><li><b>9</b><span><strong>Co-teachers</strong> (any number). An existing teacher is added at once; anyone else goes to the admin to approve.</span></li></ol></figure>
+</section>
+
+<section class="chapter part">
+  <h2>4. Teacher: give a task (every task, about 3 minutes)</h2>
+  <p>On the class page, click <strong>New task</strong>. You never make a GitHub repo.</p>
+  <figure class="shot"><div class="frame"><img src="pulse-guide/new-task.png" alt="Three ways to start a task."><span class="mk" style="left:2.50%;top:16.38%;width:95.00%;height:43.56%"><b>1</b></span><span class="mk" style="left:2.50%;top:61.79%;width:95.00%;height:22.07%"><b>2</b></span><span class="mk" style="left:2.50%;top:85.70%;width:95.00%;height:9.68%"><b>3</b></span></div>
+<figcaption>Three ways to start a task.</figcaption><ol class="legend"><li><b>1</b><span><strong>Ready-made C tasks</strong> (Basics to Advanced). Everything is filled in; change the deadline and publish.</span></li><li><b>2</b><span><strong>Copy one of your tasks</strong> from this class, another class or last year.</span></li><li><b>3</b><span><strong>Start blank</strong> and write it yourself.</span></li></ol></figure>
+  <figure class="shot"><div class="frame"><img src="pulse-guide/editor.png" alt="The task editor (here started from the “Marks calculator” template, with tests switched on)."><span class="mk" style="left:4.14%;top:9.53%;width:91.72%;height:2.48%"><b>1</b></span><span class="mk" style="left:50.47%;top:17.40%;width:45.39%;height:2.48%"><b>2</b></span><span class="mk" style="left:4.14%;top:20.38%;width:91.72%;height:14.20%"><b>3</b></span><span class="mk" style="left:2.50%;top:37.10%;width:95.00%;height:22.88%"><b>4</b></span><span class="mk" style="left:4.14%;top:61.51%;width:91.72%;height:1.72%"><b>5</b></span><span class="mk" style="left:13.32%;top:69.61%;width:11.60%;height:1.65%"><b>7</b></span></div>
+<figcaption>The task editor (here started from the “Marks calculator” template, with tests switched on).</figcaption><ol class="legend"><li><b>1</b><span><strong>Title</strong> and what students must build. Students see this.</span></li><li><b>2</b><span><strong>Assigned</strong> and <strong>Deadline</strong>. Commits before the assigned time don’t count; commits after the deadline are marked late.</span></li><li><b>3</b><span><strong>Folder</strong>: students put this task in <code>task-N/</code>. Pulse fills it in for you.</span></li><li><b>4</b><span><strong>Requirements</strong>: one line each, with what counts as done. You mark these later with one click.</span></li><li><b>5</b><span><strong>Auto-run tests</strong> (optional, off by default). Off: you just read the code. On: every push compiles the folder and runs your tests.</span></li><li><b>7</b><span><strong>Publish to students</strong>. Until then the task is a draft only you can see.</span></li></ol></figure>
+  <div class="tip"><span class="label">Test cases, if you use them</span>A test passes when every line of the expected output appears in the program’s output, in order (extra prompts are fine). Leave the input empty if the program asks for nothing. To test a restart, split the input with a line <code>---run---</code>.</div>
+  <div class="note"><span class="label">After publishing</span>Tell students: “Task 3 is up. Put your code in the folder <strong>task-3/</strong> of your class repo and push.” That’s all they need.</div>
+</section>
+
+<section class="chapter part">
+  <h2>5. Teacher: follow the class on the dashboard</h2>
+  <p>Class page → click the task. Here is a full class (sample data):</p>
+  <figure class="shot"><div class="frame"><img src="pulse-guide/dash-demo.png" alt="The task dashboard."><span class="mk" style="left:2.50%;top:8.11%;width:95.00%;height:2.46%"><b>1</b></span><span class="mk" style="left:2.50%;top:10.95%;width:39.06%;height:6.69%"><b>2</b></span><span class="mk" style="left:42.81%;top:10.95%;width:54.69%;height:6.69%"><b>3</b></span><span class="mk" style="left:2.50%;top:18.01%;width:30.83%;height:9.02%"><b>4</b></span><span class="mk" style="left:66.67%;top:18.01%;width:30.83%;height:9.02%"><b>5</b></span><span class="mk" style="left:2.50%;top:27.40%;width:95.00%;height:17.16%"><b>6</b></span><span class="mk" style="left:2.50%;top:44.94%;width:95.00%;height:3.58%"><b>7</b></span><span class="mk" style="left:2.50%;top:48.89%;width:95.00%;height:50.18%"><b>8</b></span></div>
+<figcaption>The task dashboard.</figcaption><ol class="legend"><li><b>1</b><span>At a glance: completed, students, repos linked, average requirements met, reviewed, integrity flags.</span></li><li><b>2</b><span><strong>Where the class is</strong>: click a slice to filter the table below.</span></li><li><b>3</b><span><strong>Commits per day</strong> from assignment to deadline. Is the class working, or waiting for the last night?</span></li><li><b>4</b><span><strong>Requirement completion</strong>: the hardest requirement is named, so you know what to re-teach.</span></li><li><b>5</b><span><strong>Needs attention</strong>: no repo, not started, inactive, wrong folder name, waiting for review.</span></li><li><b>6</b><span><strong>Every student × every requirement</strong> (✓ ~ ✗ ?). On your live dashboard, click a cell to change the mark.</span></li><li><b>7</b><span><strong>Possible copying</strong>: pairs of students whose task folders match. A signal to check, not proof.</span></li><li><b>8</b><span><strong>All students</strong>: search, filter and sort; click a student to open their work.</span></li></ol></figure>
+  <figure class="shot"><div class="frame"><img src="pulse-guide/dash-live.png" alt="The buttons at the top of your live dashboard."><span class="mk" style="left:57.08%;top:4.12%;width:6.96%;height:2.44%"><b>1</b></span><span class="mk" style="left:79.79%;top:4.12%;width:8.23%;height:2.44%"><b>2</b></span><span class="mk" style="left:88.64%;top:4.12%;width:8.86%;height:2.44%"><b>3</b></span><span class="mk" style="left:67.79%;top:18.38%;width:12.40%;height:1.09%"><b>4</b></span></div>
+<figcaption>The buttons at the top of your live dashboard.</figcaption><ol class="legend"><li><b>1</b><span><strong>Review</strong>: open Review mode (chapter 6).</span></li><li><b>2</b><span><strong>Sync now</strong>: check every student’s repo right away.</span></li><li><b>3</b><span><strong>Export CSV</strong>: the table, for your marks sheet.</span></li><li><b>4</b><span><strong>Reviewed</strong>: how many students who submitted you’ve marked.</span></li></ol></figure>
+</section>
+
+<section class="chapter part">
+  <h2>6. Teacher: review students, one click per requirement</h2>
+  <p>Click <strong>Review</strong>. Students who have pushed code appear one at a time, the ones you haven’t reviewed yet first.</p>
+  <figure class="shot"><div class="frame"><img src="pulse-guide/review.png" alt="Review mode."><span class="mk" style="left:73.97%;top:6.66%;width:7.06%;height:2.39%"><b>1</b></span><span class="mk" style="left:81.65%;top:6.06%;width:10.16%;height:3.59%"><b>2</b></span><span class="mk" style="left:2.50%;top:18.33%;width:64.06%;height:30.94%"><b>3</b></span><span class="mk" style="left:69.14%;top:26.31%;width:27.03%;height:3.19%"><b>4</b></span><span class="mk" style="left:69.14%;top:66.52%;width:7.50%;height:3.59%"><b>5</b></span><span class="mk" style="left:69.14%;top:73.31%;width:27.03%;height:8.18%"><b>6</b></span><span class="mk" style="left:69.14%;top:83.16%;width:11.26%;height:2.39%"><b>7</b></span><span class="mk" style="left:75.57%;top:87.15%;width:20.61%;height:3.99%"><b>8</b></span><span class="mk" style="left:69.14%;top:92.34%;width:27.03%;height:1.98%"><b>9</b></span></div>
+<figcaption>Review mode.</figcaption><ol class="legend"><li><b>1</b><span>How many you’ve reviewed so far.</span></li><li><b>2</b><span>Jump to any student (✓ marks the ones already reviewed).</span></li><li><b>3</b><span>Their code in the task folder, with line numbers. <strong>Changes</strong> shows what they added.</span></li><li><b>4</b><span>Mark each requirement: <strong>✓ Done</strong>, <strong>~ Partly</strong> or <strong>✗ Missing</strong>. Click again to clear.</span></li><li><b>5</b><span><strong>Score</strong>: leave empty to use your marks, or type your own.</span></li><li><b>6</b><span><strong>Feedback</strong> the student will see on their page.</span></li><li><b>7</b><span><strong>Saved comments</strong>: your own one-click lines, such as “Check fopen for NULL”.</span></li><li><b>8</b><span><strong>Save &amp; next</strong>: saves and opens the next student.</span></li><li><b>9</b><span>Keyboard: <strong>1</strong> done · <strong>2</strong> partly · <strong>3</strong> missing (for the highlighted requirement, then it moves on) · <strong>N</strong> save &amp; next · <strong>P</strong> previous.</span></li></ol></figure>
+  <div class="tip"><span class="label">Typical speed</span>Read the code, press 1/2/3 for each requirement, press N. About a minute per student.</div>
+</section>
+
+<section class="chapter part">
+  <h2>7. Teacher: one student in full detail</h2>
+  <figure class="shot"><div class="frame"><img src="pulse-guide/student-detail.png" alt="A student’s page (open it from the table, the grid, or Review mode)."><span class="mk" style="left:72.65%;top:4.40%;width:7.28%;height:2.61%"><b>1</b></span><span class="mk" style="left:80.25%;top:4.40%;width:6.36%;height:2.61%"><b>2</b></span><span class="mk" style="left:74.00%;top:17.00%;width:7.50%;height:6.95%"><b>3</b></span><span class="mk" style="left:2.50%;top:26.62%;width:68.75%;height:3.33%"><b>4</b></span><span class="mk" style="left:54.44%;top:51.71%;width:15.16%;height:2.03%"><b>5</b></span><span class="mk" style="left:72.50%;top:46.32%;width:25.00%;height:15.35%"><b>6</b></span><span class="mk" style="left:72.50%;top:62.82%;width:25.00%;height:13.81%"><b>7</b></span><span class="mk" style="left:72.50%;top:77.79%;width:25.00%;height:19.31%"><b>8</b></span></div>
+<figcaption>A student’s page (open it from the table, the grid, or Review mode).</figcaption><ol class="legend"><li><b>1</b><span><strong>Review mode</strong> for this student.</span></li><li><b>2</b><span><strong>Re-sync</strong>: check this student’s repo now.</span></li><li><b>3</b><span>Requirements met so far (from your marks).</span></li><li><b>4</b><span>Tabs: <strong>Overview</strong>, <strong>Code</strong>, <strong>Changes</strong>, <strong>Timeline</strong>, <strong>Integrity</strong>.</span></li><li><b>5</b><span>Mark a requirement right here.</span></li><li><b>6</b><span><strong>Override marks</strong>: set a final score with a reason (kept in the log).</span></li><li><b>7</b><span><strong>Private note</strong>: only teachers of the class see it.</span></li><li><b>8</b><span><strong>Feedback to student</strong>, and <strong>Ask to resubmit</strong>.</span></li></ol></figure>
+  <figure class="shot"><div class="frame"><img src="pulse-guide/student-timeline.png" alt="Timeline tab: when they actually worked."><span class="mk" style="left:0.00%;top:6.37%;width:100.00%;height:26.50%"><b>1</b></span><span class="mk" style="left:2.39%;top:40.68%;width:95.23%;height:4.93%"><b>2</b></span></div>
+<figcaption>Timeline tab: when they actually worked.</figcaption><ol class="legend"><li><b>1</b><span>Commits per day in the task folder.</span></li><li><b>2</b><span>Every commit: message, time, lines added and removed.</span></li></ol></figure>
+  <figure class="shot"><div class="frame"><img src="pulse-guide/code.png" alt="Code tab: the student’s files, read-only."><span class="mk" style="left:0.11%;top:12.24%;width:22.73%;height:71.84%"><b>1</b></span><span class="mk" style="left:22.84%;top:48.85%;width:77.05%;height:2.62%"><b>2</b></span></div>
+<figcaption>Code tab: the student’s files, read-only.</figcaption><ol class="legend"><li><b>1</b><span>The files in their task folder.</span></li><li><b>2</b><span>Highlighted lines.</span></li></ol></figure>
+  <div class="note"><span class="label">Integrity tab</span>Lists copying (with whom, and how similar), one bulk commit, backdated or late commits, and a repo that belongs to someone else. These are signals for you to check, never automatic penalties. If a student can’t add PULSE.txt, check the repo with them and click <strong>Verify myself</strong>.</div>
+</section>
+
+<section class="chapter part">
+  <h2>8. Student: join and set up your repo (once)</h2>
+  <ol class="steps"><li>Open the invite email and click <strong>Join the class</strong>, or go to <strong>tieedu.in/project-pulse/join</strong> and type your class code.</li><li>Sign in, or sign up, with <strong>the same email your teacher used</strong>. You see “You’re in”.</li><li>On GitHub, make <strong>one public repo</strong> for the whole class, for example <code>c-lab-2026</code>.</li><li>Open <strong>tieedu.in/project-pulse/student</strong>, paste the repo link and click <strong>Link repo</strong>.</li><li>Add a file named <code>PULSE.txt</code> to the repo containing the code Pulse shows you, then push and click <strong>Re-check my repo</strong>.</li></ol>
+  <figure class="shot"><div class="frame"><img src="pulse-guide/join.png" alt="Joining with a class code."><span class="mk" style="left:7.37%;top:33.85%;width:85.27%;height:14.91%"><b>1</b></span><span class="mk" style="left:7.37%;top:76.09%;width:85.27%;height:13.66%"><b>2</b></span></div>
+<figcaption>Joining with a class code.</figcaption><ol class="legend"><li><b>1</b><span>Type the class code from your teacher.</span></li><li><b>2</b><span><strong>Join class</strong>. With a code you wait for your teacher’s approval; with the invite link you get in at once.</span></li></ol></figure>
+  <figure class="shot"><div class="frame"><img src="pulse-guide/student-setup.png" alt="Your page before the repo is verified."><span class="mk" style="left:2.50%;top:11.35%;width:95.00%;height:11.09%"><b>1</b></span><span class="mk" style="left:3.83%;top:20.03%;width:92.34%;height:1.31%"><b>2</b></span><span class="mk" style="left:83.46%;top:13.08%;width:12.71%;height:2.61%"><b>3</b></span><span class="mk" style="left:2.50%;top:23.75%;width:95.00%;height:3.79%"><b>4</b></span><span class="mk" style="left:78.52%;top:24.86%;width:17.65%;height:1.57%"><b>5</b></span></div>
+<figcaption>Your page before the repo is verified.</figcaption><ol class="legend"><li><b>1</b><span>Your one repo for this class. <strong>Change</strong> links a different one.</span></li><li><b>2</b><span>One-time setup: add <code>PULSE.txt</code> with your personal code to prove the repo is yours. Until then your work doesn’t count.</span></li><li><b>3</b><span><strong>Re-check my repo</strong> after you push (once every 5 minutes).</span></li><li><b>4</b><span><strong>This task</strong>: the exact folder to use, and the deadline.</span></li><li><b>5</b><span>Pulse tells you when the folder isn’t there yet, or is named wrongly (for example <code>Task3/</code> instead of <code>task-3/</code>).</span></li></ol></figure>
+</section>
+
+<section class="chapter part">
+  <h2>9. Student: do a task and see your progress</h2>
+  <ol class="steps"><li>A new task appears in <strong>My tasks</strong> with its folder name, for example <code>task-3/</code>.</li><li>Put your code in that folder and push. Push as often as you like before the deadline.</li><li>Your teacher reviews it. You see their marks and feedback here.</li></ol>
+  <figure class="shot"><div class="frame"><img src="pulse-guide/student-progress.png" alt="Your progress on a task."><span class="mk" style="left:2.50%;top:24.60%;width:68.75%;height:12.25%"><b>1</b></span><span class="mk" style="left:2.58%;top:41.26%;width:68.59%;height:8.80%"><b>2</b></span><span class="mk" style="left:2.58%;top:67.67%;width:68.59%;height:8.73%"><b>3</b></span><span class="mk" style="left:72.50%;top:24.60%;width:25.00%;height:10.35%"><b>4</b></span><span class="mk" style="left:72.50%;top:36.05%;width:25.00%;height:8.69%"><b>5</b></span><span class="mk" style="left:2.50%;top:80.13%;width:68.75%;height:17.11%"><b>6</b></span></div>
+<figcaption>Your progress on a task.</figcaption><ol class="legend"><li><b>1</b><span>Status, score and days left.</span></li><li><b>2</b><span>A requirement your teacher marked <strong>Done</strong>.</span></li><li><b>3</b><span>A requirement not done yet, or <strong>Not reviewed</strong> while your teacher hasn’t marked it.</span></li><li><b>4</b><span><strong>Teacher’s feedback</strong>.</span></li><li><b>5</b><span><strong>My tasks</strong>: all your tasks in this class.</span></li><li><b>6</b><span>Your own commits per day.</span></li></ol></figure>
+  <div class="note"><span class="label">Private</span>Only you and your teachers see this page. There is no leaderboard and no other student’s data.</div>
+</section>
+
+<section class="chapter part">
+  <h2>10. Questions and fixes</h2>
+  <table class="flow">
+    <tr><th>Problem</th><th>What to do</th></tr>
+    <tr><td>A teacher can’t sign in</td><td>Admin: <strong>Set password</strong> next to their name, or <strong>Send login link</strong>.</td></tr>
+    <tr><td>A student says the invite link doesn’t work</td><td>They must sign in with the invited email. Teacher: <strong>Resend</strong> on the class page, or share the join code.</td></tr>
+    <tr><td>A student shows “Not verified”</td><td>They need <code>PULSE.txt</code> with their code in the repo, then <strong>Re-check</strong>. Or the teacher clicks <strong>Verify myself</strong> after checking the repo with them.</td></tr>
+    <tr><td>A student shows “Not started” but says they pushed</td><td>Check the folder name: it must be exactly the task’s folder (for example <code>task-3/</code>). Pulse shows the near-miss folder it found.</td></tr>
+    <tr><td>Two students linked the same repo</td><td>When the real owner verifies it, the other student is unlinked and the teacher is told.</td></tr>
+    <tr><td>Tests say “waiting for the autograder”</td><td>Only when Auto-run tests is on: the student must add the autograder file shown on their page, unchanged.</td></tr>
+    <tr><td>Data looks old</td><td>Teacher: <strong>Sync now</strong>. Student: <strong>Re-check my repo</strong>.</td></tr>
+  </table>
+</section>
+
+</body>
+</html>
