@@ -11,7 +11,10 @@ import { PulseError, type RepoCommit, type FileCache } from './store';
  */
 
 const API = 'https://api.github.com';
-const SOURCE_RE = /(\.(c|h|md|txt)$)|((^|\/)(Makefile|README)$)|(^\.github\/workflows\/pulse-autograde\.yml$)/i;
+// C labs, plus Swift / iOS sources (Wipro iOS labs): code, storyboards, plists, build settings.
+const SOURCE_RE = /(\.(c|h|md|txt|swift|m|mm|storyboard|xib|plist|xcconfig)$)|((^|\/)(Makefile|README)$)|(^\.github\/workflows\/pulse-autograde\.yml$)/i;
+/** Build output and local Xcode state are never the student's code. */
+const SKIP_RE = /(^|\/)(\.build|build|DerivedData|Pods|xcuserdata)\//;
 const MAX_FILES = 300;
 const MAX_FILE_BYTES = 200_000;
 const MAX_NEW_STATS = 120;
@@ -81,7 +84,7 @@ export async function fetchRepo(repo: string, sinceIso: string, cache: FileCache
 
   const tree = await gh(`/repos/${repo}/git/trees/${headSha}?recursive=1`);
   const dirs = (tree?.tree || []).filter((b: any) => b.type === 'tree' && !String(b.path).includes('/')).map((b: any) => String(b.path));
-  const blobs = (tree?.tree || []).filter((b: any) => b.type === 'blob' && SOURCE_RE.test(b.path) && (b.size ?? 0) <= MAX_FILE_BYTES).slice(0, MAX_FILES);
+  const blobs = (tree?.tree || []).filter((b: any) => b.type === 'blob' && SOURCE_RE.test(b.path) && !SKIP_RE.test(b.path) && (b.size ?? 0) <= MAX_FILE_BYTES).slice(0, MAX_FILES);
   const known = new Map(cache.files.map((f) => [f.sha, f.code]));
   const files: FileCache['files'] = [];
   for (const b of blobs) {
