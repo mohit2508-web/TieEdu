@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Project Pulse Student Guide</title>
+<link rel="stylesheet" href="helpbook.css">
+<style>
+  .shot { margin: 4mm 0 5mm; break-inside: avoid; }
+  .shot .frame { position: relative; border: 1px solid var(--line); border-radius: 3mm; overflow: hidden; }
+  .shot img { display: block; width: 100%; }
+  .shot .mk { position: absolute; border: 2px solid #e07b00; border-radius: 2mm; box-shadow: 0 0 0 2px rgba(255,255,255,.75); }
+  .shot .mk b { position: absolute; left: -3.2mm; top: -3.2mm; width: 6.4mm; height: 6.4mm; border-radius: 50%; background: #e07b00; color: #fff;
+    font: 700 8.5pt/6.4mm "Poppins", sans-serif; text-align: center; box-shadow: 0 0 0 1.5px #fff; }
+  .shot figcaption { margin-top: 2mm; font-size: 9pt; color: var(--muted); }
+  /* Screenshot on the left, its legend on the right, so each fits on one page. */
+  .shot.side { display: grid; gap: 6mm; align-items: start; }
+  .shot.side.w60 { grid-template-columns: 60mm 1fr; }
+  .shot.side.w88 { grid-template-columns: 88mm 1fr; }
+  .shot.side.w100 { grid-template-columns: 100mm 1fr; }
+  .legend { list-style: none; padding: 0; margin: 0; display: grid; gap: 2.2mm; }
+  .legend li { display: flex; gap: 2.5mm; font-size: 9.5pt; line-height: 1.4; }
+  .legend b { flex: none; width: 5.2mm; height: 5.2mm; border-radius: 50%; background: #e07b00; color: #fff; font: 700 8pt/5.2mm "Poppins", sans-serif; text-align: center; }
+  table.flow { width: 100%; border-collapse: collapse; font-size: 9.5pt; margin: 3mm 0; }
+  table.flow th, table.flow td { border: 1px solid var(--line); padding: 2mm 3mm; text-align: left; vertical-align: top; }
+  table.flow th { background: var(--soft); color: var(--ink); }
+  pre.tree { background: var(--soft); border: 1px solid var(--line); border-radius: 2mm; padding: 3mm 4mm; font-size: 9pt; line-height: 1.5; }
+  .part { page-break-before: always; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div>
+    <div class="bar"></div>
+    <div class="brand">TieEdu</div>
+    <h1>Project Pulse<br>Student Guide</h1>
+    <p class="sub">Join your class, link your GitHub repo once, and push each C task to its own folder. Your teacher reads your code and marks it here.</p>
+    <span class="who">For students</span>
+  </div>
+  <div class="foot">TieEdu · Project Pulse v2 · November 2026. Screenshots use a sample class; your screens show your own class.</div>
+</div>
+
+<section class="chapter">
+  <h2>1. How it works</h2>
+  <p class="lead">You keep <strong>one GitHub repo for the whole class</strong>. Every task your teacher gives goes in its own folder in that repo. Pulse reads your repo, and your teacher reads your code and marks each requirement by hand. There is no AI.</p>
+  <pre class="tree">c-lab-2026/            ← your one repo, for the whole class
+├── PULSE.txt          ← added once: proves the repo is yours
+├── task-1/  main.c    ← Task 1
+├── task-2/  main.c    ← Task 2
+└── task-3/  …         ← new task: you make this folder and push</pre>
+  <table class="flow">
+    <tr><th>Once</th><th>For every task</th></tr>
+    <tr><td>Join the class, link one repo, add <code>PULSE.txt</code></td><td>Make the folder <code>task-N/</code>, put your code in it, push before the deadline</td></tr>
+  </table>
+  <table class="flow">
+    <tr><th>What your teacher sees</th><th>How Pulse knows</th></tr>
+    <tr><td>Whether you started</td><td>Commits that changed the task’s folder after the task was given</td></tr>
+    <tr><td>When you worked</td><td>Each commit’s date, time, and lines added and removed</td></tr>
+    <tr><td>Your code</td><td>The files in the task’s folder</td></tr>
+    <tr><td>Late work</td><td>Commits after the deadline are marked late; commits before the task was given don’t count</td></tr>
+    <tr><td>Requirements done</td><td>Your teacher’s marks: ✓ Done, ~ Partly or ✗ Missing</td></tr>
+  </table>
+  <div class="note"><span class="label">Private</span>Only you and your teachers see your page. There is no leaderboard, and you never see another student’s name, code or score.</div>
+  <div class="tip"><span class="label">Good habit</span>Push small commits over several days. Your teacher sees when you worked, so one huge commit on the last night stands out.</div>
+</section>
+
+<section class="chapter part">
+  <h2>2. Join and set up your repo (once)</h2>
+  <ol class="steps"><li>Open the invite email and click <strong>Join the class</strong>, or go to <strong>tieedu.in/project-pulse/join</strong> and type your class code.</li><li>Sign in, or sign up, with <strong>the same email your teacher used</strong>. You see “You’re in”.</li><li>On GitHub, make <strong>one public repo</strong> for the whole class, for example <code>c-lab-2026</code>.</li><li>Open <strong>tieedu.in/project-pulse/student</strong>, paste the repo link and click <strong>Link repo</strong>.</li><li>Add a file named <code>PULSE.txt</code> at the top of the repo containing the code Pulse shows you, then push and click <strong>Re-check my repo</strong>.</li></ol>
+  <figure class="shot side w60"><div><div class="frame"><img src="pulse-guide/join.png" alt="Joining with a class code."><span class="mk" style="left:7.37%;top:33.85%;width:85.27%;height:14.91%"><b>1</b></span><span class="mk" style="left:7.37%;top:76.09%;width:85.27%;height:13.66%"><b>2</b></span></div><figcaption>Joining with a class code.</figcaption></div>
+<ol class="legend"><li><b>1</b><span>Type the class code from your teacher.</span></li><li><b>2</b><span><strong>Join class</strong>. With a code you wait for your teacher’s approval; with the invite link you get in at once.</span></li></ol></figure>
+  <figure class="shot side w88"><div><div class="frame"><img src="pulse-guide/student-setup.png" alt="Your page before the repo is verified."><span class="mk" style="left:2.50%;top:11.35%;width:95.00%;height:11.09%"><b>1</b></span><span class="mk" style="left:3.83%;top:20.03%;width:92.34%;height:1.31%"><b>2</b></span><span class="mk" style="left:83.46%;top:13.08%;width:12.71%;height:2.61%"><b>3</b></span><span class="mk" style="left:2.50%;top:23.75%;width:95.00%;height:3.79%"><b>4</b></span><span class="mk" style="left:78.52%;top:24.86%;width:17.65%;height:1.57%"><b>5</b></span></div><figcaption>Your page before the repo is verified.</figcaption></div>
+<ol class="legend"><li><b>1</b><span>Your one repo for this class. <strong>Change</strong> links a different one.</span></li><li><b>2</b><span>One-time setup: add <code>PULSE.txt</code> with your personal code to prove the repo is yours. Until then your work doesn’t count.</span></li><li><b>3</b><span><strong>Re-check my repo</strong> after you push (once every 5 minutes).</span></li><li><b>4</b><span><strong>This task</strong>: the exact folder to use, and the deadline.</span></li><li><b>5</b><span>Pulse tells you when the folder isn’t there yet, or is named wrongly (for example <code>Task3/</code> instead of <code>task-3/</code>).</span></li></ol></figure>
+</section>
+
+<section class="chapter part">
+  <h2>3. Do a task and see your progress</h2>
+  <ol class="steps"><li>A new task appears in <strong>My tasks</strong> with its folder name, for example <code>task-3/</code>.</li><li>Put your code in that folder and push. Push as often as you like before the deadline.</li><li>Your teacher reviews it. You see their marks and feedback on this page.</li></ol>
+  <pre class="tree">git add task-3
+git commit -m "search by roll number"
+git push</pre>
+  <figure class="shot side w100"><div><div class="frame"><img src="pulse-guide/student-progress.png" alt="Your progress on a task."><span class="mk" style="left:2.50%;top:24.60%;width:68.75%;height:12.25%"><b>1</b></span><span class="mk" style="left:2.58%;top:41.26%;width:68.59%;height:8.80%"><b>2</b></span><span class="mk" style="left:2.58%;top:67.67%;width:68.59%;height:8.73%"><b>3</b></span><span class="mk" style="left:72.50%;top:24.60%;width:25.00%;height:10.35%"><b>4</b></span><span class="mk" style="left:72.50%;top:36.05%;width:25.00%;height:8.69%"><b>5</b></span><span class="mk" style="left:2.50%;top:80.13%;width:68.75%;height:17.11%"><b>6</b></span></div><figcaption>Your progress on a task.</figcaption></div>
+<ol class="legend"><li><b>1</b><span>Status, score and days left.</span></li><li><b>2</b><span>A requirement your teacher marked <strong>Done</strong>.</span></li><li><b>3</b><span>A requirement not done yet, or <strong>Not reviewed</strong> while your teacher hasn’t marked it.</span></li><li><b>4</b><span><strong>Teacher’s feedback</strong>. If they ask you to resubmit, fix the code and push again.</span></li><li><b>5</b><span><strong>My tasks</strong>: all your tasks in this class.</span></li><li><b>6</b><span>Your own commits per day.</span></li></ol></figure>
+  <div class="tip"><span class="label">When it updates</span>Every 20 minutes on its own, or right away when you press <strong>Re-check my repo</strong>.</div>
+</section>
+
+<section class="chapter part">
+  <h2>4. Questions and fixes</h2>
+  <table class="flow">
+    <tr><th>Problem</th><th>What to do</th></tr>
+    <tr><td>The invite link doesn’t work</td><td>Sign in with the email your teacher invited. If it still fails, ask your teacher to <strong>Resend</strong> it, or join with the class code.</td></tr>
+    <tr><td>“Waiting for approval” after joining</td><td>You joined with the code, so your teacher has to approve you. Tell them.</td></tr>
+    <tr><td>My repo shows “Not verified”</td><td>Add <code>PULSE.txt</code> at the top of the repo with the exact code shown on your page, push, then <strong>Re-check my repo</strong>. If you still can’t, ask your teacher to check the repo with you.</td></tr>
+    <tr><td>Task shows “Not started” but I pushed</td><td>Check the folder name. It must be exactly the task’s folder, for example <code>task-3/</code> (small letters, with the dash). Pulse shows the near-miss folder it found.</td></tr>
+    <tr><td>Pulse can’t read my repo</td><td>The repo must be <strong>public</strong>, and the link must point to the repo, not a single file.</td></tr>
+    <tr><td>Someone else linked my repo</td><td>Add your <code>PULSE.txt</code> and verify. The other student is unlinked and your teacher is told.</td></tr>
+    <tr><td>Tests say “waiting for the autograder”</td><td>Only for tasks with auto-run tests: add the autograder file shown on your page, unchanged.</td></tr>
+    <tr><td>My page looks old</td><td>Press <strong>Re-check my repo</strong> (once every 5 minutes).</td></tr>
+  </table>
+  <div class="note"><span class="label">Remember</span>One repo for the class · one folder per task · <code>PULSE.txt</code> once · push before the deadline.</div>
+</section>
+
+</body>
+</html>

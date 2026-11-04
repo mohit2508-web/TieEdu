@@ -48,3 +48,7 @@ gla-students.csv
 
 # ---- local DB backups (student PII, never commit) ----
 backend/scripts/backups/
+
+# Frontend test runner output and Office lock files
+frontend/.test-build/
+~$*
