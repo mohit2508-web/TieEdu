@@ -67,8 +67,8 @@ export const TieEduLogo: React.FC<TieEduLogoProps> = ({ className = '', size = '
        */}
       {/* eslint-disable-next-line @next/next/no-img-element -- SVG, the optimizer refuses it, see above */}
       <img
-        src="/logo.svg"
-        alt="TieEdu — Learn, Evolve, Develop"
+        src="/logo.svg?v=2"
+        alt="TieEdu — Technology × Intelligence × Education"
         width={width}
         height={height}
         style={{ width: `${width}px`, height: `${height}px` }}

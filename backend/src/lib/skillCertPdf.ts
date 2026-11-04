@@ -107,7 +107,7 @@ export async function buildSkillCertPdf(cert: SkillCertificate): Promise<Buffer>
   // --- Brand header ------------------------------------------------------
   page.drawRectangle({ x: 22, y: H - 96, width: W - 44, height: 52, color: NAVY });
   page.drawText('TieEdu', { x: 44, y: H - 68, size: 25, font: serifBold, color: rgb(1, 1, 1) });
-  page.drawText('Learn   Evolve   Develop', { x: 140, y: H - 66, size: 9.5, font: sans, color: AMBER });
+  page.drawText('Technology  ×  Intelligence  ×  Education', { x: 140, y: H - 66, size: 9.5, font: sans, color: AMBER });
   const headerRight = 'CERTIFICATE OF SKILL PROFICIENCY';
   page.drawText(headerRight, {
     x: W - 44 - sansBold.widthOfTextAtSize(headerRight, 11),

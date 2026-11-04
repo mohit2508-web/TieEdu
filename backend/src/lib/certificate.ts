@@ -685,7 +685,7 @@ export async function buildCertificatePdf(
   page.drawText('TieEdu', {
     x: 44, y: H - 68, size: 25, font: serifBold, color: rgb(1, 1, 1),
   });
-  page.drawText('Learn   Evolve   Develop', {
+  page.drawText('Technology  ×  Intelligence  ×  Education', {
     x: 140, y: H - 66, size: 9.5, font: sans, color: AMBER,
   });
   const headerRight = 'CERTIFICATE OF COURSE COMPLETION';

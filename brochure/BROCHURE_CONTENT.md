@@ -30,7 +30,7 @@
 - Page size: A4 portrait · margins 15mm · dark cover, light inner pages
 
 **Logo:** TieEdu wordmark — "Tie" (light) + "Edu" (amber `#E8A33D`)
-**Tagline:** Learn · Evolve · Develop
+**Tagline:** Technology × Intelligence × Education
 
 **Voice rules (copy me kya follow hua hai)**
 - No invented testimonials, no inflated counters — har number labelled hai.
@@ -52,7 +52,7 @@
 
 **Top-left:**
 - Logo lockup: **Tie**<span style="color:#E8A33D">Edu</span>
-- Tagline: `Learn · Evolve · Develop`
+- Tagline: `Technology × Intelligence × Education`
 
 **Badge:**
 `2026–27 · Institutional Edition`
@@ -747,7 +747,7 @@ Twenty minutes, live: the cohort console with a sample department's data, one co
 
 **Centre lockup:**
 - **Tie**Edu logo
-- `Learn · Evolve · Develop`
+- `Technology × Intelligence × Education`
 - `TieEdu Technologies`
 
 **Three trust cards:**

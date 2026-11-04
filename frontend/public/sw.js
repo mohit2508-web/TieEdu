@@ -27,7 +27,7 @@
  * keys are not configured" long after the server had been fixed.
  */
 // v3: the UI redesign (new tokens, fonts and dark theme) - retire every v2 cache.
-const VERSION = 'tieedu-v3';
+const VERSION = 'tieedu-v4';
 const SHELL_CACHE = `${VERSION}-shell`;
 const DATA_CACHE = `${VERSION}-data`;
 const STATIC_CACHE = `${VERSION}-static`;

@@ -79,7 +79,7 @@ export async function buildPersonalizedPdf(
       font: fontBold,
       color: rgb(1, 1, 1),
     });
-    coverPage.drawText('Learn    Evolve    Develop', {
+    coverPage.drawText('Technology  ×  Intelligence  ×  Education', {
       x: 96,
       y: cH - 82,
       size: 11,
