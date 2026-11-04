@@ -20,7 +20,9 @@ export type EmailTemplateId =
   | 'skill-test'
   | 'proof'
   | 'offer'
-  | 'reengage';
+  | 'reengage'
+  | 'drive-update'
+  | 'infosys-se';
 
 export interface EmailLead {
   id: string;

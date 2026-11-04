@@ -15,6 +15,7 @@
 import React from 'react';
 import { Button, Check, FAQ, H2, Headline, Layout, Note, P, PriceRow, TemplateDef, TemplateProps, V, greeting } from './base';
 import type { EmailTemplateId } from '../../../data/db';
+import { InfosysSe } from './infosysSe';
 
 const DEFAULTS = {
   course_title: 'Advanced Data Structures',
@@ -329,6 +330,11 @@ export const TEMPLATES: Record<EmailTemplateId, TemplateDef> = {
     preheader: (p) => (V(p, 'body', '') || 'A drive update.').replace(/\s+/g, ' ').slice(0, 120),
     Component: DriveUpdate,
   },
+  'infosys-se': {
+    subject: () => 'Your Infosys SE prep plan is live',
+    preheader: () => '54 questions, 100 minutes. Train · Test · Track for it on TieEdu.',
+    Component: InfosysSe,
+  },
 };
 
 export const TEMPLATE_LIST: { id: EmailTemplateId; label: string }[] = [
@@ -341,4 +347,5 @@ export const TEMPLATE_LIST: { id: EmailTemplateId; label: string }[] = [
   { id: 'offer', label: 'Offer (coupon deadline)' },
   { id: 'reengage', label: 'Re-engage (non-openers)' },
   { id: 'drive-update', label: 'Drive update (payment / slot / link)' },
+  { id: 'infosys-se', label: 'Infosys SE launch (final year)' },
 ];

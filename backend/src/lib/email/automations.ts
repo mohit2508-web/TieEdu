@@ -73,6 +73,7 @@ const A4_ALT_SUBJECT: Record<EmailTemplateId, string> = {
   offer: 'Your coupon code, one more time',
   reengage: 'The course link you saved',
   'drive-update': 'Your mock drive update',
+  'infosys-se': 'Your Infosys SE plan, saved for you',
 };
 
 export interface AutomationPassResult {

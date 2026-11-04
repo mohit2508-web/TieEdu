@@ -1218,7 +1218,8 @@ export type EmailTemplateId =
   | 'proof'
   | 'offer'
   | 'reengage'
-  | 'drive-update';
+  | 'drive-update'
+  | 'infosys-se';
 
 export interface EmailCampaign {
   id: string;
