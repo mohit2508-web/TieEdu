@@ -262,6 +262,10 @@
      adding it per-component is how one of them gets missed. */
   --header-total: calc(var(--header-h) + var(--safe-top));
   --tabbar-total: calc(var(--tabbar-h) + var(--safe-bottom));
+  /* Where a sticky sub-bar pins: under the header while it shows, at the top
+     edge once the header slides away on scroll, so no strip of page scrolls
+     through the gap the header left. */
+  --header-pin: var(--header-total);
 
   /* ---------------------------------------------------------------
      MOTION  (Phase 0)
@@ -279,6 +283,10 @@
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   --ease-sheet: cubic-bezier(0.32, 0.72, 0, 1);
 }
+
+/* The header is hidden (Header.tsx sets data-slide): sub-bars move up to the
+   top edge, keeping only the notch inset. */
+:root:has(header[data-slide='hidden']) { --header-pin: var(--safe-top); }
 
 /* ============================================
    DARK THEME — channel swap only

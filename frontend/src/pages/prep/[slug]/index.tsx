@@ -160,7 +160,7 @@ export default function PrepPage() {
               <section className="mt-8 flex flex-col gap-4 rounded-card bg-brand-ink p-6 text-white sm:flex-row sm:items-center">
                 <div className="min-w-0 flex-1">
                   <p className="eyebrow text-money">Step 1 · Free</p>
-                  <h2 className="mt-1 font-display text-2xl font-bold">Take the free demo test</h2>
+                  <h2 className="mt-1 font-display text-2xl font-bold text-white">Take the free demo test</h2>
                   <p className="mt-1 text-base text-white/80">{mockQs ? `${mockQs} questions in the real ${data.company.name} pattern.` : 'The real test pattern.'} You get your score in every section and exactly what to study first.</p>
                 </div>
                 <Link href={`/skill-test/${data.full_mock.slug}/assessment`} className="btn btn-primary min-h-[52px] shrink-0 px-6 text-lg">Start demo test <ArrowRight className="h-5 w-5" aria-hidden /></Link>
@@ -175,7 +175,7 @@ export default function PrepPage() {
                 <section className="mt-8 flex flex-col gap-4 rounded-card bg-brand-ink p-6 text-white sm:flex-row sm:items-center">
                   <div className="min-w-0 flex-1">
                     <p className="eyebrow text-money">{fmt(ms.date)} · {data.days_left === 0 ? 'today' : `in ${data.days_left} day${data.days_left === 1 ? '' : 's'}`}</p>
-                    <h2 className="mt-1 font-display text-2xl font-bold">{ms.name}: mock test</h2>
+                    <h2 className="mt-1 font-display text-2xl font-bold text-white">{ms.name}: mock test</h2>
                     <p className="mt-1 text-base text-white/80">
                       {s.attempts ? `Last score ${s.score}% after ${s.attempts} attempt${s.attempts === 1 ? '' : 's'}. ` : ''}Timed, fresh questions every attempt, full explanations after you submit. Aim for 80%+ twice before the real test.
                     </p>

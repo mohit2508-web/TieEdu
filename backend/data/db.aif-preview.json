@@ -164532,5 +164532,7 @@
   "skillCertificates": [],
   "recommendations": [],
   "skillBadges": [],
-  "skillUserBadges": []
+  "skillUserBadges": [],
+  "company_prep_profiles": [],
+  "countdown_push_last_day": "2026-11-04"
 }

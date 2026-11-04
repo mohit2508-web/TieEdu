@@ -11,7 +11,7 @@ const TABS: Array<{ key: PrepTab; label: string }> = [
 ];
 
 export const PrepNav: React.FC<{ slug: string; name: string; active?: PrepTab; onTab?: (t: PrepTab) => void }> = ({ slug, name, active, onTab }) => (
-  <nav aria-label={`${name} prep`} className="sticky top-[var(--header-total)] z-20 border-b border-line bg-card/95 backdrop-blur">
+  <nav aria-label={`${name} prep`} className="sticky top-[var(--header-pin)] z-20 transition-[top] duration-200 motion-reduce:transition-none border-b border-line bg-card/95 backdrop-blur">
     <div className="mx-auto flex w-full max-w-5xl items-center gap-2 overflow-x-auto px-4 py-2 sm:px-6">
       <Link href={`/prep/${slug}`} className="mr-2 shrink-0 font-display text-base font-bold text-heading">{name}</Link>
       {TABS.map((t) => {

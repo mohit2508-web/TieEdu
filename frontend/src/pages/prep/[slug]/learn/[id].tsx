@@ -60,7 +60,7 @@ export default function LessonPage() {
     <>
       <Head><title>{v?.title || 'Lesson'} | TieEdu</title></Head>
       <PrepNav slug={slug} name={prep?.company.name || 'My prep'} active="train" />
-      <div className="sticky top-[calc(var(--header-total)+3.25rem)] z-10 border-b border-line bg-app-warm/95 backdrop-blur">
+      <div className="sticky top-[calc(var(--header-pin)+3.25rem)] z-10 transition-[top] duration-200 motion-reduce:transition-none border-b border-line bg-app-warm/95 backdrop-blur">
         <div className="mx-auto flex max-w-3xl items-center gap-3 px-4 py-2 sm:px-6">
           <Link href={exit} className="btn btn-ghost min-h-[44px] px-3 text-base"><X className="h-5 w-5" aria-hidden /> Exit to my plan</Link>
           {v && <span className="ml-auto text-base font-semibold text-muted">Lesson {v.index} of {v.total}</span>}
