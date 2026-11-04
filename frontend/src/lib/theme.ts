@@ -12,8 +12,8 @@ export type ThemeChoice = 'light' | 'dark' | 'system';
 
 export const THEME_KEY = 'tieedu_theme';
 
-/** Follow the device until the visitor picks; every page has passed the dark contrast scan. */
-export const DEFAULT_THEME: ThemeChoice = 'system';
+/** Light until the visitor picks (owner, 2026-11-04); dark and system stay one tap away in the theme switch. */
+export const DEFAULT_THEME: ThemeChoice = 'light';
 
 /**
  * Inline, dependency-free, ES5: it runs before React and before the bundle.
