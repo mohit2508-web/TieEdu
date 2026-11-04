@@ -14,6 +14,7 @@ import { FEED_V2 } from '../data/feedV2';
 import { MPHASIS_BANK } from '../data/companyTests/mphasis';
 import { MPHASIS_TECHNICAL, MPHASIS_HR } from '../data/interviewPrep/mphasis';
 import { MPHASIS_LESSONS, MPHASIS_LESSON_EXTRAS } from '../data/interviewPrep/mphasisLessons';
+import { WIPRO_IOS_BANK, WIPRO_IOS_LESSONS, WIPRO_IOS_LESSON_EXTRAS, WIPRO_IOS_SLUG } from '../data/wiproIOS';
 
 export function seedCompanyProfiles(db: any, onlyMissing = false, only?: string[]): { created: number; updated: number } {
   const FACT_CHECKED = '2026-10-27';
@@ -61,6 +62,7 @@ export function seedCompanyProfiles(db: any, onlyMissing = false, only?: string[
       ctc_min: p.ctc ? p.ctc[0] : null,
       ctc_max: p.ctc ? p.ctc[1] : null,
       status: 'published',
+      is_free: !!p.is_free,
       seo_title: p.seo[0],
       seo_description: p.seo[1],
       // Low-confidence profiles get no "checked" date, so the site says "Being verified".
@@ -109,6 +111,14 @@ interface Section { key: string; name: string; count: number; minutes: number }
 interface WritingTask { prompt: string; model: string; tip: string }
 interface Config {
   slug: string; name: string; company_slug: string; description: string; minutes: number; sections: Section[];
+  /** Short name for sectional tests ("Wipro iOS · Milestone 1"); default: name without " Online Assessment". */
+  short?: string;
+  /**
+   * Stable question ids and a bank hash: a live database picks up bank changes
+   * on the next start, and old attempts keep their questions (removed ones are
+   * retired, not deleted).
+   */
+  stable?: boolean;
   /** Optional, ungraded task shown after the last section (Infosys: an email, 120–150 words). */
   writing?: { title: string; words: [number, number]; tasks: WritingTask[] };
 }
@@ -161,7 +171,48 @@ CONFIGS.mphasis = {
   ],
 };
 
-const BANKS: Record<string, any[]> = { 'infosys-se': INFOSYS_SE_BANK, mphasis: MPHASIS_BANK };
+CONFIGS['wipro-ios'] = {
+  slug: 'wipro-ios-full-course-mock',
+  name: 'Wipro iOS Full Course Mock',
+  short: 'Wipro iOS',
+  company_slug: WIPRO_IOS_SLUG,
+  description: 'Full course mock for the Wipro iOS developer training: one timed section per milestone (Swift foundations 20, Architecture & concurrency 10, Networking & UIKit 10, SwiftUI & project setup 12, Testing & Instruments 8). 60 questions in 75 minutes, secure mode, fresh questions every attempt. Free.',
+  minutes: 75,
+  stable: true,
+  sections: [
+    { key: 'm1', name: 'Milestone 1 · Swift foundations', count: 20, minutes: 25 },
+    { key: 'm2', name: 'Milestone 2 · Architecture & concurrency', count: 10, minutes: 12 },
+    { key: 'm3', name: 'Milestone 3 · Networking & UIKit', count: 10, minutes: 12 },
+    { key: 'm4', name: 'Milestone 4 · SwiftUI & project setup', count: 12, minutes: 15 },
+    { key: 'final', name: 'Final · Testing & Instruments', count: 8, minutes: 11 },
+  ],
+};
+
+const BANKS: Record<string, any[]> = { 'infosys-se': INFOSYS_SE_BANK, mphasis: MPHASIS_BANK, 'wipro-ios': WIPRO_IOS_BANK };
+
+const md5 = (x: string) => crypto.createHash('md5').update(x).digest('hex').slice(0, 12);
+const bankHash = (bank: any[]) => md5(JSON.stringify(bank));
+
+/**
+ * Stable mode: one id per question text, updated in place; questions no longer
+ * in the bank are retired so old attempts can still be reviewed.
+ */
+function writeStableQuestions(db: any, skill: any, rows: Array<{ q: any; topicId: string }>, tags: (q: any) => string[], now: string) {
+  const keep = new Set<string>();
+  for (const { q, topicId } of rows) {
+    const id = `qst-${skill.slug}-${md5(q.question)}`;
+    keep.add(id);
+    const fields = {
+      skillId: skill.id, topicId, type: 'single_choice', difficulty: q.difficulty, question: q.question,
+      options: q.options.map((text: string, i: number) => ({ text, isCorrect: i === q.correct })),
+      explanation: q.explanation, tags: tags(q), status: 'approved', code: !!q.code, updated_at: now,
+    };
+    const old = db.questions.find((x: any) => x.id === id);
+    if (old) Object.assign(old, fields);
+    else db.questions.push({ id, ...fields, version: 1, usageCount: 0, correctCount: 0, difficultyScore: 0, created_at: now });
+  }
+  for (const x of db.questions) if (x.skillId === skill.id && !keep.has(x.id) && x.status === 'approved') x.status = 'retired';
+}
 
 /** A test is only created once its bank can fill every section — never a half-empty paper. */
 const bankFills = (bank: any[], sections: Array<{ key: string; count: number }>) =>
@@ -179,11 +230,13 @@ export function seedCompanyTest(db: any, key: string, onlyMissing = false): numb
   for (const k of ['skills', 'topics', 'questions', 'assessments']) db[k] = Array.isArray(db[k]) ? db[k] : [];
 
   let skill = db.skills.find((s: any) => s.slug === cfg.slug);
-  if (skill && onlyMissing) return 0;
+  const hash = cfg.stable ? bankHash(bank) : undefined;
+  if (skill && onlyMissing && (!cfg.stable || skill.bank_hash === hash)) return 0;
   if (!skill) {
     skill = { id: id('skl'), slug: cfg.slug, created_at: now };
     db.skills.push(skill);
   }
+  if (hash) skill.bank_hash = hash;
   Object.assign(skill, {
     name: cfg.name, category: 'Company mocks', description: cfg.description, shortDescription: `${cfg.name} mock`,
     status: 'active', isPopular: true, certificateAvailable: false, displayOrder: 0,
@@ -199,8 +252,10 @@ export function seedCompanyTest(db: any, key: string, onlyMissing = false): numb
     topicId[s.key] = t.id;
   });
 
-  db.questions = db.questions.filter((q: any) => q.skillId !== skill.id);
-  for (const q of bank) {
+  if (cfg.stable) {
+    writeStableQuestions(db, skill, bank.filter((q) => topicId[q.topic]).map((q) => ({ q, topicId: topicId[q.topic] })), (q) => [key, q.topic, q.source], now);
+  } else db.questions = db.questions.filter((q: any) => q.skillId !== skill.id);
+  for (const q of cfg.stable ? [] : bank) {
     if (!topicId[q.topic]) continue;
     db.questions.push({
       id: id('qst'), skillId: skill.id, topicId: topicId[q.topic], type: 'single_choice', difficulty: q.difficulty,
@@ -245,7 +300,8 @@ const lessonAsItem = ([section, title, rules, example, trap]: Lesson): PrepItem 
  * rules, worked examples, trap, and 5 practice questions from the Infosys bank
  * matching the topic (3 to 5, on-topic first).
  */
-interface LessonSource { lessons: Lesson[]; extras: Record<string, { what: string; examples: string[]; match: RegExp }>; bank: typeof INFOSYS_SE_BANK; topic: Record<string, string> }
+interface LessonExtraPlus { what: string; examples: string[]; match: RegExp; doc?: { label: string; url: string }; task?: string; module?: number }
+interface LessonSource { lessons: Lesson[]; extras: Record<string, LessonExtraPlus>; bank: Array<typeof INFOSYS_SE_BANK[number] & { lesson?: string }>; topic: Record<string, string> }
 
 const INFOSYS_LESSONS: LessonSource = {
   lessons: LESSONS, extras: LESSON_EXTRAS, bank: INFOSYS_SE_BANK,
@@ -256,6 +312,11 @@ const MPHASIS_LESSON_SOURCE: LessonSource = {
   topic: { Quant: 'quant', Reasoning: 'reasoning', Verbal: 'verbal', Programming: 'programming', Coding: 'programming', SVAR: 'verbal' },
 };
 
+const WIPRO_IOS_LESSON_SOURCE: LessonSource = {
+  lessons: WIPRO_IOS_LESSONS, extras: WIPRO_IOS_LESSON_EXTRAS, bank: WIPRO_IOS_BANK,
+  topic: { M1: 'm1', M2: 'm2', M3: 'm3', M4: 'm4', Final: 'final' },
+};
+
 function structuredLessons(src: LessonSource) {
   const used = new Set<number>();
   const { topic } = src;
@@ -263,7 +324,8 @@ function structuredLessons(src: LessonSource) {
     const x = src.extras[title];
     // Topic match first (an unused one, then one another lesson also uses), then any unused question of the section.
     const all = src.bank.map((q, i) => ({ q, i })).filter(({ q }) => q.topic === topic[section]);
-    const hit = ({ q }: { q: typeof INFOSYS_SE_BANK[number] }) => !!x?.match.test(q.question);
+    // Questions tagged with a lesson belong to that lesson only; untagged ones are matched by pattern.
+    const hit = ({ q }: { q: LessonSource['bank'][number] }) => (q.lesson ? q.lesson === title : !!x?.match.test(q.question));
     const order = [
       ...all.filter((e) => hit(e) && !used.has(e.i)), ...all.filter((e) => hit(e) && used.has(e.i)),
       ...all.filter((e) => !hit(e) && !used.has(e.i)), ...all.filter((e) => !hit(e) && used.has(e.i)),
@@ -274,6 +336,7 @@ function structuredLessons(src: LessonSource) {
     pick.forEach(({ i }) => used.add(i));
     return {
       section, title, what: x?.what || '', rules, examples: [example, ...(x?.examples || [])], trap,
+      ...(x?.doc ? { doc: x.doc } : {}), ...(x?.task ? { task: x.task } : {}), ...(x?.module ? { module: x.module } : {}),
       practice: pick.map(({ q }) => ({ question: q.code ? q.question : q.question.replace(/\s*\n\s*/g, ' '), options: q.options, correct: q.correct, explanation: q.explanation, code: q.code })),
     };
   });
@@ -282,7 +345,10 @@ function structuredLessons(src: LessonSource) {
 /** Bump when the lesson set changes: older copies on a live database are replaced on the next start. */
 const LESSON_VERSION = 3;
 
-const SETS: Array<{ slug: string; id: string; type: string; round: string; title: string; order: number; items: PrepItem[]; lesson?: LessonSource; role: string }> = [
+/** Free sets: every item readable, nothing in the pack. hash: content hash that replaces LESSON_VERSION for this set. */
+const WIPRO_IOS_HASH = md5(JSON.stringify([WIPRO_IOS_LESSONS, WIPRO_IOS_LESSON_EXTRAS, WIPRO_IOS_BANK]));
+
+const SETS: Array<{ slug: string; id: string; type: string; round: string; title: string; order: number; items: PrepItem[]; lesson?: LessonSource; role: string; free?: boolean; hash?: string }> = [
   { slug: 'infosys-systems-engineer', id: 'mod-prep-infosys-se-oa', type: 'preparation_guide', round: 'OA', title: 'Online assessment: topic lessons', order: 1, items: LESSONS.map(lessonAsItem), lesson: INFOSYS_LESSONS, role: 'Systems Engineer' },
   { slug: 'infosys-systems-engineer', id: 'mod-prep-infosys-se-tech', type: 'technical_question', round: 'Technical', title: 'Technical interview: questions and model answers', order: 2, items: TECHNICAL, role: 'Systems Engineer' },
   { slug: 'infosys-systems-engineer', id: 'mod-prep-infosys-se-hr', type: 'hr_question', round: 'HR', title: 'HR interview: questions and model answers', order: 3, items: HR, role: 'Systems Engineer' },
@@ -290,6 +356,8 @@ const SETS: Array<{ slug: string; id: string; type: string; round: string; title
   { slug: 'mphasis-freshers', id: 'mod-prep-mphasis-oa', type: 'preparation_guide', round: 'OA', title: 'Online assessment: topic lessons', order: 1, items: MPHASIS_LESSONS.map(lessonAsItem), lesson: MPHASIS_LESSON_SOURCE, role: 'Software Engineer' },
   { slug: 'mphasis-freshers', id: 'mod-prep-mphasis-tech', type: 'technical_question', round: 'Technical', title: 'Technical interview: questions and model answers', order: 2, items: MPHASIS_TECHNICAL, role: 'Software Engineer' },
   { slug: 'mphasis-freshers', id: 'mod-prep-mphasis-hr', type: 'hr_question', round: 'HR', title: 'HR interview: questions and model answers', order: 3, items: MPHASIS_HR, role: 'Software Engineer' },
+  // Wipro iOS (owner, 2026-11-04): free program, every lesson open.
+  { slug: WIPRO_IOS_SLUG, id: 'mod-prep-wipro-ios-lessons', type: 'preparation_guide', round: 'OA', title: 'iOS training: topic lessons', order: 1, items: WIPRO_IOS_LESSONS.map(lessonAsItem), lesson: WIPRO_IOS_LESSON_SOURCE, role: 'iOS Developer', free: true, hash: WIPRO_IOS_HASH },
 ];
 
 const FREE_PREVIEW = 3;
@@ -306,16 +374,20 @@ export function seedInterviewPrep(db: any, onlyMissing = false): number {
     if (!company) continue;
     company.modules = Array.isArray(company.modules) ? company.modules : [];
     const existing = company.modules.find((m: any) => m.id === set.id);
-    if (onlyMissing && existing && (!set.lesson || (existing.content_version || 1) >= LESSON_VERSION)) continue;
+    const current = set.hash ? existing?.content_hash === set.hash : (!set.lesson || (existing?.content_version || 1) >= LESSON_VERSION);
+    if (onlyMissing && existing && current) continue;
     const rich = set.lesson ? structuredLessons(set.lesson) : [];
     const firstOfSection = new Set(rich.map((l, i) => (rich.findIndex((r) => r.section === l.section) === i ? i : -1)).filter((i) => i >= 0));
     const module = {
       id: set.id, company_id: company.id, module_type: set.type, round_type: set.round, title: set.title,
       // Topic lessons are free (design: Free = topic notes); interview answers are in the pack, first FREE_PREVIEW readable.
       // Lessons stay out of the price ladder (is_premium false) but are pack-gated: the first lesson of each section is free.
-      sort_order: set.order, is_premium: !set.lesson, pack_gated: !!set.lesson, content_version: set.lesson ? LESSON_VERSION : undefined,
+      sort_order: set.order, is_premium: !set.free && !set.lesson, pack_gated: !set.free && !!set.lesson,
+      content_version: set.lesson && !set.hash ? LESSON_VERSION : undefined, content_hash: set.hash,
       items: set.items.map((it, i) => ({
-        id: `${set.id}-${i + 1}`, module_id: set.id, question_text: it[0], is_free_preview: set.lesson ? firstOfSection.has(i) : i < FREE_PREVIEW, lesson: set.lesson ? rich[i] : undefined,
+        // Hash-versioned sets key items by title, so a lesson inserted mid-list keeps every student's "done" ticks.
+        id: set.hash ? `${set.id}-${md5(it[0])}` : `${set.id}-${i + 1}`, module_id: set.id, question_text: it[0],
+        is_free_preview: set.free || (set.lesson ? firstOfSection.has(i) : i < FREE_PREVIEW), lesson: set.lesson ? rich[i] : undefined,
         difficulty: it[1], role_tag: set.role, frequency_tag: it[2], round_type: set.round, status: 'published',
         comments_count: 0, upvotes_count: 0,
         blocks: [{ id: `${set.id}-${i + 1}-b1`, block_type: 'markdown', block_order: 1, payload: { text: md(it, !!set.lesson) } }],
@@ -380,6 +452,14 @@ const SECTIONAL: Record<string, Array<{ key: string; name: string; count: number
     { key: 'verbal', name: 'Verbal English', count: 10, minutes: 10 },
     { key: 'programming', name: 'Computer Programming', count: 8, minutes: 10 },
   ],
+  // Milestone tests: the M1 test is the 15 Nov mock (40 of 118 questions, fresh draw every attempt).
+  'wipro-ios': [
+    { key: 'm1', name: 'Milestone 1 · Swift foundations', count: 40, minutes: 50 },
+    { key: 'm2', name: 'Milestone 2 · Architecture & concurrency', count: 25, minutes: 30 },
+    { key: 'm3', name: 'Milestone 3 · Networking & UIKit', count: 25, minutes: 30 },
+    { key: 'm4', name: 'Milestone 4 · SwiftUI & project setup', count: 25, minutes: 30 },
+    { key: 'final', name: 'Final · Testing & Instruments', count: 15, minutes: 20 },
+  ],
 };
 
 export function seedSectionalTests(db: any, key: string, onlyMissing = false): number {
@@ -392,10 +472,13 @@ export function seedSectionalTests(db: any, key: string, onlyMissing = false): n
     if (!bankFills(bank, [sec])) continue;
     const slug = `${cfg.slug}-${sec.key}`;
     let skill = db.skills.find((s: any) => s.slug === slug);
-    if (skill && onlyMissing) continue;
+    const secBank = bank.filter((x: any) => x.topic === sec.key);
+    const hash = cfg.stable ? bankHash(secBank) : undefined;
+    if (skill && onlyMissing && (!cfg.stable || skill.bank_hash === hash)) continue;
     if (!skill) { skill = { id: mk('skl'), slug, created_at: now }; db.skills.push(skill); }
+    if (hash) skill.bank_hash = hash;
     Object.assign(skill, {
-      name: `${cfg.name.replace(' Online Assessment', '')} · ${sec.name}`, category: 'Company mocks',
+      name: `${cfg.short || cfg.name.replace(' Online Assessment', '')} · ${sec.name}`, category: 'Company mocks',
       description: `${sec.name} sectional test for ${cfg.name}: ${sec.count} questions in ${sec.minutes} minutes.`,
       shortDescription: `${sec.name} test`, status: 'active', isPopular: false, certificateAvailable: false, displayOrder: 0,
       tags: ['company', key, cfg.company_slug, 'sectional'], totalQuestions: sec.count, avgCompletionTime: sec.minutes,
@@ -404,8 +487,9 @@ export function seedSectionalTests(db: any, key: string, onlyMissing = false): n
     let t = db.topics.find((x: any) => x.skillId === skill.id && x.slug === sec.key);
     if (!t) { t = { id: mk('top'), skillId: skill.id, slug: sec.key, created_at: now }; db.topics.push(t); }
     Object.assign(t, { name: sec.name, displayOrder: 1, isActive: true, updated_at: now });
-    db.questions = db.questions.filter((q: any) => q.skillId !== skill.id);
-    for (const q of bank.filter((x: any) => x.topic === sec.key)) {
+    if (cfg.stable) writeStableQuestions(db, skill, secBank.map((q: any) => ({ q, topicId: t.id })), (q) => [key, q.topic, q.source, 'sectional'], now);
+    else db.questions = db.questions.filter((q: any) => q.skillId !== skill.id);
+    for (const q of cfg.stable ? [] : secBank) {
       db.questions.push({
         id: mk('qst'), skillId: skill.id, topicId: t.id, type: 'single_choice', difficulty: q.difficulty,
         question: q.question, options: q.options.map((text: string, i: number) => ({ text, isCorrect: i === q.correct })),
@@ -428,7 +512,7 @@ export function seedSectionalTests(db: any, key: string, onlyMissing = false): n
 }
 
 /** Focus (owner, 2026-11-01): only these programs are public for now; the rest become drafts once (restorable in Admin). */
-const FOCUS = ['infosys-systems-engineer', 'tcs-nqt', 'accenture', 'wipro-elite-nth', 'cognizant-genc', 'mphasis-freshers'];
+const FOCUS = ['infosys-systems-engineer', 'tcs-nqt', 'accenture', 'wipro-elite-nth', 'cognizant-genc', 'mphasis-freshers', WIPRO_IOS_SLUG];
 export function applyCompanyFocus(db: any): number {
   if (db.company_focus_applied) return 0;
   let n = 0;
@@ -463,15 +547,27 @@ export function ensureMphasisV1(db: any): number {
   return 1;
 }
 
+/**
+ * Wipro iOS (owner, 2026-11-04): publish the program once with its full
+ * profile, even if an older record with the slug exists.
+ */
+export function ensureWiproIOSV1(db: any): number {
+  if (db.company_wipro_ios_v1) return 0;
+  seedCompanyProfiles(db, false, [WIPRO_IOS_SLUG]);
+  db.company_wipro_ios_v1 = new Date().toISOString();
+  return 1;
+}
+
 /** Server start: add any missing 3T content. Returns true when something was added. */
 export function seedMissing3T(db: any): boolean {
   const covers = seedCourseCovers(db) + seedFeedV2(db);
-  const t0 = COMPANY_TESTS.reduce((n, k) => n + seedSectionalTests(db, k, true), 0);
   const p = seedCompanyProfiles(db, true);
+  const wipro = ensureWiproIOSV1(db);
+  const t0 = COMPANY_TESTS.reduce((n, k) => n + seedSectionalTests(db, k, true), 0);
   const t = COMPANY_TESTS.reduce((n, k) => n + seedCompanyTest(db, k, true), 0);
   const i = seedInterviewPrep(db, true);
   const focus = applyCompanyFocus(db);
   const focusFix = ensureFocusLive(db);
   const mphasis = ensureMphasisV1(db);
-  return covers + t0 + focus + focusFix + mphasis + p.created + t + i > 0;
+  return covers + t0 + focus + focusFix + mphasis + wipro + p.created + t + i > 0;
 }

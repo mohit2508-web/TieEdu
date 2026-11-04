@@ -128,7 +128,7 @@ companiesRouter.get('/:slug', optionalAuth, (req: Request, res: Response) => {
         (u: any) => u.user_id === userId && u.company_id === company.id && (u.status === 'active' || !u.status)
       ));
   const ownsEveryModule = premiumIds.length > 0 && premiumIds.every((mid: string) => ownedModuleIds.includes(mid));
-  const isUnlocked = isAdmin || companyUnlocked || ownsEveryModule || premiumIds.length === 0;
+  const isUnlocked = isAdmin || company.is_free === true || companyUnlocked || ownsEveryModule || premiumIds.length === 0;
 
   // Deep clone to avoid mutating in-memory db
   const sanitizedCompany = attachLiveStats(db, JSON.parse(JSON.stringify(company)));

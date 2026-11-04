@@ -23,6 +23,8 @@ export interface Profile {
   oa_pattern?: Array<[string, string, number, string]>;
   /** Full syllabus: [section, topics[]]. */
   syllabus?: Array<[string, string[]]>;
+  /** Free program: every lesson and test is open to every student (no pack). */
+  is_free?: boolean;
 }
 
 const APT = ['Quant', 'Logical reasoning', 'Verbal'];
@@ -318,6 +320,38 @@ export const PROFILES: Profile[] = [
     bond: 'Service agreement discussed in the HR round — amount not published', training: '', window: 'Registration dates vary each year',
     seo: ['Wipro Elite NTH & Turbo: Fresher CTC, Test Pattern', 'Wipro Elite NTH for B.Tech freshers: Elite ~₹3.5 LPA, Turbo ~₹6.5 LPA. Aptitude, essay and coding test, then technical and HR interview.'],
     confidence: 'medium', note: 'CTC bands vary by source.',
+  },
+  {
+    // Owner's curriculum sheet, 2026-11-04 (WIPRO_IOS_3T_PLAN.md). A training track, not a hiring route: no CTC.
+    slug: 'wipro-ios-swift', company: 'Wipro', name: 'Wipro iOS Developer Training (Swift)', industry: 'IT Services & Consulting',
+    tagline: '12 modules, 4 milestone assessments: Swift, UIKit, SwiftUI, concurrency, testing. Free.',
+    about: 'The iOS developer training track from Xcode setup to Instruments: Swift language, architecture (MVC/MVVM), concurrency, networking with URLSession and Codable, UIKit and SwiftUI, project configuration and XCTest. Four assessment milestones (15 Nov, 25 Nov, 4 Dec, 10 Dec) and a final. Every lesson, milestone test and full mock here is free.',
+    hq: 'Bengaluru, India', founded: '1945', size: '~236,328', careers: 'https://careers.wipro.com',
+    tags: ['Free', 'iOS · Swift', '12 Modules', '4 Milestones', 'Full mock'],
+    program_type: 'Training track: iOS development',
+    roles: [['iOS Developer (training track)', 'As per your offer letter']], ctc: null,
+    elig: { degrees: 'Trainees on the iOS track', batches: 'Current training batch', cutoff: 'Milestone assessments during training', backlogs: '', gap: '' },
+    rounds: [
+      ['Milestone 1: Swift foundations', 'OA', 'mcq', 40, 50, undefined, ['Xcode & Git', 'Swift basics', 'Collections & enums', 'Struct vs class', 'Optionals', 'ARC', 'Closures', 'Protocols & generics', 'Error handling', 'UIKit vs SwiftUI']],
+      ['Milestone 2: Architecture & concurrency', 'OA', 'mcq', 25, 30, undefined, ['MVC', 'MVVM', 'App & view life cycle', 'GCD', 'async/await', 'Tasks', 'Actors']],
+      ['Milestone 3: Networking & UIKit', 'OA', 'mcq', 25, 30, undefined, ['URLSession', 'Codable', 'View hierarchy', 'Storyboards', 'Auto Layout', 'UITableView']],
+      ['Milestone 4: SwiftUI & project setup', 'OA', 'mcq', 25, 30, undefined, ['SwiftUI app structure', 'Layouts', 'State', 'Navigation', 'Targets & build settings', 'Info.plist']],
+      ['Final: testing & Instruments', 'OA', 'mcq', 15, 20, undefined, ['XCTest & mocks', 'Instruments']],
+    ],
+    higher: '', difficulty: 3, bond: '', training: 'Modules 1–12 from 30 Oct to 13 Dec 2026, with milestone assessments on 15 Nov, 25 Nov, 4 Dec and 10 Dec.', window: 'Current training batch: 30 Oct – 13 Dec 2026',
+    seo: ['Wipro iOS Training (Swift): Free Milestone Tests & Lessons', 'Free prep for the Wipro iOS developer training: 42 Swift, UIKit and SwiftUI lessons, milestone mock tests and a full course mock, with a day-by-day plan.'],
+    confidence: 'low', pattern_checked: '2026-11-04', is_free: true,
+    note: 'Curriculum and dates from the training schedule. The milestone test format is not published; these tests are practice tests written to the syllabus.',
+    syllabus: [
+      ['Module 1 · Setup', ['Xcode installation & Simulator', 'Swift Playgrounds', 'Git & GitHub in Xcode']],
+      ['Module 2 · Swift basics', ['Swift features', 'Constants, variables & type inference', 'Operators', 'Collections', 'Enums', 'Struct vs class', 'Access control', 'Optionals', 'ARC (weak/unowned)']],
+      ['Module 3 · Swift in depth', ['Functions & argument labels', 'Closures', 'map / filter / reduce', 'Protocols & extensions', 'Generics', 'Extensions', 'Error handling']],
+      ['Module 4 · UI paradigms', ['UIKit (imperative) vs SwiftUI (declarative)']],
+      ['Modules 5–6 · Architecture & concurrency', ['MVC', 'MVVM', 'App life cycle', 'View life cycle', 'GCD & queues', 'async/await', 'Tasks & task groups', 'Actors & @MainActor']],
+      ['Modules 7–8 · Networking & UIKit', ['URLSession', 'Codable', 'UIView/UIViewController hierarchy', 'Storyboards, IBOutlets & IBActions', 'Auto Layout', 'UI controls & UITableView']],
+      ['Modules 9–10 · SwiftUI & project', ['SwiftUI app structure', 'Stacks, forms, grids', '@State, @Binding, @Observable', 'NavigationStack & TabView', 'Targets & build settings', 'Info.plist permissions']],
+      ['Modules 11–12 · Quality', ['XCTest & mocks', 'Instruments: Time Profiler, Leaks']],
+    ],
   },
   {
     slug: 'hcltech-freshers', company: 'HCLTech', name: 'HCLTech Graduate Fresher Hiring', industry: 'IT Services & Consulting',

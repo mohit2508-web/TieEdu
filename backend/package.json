@@ -7,7 +7,7 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p scripts/tsconfig.json",
-    "test": "npm run test:courses && npm run test:certs && npm run test:certhttp && npm run test:certadmin && npm run test:jwt && npm run test:account && npm run test:signins && npm run test:messaging && npm run test:foryou && npm run test:tpoalerts && npm run test:security && npm run test:rbac && npm run test:placement && npm run test:school && npm run test:notifications && npm run test:email && npm run test:audit && npm run test:guards && npm run test:catalog && npm run test:ccontent && npm run test:assessment && npm run test:perks && npm run test:coupons && npm run test:pack && npm run test:repair && npm run test:companypage && npm run test:mphasis && npm run test:today && npm run test:daily && npm run test:mojibake && npm run test:drops && npm run test:pulse && npm run test:readiness && npm run test:data && npm run test:smoke",
+    "test": "npm run test:courses && npm run test:certs && npm run test:certhttp && npm run test:certadmin && npm run test:jwt && npm run test:account && npm run test:signins && npm run test:messaging && npm run test:foryou && npm run test:tpoalerts && npm run test:security && npm run test:rbac && npm run test:placement && npm run test:school && npm run test:notifications && npm run test:email && npm run test:audit && npm run test:guards && npm run test:catalog && npm run test:ccontent && npm run test:assessment && npm run test:perks && npm run test:coupons && npm run test:pack && npm run test:repair && npm run test:companypage && npm run test:mphasis && npm run test:wipro && npm run test:today && npm run test:daily && npm run test:mojibake && npm run test:drops && npm run test:pulse && npm run test:readiness && npm run test:data && npm run test:smoke",
     "test:m1": "tsx --test scripts/verify-m1-guards.live.ts",
     "test:courses": "ts-node --transpile-only scripts/courses-lib.test.ts",
     "test:certs": "ts-node --transpile-only scripts/certificate-keys.test.ts",
@@ -48,7 +48,8 @@
     "test:foryou": "ts-node --transpile-only scripts/for-you.test.ts",
     "test:tpoalerts": "ts-node --transpile-only scripts/tpo-alerts.test.ts",
     "test:signins": "ts-node --transpile-only scripts/signins.test.ts",
-    "test:mphasis": "ts-node --transpile-only scripts/mphasis.test.ts"
+    "test:mphasis": "ts-node --transpile-only scripts/mphasis.test.ts",
+    "test:wipro": "ts-node --transpile-only scripts/wiproIOS.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.3.0",

@@ -11,7 +11,10 @@ import { fetchTarget, saveTarget, OPEN_TARGET_EVENT } from '@/lib/prepApi';
  * once after sign-in; reopened from the Today screen or the header chip via
  * OPEN_TARGET_EVENT. Only companies with a full prep plan can be picked.
  */
-const READY = [{ slug: 'infosys-systems-engineer', name: 'Infosys Systems Engineer (SE)', meta: 'Online test 54 Qs · Technical · HR · ₹3.6–4.2 LPA' }];
+const READY = [
+  { slug: 'infosys-systems-engineer', name: 'Infosys Systems Engineer (SE)', meta: 'Online test 54 Qs · Technical · HR · ₹3.6–4.2 LPA' },
+  { slug: 'wipro-ios-swift', name: 'Wipro iOS Developer Training (Swift)', meta: 'Free · 12 modules · 4 milestone tests · full course mock' },
+];
 const SOON = ['TCS NQT', 'Accenture', 'Wipro Elite NTH', 'Cognizant GenC'];
 
 // Pages where the sheet must never pop up on its own.

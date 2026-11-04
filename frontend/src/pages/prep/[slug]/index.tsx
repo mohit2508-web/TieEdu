@@ -61,7 +61,7 @@ export default function PrepPage() {
 
   const ItemRow: React.FC<{ it: PrepItem }> = ({ it }) => {
     const Icon = KIND_ICON[it.kind];
-    const isLocked = locked(it);
+    const isLocked = !it.soon && locked(it);
     return (
       <li className="flex items-center gap-3 rounded-xl border border-line bg-card p-3">
         <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl ${it.done ? 'bg-success-soft text-success' : 'bg-signal-soft text-amber-deep'}`} aria-hidden>
@@ -71,7 +71,9 @@ export default function PrepPage() {
           <span className="block text-sm font-semibold uppercase tracking-wider text-muted">{KIND_LABEL[it.kind]}</span>
           <span className={`block font-semibold sm:text-lg ${it.done ? 'text-muted line-through' : 'text-heading'}`}>{it.title}</span>
         </span>
-        {isLocked ? (
+        {it.soon ? (
+          <span className="shrink-0 rounded-full bg-surface-hover px-3 py-1 text-sm font-semibold text-muted">Coming soon</span>
+        ) : isLocked ? (
           <button type="button" onClick={() => setSheet(it.title)} className="btn btn-ghost min-h-[44px] px-3 text-base"><Lock className="h-4 w-4" aria-hidden /> Unlock</button>
         ) : (
           <Link href={prepHref(slug, it)} className="btn btn-primary min-h-[44px] px-4 text-base">{it.kind === 'lesson' ? 'Read' : 'Start'} <ArrowRight className="h-4 w-4" aria-hidden /></Link>
@@ -87,6 +89,9 @@ export default function PrepPage() {
     : null;
   const visible = showAll ? data.plan : upcoming.slice(0, 10);
   const weakest = data.sections.filter((s) => s.score !== null).sort((a, z) => a.score! - z.score!)[0];
+  const L = data.labels || { section_tests: 'Section tests', section_test: 'section test', full_mock: 'Full mock', mock_blurb: 'Real pattern, fresh questions every attempt.' };
+  const mockQs = data.full_mock?.questions;
+  const ms = data.next_milestone;
 
   return (
     <>
@@ -95,8 +100,12 @@ export default function PrepPage() {
       <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="font-display text-3xl font-bold text-heading sm:text-4xl">My {data.company.name} prep</h1>
-          {data.owned && <span className="rounded-full bg-success-soft px-3 py-1 text-sm font-bold text-success">Pack active ✓</span>}
+          {data.free
+            ? <span className="rounded-full bg-success-soft px-3 py-1 text-sm font-bold text-success">Free · all unlocked ✓</span>
+            : data.owned && <span className="rounded-full bg-success-soft px-3 py-1 text-sm font-bold text-success">Pack active ✓</span>}
         </div>
+
+        {data.free && L.free_note && <p className="mt-3 text-base text-muted">{L.free_note}</p>}
 
         {!data.owned && (
           <div className="mt-4 flex flex-col gap-3 rounded-card border border-signal/40 bg-signal-soft p-4 sm:flex-row sm:items-center sm:justify-between">
@@ -121,8 +130,8 @@ export default function PrepPage() {
             </div>
           </div>
           <div className="rounded-card border border-line bg-card p-5 shadow-edge-neutral">
-            <p className="flex items-center gap-1.5 text-base text-muted"><Target className="h-5 w-5" aria-hidden /> Test day</p>
-            <p className="font-display text-4xl font-bold text-heading">{data.days_left} days left</p>
+            <p className="flex items-center gap-1.5 text-base text-muted"><Target className="h-5 w-5" aria-hidden /> {ms ? `Next: ${ms.name}` : 'Test day'}</p>
+            <p className="font-display text-4xl font-bold text-heading">{data.days_left === 0 ? 'Today' : `${data.days_left} day${data.days_left === 1 ? '' : 's'} left`}</p>
             <p className="text-base text-muted">{fmt(data.test_date)} · plan of {data.plan.length} days</p>
             <label className="mt-3 flex flex-wrap items-center gap-2 text-base text-muted">
               Change test date
@@ -139,16 +148,34 @@ export default function PrepPage() {
 
         {tab === 'plan' && (
           <>
-            {!mockTaken && data.full_mock && (
+            {!mockTaken && data.full_mock && !data.free && (
               <section className="mt-8 flex flex-col gap-4 rounded-card bg-brand-ink p-6 text-white sm:flex-row sm:items-center">
                 <div className="min-w-0 flex-1">
                   <p className="eyebrow text-money">Step 1 · Free</p>
                   <h2 className="mt-1 font-display text-2xl font-bold">Take the free demo test</h2>
-                  <p className="mt-1 text-base text-white/80">54 questions in the real Infosys pattern. You get your score in every section and exactly what to study first.</p>
+                  <p className="mt-1 text-base text-white/80">{mockQs ? `${mockQs} questions in the real ${data.company.name} pattern.` : 'The real test pattern.'} You get your score in every section and exactly what to study first.</p>
                 </div>
                 <Link href={`/skill-test/${data.full_mock.slug}/assessment`} className="btn btn-primary min-h-[52px] shrink-0 px-6 text-lg">Start demo test <ArrowRight className="h-5 w-5" aria-hidden /></Link>
               </section>
             )}
+
+            {/* Calendar programs: the next milestone's own test, front and centre. */}
+            {ms && (() => {
+              const s = data.sections.find((x) => x.key === ms.key);
+              if (!s?.test_slug) return null;
+              return (
+                <section className="mt-8 flex flex-col gap-4 rounded-card bg-brand-ink p-6 text-white sm:flex-row sm:items-center">
+                  <div className="min-w-0 flex-1">
+                    <p className="eyebrow text-money">{fmt(ms.date)} · {data.days_left === 0 ? 'today' : `in ${data.days_left} day${data.days_left === 1 ? '' : 's'}`}</p>
+                    <h2 className="mt-1 font-display text-2xl font-bold">{ms.name}: mock test</h2>
+                    <p className="mt-1 text-base text-white/80">
+                      {s.attempts ? `Last score ${s.score}% after ${s.attempts} attempt${s.attempts === 1 ? '' : 's'}. ` : ''}Timed, fresh questions every attempt, full explanations after you submit. Aim for 80%+ twice before the real test.
+                    </p>
+                  </div>
+                  <Link href={`/skill-test/${s.test_slug}/assessment`} className="btn btn-primary min-h-[52px] shrink-0 px-6 text-lg">{s.attempts ? 'Retake' : 'Start'} mock <ArrowRight className="h-5 w-5" aria-hidden /></Link>
+                </section>
+              );
+            })()}
 
             <section className="mt-8">
               <h2 className="font-display text-2xl font-bold text-heading">Today · Day {data.today.day} · {data.today.phase}</h2>
@@ -163,10 +190,10 @@ export default function PrepPage() {
 
             <section className="mt-8 rounded-card border border-danger/30 bg-card p-5 shadow-edge-neutral">
               <h2 className="font-display text-xl font-bold text-heading">Fix next: {data.fix.name}{data.fix.score !== null ? ` · ${data.fix.score}%` : ''}</h2>
-              <p className="text-base text-muted">Read these lessons, then retest the section.</p>
+              <p className="text-base text-muted">Read these lessons, then take the {L.section_test} again.</p>
               <ul className="mt-3 space-y-2">
                 {data.fix.lessons.map((l) => <ItemRow key={l.id} it={{ kind: 'lesson', ref: l.id, title: l.title, done: false }} />)}
-                {data.fix.test_slug && <ItemRow it={{ kind: 'sectional', ref: data.fix.test_slug, title: `${data.fix.name} test`, done: false }} />}
+                {data.fix.test_slug && <ItemRow it={{ kind: 'sectional', ref: data.fix.test_slug, title: `${data.fix.name}: ${L.section_test}`, done: false }} />}
               </ul>
             </section>
 
@@ -196,7 +223,7 @@ export default function PrepPage() {
 
         {tab === 'train' && (
           <section className="mt-8 space-y-6">
-            <p className="text-base text-body">Read a lesson, answer its practice questions, then take the section test. Lessons are ticked when you finish the practice.</p>
+            <p className="text-base text-body">Read a lesson, answer its practice questions, then take the {L.section_test}. Lessons are ticked when you finish the practice.</p>
             {data.sections.map((s) => {
               const ls = data.lessons.filter((l) => l.section === s.key);
               if (!ls.length) return null;
@@ -209,18 +236,21 @@ export default function PrepPage() {
                   <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-hover" aria-hidden><div className="h-full rounded-full bg-success" style={{ width: `${(s.lessons_done / Math.max(1, s.lessons_total)) * 100}%` }} /></div>
                   <ul className="mt-4 space-y-2">
                     {ls.map((l) => <ItemRow key={l.id} it={{ kind: 'lesson', ref: l.id, title: l.title.replace(/^[^:]+:\s*/, ''), done: l.done }} />)}
-                    {s.test_slug && <ItemRow it={{ kind: 'sectional', ref: s.test_slug, title: `${s.name} test`, done: s.attempts > 0 }} />}
+                    {s.test_slug && <ItemRow it={{ kind: 'sectional', ref: s.test_slug, title: `${s.name}: ${L.section_test}`, done: s.attempts > 0 }} />}
                   </ul>
                 </div>
               );
             })}
-            <div className="rounded-card border border-line bg-card p-5 shadow-edge-neutral">
-              <h2 className="font-display text-xl font-bold text-heading">Interview prep</h2>
-              <ul className="mt-3 space-y-2">
-                <ItemRow it={{ kind: 'interview', ref: data.interview[0], title: 'Technical interview: 20 questions with model answers', done: false }} />
-                <ItemRow it={{ kind: 'interview', ref: data.interview[1], title: 'HR interview: 12 questions with model answers', done: false }} />
-              </ul>
-            </div>
+            {(data.interview_modules || []).length > 0 && (
+              <div className="rounded-card border border-line bg-card p-5 shadow-edge-neutral">
+                <h2 className="font-display text-xl font-bold text-heading">Interview prep</h2>
+                <ul className="mt-3 space-y-2">
+                  {data.interview_modules!.map((m) => (
+                    <ItemRow key={m.id} it={{ kind: 'interview', ref: m.id, title: `${m.title.replace(/:.*/, '')}: ${m.count} questions with model answers`, done: false }} />
+                  ))}
+                </ul>
+              </div>
+            )}
           </section>
         )}
 
@@ -228,17 +258,17 @@ export default function PrepPage() {
           <section className="mt-8 space-y-6">
             {data.full_mock && (
               <div className="rounded-card border border-line bg-card p-5 shadow-edge-neutral">
-                <h2 className="font-display text-xl font-bold text-heading">Full mock · 54 questions · real pattern</h2>
-                <p className="mt-1 text-base text-muted">Taken {data.full_mock.attempts} time{data.full_mock.attempts === 1 ? '' : 's'}{data.full_mock.last !== null && ` · last score ${data.full_mock.last}%`}. Every attempt draws fresh questions.</p>
-                <ul className="mt-3"><ItemRow it={{ kind: 'mock', ref: data.full_mock.slug, title: mockTaken ? 'Take another full mock' : 'Free demo test', done: false }} /></ul>
+                <h2 className="font-display text-xl font-bold text-heading">{L.full_mock}{mockQs ? ` · ${mockQs} questions` : ''}{data.full_mock.minutes ? ` · ${data.full_mock.minutes} min` : ''}</h2>
+                <p className="mt-1 text-base text-muted">{L.mock_blurb} Taken {data.full_mock.attempts} time{data.full_mock.attempts === 1 ? '' : 's'}{data.full_mock.last !== null && ` · last score ${data.full_mock.last}%`}.</p>
+                <ul className="mt-3"><ItemRow it={{ kind: 'mock', ref: data.full_mock.slug, title: mockTaken ? `Take another ${L.full_mock.toLowerCase()}` : data.free ? `Start the ${L.full_mock.toLowerCase()}` : 'Free demo test', done: false }} /></ul>
               </div>
             )}
             <div className="rounded-card border border-line bg-card p-5 shadow-edge-neutral">
-              <h2 className="font-display text-xl font-bold text-heading">Section tests</h2>
-              <p className="mt-1 text-base text-muted">One section at a time, unlimited retakes. Retake your weakest section after reading its lessons.</p>
+              <h2 className="font-display text-xl font-bold text-heading">{L.section_tests}</h2>
+              <p className="mt-1 text-base text-muted">One at a time, unlimited retakes. Retake your weakest one after reading its lessons.</p>
               <ul className="mt-3 space-y-2">
-                {data.sections.filter((s) => s.test_slug).map((s) => (
-                  <ItemRow key={s.key} it={{ kind: 'sectional', ref: s.test_slug!, title: `${s.name}${s.score !== null ? ` · last ${s.score}%` : ''}`, done: false }} />
+                {data.sections.map((s) => (
+                  <ItemRow key={s.key} it={{ kind: 'sectional', ref: s.test_slug || '', title: `${s.name}${s.score !== null ? ` · last ${s.score}%` : ''}`, done: false, soon: !s.test_slug }} />
                 ))}
               </ul>
             </div>
@@ -268,7 +298,7 @@ export default function PrepPage() {
             <div className="rounded-card border border-line bg-card p-5 shadow-edge-neutral">
               <h2 className="font-display text-xl font-bold text-heading">All your tests</h2>
               {data.attempts.length === 0
-                ? <p className="mt-2 text-base text-muted">No tests yet. Start with the free demo test on the Plan tab.</p>
+                ? <p className="mt-2 text-base text-muted">No tests yet. {data.free ? `Start with a ${L.section_test} on the Test tab.` : 'Start with the free demo test on the Plan tab.'}</p>
                 : (
                   <ul className="mt-3 divide-y divide-line">
                     {data.attempts.map((a) => (
@@ -286,7 +316,7 @@ export default function PrepPage() {
           </section>
         )}
       </main>
-      <BuyPackSheet open={sheet !== null} onClose={() => setSheet(null)} slug={slug} name={data.company.name} what={sheet || undefined} />
+      {!data.free && <BuyPackSheet open={sheet !== null} onClose={() => setSheet(null)} slug={slug} name={data.company.name} what={sheet || undefined} />}
     </>
   );
 }

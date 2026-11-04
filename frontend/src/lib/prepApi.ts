@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { apiFetch, API_BASE_URL } from './api';
 
 export type PrepItemKind = 'lesson' | 'sectional' | 'mock' | 'revision' | 'interview';
-export interface PrepItem { kind: PrepItemKind; ref: string; title: string; done: boolean }
+/** soon: on the calendar, but its lesson or test is not published yet. */
+export interface PrepItem { kind: PrepItemKind; ref: string; title: string; done: boolean; soon?: boolean }
 export interface PrepDay { day: number; date: string; phase: string; items: PrepItem[] }
 export interface PrepSection {
   key: string; name: string; weight: number; score: number | null; trend: number[]; attempts: number;
@@ -16,8 +17,14 @@ export interface PrepView {
   readiness: { score: number; band: string; test: number; lessons: number; consistency: number; week_change: number; previous: number | null };
   attempts: Array<{ id: string; slug: string; title: string; score: number; at: string }>;
   interview: string[];
+  interview_modules?: Array<{ id: string; title: string; count: number }>;
+  /** Free program: nothing is locked, no pack. */
+  free?: boolean;
+  labels?: { section_tests: string; section_test: string; full_mock: string; mock_blurb: string; free_note?: string };
+  /** Calendar programs: the milestone the countdown points at. */
+  next_milestone?: { key: string; name: string; date: string } | null;
   sections: PrepSection[];
-  full_mock: { slug: string; attempts: number; last: number | null } | null;
+  full_mock: { slug: string; attempts: number; last: number | null; questions?: number | null; minutes?: number | null } | null;
   lessons: Array<{ id: string; title: string; section: string; done: boolean; free: boolean }>;
   fix: { section: string; name: string; score: number | null; lessons: Array<{ id: string; title: string }>; test_slug: string | null };
   today: PrepDay;
@@ -74,7 +81,11 @@ export function useTarget(enabled: boolean) {
 
 // ---- Lesson reader
 export interface LessonPractice { question: string; options: string[]; correct: number; explanation: string; code?: boolean }
-export interface LessonBody { section: string; title: string; what: string; rules: string[]; examples: string[]; trap: string; practice: LessonPractice[] }
+export interface LessonBody {
+  section: string; title: string; what: string; rules: string[]; examples: string[]; trap: string; practice: LessonPractice[];
+  /** Official documentation, a hands-on task and the course module (calendar programs). */
+  doc?: { label: string; url: string }; task?: string; module?: number;
+}
 export interface LessonView {
   id: string; title: string; index: number; total: number; owned: boolean; free: boolean; done?: boolean;
   prev: { id: string; title: string } | null; next: { id: string; title: string } | null;
@@ -89,4 +100,4 @@ export const fetchLesson = async (slug: string, id: string): Promise<LessonView>
 };
 
 /** Companies with a full Train · Test · Track plan. */
-export const PREP_SLUGS = ['infosys-systems-engineer'];
+export const PREP_SLUGS = ['infosys-systems-engineer', 'wipro-ios-swift'];

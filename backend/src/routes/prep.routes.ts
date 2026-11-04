@@ -14,6 +14,7 @@ export const prepRouter = Router();
 export function ownsCompanyPack(db: any, userId: string, slug: string): boolean {
   const company = (db.companies || []).find((c: any) => c.slug === slug);
   if (!company) return false;
+  if (company.is_free) return true; // free program: everything open
   const user = (db.users || []).find((u: any) => u.id === userId);
   if (user?.role === 'admin') return true;
   if (unlockedCompanyIds(db, userId).includes(company.id)) return true;

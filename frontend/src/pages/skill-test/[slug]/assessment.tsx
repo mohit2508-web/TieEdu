@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSecureMode } from '@/hooks/useSecureMode';
+import { splitQuestion } from '@/lib/questionText';
 import { SecureModeWarning, SecureBadge } from '@/components/common/SecureModeWarning';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
@@ -355,15 +356,14 @@ function AssessmentPage() {
             {(() => {
               // Company mocks carry passages, tables and pseudocode: keep line breaks,
               // and show the code part (after the prompt) as a code block.
-              const isCode = /pseudocode\?/.test(q.question);
-              const cut = isCode ? q.question.indexOf('\n\n') : -1;
-              return cut > 0 ? (
-                <>
-                  <p className="text-base font-medium text-gray-900 leading-relaxed whitespace-pre-wrap">{q.question.slice(0, cut)}</p>
-                  <pre className="mt-3 overflow-x-auto rounded-xl bg-gray-900 p-4 font-mono text-sm leading-relaxed text-gray-100">{q.question.slice(cut + 2)}</pre>
-                </>
-              ) : (
-                <p className="text-base font-medium text-gray-900 leading-relaxed whitespace-pre-wrap">{q.question}</p>
+              // Swift output questions put the code first and the prompt last (lib/questionText).
+              const parts = splitQuestion(q.question, q.code);
+              return (
+                <div className="min-w-0 flex-1">
+                  {parts.before && <p className="text-base font-medium text-gray-900 leading-relaxed whitespace-pre-wrap">{parts.before}</p>}
+                  {parts.code && <pre className={`${parts.before ? 'mt-3 ' : ''}overflow-x-auto rounded-xl bg-gray-900 p-4 font-mono text-sm leading-relaxed text-gray-100`}>{parts.code}</pre>}
+                  {parts.after && <p className="mt-3 text-base font-medium text-gray-900 leading-relaxed whitespace-pre-wrap">{parts.after}</p>}
+                </div>
               );
             })()}
             <button

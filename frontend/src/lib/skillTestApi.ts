@@ -1,3 +1,4 @@
+import type { ReviewItem } from '@/components/skill-test/AnswerReview';
 import { API_BASE_URL, apiFetch } from './api';
 
 // ============================================================================
@@ -63,6 +64,8 @@ export interface SafeQuestion {
   options: SafeQuestionOption[];
   topicId: string;
   difficulty: string;
+  /** Code question: the code is shown as a block (see lib/questionText). */
+  code?: boolean;
 }
 
 export interface SafeAnswer {
@@ -191,6 +194,7 @@ export const getResultApi = async (attemptId: string): Promise<{
   attempt: SkillTestAttempt;
   certificate: SkillTestCertificate | null;
   recommendation: SkillTestRecommendation | null;
+  review?: ReviewItem[];
 }> => json(await apiFetch(`${base}/attempts/${encodeURIComponent(attemptId)}/result`));
 
 export const fetchMyAttemptsApi = async (): Promise<SkillTestAttempt[]> =>

@@ -103,6 +103,7 @@ skillTestRouter.post('/assessments/:slug/start', requireAuth, (req: Request, res
     const premiumIds = (company?.modules || []).filter((m: any) => m.is_premium).map((m: any) => m.id);
     const owned = ownedModuleIdsFor(db, userId);
     const unlocked = !company
+      || company.is_free === true
       || user?.role === 'admin'
       || unlockedCompanyIds(db, userId).includes(company.id)
       || (premiumIds.length > 0 && premiumIds.every((id: string) => owned.includes(id)));
@@ -424,7 +425,28 @@ skillTestRouter.get('/attempts/:attemptId/result', requireAuth, (req: Request, r
     (r: Recommendation) => r.attemptId === attempt.id
   );
 
-  res.json({ attempt, certificate, recommendation });
+  // Answer review after submit (when the test allows it): each question with the
+  // student's pick, the right answer and the explanation, in paper order.
+  const assessment = (db.assessments || []).find((a: Assessment) => a.id === attempt.assessmentId);
+  let review: any[] = [];
+  if (attempt.status === 'submitted' && assessment?.showExplanationAfterSubmit) {
+    const qMap = new Map<string, any>((db.questions || []).map((q: any) => [q.id, q]));
+    const aMap = new Map<string, any>((attempt.answers || []).map((a: any) => [a.questionId, a]));
+    review = attempt.questionOrder.map((qid: string) => {
+      const q = qMap.get(qid);
+      if (!q) return null;
+      const picked = aMap.get(qid)?.selectedOptions?.[0];
+      return {
+        id: q.id, topicId: q.topicId, question: q.question, code: !!q.code,
+        options: (q.options || []).map((o: any) => o.text),
+        correct: (q.options || []).findIndex((o: any) => o.isCorrect),
+        selected: picked == null || picked === '' ? null : Number(picked),
+        explanation: q.explanation || '',
+      };
+    }).filter(Boolean);
+  }
+
+  res.json({ attempt, certificate, recommendation, review });
 });
 
 // ─── GET /my-attempts ───────────────────────────────────────────────────────────
@@ -558,6 +580,8 @@ function sanitizeAttempt(attempt: Attempt, allQuestions: Question[]) {
       // NO isCorrect — never leak answers to frontend
       topicId: q.topicId,
       difficulty: q.difficulty,
+      // Code questions (Swift output, pseudocode) are shown with their code in a block.
+      code: (q as any).code ? true : undefined,
     }));
 
   const answersByQid: Record<string, any> = {};

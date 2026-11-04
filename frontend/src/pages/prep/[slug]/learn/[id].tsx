@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { ArrowLeft, ArrowRight, Check, Lightbulb, AlertTriangle, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Lightbulb, AlertTriangle, X, ExternalLink, Wrench } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { PrepNav } from '@/components/prep/PrepNav';
 import { BuyPackSheet } from '@/components/prep/BuyPackSheet';
@@ -73,7 +73,7 @@ export default function LessonPage() {
 
         {v && (
           <>
-            <p className="eyebrow">{L?.section || v.title.split(':')[0]}</p>
+            <p className="eyebrow">{L?.module ? `Module ${L.module} · ${L.section}` : L?.section || v.title.split(':')[0]}</p>
             <h1 className="mt-1 font-display text-3xl font-bold leading-tight text-heading sm:text-4xl">{L?.title || v.title.split(':').slice(1).join(':').trim()}</h1>
 
             {v.error === 'pack_required' ? (
@@ -81,11 +81,16 @@ export default function LessonPage() {
             ) : L ? (
               <article className="mt-6 space-y-8 text-lg leading-relaxed text-body">
                 {L.what && <p>{L.what}</p>}
+                {L.doc && (
+                  <a href={L.doc.url} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-line bg-card px-4 text-base font-semibold text-link">
+                    <ExternalLink className="h-4 w-4" aria-hidden /> Official docs: {L.doc.label}
+                  </a>
+                )}
 
                 <section>
                   <h2 className="font-display text-2xl font-bold text-heading">Rules and formulas</h2>
                   <ul className="mt-3 space-y-2 rounded-card border border-line bg-card p-5">
-                    {L.rules.map((r) => <li key={r} className="flex gap-2"><Check className="mt-1.5 h-5 w-5 shrink-0 text-success" aria-hidden /><span>{r}</span></li>)}
+                    {L.rules.map((r) => <li key={r} className="flex gap-2"><Check className="mt-1.5 h-5 w-5 shrink-0 text-success" aria-hidden /><span><Inline text={r} /></span></li>)}
                   </ul>
                 </section>
 
@@ -94,7 +99,10 @@ export default function LessonPage() {
                   <ol className="mt-3 space-y-3">
                     {L.examples.map((e, i) => (
                       <li key={i} className="rounded-card border border-line bg-card p-5">
-                        <span className="mr-2 font-bold text-amber-deep">Example {i + 1}.</span>{e}
+                        <span className="mr-2 font-bold text-amber-deep">Example {i + 1}.</span>
+                        {e.includes('\n')
+                          ? <pre className="mt-2 overflow-x-auto rounded-xl bg-surface-hover p-4 font-mono text-[0.95rem] leading-relaxed text-heading">{e}</pre>
+                          : <Inline text={e} />}
                       </li>
                     ))}
                   </ol>
@@ -102,8 +110,15 @@ export default function LessonPage() {
 
                 <section className="flex gap-3 rounded-card border border-danger/30 bg-danger-soft p-5">
                   <AlertTriangle className="mt-1 h-6 w-6 shrink-0 text-danger" aria-hidden />
-                  <p><span className="font-bold text-heading">Common trap: </span>{L.trap}</p>
+                  <p><span className="font-bold text-heading">Common trap: </span><Inline text={L.trap} /></p>
                 </section>
+
+                {L.task && (
+                  <section className="flex gap-3 rounded-card border border-line bg-card p-5">
+                    <Wrench className="mt-1 h-6 w-6 shrink-0 text-amber-deep" aria-hidden />
+                    <p><span className="font-bold text-heading">Try it in Xcode: </span>{L.task}</p>
+                  </section>
+                )}
 
                 {practice.length > 0 && (
                   <section>
@@ -116,7 +131,7 @@ export default function LessonPage() {
                         return (
                           <li key={i} className="rounded-card border border-line bg-card p-5">
                             <p className="font-semibold text-heading">Q{i + 1}.</p>
-                            <pre className="mt-1 whitespace-pre-wrap break-words font-sans text-lg text-heading">{q.question}</pre>
+                            <pre className={`mt-1 whitespace-pre-wrap break-words text-heading ${q.code ? 'overflow-x-auto rounded-xl bg-surface-hover p-4 font-mono text-[0.95rem] leading-relaxed' : 'font-sans text-lg'}`}>{q.question}</pre>
                             <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
                               {q.options.map((o, k) => {
                                 const tone = !shown ? 'border-line hover:border-signal' : k === q.correct ? 'border-success bg-success-soft' : k === picked ? 'border-danger bg-danger-soft' : 'border-line opacity-70';
@@ -166,6 +181,13 @@ export default function LessonPage() {
     </>
   );
 }
+
+/** `code` spans in lesson text (rules, traps) shown in monospace. */
+const Inline: React.FC<{ text: string }> = ({ text }) => (
+  <>{text.split(/(`[^`]+`)/).map((part, i) => (part.startsWith('`') && part.endsWith('`') && part.length > 2
+    ? <code key={i} className="rounded bg-surface-hover px-1.5 py-0.5 font-mono text-[0.92em] text-heading">{part.slice(1, -1)}</code>
+    : <React.Fragment key={i}>{part}</React.Fragment>))}</>
+);
 
 const LockedLesson: React.FC<{ slug: string; name: string }> = ({ slug, name }) => {
   const [open, setOpen] = useState(true);

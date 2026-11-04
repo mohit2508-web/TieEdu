@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { PrepResultPanel } from '@/components/prep/PrepResultPanel';
+import { AnswerReview, type ReviewItem } from '@/components/skill-test/AnswerReview';
 import {
   Award, CheckCircle2, XCircle, MinusCircle, TrendingUp,
   BookOpen, ChevronRight, RotateCcw, Share2, Trophy,
@@ -31,6 +32,7 @@ function ResultPage() {
   const [attempt, setAttempt] = useState<SkillTestAttempt | null>(null);
   const [certificate, setCertificate] = useState<SkillTestCertificate | null>(null);
   const [recommendation, setRecommendation] = useState<SkillTestRecommendation | null>(null);
+  const [review, setReview] = useState<ReviewItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [animated, setAnimated] = useState(false);
@@ -38,7 +40,7 @@ function ResultPage() {
   useEffect(() => {
     if (!router.isReady || typeof attemptId !== 'string') return;
     getResultApi(attemptId)
-      .then((res) => { setAttempt(res.attempt); setCertificate(res.certificate); setRecommendation(res.recommendation); })
+      .then((res) => { setAttempt(res.attempt); setCertificate(res.certificate); setRecommendation(res.recommendation); setReview(res.review || []); })
       .catch((e) => setError(e?.message || 'Could not load result'))
       .finally(() => { setLoading(false); setTimeout(() => setAnimated(true), 100); });
   }, [router.isReady, attemptId]);
@@ -162,6 +164,9 @@ function ResultPage() {
             ))}
           </div>
         </div>
+
+        {/* Every question with your answer, the right one and why */}
+        <AnswerReview items={review} topicName={(id) => (topicPerf.find((t) => t.topicId === id)?.topicName || '').replace(/\s*\(.*\)$/, '')} />
 
         {/* Strengths */}
         {strengths.length > 0 && (

@@ -7,13 +7,32 @@
  */
 import { MPHASIS_BANK } from '../data/companyTests/mphasis';
 import { MPHASIS_LESSONS } from '../data/interviewPrep/mphasisLessons';
+import { MILESTONES, WIPRO_IOS_SLUG, curriculumDays } from '../data/wiproIOS';
 
 export interface PrepSection { key: string; name: string; weight: number }
+
+/**
+ * A fixed course calendar instead of the generated Learn/Strengthen/Final plan
+ * (WIPRO_IOS_3T_PLAN.md): lessons on their curriculum dates, a test on each
+ * milestone day, and the countdown always to the next milestone.
+ */
+export interface PrepSchedule {
+  days: Array<{ date: string; lessons: string[]; milestone?: string }>;
+  milestones: Array<{ key: string; name: string; date: string }>;
+}
+
+/** Words the prep screens use for this company (defaults suit a hiring OA). */
+export interface PrepLabels { section_tests: string; section_test: string; full_mock: string; mock_blurb: string; free_note?: string }
+
+interface PrepConfig {
+  sections: PrepSection[]; lessonModule: string; interviewModules: string[]; defaultDays: number;
+  schedule?: PrepSchedule; labels?: Partial<PrepLabels>;
+}
 
 /** Mphasis prep turns on once its lessons and a full mock's worth of questions exist. */
 const MPHASIS_READY = MPHASIS_LESSONS.length > 0 && MPHASIS_BANK.length >= 75;
 
-export const PREP_COMPANIES: Record<string, { sections: PrepSection[]; lessonModule: string; interviewModules: string[]; defaultDays: number }> = {
+export const PREP_COMPANIES: Record<string, PrepConfig> = {
   'infosys-systems-engineer': {
     sections: [
       { key: 'math', name: 'Mathematical Ability', weight: 10 },
@@ -25,6 +44,19 @@ export const PREP_COMPANIES: Record<string, { sections: PrepSection[]; lessonMod
     lessonModule: 'mod-prep-infosys-se-oa',
     interviewModules: ['mod-prep-infosys-se-tech', 'mod-prep-infosys-se-hr'],
     defaultDays: 50,
+  },
+  // Free program on the owner's course calendar; sections are the milestones.
+  [WIPRO_IOS_SLUG]: {
+    sections: MILESTONES.map((m) => ({ key: m.key, name: m.name, weight: m.key === 'm1' ? 30 : m.key === 'final' ? 10 : 20 })),
+    lessonModule: 'mod-prep-wipro-ios-lessons',
+    interviewModules: [],
+    defaultDays: 45,
+    schedule: { days: curriculumDays(), milestones: MILESTONES },
+    labels: {
+      section_tests: 'Milestone tests', section_test: 'milestone test', full_mock: 'Full course mock',
+      mock_blurb: 'One timed section per milestone, fresh questions every attempt.',
+      free_note: 'Free program: every lesson, milestone test and mock is open. No pack needed.',
+    },
   },
   ...(MPHASIS_READY ? {
     'mphasis-freshers': {
@@ -45,6 +77,7 @@ export const PREP_COMPANIES: Record<string, { sections: PrepSection[]; lessonMod
 const LESSON_SECTION: Record<string, string> = {
   math: 'math', reasoning: 'reasoning', verbal: 'verbal', pseudocode: 'pseudocode', puzzles: 'puzzle', email: 'verbal',
   quant: 'quant', programming: 'programming', coding: 'programming', svar: 'verbal',
+  m1: 'm1', m2: 'm2', m3: 'm3', m4: 'm4', final: 'final',
 };
 const lessonSection = (title: string) => LESSON_SECTION[(title.split(':')[0] || '').trim().toLowerCase()] || 'verbal';
 
@@ -102,6 +135,10 @@ export function buildPrep(db: any, userId: string, slug: string, owned: boolean)
   }
   const mockAttempts = attempts.filter((a: any) => asmBySkill.get(a.assessmentId) === fullMock?.id);
 
+  // Calendar programs score the milestones up to the next one; later ones are not due yet.
+  const nextMs = cfg.schedule ? (cfg.schedule.milestones.find((m) => m.date >= today) || cfg.schedule.milestones[cfg.schedule.milestones.length - 1]) : null;
+  const due = (key: string) => !nextMs || cfg.schedule!.milestones.findIndex((m) => m.key === key) <= cfg.schedule!.milestones.indexOf(nextMs);
+
   const sections = cfg.sections.map((s) => {
     const scores = hist[s.key] || [];
     const sl = lessons.filter((l: any) => l.section === s.key);
@@ -118,16 +155,19 @@ export function buildPrep(db: any, userId: string, slug: string, owned: boolean)
 
   // ---- readiness = 0.6 test + 0.25 lessons + 0.15 consistency
   const wTotal = cfg.sections.reduce((n, s) => n + s.weight, 0);
-  const testScore = sections.reduce((n, s) => n + (s.score ?? 0) * s.weight, 0) / wTotal;
-  const lessonScore = lessons.length ? (lessons.filter((l: any) => l.done).length / lessons.length) * 100 : 0;
+  const scoped = sections.filter((s) => due(s.key));
+  const wScoped = scoped.reduce((n, s) => n + s.weight, 0) || 1;
+  const testScore = scoped.reduce((n, s) => n + (s.score ?? 0) * s.weight, 0) / wScoped;
+  const scopedLessons = lessons.filter((l: any) => due(l.section));
+  const lessonScore = scopedLessons.length ? (scopedLessons.filter((l: any) => l.done).length / scopedLessons.length) * 100 : 0;
   const last14 = new Set(Array.from({ length: 14 }, (_, i) => addDays(today, -i)));
   const activeDays = new Set([...p.activity_days, ...attempts.map((a: any) => String(a.submittedAt || a.updated_at || '').slice(0, 10))]);
   const consistency = ([...activeDays].filter((d) => last14.has(d)).length / 14) * 100;
   const readiness = Math.round(0.6 * testScore + 0.25 * lessonScore + 0.15 * consistency);
 
   // ---- weakest section: lowest score among tested, else the first with lessons left
-  const tested = sections.filter((s) => s.score !== null).sort((a, b) => (a.score! - b.score!));
-  const weak = tested[0] && tested[0].score! < 70 ? tested[0] : sections.find((s) => s.lessons_done < s.lessons_total) || tested[0] || sections[0];
+  const tested = scoped.filter((s) => s.score !== null).sort((a, b) => (a.score! - b.score!));
+  const weak = tested[0] && tested[0].score! < 70 ? tested[0] : scoped.find((s) => s.lessons_done < s.lessons_total) || tested[0] || scoped[0] || sections[0];
   const fix = {
     section: weak.key, name: weak.name, score: weak.score,
     lessons: lessons.filter((l: any) => l.section === weak.key && !l.done).slice(0, 3),
@@ -135,12 +175,18 @@ export function buildPrep(db: any, userId: string, slug: string, owned: boolean)
   };
 
   // ---- the plan: test date (or default) split Learn 60% · Strengthen 25% · Final 15%
-  const testDate = p.test_date || addDays(p.started_at || today, cfg.defaultDays);
+  // Calendar programs count to the next milestone (a date the student set wins until it has passed).
+  const testDate = nextMs ? (p.test_date && p.test_date >= today ? p.test_date : nextMs.date) : (p.test_date || addDays(p.started_at || today, cfg.defaultDays));
   const totalDays = Math.max(7, diffDays(p.started_at || today, testDate));
   const learnDays = Math.round(totalDays * 0.6);
   const strengthenDays = Math.round(totalDays * 0.25);
-  type Item = { kind: 'lesson' | 'sectional' | 'mock' | 'revision' | 'interview'; ref: string; title: string; done: boolean };
+  type Item = { kind: 'lesson' | 'sectional' | 'mock' | 'revision' | 'interview'; ref: string; title: string; done: boolean; soon?: boolean };
   const plan: Array<{ day: number; date: string; phase: string; items: Item[] }> = [];
+  if (cfg.schedule) {
+    const built = schedulePlan(cfg, lessons, sectional, hist, fullMock, mockAttempts, today);
+    plan.push(...built.plan);
+    return finish(built.today);
+  }
   const order = cfg.sections.map((s) => s.key);
   const queue = order.flatMap((k) => [
     ...lessons.filter((l: any) => l.section === k).map((l: any): Item => ({ kind: 'lesson', ref: l.id, title: l.title, done: l.done })),
@@ -162,7 +208,9 @@ export function buildPrep(db: any, userId: string, slug: string, owned: boolean)
     if (!items.length) items.push({ kind: 'revision', ref: weak.test_slug || '', title: `Revision: ${weak.name}`, done: false });
     plan.push({ day: d + 1, date, phase, items });
   }
-  const todayPlan = plan.find((x) => x.date === today) || plan[0];
+  return finish(plan.find((x) => x.date === today) || plan[0]);
+
+  function finish(todayPlan: { day: number; date: string; phase: string; items: Item[] }) {
   // Readiness history, one value per day: drives "+6% this week" and "was → now" after a test.
   p.readiness_log = Array.isArray(p.readiness_log) ? p.readiness_log : [];
   const lastLog = p.readiness_log[p.readiness_log.length - 1];
@@ -179,11 +227,60 @@ export function buildPrep(db: any, userId: string, slug: string, owned: boolean)
     readiness: { score: readiness, band: band(readiness), test: Math.round(testScore), lessons: Math.round(lessonScore), consistency: Math.round(consistency), week_change: readiness - (weekAgo?.score ?? readiness), previous: prevDay },
     attempts: attempts.slice(-20).reverse().map((a: any) => ({ id: a.id, slug: skills.find((s: any) => s.id === asmBySkill.get(a.assessmentId))?.slug, title: skills.find((s: any) => s.id === asmBySkill.get(a.assessmentId))?.name, score: Math.round(Number(a.score) || 0), at: a.submittedAt || a.updated_at })),
     interview: cfg.interviewModules,
+    interview_modules: cfg.interviewModules.map((id) => {
+      const m = (company.modules || []).find((x: any) => x.id === id);
+      return { id, title: String(m?.title || ''), count: (m?.items || []).length };
+    }).filter((m) => m.count > 0),
+    free: !!company.is_free,
+    labels: { section_tests: 'Section tests', section_test: 'section test', full_mock: 'Full mock', mock_blurb: 'Real pattern, fresh questions every attempt.', ...(cfg.labels || {}) },
+    next_milestone: nextMs,
     sections,
-    full_mock: fullMock ? { slug: fullMock.slug, attempts: mockAttempts.length, last: mockAttempts.length ? Number(mockAttempts[mockAttempts.length - 1].score) || 0 : null } : null,
+    full_mock: fullMock ? {
+      slug: fullMock.slug, attempts: mockAttempts.length, last: mockAttempts.length ? Number(mockAttempts[mockAttempts.length - 1].score) || 0 : null,
+      questions: Number(fullMock.totalQuestions) || null, minutes: Number(fullMock.avgCompletionTime) || null,
+    } : null,
     lessons,
     fix,
     today: todayPlan,
     plan,
   };
+  }
+}
+
+/**
+ * Calendar plan: every day from the first class to the final. Lessons sit on
+ * their curriculum dates ("coming" when not written yet), each milestone day
+ * has its test, the two days before it a practice run of that test, empty days
+ * a revision test. Today also lists up to 3 earlier lessons still unread.
+ */
+function schedulePlan(cfg: PrepConfig, lessons: any[], sectional: Record<string, any>, hist: Record<string, number[]>, fullMock: any, mockAttempts: any[], today: string) {
+  type Item = { kind: 'lesson' | 'sectional' | 'mock' | 'revision' | 'interview'; ref: string; title: string; done: boolean; soon?: boolean };
+  const { days, milestones } = cfg.schedule!;
+  const byTitle = new Map(lessons.map((l: any) => [l.title, l]));
+  const strip = (t: string) => t.replace(/^[^:]+:\s*/, '');
+  const name = (k: string) => cfg.sections.find((s) => s.key === k)?.name || k;
+  const short = (k: string) => name(k).split(' · ')[0];
+  const test = (k: string, title: string): Item => ({ kind: 'sectional', ref: sectional[k]?.slug || '', title, done: (hist[k] || []).length > 0, ...(sectional[k] ? {} : { soon: true }) });
+  const first = days[0].date;
+  const last = days[days.length - 1].date;
+  const plan: Array<{ day: number; date: string; phase: string; items: Item[] }> = [];
+  for (let d = first, n = 1; d <= last; d = addDays(d, 1), n++) {
+    const sd = days.find((x) => x.date === d);
+    const ms = milestones.find((m) => m.date >= d) || milestones[milestones.length - 1];
+    const items: Item[] = (sd?.lessons || []).map((t) => {
+      const l: any = byTitle.get(t);
+      return l ? { kind: 'lesson', ref: l.id, title: strip(t), done: l.done } : { kind: 'lesson', ref: '', title: strip(t), done: false, soon: true };
+    });
+    const toMs = diffDays(d, ms.date);
+    if (sd?.milestone) items.push(test(sd.milestone, `${name(sd.milestone)}: test day`));
+    else if (toMs >= 1 && toMs <= 2) items.push(test(ms.key, `Practice: ${short(ms.key)} mock test`));
+    if (d === last && fullMock) items.push({ kind: 'mock', ref: fullMock.slug, title: 'Full course mock', done: mockAttempts.length > 0 });
+    if (!items.length) items.push({ ...test(ms.key, `Revision: ${short(ms.key)} test`), kind: 'revision', done: false });
+    plan.push({ day: n, date: d, phase: short(ms.key), items });
+  }
+  const at = today < first ? plan[0] : today > last ? plan[plan.length - 1] : plan.find((x) => x.date === today)!;
+  const catchUp: Item[] = plan.filter((x) => x.date < at.date).flatMap((x) => x.items)
+    .filter((it) => it.kind === 'lesson' && it.ref && !it.done).slice(0, 3)
+    .map((it) => ({ ...it, title: `Catch up: ${it.title}` }));
+  return { plan, today: { ...at, items: [...catchUp, ...at.items] } };
 }
