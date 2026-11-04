@@ -99,6 +99,8 @@ export interface LessonBody {
   section: string; title: string; what: string; rules: string[]; examples: string[]; trap: string; practice: LessonPractice[];
   /** Official documentation, a hands-on task and the course module (calendar programs). */
   doc?: { label: string; url: string }; task?: string; module?: number;
+  /** The module's cheat sheet (Wipro iOS): tables, quick facts, question patterns. */
+  cheat?: { title: string; tables: Array<{ title?: string; head: string[]; rows: string[][] }>; facts: string[]; patterns: string[] };
 }
 export interface LessonView {
   id: string; title: string; index: number; total: number; owned: boolean; free: boolean; done?: boolean;

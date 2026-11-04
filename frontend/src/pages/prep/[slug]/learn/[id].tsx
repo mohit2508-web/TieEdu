@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { ArrowLeft, ArrowRight, Check, AlertTriangle, X, ExternalLink, Wrench } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, AlertTriangle, X, ExternalLink, Wrench, NotebookPen } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { PrepNav } from '@/components/prep/PrepNav';
 import { BuyPackSheet } from '@/components/prep/BuyPackSheet';
@@ -123,6 +123,36 @@ export default function LessonPage() {
                   </section>
                 )}
 
+                {L.cheat && (
+                  <section id="cheat" className="scroll-mt-32 rounded-card border border-signal/40 bg-signal-soft/40 p-5 sm:p-6">
+                    <h2 className="flex items-center gap-2 font-display text-2xl font-bold text-heading"><NotebookPen className="h-6 w-6 text-amber-deep" aria-hidden /> {L.cheat.title}</h2>
+                    <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
+                      {L.cheat.tables.map((tb, i) => (
+                        <div key={i} className="overflow-x-auto rounded-xl border border-line bg-card">
+                          {tb.title && <p className="border-b border-line px-4 py-2 text-base font-bold text-heading">{tb.title}</p>}
+                          <table className="w-full text-left text-base">
+                            <thead className="bg-surface-hover text-sm text-muted"><tr>{tb.head.map((h, k) => <th key={k} className="px-4 py-2 font-semibold">{h}</th>)}</tr></thead>
+                            <tbody>{tb.rows.map((row, k) => <tr key={k} className="border-t border-line">{row.map((c, j) => <td key={j} className={`px-4 py-2 align-top ${j === 0 ? 'font-mono font-semibold text-heading' : 'text-body'}`}>{c}</td>)}</tr>)}</tbody>
+                          </table>
+                        </div>
+                      ))}
+                    </div>
+                    <ul className="mt-4 space-y-2">
+                      {L.cheat.facts.map((x) => {
+                        const cut = x.indexOf(': ');
+                        return <li key={x} className="flex gap-2"><Check className="mt-1.5 h-5 w-5 shrink-0 text-success" aria-hidden /><span>{cut > 0 && cut < 40 ? <><span className="font-bold text-heading">{x.slice(0, cut)}: </span>{x.slice(cut + 2)}</> : x}</span></li>;
+                      })}
+                    </ul>
+                    <h3 className="mt-5 font-display text-xl font-bold text-heading">Question patterns and how to solve them</h3>
+                    <ul className="mt-2 space-y-2">
+                      {L.cheat.patterns.map((x) => {
+                        const cut = x.indexOf(': ');
+                        return <li key={x} className="rounded-xl bg-card p-3">{cut > 0 ? <><span className="font-bold text-heading">{x.slice(0, cut)}: </span>{x.slice(cut + 2)}</> : x}</li>;
+                      })}
+                    </ul>
+                  </section>
+                )}
+
                 {practice.length > 0 && (
                   <section id="practice" className="scroll-mt-32">
                     <h2 className="font-display text-2xl font-bold text-heading">Try it: {practice.length} questions</h2>
@@ -163,7 +193,7 @@ export default function LessonPage() {
                 <nav aria-label="In this lesson" className="rounded-card border border-line bg-card p-5 shadow-edge-neutral">
                   <p className="text-sm font-bold uppercase tracking-wide text-muted">In this lesson</p>
                   <ul className="mt-3 space-y-1 text-base">
-                    {[['rules', 'Rules and formulas'], ['examples', `Worked examples (${L.examples.length})`], ['trap', 'Common trap'], ...(practice.length ? [['practice', `Practice (${practice.length})`]] : [])].map(([k, label]) => (
+                    {[['rules', 'Rules and formulas'], ['examples', `Worked examples (${L.examples.length})`], ['trap', 'Common trap'], ...(L.cheat ? [['cheat', 'Module cheat sheet']] : []), ...(practice.length ? [['practice', `Practice (${practice.length})`]] : [])].map(([k, label]) => (
                       <li key={k}><a href={`#${k}`} className="block rounded-lg px-2 py-1.5 font-semibold text-heading hover:bg-surface-hover">{label}</a></li>
                     ))}
                   </ul>

@@ -41,7 +41,7 @@ for (const q of WIPRO_IOS_BANK) {
 check('every question: unique, valid for its kind (4-option MCQ / typed answers / 3+ order items), explained, tagged to a lesson', bad === 0, `${bad} bad`);
 const m1 = WIPRO_IOS_BANK.filter((q) => q.topic === 'm1' && (q.kind || 'mcq') === 'mcq');
 // Guess papers (owner, 2026-11-04) and hands-on questions.
-check('guess papers: Part 1 (41) + Part 2 so far (69) are in, each with a memory trick', WIPRO_IOS_BANK.filter((q) => q.trick && (q.kind || 'mcq') === 'mcq').length === 110);
+check('guess papers: Part 1 (41) + Part 2 (80) are in, each with a memory trick', WIPRO_IOS_BANK.filter((q) => q.trick && (q.kind || 'mcq') === 'mcq').length === 121);
 for (const m of ['m1', 'm2', 'm3', 'm4', 'final'] as const) {
   const t = WIPRO_IOS_BANK.filter((q) => q.topic === m);
   check(`${m}: typed and drag-order questions, not only MCQs`, t.filter((q) => q.kind === 'fill').length >= 4 && t.some((q) => q.kind === 'order'));
@@ -86,6 +86,7 @@ const mod = c.modules.find((m: any) => m.id === 'mod-prep-wipro-ios-lessons');
 check('lesson module is free: not premium, not pack-gated', mod && mod.is_premium === false && mod.pack_gated === false);
 check('every lesson item is readable', mod.items.every((it: any) => it.is_free_preview));
 check('reader gets doc link, task and practice', mod.items.every((it: any) => it.lesson?.doc?.url && it.lesson?.task && it.lesson.practice.length >= 3));
+check('every lesson carries its module cheat sheet (all 12 modules)', mod.items.every((it: any) => it.lesson.cheat?.title?.startsWith('Cheat sheet') && it.lesson.cheat.patterns.length >= 2));
 check('practice comes from the lesson’s own questions', mod.items.every((it: any) => it.lesson.practice.every((p: any) => WIPRO_IOS_BANK.find((q) => q.question === p.question)?.lesson === it.lesson.title)));
 
 check('full course mock builds: 60 Qs / 75 min', seedCompanyTest(db, 'wipro-ios') > 0 && db.skills.find((s: any) => s.slug === 'wipro-ios-full-course-mock')?.totalQuestions === 60);

@@ -15,6 +15,7 @@ import { MPHASIS_BANK } from '../data/companyTests/mphasis';
 import { MPHASIS_TECHNICAL, MPHASIS_HR } from '../data/interviewPrep/mphasis';
 import { MPHASIS_LESSONS, MPHASIS_LESSON_EXTRAS } from '../data/interviewPrep/mphasisLessons';
 import { WIPRO_IOS_BANK, WIPRO_IOS_LESSONS, WIPRO_IOS_LESSON_EXTRAS, WIPRO_IOS_SLUG } from '../data/wiproIOS';
+import { CHEAT_SHEETS } from '../data/wiproIOS/cheatsheets';
 
 export function seedCompanyProfiles(db: any, onlyMissing = false, only?: string[]): { created: number; updated: number } {
   const FACT_CHECKED = '2026-10-27';
@@ -305,7 +306,7 @@ const lessonAsItem = ([section, title, rules, example, trap]: Lesson): PrepItem 
  * matching the topic (3 to 5, on-topic first).
  */
 interface LessonExtraPlus { what: string; examples: string[]; match: RegExp; doc?: { label: string; url: string }; task?: string; module?: number }
-interface LessonSource { lessons: Lesson[]; extras: Record<string, LessonExtraPlus>; bank: Array<typeof INFOSYS_SE_BANK[number] & { lesson?: string }>; topic: Record<string, string>; /** Most practice questions per lesson (default 5). */ max?: number }
+interface LessonSource { lessons: Lesson[]; extras: Record<string, LessonExtraPlus>; bank: Array<typeof INFOSYS_SE_BANK[number] & { lesson?: string }>; topic: Record<string, string>; /** Module number → cheat sheet shown in each of its lessons. */ cheats?: Record<number, unknown>; /** Most practice questions per lesson (default 5). */ max?: number }
 
 const INFOSYS_LESSONS: LessonSource = {
   lessons: LESSONS, extras: LESSON_EXTRAS, bank: INFOSYS_SE_BANK,
@@ -319,6 +320,7 @@ const MPHASIS_LESSON_SOURCE: LessonSource = {
 const WIPRO_IOS_LESSON_SOURCE: LessonSource = {
   lessons: WIPRO_IOS_LESSONS, extras: WIPRO_IOS_LESSON_EXTRAS, bank: WIPRO_IOS_BANK,
   topic: { M1: 'm1', M2: 'm2', M3: 'm3', M4: 'm4', Final: 'final' },
+  cheats: CHEAT_SHEETS,
   // Every question tagged to a lesson is practised there (owner: the guess papers must be covered in Train).
   max: 20,
 };
@@ -343,6 +345,7 @@ function structuredLessons(src: LessonSource) {
     return {
       section, title, what: x?.what || '', rules, examples: [example, ...(x?.examples || [])], trap,
       ...(x?.doc ? { doc: x.doc } : {}), ...(x?.task ? { task: x.task } : {}), ...(x?.module ? { module: x.module } : {}),
+      ...(x?.module && src.cheats?.[x.module] ? { cheat: src.cheats[x.module] } : {}),
       practice: pick.map(({ q }) => {
         const x = q as typeof q & { kind?: string; answers?: string[]; items?: string[]; trick?: string };
         return {
@@ -359,7 +362,7 @@ function structuredLessons(src: LessonSource) {
 const LESSON_VERSION = 3;
 
 /** Free sets: every item readable, nothing in the pack. hash: content hash that replaces LESSON_VERSION for this set. */
-const WIPRO_IOS_HASH = md5(JSON.stringify([WIPRO_IOS_LESSONS, WIPRO_IOS_LESSON_EXTRAS, WIPRO_IOS_BANK]));
+const WIPRO_IOS_HASH = md5(JSON.stringify([WIPRO_IOS_LESSONS, WIPRO_IOS_LESSON_EXTRAS, WIPRO_IOS_BANK, CHEAT_SHEETS]));
 
 const SETS: Array<{ slug: string; id: string; type: string; round: string; title: string; order: number; items: PrepItem[]; lesson?: LessonSource; role: string; free?: boolean; hash?: string }> = [
   { slug: 'infosys-systems-engineer', id: 'mod-prep-infosys-se-oa', type: 'preparation_guide', round: 'OA', title: 'Online assessment: topic lessons', order: 1, items: LESSONS.map(lessonAsItem), lesson: INFOSYS_LESSONS, role: 'Systems Engineer' },
