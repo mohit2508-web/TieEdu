@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSecureMode } from '@/hooks/useSecureMode';
 import { splitQuestion } from '@/lib/questionText';
+import { FillInput, OrderList } from '@/components/skill-test/QuestionInputs';
 import { useAuth } from '@/context/AuthContext';
 import { SecureModeWarning, SecureBadge } from '@/components/common/SecureModeWarning';
 import { useRouter } from 'next/router';
@@ -195,6 +196,13 @@ function AssessmentPage() {
 
   const toggleMark = (qId: string) => setMarked((prev) => ({ ...prev, [qId]: !prev[qId] }));
 
+  /** Typed and ordering answers replace the whole answer; an empty one clears it. */
+  const setAnswer = (qId: string, value: string[]) => setAnswers((prev) => {
+    const next = { ...prev };
+    if (value.length && value.some((v) => v.trim())) next[qId] = value; else delete next[qId];
+    return next;
+  });
+
   const clearAnswer = (qId: string) => setAnswers((prev) => {
     const next = { ...prev };
     delete next[qId];
@@ -377,6 +385,23 @@ function AssessmentPage() {
             </button>
           </div>
 
+          {q.type === 'fill_blank' ? (
+            <div className="mt-4"><FillInput large value={selected[0] || ''} onChange={(v) => setAnswer(q.id, [v])} /></div>
+          ) : q.type === 'ordering' ? (() => {
+            // Rows are the shuffled items; the answer is their real indices in the student's order.
+            const shown = q.options.map((o) => o.text);
+            const order = selected.length === q.options.length ? selected.map((v) => q.options.findIndex((o) => String(o.index) === v)) : q.options.map((_, i) => i);
+            return (
+              <div className="mt-4">
+                <OrderList items={shown} order={order} mono={!!q.code} large onChange={(o) => setAnswer(q.id, o.map((p) => String(q.options[p].index)))} />
+                {!selected.length && (
+                  <button type="button" onClick={() => setAnswer(q.id, order.map((p) => String(q.options[p].index)))} className="mt-3 min-h-[44px] rounded-xl border-2 border-gray-200 bg-white px-4 text-sm font-semibold text-gray-700 hover:border-gray-300">
+                    Keep this order as my answer
+                  </button>
+                )}
+              </div>
+            );
+          })() : (
           <div className="mt-4 space-y-2">
             {q.options.map((opt) => {
               const isSelected = selected.includes(String(opt.index));
@@ -398,6 +423,7 @@ function AssessmentPage() {
               );
             })}
           </div>
+          )}
 
           <div className="mt-4 flex items-center justify-between">
             <button
@@ -407,7 +433,7 @@ function AssessmentPage() {
               <RotateCcw className="h-3.5 w-3.5" /> Clear Answer
             </button>
             <span className="text-xs text-gray-400">
-              {isMultiple ? 'Select all that apply' : 'Select one option'}
+              {q.type === 'fill_blank' ? 'Type the answer' : q.type === 'ordering' ? 'Put the rows in order' : isMultiple ? 'Select all that apply' : 'Select one option'}
             </span>
           </div>
         </div>

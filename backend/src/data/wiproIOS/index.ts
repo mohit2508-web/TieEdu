@@ -11,6 +11,7 @@ import { M2_LESSONS, M2_QUESTIONS } from './m2';
 import { M3_LESSONS, M3_QUESTIONS } from './m3';
 import { M4_LESSONS, M4_QUESTIONS } from './m4';
 import { FINAL_LESSONS, FINAL_QUESTIONS } from './final';
+import { GUESS_QUESTIONS } from './guess';
 
 export type { MKey, WLesson, WQuestion } from './types';
 
@@ -69,7 +70,7 @@ export const TOPICS: Array<[number, string]> = [
 ];
 
 export const WIPRO_IOS_LESSONS_RICH: WLesson[] = [...M1_LESSONS, ...M2_LESSONS, ...M3_LESSONS, ...M4_LESSONS, ...FINAL_LESSONS];
-export const WIPRO_IOS_BANK: WQuestion[] = [...M1_QUESTIONS, ...M2_QUESTIONS, ...M3_QUESTIONS, ...M4_QUESTIONS, ...FINAL_QUESTIONS];
+export const WIPRO_IOS_BANK: WQuestion[] = [...M1_QUESTIONS, ...M2_QUESTIONS, ...M3_QUESTIONS, ...M4_QUESTIONS, ...FINAL_QUESTIONS, ...GUESS_QUESTIONS];
 
 /** Lesson tuples for the shared seeding code: [section, title, rules, first example, trap]. */
 export const WIPRO_IOS_LESSONS: Lesson[] = WIPRO_IOS_LESSONS_RICH.map((l) => [SECTION_LABEL[l.m], l.title, l.rules, l.examples[0], l.trap]);

@@ -5,6 +5,7 @@ import { loadDb, saveDb } from '../data/db';
 import { touchStreak } from '../lib/streak';
 import type { Skill, Topic, Question, Assessment, Attempt, AttemptAnswer, SkillCertificate, Recommendation } from '../data/skillTestTypes';
 import { requireAuth } from '../middleware/auth';
+import { orderRight, shownOrder, typedRight } from '../lib/answerKinds';
 import { buildSkillCertPdf } from '../lib/skillCertPdf';
 import { events as msgEvents, sendToUser } from '../lib/messaging';
 
@@ -188,7 +189,7 @@ skillTestRouter.post('/attempts/:attemptId/save', requireAuth, (req: Request, re
   if (Array.isArray(answers)) {
     attempt.answers = answers.map((a: any) => ({
       questionId: String(a.questionId),
-      selectedOptions: Array.isArray(a.selectedOptions) ? a.selectedOptions.map(String) : [],
+      selectedOptions: Array.isArray(a.selectedOptions) ? a.selectedOptions.slice(0, 30).map((x: any) => String(x).slice(0, 300)) : [],
       isCorrect: false,
       timeSpentSec: Number(a.timeSpentSec) || 0,
       markedForReview: Boolean(a.markedForReview),
@@ -221,7 +222,7 @@ skillTestRouter.post('/attempts/:attemptId/submit', requireAuth, (req: Request, 
   if (Array.isArray(bodyAnswers)) {
     attempt.answers = bodyAnswers.map((a: any) => ({
       questionId: String(a.questionId),
-      selectedOptions: Array.isArray(a.selectedOptions) ? a.selectedOptions.map(String) : [],
+      selectedOptions: Array.isArray(a.selectedOptions) ? a.selectedOptions.slice(0, 30).map((x: any) => String(x).slice(0, 300)) : [],
       isCorrect: false,
       timeSpentSec: Number(a.timeSpentSec) || 0,
       markedForReview: Boolean(a.markedForReview),
@@ -435,13 +436,20 @@ skillTestRouter.get('/attempts/:attemptId/result', requireAuth, (req: Request, r
     review = attempt.questionOrder.map((qid: string) => {
       const q = qMap.get(qid);
       if (!q) return null;
-      const picked = aMap.get(qid)?.selectedOptions?.[0];
+      const sel: string[] = aMap.get(qid)?.selectedOptions || [];
+      const picked = sel[0];
+      const kind = q.type === 'fill_blank' ? 'fill' : q.type === 'ordering' ? 'order' : 'mcq';
       return {
-        id: q.id, topicId: q.topicId, question: q.question, code: !!q.code,
+        id: q.id, topicId: q.topicId, question: q.question, code: !!q.code, kind,
         options: (q.options || []).map((o: any) => o.text),
-        correct: (q.options || []).findIndex((o: any) => o.isCorrect),
-        selected: picked == null || picked === '' ? null : Number(picked),
+        correct: kind === 'mcq' ? (q.options || []).findIndex((o: any) => o.isCorrect) : -1,
+        selected: kind !== 'mcq' || picked == null || picked === '' ? null : Number(picked),
+        // fill: what they typed; order: the item indices in their order.
+        ...(kind === 'fill' ? { typed: picked ?? null } : {}),
+        ...(kind === 'order' ? { order: sel.length ? sel.map(Number) : null } : {}),
+        right: !!aMap.get(qid)?.isCorrect,
         explanation: q.explanation || '',
+        ...(q.hint ? { trick: q.hint } : {}),
       };
     }).filter(Boolean);
   }
@@ -576,8 +584,11 @@ function sanitizeAttempt(attempt: Attempt, allQuestions: Question[]) {
       question: q.question,
       questionHtml: q.questionHtml || undefined,
       imageUrl: q.imageUrl || undefined,
-      options: (q.options || []).map((o, i) => ({ index: i, text: o.text })),
-      // NO isCorrect — never leak answers to frontend
+      // NO isCorrect — never leak answers to frontend. Typed answers send no options at all;
+      // ordering sends the items shuffled (same order every time this attempt is opened).
+      options: q.type === 'fill_blank' ? []
+        : q.type === 'ordering' ? shownOrder(`${attempt.id}:${q.id}`, (q.options || []).length).map((i) => ({ index: i, text: (q.options || [])[i].text }))
+          : (q.options || []).map((o, i) => ({ index: i, text: o.text })),
       topicId: q.topicId,
       difficulty: q.difficulty,
       // Code questions (Swift output, pseudocode) are shown with their code in a block.
@@ -625,6 +636,9 @@ function evaluateAnswer(q: Question, ans: any): boolean {
   if (!ans) return false;
   const selected: string[] = ans.selectedOptions || [];
   if (selected.length === 0) return false;
+
+  if (q.type === 'fill_blank') return typedRight((q.options || []).map((o) => o.text), selected[0]);
+  if (q.type === 'ordering') return orderRight((q.options || []).length, selected);
 
   if (q.type === 'single_choice' || q.type === 'true_false' || q.type === 'output_prediction' || q.type === 'debugging_mcq' || q.type === 'scenario_based') {
     const correctIdx = (q.options || []).map((o, i) => (o.isCorrect ? i : -1)).filter((i) => i >= 0);

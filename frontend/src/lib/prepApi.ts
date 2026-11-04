@@ -90,7 +90,11 @@ export function useTarget(enabled: boolean) {
 }
 
 // ---- Lesson reader
-export interface LessonPractice { question: string; options: string[]; correct: number; explanation: string; code?: boolean }
+/** kind (default mcq): fill = typed answer checked against `answers`; order = drag `items` (given in the right order). */
+export interface LessonPractice {
+  question: string; options: string[]; correct: number; explanation: string; code?: boolean;
+  kind?: 'mcq' | 'fill' | 'order'; answers?: string[]; items?: string[]; trick?: string;
+}
 export interface LessonBody {
   section: string; title: string; what: string; rules: string[]; examples: string[]; trap: string; practice: LessonPractice[];
   /** Official documentation, a hands-on task and the course module (calendar programs). */

@@ -30,13 +30,32 @@ let bad = 0;
 for (const q of WIPRO_IOS_BANK) {
   const key = q.question.trim();
   const opts = new Set(q.options.map((o) => o.trim()));
-  if (seen.has(key) || q.options.length !== 4 || opts.size !== 4 || q.correct < 0 || q.correct > 3 || q.explanation.length < 20 || !WIPRO_IOS_LESSONS_RICH.some((l) => l.title === q.lesson)) {
+  const kindOk = q.kind === 'fill' ? (q.answers || []).length > 0 && (q.answers || []).every((x) => x.trim())
+    : q.kind === 'order' ? (q.items || []).length >= 3 && new Set(q.items).size === (q.items || []).length
+      : q.options.length === 4 && opts.size === 4 && q.correct >= 0 && q.correct <= 3;
+  if (seen.has(key) || !kindOk || q.explanation.length < 20 || !WIPRO_IOS_LESSONS_RICH.some((l) => l.title === q.lesson)) {
     bad++; console.log('    bad question:', q.question.slice(0, 70));
   }
   seen.add(key);
 }
-check('every question: unique, 4 distinct options, valid answer, explained, tagged to a lesson', bad === 0, `${bad} bad`);
-const m1 = WIPRO_IOS_BANK.filter((q) => q.topic === 'm1');
+check('every question: unique, valid for its kind (4-option MCQ / typed answers / 3+ order items), explained, tagged to a lesson', bad === 0, `${bad} bad`);
+const m1 = WIPRO_IOS_BANK.filter((q) => q.topic === 'm1' && (q.kind || 'mcq') === 'mcq');
+// Guess papers (owner, 2026-11-04) and hands-on questions.
+check('guess papers: Part 1 (41) + Part 2 so far (69) are in, each with a memory trick', WIPRO_IOS_BANK.filter((q) => q.trick && (q.kind || 'mcq') === 'mcq').length === 110);
+for (const m of ['m1', 'm2', 'm3', 'm4', 'final'] as const) {
+  const t = WIPRO_IOS_BANK.filter((q) => q.topic === m);
+  check(`${m}: typed and drag-order questions, not only MCQs`, t.filter((q) => q.kind === 'fill').length >= 4 && t.some((q) => q.kind === 'order'));
+}
+{
+  // Grading the new kinds (backend lib/answerKinds.ts).
+  const { typedRight, orderRight, shownOrder, normAnswer } = require('../src/lib/answerKinds');
+  check('typed answers ignore case, spaces, quotes and a trailing ;', typedRight(['guard'], ' Guard ') && typedRight(['[20, 40]'], '[20,40]') && typedRight(['Int?'], 'int?;') && !typedRight(['weak'], 'unowned') && !typedRight(['x'], ''));
+  check('typed: ?? and ! are kept', normAnswer('??') === '??' && normAnswer('!') === '!');
+  check('order: only the exact order is right', orderRight(3, ['0', '1', '2']) && !orderRight(3, ['1', '0', '2']) && !orderRight(3, ['0', '1']));
+  const s1 = shownOrder('att-1:q-1', 5);
+  check('order: shuffle is stable per attempt and never already solved', JSON.stringify(s1) === JSON.stringify(shownOrder('att-1:q-1', 5)) && !s1.every((v: number, i: number) => v === i) && new Set(s1).size === 5
+    && [2, 3, 4, 6].every((n) => [...Array(30)].every((_, k) => !shownOrder(`s${k}`, n).every((v: number, i: number) => v === i))));
+}
 check('M1 bank holds at least 100 questions', m1.length >= 100, String(m1.length));
 const mix = (d: string) => m1.filter((q) => q.difficulty === d).length / m1.length;
 check('M1 difficulty mix has real depth (≥10% advanced, ≥35% intermediate)', mix('advanced') >= 0.1 && mix('intermediate') >= 0.35, `adv ${mix('advanced').toFixed(2)} int ${mix('intermediate').toFixed(2)}`);
@@ -73,7 +92,8 @@ check('full course mock builds: 60 Qs / 75 min', seedCompanyTest(db, 'wipro-ios'
 seedSectionalTests(db, 'wipro-ios');
 const m1Test = db.skills.find((s: any) => s.slug === 'wipro-ios-full-course-mock-m1');
 check('M1 milestone test exists: 40 Qs, 50 min', m1Test && m1Test.totalQuestions === 40 && m1Test.avgCompletionTime === 50 && m1Test.name === 'Wipro iOS · Milestone 1 · Swift foundations');
-check('M1 test holds the whole M1 bank', db.questions.filter((q: any) => q.skillId === m1Test.id && q.status === 'approved').length === m1.length);
+check('M1 test holds the whole M1 bank (MCQ, typed and order)', db.questions.filter((q: any) => q.skillId === m1Test.id && q.status === 'approved').length === WIPRO_IOS_BANK.filter((q) => q.topic === 'm1').length);
+check('M1 test stores typed and order questions with their own types', ['fill_blank', 'ordering'].every((t) => db.questions.some((q: any) => q.skillId === m1Test.id && q.type === t)));
 check('code questions keep their code flag', db.questions.some((q: any) => q.skillId === m1Test.id && q.code === true));
 check('no empty milestone tests', !db.skills.some((s: any) => s.slug === 'wipro-ios-full-course-mock-m2') || WIPRO_IOS_BANK.filter((q) => q.topic === 'm2').length >= 25);
 

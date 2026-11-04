@@ -202,10 +202,14 @@ function writeStableQuestions(db: any, skill: any, rows: Array<{ q: any; topicId
   for (const { q, topicId } of rows) {
     const id = `qst-${skill.slug}-${md5(q.question)}`;
     keep.add(id);
+    // fill: the accepted answers are the (hidden) options; order: the items in the right order.
+    const type = q.kind === 'fill' ? 'fill_blank' : q.kind === 'order' ? 'ordering' : 'single_choice';
+    const options = q.kind === 'fill' ? (q.answers || []).map((text: string) => ({ text, isCorrect: true }))
+      : q.kind === 'order' ? (q.items || []).map((text: string) => ({ text, isCorrect: false }))
+        : q.options.map((text: string, i: number) => ({ text, isCorrect: i === q.correct }));
     const fields = {
-      skillId: skill.id, topicId, type: 'single_choice', difficulty: q.difficulty, question: q.question,
-      options: q.options.map((text: string, i: number) => ({ text, isCorrect: i === q.correct })),
-      explanation: q.explanation, tags: tags(q), status: 'approved', code: !!q.code, updated_at: now,
+      skillId: skill.id, topicId, type, difficulty: q.difficulty, question: q.question, options,
+      explanation: q.explanation, hint: q.trick || null, tags: tags(q), status: 'approved', code: !!q.code, updated_at: now,
     };
     const old = db.questions.find((x: any) => x.id === id);
     if (old) Object.assign(old, fields);
@@ -301,7 +305,7 @@ const lessonAsItem = ([section, title, rules, example, trap]: Lesson): PrepItem 
  * matching the topic (3 to 5, on-topic first).
  */
 interface LessonExtraPlus { what: string; examples: string[]; match: RegExp; doc?: { label: string; url: string }; task?: string; module?: number }
-interface LessonSource { lessons: Lesson[]; extras: Record<string, LessonExtraPlus>; bank: Array<typeof INFOSYS_SE_BANK[number] & { lesson?: string }>; topic: Record<string, string> }
+interface LessonSource { lessons: Lesson[]; extras: Record<string, LessonExtraPlus>; bank: Array<typeof INFOSYS_SE_BANK[number] & { lesson?: string }>; topic: Record<string, string>; /** Most practice questions per lesson (default 5). */ max?: number }
 
 const INFOSYS_LESSONS: LessonSource = {
   lessons: LESSONS, extras: LESSON_EXTRAS, bank: INFOSYS_SE_BANK,
@@ -315,6 +319,8 @@ const MPHASIS_LESSON_SOURCE: LessonSource = {
 const WIPRO_IOS_LESSON_SOURCE: LessonSource = {
   lessons: WIPRO_IOS_LESSONS, extras: WIPRO_IOS_LESSON_EXTRAS, bank: WIPRO_IOS_BANK,
   topic: { M1: 'm1', M2: 'm2', M3: 'm3', M4: 'm4', Final: 'final' },
+  // Every question tagged to a lesson is practised there (owner: the guess papers must be covered in Train).
+  max: 20,
 };
 
 function structuredLessons(src: LessonSource) {
@@ -332,12 +338,19 @@ function structuredLessons(src: LessonSource) {
     ];
     // Up to 5 on-topic questions; when the bank has fewer, fill to 3 with the section's others (never pad to 5 with off-topic ones).
     const hits = all.filter(hit).length;
-    const pick = section === 'Email' || section === 'SVAR' ? [] : order.slice(0, Math.min(5, Math.max(3, hits)));
+    const pick = section === 'Email' || section === 'SVAR' ? [] : order.slice(0, Math.min(src.max ?? 5, Math.max(3, hits)));
     pick.forEach(({ i }) => used.add(i));
     return {
       section, title, what: x?.what || '', rules, examples: [example, ...(x?.examples || [])], trap,
       ...(x?.doc ? { doc: x.doc } : {}), ...(x?.task ? { task: x.task } : {}), ...(x?.module ? { module: x.module } : {}),
-      practice: pick.map(({ q }) => ({ question: q.code ? q.question : q.question.replace(/\s*\n\s*/g, ' '), options: q.options, correct: q.correct, explanation: q.explanation, code: q.code })),
+      practice: pick.map(({ q }) => {
+        const x = q as typeof q & { kind?: string; answers?: string[]; items?: string[]; trick?: string };
+        return {
+          question: q.code ? q.question : q.question.replace(/\s*\n\s*/g, ' '), options: q.options, correct: q.correct, explanation: q.explanation, code: q.code,
+          ...(x.kind && x.kind !== 'mcq' ? { kind: x.kind, answers: x.answers, items: x.items } : {}),
+          ...(x.trick ? { trick: x.trick } : {}),
+        };
+      }),
     };
   });
 }

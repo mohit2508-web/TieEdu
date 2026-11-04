@@ -105,8 +105,8 @@ export default function PrepPage() {
   return (
     <>
       <Head><title>My {data.company.name} prep | TieEdu</title></Head>
-      <PrepNav slug={slug} name={data.company.name} active={tab} onTab={setTab} lab={!!data.lab} />
-      <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
+      <PrepNav slug={slug} name={data.company.name} active={tab} onTab={setTab} lab={!!data.lab} wide />
+      <main className="mx-auto w-full max-w-[1280px] px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="font-display text-3xl font-bold text-heading sm:text-4xl">My {data.company.name} prep</h1>
           {data.free
@@ -186,7 +186,8 @@ export default function PrepPage() {
               );
             })()}
 
-            <section className="mt-8">
+            <div className="mt-8 grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+            <section>
               <h2 className="font-display text-2xl font-bold text-heading">Today · Day {data.today.day} · {data.today.phase}</h2>
               <ul className="mt-3 space-y-2">{data.today.items.map((it, i) => <ItemRow key={i} it={it} />)}</ul>
               {aheadItem && (
@@ -197,7 +198,7 @@ export default function PrepPage() {
               )}
             </section>
 
-            <section className="mt-8 rounded-card border border-danger/30 bg-card p-5 shadow-edge-neutral">
+            <section className="rounded-card border border-danger/30 bg-card p-5 shadow-edge-neutral">
               <h2 className="font-display text-xl font-bold text-heading">Fix next: {data.fix.name}{data.fix.score !== null ? ` · ${data.fix.score}%` : ''}</h2>
               <p className="text-base text-muted">Read these lessons, then take the {L.section_test} again.</p>
               <ul className="mt-3 space-y-2">
@@ -205,10 +206,11 @@ export default function PrepPage() {
                 {data.fix.test_slug && <ItemRow it={{ kind: 'sectional', ref: data.fix.test_slug, title: `${data.fix.name}: ${L.section_test}`, done: false }} />}
               </ul>
             </section>
+            </div>
 
             <section className="mt-8">
               <h2 className="font-display text-2xl font-bold text-heading">Your roadmap</h2>
-              <ol className="mt-3 space-y-2">
+              <ol className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2">
                 {visible.map((d) => {
                   const all = d.items.every((i) => i.done);
                   const isToday = d.date === data.today.date;
@@ -224,7 +226,7 @@ export default function PrepPage() {
                 })}
               </ol>
               {later.length > 0 && (
-                <ul className="mt-3 space-y-2">
+                <ul className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2">
                   {later.map((m) => (
                     <li key={m.phase} className="flex items-center justify-between gap-3 rounded-xl border border-dashed border-line p-3 text-base text-muted">
                       <span className="font-semibold text-heading">{m.phase}</span>
@@ -241,8 +243,8 @@ export default function PrepPage() {
         )}
 
         {tab === 'train' && (
-          <section className="mt-8 space-y-6">
-            <p className="text-base text-body">Read a lesson, answer its practice questions, then take the {L.section_test}. Lessons are ticked when you finish the practice.</p>
+          <section className="mt-8 grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
+            <p className="text-base text-body lg:col-span-2">Read a lesson, answer its practice questions, then take the {L.section_test}. Lessons are ticked when you finish the practice.</p>
             {data.sections.map((s) => {
               const ls = data.lessons.filter((l) => l.section === s.key);
               if (!ls.length) return null;
@@ -274,7 +276,7 @@ export default function PrepPage() {
         )}
 
         {tab === 'test' && (
-          <section className="mt-8 space-y-6">
+          <section className="mt-8 grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
             {data.full_mock && (
               <div className="rounded-card border border-line bg-card p-5 shadow-edge-neutral">
                 <h2 className="font-display text-xl font-bold text-heading">{L.full_mock}{mockQs ? ` · ${mockQs} questions` : ''}{data.full_mock.minutes ? ` · ${data.full_mock.minutes} min` : ''}</h2>
@@ -282,10 +284,10 @@ export default function PrepPage() {
                 <ul className="mt-3"><ItemRow it={{ kind: 'mock', ref: data.full_mock.slug, title: mockTaken ? `Take another ${L.full_mock.toLowerCase()}` : data.free ? `Start the ${L.full_mock.toLowerCase()}` : 'Free demo test', done: false }} /></ul>
               </div>
             )}
-            <div className="rounded-card border border-line bg-card p-5 shadow-edge-neutral">
+            <div className="rounded-card border border-line bg-card p-5 shadow-edge-neutral lg:col-span-2 lg:row-start-1">
               <h2 className="font-display text-xl font-bold text-heading">{L.section_tests}</h2>
               <p className="mt-1 text-base text-muted">One at a time, unlimited retakes. Retake your weakest one after reading its lessons.</p>
-              <ul className="mt-3 space-y-2">
+              <ul className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2">
                 {data.sections.map((s) => (
                   <ItemRow key={s.key} it={{ kind: 'sectional', ref: s.test_slug || '', title: `${s.name}${s.score !== null ? ` · last ${s.score}%` : ''}`, done: false, soon: !s.test_slug }} />
                 ))}
@@ -302,7 +304,7 @@ export default function PrepPage() {
 
         {tab === 'track' && (
           <section className="mt-8 space-y-6">
-            <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
               {data.sections.map((s) => (
                 <li key={s.key} className="rounded-card border border-line bg-card p-4 shadow-edge-neutral">
                   <div className="flex items-baseline justify-between">

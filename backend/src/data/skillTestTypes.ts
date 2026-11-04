@@ -66,7 +66,7 @@ export interface Question {
   skillId: string;
   topicId: string;
   subtopic?: string;
-  type: 'single_choice' | 'multiple_choice' | 'true_false' | 'output_prediction' | 'debugging_mcq' | 'scenario_based' | 'match_following' | 'ordering' | 'image_diagram' | 'assertion_reason';
+  type: 'single_choice' | 'multiple_choice' | 'true_false' | 'output_prediction' | 'debugging_mcq' | 'scenario_based' | 'match_following' | 'ordering' | 'fill_blank' | 'image_diagram' | 'assertion_reason';
   difficulty: 'beginner' | 'intermediate' | 'advanced' | 'expert';
   question: string;
   questionHtml?: string;
