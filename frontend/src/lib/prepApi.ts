@@ -25,6 +25,7 @@ export interface PrepView {
   next_milestone?: { key: string; name: string; date: string } | null;
   /** Hands-on labs tracked in Project Pulse (null for programs without labs). */
   lab?: {
+    pack: string;
     pulse_class: { id: string; name: string } | null;
     items: Array<{
       id: string; code: string; title: string; milestone: string; due: string; kind: 'lab' | 'assessment' | 'capstone';

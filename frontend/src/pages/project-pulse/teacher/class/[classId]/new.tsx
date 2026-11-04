@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
 import { LayoutTemplate, Copy, FilePlus2 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { PulseShell } from '@/components/pulse/PulseUi';
 import { PulseGate } from '@/components/pulse/PulseGate';
 import { TaskEditor, emptyTask } from '@/components/pulse/TaskEditor';
 import { pulseApi, type TaskInput } from '@/lib/pulse/api';
+import { usePulseNav } from '@/lib/pulse/scope';
 
 /**
  * Project Pulse — a new task: start from a ready-made C template, copy one of
@@ -14,7 +14,7 @@ import { pulseApi, type TaskInput } from '@/lib/pulse/api';
 type Tpl = { id: string; title: string; level: string; summary: string; input: TaskInput };
 
 const Body: React.FC<{ classId: string }> = ({ classId }) => {
-  const router = useRouter();
+  const nav = usePulseNav();
   const [templates, setTemplates] = useState<Tpl[]>([]);
   const [mine, setMine] = useState<{ id: string; title: string; class_name: string }[]>([]);
   const [start, setStart] = useState<{ key: string; input: TaskInput } | null>(null);
@@ -26,12 +26,12 @@ const Body: React.FC<{ classId: string }> = ({ classId }) => {
 
   const copyTask = async (id: string) => {
     setMsg(null);
-    try { const t = await pulseApi.duplicate(id, classId); router.replace(`/project-pulse/teacher/task/${t.id}/edit`); }
+    try { const t = await pulseApi.duplicate(id, classId); nav.replace(`/project-pulse/teacher/task/${t.id}/edit`); }
     catch (e: any) { setMsg(e?.message || 'Could not copy.'); }
   };
 
   return (
-    <PulseShell title="New task" role={null} crumbs={[{ href: `/project-pulse/teacher/class/${classId}`, label: 'Class' }]}>
+    <PulseShell title="New task" role={null} crumbs={[{ href: nav.href(`/project-pulse/teacher/class/${classId}`), label: 'Class' }]}>
       {!start ? (
         <div className="space-y-4">
           <section className="rounded-card border border-line bg-card p-5">
@@ -75,7 +75,7 @@ const Body: React.FC<{ classId: string }> = ({ classId }) => {
         <>
           <button type="button" onClick={() => setStart(null)} className="mb-3 text-sm font-semibold text-link">← Choose another way to start</button>
           <TaskEditor key={start.key} initial={start.input}
-            onSave={async (t) => { const x = await pulseApi.createTask(classId, t); router.replace(`/project-pulse/teacher/task/${x.id}/edit`); }} />
+            onSave={async (t) => { const x = await pulseApi.createTask(classId, t); nav.replace(`/project-pulse/teacher/task/${x.id}/edit`); }} />
         </>
       )}
     </PulseShell>
@@ -83,7 +83,7 @@ const Body: React.FC<{ classId: string }> = ({ classId }) => {
 };
 
 export default function PulseNewTask() {
-  const router = useRouter();
-  const classId = typeof router.query.classId === 'string' ? router.query.classId : '';
+  const nav = usePulseNav();
+  const classId = typeof nav.query.classId === 'string' ? nav.query.classId : '';
   return <PulseGate title="New task">{classId ? <Body classId={classId} /> : null}</PulseGate>;
 }

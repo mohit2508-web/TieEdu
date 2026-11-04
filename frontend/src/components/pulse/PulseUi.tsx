@@ -3,6 +3,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { Activity, ShieldAlert, Inbox, CheckCircle2, CircleDashed, XCircle, Copy, Clock3, Layers, History, AlertTriangle, FileCode2, Info } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { usePulseNav } from '@/lib/pulse/scope';
 import { STATUS_META, lineDiff, type PulseStatus, type Verdict, type Flag, type SourceFile, type Evidence } from '@/lib/pulse/demo';
 
 /**
@@ -19,7 +20,9 @@ export const PulseShell: React.FC<{
   /** Sample-data mode: shows the preview banner and the teacher/student switch. */
   preview?: boolean;
   children: React.ReactNode;
-}> = ({ title, role, crumbs, actions, preview, children }) => (
+}> = ({ title, role, crumbs, actions, preview, children }) => {
+  const nav = usePulseNav();
+  return (
   <>
     <Head>
       <title>{`${title} — Project Pulse · TieEdu`}</title>
@@ -38,20 +41,20 @@ export const PulseShell: React.FC<{
 
       <div className="mb-6 flex flex-col gap-4 border-b border-line pb-5 md:flex-row md:items-end md:justify-between">
         <div className="min-w-0">
-          <Link href="/project-pulse" className="inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-widest text-link">
+          <Link href={nav.href('/project-pulse')} className="inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-widest text-link">
             <Activity className="h-4 w-4" aria-hidden /> Project Pulse
           </Link>
           {crumbs?.length ? (
             <nav aria-label="Breadcrumb" className="mt-1 flex flex-wrap items-center gap-1 text-xs text-muted">
               {crumbs.map((c) => (
                 <React.Fragment key={c.href}>
-                  <Link href={c.href} className="hover:text-link">{c.label}</Link>
+                  <Link href={nav.href(c.href)} className="hover:text-link">{c.label}</Link>
                   <span aria-hidden>/</span>
                 </React.Fragment>
               ))}
             </nav>
           ) : null}
-          <h1 className="mt-1 truncate font-display text-h1 text-heading">{title}</h1>
+          <h1 className="mt-1 break-words font-display text-2xl leading-tight text-heading sm:text-h1">{title}</h1>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {actions}
@@ -74,7 +77,8 @@ export const PulseShell: React.FC<{
       {children}
     </div>
   </>
-);
+  );
+};
 
 export const StatusPill: React.FC<{ status: PulseStatus; className?: string }> = ({ status, className }) => {
   const m = STATUS_META[status];

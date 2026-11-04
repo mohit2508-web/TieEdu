@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
 import { Plus, Send, Check, Trash2, Copy, KeyRound, UserPlus, ChevronRight, Pencil, ClipboardCheck, GitBranch } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { PulseShell } from '@/components/pulse/PulseUi';
 import { PulseGate, PulseLoadState, usePulseLoad } from '@/components/pulse/PulseGate';
 import { pulseApi, type ClassDetail } from '@/lib/pulse/api';
+import { usePulseNav } from '@/lib/pulse/scope';
 import { fmtDateTime } from '@/lib/pulse/demo';
 
 /**
@@ -23,6 +23,7 @@ const parseEntries = (text: string) => text.split(/\r?\n/).map((l) => l.split(/[
   .map(([email, name, roll_no]) => ({ email, name, roll_no }));
 
 const ClassBody: React.FC<{ id: string }> = ({ id }) => {
+  const nav = usePulseNav();
   const { data: cls, error, reload, setData } = usePulseLoad<ClassDetail>(() => pulseApi.cls(id), [id]);
   const [text, setText] = useState('');
   const [links, setLinks] = useState<{ email: string; link: string }[]>([]);
@@ -45,8 +46,8 @@ const ClassBody: React.FC<{ id: string }> = ({ id }) => {
   cls.roster.forEach((r) => { counts[r.status] = (counts[r.status] || 0) + 1; });
 
   return (
-    <PulseShell title={cls.name} role={null} crumbs={[{ href: '/project-pulse/teacher', label: 'My classes' }]}
-      actions={<Link href={`/project-pulse/teacher/class/${cls.id}/new`} className={primary}><Plus className="h-4 w-4" /> New task</Link>}>
+    <PulseShell title={cls.name} role={null} crumbs={[{ href: nav.href('/project-pulse/teacher'), label: 'My classes' }]}
+      actions={<Link href={nav.href(`/project-pulse/teacher/class/${cls.id}/new`)} className={primary}><Plus className="h-4 w-4" /> New task</Link>}>
       {msg ? <p role="status" className="mb-4 rounded-cell bg-secondary-soft px-4 py-2.5 text-sm text-secondary">{msg}</p> : null}
 
       <section className="rounded-card border border-line bg-card">
@@ -54,23 +55,23 @@ const ClassBody: React.FC<{ id: string }> = ({ id }) => {
           <h2 className="font-display text-h3 text-heading">Tasks</h2>
           {/* Ready-made Wipro iOS labs: every lab and milestone from the handbook, published with folders and deadlines. */}
           <button type="button" disabled={busy} className={ghost}
-            onClick={() => run(async () => { const r = await pulseApi.addPack(cls.id, 'wipro-ios'); setMsg(r.added ? `${r.added} Wipro iOS labs added and published. Students push each lab to its folder.` : 'All Wipro iOS labs are already in this class.'); }, undefined)}>
+            onClick={() => run(async () => { const r = await pulseApi.addPack(cls.id, 'wipro-ios'); setMsg(r.added ? `${r.added} Wipro iOS labs added and published. Students push each lab to its folder.` : 'All Wipro iOS labs are already in this class; their wording is refreshed from the handbook.'); }, undefined)}>
             <Plus className="h-3.5 w-3.5" /> Add Wipro iOS (Swift) labs
           </button>
         </div>
         <ul className="divide-y divide-line">
           {cls.tasks.map((t) => (
-            <li key={t.id} className="flex flex-col gap-2 px-5 py-3 sm:flex-row sm:items-center">
-              <Link href={`/project-pulse/teacher/task/${t.id}`} className="min-w-0 flex-1">
-                <span className="font-semibold text-heading hover:text-link">{t.title}</span>
+            <li key={t.id} className="flex flex-col gap-3 px-4 py-4 sm:px-5 lg:flex-row lg:items-center">
+              <Link href={nav.href(`/project-pulse/teacher/task/${t.id}`)} className="min-w-0 flex-1">
+                <span className="text-base font-semibold leading-snug text-heading hover:text-link">{t.title}</span>
                 {!t.published ? <span className="ml-2 rounded-full bg-surface-hover px-2 py-0.5 text-xs font-semibold text-muted">Draft</span> : null}
-                <span className="block text-xs text-muted"><span className="font-mono">{t.folder}/</span> · due {fmtDateTime(t.deadline_at)} · {t.started} started · {t.reviewed} reviewed · {t.done} done{t.auto_tests ? ' · auto tests' : ''}</span>
+                <span className="mt-1 block text-sm text-muted"><span className="font-mono">{t.folder}/</span> · due {fmtDateTime(t.deadline_at)} · {t.started} started · {t.reviewed} reviewed · {t.done} done{t.auto_tests ? ' · auto tests' : ''}</span>
               </Link>
-              <div className="flex gap-1.5">
-                <Link href={`/project-pulse/teacher/task/${t.id}/review`} className={ghost}><ClipboardCheck className="h-3.5 w-3.5" /> Review</Link>
-                <Link href={`/project-pulse/teacher/task/${t.id}/edit`} className={ghost}><Pencil className="h-3.5 w-3.5" /> Edit</Link>
+              <div className="flex shrink-0 flex-wrap gap-1.5">
+                <Link href={nav.href(`/project-pulse/teacher/task/${t.id}/review`)} className={ghost}><ClipboardCheck className="h-3.5 w-3.5" /> Review</Link>
+                <Link href={nav.href(`/project-pulse/teacher/task/${t.id}/edit`)} className={ghost}><Pencil className="h-3.5 w-3.5" /> Edit</Link>
                 <button type="button" disabled={busy} className={ghost} onClick={() => run(() => pulseApi.duplicate(t.id), 'Copied as a draft with a new folder. Edit it, then publish.')}><Copy className="h-3.5 w-3.5" /> Duplicate</button>
-                <Link href={`/project-pulse/teacher/task/${t.id}`} className={ghost}>Dashboard <ChevronRight className="h-3.5 w-3.5" /></Link>
+                <Link href={nav.href(`/project-pulse/teacher/task/${t.id}`)} className={ghost}>Dashboard <ChevronRight className="h-3.5 w-3.5" /></Link>
               </div>
             </li>
           ))}
@@ -175,7 +176,7 @@ const ClassBody: React.FC<{ id: string }> = ({ id }) => {
 };
 
 export default function PulseClassPage() {
-  const router = useRouter();
-  const id = typeof router.query.classId === 'string' ? router.query.classId : '';
+  const nav = usePulseNav();
+  const id = typeof nav.query.classId === 'string' ? nav.query.classId : '';
   return <PulseGate title="Class">{id ? <ClassBody id={id} /> : null}</PulseGate>;
 }

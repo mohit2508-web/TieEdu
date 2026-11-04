@@ -19,7 +19,7 @@ const KIND_ICON = { lesson: BookOpen, sectional: ClipboardCheck, mock: Trophy, r
 const KIND_LABEL = { lesson: 'Lesson', sectional: 'Section test', mock: 'Full mock', revision: 'Revision test', interview: 'Interview prep' } as const;
 
 const fmt = (d: string) => new Date(d + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
-const TABS: PrepTab[] = ['plan', 'train', 'test', 'track', 'lab'];
+const TABS: PrepTab[] = ['plan', 'train', 'test', 'track'];
 
 export default function PrepPage() {
   const router = useRouter();
@@ -37,6 +37,7 @@ export default function PrepPage() {
   }, [slug]);
   useEffect(() => { if (user) load(); }, [user, load]);
 
+  useEffect(() => { if (slug && router.query.tab === 'lab') router.replace(`/prep/${slug}/lab`); }, [slug, router]);
   const setTab = (t: PrepTab) => router.replace({ query: { slug, ...(t === 'plan' ? {} : { tab: t }) } }, undefined, { shallow: true });
   const done = async (id: string) => { await markLesson(slug, id).catch(() => {}); load(); };
 
@@ -299,8 +300,6 @@ export default function PrepPage() {
           </section>
         )}
 
-        {tab === 'lab' && data.lab && <LabTab lab={data.lab} sections={data.sections} />}
-
         {tab === 'track' && (
           <section className="mt-8 space-y-6">
             <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -353,73 +352,3 @@ const Trend: React.FC<{ values: number[] }> = ({ values }) => {
   );
 };
 
-/** Pulse status → what the student sees. */
-const LAB_STATUS: Record<string, { label: string; tone: string }> = {
-  noRepo: { label: 'Link your GitHub repo', tone: 'bg-surface-hover text-muted' },
-  notStarted: { label: 'Not pushed yet', tone: 'bg-surface-hover text-muted' },
-  unverified: { label: 'Repo not verified', tone: 'bg-danger-soft text-danger' },
-  submitted: { label: 'Pushed · waiting for review', tone: 'bg-signal-soft text-amber-deep' },
-  progress: { label: 'Reviewed · some tasks left', tone: 'bg-signal-soft text-amber-deep' },
-  done: { label: 'Done ✓', tone: 'bg-success-soft text-success' },
-};
-
-/**
- * Lab: the handbook's hands-on labs, grouped by milestone. Inside a Project
- * Pulse class, each lab shows its Pulse status and opens the student's Pulse page;
- * everyone else still gets the full brief.
- */
-const LabTab: React.FC<{ lab: NonNullable<PrepView['lab']>; sections: PrepView['sections'] }> = ({ lab, sections }) => {
-  const [open, setOpen] = useState<string | null>(null);
-  const done = lab.items.filter((l) => l.pulse?.status === 'done').length;
-  return (
-    <section className="mt-8 space-y-6">
-      {lab.pulse_class ? (
-        <div className="flex flex-col gap-3 rounded-card border border-success/40 bg-success-soft p-5 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-base text-heading"><span className="font-bold">Project Pulse · {lab.pulse_class.name}.</span> Push each lab to its folder in your class repo; your teacher reviews it there. {done}/{lab.items.length} done.</p>
-          <Link href="/project-pulse/student" className="btn btn-primary min-h-[48px] shrink-0 px-5">Open Project Pulse <ArrowRight className="h-5 w-5" aria-hidden /></Link>
-        </div>
-      ) : (
-        <div className="rounded-card border border-signal/40 bg-signal-soft p-5 text-base text-heading">
-          Your teacher tracks these labs in <span className="font-bold">Project Pulse</span>. When they add you to the class, each lab here shows whether you pushed it and your review. Until then you can read every brief and practise.
-        </div>
-      )}
-      {sections.map((s) => {
-        const items = lab.items.filter((l) => l.milestone === s.key);
-        if (!items.length) return null;
-        return (
-          <div key={s.key} className="rounded-card border border-line bg-card p-5 shadow-edge-neutral">
-            <h2 className="font-display text-xl font-bold text-heading">{s.name}</h2>
-            <ul className="mt-3 space-y-2">
-              {items.map((l) => {
-                const st = l.pulse ? LAB_STATUS[l.pulse.status] || LAB_STATUS.notStarted : null;
-                const isOpen = open === l.id;
-                return (
-                  <li key={l.id} className="rounded-xl border border-line">
-                    <button type="button" onClick={() => setOpen(isOpen ? null : l.id)} aria-expanded={isOpen} className="flex w-full flex-wrap items-center gap-3 p-3 text-left">
-                      <span className={`grid h-11 min-w-[44px] shrink-0 place-items-center rounded-xl px-2 text-sm font-bold ${l.kind === 'lab' ? 'bg-signal-soft text-amber-deep' : 'bg-brand-ink text-white'}`}>{l.code}</span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block font-semibold text-heading sm:text-lg">{l.title}</span>
-                        <span className="block text-sm text-muted">Due {fmt(l.due)}{l.pulse ? ` · folder ${l.pulse.folder}/ · ${l.pulse.commits} commit${l.pulse.commits === 1 ? '' : 's'}` : ''}</span>
-                      </span>
-                      {st && <span className={`shrink-0 rounded-full px-3 py-1 text-sm font-semibold ${st.tone}`}>{st.label}{l.pulse?.reviewed ? ` · ${l.pulse.score}%` : ''}</span>}
-                    </button>
-                    {isOpen && (
-                      <div className="space-y-3 border-t border-line p-4 text-base text-body">
-                        <p><span className="font-bold text-heading">Objective: </span>{l.objective}</p>
-                        <ol className="list-decimal space-y-1 pl-5">{l.tasks.map((t) => <li key={t}>{t}</li>)}</ol>
-                        <p><span className="font-bold text-heading">Submit: </span>{l.submit}</p>
-                        {l.extension && <p><span className="font-bold text-heading">Extension: </span>{l.extension}</p>}
-                        {l.pulse?.feedback && <p className="rounded-xl bg-surface-hover p-3"><span className="font-bold text-heading">Teacher feedback: </span>{l.pulse.feedback}</p>}
-                        {l.pulse && <Link href="/project-pulse/student" className="btn btn-ghost min-h-[44px] px-4">Open in Project Pulse <ArrowRight className="h-4 w-4" aria-hidden /></Link>}
-                      </div>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        );
-      })}
-    </section>
-  );
-};

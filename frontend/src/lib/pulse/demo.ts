@@ -56,7 +56,7 @@ export interface PulseStudent {
 export interface PulseTask {
   id: string;
   title: string;
-  language: 'c';
+  language: 'c' | 'swift';
   summary: string;
   assignedAt: string;
   deadlineAt: string;
@@ -71,7 +71,7 @@ export interface PulseTask {
   published?: boolean;
 }
 
-export interface PulseClass { id: string; name: string; subject: string; teacher: string }
+export interface PulseClass { id: string; name: string; subject: string; teacher: string; /** Lab pack the class was set up with (e.g. wipro-ios). */ pack?: string | null }
 
 /** "Now" is pinned so the sample reads the same on every visit. */
 export const DEMO_NOW = new Date('2026-11-03T15:30:00+05:30');

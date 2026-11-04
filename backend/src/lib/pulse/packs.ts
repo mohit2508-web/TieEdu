@@ -20,6 +20,13 @@ const endOfDayIst = (d: string) => `${d}T18:29:00.000Z`;
 /** 09:00 IST on a YYYY-MM-DD date. */
 const morningIst = (d: string) => `${d}T03:30:00.000Z`;
 
+/** A handbook task as a requirement: the full text as the title; only a task too long for a title (120) keeps it in `detail`. */
+const reqOf = (t: string) => {
+  if (t.length <= 120) return { title: t, detail: '' };
+  const cut = t.slice(0, 117);
+  return { title: `${cut.slice(0, Math.max(cut.lastIndexOf(' '), 80))}…`, detail: t };
+};
+
 export function labTaskBody(lab: Lab) {
   const start = MODULES[lab.module]?.start || lab.due;
   const assigned = start < lab.due ? start : new Date(Date.parse(lab.due) - 86400000).toISOString().slice(0, 10);
@@ -31,8 +38,8 @@ export function labTaskBody(lab: Lab) {
     auto_tests: false,
     assigned_at: morningIst(assigned),
     deadline_at: endOfDayIst(lab.due),
-    // Each handbook task is one requirement the teacher marks met / partly / not met.
-    requirements: lab.tasks.map((t, i) => ({ title: `Task ${i + 1}: ${t.length > 100 ? `${t.slice(0, 97)}…` : t}`, detail: t })),
+    // Each handbook task, word for word, is one requirement the teacher marks met / partly / not met.
+    requirements: lab.tasks.map(reqOf),
     tests: [],
     weights: { tests: 0, reqs: 90, activity: 10 },
     published: true,
@@ -47,7 +54,12 @@ export function addPack(db: any, cls: any, packId: string, by: string): number {
   let added = 0;
   for (const lab of pack.labs) {
     const ref = `${packId}:${lab.id}`;
-    if (p.tasks.some((t) => t.class_id === cls.id && t.pack_ref === ref)) continue;
+    const have = p.tasks.find((t) => t.class_id === cls.id && t.pack_ref === ref);
+    if (have) {
+      // Re-adding the pack refreshes the handbook wording; ids R1… stay, so marks are kept.
+      if (have.requirements?.length === lab.tasks.length) have.requirements = have.requirements.map((r: any, i: number) => ({ ...r, ...reqOf(lab.tasks[i]) }));
+      continue;
+    }
     // A teacher may already use the folder name; keep the lab but let the class pick the next free folder.
     const clash = p.tasks.some((t) => t.class_id === cls.id && String(t.folder).toLowerCase() === lab.id);
     const body = labTaskBody(lab);

@@ -11,13 +11,14 @@ const TABS: Array<{ key: PrepTab; label: string }> = [
 ];
 const LAB_TAB = { key: 'lab' as PrepTab, label: 'Lab' };
 
-/** `lab`: show the Lab tab (programs with Project Pulse labs). */
-export const PrepNav: React.FC<{ slug: string; name: string; active?: PrepTab; onTab?: (t: PrepTab) => void; lab?: boolean }> = ({ slug, name, active, onTab, lab }) => (
+/** `lab`: show the Lab tab (programs with Project Pulse labs). `wide`: match the Lab's wider page. */
+export const PrepNav: React.FC<{ slug: string; name: string; active?: PrepTab; onTab?: (t: PrepTab) => void; lab?: boolean; wide?: boolean }> = ({ slug, name, active, onTab, lab, wide }) => (
   <nav aria-label={`${name} prep`} className="sticky top-[var(--header-pin)] z-20 transition-[top] duration-200 motion-reduce:transition-none border-b border-line bg-card/95 backdrop-blur">
-    <div className="mx-auto flex w-full max-w-5xl items-center gap-2 overflow-x-auto px-4 py-2 sm:px-6">
+    <div className={`mx-auto flex w-full items-center gap-2 overflow-x-auto px-4 py-2 sm:px-6 ${wide ? 'max-w-[1280px] lg:px-8' : 'max-w-5xl'}`}>
       <Link href={`/prep/${slug}`} className="mr-2 shrink-0 font-display text-base font-bold text-heading">{name}</Link>
       {(lab ? [...TABS, LAB_TAB] : TABS).map((t) => {
         const cls = `shrink-0 rounded-full px-4 py-2 text-base font-semibold ${active === t.key ? 'bg-brand-ink text-white' : 'text-heading hover:bg-surface-hover'}`;
+        if (t.key === 'lab') return <Link key={t.key} href={`/prep/${slug}/lab`} aria-current={active === 'lab' ? 'page' : undefined} className={cls}>{t.label}</Link>;
         return onTab
           ? <button key={t.key} type="button" onClick={() => onTab(t.key)} aria-pressed={active === t.key} className={cls}>{t.label}</button>
           : <Link key={t.key} href={`/prep/${slug}?tab=${t.key}`} className={cls}>{t.label}</Link>;

@@ -590,7 +590,7 @@ export const taskView = (task: any) => ({
 
 export const classView = (db: any, cls: any) => {
   const owner = (db.users || []).find((u: any) => u.id === cls.owner_id);
-  return { id: cls.id, name: cls.name, subject: cls.subject, teacher: owner?.name || 'Teacher' };
+  return { id: cls.id, name: cls.name, subject: cls.subject, teacher: owner?.name || 'Teacher', pack: cls.pack || null };
 };
 
 /** A teacher's review in one call: verdicts, score override, feedback. */

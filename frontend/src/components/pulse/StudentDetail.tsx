@@ -335,7 +335,7 @@ export const StudentDetail: React.FC<StudentDetailProps> = ({ data, preview, cla
                 ['Last synced', s.sync ? relTime(s.sync.at, now) : '—'],
                 ['Folder', `${task.folder ?? 'task'}/`],
                 ['First commit', s.commits.length ? fmtDateTime(s.commits[s.commits.length - 1].at) : '—'],
-                ['Builds', s.commits.length ? (s.compiles ? 'Yes' : 'No: gcc error') : '—'],
+                ['Builds', !task.auto_tests ? 'Not auto-checked' : s.commits.length ? (s.compiles ? 'Yes' : 'No: gcc error') : '—'],
                 ['Files', s.files.length],
               ].map(([k, v]) => (
                 <div key={String(k)} className="flex justify-between gap-3"><dt className="text-muted">{k}</dt><dd className="text-right font-semibold text-heading">{v}</dd></div>

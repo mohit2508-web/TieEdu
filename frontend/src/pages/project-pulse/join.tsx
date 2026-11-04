@@ -1,20 +1,20 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
 import { KeyRound, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { PulseShell } from '@/components/pulse/PulseUi';
 import { PulseGate } from '@/components/pulse/PulseGate';
 import { pulseApi } from '@/lib/pulse/api';
+import { usePulseNav } from '@/lib/pulse/scope';
 
 /**
  * Project Pulse — join a class. ?token= from the invite email joins at once
  * (same email required); a class code asks to join and the teacher approves.
  */
 const Body: React.FC = () => {
-  const router = useRouter();
+  const nav = usePulseNav();
   const { user } = useAuth();
-  const token = typeof router.query.token === 'string' ? router.query.token : '';
+  const token = typeof nav.query.token === 'string' ? nav.query.token : '';
   const [code, setCode] = useState('');
   const [roll, setRoll] = useState('');
   const [state, setState] = useState<{ ok?: 'active' | 'pending'; error?: string; busy?: boolean }>({});
@@ -22,7 +22,7 @@ const Body: React.FC = () => {
 
   const submit = async (body: { token?: string; code?: string; roll_no?: string }) => {
     setState({ busy: true });
-    try { const r = await pulseApi.join(body); setState({ ok: r.status }); if (r.status === 'active') setTimeout(() => router.push('/project-pulse/student'), 1200); }
+    try { const r = await pulseApi.join(body); setState({ ok: r.status }); if (r.status === 'active') setTimeout(() => nav.push('/project-pulse/student'), 1200); }
     catch (e: any) { setState({ error: e?.message || 'Could not join.' }); }
   };
   useEffect(() => {
@@ -38,7 +38,7 @@ const Body: React.FC = () => {
             <CheckCircle2 className="mx-auto h-10 w-10 text-success" />
             <h2 className="mt-3 font-display text-h2 text-heading">{state.ok === 'active' ? 'You’re in' : 'Request sent'}</h2>
             <p className="mt-1 text-sm text-muted">{state.ok === 'active' ? 'Opening your tasks…' : 'Your teacher will approve you. Your tasks show up after that.'}</p>
-            <Link href="/project-pulse/student" className="mt-4 inline-block text-sm font-semibold text-link">My tasks →</Link>
+            <Link href={nav.href('/project-pulse/student')} className="mt-4 inline-block text-sm font-semibold text-link">My tasks →</Link>
           </div>
         ) : token && !state.error ? (
           <p className="text-center text-sm text-muted">Checking your invite…</p>

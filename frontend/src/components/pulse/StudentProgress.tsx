@@ -152,6 +152,12 @@ export const StudentProgress: React.FC<StudentProgressProps> = ({ data, tasks, p
       {linked && !editing ? (
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div className="min-w-0 space-y-4">
+            {task.summary ? (
+              <details className="rounded-card border border-line bg-card p-5" open>
+                <summary className="cursor-pointer font-display text-h3 text-heading">About this task</summary>
+                <p className="mt-3 whitespace-pre-line text-base leading-relaxed text-body">{task.summary}</p>
+              </details>
+            ) : null}
             {/* Headline */}
             <section className="flex flex-col gap-5 rounded-band bg-hero p-6 text-hero-on sm:flex-row sm:items-center">
               <div className="rounded-full bg-card p-1"><Ring value={reqPoints(me)} max={nReq} size={112} label="Requirements" sub="requirements" /></div>

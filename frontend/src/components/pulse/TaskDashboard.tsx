@@ -161,8 +161,8 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({ data, preview, stu
       {/* Task strip */}
       <div className="mb-5 flex flex-col gap-3 rounded-card border border-line bg-card p-4 lg:flex-row lg:items-center">
         <div className="flex-1">
-          <p className="text-sm text-body">{task.summary}</p>
-          <p className="mt-1 text-xs text-muted">Language: C · {task.requirements.length} requirements · {task.tests.length} test cases · Teacher: {cls.teacher}</p>
+          <p className="whitespace-pre-line text-sm leading-relaxed text-body">{task.summary}</p>
+          <p className="mt-1 text-xs text-muted">Language: {task.language === 'swift' ? 'Swift' : 'C'} · {task.requirements.length} requirements · {task.tests.length} test cases · Teacher: {cls.teacher}</p>
         </div>
         <div className="flex shrink-0 items-center gap-3 rounded-cell bg-signal-soft px-4 py-2.5 text-signal-ink">
           <CalendarClock className="h-5 w-5" />

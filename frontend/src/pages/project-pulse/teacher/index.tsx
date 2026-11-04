@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
 import { Plus, Users, ListChecks, ChevronRight, ShieldCheck, Trash2, Github, Copy, Check, Send, KeyRound } from 'lucide-react';
 import { PulseShell } from '@/components/pulse/PulseUi';
 import { PulseGate, PulseLoadState, usePulseLoad } from '@/components/pulse/PulseGate';
 import { pulseApi, type PulseMe } from '@/lib/pulse/api';
+import { usePulseNav } from '@/lib/pulse/scope';
 
 /**
  * Project Pulse — teacher home: my classes, create a class; for admins also
@@ -117,10 +117,13 @@ const AdminPanel: React.FC = () => {
 };
 
 const Home: React.FC = () => {
-  const router = useRouter();
-  const { data: me, error, reload } = usePulseLoad<PulseMe>(() => pulseApi.me(), []);
+  const nav = usePulseNav();
+  const { data: all, error, reload } = usePulseLoad<PulseMe>(() => pulseApi.me(), []);
+  // Inside a Lab tab: only classes set up with that program's lab pack; new classes get the pack.
+  const pack = nav.scope?.pack;
+  const me = all && pack ? { ...all, classes: all.classes.filter((c) => c.pack === pack) } : all;
   const [name, setName] = useState('');
-  const [subject, setSubject] = useState('Programming in C');
+  const [subject, setSubject] = useState(pack ? '' : 'Programming in C');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   if (!me) return <PulseLoadState title="Teacher portal" error={error} onRetry={reload} />;
@@ -132,8 +135,8 @@ const Home: React.FC = () => {
           <h2 className="font-display text-h2 text-heading">You are not a Pulse teacher yet</h2>
           <p className="mt-2 text-sm text-muted">Teacher logins are created only by TieEdu admins; there is no sign-up for teachers. Ask your college’s TieEdu contact, or write to us from the Contact page.</p>
           <div className="mt-5 flex justify-center gap-2">
-            <Link href="/project-pulse/demo" className={primary}>See the demo</Link>
-            {me.tasks.length ? <Link href="/project-pulse/student" className="inline-flex h-10 items-center rounded-cell border border-line px-4 text-sm font-semibold text-heading">My tasks</Link> : null}
+            <Link href={nav.href('/project-pulse/demo')} className={primary}>See the demo</Link>
+            {me.tasks.length ? <Link href={nav.href('/project-pulse/student')} className="inline-flex h-10 items-center rounded-cell border border-line px-4 text-sm font-semibold text-heading">My tasks</Link> : null}
           </div>
         </div>
       </PulseShell>
@@ -143,15 +146,15 @@ const Home: React.FC = () => {
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true); setMsg(null);
-    try { const c = await pulseApi.createClass({ name, subject }); router.push(`/project-pulse/teacher/class/${c.id}`); }
+    try { const c = await pulseApi.createClass(pack ? { name, subject, pack } : { name, subject }); nav.push(`/project-pulse/teacher/class/${c.id}`); }
     catch (x: any) { setMsg(x?.message || 'Could not create the class.'); setBusy(false); }
   };
 
   return (
-    <PulseShell title="My classes" role={null} actions={<Link href="/project-pulse/demo" className="text-sm font-semibold text-link">Demo</Link>}>
+    <PulseShell title={pack ? 'Lab classes' : 'My classes'} role={null} actions={pack ? null : <Link href={nav.href('/project-pulse/demo')} className="text-sm font-semibold text-link">Demo</Link>}>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {me.classes.map((c) => (
-          <Link key={c.id} href={`/project-pulse/teacher/class/${c.id}`} className="group rounded-card border border-line bg-card p-5 transition-shadow hover:shadow-pop">
+          <Link key={c.id} href={nav.href(`/project-pulse/teacher/class/${c.id}`)} className="group rounded-card border border-line bg-card p-5 transition-shadow hover:shadow-pop">
             <p className="text-xs font-semibold uppercase tracking-widest text-muted">{c.subject}{c.role !== 'owner' ? ` · ${c.role === 'co' ? 'co-teacher' : 'admin view'}` : ''}</p>
             <h2 className="mt-1 font-display text-h2 text-heading group-hover:text-link">{c.name}</h2>
             <p className="mt-3 flex items-center gap-4 text-sm text-body">
@@ -165,12 +168,13 @@ const Home: React.FC = () => {
         <form onSubmit={create} className="rounded-card border border-dashed border-line-strong/60 bg-app-warm p-5">
           <p className="font-display text-h3 text-heading">New class</p>
           <input className={`${input} mt-3`} required value={name} onChange={(e) => setName(e.target.value)} placeholder="CSE 2A · 2026" aria-label="Class name" />
-          <input className={`${input} mt-2`} value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Subject" aria-label="Subject" />
+          <input className={`${input} mt-2`} value={subject} onChange={(e) => setSubject(e.target.value)} placeholder={pack ? 'Subject (optional)' : 'Subject'} aria-label="Subject" />
+          {pack ? <p className="mt-2 text-xs text-muted">Every lab of this program is added to the class as a published task.</p> : null}
           {msg ? <p className="mt-2 text-xs text-error">{msg}</p> : null}
           <button className={`${primary} mt-3 w-full`} disabled={busy}><Plus className="h-4 w-4" /> Create class</button>
         </form>
       </div>
-      {me.is_admin ? <AdminPanel /> : null}
+      {me.is_admin && !pack ? <AdminPanel /> : null}
     </PulseShell>
   );
 };

@@ -306,6 +306,7 @@ function labsFor(db: any, userId: string, labs: { pack: string; list: Lab[] }) {
   const tasks = p.tasks.filter((t: any) => t.published && String(t.pack_ref || '').startsWith(`${labs.pack}:`) && rows.some((r: any) => r.class_id === t.class_id));
   const cls = tasks.length ? p.classes.find((c: any) => c.id === tasks[0].class_id) : null;
   return {
+    pack: labs.pack,
     pulse_class: cls ? { id: cls.id, name: cls.name } : null,
     items: labs.list.map((lab) => {
       const task = tasks.find((t: any) => t.pack_ref === `${labs.pack}:${lab.id}`);

@@ -60,7 +60,7 @@ export const pulseApi = {
   decideCo: (id: string, approve: boolean) => post<{ requests: CoRequest[]; teachers: TeacherRow[] } & Welcome>(`/admin/co-requests/${id}`, { approve }),
   revoke: (userId: string) => call<{ teachers: TeacherRow[] }>(`/admin/teachers/${userId}`, { method: 'DELETE' }),
 
-  createClass: (body: { name: string; subject: string }) => post<ClassDetail>('/classes', body),
+  createClass: (body: { name: string; subject: string; pack?: string }) => post<ClassDetail>('/classes', body),
   cls: (id: string) => call<ClassDetail>(`/classes/${id}`),
   updateClass: (id: string, body: Record<string, unknown>) => post<ClassDetail>(`/classes/${id}`, body, 'PATCH'),
   addCoTeacher: (id: string, body: { email: string; name: string }) => post<ClassDetail & { result: 'added' | 'requested' }>(`/classes/${id}/co-teachers`, body),

@@ -1,11 +1,11 @@
 import React from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
 import { ChevronRight, KeyRound } from 'lucide-react';
 import { PulseShell, StatusPill } from '@/components/pulse/PulseUi';
 import { PulseGate, PulseLoadState, usePulseLoad } from '@/components/pulse/PulseGate';
 import { StudentProgress, type MyTaskItem } from '@/components/pulse/StudentProgress';
 import { pulseApi, type PulseMe } from '@/lib/pulse/api';
+import { usePulseNav } from '@/lib/pulse/scope';
 import { fmtDateTime, STATUS_META } from '@/lib/pulse/demo';
 
 /**
@@ -15,10 +15,11 @@ import { fmtDateTime, STATUS_META } from '@/lib/pulse/demo';
  */
 
 const TaskView: React.FC<{ me: PulseMe; taskId: string }> = ({ me, taskId }) => {
+  const nav = usePulseNav();
   const { data, error, reload } = usePulseLoad(() => pulseApi.myTask(taskId), [taskId]);
   if (!data) return <PulseLoadState title="My task" error={error} onRetry={reload} />;
   const tasks: MyTaskItem[] = me.tasks.map((t) => ({
-    id: t.task_id, title: t.title, due: t.deadline_at, current: t.task_id === taskId, href: `/project-pulse/student?task=${t.task_id}`,
+    id: t.task_id, title: t.title, due: t.deadline_at, current: t.task_id === taskId, href: nav.href(`/project-pulse/student?task=${t.task_id}`),
     state: `${STATUS_META[t.status].label.toLowerCase()}${t.repo ? ` · ${t.score}/100` : ''}`,
   }));
   return (
@@ -33,10 +34,12 @@ const TaskView: React.FC<{ me: PulseMe; taskId: string }> = ({ me, taskId }) => 
 };
 
 const Body: React.FC = () => {
-  const router = useRouter();
-  const { data: me, error, reload } = usePulseLoad(() => pulseApi.me(), []);
+  const nav = usePulseNav();
+  const { data: all, error, reload } = usePulseLoad(() => pulseApi.me(), []);
+  // Inside a Lab tab only that program's lab tasks show.
+  const me = all && nav.scope ? { ...all, tasks: all.tasks.filter((t) => t.class.pack === nav.scope!.pack) } : all;
   if (!me) return <PulseLoadState title="My tasks" error={error} onRetry={reload} />;
-  const taskId = typeof router.query.task === 'string' ? router.query.task : me.tasks.length === 1 ? me.tasks[0].task_id : null;
+  const taskId = typeof nav.query.task === 'string' ? nav.query.task : me.tasks.length === 1 ? me.tasks[0].task_id : null;
   if (taskId) return <TaskView me={me} taskId={taskId} />;
   return (
     <PulseShell title="My tasks" role={null}>
@@ -45,7 +48,7 @@ const Body: React.FC = () => {
         <ul className="space-y-2">
           {me.tasks.map((t) => (
             <li key={t.task_id}>
-              <Link href={`/project-pulse/student?task=${t.task_id}`} className="flex items-center gap-3 rounded-card border border-line bg-card p-4 hover:shadow-pop">
+              <Link href={nav.href(`/project-pulse/student?task=${t.task_id}`)} className="flex items-center gap-3 rounded-card border border-line bg-card p-4 hover:shadow-pop">
                 <span className="min-w-0 flex-1">
                   <span className="block font-semibold text-heading">{t.title}</span>
                   <span className="block text-xs text-muted">{t.class.name} · due {fmtDateTime(t.deadline_at)}</span>
@@ -60,10 +63,10 @@ const Body: React.FC = () => {
         <div className="mx-auto max-w-md rounded-band border border-line bg-card p-8 text-center">
           <h2 className="font-display text-h2 text-heading">No tasks yet</h2>
           <p className="mt-1 text-sm text-muted">When your teacher invites you and publishes a task, it shows here. Got a class code?</p>
-          <Link href="/project-pulse/join" className="mt-4 inline-flex h-10 items-center gap-1.5 rounded-cell bg-signal px-4 text-sm font-semibold text-on-primary shadow-edge-primary"><KeyRound className="h-4 w-4" /> Join with a code</Link>
+          <Link href={nav.href('/project-pulse/join')} className="mt-4 inline-flex h-10 items-center gap-1.5 rounded-cell bg-signal px-4 text-sm font-semibold text-on-primary shadow-edge-primary"><KeyRound className="h-4 w-4" /> Join with a code</Link>
         </div>
       )}
-      {me.is_teacher ? <p className="mt-6 text-sm"><Link href="/project-pulse/teacher" className="font-semibold text-link">Go to the teacher portal →</Link></p> : null}
+      {me.is_teacher ? <p className="mt-6 text-sm"><Link href={nav.href('/project-pulse/teacher')} className="font-semibold text-link">Go to the teacher portal →</Link></p> : null}
     </PulseShell>
   );
 };
