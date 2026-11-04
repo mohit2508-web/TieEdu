@@ -611,7 +611,9 @@ export const SHELL_EXCLUDED_ROUTES: string[] = ['/login', '/signup', '/admin', '
 export const isShellExcluded = (pathname: string): boolean =>
   SHELL_EXCLUDED_ROUTES.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`)
-  );
+  )
+  // A test in progress is exam-hall mode: no navbar, tab bar or footer to click away to.
+  || /^\/skill-test\/[^/]+\/assessment$/.test(pathname);
 
 /** Trailing slashes are cosmetic; `next/router` can hand back either form. */
 const normalizePath = (value: string): string => {
