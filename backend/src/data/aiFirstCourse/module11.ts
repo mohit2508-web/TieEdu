@@ -1,4 +1,4 @@
-// AI.FIRST — Module 11 · ANSWER FOR IT · AI security & trust
+// AI.FIRST — Module 11 · T · AI security & trust
 import type { CourseModule } from '../db';
 import { nineBlocks, diagram, table, tip, warn, code } from '../nineBlocks';
 import { lesson, proofOfWork, M, COURSE_ID } from './helpers';
@@ -10,7 +10,7 @@ export const module11: CourseModule = {
   course_id: COURSE_ID,
   title: 'Module 11 — AI Security & Trust',
   summary:
-    'Pillar ANSWER FOR IT. Prompt injection and jailbreaks, deepfakes and AI-powered scams, data leakage and shadow AI at work, and incident thinking — red-teaming your own AI before someone else does.',
+    'T · Transform — answer for it. Prompt injection and jailbreaks, deepfakes and AI-powered scams, data leakage and shadow AI at work, and incident thinking — red-teaming your own AI before someone else does.',
   sort_order: 11,
   lessons: [
     lesson(

@@ -146,6 +146,28 @@ function accessFor(db: any, userId: string | null, course: Course, role?: string
   };
 }
 
+/**
+ * The course's teaching framework with each pillar's modules resolved to
+ * `{ id, title, sort_order }`, so counts and numbers shown on the page always
+ * match the real syllabus. Sent on the card too: a signed-out visitor's preview
+ * is built from the card and should explain the course's name just the same.
+ */
+function frameworkView(course: Course) {
+  const f = course.framework;
+  if (!f) return null;
+  const mods = new Map(orderedModules(course).map((m) => [m.id, m]));
+  return {
+    ...f,
+    pillars: f.pillars.map(({ module_ids, ...p }) => ({
+      ...p,
+      modules: module_ids
+        .map((id) => mods.get(id))
+        .filter((m): m is NonNullable<typeof m> => !!m)
+        .map((m) => ({ id: m.id, title: m.title, sort_order: m.sort_order })),
+    })),
+  };
+}
+
 /** Lesson stub reason for a module a personalised-path buyer skipped. */
 const CLOSED_BY_PATH = 'Credited by your readiness test — you chose the personalised path, so this module is marked done.';
 
@@ -333,6 +355,7 @@ function courseView(db: any, userId: string | null, course: Course, role?: strin
       lock_reason: userId ? courseLockReason(db, userId, course) : null,
       // Pre-course readiness test state (null when the course has none).
       readiness: readinessStateFor(db, userId, course),
+      framework: frameworkView(course),
     };
 
     // Drop the long-form keys that hold nothing, so the client can decide whether
@@ -467,6 +490,7 @@ function catalogCard(
     // The catalog needs the same verdict the detail page gives, so a card
     // can say "Buy ₹1,299" instead of showing an enrol button that 402s.
     access: accessFor(db, userId, course, role),
+    framework: frameworkView(course),
     lock_reason: userId ? courseLockReason(db, userId, course) : null,
   };
 }

@@ -1,4 +1,4 @@
-// AI.FIRST — Module 5 · VERIFY · Verifying AI output
+// AI.FIRST — Module 5 · R · Verifying AI output
 import type { CourseModule } from '../db';
 import { nineBlocks, diagram, table, tip, warn, code } from '../nineBlocks';
 import { lesson, proofOfWork, M, COURSE_ID } from './helpers';
@@ -10,7 +10,7 @@ export const module5: CourseModule = {
   course_id: COURSE_ID,
   title: 'Module 5 — Verifying AI Output',
   summary:
-    'Pillar VERIFY — the heart of the course. A taxonomy of AI errors, lateral reading and source checks, verifying numbers, code and citations, and building a mini evaluation with golden sets and rubrics.',
+    'R · Reliable — the heart of the course. A taxonomy of AI errors, lateral reading and source checks, verifying numbers, code and citations, and building a mini evaluation with golden sets and rubrics.',
   sort_order: 5,
   lessons: [
     lesson(

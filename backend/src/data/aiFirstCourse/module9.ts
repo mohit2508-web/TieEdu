@@ -1,4 +1,4 @@
-// AI.FIRST — Module 9 · BUILD · Agents, tools & MCP
+// AI.FIRST — Module 9 · S · Agents, tools & MCP
 import type { CourseModule } from '../db';
 import { nineBlocks, diagram, table, tip, warn, code } from '../nineBlocks';
 import { lesson, proofOfWork, M, COURSE_ID } from './helpers';
@@ -10,7 +10,7 @@ export const module9: CourseModule = {
   course_id: COURSE_ID,
   title: 'Module 9 — Agents, Tools & MCP',
   summary:
-    'Pillar BUILD, advanced. What an agent really is, the Model Context Protocol for connecting tools, working with coding agents responsibly, and guardrails plus evaluation for systems that act.',
+    'S · Systems, advanced. What an agent really is, the Model Context Protocol for connecting tools, working with coding agents responsibly, and guardrails plus evaluation for systems that act.',
   sort_order: 9,
   lessons: [
     lesson(

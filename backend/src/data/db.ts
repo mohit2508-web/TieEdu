@@ -425,6 +425,19 @@ export interface ReadinessAttempt {
   credits_voided: boolean;
 }
 
+/**
+ * A course's teaching framework, shown when the course opens: lettered pillars
+ * mapped to real module ids (so the counts are derived, never typed), the
+ * steps every module runs through, and the principles behind them.
+ */
+export interface CourseFramework {
+  title: string;
+  intro: string;
+  pillars: { letter: string; name: string; tagline: string; color: string; module_ids: string[] }[];
+  steps: { title: string; text: string }[];
+  principles: { title: string; text: string }[];
+}
+
 /** Capstone project config for Premium / track courses. */
 export interface CourseProjectConfig {
   title: string;
@@ -649,6 +662,14 @@ export interface Course {
     exam?: CourseExamConfig;
     /** Capstone project config; absent means the course has no project. */
     project?: CourseProjectConfig;
+    /**
+     * Seed content version. When the bundled seed's value is higher than the
+     * stored copy's, the stored course's content is refreshed on load (admin-
+     * owned fields kept). Absent means the stored copy is never overwritten.
+     */
+    seed_version?: number;
+    /** Teaching framework shown on the course page; absent means none. */
+    framework?: CourseFramework;
     /** Pre-course readiness test; absent means the course has none. */
     readiness?: CourseReadinessConfig;
     /** Rewards this course issues, so copy only promises what it grants. */
@@ -2407,7 +2428,32 @@ export function loadDb() {
       );
       for (const seedCourse of initialDbData.courses) {
         if (!seedCourse || typeof seedCourse.slug !== 'string') continue;
-        if (seededCourseSlugs.has(seedCourse.slug)) continue;
+        if (seededCourseSlugs.has(seedCourse.slug)) {
+          // Opt-in content refresh: a seed that carries a higher `seed_version`
+          // than the stored copy replaces its content, keeping the fields an
+          // admin owns (price, cover, publish state, instructor, offer badge)
+          // and the id. Lesson and module ids are stable, so learner progress
+          // is untouched. Courses without a seed_version are never overwritten.
+          const at = data.courses.findIndex((c: any) => c && c.slug === seedCourse.slug);
+          const stored = at >= 0 ? data.courses[at] : null;
+          const want = Number((seedCourse as any).seed_version) || 0;
+          if (stored && want > (Number(stored.seed_version) || 0)) {
+            data.courses[at] = {
+              ...seedCourse,
+              id: stored.id,
+              price_inr: stored.price_inr,
+              is_free: stored.is_free,
+              published: stored.published,
+              thumbnail_url: stored.thumbnail_url,
+              thumbnail_alt: stored.thumbnail_alt ?? (seedCourse as any).thumbnail_alt,
+              instructor_id: stored.instructor_id ?? null,
+              offer_badge_enabled: stored.offer_badge_enabled,
+              created_at: stored.created_at || (seedCourse as any).created_at,
+            };
+            upgraded = true;
+          }
+          continue;
+        }
         data.courses.push(seedCourse);
         seededCourseSlugs.add(seedCourse.slug);
         upgraded = true;

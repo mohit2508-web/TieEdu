@@ -1,7 +1,7 @@
 // AI.FIRST — Future-Ready Intelligence, Skills & Technology.
 //
-// The flagship paid course (₹99): twelve modules across four pillars —
-// UNDERSTAND, VERIFY, BUILD, ANSWER FOR IT — forty-eight nine-block lessons,
+// The flagship paid course (₹99): twelve modules across the five F.I.R.S.T.
+// pillars — Foundations, Interact, Reliable, Systems, Transform — forty-eight nine-block lessons,
 // a proof of work per module in three pathway variants, a readiness test that
 // can test a learner out of modules and price a personalised path, a final
 // exam and a capstone defence required for the certificate.
@@ -95,12 +95,14 @@ export function getAIFirstCourse(): Course {
   return {
     id: COURSE_ID,
     slug: 'ai-first',
+    // Bump when this file's content changes so existing databases pick it up.
+    seed_version: 2,
     title: 'AI.FIRST — Future-Ready Intelligence, Skills & Technology',
     subtitle:
       "Don't just use AI. Understand it, verify it, build with it and answer for it. Twelve modules, twelve proofs of work, one credential you have to defend.",
     description: `**AI.FIRST** is the complete, practical AI course for students and professionals who want to be genuinely future-ready — not just able to type into a chatbot.
 
-It is built on four pillars. **Understand** how AI, machine learning and large language models really work, and how to choose a model on quality, cost and privacy. **Verify** every output: a seven-type error taxonomy, lateral reading, checking numbers, code and citations, and building your own evaluation. **Build** with AI — no-code workflows, Python API apps with structured output and RAG, and agents connected to tools through MCP. **Answer for it** — bias, privacy under India's DPDP Act, copyright, regulation, prompt injection, deepfake scams and incident response.
+FIRST is the framework, one letter per pillar. **F — Foundations:** how AI, machine learning and large language models really work, and where they break. **I — Interact:** choosing models on quality, cost and privacy, prompting and context engineering. **R — Reliable:** verifying every output — a seven-type error taxonomy, lateral reading, checking numbers, code and citations, and building your own evaluation. **S — Systems:** no-code workflows, Python API apps with structured output and RAG, and agents connected to tools through MCP. **T — Transform:** bias, privacy under India's DPDP Act, copyright, regulation, prompt injection, deepfake scams, your career and the defended capstone.
 
 **Start with a readiness test.** A secure, timed, fullscreen paper checks what you already know module by module. Ace a module and it is tested out — you do not have to study it — and test out enough of them to unlock a cheaper personalised path.
 
@@ -136,14 +138,15 @@ It is built on four pillars. **Understand** how AI, machine learning and large l
     created_at: '2026-11-03T09:00:00.000Z',
     updated_at: '2026-11-03T09:00:00.000Z',
     instructor_id: null,
-    about_course: `### Four pillars, twelve modules
+    about_course: `### The F.I.R.S.T. framework — what the name means
 
-| Pillar | Modules |
-|---|---|
-| **UNDERSTAND** | 1 What AI actually is · 2 Inside a large language model · 3 The 2026 model landscape |
-| **VERIFY** | 4 Prompting & context engineering · 5 Verifying AI output · 6 AI for research, study & analysis |
-| **BUILD** | 7 No-code AI workflows · 8 Building with AI APIs · 9 Agents, tools & MCP |
-| **ANSWER FOR IT** | 10 Responsible AI · 11 AI security & trust · 12 AI at work & your defence |
+| | Pillar | Modules |
+|---|---|---|
+| **F** | **Foundations** — how AI really works and where it is brittle | 1 What AI actually is · 2 Inside a large language model |
+| **I** | **Interact** — the model and tool landscape, prompting and context | 3 The 2026 model landscape · 4 Prompting & context engineering |
+| **R** | **Reliable** — verify, evaluate and defend what you use | 5 Verifying AI output · 6 AI for research, study & analysis |
+| **S** | **Systems** — workflows, apps, data and agents | 7 No-code AI workflows · 8 Building with AI APIs · 9 Agents, tools & MCP |
+| **T** | **Transform** — responsibility, security, career and the defended capstone | 10 Responsible AI · 11 AI security & trust · 12 AI at work & your defence |
 
 Every one of the 48 lessons follows the same nine-step shape — objective, a real-world hook, the concept, a **diagram**, a worked example, a practice task, common mistakes, an interview angle and a summary — and ends with a graded quiz.
 
@@ -284,6 +287,30 @@ Worked examples use rupees, UPI, Indian colleges, placement cells, the DPDP Act,
         'Submit one public folder link containing: (1) your twelve proofs of work PoW-01…PoW-12 in your pathway (Explorer, Builder or Leader); (2) the capstone for your pathway — Explorer: an AI-first toolkit for a real person or group; Builder: an evaluated AI app or agent with a red-team report and cost model; Leader: an AI adoption plan with impact assessment, AI-use policy and pilot design; (3) a claims map in which every important claim links to its evidence; (4) a 10-minute recorded defence (problem, design, evidence, risks, next steps) that answers at least three of the Module 12.4 hard questions; (5) an AI-use disclosure. Remove all personal and confidential data before sharing.',
       submission_hint: 'One public link (Drive folder, GitHub repo or Notion page) — anyone with the link can view.',
       required_for_certificate: true,
+    },
+    framework: {
+      title: 'The F.I.R.S.T. framework',
+      intro:
+        'Five pillars take you from "what is this?" to "I can lead with it", in the order that builds judgement first and speed second.',
+      pillars: [
+        { letter: 'F', name: 'Foundations', tagline: 'How AI really works and where it is brittle.', color: '#3E8A8A', module_ids: [M(1), M(2)] },
+        { letter: 'I', name: 'Interact', tagline: 'The model and tool landscape, prompting and context.', color: '#C97C2E', module_ids: [M(3), M(4)] },
+        { letter: 'R', name: 'Reliable', tagline: 'Verify, evaluate and defend what you use.', color: '#9E4468', module_ids: [M(5), M(6)] },
+        { letter: 'S', name: 'Systems', tagline: 'Workflows, apps, data and agents.', color: '#5A48D6', module_ids: [M(7), M(8), M(9)] },
+        { letter: 'T', name: 'Transform', tagline: 'Responsibility, security, career and the defended capstone.', color: '#4A7AAE', module_ids: [M(10), M(11), M(12)] },
+      ],
+      steps: [
+        { title: 'Learn', text: 'Short, first-principles lessons — each with a diagram and a quiz.' },
+        { title: 'Do', text: 'A worked example and a practice task on a real problem in every lesson.' },
+        { title: 'Prove', text: 'One proof-of-work artefact per module, in your pathway.' },
+        { title: 'Defend', text: 'The final exam, then a recorded capstone defence with a claims map.' },
+      ],
+      principles: [
+        { title: 'Verify first', text: 'No output is trusted until it passes a checklist you built.' },
+        { title: 'Proof over passing', text: 'Twelve proofs of work and a defended capstone stand behind the credential, not a quiz score alone.' },
+        { title: 'Dated facts', text: 'Fast-moving facts — models, prices, rules — are dated and hedged, and you learn to re-check them.' },
+        { title: 'India-ready', text: 'Rupees, UPI, the DPDP Act, RBI, campus placements and hiring contexts throughout.' },
+      ],
     },
     readiness: {
       per_module: 4,

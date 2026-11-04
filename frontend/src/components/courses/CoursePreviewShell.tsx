@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { CourseFramework } from '@/components/courses/CourseFramework';
+import { MarkdownContent } from '@/components/blocks/MarkdownContent';
 import { CheckCircle2, Clock, FileText, Layers, Lock, PlayCircle } from 'lucide-react';
 import { CourseCover } from '@/components/courses/CourseUi';
 import { ContentBlockRenderer } from '@/components/blocks/ContentBlockRenderer';
@@ -105,7 +107,11 @@ export const CoursePreviewShell: React.FC<{
         )}
 
         {course.description && (
-          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-[var(--text-body)]">{course.description}</p>
+          // Descriptions are authored in markdown; rendering them as a plain <p>
+          // printed the ** markers literally.
+          <MarkdownContent compact className="mt-4 max-w-2xl text-sm leading-relaxed text-[var(--text-body)]">
+            {course.description}
+          </MarkdownContent>
         )}
 
         {/* Real, server-counted facts only. The same rule as the full page: a
@@ -127,6 +133,12 @@ export const CoursePreviewShell: React.FC<{
           )}
           <span className="text-[var(--text-muted)]">{formatLevel(course.level)}</span>
         </div>
+
+        {course.framework && (
+          <div className="mt-10">
+            <CourseFramework framework={course.framework} />
+          </div>
+        )}
 
         {(course.outcomes?.length || 0) > 0 && (
           <section aria-labelledby="preview-outcomes" className="mt-10">
@@ -224,7 +236,7 @@ export const CoursePreviewShell: React.FC<{
             title={course.title}
             subject={course.category}
             thumbnailUrl={course.thumbnail_url}
-            className="mb-4 aspect-[4/3] w-full overflow-hidden rounded-[var(--radius-md)] border border-[var(--border-subtle)]"
+            className="mb-4 aspect-video w-full overflow-hidden rounded-[var(--radius-md)] border border-[var(--border-subtle)]"
             /* An `lg:sticky` aside: a third of the reader column once the two-column
                layout engages, full width below it. */
             sizes="(min-width: 1024px) 420px, 100vw"

@@ -21,6 +21,7 @@ import { applyLessonState } from '@/lib/lessonProgress';
 import { CourseThumbnailEditor } from '@/components/courses/CourseThumbnailEditor';
 import { ExamCard } from '@/components/courses/ExamCard';
 import { ReadinessCard } from '@/components/courses/ReadinessCard';
+import { CourseFramework } from '@/components/courses/CourseFramework';
 import { ModuleTestCard } from '@/components/courses/ModuleTestCard';
 import { CouponBanner } from '@/components/courses/CouponBanner';
 import { ProjectSubmit } from '@/components/courses/ProjectSubmit';
@@ -937,6 +938,8 @@ export default function CoursePage({
               </div>
             </header>
 
+            {course.framework && <CourseFramework framework={course.framework} />}
+
             {course && (
               <CouponBanner
                 couponCode={stagedCoupon}
@@ -1771,14 +1774,23 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
   // public catalogue needs no token and describes the course honestly, so it is
   // asked for the one row. A failure here is not fatal: the page falls back to the
   // loading state and the client retries, exactly as it did before.
+  //
+  // The catalogue is paginated, so it is walked page by page until the row is
+  // found — reading only page 1 left every paid course past the first page
+  // (a new course sorts last on "popular") with a blank signed-out page.
   let catalogue: unknown;
   if (!initialCourse && upstreamStatus === 403) {
     try {
-      const res = await fetch(`${serverApiBase()}/courses`);
-      if (res.ok) {
+      const rows: unknown[] = [];
+      for (let page = 1; page <= 10; page++) {
+        const res = await fetch(`${serverApiBase()}/courses?page_size=50&page=${page}`);
+        if (!res.ok) break;
         const data = await res.json();
-        catalogue = data.courses;
+        const batch = Array.isArray(data.courses) ? data.courses : [];
+        rows.push(...batch);
+        if (batch.some((c: any) => c?.slug === slug) || !data.has_more) break;
       }
+      catalogue = rows;
     } catch {
       /* The preview is an improvement, never a requirement. */
     }

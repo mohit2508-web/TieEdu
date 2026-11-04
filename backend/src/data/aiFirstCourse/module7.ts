@@ -1,4 +1,4 @@
-// AI.FIRST — Module 7 · BUILD · No-code AI workflows
+// AI.FIRST — Module 7 · S · No-code AI workflows
 import type { CourseModule } from '../db';
 import { nineBlocks, diagram, table, tip, warn, code } from '../nineBlocks';
 import { lesson, proofOfWork, M, COURSE_ID } from './helpers';
@@ -10,7 +10,7 @@ export const module7: CourseModule = {
   course_id: COURSE_ID,
   title: 'Module 7 — No-Code AI Workflows',
   summary:
-    'Pillar BUILD, no code required. Automation thinking, custom assistants with knowledge bases, building a multi-step AI workflow in a tool like n8n or Zapier, and making it reliable, affordable and safe.',
+    'S · Systems, no code required. Automation thinking, custom assistants with knowledge bases, building a multi-step AI workflow in a tool like n8n or Zapier, and making it reliable, affordable and safe.',
   sort_order: 7,
   lessons: [
     lesson(

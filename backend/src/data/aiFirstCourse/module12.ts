@@ -1,4 +1,4 @@
-// AI.FIRST — Module 12 · ANSWER FOR IT · AI at work & your defence (capstone)
+// AI.FIRST — Module 12 · T · AI at work & your defence (capstone)
 import type { CourseModule } from '../db';
 import { nineBlocks, diagram, table, tip, warn } from '../nineBlocks';
 import { lesson, proofOfWork, M, COURSE_ID } from './helpers';
@@ -10,7 +10,7 @@ export const module12: CourseModule = {
   course_id: COURSE_ID,
   title: 'Module 12 — AI at Work & Your Defence',
   summary:
-    'The capstone. AI and jobs as tasks not titles, building an AI-first portfolio from your twelve proofs of work, AI interview rounds, and the defence: presenting your capstone and answering for every claim in it.',
+    'T · Transform — the capstone. AI and jobs as tasks not titles, building an AI-first portfolio from your twelve proofs of work, AI interview rounds, and the defence: presenting your capstone and answering for every claim in it.',
   sort_order: 12,
   lessons: [
     lesson(
@@ -159,22 +159,26 @@ export const module12: CourseModule = {
           diagram(
             'From twelve proofs to a portfolio',
             `flowchart TB
-  subgraph U["UNDERSTAND"]
-    p1["PoW-01 AI audit"]; p2["PoW-02 Token lab"]; p3["PoW-03 Model memo"]
+  subgraph F1["F · Foundations"]
+    p1["PoW-01 AI audit"]; p2["PoW-02 Token lab"]
   end
-  subgraph V["VERIFY"]
-    p4["PoW-04 Prompt library"]; p5["PoW-05 Verification + eval"]; p6["PoW-06 Analysis report"]
+  subgraph I1["I · Interact"]
+    p3["PoW-03 Model memo"]; p4["PoW-04 Prompt library"]
   end
-  subgraph B["BUILD"]
+  subgraph R1["R · Reliable"]
+    p5["PoW-05 Verification + eval"]; p6["PoW-06 Analysis report"]
+  end
+  subgraph S1["S · Systems"]
     p7["PoW-07 Automation"]; p8["PoW-08 Mini-app"]; p9["PoW-09 Agent spec"]
   end
-  subgraph A["ANSWER FOR IT"]
+  subgraph T1["T · Transform"]
     p10["PoW-10 Impact assessment"]; p11["PoW-11 Red-team report"]; p12["PoW-12 Capstone defence"]
   end
-  U --> F["Pick 3 featured for your role"]
-  V --> F
-  B --> F
-  A --> F
+  F1 --> F["Pick 3 featured for your role"]
+  I1 --> F
+  R1 --> F
+  S1 --> F
+  T1 --> F
   F --> PF["Portfolio page: header · 3 case studies · full table · how I work with AI"]`
           ),
           table('Case-study card — example (PoW-08)', ['Field', 'Content'], [

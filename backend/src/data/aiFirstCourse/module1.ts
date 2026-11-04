@@ -1,4 +1,4 @@
-// AI.FIRST — Module 1 · UNDERSTAND · What AI actually is
+// AI.FIRST — Module 1 · F · What AI actually is
 import type { CourseModule } from '../db';
 import { nineBlocks, diagram, table, tip, warn } from '../nineBlocks';
 import { lesson, proofOfWork, M, COURSE_ID } from './helpers';
@@ -10,7 +10,7 @@ export const module1: CourseModule = {
   course_id: COURSE_ID,
   title: 'Module 1 — What AI Actually Is',
   summary:
-    'Pillar UNDERSTAND. The map of AI, ML, deep learning and generative AI; how a machine learns from data; neural networks without the maths fog; and why the 2017–2026 wave happened.',
+    'F · Foundations. The map of AI, ML, deep learning and generative AI; how a machine learns from data; neural networks without the maths fog; and why the 2017–2026 wave happened.',
   sort_order: 1,
   lessons: [
     lesson(

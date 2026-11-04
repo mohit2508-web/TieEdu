@@ -1,4 +1,4 @@
-// AI.FIRST — Module 2 · UNDERSTAND · Inside a large language model
+// AI.FIRST — Module 2 · F · Inside a large language model
 import type { CourseModule } from '../db';
 import { nineBlocks, diagram, table, tip, warn, code } from '../nineBlocks';
 import { lesson, proofOfWork, M, COURSE_ID } from './helpers';
@@ -10,7 +10,7 @@ export const module2: CourseModule = {
   course_id: COURSE_ID,
   title: 'Module 2 — Inside a Large Language Model',
   summary:
-    'Pillar UNDERSTAND. Tokens and next-token prediction, embeddings and attention, how a chat model is made, and why sampling, context windows and cutoffs produce hallucinations.',
+    'F · Foundations. Tokens and next-token prediction, embeddings and attention, how a chat model is made, and why sampling, context windows and cutoffs produce hallucinations.',
   sort_order: 2,
   lessons: [
     lesson(

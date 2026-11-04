@@ -1,4 +1,4 @@
-// AI.FIRST — Module 4 · VERIFY · Prompting & context engineering
+// AI.FIRST — Module 4 · I · Prompting & context engineering
 import type { CourseModule } from '../db';
 import { nineBlocks, diagram, table, tip, warn, code } from '../nineBlocks';
 import { lesson, proofOfWork, M, COURSE_ID } from './helpers';
@@ -10,7 +10,7 @@ export const module4: CourseModule = {
   course_id: COURSE_ID,
   title: 'Module 4 — Prompting & Context Engineering',
   summary:
-    'Pillar VERIFY. The anatomy of a strong prompt, examples and output formats, reasoning and decomposition, and context engineering — documents, memory and a tested prompt library.',
+    'I · Interact. The anatomy of a strong prompt, examples and output formats, reasoning and decomposition, and context engineering — documents, memory and a tested prompt library.',
   sort_order: 4,
   lessons: [
     lesson(

@@ -1,4 +1,4 @@
-// AI.FIRST — Module 6 · VERIFY · AI for research, study & analysis
+// AI.FIRST — Module 6 · R · AI for research, study & analysis
 import type { CourseModule } from '../db';
 import { nineBlocks, diagram, table, tip, warn, code } from '../nineBlocks';
 import { lesson, proofOfWork, M, COURSE_ID } from './helpers';
@@ -10,7 +10,7 @@ export const module6: CourseModule = {
   course_id: COURSE_ID,
   title: 'Module 6 — AI for Research, Study & Analysis',
   summary:
-    'Pillar VERIFY in practice. Research with AI search and deep-research tools, learning with AI without outsourcing your brain, data analysis you can defend, and writing with AI honestly.',
+    'R · Reliable, in practice. Research with AI search and deep-research tools, learning with AI without outsourcing your brain, data analysis you can defend, and writing with AI honestly.',
   sort_order: 6,
   lessons: [
     lesson(

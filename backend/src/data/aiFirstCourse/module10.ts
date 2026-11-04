@@ -1,4 +1,4 @@
-// AI.FIRST — Module 10 · ANSWER FOR IT · Responsible AI
+// AI.FIRST — Module 10 · T · Responsible AI
 import type { CourseModule } from '../db';
 import { nineBlocks, diagram, table, tip, warn } from '../nineBlocks';
 import { lesson, proofOfWork, M, COURSE_ID } from './helpers';
@@ -10,7 +10,7 @@ export const module10: CourseModule = {
   course_id: COURSE_ID,
   title: 'Module 10 — Responsible AI',
   summary:
-    'Pillar ANSWER FOR IT. Bias and fairness you can test, privacy and India\'s DPDP Act, copyright, disclosure and integrity, and the regulation and governance landscape from the EU AI Act to company AI policies.',
+    'T · Transform — answer for it. Bias and fairness you can test, privacy and India\'s DPDP Act, copyright, disclosure and integrity, and the regulation and governance landscape from the EU AI Act to company AI policies.',
   sort_order: 10,
   lessons: [
     lesson(

@@ -1,4 +1,4 @@
-// AI.FIRST — Module 3 · UNDERSTAND · The 2026 model landscape
+// AI.FIRST — Module 3 · I · The 2026 model landscape
 import type { CourseModule } from '../db';
 import { nineBlocks, diagram, table, tip, warn } from '../nineBlocks';
 import { lesson, proofOfWork, M, COURSE_ID } from './helpers';
@@ -10,7 +10,7 @@ export const module3: CourseModule = {
   course_id: COURSE_ID,
   title: 'Module 3 — The 2026 Model Landscape',
   summary:
-    'Pillar UNDERSTAND. Model families and open vs closed weights; multimodal models; reasoning models and agents; and choosing a model on quality, cost, latency and privacy with real token arithmetic.',
+    'I · Interact. Model families and open vs closed weights; multimodal models; reasoning models and agents; and choosing a model on quality, cost, latency and privacy with real token arithmetic.',
   sort_order: 3,
   lessons: [
     lesson(

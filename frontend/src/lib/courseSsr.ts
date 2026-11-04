@@ -40,6 +40,8 @@ export type PublicCoursePreview = {
   created_at: string | null;
   is_new: boolean;
   is_popular: boolean;
+  /** The course's teaching framework (public marketing copy), when it has one. */
+  framework: import('@/components/courses/CourseFramework').CourseFrameworkData | null;
   stats: {
     module_count: number;
     lesson_count: number;
@@ -76,6 +78,7 @@ const PREVIEW_FIELDS = [
   'created_at',
   'is_new',
   'is_popular',
+  'framework',
   'stats',
 ] as const;
 
@@ -132,8 +135,32 @@ export function toPublicCoursePreview(row: unknown): PublicCoursePreview | null 
     created_at: str(r.created_at),
     is_new: bool(r.is_new),
     is_popular: bool(r.is_popular),
+    framework: publicFramework(r.framework),
     stats,
   } as PublicCoursePreview;
+}
+
+/**
+ * The framework, rebuilt field by field like the rest of the preview: pillar
+ * copy and module titles/numbers only — never lessons or anything that teaches.
+ */
+function publicFramework(v: unknown): PublicCoursePreview['framework'] {
+  if (!v || typeof v !== 'object') return null;
+  const f = v as Record<string, any>;
+  const list = (x: unknown): any[] => (Array.isArray(x) ? x : []);
+  return {
+    title: str(f.title) || '',
+    intro: str(f.intro) || '',
+    pillars: list(f.pillars).map((p) => ({
+      letter: str(p?.letter) || '',
+      name: str(p?.name) || '',
+      tagline: str(p?.tagline) || '',
+      color: /^#[0-9a-f]{3,8}$/i.test(String(p?.color || '')) ? String(p.color) : '#3E8A8A',
+      modules: list(p?.modules).map((m) => ({ id: str(m?.id) || '', title: str(m?.title) || '', sort_order: num(m?.sort_order) })),
+    })),
+    steps: list(f.steps).map((x) => ({ title: str(x?.title) || '', text: str(x?.text) || '' })),
+    principles: list(f.principles).map((x) => ({ title: str(x?.title) || '', text: str(x?.text) || '' })),
+  };
 }
 
 /** The catalogue row for this slug, reduced to publishable fields, or null. */

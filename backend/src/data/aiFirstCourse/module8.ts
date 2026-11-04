@@ -1,4 +1,4 @@
-// AI.FIRST — Module 8 · BUILD · Building with AI APIs
+// AI.FIRST — Module 8 · S · Building with AI APIs
 import type { CourseModule } from '../db';
 import { nineBlocks, diagram, table, tip, warn, code } from '../nineBlocks';
 import { lesson, proofOfWork, M, COURSE_ID } from './helpers';
@@ -10,7 +10,7 @@ export const module8: CourseModule = {
   course_id: COURSE_ID,
   title: 'Module 8 — Building with AI APIs',
   summary:
-    'Pillar BUILD, with code. Your first API call, structured output and function calling, retrieval-augmented generation over your own documents, and shipping a small AI app with tests and cost control.',
+    'S · Systems, with code. Your first API call, structured output and function calling, retrieval-augmented generation over your own documents, and shipping a small AI app with tests and cost control.',
   sort_order: 8,
   lessons: [
     lesson(

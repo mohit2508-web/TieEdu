@@ -192,6 +192,22 @@ check('an unknown field added to the catalogue row is not published by default',
   ok(!('secret_lesson_preview' in (p as any)), 'an unlisted key is present');
 });
 
+check('a framework is rebuilt field by field and never carries lesson content', () => {
+  const row = {
+    slug: 'fw-course', title: 'FW',
+    framework: {
+      title: 'The F.I.R.S.T. framework', intro: 'x', steps: [], principles: [],
+      pillars: [{ letter: 'F', name: 'Foundations', tagline: 't', color: 'javascript:alert(1)',
+        modules: [{ id: 'm1', title: 'Module 1', sort_order: 1, lessons: [{ blocks: ['secret'] }] }] }],
+    },
+  };
+  const p = findPublicCoursePreview([row], 'fw-course')!;
+  ok(!!p.framework, 'framework missing');
+  ok(!JSON.stringify(p.framework).includes('secret'), 'lesson content leaked through the framework');
+  eq(p.framework!.pillars[0].color, '#3E8A8A', 'unsafe colour passed through');
+  eq(findPublicCoursePreview([{ slug: 'x', title: 'X' }], 'x')!.framework, null, 'absent framework is not null');
+});
+
 check('the preview keys are exactly the whitelisted set', () => {
   const p = findPublicCoursePreview(catalogue, 'advanced-data-structures')!;
   eq(
@@ -201,6 +217,7 @@ check('the preview keys are exactly the whitelisted set', () => {
       'certificate_eligible',
       'created_at',
       'description',
+      'framework',
       'id',
       'is_free',
       'is_new',

@@ -950,6 +950,8 @@ export interface ExamPrep {
 }
 
 export interface CourseCard {
+  /** Teaching framework (e.g. F.I.R.S.T.) with modules resolved; null when none. */
+  framework?: import('@/components/courses/CourseFramework').CourseFrameworkData | null;
   id: string;
   slug: string;
   title: string;
