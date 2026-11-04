@@ -552,9 +552,11 @@ export function ensureMphasisV1(db: any): number {
  * profile, even if an older record with the slug exists.
  */
 export function ensureWiproIOSV1(db: any): number {
-  if (db.company_wipro_ios_v1) return 0;
+  // v2: course compressed to end on the 15 Nov Wipro test (profile text changed).
+  if (db.company_wipro_ios_v2) return 0;
   seedCompanyProfiles(db, false, [WIPRO_IOS_SLUG]);
-  db.company_wipro_ios_v1 = new Date().toISOString();
+  db.company_wipro_ios_v1 = db.company_wipro_ios_v1 || new Date().toISOString();
+  db.company_wipro_ios_v2 = new Date().toISOString();
   return 1;
 }
 

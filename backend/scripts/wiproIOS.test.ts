@@ -47,8 +47,9 @@ check('Swift string interpolation survived escaping', WIPRO_IOS_BANK.some((q) =>
 const days = curriculumDays();
 const allLessons = days.flatMap((d) => d.lessons);
 check('calendar places every topic exactly once', allLessons.length === 42 && new Set(allLessons).size === 42);
-check('M1 test day is 15 Nov', days.find((d) => d.milestone === 'm1')?.date === '2026-11-15');
-check('module 3 topics are spread over 5–13 Nov', days.filter((d) => d.date >= '2026-11-05' && d.date <= '2026-11-13' && d.lessons.length).length >= 5);
+check('M1 test day is 7 Nov; final is 15 Nov', days.find((d) => d.milestone === 'm1')?.date === '2026-11-07' && days.find((d) => d.milestone === 'final')?.date === '2026-11-15');
+check('every lesson is scheduled on or before 14 Nov', days.filter((d) => d.lessons.length).every((d) => d.date <= '2026-11-14'));
+check('no day has more than 4 lessons', days.every((d) => d.lessons.length <= 4), days.map((d) => d.lessons.length).join(','));
 
 // ---- seeding
 const db: any = { companies: [], skills: [], topics: [], questions: [], assessments: [], attempts: [], users: [{ id: 'u1', role: 'student' }] };
@@ -80,17 +81,18 @@ check('every student owns the program (no pack)', ownsCompanyPack(db, 'u1', WIPR
 // ---- prep view
 check('prep plan registered', !!PREP_COMPANIES[WIPRO_IOS_SLUG]);
 const view: any = buildPrep(db, 'u1', WIPRO_IOS_SLUG, true);
-check('plan covers 30 Oct → 13 Dec', view.plan[0].date === '2026-10-30' && view.plan[view.plan.length - 1].date === '2026-12-13' && view.plan.length === 45);
-check('15 Nov is the M1 test day', view.plan.find((d: any) => d.date === '2026-11-15').items.some((i: any) => i.kind === 'sectional' && i.ref === 'wipro-ios-full-course-mock-m1'));
-check('13–14 Nov have an M1 practice mock', ['2026-11-13', '2026-11-14'].every((d) => view.plan.find((x: any) => x.date === d).items.some((i: any) => /Practice: Milestone 1/.test(i.title))));
+check('plan covers 30 Oct → 15 Nov', view.plan[0].date === '2026-10-30' && view.plan[view.plan.length - 1].date === '2026-11-15' && view.plan.length === 17);
+check('7 Nov is the M1 test day', view.plan.find((d: any) => d.date === '2026-11-07').items.some((i: any) => i.kind === 'sectional' && i.ref === 'wipro-ios-full-course-mock-m1'));
+check('15 Nov has the full course mock', view.plan.find((d: any) => d.date === '2026-11-15').items.some((i: any) => i.kind === 'mock'));
+check('5–6 Nov have an M1 practice mock', ['2026-11-05', '2026-11-06'].every((d) => view.plan.find((x: any) => x.date === d).items.some((i: any) => /Practice: Milestone 1/.test(i.title))));
 check('future topics show as coming, not broken links', view.plan.flatMap((d: any) => d.items).filter((i: any) => i.kind === 'lesson' && !i.ref).every((i: any) => i.soon));
-check('countdown points at a milestone date', ['2026-11-15', '2026-11-25', '2026-12-04', '2026-12-10', '2026-12-13'].includes(view.test_date));
+check('countdown points at a milestone date', ['2026-11-07', '2026-11-10', '2026-11-12', '2026-11-14', '2026-11-15'].includes(view.test_date));
 check('free flag and labels reach the screen', view.free === true && view.labels.section_tests === 'Milestone tests');
 check('lesson sections map to milestones', view.lessons.every((l: any) => ['m1', 'm2', 'm3', 'm4', 'final'].includes(l.section)));
 check('all 42 lessons written, nothing left as coming', view.lessons.length === 42 && !view.plan.flatMap((d: any) => d.items).some((i: any) => i.soon), String(view.lessons.length));
 for (const k of ['m2', 'm3', 'm4', 'final']) check(`${k} milestone test exists`, db.skills.some((s: any) => s.slug === `wipro-ios-full-course-mock-${k}`));
 const today = new Date(Date.now() + 5.5 * 3600000).toISOString().slice(0, 10);
-if (today > '2026-11-02' && today < '2026-12-13') check('today lists catch-up lessons when behind', view.today.items.some((i: any) => /^Catch up:/.test(i.title)));
+if (today > '2026-11-02' && today < '2026-11-15') check('today lists catch-up lessons when behind', view.today.items.some((i: any) => /^Catch up:/.test(i.title)));
 
 // ---- live database: refresh once, then pick up bank changes without losing attempts
 const live: any = { companies: [], skills: [], topics: [], questions: [], assessments: [], company_focus_applied: 'x', company_focus_v2: 'x', company_mphasis_v1: 'x', feed_v2_seeded: 'x' };

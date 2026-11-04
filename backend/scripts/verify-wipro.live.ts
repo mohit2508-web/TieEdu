@@ -68,7 +68,7 @@ async function main() {
 
   console.log('\n[2] plan, free, labels');
   let p = await req(`/prep/${SLUG}`, { token: tok });
-  check('plan 200, owned (free), 45 calendar days', p.status === 200 && p.body.owned === true && p.body.free === true && p.body.plan.length === 45, `${p.status} ${p.body?.owned} ${p.body?.free} ${p.body?.plan?.length}`);
+  check('plan 200, owned (free), 45 calendar days', p.status === 200 && p.body.owned === true && p.body.free === true && p.body.plan.length === 17, `${p.status} ${p.body?.owned} ${p.body?.free} ${p.body?.plan?.length}`);
   check('next milestone named with its date', !!p.body.next_milestone?.name && p.body.test_date === p.body.next_milestone.date, JSON.stringify(p.body.next_milestone));
   check('labels say milestone tests', p.body.labels?.section_tests === 'Milestone tests');
   check('M1 section has its test', p.body.sections.find((s: any) => s.key === 'm1')?.test_slug === M1);

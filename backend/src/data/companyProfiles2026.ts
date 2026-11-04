@@ -325,7 +325,7 @@ export const PROFILES: Profile[] = [
     // Owner's curriculum sheet, 2026-11-04 (WIPRO_IOS_3T_PLAN.md). A training track, not a hiring route: no CTC.
     slug: 'wipro-ios-swift', company: 'Wipro', name: 'Wipro iOS Developer Training (Swift)', industry: 'IT Services & Consulting',
     tagline: '12 modules, 4 milestone assessments: Swift, UIKit, SwiftUI, concurrency, testing. Free.',
-    about: 'The iOS developer training track from Xcode setup to Instruments: Swift language, architecture (MVC/MVVM), concurrency, networking with URLSession and Codable, UIKit and SwiftUI, project configuration and XCTest. Four assessment milestones (15 Nov, 25 Nov, 4 Dec, 10 Dec) and a final. Every lesson, milestone test and full mock here is free.',
+    about: 'The iOS developer training track from Xcode setup to Instruments: Swift language, architecture (MVC/MVVM), concurrency, networking with URLSession and Codable, UIKit and SwiftUI, project configuration and XCTest. The whole course is planned to finish by the Wipro test on 15 Nov 2026, with a milestone test after each block of modules. Every lesson, milestone test and full mock here is free.',
     hq: 'Bengaluru, India', founded: '1945', size: '~236,328', careers: 'https://careers.wipro.com',
     tags: ['Free', 'iOS · Swift', '12 Modules', '4 Milestones', 'Full mock'],
     program_type: 'Training track: iOS development',
@@ -338,7 +338,7 @@ export const PROFILES: Profile[] = [
       ['Milestone 4: SwiftUI & project setup', 'OA', 'mcq', 25, 30, undefined, ['SwiftUI app structure', 'Layouts', 'State', 'Navigation', 'Targets & build settings', 'Info.plist']],
       ['Final: testing & Instruments', 'OA', 'mcq', 15, 20, undefined, ['XCTest & mocks', 'Instruments']],
     ],
-    higher: '', difficulty: 3, bond: '', training: 'Modules 1–12 from 30 Oct to 13 Dec 2026, with milestone assessments on 15 Nov, 25 Nov, 4 Dec and 10 Dec.', window: 'Current training batch: 30 Oct – 13 Dec 2026',
+    higher: '', difficulty: 3, bond: '', training: 'Modules 1–12 from 30 Oct to 15 Nov 2026; milestone practice tests on 7, 10, 12 and 14 Nov; final test 15 Nov.', window: 'Current training batch: final test 15 Nov 2026',
     seo: ['Wipro iOS Training (Swift): Free Milestone Tests & Lessons', 'Free prep for the Wipro iOS developer training: 42 Swift, UIKit and SwiftUI lessons, milestone mock tests and a full course mock, with a day-by-day plan.'],
     confidence: 'low', pattern_checked: '2026-11-04', is_free: true,
     note: 'Curriculum and dates from the training schedule. The milestone test format is not published; these tests are practice tests written to the syllabus.',

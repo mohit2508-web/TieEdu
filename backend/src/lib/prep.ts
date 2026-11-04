@@ -273,7 +273,11 @@ function schedulePlan(cfg: PrepConfig, lessons: any[], sectional: Record<string,
     });
     const toMs = diffDays(d, ms.date);
     if (sd?.milestone) items.push(test(sd.milestone, `${name(sd.milestone)}: test day`));
-    else if (toMs >= 1 && toMs <= 2) items.push(test(ms.key, `Practice: ${short(ms.key)} mock test`));
+    else if (toMs >= 1 && toMs <= 2) {
+      // Before the last milestone, rehearse the whole course, not one section.
+      const isLast = ms === milestones[milestones.length - 1];
+      items.push(isLast && fullMock ? { kind: 'mock', ref: fullMock.slug, title: 'Practice: full course mock (60 Qs)', done: mockAttempts.length > 0 } : test(ms.key, `Practice: ${short(ms.key)} mock test`));
+    }
     if (d === last && fullMock) items.push({ kind: 'mock', ref: fullMock.slug, title: 'Full course mock', done: mockAttempts.length > 0 });
     if (!items.length) items.push({ ...test(ms.key, `Revision: ${short(ms.key)} test`), kind: 'revision', done: false });
     plan.push({ day: n, date: d, phase: short(ms.key), items });

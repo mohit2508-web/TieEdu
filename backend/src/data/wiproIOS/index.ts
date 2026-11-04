@@ -16,31 +16,36 @@ export type { MKey, WLesson, WQuestion } from './types';
 
 export const WIPRO_IOS_SLUG = 'wipro-ios-swift';
 
-/** Module → [start, end] dates (inclusive) and the milestone it counts toward. */
+/**
+ * Module → [start, end] dates (inclusive) and the milestone it counts toward.
+ * Owner, 2026-11-04: the Wipro final test is on 15 Nov, so the whole course is
+ * compressed to end then. Modules 1–2 keep their sheet dates (already past).
+ */
 export const MODULES: Record<number, { start: string; end: string; m: MKey }> = {
   1: { start: '2026-10-30', end: '2026-10-30', m: 'm1' },
   2: { start: '2026-11-02', end: '2026-11-04', m: 'm1' },
-  3: { start: '2026-11-05', end: '2026-11-13', m: 'm1' },
-  4: { start: '2026-11-14', end: '2026-11-14', m: 'm1' },
-  5: { start: '2026-11-16', end: '2026-11-19', m: 'm2' },
-  6: { start: '2026-11-20', end: '2026-11-24', m: 'm2' },
-  7: { start: '2026-11-25', end: '2026-11-27', m: 'm3' },
-  8: { start: '2026-11-30', end: '2026-12-03', m: 'm3' },
-  9: { start: '2026-12-04', end: '2026-12-08', m: 'm4' },
-  10: { start: '2026-12-09', end: '2026-12-09', m: 'm4' },
-  11: { start: '2026-12-10', end: '2026-12-11', m: 'final' },
-  12: { start: '2026-12-13', end: '2026-12-13', m: 'final' },
+  3: { start: '2026-11-05', end: '2026-11-06', m: 'm1' },
+  4: { start: '2026-11-07', end: '2026-11-07', m: 'm1' },
+  5: { start: '2026-11-08', end: '2026-11-08', m: 'm2' },
+  6: { start: '2026-11-09', end: '2026-11-09', m: 'm2' },
+  7: { start: '2026-11-10', end: '2026-11-10', m: 'm3' },
+  8: { start: '2026-11-11', end: '2026-11-11', m: 'm3' },
+  9: { start: '2026-11-12', end: '2026-11-12', m: 'm4' },
+  10: { start: '2026-11-13', end: '2026-11-13', m: 'm4' },
+  11: { start: '2026-11-14', end: '2026-11-14', m: 'final' },
+  12: { start: '2026-11-14', end: '2026-11-14', m: 'final' },
 };
 
 /** Section label used as the lesson-title prefix ("M1: …") and in the reader. */
 export const SECTION_LABEL: Record<MKey, string> = { m1: 'M1', m2: 'M2', m3: 'M3', m4: 'M4', final: 'Final' };
 
 export const MILESTONES: Array<{ key: MKey; name: string; date: string; modules: string }> = [
-  { key: 'm1', name: 'Milestone 1 · Swift foundations', date: '2026-11-15', modules: 'Modules 1–4' },
-  { key: 'm2', name: 'Milestone 2 · Architecture & concurrency', date: '2026-11-25', modules: 'Modules 5–6' },
-  { key: 'm3', name: 'Milestone 3 · Networking & UIKit', date: '2026-12-04', modules: 'Modules 7–8' },
-  { key: 'm4', name: 'Milestone 4 · SwiftUI & project setup', date: '2026-12-10', modules: 'Modules 9–10' },
-  { key: 'final', name: 'Final · Testing & Instruments', date: '2026-12-13', modules: 'Modules 11–12' },
+  { key: 'm1', name: 'Milestone 1 · Swift foundations', date: '2026-11-07', modules: 'Modules 1–4' },
+  { key: 'm2', name: 'Milestone 2 · Architecture & concurrency', date: '2026-11-10', modules: 'Modules 5–6' },
+  { key: 'm3', name: 'Milestone 3 · Networking & UIKit', date: '2026-11-12', modules: 'Modules 7–8' },
+  { key: 'm4', name: 'Milestone 4 · SwiftUI & project setup', date: '2026-11-14', modules: 'Modules 9–10' },
+  // The Wipro final test day: Final section test plus the full course mock.
+  { key: 'final', name: 'Final · Wipro test day', date: '2026-11-15', modules: 'Modules 1–12' },
 ];
 
 /** Every topic on the sheet, in order: [module, title]. Lessons not written yet still show in the plan as "coming". */
