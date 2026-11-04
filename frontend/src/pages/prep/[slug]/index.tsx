@@ -87,7 +87,15 @@ export default function PrepPage() {
   const aheadItem = data.today.items.every((i) => i.done)
     ? upcoming.filter((d) => d.date > data.today.date).flatMap((d) => d.items).find((i) => !i.done && i.ref) || null
     : null;
-  const visible = showAll ? data.plan : upcoming.slice(0, 10);
+  // Calendar programs: by default only the days up to the next milestone; later milestones stay collapsed.
+  const nextMs = data.next_milestone;
+  const visible = showAll ? data.plan : nextMs ? upcoming.filter((d) => d.date <= nextMs.date) : upcoming.slice(0, 10);
+  const later = nextMs && !showAll
+    ? Array.from(new Set(data.plan.filter((d) => d.date > nextMs.date).map((d) => d.phase))).map((phase) => {
+        const days = data.plan.filter((d) => d.date > nextMs.date && d.phase === phase);
+        return { phase, from: days[0].date, to: days[days.length - 1].date, count: days.length };
+      })
+    : [];
   const weakest = data.sections.filter((s) => s.score !== null).sort((a, z) => a.score! - z.score!)[0];
   const L = data.labels || { section_tests: 'Section tests', section_test: 'section test', full_mock: 'Full mock', mock_blurb: 'Real pattern, fresh questions every attempt.' };
   const mockQs = data.full_mock?.questions;
@@ -214,8 +222,18 @@ export default function PrepPage() {
                   );
                 })}
               </ol>
+              {later.length > 0 && (
+                <ul className="mt-3 space-y-2">
+                  {later.map((m) => (
+                    <li key={m.phase} className="flex items-center justify-between gap-3 rounded-xl border border-dashed border-line p-3 text-base text-muted">
+                      <span className="font-semibold text-heading">{m.phase}</span>
+                      <span>{fmt(m.from)} – {fmt(m.to)} · {m.count} days</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
               <button type="button" onClick={() => setShowAll((v) => !v)} className="btn btn-ghost mt-3 min-h-[44px] px-4 text-base">
-                {showAll ? 'Show the next 10 days' : `Show all ${data.plan.length} days`}
+                {showAll ? (nextMs ? `Show only until ${nextMs.name.split(' · ')[0]}` : 'Show the next 10 days') : `Show all ${data.plan.length} days`}
               </button>
             </section>
           </>
