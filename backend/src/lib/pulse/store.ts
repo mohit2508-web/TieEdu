@@ -357,7 +357,8 @@ export const normaliseTask = (body: any, prev: any = {}, ctx: { db?: any; classI
   const out = {
     title: clean(body?.title ?? prev.title, 140),
     summary: clean(body?.summary ?? prev.summary, 2000),
-    language: 'c',
+    // C by default; Swift for iOS lab packs (reviewed by hand, no compile step).
+    language: (body?.language ?? prev.language) === 'swift' ? 'swift' : 'c',
     folder,
     auto_tests: autoTests,
     assigned_at: date(body?.assigned_at ?? prev.assigned_at, iso()),

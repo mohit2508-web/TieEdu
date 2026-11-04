@@ -50,7 +50,14 @@ const ClassBody: React.FC<{ id: string }> = ({ id }) => {
       {msg ? <p role="status" className="mb-4 rounded-cell bg-secondary-soft px-4 py-2.5 text-sm text-secondary">{msg}</p> : null}
 
       <section className="rounded-card border border-line bg-card">
-        <h2 className="border-b border-line px-5 py-3 font-display text-h3 text-heading">Tasks</h2>
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-5 py-3">
+          <h2 className="font-display text-h3 text-heading">Tasks</h2>
+          {/* Ready-made Wipro iOS labs: every lab and milestone from the handbook, published with folders and deadlines. */}
+          <button type="button" disabled={busy} className={ghost}
+            onClick={() => run(async () => { const r = await pulseApi.addPack(cls.id, 'wipro-ios'); setMsg(r.added ? `${r.added} Wipro iOS labs added and published. Students push each lab to its folder.` : 'All Wipro iOS labs are already in this class.'); }, undefined)}>
+            <Plus className="h-3.5 w-3.5" /> Add Wipro iOS (Swift) labs
+          </button>
+        </div>
         <ul className="divide-y divide-line">
           {cls.tasks.map((t) => (
             <li key={t.id} className="flex flex-col gap-2 px-5 py-3 sm:flex-row sm:items-center">

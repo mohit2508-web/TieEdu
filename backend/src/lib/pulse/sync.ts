@@ -83,7 +83,7 @@ export function refreshSimilarity(db: any, taskId: string) {
   const p = pulseOf(db);
   const task = p.tasks.find((t) => t.id === taskId);
   if (!task) return;
-  const codeOf = (files: { path: string; code: string }[]) => files.filter((f) => /\.(c|h)$/i.test(f.path)).map((f) => f.code).join('\n');
+  const codeOf = (files: { path: string; code: string }[]) => files.filter((f) => /\.(c|h|swift)$/i.test(f.path)).map((f) => f.code).join('\n');
   const subs = p.repos.filter((r) => r.class_id === task.class_id && r.snap)
     .map((r) => ({ id: r.roster_id, code: codeOf(folderFiles(task, readFiles(r.id))) }))
     .filter((s) => s.code.trim());

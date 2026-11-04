@@ -70,6 +70,8 @@ export const pulseApi = {
   approve: (rowId: string) => post(`/roster/${rowId}/approve`),
   removeStudent: (rowId: string) => call(`/roster/${rowId}`, { method: 'DELETE' }),
 
+  packs: () => call<{ packs: { id: string; title: string; subject: string; count: number }[] }>('/packs'),
+  addPack: (classId: string, pack: string) => post<{ added: number; class: ClassDetail }>(`/classes/${classId}/packs/${pack}`),
   templates: () => call<{ templates: { id: string; title: string; level: string; summary: string; input: TaskInput }[] }>('/templates'),
   teacherTasks: () => call<{ tasks: { id: string; title: string; class_id: string; class_name: string }[] }>('/teacher/tasks'),
   duplicate: (taskId: string, classId?: string) => post<PulseTask>(`/tasks/${taskId}/duplicate`, { class_id: classId }),

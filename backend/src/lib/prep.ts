@@ -8,6 +8,8 @@
 import { MPHASIS_BANK } from '../data/companyTests/mphasis';
 import { MPHASIS_LESSONS } from '../data/interviewPrep/mphasisLessons';
 import { MILESTONES, WIPRO_IOS_SLUG, curriculumDays } from '../data/wiproIOS';
+import { LABS, WIPRO_IOS_PACK, type Lab } from '../data/wiproIOS/labs';
+import { pulseOf, studentView } from './pulse/store';
 
 export interface PrepSection { key: string; name: string; weight: number }
 
@@ -27,6 +29,8 @@ export interface PrepLabels { section_tests: string; section_test: string; full_
 interface PrepConfig {
   sections: PrepSection[]; lessonModule: string; interviewModules: string[]; defaultDays: number;
   schedule?: PrepSchedule; labels?: Partial<PrepLabels>;
+  /** Hands-on labs tracked in Project Pulse (Lab tab). */
+  labs?: { pack: string; list: Lab[] };
 }
 
 /** Mphasis prep turns on once its lessons and a full mock's worth of questions exist. */
@@ -52,6 +56,7 @@ export const PREP_COMPANIES: Record<string, PrepConfig> = {
     interviewModules: [],
     defaultDays: 45,
     schedule: { days: curriculumDays(), milestones: MILESTONES },
+    labs: { pack: WIPRO_IOS_PACK, list: LABS },
     labels: {
       section_tests: 'Milestone tests', section_test: 'milestone test', full_mock: 'Full course mock',
       mock_blurb: 'One timed section per milestone, fresh questions every attempt.',
@@ -232,6 +237,7 @@ export function buildPrep(db: any, userId: string, slug: string, owned: boolean)
       return { id, title: String(m?.title || ''), count: (m?.items || []).length };
     }).filter((m) => m.count > 0),
     free: !!company.is_free,
+    lab: cfg.labs ? labsFor(db, userId, cfg.labs) : null,
     labels: { section_tests: 'Section tests', section_test: 'section test', full_mock: 'Full mock', mock_blurb: 'Real pattern, fresh questions every attempt.', ...(cfg.labels || {}) },
     next_milestone: nextMs,
     sections,
@@ -287,4 +293,28 @@ function schedulePlan(cfg: PrepConfig, lessons: any[], sectional: Record<string,
     .filter((it) => it.kind === 'lesson' && it.ref && !it.done).slice(0, 3)
     .map((it) => ({ ...it, title: `Catch up: ${it.title}` }));
   return { plan, today: { ...at, items: [...catchUp, ...at.items] } };
+}
+
+/**
+ * The Lab tab: every handbook lab with its due date and, when the student is in
+ * a Project Pulse class that has the pack, their status there (pushed, reviewed,
+ * score). Students outside Pulse still see every brief.
+ */
+function labsFor(db: any, userId: string, labs: { pack: string; list: Lab[] }) {
+  const p = pulseOf(db);
+  const rows = p.roster.filter((r: any) => r.user_id === userId && r.status === 'active');
+  const tasks = p.tasks.filter((t: any) => t.published && String(t.pack_ref || '').startsWith(`${labs.pack}:`) && rows.some((r: any) => r.class_id === t.class_id));
+  const cls = tasks.length ? p.classes.find((c: any) => c.id === tasks[0].class_id) : null;
+  return {
+    pulse_class: cls ? { id: cls.id, name: cls.name } : null,
+    items: labs.list.map((lab) => {
+      const task = tasks.find((t: any) => t.pack_ref === `${labs.pack}:${lab.id}`);
+      const row = task && rows.find((r: any) => r.class_id === task.class_id);
+      const v = task && row ? studentView(db, task, row, 'student') : null;
+      return {
+        ...lab,
+        pulse: v ? { task_id: task.id, folder: task.folder, deadline: task.deadline_at, status: v.status, score: v.score, reviewed: v.reviewed, commits: v.commits.length, repo: v.repo, feedback: v.feedback } : null,
+      };
+    }),
+  };
 }

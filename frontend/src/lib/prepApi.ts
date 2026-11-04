@@ -23,6 +23,15 @@ export interface PrepView {
   labels?: { section_tests: string; section_test: string; full_mock: string; mock_blurb: string; free_note?: string };
   /** Calendar programs: the milestone the countdown points at. */
   next_milestone?: { key: string; name: string; date: string } | null;
+  /** Hands-on labs tracked in Project Pulse (null for programs without labs). */
+  lab?: {
+    pulse_class: { id: string; name: string } | null;
+    items: Array<{
+      id: string; code: string; title: string; milestone: string; due: string; kind: 'lab' | 'assessment' | 'capstone';
+      objective: string; tasks: string[]; submit: string; extension?: string;
+      pulse: { task_id: string; folder: string; deadline: string; status: string; score: number; reviewed: boolean; commits: number; repo: string | null; feedback: string | null } | null;
+    }>;
+  } | null;
   sections: PrepSection[];
   full_mock: { slug: string; attempts: number; last: number | null; questions?: number | null; minutes?: number | null } | null;
   lessons: Array<{ id: string; title: string; section: string; done: boolean; free: boolean }>;

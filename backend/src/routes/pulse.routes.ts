@@ -13,6 +13,7 @@ import {
 import { parseRepo, workflowYaml, GRADER_JS } from '../lib/pulse/github';
 import { syncRepo, syncTask, releaseOthers } from '../lib/pulse/sync';
 import { TEMPLATES, templateInput } from '../lib/pulse/templates';
+import { PACKS, addPack } from '../lib/pulse/packs';
 
 /**
  * Project Pulse API (PROJECT_PULSE_PLAN.md §8, §12). Everything is signed-in except
@@ -239,7 +240,10 @@ const classDetail = (db: any, me: any, cls: any) => {
 
 pulseRouter.post('/classes', h((req, res) => {
   const db = loadDb();
-  const cls = createClass(db, u(req), req.body);
+  const pack = req.body?.pack ? PACKS[String(req.body.pack)] : null;
+  const cls = createClass(db, u(req), { ...req.body, subject: req.body?.subject || pack?.subject });
+  // Optional ready-made labs (for example the Wipro iOS pack), published straight away.
+  if (pack) addPack(db, cls, String(req.body.pack), req.userId!);
   saveDb(db);
   res.status(201).json(classDetail(db, u(req), cls));
 }));
@@ -309,6 +313,17 @@ pulseRouter.delete('/roster/:id', h((req, res) => {
 }));
 
 // ---- Tasks -------------------------------------------------------------------
+/** Ready-made lab packs a teacher can add to a class in one go. */
+pulseRouter.get('/packs', h((_req, res) => {
+  res.json({ packs: Object.entries(PACKS).map(([id, p]) => ({ id, title: p.title, subject: p.subject, count: p.labs.length })) });
+}));
+pulseRouter.post('/classes/:id/packs/:pack', h((req, res) => {
+  const db = loadDb();
+  const cls = teachClass(db, u(req), String(req.params.id));
+  const added = addPack(db, cls, String(req.params.pack), req.userId!);
+  saveDb(db);
+  res.json({ added, class: classDetail(db, u(req), cls) });
+}));
 pulseRouter.get('/templates', h((_req, res) => {
   res.json({ templates: TEMPLATES.map((t) => ({ id: t.id, title: t.title, level: t.level, summary: t.summary, input: templateInput(t) })) });
 }));

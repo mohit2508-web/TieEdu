@@ -5,6 +5,8 @@
 import { seedCompanyProfiles, seedInterviewPrep, seedMissing3T, seedCompanyTest, seedSectionalTests } from '../src/lib/seed3T';
 import { buildPrep, PREP_COMPANIES } from '../src/lib/prep';
 import { ownsCompanyPack } from '../src/routes/prep.routes';
+import { addPack } from '../src/lib/pulse/packs';
+import { LABS } from '../src/data/wiproIOS/labs';
 import { WIPRO_IOS_BANK, WIPRO_IOS_LESSONS_RICH, WIPRO_IOS_SLUG, TOPICS, MODULES, curriculumDays } from '../src/data/wiproIOS';
 
 let pass = 0;
@@ -114,6 +116,23 @@ check('removed question is retired, not deleted', live.questions.find((q: any) =
 lc.modules.find((m: any) => m.id === 'mod-prep-wipro-ios-lessons').content_hash = 'old';
 seedMissing3T(live);
 check('changed lessons are picked up on start', lc.modules.find((m: any) => m.id === 'mod-prep-wipro-ios-lessons').content_hash !== 'old');
+
+// ---- Project Pulse lab pack + the Lab tab
+check('33 labs and assessments, each with tasks and a due date by 15 Nov', LABS.length === 33 && LABS.every((l) => l.tasks.length >= 4 && l.due <= '2026-11-15' && !!l.submit));
+const pdb: any = { companies: [], skills: [], topics: [], questions: [], assessments: [], attempts: [], users: [{ id: 's1', role: 'student' }] };
+seedCompanyProfiles(pdb, false, [WIPRO_IOS_SLUG]);
+seedInterviewPrep(pdb);
+pdb.pulse = { teachers: [], classes: [{ id: 'cls1', name: 'iOS batch A', owner_id: 't1', co_teachers: [] }], roster: [{ id: 'r1', class_id: 'cls1', user_id: 's1', name: 'Asha', email: 'a@x.in', status: 'active' }], tasks: [], repos: [], results: [] };
+check('pack adds all 33 labs to the class', addPack(pdb, pdb.pulse.classes[0], 'wipro-ios', 't1') === 33);
+check('adding again adds nothing (idempotent)', addPack(pdb, pdb.pulse.classes[0], 'wipro-ios', 't1') === 0);
+const t1 = pdb.pulse.tasks[0];
+check('lab task: Swift, published, folder lab-1a, hand-reviewed, one requirement per handbook task', t1.language === 'swift' && t1.published && t1.folder === 'lab-1a' && !t1.auto_tests && t1.requirements.length === LABS[0].tasks.length);
+check('deadlines end 23:59 IST on the due date', pdb.pulse.tasks.every((t: any) => t.deadline_at.endsWith('T18:29:00.000Z') && t.deadline_at > t.assigned_at));
+const pv: any = buildPrep(pdb, 's1', WIPRO_IOS_SLUG, true);
+check('Lab tab: 33 labs with the Pulse class', pv.lab.items.length === 33 && pv.lab.pulse_class?.name === 'iOS batch A');
+check('Lab tab: student status from Pulse (no repo yet)', pv.lab.items.every((l: any) => l.pulse?.status === 'noRepo'));
+const outsider: any = buildPrep(pdb, 'nobody', WIPRO_IOS_SLUG, true);
+check('students outside Pulse still see every brief', outsider.lab.items.length === 33 && outsider.lab.pulse_class === null && outsider.lab.items.every((l: any) => l.pulse === null));
 
 // ---- Infosys unchanged
 const idb: any = { companies: [], skills: [], topics: [], questions: [], assessments: [] };

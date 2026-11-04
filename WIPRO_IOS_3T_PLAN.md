@@ -95,3 +95,47 @@ They are never presented as real Wipro papers.
   practice is a "Try in a Playground" task at the end of each lesson.
 - Wipro's CTC and bond are not shown for this program (it is training, not a hiring
   route).
+
+---
+
+## 5. Lab: hands-on labs tracked in Project Pulse (owner, 2026-11-04)
+
+Source: the owner's *Swift iOS Lab Assignment Handbook*, which has 33 entries:
+- Labs 1A–1E, 2A–2D and 3
+- Milestone 1
+- Labs 4A–4B and 5A–5D
+- Milestone 2
+- Lab 6 and Labs 7A–7C
+- Milestone 3
+- Labs 8A–8D and Lab 9
+- Milestone 4
+- Labs 10A–10B and Lab 11
+- Capstone
+
+Each entry has its objective, tasks, submission and extension. Data: `backend/src/data/wiproIOS/labs.ts`.
+
+**Due dates** follow the course compressed to end on 15 Nov:
+- Labs 1–2: 6 Nov
+- Lab 3 and Milestone 1: 7 Nov
+- Lab 4: 8 Nov
+- Lab 5: 9 Nov
+- Milestone 2 and Lab 6: 10 Nov
+- Lab 7: 11 Nov
+- Milestone 3 and Lab 8: 12 Nov
+- Lab 9: 13 Nov
+- Milestone 4 and Labs 10–11: 14 Nov
+- Capstone: 15 Nov
+
+Teachers can edit any deadline in Pulse.
+
+**Project Pulse (teacher):**
+- Class page → **Add Wipro iOS (Swift) labs**. This adds all 33 as published tasks, one folder each (`lab-1a/` … `capstone/`), with one requirement per handbook task.
+- Swift labs are reviewed by hand: met, partly or not met, plus feedback. Auto-run tests are off, because Swift apps need macOS runners.
+- Adding the pack again skips the labs the class already has. The API can also add it when the class is created: `POST /api/pulse/classes` with `pack: "wipro-ios"`.
+
+**Project Pulse (student):** link the class repo once, then push each lab to its folder.
+
+**Prep → Lab tab** (Wipro iOS only):
+- Lists every lab, grouped by milestone, with its due date and full brief.
+- Inside a Pulse class, each lab also shows the student's status (link repo, not pushed, waiting for review, partly done, done), the score once reviewed, the teacher's feedback, and a link to open Project Pulse.
+- Students outside Pulse see the briefs and a note that their teacher tracks the labs in Pulse.
