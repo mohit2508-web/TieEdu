@@ -57,7 +57,7 @@ export default function PrepPage() {
   const mockTaken = (data.full_mock?.attempts || 0) > 0;
   const lessonFree = (id: string) => !!data.lessons.find((l) => l.id === id)?.free;
   const locked = (it: PrepItem) => !data.owned && (
-    it.kind === 'sectional' || it.kind === 'revision' || it.kind === 'interview' || (it.kind === 'mock' && mockTaken) || (it.kind === 'lesson' && !lessonFree(it.ref))
+    it.kind === 'sectional' || it.kind === 'revision' || it.kind === 'interview' || (it.kind === 'mock' && mockTaken) || (it.kind === 'lesson' && !lessonFree(it.ref) && !data.lessons_open)
   );
 
   const ItemRow: React.FC<{ it: PrepItem }> = ({ it }) => {

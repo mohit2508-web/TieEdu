@@ -147,7 +147,7 @@ function ReadinessPage() {
     setError(null);
     try {
       const res = await chooseReadinessPath(slug, path);
-      add({ kind: 'course', id: course.id, slug: course.slug, name: course.title, price: res.price_inr });
+      add({ kind: 'course', id: course.id, slug: course.slug, name: course.title, price: res.price_inr, list_price: course.price_inr });
       openOverlay('cart');
       setState((s) => (s ? { ...s, path_choice: res.path_choice } : s));
     } catch (e: any) {

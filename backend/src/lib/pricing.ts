@@ -171,7 +171,7 @@ export function buildPricingCatalog(
         module_type: m.module_type || null,
         item_count: (m.items || []).length,
         has_pdf: !!m.pdf,
-        price: SINGLE_MODULE_PRICE,
+        price: sale(SINGLE_MODULE_PRICE),
       })),
       ...cappedPrices(remaining, capFor(company.id), sale),
       is_unlocked: companyUnlocked || ownsEvery,

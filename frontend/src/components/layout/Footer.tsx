@@ -6,6 +6,11 @@ import { useLang } from '@/lib/lang';
 import { navLabel } from '@/lib/navHinglish';
 import { LEGAL, LEGAL_LINKS } from '@/lib/legal';
 import { OPEN_COOKIE_SETTINGS_EVENT } from '@/lib/legalEvents';
+import { useFestival } from '@/lib/festival';
+import { DiyaRow } from '@/components/festival/Ornaments';
+
+/** Diwali 2026: a row of lit diyas above the footer, only during the sale. */
+const FooterDiyas: React.FC = () => (useFestival().active ? <div className="-mt-8 mb-6"><DiyaRow /></div> : null);
 
 /**
  * The site footer (PROFESSIONAL_PLATFORM_PLAN §8.1).
@@ -64,6 +69,7 @@ export const Footer: React.FC = () => {
   const year = new Date().getFullYear();
   return (
     <footer className="mt-16 border-t border-line bg-app pb-8 pt-12">
+      <FooterDiyas />
       <div className="mx-auto w-full max-w-[1400px] px-4 sm:px-8 lg:px-12">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-[minmax(0,1.4fr)_repeat(4,minmax(0,1fr))]">
           <div className="col-span-2 md:col-span-1">

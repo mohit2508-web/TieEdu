@@ -21,6 +21,8 @@ import { useCartScope } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { TodayScreen } from '@/components/today/TodayScreen';
 import { Company } from '@/types';
+import { useFestival } from '@/lib/festival';
+import { DiwaliHero } from '@/components/festival/DiwaliHero';
 
 const JoinChannelsPopup = dynamic(
   () => import('@/components/home/JoinChannelsPopup').then((m) => m.JoinChannelsPopup),
@@ -30,6 +32,7 @@ const JoinChannelsPopup = dynamic(
 const INDUSTRIES = ['All', 'Big Tech', 'IT Services', 'Cybersecurity', 'Fintech', 'SaaS', 'Consulting'];
 
 export default function Home() {
+  const festival = useFestival();
   const { user, loading: authLoading } = useAuth();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [selectedIndustry, setSelectedIndustry] = useState<string>('All');
@@ -151,7 +154,8 @@ export default function Home() {
       */}
       <div className="flex min-h-screen flex-col bg-app">
         <main className="w-full flex-grow overflow-x-clip">
-          <PromoBar />
+          <DiwaliHero />
+          {!festival.active && <PromoBar />}
 
           <LandingHero companies={companies} stats={stats} searchQuery={searchQuery} onSearch={setSearchQuery} />
 
@@ -192,7 +196,7 @@ export default function Home() {
       </div>
 
       {/* Occasional "join our channels" promo — 7-day localStorage cooldown */}
-      <JoinChannelsPopup />
+      {!festival.active && <JoinChannelsPopup />}
     </>
   );
 }

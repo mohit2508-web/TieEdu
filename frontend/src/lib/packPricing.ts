@@ -1,4 +1,5 @@
 import { CartItem, Company, PricingPlan, CompanyModuleItem, CourseCartItem } from '@/types';
+import { salePrice } from '@/lib/festival';
 
 /**
  * CLIENT MIRROR of the server pack ladder (backend/src/lib/pricing.ts).
@@ -16,11 +17,15 @@ export const COMPLETE_PACK_PRICE = 249;
 export const COMPLETE_PACK_COUNT = 4;
 const PACK_LADDER: Record<number, number> = { 1: 99, 2: 169, 3: 219 };
 
-export const packPrice = (n: number): number => {
+/** The ladder price without any festival sale. */
+export const regularPackPrice = (n: number): number => {
   if (n <= 0) return 0;
   if (n >= COMPLETE_PACK_COUNT) return COMPLETE_PACK_PRICE;
   return PACK_LADDER[n] ?? n * SINGLE_MODULE_PRICE;
 };
+
+/** Today's pack price: the ladder, halved during the Diwali sale (lib/festival). */
+export const packPrice = (n: number): number => salePrice(regularPackPrice(n));
 
 /** The honest undiscounted value of N modules bought separately (N x Rs 99). */
 export const listPrice = (n: number): number => Math.max(0, n) * SINGLE_MODULE_PRICE;
@@ -39,6 +44,10 @@ export const packSizeLabel = (n: number): string =>
 
 export interface PackSummary {
   subtotal: number;
+  /** What the same cart costs without the festival sale. */
+  preSaleSubtotal: number;
+  /** The festival sale's share of the saving (0 outside a sale). */
+  saleSavings: number;
   listTotal: number;
   savingsTotal: number;
   moduleCount: number;
@@ -52,13 +61,18 @@ export const summarizePackItems = (items: CartItem[]): PackSummary => {
   const perCompany = new Map<string, { name: string; moduleIds: Set<string>; isComplete: boolean; cap: number | null }>();
   let planTotal = 0;
   let courseTotal = 0;
+  let coursePreSale = 0;
 
   for (const it of items) {
     // Courses are priced from their own catalogue price, not the module ladder.
     // They must be checked BEFORE the module branch below, which would otherwise
     // read the course id as a company id and invent a pack price for it.
     if (isCourseItem(it)) {
-      courseTotal += (it as CourseCartItem).price || 0;
+      const ci = it as CourseCartItem;
+      const own = ci.price || 0;
+      coursePreSale += own;
+      // Checkout's rule: the lower of the buyer's own price and the sale price of the list price.
+      courseTotal += Math.min(own, salePrice(ci.list_price ?? own));
       continue;
     }
     if ('scope' in it && 'billing_cycle' in it) {
@@ -81,20 +95,31 @@ export const summarizePackItems = (items: CartItem[]): PackSummary => {
   let subtotal = 0;
   // A course has no "list price vs pack price" gap, so it enters both totals at
   // the same figure and never inflates the advertised savings.
-  let listTotal = planTotal + courseTotal;
+  let listTotal = planTotal + coursePreSale;
   let moduleCount = 0;
+  let preSale = 0;
   for (const c of perCompany.values()) {
     // A plain company line (no module ids) = every round; array pack lines =
     // exactly the modules listed (e.g. "finish your pack" with 2 left -> Rs 169).
     const n = c.isComplete && c.moduleIds.size === 0 ? COMPLETE_PACK_COUNT : c.moduleIds.size;
     // Same rule as checkout: a company page's flat price caps the ladder, never raises it.
-    subtotal += c.cap !== null ? Math.min(packPrice(n), c.cap) : packPrice(n);
+    const pre = c.cap !== null ? Math.min(regularPackPrice(n), c.cap) : regularPackPrice(n);
+    preSale += pre;
+    subtotal += salePrice(pre);
     listTotal += listPrice(n);
     moduleCount += n;
   }
   subtotal += planTotal + courseTotal;
+  preSale += planTotal + coursePreSale;
 
-  return { subtotal, listTotal, savingsTotal: Math.max(0, listTotal - subtotal), moduleCount };
+  return {
+    subtotal,
+    preSaleSubtotal: preSale,
+    saleSavings: Math.max(0, preSale - subtotal),
+    listTotal,
+    savingsTotal: Math.max(0, listTotal - subtotal),
+    moduleCount,
+  };
 };
 
 export const isCompanyItem = (i: CartItem): i is Company | CompanyModuleItem => 'slug' in i;

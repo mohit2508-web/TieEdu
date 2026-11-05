@@ -6,6 +6,7 @@ import {
   getCheckoutPaymentInfoApi, verifyRazorpayPaymentApi, fetchActiveCouponsApi,
 } from '@/lib/api';
 import { summarizePackItems, isCompanyItem, isModuleItem, isCourseItem, SINGLE_MODULE_PRICE, COMPLETE_PACK_PRICE, packPrice } from '@/lib/packPricing';
+import { useFestival } from '@/lib/festival';
 import { useCart } from '@/context/CartContext';
 import { useShell } from '@/context/ShellContext';
 import { PENDING_COUPON_KEY } from '@/components/home/OffersStrip';
@@ -67,6 +68,7 @@ export const CartModal: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  const festival = useFestival();
   const summary = summarizePackItems(items);
   const finalTotal = Math.max(0, summary.subtotal - discount);
   // What the cart would become if every missing round of the open vault were added.
@@ -146,7 +148,7 @@ export const CartModal: React.FC = () => {
       // THIS cart instead of the subtotal alone. The server re-resolves every
       // line against the catalogue at order time — this is context, not trust.
       const courseIds = items.filter(isCourseItem).map((c: any) => c.course_id || c.id).filter(Boolean);
-      const res = await validateCouponApi(cleanCode, summary.subtotal, courseIds);
+      const res = await validateCouponApi(cleanCode, summary.subtotal, courseIds, summary.preSaleSubtotal);
       if (res.valid) {
         setDiscount(res.discount || 0);
         setAppliedCouponCode(cleanCode);
@@ -221,6 +223,10 @@ export const CartModal: React.FC = () => {
 
   const finishPurchase = () => {
     stopPolling();
+    // Diwali S3: FestivalLayer celebrates a paid order with fireworks.
+    if (festival.active) {
+      window.dispatchEvent(new CustomEvent('tieedu:purchase', { detail: { saved: Math.max(0, summary.saleSavings) } }));
+    }
     setStep('cart');
     setTimeout(() => {
       /*
@@ -736,11 +742,20 @@ export const CartModal: React.FC = () => {
             <div className="px-4 sm:px-6 py-4 sm:py-5 border-t border-gray-200 bg-app-warm shrink-0 space-y-3">
               <div className="text-sm space-y-1.5">
                 <div className="flex justify-between text-gray-500">
-                  <span>Subtotal{summary.savingsTotal > 0 ? ` (${summary.moduleCount} module pack)` : ''}</span><span>₹{summary.subtotal}</span>
+                  <span>Subtotal{summary.savingsTotal > 0 ? ` (${summary.moduleCount} module pack)` : ''}</span>
+                  <span>
+                    {summary.saleSavings > 0 && <s className="mr-1.5 opacity-70">₹{summary.preSaleSubtotal}</s>}
+                    ₹{summary.subtotal}
+                  </span>
                 </div>
-                {summary.savingsTotal > 0 && (
+                {summary.savingsTotal - summary.saleSavings > 0 && (
                   <div className="flex justify-between text-emerald-600 font-semibold">
-                    <span>Pack savings (combo)</span><span>-₹{summary.savingsTotal}</span>
+                    <span>Pack savings (combo)</span><span>-₹{summary.savingsTotal - summary.saleSavings}</span>
+                  </div>
+                )}
+                {summary.saleSavings > 0 && (
+                  <div className="diwali-cart-line flex justify-between font-bold">
+                    <span>🪔 Diwali sale ({festival.discount_percent}% OFF)</span><span>-₹{summary.saleSavings}</span>
                   </div>
                 )}
                 {discount > 0 && (

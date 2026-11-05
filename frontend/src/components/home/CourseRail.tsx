@@ -6,6 +6,7 @@ import { CourseBadge, CourseCover } from '@/components/courses/CourseUi';
 import { fetchCourseCatalog } from '@/lib/coursesApi';
 import { formatDuration, formatLessonCount, formatLevel, formatRating } from '@/lib/courseFormat';
 import { CourseCard } from '@/types';
+import { SalePrice } from '@/components/festival/SalePrice';
 
 /*
  * Widths are pinned to the srcset ladder (deviceSizes includes 384 and 390):
@@ -79,7 +80,7 @@ const CourseRailCard: React.FC<{ course: CourseCard }> = ({ course }) => {
           {course.is_free || course.price_inr === 0 ? (
             <span className="text-base font-black text-success">Free</span>
           ) : (
-            <span className="text-base font-black text-heading">₹{course.price_inr}</span>
+            <SalePrice list={course.price_inr} className="text-base font-black text-heading" />
           )}
           <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-paper text-link transition-colors group-hover:bg-signal group-hover:text-white">
             <ArrowRight className="w-4 h-4" aria-hidden />

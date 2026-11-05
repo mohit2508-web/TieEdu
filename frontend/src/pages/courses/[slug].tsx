@@ -69,6 +69,8 @@ import type {
   LessonProgressResponse,
 } from '@/types';
 import { useTrackView } from '@/lib/forYouApi';
+import { SalePrice } from '@/components/festival/SalePrice';
+import { courseSalePrice } from '@/lib/festival';
 
 const SITE_URL = 'https://tieedu.in';
 
@@ -253,6 +255,7 @@ export default function CoursePage({
             // The personalised-path price when the learner chose one after the
             // readiness test; the server prices the order the same way.
             price: course.access?.price_inr ?? course.price_inr,
+            list_price: course.price_inr,
             lesson_count: course.stats?.lesson_count,
           }
         : null,
@@ -457,7 +460,8 @@ export default function CoursePage({
     if (locked) {
       return (
         <PayWall
-          priceInr={course.access?.price_inr ?? course.price_inr}
+          priceInr={courseSalePrice(course.price_inr, course.access?.price_inr)}
+          wasInr={course.access?.price_inr ?? course.price_inr}
           reason={course.access?.reason || 'This course is not part of your plan.'}
           onBuy={buy}
           buying={enrolling}
@@ -508,7 +512,7 @@ export default function CoursePage({
 
     if (locked) {
       return (
-        <CourseMobileActionBar note={course.is_free ? 'Free course' : formatPrice(course.access?.price_inr ?? course.price_inr)}>
+        <CourseMobileActionBar note={course.is_free ? 'Free course' : <SalePrice list={course.price_inr} own={course.access?.price_inr} />}>
           <CtaButton tone={cta.tone} onClick={buy} disabled={enrolling} className="w-full py-3 disabled:opacity-50">
             {enrolling ? 'Adding…' : 'Buy this course'}
           </CtaButton>
@@ -518,7 +522,7 @@ export default function CoursePage({
 
     return (
       <CourseMobileActionBar
-        note={course.is_free ? 'Free · lifetime access' : `${formatPrice(course.access?.price_inr ?? course.price_inr)} · one-time`}
+        note={course.is_free ? 'Free · lifetime access' : <><SalePrice list={course.price_inr} own={course.access?.price_inr} /> · one-time</>}
       >
         <CtaButton tone={pageTone} onClick={enrol} disabled={enrolling} className="w-full py-3 disabled:opacity-50">
           {enrolling ? 'Starting…' : cta.label}
@@ -560,7 +564,7 @@ export default function CoursePage({
         q: 'Is it really free?',
         a: course.is_free
           ? 'Yes — this course is free, and there is nothing to buy to start it.'
-          : `This course costs ₹${course.price_inr}. You can see the full syllabus before paying, and the certificate is issued on completion.`,
+          : `This course costs ₹${courseSalePrice(course.price_inr)}. You can see the full syllabus before paying, and the certificate is issued on completion.`,
       },
       {
         q: 'How is my progress tracked?',
@@ -613,7 +617,7 @@ export default function CoursePage({
                 url: `${SITE_URL}/courses/${preview.slug}`,
                 ...(preview.is_free
                   ? { isAccessibleForFree: true }
-                  : { offers: { '@type': 'Offer', price: String(preview.price_inr), priceCurrency: 'INR' } }),
+                  : { offers: { '@type': 'Offer', price: String(courseSalePrice(preview.price_inr)), priceCurrency: 'INR' } }),
                 // `hasCourseInstance` is omitted rather than derived from
                 // `certificate_eligible`. These were briefly wired together, which
                 // is wrong on its face: being eligible for a certificate says
@@ -744,7 +748,7 @@ export default function CoursePage({
                       : {
                           offers: {
                             '@type': 'Offer',
-                            price: String(course.price_inr),
+                            price: String(courseSalePrice(course.price_inr)),
                             priceCurrency: 'INR',
                             availability: 'https://schema.org/InStock',
                           },
@@ -847,7 +851,7 @@ export default function CoursePage({
                       {course.category}
                     </span>
                     <span className="rounded-full bg-[var(--brand-accent)] px-3 py-1 text-xs font-extrabold uppercase tracking-widest text-[var(--accent-ink)]">
-                      {course.is_free ? 'Free' : formatPrice(course.access?.price_inr ?? course.price_inr)}
+                      {course.is_free ? 'Free' : <SalePrice list={course.price_inr} own={course.access?.price_inr} badge />}
                     </span>
                     <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-white/90 ring-1 ring-white/20">
                       {formatLevel(course.level)}
@@ -1323,7 +1327,7 @@ export default function CoursePage({
                       {course.is_free ? 'Price' : 'One-time · lifetime access'}
                     </p>
                     <div className="mt-1 font-display text-4xl font-extrabold leading-none tracking-tight">
-                      {course.is_free ? 'Free' : formatPrice(course.access?.price_inr ?? course.price_inr)}
+                      {course.is_free ? 'Free' : <SalePrice list={course.price_inr} own={course.access?.price_inr} badge />}
                     </div>
                   </div>
                   <div className="p-5">
@@ -1704,13 +1708,16 @@ const CertificateBlock: React.FC<{
  */
 const PayWall: React.FC<{
   priceInr: number;
+  /** The price before the festival sale; struck through when higher. */
+  wasInr?: number;
   reason: string;
   onBuy: () => void;
   buying: boolean;
-}> = ({ priceInr, reason, onBuy, buying }) => (
+}> = ({ priceInr, wasInr, reason, onBuy, buying }) => (
   <div className="flex flex-wrap items-center gap-3">
     <div>
       <div className="text-2xl font-extrabold leading-none text-[var(--ink)]">
+        {wasInr && wasInr > priceInr ? <s className="sale-price__was mr-2">₹{Math.round(wasInr).toLocaleString('en-IN')}</s> : null}
         ₹{Math.round(priceInr).toLocaleString('en-IN')}
       </div>
       <div className="mt-1 text-xs text-[var(--text-muted)]">one-time · lifetime access</div>

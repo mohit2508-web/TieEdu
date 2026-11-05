@@ -17,6 +17,7 @@
  */
 
 import type { CourseSignals, CourseStats } from '@/types';
+import { salePrice } from './festival';
 
 /**
  * Indian digit grouping: the last three digits, then pairs.
@@ -225,7 +226,8 @@ export function courseCta(input: {
   // A paid course this learner has not bought is the one case where the honest
   // label is not "learn" — clicking through would only produce a paywall.
   if (access && !access.granted && (Number(price_inr) || 0) > 0) {
-    return { label: `Get this course · ${formatPrice(price_inr)}`, tone: 'gold' };
+    // During the Diwali sale the label carries the sale price checkout charges.
+    return { label: `Get this course · ${formatPrice(salePrice(Number(price_inr) || 0))}`, tone: 'gold' };
   }
 
   if (!progress?.enrolled) return { label: 'Start learning', tone: 'outline' };

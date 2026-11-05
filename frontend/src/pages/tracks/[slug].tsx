@@ -10,6 +10,7 @@ import {
   certificateDownloadPath,
 } from '@/lib/coursesApi';
 import type { LearningTrack, TrackCourseState } from '@/types';
+import { SalePrice } from '@/components/festival/SalePrice';
 
 function formatDate(s: string) {
   try {
@@ -83,7 +84,7 @@ function CourseRow({
           </span>
         ) : (
           <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700">
-            ₹{course.price_inr ?? 0}
+            <SalePrice list={course.price_inr ?? 0} />
           </span>
         )}
         {available && course.slug && (

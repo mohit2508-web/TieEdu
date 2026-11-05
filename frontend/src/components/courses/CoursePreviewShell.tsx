@@ -15,6 +15,7 @@ import {
 import { fetchCourseSample } from '@/lib/coursesApi';
 import { CourseMobileActionBar } from '@/components/courses/CourseMobileActionBar';
 import type { ContentBlock, CourseCard } from '@/types';
+import { SalePrice } from '@/components/festival/SalePrice';
 
 /**
  * The server-rendered view of a paid course for a signed-out visitor.
@@ -95,7 +96,7 @@ export const CoursePreviewShell: React.FC<{
             </span>
           )}
           <span className="rounded-full bg-[var(--bg-sky-soft)] px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-link">
-            {course.is_free ? 'Free' : formatPrice(course.price_inr)}
+            {course.is_free ? 'Free' : <SalePrice list={course.price_inr} />}
           </span>
         </div>
 
@@ -243,7 +244,7 @@ export const CoursePreviewShell: React.FC<{
           />
 
           <div className="text-2xl font-extrabold leading-none text-[var(--ink)]">
-            {course.is_free ? 'Free' : formatPrice(course.price_inr)}
+            {course.is_free ? 'Free' : <SalePrice list={course.price_inr} />}
           </div>
           {!course.is_free && (
             <p className="mt-1 text-xs text-[var(--text-muted)]">One-time payment, lifetime access</p>
@@ -298,7 +299,7 @@ export const CoursePreviewShell: React.FC<{
         `py-3` clears the 44px touch minimum that `py-2.5` in the card does not. */}
     <div className="md:hidden">
       <CourseMobileActionBar
-        note={course.is_free ? 'Free course' : formatPrice(course.price_inr)}
+        note={course.is_free ? 'Free course' : <SalePrice list={course.price_inr} />}
       >
         <button
           type="button"

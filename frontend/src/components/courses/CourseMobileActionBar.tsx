@@ -34,7 +34,7 @@ export const CourseMobileActionBar: React.FC<{
    * Kept to one line and truncated, because the control matters and the
    * supporting text does not.
    */
-  note?: string | null;
+  note?: React.ReactNode;
   /** The primary control. Passed in so the page keeps sole ownership of it. */
   children: React.ReactNode;
   className?: string;

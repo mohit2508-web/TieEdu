@@ -26,7 +26,7 @@
 | O3 | **Internship opportunities** | There is **no internship board** yet. It needs real listings from the owner (see D2) | Needs content |
 
 **How it combines with other offers:**
-- No stacking. With a coupon, the buyer gets whichever is cheaper (sale or coupon), never both. This prevents negative or near-zero orders.
+- No stacking. During the sale a coupon is refused unless it is bigger than 50%. A bigger coupon replaces the sale: it is priced against the pre-sale cart and used only when it is actually cheaper. A losing coupon is not consumed.
 - With a readiness "personalised path" price, the buyer pays `min(personalised, sale)`.
 - With a company page's flat pack cap, the buyer pays `min(cap, sale)`.
 - Free courses stay free and get no "50% OFF" badge.
@@ -174,3 +174,24 @@ We **will not invent listings.** Each listing needs real data from the owner:
 - **D3 Scope of 50%:** all paid courses **and** company packs (suggested), or courses only? Is the ₹99 AI.FIRST course included (→ ₹49)?
 - **D4 Start time:** as soon as it is deployed, or from 6 Nov 00:00 IST (Dhanteras)?
 - **D5 Sound:** keep the optional crackle sound (off by default), or no sound at all?
+
+---
+
+## 10. Build status (2026-11-05)
+
+Built on branch `feat/diwali-2026`, decisions D1–D5 taken as the suggested defaults:
+- D1: 3-month membership with the perks in §4.
+- D2: TieEdu roles seeded as **drafts**. The owner fills in the stipend and opens them in Admin → Diwali sale.
+- D3: courses and company packs, AI.FIRST included.
+- D4: the sale is live as soon as it is deployed (window starts 5 Nov).
+- D5: optional crackle sound, off by default.
+
+| Phase | Status |
+|---|---|
+| P1 Engine | Done: festival.ts, catalog and checkout, admin mode, membership, internships API, 37 unit checks |
+| P2 Skin | Done: diwali.css tokens (light and dark), toran, footer diyas, sale bar, price strike-throughs |
+| P3 Wow | Done: night-sky hero, gift popup S1, header diya S2, purchase fireworks S3, Diwali-day mode S4, last-day bar S5, member card flip S6 |
+| P4 Membership | Done: claim flow, +2 mock attempts, lessons opened |
+| P5 Internships + /diwali | Done: /diwali, /internships, admin tab |
+| P6 Launch | Pending: email and push campaign (needs the owner's go-ahead to send), deploy by the owner |
+| P8 Cleanup | 11 Nov: remove the Diwali UI and sale hooks. Keep `membershipOf` / `isMember` and the internship board, because memberships run until Feb 2027 |

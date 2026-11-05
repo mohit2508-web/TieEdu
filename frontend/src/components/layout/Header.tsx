@@ -7,6 +7,7 @@ import { useRouter } from 'next/router';
 import { useReducedMotion } from 'framer-motion';
 import { Award, ChevronDown, ChevronLeft, Command, LogOut, Search, ShieldCheck, ShoppingBag, Trophy, UserRound } from 'lucide-react';
 import { TieEduLogo } from '@/components/common/TieEduLogo';
+import { HeaderDiya, HeaderFestival } from '@/components/festival/HeaderFestival';
 import { PWAInstallButton } from '@/components/common/PWAInstallButton';
 import { PrefsControl } from '@/components/common/PrefsControl';
 import { useAuth } from '@/context/AuthContext';
@@ -236,7 +237,8 @@ export const Header: React.FC = () => {
       data-scrolled={scroll.scrolled ? 'true' : undefined}
       style={{
         height: 'var(--header-total)',
-        paddingTop: 'var(--safe-top)',
+        // The Diwali sale strip (HeaderFestival) sits above the nav row.
+        paddingTop: 'calc(var(--safe-top) + var(--festival-bar-h, 0px))',
         transform: scroll.hidden ? 'translate3d(0, -100%, 0)' : 'translate3d(0, 0, 0)',
         /*
          * The slide is suppressed under `prefers-reduced-motion` rather than
@@ -251,6 +253,7 @@ export const Header: React.FC = () => {
         boxShadow: scroll.scrolled ? 'var(--shadow-raised)' : undefined,
       }}
     >
+      <HeaderFestival />
       {/*
         Phase 1 — §1.3. The native nav bar a pushed screen gets below `md`.
 
@@ -363,6 +366,7 @@ export const Header: React.FC = () => {
         </div>
 
         <div className="flex flex-none items-center gap-1.5 sm:gap-2">
+          <HeaderDiya />
           {/* Desktop: a real field that widens on focus. The old one used
               `text-[--text-muted]`, which is not valid Tailwind — the muted
               colour never applied and the label rendered in body text. */}

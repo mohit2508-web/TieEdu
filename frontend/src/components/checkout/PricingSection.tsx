@@ -5,6 +5,8 @@ import { CatalogCompany, PricingCatalog } from '@/types';
 import { RadioCard } from '@/components/ui/RadioCard';
 import { fetchPricingCatalogApi } from '@/lib/api';
 import { Check, ShieldCheck, AlertTriangle, ArrowRight } from 'lucide-react';
+import { PackSalePrice } from '@/components/festival/SalePrice';
+import { SINGLE_MODULE_PRICE as regularSingle } from '@/lib/packPricing';
 
 /**
  * Pricing is rendered from GET /api/pricing/catalog — the same packPrice() the
@@ -73,7 +75,7 @@ const PackCard: React.FC<{ companies: CatalogCompany[]; onPay: (slug: string, mo
                   </>
                 ) : 'One-time'
               }
-              aside={<span className="font-display text-2xl font-bold">₹{company.pack_price}</span>}
+              aside={<PackSalePrice regular={company.pre_sale_price ?? company.pack_price} now={company.pack_price} className="font-display text-2xl font-bold" />}
             />
           )}
           <RadioCard
@@ -81,7 +83,7 @@ const PackCard: React.FC<{ companies: CatalogCompany[]; onPay: (slug: string, mo
             onSelect={() => setPlan('single')}
             title="One round"
             description={cheapest.title}
-            aside={<span className="font-display text-2xl font-bold">₹{cheapest.price}</span>}
+            aside={<PackSalePrice regular={regularSingle} now={cheapest.price} className="font-display text-2xl font-bold" />}
           />
         </div>
 

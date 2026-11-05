@@ -1,0 +1,217 @@
+/* ============================================================================
+   DIWALI UTSAV 2026 — festive skin (DIWALI_SALE_PLAN.md §3)
+
+   Everything here hangs off <html data-festival="diwali">, which FestivalLayer
+   sets only inside the sale window. Remove the attribute and the site is the
+   plain Warm Paper theme again. The logo colour (--rgb-logo) is never touched.
+
+   Contrast: dark ink stays on gold fills (same rule as amber); white text only
+   on maroon / night indigo. Both pass WCAG AA.
+   ============================================================================ */
+
+:root {
+  --festival-bar-h: 0px;
+  --diwali-gold: 245 179 1;      /* #F5B301 diya gold */
+  --diwali-marigold: 255 138 0;  /* #FF8A00 */
+  --diwali-rani: 214 36 110;     /* #D6246E rani pink */
+  --diwali-maroon: 122 21 48;    /* #7A1530 sindoor */
+  --diwali-night: 27 20 70;      /* #1B1446 */
+  --diwali-leaf: 46 125 50;      /* mango leaf */
+}
+
+:root[data-festival-bar='on'] { --festival-bar-h: 38px; }
+@media (max-width: 639px) {
+  :root[data-festival-bar='on'] { --festival-bar-h: 34px; }
+}
+:root[data-festival] {
+  --header-total: calc(var(--header-h) + var(--safe-top) + var(--festival-bar-h));
+}
+
+/* ---- Light palette ------------------------------------------------------- */
+:root[data-festival='diwali'] {
+  --rgb-bg-app: 255 246 228;          /* #FFF6E4 lamp-lit cream */
+  --rgb-bg-app-warm: 254 238 208;     /* #FEEED0 */
+  --rgb-bg-surface-hover: 253 236 205;
+  --rgb-border-subtle: 240 216 176;   /* #F0D8B0 */
+  --rgb-edge: 232 200 150;
+  --rgb-paper-rule: 242 220 182;
+
+  --rgb-signal: 245 179 1;            /* diya gold — ink on it 9:1 */
+  --rgb-signal-hover: 204 132 0;
+  --rgb-signal-soft: 255 236 179;
+  --rgb-signal-ink: 110 60 0;
+  --rgb-money: 245 179 1;
+  --rgb-money-hover: 204 132 0;
+  --rgb-highlight: 255 214 102;
+
+  --rgb-brand-ink: 122 21 48;         /* the dark band turns sindoor maroon */
+  --rgb-on-hero-muted: 255 205 178;   /* 9:1 on maroon */
+  --rgb-hero-edge: 84 10 32;
+  --rgb-link: 140 22 62;              /* #8C163E — 9.5:1 on cream */
+  --rgb-secondary: 140 22 62;
+  --rgb-secondary-soft: 252 225 232;
+  --rgb-rose: 168 22 88;
+  --rgb-rose-soft: 253 226 238;
+}
+
+/* ---- Dark palette: a Diwali night --------------------------------------- */
+:root[data-theme='dark'][data-festival='diwali'] {
+  --rgb-bg-app: 20 12 26;             /* #140C1A */
+  --rgb-bg-app-warm: 28 16 34;
+  --rgb-bg-surface: 34 20 40;         /* #221428 */
+  --rgb-bg-surface-hover: 46 28 52;
+  --rgb-border-subtle: 70 44 66;
+  --rgb-edge: 8 4 10;
+  --rgb-paper-rule: 52 34 54;
+
+  --rgb-signal: 255 201 60;           /* #FFC93C */
+  --rgb-signal-hover: 196 136 0;
+  --rgb-signal-soft: 66 44 12;
+  --rgb-signal-ink: 255 214 140;
+  --rgb-money: 255 201 60;
+  --rgb-money-hover: 196 136 0;
+
+  --rgb-brand-ink: 58 10 30;          /* #3A0A1E */
+  --rgb-hero-edge: 34 6 18;
+  --rgb-link: 255 170 120;            /* #FFAA78 — 9:1 on the night */
+  --rgb-secondary: 255 170 120;
+  --rgb-on-secondary: 40 10 10;
+  --rgb-secondary-soft: 64 24 34;
+  --rgb-rose: 255 128 176;
+  --rgb-rose-soft: 64 20 40;
+}
+
+/* A faint warm glow on the page, like lamps in the room. */
+:root[data-festival='diwali'] body {
+  background-image:
+    radial-gradient(1200px 500px at 10% -10%, rgb(var(--diwali-gold) / 0.10), transparent 60%),
+    radial-gradient(900px 420px at 95% 0%, rgb(var(--diwali-rani) / 0.07), transparent 60%);
+  background-attachment: fixed;
+}
+
+/* ---- Sale prices ---------------------------------------------------------- */
+.sale-price { display: inline-flex; align-items: baseline; gap: 0.35em; flex-wrap: wrap; }
+.sale-price__was { opacity: 0.6; font-weight: 600; font-size: 0.82em; text-decoration-thickness: 2px; text-decoration-color: rgb(var(--diwali-rani)); }
+.sale-price__now { font-weight: 800; }
+.sale-badge {
+  display: inline-block; border-radius: 999px; padding: 0.1em 0.55em; font-size: 0.68em; font-weight: 800;
+  letter-spacing: 0.04em; color: #fff; background: rgb(var(--diwali-rani));
+  box-shadow: 0 0 0 2px rgb(var(--diwali-gold) / 0.35);
+}
+.diwali-cart-line { color: rgb(var(--diwali-rani)); }
+:root[data-theme='dark'] .diwali-cart-line { color: rgb(255 128 176); }
+
+/* ---- Festive buttons: a light sweep across gold fills ---------------------- */
+:root[data-festival='diwali'] :is(.bg-signal, .bg-money, .btn-primary) { position: relative; overflow: hidden; }
+:root[data-festival='diwali'] :is(.bg-signal, .bg-money, .btn-primary)::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 0.55) 48%, transparent 66%);
+  transform: translateX(-120%);
+  animation: diwali-sweep 5.5s ease-in-out infinite;
+}
+@keyframes diwali-sweep { 0%, 70% { transform: translateX(-120%); } 100% { transform: translateX(120%); } }
+
+/* Cards: a gold glow on hover and a tiny rangoli dot in the corner. */
+:root[data-festival='diwali'] :is(.rounded-card, .card) { transition: box-shadow 220ms ease; }
+:root[data-festival='diwali'] :is(a, button).rounded-card:hover,
+:root[data-festival='diwali'] a > .rounded-card:hover {
+  box-shadow: 0 0 0 1px rgb(var(--diwali-gold) / 0.6), 0 10px 30px -10px rgb(var(--diwali-marigold) / 0.45);
+}
+
+/* ---- Sale bar ---------------------------------------------------------------- */
+.festival-bar {
+  position: absolute; left: 0; right: 0; top: var(--safe-top); height: var(--festival-bar-h);
+  display: flex; align-items: center; justify-content: center; gap: 0.6rem; padding: 0 2.25rem 0 0.75rem;
+  color: #fff; font-size: 0.8rem; font-weight: 700; white-space: nowrap; overflow: hidden;
+  background: linear-gradient(90deg, rgb(var(--diwali-maroon)), rgb(var(--diwali-rani)) 50%, rgb(var(--diwali-maroon)));
+  background-size: 200% 100%;
+  animation: diwali-bar-shift 9s linear infinite;
+}
+.festival-bar[data-last='true'] { background: linear-gradient(90deg, #B0003A, #E8175D, #B0003A); background-size: 200% 100%; }
+.festival-bar a { color: #FFE08A; text-decoration: underline; text-underline-offset: 2px; }
+.festival-bar__clock { font-variant-numeric: tabular-nums; background: rgb(0 0 0 / 0.25); border-radius: 6px; padding: 0.05rem 0.4rem; color: #FFE08A; }
+.festival-bar__close { position: absolute; right: 0.4rem; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; border-radius: 999px; display: grid; place-items: center; color: #fff; opacity: 0.85; }
+.festival-bar__close:hover { background: rgb(255 255 255 / 0.15); opacity: 1; }
+@keyframes diwali-bar-shift { from { background-position: 0% 0; } to { background-position: 200% 0; } }
+
+/* ---- Toran (garland) under the header ---------------------------------------- */
+.diwali-toran { position: absolute; left: 0; right: 0; bottom: -18px; height: 22px; pointer-events: none; overflow: visible; }
+.diwali-toran svg { width: 100%; height: 100%; display: block; }
+.diwali-toran__sway { transform-origin: top center; animation: diwali-sway 6s ease-in-out infinite; }
+@keyframes diwali-sway { 0%, 100% { transform: rotate(0.6deg); } 50% { transform: rotate(-0.6deg); } }
+:root[data-scrolled-header='true'] .diwali-toran { opacity: 0; }
+
+/* ---- Diya --------------------------------------------------------------------- */
+.diya-flame { transform-origin: 50% 100%; animation: diya-flicker 1.6s ease-in-out infinite; }
+.diya-glow { animation: diya-glow 2.4s ease-in-out infinite; }
+@keyframes diya-flicker {
+  0%, 100% { transform: scale(1, 1) rotate(-2deg); }
+  25% { transform: scale(0.94, 1.08) rotate(2deg); }
+  50% { transform: scale(1.04, 0.95) rotate(-1deg); }
+  75% { transform: scale(0.97, 1.05) rotate(1.5deg); }
+}
+@keyframes diya-glow { 0%, 100% { opacity: 0.55; } 50% { opacity: 0.9; } }
+
+.header-diya { position: relative; display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 999px; }
+.header-diya:hover { background: rgb(var(--diwali-gold) / 0.15); }
+.header-diya[data-lit='false'] .diya-flame, .header-diya[data-lit='false'] .diya-glow { opacity: 0; animation: none; }
+.header-diya[data-lit='false'] { animation: diya-nudge 3s ease-in-out infinite; }
+@keyframes diya-nudge { 0%, 85%, 100% { transform: none; } 90% { transform: rotate(-10deg); } 95% { transform: rotate(10deg); } }
+
+/* ---- Shimmering gold text ---------------------------------------------------- */
+.diwali-gold-text {
+  background: linear-gradient(100deg, #B8860B 0%, #FFD966 25%, #FFF3B0 40%, #F5B301 55%, #B8860B 75%, #FFD966 100%);
+  background-size: 250% 100%;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: diwali-shimmer 4s linear infinite;
+}
+@keyframes diwali-shimmer { from { background-position: 100% 0; } to { background-position: -150% 0; } }
+
+/* ---- Rangoli draw -------------------------------------------------------------- */
+.rangoli-draw path, .rangoli-draw circle { stroke-dasharray: 1; stroke-dashoffset: 1; animation: rangoli-draw 3.2s ease-out forwards; }
+@keyframes rangoli-draw { to { stroke-dashoffset: 0; } }
+.rangoli-spin { animation: rangoli-spin 60s linear infinite; transform-origin: center; }
+@keyframes rangoli-spin { to { transform: rotate(360deg); } }
+
+/* ---- Lanterns ----------------------------------------------------------------- */
+.kandil { animation: kandil-float 7s ease-in-out infinite; transform-origin: top center; }
+@keyframes kandil-float { 0%, 100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-14px) rotate(3deg); } }
+
+/* ---- Gift box popup ---------------------------------------------------------- */
+.gift-backdrop { position: fixed; inset: 0; z-index: 90; background: rgb(14 6 24 / 0.72); backdrop-filter: blur(4px); display: grid; place-items: center; padding: 1rem; }
+.gift-box { animation: gift-bounce 1.4s ease-in-out infinite; cursor: pointer; }
+@keyframes gift-bounce { 0%, 100% { transform: translateY(0) rotate(0); } 30% { transform: translateY(-14px) rotate(-3deg); } 60% { transform: translateY(0) rotate(3deg); } }
+.gift-lid { transition: transform 600ms cubic-bezier(.2,1.6,.4,1); transform-origin: 20% 100%; }
+.gift-open .gift-lid { transform: translate(-30px, -70px) rotate(-35deg); }
+
+.offer-card {
+  border-radius: 18px; padding: 1rem 1.1rem; color: #fff; position: relative; overflow: hidden;
+  box-shadow: 0 18px 40px -16px rgb(0 0 0 / 0.6), inset 0 0 0 1px rgb(255 255 255 / 0.15);
+}
+.offer-card::before {
+  content: ''; position: absolute; inset: -40% -40% auto auto; width: 160px; height: 160px; border-radius: 999px;
+  background: radial-gradient(circle, rgb(255 255 255 / 0.25), transparent 70%);
+}
+
+/* ---- Member card flip ---------------------------------------------------------- */
+.member-card { perspective: 1000px; }
+.member-card__inner { transition: transform 900ms cubic-bezier(.2,.8,.2,1); transform-style: preserve-3d; position: relative; }
+.member-card[data-flipped='true'] .member-card__inner { transform: rotateY(180deg); }
+.member-card__face { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.member-card__back { position: absolute; inset: 0; transform: rotateY(180deg); }
+.member-gold {
+  background: linear-gradient(135deg, #6B3E00 0%, #B8860B 25%, #FFD966 50%, #B8860B 75%, #6B3E00 100%);
+  background-size: 200% 200%; animation: diwali-shimmer 6s linear infinite;
+}
+
+/* ---- Footer diyas ---------------------------------------------------------------- */
+.diya-row { display: flex; justify-content: center; gap: clamp(0.75rem, 3vw, 2rem); padding: 1rem 0 0.25rem; }
+
+/* ---- Reduced motion: decorations stay, motion goes ---------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .festival-bar, .diwali-toran__sway, .diya-flame, .diya-glow, .diwali-gold-text, .rangoli-spin, .kandil,
+  .gift-box, .member-gold, .header-diya,
+  :root[data-festival='diwali'] :is(.bg-signal, .bg-money, .btn-primary)::after { animation: none !important; }
+  .rangoli-draw path, .rangoli-draw circle { animation: none; stroke-dashoffset: 0; }
+  .member-card__inner, .gift-lid { transition: none; }
+}

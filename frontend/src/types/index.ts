@@ -570,6 +570,8 @@ export interface CourseCartItem {
   slug: string;
   name: string;
   price: number;
+  /** The course list price, when `price` is a personalised path price (festival sale maths). */
+  list_price?: number;
   /** Shown in the cart so the buyer knows what they are paying for. */
   lesson_count?: number;
 }
@@ -608,6 +610,8 @@ export interface CatalogCompany {
   modules: CatalogModule[];
   /** Real price for this company's pack at its real remaining size. */
   pack_price: number;
+  /** Pack price before the festival sale (server, Diwali 2026). */
+  pre_sale_price?: number;
   list_total: number;
   savings: number;
   savings_percent: number;

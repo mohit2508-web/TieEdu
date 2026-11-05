@@ -5,6 +5,7 @@ import { Reveal } from '@/components/home/Reveal';
 import { fetchCourseCatalog } from '@/lib/coursesApi';
 import { formatDuration } from '@/lib/courseFormat';
 import type { CourseCard } from '@/types';
+import { SalePrice } from '@/components/festival/SalePrice';
 
 /**
  * The first-win strip: the fastest path to a first certificate.
@@ -85,7 +86,7 @@ export const FirstWinStrip: React.FC = () => {
                     {c.is_free || c.price_inr === 0 ? (
                       <span className="font-bold text-success">Free</span>
                     ) : (
-                      <span className="font-bold text-heading">₹{c.price_inr}</span>
+                      <SalePrice list={c.price_inr} className="font-bold text-heading" />
                     )}
                     {c.certificate_eligible && (
                       <span className="inline-flex items-center gap-1 rounded-full bg-surface-hover px-2 py-0.5 text-xs font-bold text-success">
