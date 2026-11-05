@@ -2996,3 +2996,26 @@ body {
   color: rgb(var(--rgb-money-ink));
 }
 
+
+/* ---- My prep loader (components/prep/PlanLoader) ----------------------------
+   A week of day cards fills in left to right, holds, then fades back, on one
+   slow 2.8 s loop. Reduced motion: the cards stay filled and the dot stays put. */
+.plan-loader-day {
+  background: rgb(var(--rgb-bg-surface-hover));
+  animation: planDayFill 2.8s var(--ease-out) infinite both;
+}
+@keyframes planDayFill {
+  0%, 8%    { background: rgb(var(--rgb-bg-surface-hover)); transform: translateY(4px); opacity: 0.6; }
+  22%, 70%  { background: rgb(var(--rgb-signal-soft)); box-shadow: inset 0 -4px 0 rgb(var(--rgb-signal)); transform: none; opacity: 1; }
+  92%, 100% { background: rgb(var(--rgb-bg-surface-hover)); transform: none; opacity: 0.6; }
+}
+.plan-loader-dot { animation: planDotPulse 1.2s ease-in-out infinite; }
+@keyframes planDotPulse {
+  0%, 100% { transform: scale(0.75); opacity: 0.6; }
+  50%      { transform: scale(1); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .plan-loader-day,
+  .plan-loader-dot { animation: none; }
+  .plan-loader-day { background: rgb(var(--rgb-signal-soft)); box-shadow: inset 0 -4px 0 rgb(var(--rgb-signal)); }
+}

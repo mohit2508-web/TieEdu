@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import { readinessBand, BAND_CLASS } from '@/lib/readiness';
 import { PrepNav, type PrepTab } from '@/components/prep/PrepNav';
 import { BuyPackSheet } from '@/components/prep/BuyPackSheet';
+import { PlanLoader } from '@/components/prep/PlanLoader';
 import { fetchPrep, markLesson, prepHref, setPrepDate, type PrepItem, type PrepView } from '@/lib/prepApi';
 
 /**
@@ -50,7 +51,7 @@ export default function PrepPage() {
     );
   }
   if (error) return <main className="mx-auto max-w-xl px-4 py-16 text-center text-base text-muted">{error}</main>;
-  if (!data) return <main className="mx-auto max-w-5xl px-4 py-16 text-center text-base text-muted" aria-busy="true">Building your plan…</main>;
+  if (!data) return <PlanLoader />;
 
   const r = data.readiness;
   const b = readinessBand(r.score);
