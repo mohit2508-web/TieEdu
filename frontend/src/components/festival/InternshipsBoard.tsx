@@ -56,8 +56,8 @@ export const InternshipsBoard: React.FC = () => {
     return (
       <div className="rounded-2xl border border-dashed border-line bg-card p-6 text-center">
         <Briefcase className="mx-auto text-muted" aria-hidden />
-        <p className="mt-2 font-bold text-heading">Internship listings jald aa rahi hain</p>
-        <p className="mt-1 text-sm text-muted">Membership claim kar lo — nayi listing aate hi aap sabse pehle apply kar paoge.</p>
+        <p className="mt-2 font-bold text-heading">Internship listings are coming soon</p>
+        <p className="mt-1 text-sm text-muted">Claim your free membership now — you&apos;ll be first to apply when new listings go live.</p>
       </div>
     );
   }

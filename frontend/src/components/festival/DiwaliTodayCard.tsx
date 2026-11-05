@@ -15,15 +15,15 @@ export const DiwaliTodayCard: React.FC = () => {
   const first = user?.name?.split(' ')[0];
   return (
     <section aria-label="Your Diwali offer" className="overflow-hidden rounded-2xl text-white shadow-lg"
-      style={{ background: 'linear-gradient(135deg, #3B1458, #7A1530 60%, #D6246E)' }}>
+      style={{ background: 'linear-gradient(135deg, #4A0D22, #7A1530 60%, #C2185B)' }}>
       <div className="grid gap-5 p-5 sm:grid-cols-[1fr_minmax(0,320px)] sm:p-6">
         <div>
           <div className="flex gap-2" aria-hidden>{[0, 1, 2].map((i) => <Diya key={i} size={28} delay={i * 0.3} />)}</div>
-          <h2 className="mt-2 font-display text-2xl font-black">
-            {f.is_peak_day ? 'Shubh Deepavali' : 'Happy Diwali'}{first ? `, ${first}` : ''}! 🪔
+          <h2 className="mt-2 font-display text-2xl font-black" style={{ color: '#FFF8EE' }}>
+            {f.is_peak_day ? 'Happy Diwali' : 'Diwali Sale is on'}{first ? `, ${first}` : ''}! 🪔
           </h2>
           <p className="mt-1 text-sm font-semibold text-white/85">
-            Har course &amp; company pack {f.discount_percent}% OFF · ends in <span className="tabular-nums text-[#FFD966]">{formatLeft(t)}</span>
+            {f.discount_percent}% OFF every course &amp; company pack · ends in <span className="tabular-nums text-[#FFD966]">{formatLeft(t)}</span>
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <Link href="/courses" className="rounded-full bg-[#FFC93C] px-4 py-2 text-sm font-black text-[#2A1400]">Courses 50% OFF</Link>

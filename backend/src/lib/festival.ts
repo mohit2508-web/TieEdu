@@ -27,7 +27,7 @@ export interface Festival {
 
 export const DIWALI_2026: Festival = {
   id: 'diwali-2026',
-  name: 'Diwali Utsav',
+  name: 'Diwali Sale',
   starts_at: '2026-11-05T00:00:00+05:30',
   ends_at: '2026-11-10T23:59:59+05:30',
   peak_day: '2026-11-08',

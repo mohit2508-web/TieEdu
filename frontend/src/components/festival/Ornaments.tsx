@@ -78,8 +78,11 @@ export const Kandil: React.FC<{ size?: number; color?: string; className?: strin
 export const Rangoli: React.FC<{ size?: number; className?: string; spin?: boolean }> = ({ size = 320, className, spin = true }) => {
   const petals = Array.from({ length: 12 });
   return (
-    <svg width={size} height={size} viewBox="-100 -100 200 200" aria-hidden className={`rangoli-draw ${className || ''}`}>
-      <g className={spin ? 'rangoli-spin' : undefined}>
+    // The spin sits on the <svg> box itself: rotating an inner <g> pivots
+    // differently across browsers and swung the drawing out of its viewport.
+    <svg width={size} height={size} viewBox="-100 -100 200 200" aria-hidden overflow="visible"
+      className={`rangoli-draw ${spin ? 'rangoli-spin' : ''} ${className || ''}`}>
+      <g>
         {petals.map((_, i) => (
           <path key={`p${i}`} pathLength={1} transform={`rotate(${i * 30})`} d="M0 -18 C 18 -40 14 -70 0 -88 C -14 -70 -18 -40 0 -18 Z"
             fill="none" stroke={i % 2 ? '#FF4F93' : '#FFC93C'} strokeWidth="2.2" style={{ animationDelay: `${i * 0.08}s` }} />

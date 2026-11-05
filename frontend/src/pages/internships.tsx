@@ -15,7 +15,7 @@ export default function InternshipsPage() {
       </Head>
       <main className="mx-auto max-w-6xl px-5 py-12">
         <h1 className="font-display text-4xl font-black text-heading">Internships</h1>
-        <p className="mt-2 text-body">TieEdu members ke liye asli internship listings. Members ek tap mein apply karte hain.</p>
+        <p className="mt-2 text-body">Real internship listings for TieEdu members. Members apply in one tap.</p>
         {f.active && !f.membership && (
           <div id="membership" className="mt-6 max-w-md scroll-mt-32"><MembershipClaim compact /></div>
         )}

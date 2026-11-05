@@ -15,7 +15,7 @@
   --diwali-marigold: 255 138 0;  /* #FF8A00 */
   --diwali-rani: 214 36 110;     /* #D6246E rani pink */
   --diwali-maroon: 122 21 48;    /* #7A1530 sindoor */
-  --diwali-night: 27 20 70;      /* #1B1446 */
+  --diwali-night: 26 6 14;       /* #1A060E */
   --diwali-leaf: 46 125 50;      /* mango leaf */
 }
 
@@ -56,13 +56,13 @@
 
 /* ---- Dark palette: a Diwali night --------------------------------------- */
 :root[data-theme='dark'][data-festival='diwali'] {
-  --rgb-bg-app: 20 12 26;             /* #140C1A */
-  --rgb-bg-app-warm: 28 16 34;
-  --rgb-bg-surface: 34 20 40;         /* #221428 */
-  --rgb-bg-surface-hover: 46 28 52;
-  --rgb-border-subtle: 70 44 66;
-  --rgb-edge: 8 4 10;
-  --rgb-paper-rule: 52 34 54;
+  --rgb-bg-app: 22 12 12;             /* #160C0C warm night */
+  --rgb-bg-app-warm: 30 16 16;
+  --rgb-bg-surface: 36 20 20;         /* #241414 */
+  --rgb-bg-surface-hover: 48 28 28;
+  --rgb-border-subtle: 74 44 40;
+  --rgb-edge: 10 4 4;
+  --rgb-paper-rule: 56 34 32;
 
   --rgb-signal: 255 201 60;           /* #FFC93C */
   --rgb-signal-hover: 196 136 0;
@@ -178,7 +178,7 @@
 @keyframes kandil-float { 0%, 100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-14px) rotate(3deg); } }
 
 /* ---- Gift box popup ---------------------------------------------------------- */
-.gift-backdrop { position: fixed; inset: 0; z-index: 90; background: rgb(14 6 24 / 0.72); backdrop-filter: blur(4px); display: grid; place-items: center; padding: 1rem; }
+.gift-backdrop { position: fixed; inset: 0; z-index: 90; background: rgb(26 6 12 / 0.72); backdrop-filter: blur(4px); display: grid; place-items: center; padding: 1rem; }
 .gift-box { animation: gift-bounce 1.4s ease-in-out infinite; cursor: pointer; }
 @keyframes gift-bounce { 0%, 100% { transform: translateY(0) rotate(0); } 30% { transform: translateY(-14px) rotate(-3deg); } 60% { transform: translateY(0) rotate(3deg); } }
 .gift-lid { transition: transform 600ms cubic-bezier(.2,1.6,.4,1); transform-origin: 20% 100%; }

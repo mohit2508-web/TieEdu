@@ -60,9 +60,9 @@ export const GiftPopup: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   };
 
   const cards = [
-    { icon: <Percent size={22} />, title: `${f.discount_percent}% OFF`, sub: 'Har course & company pack', href: '/courses', cta: 'Courses dekho', bg: 'linear-gradient(135deg,#D6246E,#7A1530)' },
-    { icon: <Crown size={22} />, title: 'FREE Membership', sub: `${Math.round(f.membership_days / 30)} months · extra mocks + all lessons`, href: '#claim', cta: 'Claim karo', bg: 'linear-gradient(135deg,#B8860B,#6B3E00)' },
-    { icon: <Briefcase size={22} />, title: 'Internships', sub: 'Members apply in one tap', href: '/diwali#internships', cta: 'Dekho', bg: 'linear-gradient(135deg,#3B2A8C,#1B1446)' },
+    { icon: <Percent size={22} />, title: `${f.discount_percent}% OFF`, sub: 'Every course & company pack', href: '/courses', cta: 'Browse courses', bg: 'linear-gradient(135deg,#D6246E,#7A1530)' },
+    { icon: <Crown size={22} />, title: 'FREE Membership', sub: `${Math.round(f.membership_days / 30)} months · extra mocks + all lessons`, href: '#claim', cta: 'Claim now', bg: 'linear-gradient(135deg,#B8860B,#6B3E00)' },
+    { icon: <Briefcase size={22} />, title: 'Internships', sub: 'Members apply in one tap', href: '/diwali#internships', cta: 'View', bg: 'linear-gradient(135deg,#0F6B5C,#063B33)' },
   ];
 
   return (
@@ -74,7 +74,7 @@ export const GiftPopup: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         aria-label="Your Diwali gift from TieEdu"
         onClick={(e) => e.stopPropagation()}
         className="relative w-full max-w-lg overflow-hidden rounded-3xl text-white shadow-2xl"
-        style={{ background: 'radial-gradient(120% 90% at 50% 0%, #3B1458 0%, #1B1446 55%, #0E0A26 100%)', maxHeight: '92vh', overflowY: 'auto' }}
+        style={{ background: 'radial-gradient(90% 70% at 50% 115%, rgba(255,170,40,0.28) 0%, transparent 60%), radial-gradient(120% 100% at 50% 0%, #6B1530 0%, #3A0A1C 52%, #1A050D 100%)', maxHeight: '92vh', overflowY: 'auto' }}
       >
         {open && <Fireworks mode="burst" count={7} />}
         <div className="pointer-events-none absolute -right-24 -top-24 opacity-40"><Rangoli size={300} /></div>
@@ -90,9 +90,9 @@ export const GiftPopup: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         </div>
 
         <div className="relative px-6 pb-6 pt-8 text-center">
-          <p className="text-xs font-extrabold uppercase tracking-[0.3em] text-[#FFD966]">Shubh Deepavali</p>
-          <h2 className="mt-1 font-display text-3xl font-black sm:text-4xl">
-            <span className="diwali-gold-text">TieEdu ka Diwali Dhamaka</span>
+          <p className="text-xs font-extrabold uppercase tracking-[0.3em] text-[#FFD966]">Happy Diwali</p>
+          <h2 className="mt-1 font-display text-3xl font-black sm:text-4xl" style={{ color: '#FFF8EE' }}>
+            <span className="diwali-gold-text">TieEdu Diwali Sale</span>
           </h2>
 
           <AnimatePresence mode="wait">
@@ -110,7 +110,7 @@ export const GiftPopup: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                     <circle cx="34" cy="72" r="3" fill="#FFD966" /><circle cx="84" cy="90" r="3" fill="#FFD966" /><circle cx="36" cy="96" r="2" fill="#FFF3B0" />
                   </svg>
                 </button>
-                <p className="mt-3 text-sm font-semibold text-white/85">Aapke liye ek gift hai — tap karke kholo 🎁</p>
+                <p className="mt-3 text-sm font-semibold text-white/85">We have a gift for you — tap to open 🎁</p>
               </motion.div>
             ) : (
               <motion.div key="offers" initial={reduce ? false : { opacity: 0 }} animate={{ opacity: 1 }} className="mt-5">
@@ -142,14 +142,14 @@ export const GiftPopup: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
                 <Link href="/diwali" onClick={onClose}
                   className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#FFC93C] px-6 py-3 text-sm font-black text-[#2A1400] shadow-lg hover:bg-[#FFD966]">
-                  Offer pakdo →
+                  Grab the offer →
                 </Link>
               </motion.div>
             )}
           </AnimatePresence>
 
           <p className="mt-5 text-xs font-semibold text-white/75">
-            {f.is_last_day ? 'Aaj raat 11:59 tak — last chance · ' : 'Offer ends 10 Nov, 11:59 PM · '}
+            {f.is_last_day ? 'Last chance — ends tonight at 11:59 PM · ' : 'Offer ends 10 Nov, 11:59 PM · '}
             <span className="tabular-nums text-[#FFD966]">{formatLeft(t)}</span>
           </p>
           <div className="mt-3 flex justify-center gap-4" aria-hidden>

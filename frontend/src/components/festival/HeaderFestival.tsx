@@ -69,14 +69,14 @@ export const HeaderDiya: React.FC = () => {
     try { localStorage.setItem(LIT_KEY, '1'); } catch { /* ignore */ }
     crackle(600);
     const name = user?.name?.split(' ')[0];
-    setToast(`🪔 Shubh Deepavali${name ? `, ${name}` : ''}! ${f.membership ? 'Aap TieEdu Member ho ✨' : `Aapka ${f.discount_percent}% OFF active hai`}`);
+    setToast(`🪔 Happy Diwali${name ? `, ${name}` : ''}! ${f.membership ? 'You are a TieEdu Member ✨' : `Your ${f.discount_percent}% OFF is active`}`);
     window.setTimeout(() => setToast(''), 4200);
   };
 
   return (
     <span className="relative hidden sm:inline-flex">
       <button type="button" onClick={light} className="header-diya" data-lit={lit ? 'true' : 'false'}
-        aria-label={lit ? 'Diya is lit — Shubh Deepavali' : 'Light the diya'} title={lit ? 'Shubh Deepavali!' : 'Diya jalao 🪔'}>
+        aria-label={lit ? 'Diya is lit — Happy Diwali' : 'Light the diya'} title={lit ? 'Happy Diwali!' : 'Light the diya 🪔'}>
         <Diya size={30} lit={lit} />
       </button>
       {toast && (

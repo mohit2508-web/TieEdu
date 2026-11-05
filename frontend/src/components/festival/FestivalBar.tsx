@@ -37,15 +37,15 @@ export const FestivalBar: React.FC<{ onDismiss: () => void }> = ({ onDismiss }) 
     <div className="festival-bar" data-last={f.is_last_day ? 'true' : 'false'} role="region" aria-label="Diwali sale">
       <span aria-hidden>🪔</span>
       <span className="hidden sm:inline">
-        {f.is_last_day ? 'Last day! ' : f.is_peak_day ? 'Shubh Deepavali! ' : 'Diwali Utsav: '}
-        Sab courses &amp; packs <b>{f.discount_percent}% OFF</b> + FREE TieEdu Membership
+        {f.is_last_day ? 'Last day! ' : f.is_peak_day ? 'Happy Diwali! ' : 'Diwali Sale: '}
+        All courses &amp; packs <b>{f.discount_percent}% OFF</b> + FREE TieEdu Membership
       </span>
       <span className="sm:hidden"><b>{f.discount_percent}% OFF</b> + Free Membership</span>
       <span className="festival-bar__clock hidden sm:inline" aria-live="off">
         {f.is_last_day ? 'ends tonight ' : 'ends in '}{formatLeft(t)}
       </span>
       <span className="festival-bar__clock sm:hidden">{formatLeft(t, true)}</span>
-      <Link href="/diwali" className="hidden md:inline">Offer dekho →</Link>
+      <Link href="/diwali" className="hidden md:inline">See offers →</Link>
       <Link href="/diwali" className="md:hidden" aria-label="See the Diwali offer">→</Link>
       <button type="button" className="festival-bar__close" onClick={onDismiss} aria-label="Hide the sale bar">
         <X size={14} />

@@ -83,7 +83,7 @@ export const MembershipClaim: React.FC<{ compact?: boolean }> = ({ compact = fal
               {member ? `Valid till ${fmtDate(member.expires_at)}` : ''} · Diwali 2026
             </p>
           </div>
-          <p className="text-xs font-bold">Aap ab TieEdu Member ho ✨ Shubh Deepavali!</p>
+          <p className="text-xs font-bold">You&apos;re a TieEdu Member now ✨ Happy Diwali!</p>
         </div>
       </div>
     </div>

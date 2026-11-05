@@ -11,7 +11,7 @@ import { prefersReducedMotion } from '@/lib/festival';
  * under prefers-reduced-motion. Particle count is capped for cheap phones.
  */
 
-const COLORS = ['#FFD966', '#FFC93C', '#FF8A00', '#FF4F93', '#FFF3B0', '#FF6B3D', '#B388FF', '#7CF0C5'];
+const COLORS = ['#FFD966', '#FFC93C', '#FF8A00', '#FF4F93', '#FFF3B0', '#FF6B3D', '#FFB3C7', '#7CF0C5'];
 const MAX_PARTICLES = 700;
 
 interface Spark { x: number; y: number; vx: number; vy: number; life: number; max: number; color: string; size: number; }
