@@ -55,6 +55,8 @@ import { startWeeklyRecapScheduler } from './lib/recapPush';
 import { startParentWhatsappScheduler } from './lib/parentWhatsappScheduler';
 import { startCountdownPushScheduler } from './lib/countdownPushScheduler';
 import { seedMissing3T } from './lib/seed3T';
+import { festivalRouter, festivalAdminRouter } from './routes/festival.routes';
+import { seedTieEduInternshipDrafts } from './lib/internships';
 import { startStudyReminderScheduler } from './lib/studyReminderScheduler';
 import { collegesRouter, collegesAdminRouter } from './routes/colleges.routes';
 import { campusPagesRouter } from './routes/campusPages.routes';
@@ -141,6 +143,8 @@ app.use('/api/webhooks', webhooksRouter);
 app.use('/api/reports', reportsRouter);
 app.use('/api/auth', authRouter);
 // Before the general admin router, so its catch-all cannot swallow /offers.
+app.use('/api/festival', festivalRouter);
+app.use('/api/admin/festival', requireAdmin, festivalAdminRouter);
 app.use('/api/admin/offers', requireAdmin, offersAdminRouter);
 app.use('/api/admin/guarantee', requireAdmin, guaranteeAdminRouter);
 app.use('/api/admin/support', requireAdmin, supportAdminRouter);
@@ -419,6 +423,12 @@ export const httpServer = app.listen(PORT, async () => {
     if (seedMissing3T(db)) { safeSaveDb(db); console.log('[3T] added missing company content'); }
   } catch (e: any) {
     console.warn('[3T] seeding skipped:', e?.message);
+  }
+  try {
+    const db = loadDb();
+    if (seedTieEduInternshipDrafts(db)) { safeSaveDb(db); console.log('[Diwali] seeded TieEdu internship drafts'); }
+  } catch (e: any) {
+    console.warn('[Diwali] internship seeding skipped:', e?.message);
   }
   startStudyReminderScheduler();
   startPulseScheduler();

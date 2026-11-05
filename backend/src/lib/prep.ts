@@ -5,6 +5,7 @@
  * module, tests = skills tagged with the company), so content an admin adds
  * appears in the plan on the next visit.
  */
+import { isMember } from './festival';
 import { MPHASIS_BANK } from '../data/companyTests/mphasis';
 import { MPHASIS_LESSONS } from '../data/interviewPrep/mphasisLessons';
 import { MILESTONES, WIPRO_IOS_SLUG, curriculumDays } from '../data/wiproIOS';
@@ -227,6 +228,8 @@ export function buildPrep(db: any, userId: string, slug: string, owned: boolean)
   return {
     company: { name: company.name, slug },
     owned,
+    /** Lessons readable: pack owners and TieEdu members. */
+    lessons_open: owned || isMember(db, userId),
     test_date: testDate,
     days_left: Math.max(0, diffDays(today, testDate)),
     readiness: { score: readiness, band: band(readiness), test: Math.round(testScore), lessons: Math.round(lessonScore), consistency: Math.round(consistency), week_change: readiness - (weekAgo?.score ?? readiness), previous: prevDay },

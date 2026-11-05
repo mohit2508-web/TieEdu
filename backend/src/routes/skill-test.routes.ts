@@ -1,4 +1,5 @@
-﻿import { Router, Request, Response } from 'express';
+﻿import { isMember, MEMBER_EXTRA_MOCK_ATTEMPTS } from '../lib/festival';
+import { Router, Request, Response } from 'express';
 import { ownedModuleIdsFor, unlockedCompanyIds } from '../payments/orders';
 import crypto from 'crypto';
 import { loadDb, saveDb } from '../data/db';
@@ -108,7 +109,9 @@ skillTestRouter.post('/assessments/:slug/start', requireAuth, (req: Request, res
       || user?.role === 'admin'
       || unlockedCompanyIds(db, userId).includes(company.id)
       || (premiumIds.length > 0 && premiumIds.every((id: string) => owned.includes(id)));
-    const freeAttempts = Number((assessment as any).freeAttempts ?? 1);
+    // TieEdu members (Diwali 2026 offer) get extra free attempts.
+    const freeAttempts = Number((assessment as any).freeAttempts ?? 1)
+      + (isMember(db, userId) ? MEMBER_EXTRA_MOCK_ATTEMPTS : 0);
     if (!unlocked && priorAttempts.length >= freeAttempts) {
       return res.status(402).json({
         error: freeAttempts > 0

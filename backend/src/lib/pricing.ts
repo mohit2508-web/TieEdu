@@ -80,6 +80,8 @@ export interface CatalogCompany {
   modules: CatalogModule[];
   /** Price for the whole company's premium pack at its real size. */
   pack_price: number;
+  /** The pack price without the festival sale (equals pack_price outside a sale). */
+  pre_sale_price: number;
   list_total: number;
   savings: number;
   savings_percent: number;
@@ -93,6 +95,8 @@ export interface PricingCatalog {
   complete_pack_price: number;
   complete_pack_count: number;
   ladder: ReadonlyArray<{ module_count: number; price: number }>;
+  /** The ladder at today's price — the same as `ladder` outside a festival sale. */
+  sale_ladder: ReadonlyArray<{ module_count: number; price: number }>;
   companies: CatalogCompany[];
 }
 
@@ -109,13 +113,17 @@ export interface PricingCatalog {
  * company page. The cap lowers the pack price and the saving grows with it; it
  * never raises anything, matching checkout exactly.
  */
-function cappedPrices(remaining: number, cap: number | null) {
+function cappedPrices(remaining: number, cap: number | null, sale: (list: number) => number = (p) => p) {
   const ladder = packPrice(remaining);
-  const pack = cap !== null && cap > 0 && remaining > 0 ? Math.min(ladder, cap) : ladder;
+  const preSale = cap !== null && cap > 0 && remaining > 0 ? Math.min(ladder, cap) : ladder;
+  // A festival sale halves the price the buyer would otherwise pay; checkout
+  // applies the very same function in summarizePack.
+  const pack = sale(preSale);
   const list = listPriceFor(remaining);
   const savings = Math.max(0, list - pack);
   return {
     pack_price: pack,
+    pre_sale_price: preSale,
     list_total: list,
     savings,
     savings_percent: list > 0 ? Math.round((savings / list) * 100) : 0,
@@ -128,7 +136,9 @@ export function buildPricingCatalog(
   unlockedCompanyIds: string[] = [],
   isAdmin = false,
   /** A live company page's flat pack price — the same cap checkout applies. */
-  capFor: (companyId: string) => number | null = () => null
+  capFor: (companyId: string) => number | null = () => null,
+  /** Festival sale price function (lib/festival saleFnFor); identity outside a sale. */
+  sale: (list: number) => number = (p) => p
 ): PricingCatalog {
   const owned = new Set(ownedModuleIds);
   const unlocked = new Set(unlockedCompanyIds);
@@ -163,7 +173,7 @@ export function buildPricingCatalog(
         has_pdf: !!m.pdf,
         price: SINGLE_MODULE_PRICE,
       })),
-      ...cappedPrices(remaining, capFor(company.id)),
+      ...cappedPrices(remaining, capFor(company.id), sale),
       is_unlocked: companyUnlocked || ownsEvery,
       owned_module_count: ownedHere.length,
     });
@@ -178,6 +188,7 @@ export function buildPricingCatalog(
     complete_pack_price: COMPLETE_PACK_PRICE,
     complete_pack_count: COMPLETE_PACK_COUNT,
     ladder: PACK_LADDER_TABLE,
+    sale_ladder: PACK_LADDER_TABLE.map((r) => ({ module_count: r.module_count, price: sale(r.price) })),
     companies: rows,
   };
 }

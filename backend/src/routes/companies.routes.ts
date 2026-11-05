@@ -1,3 +1,4 @@
+import { isMember } from '../lib/festival';
 import { Router, Request, Response } from 'express';
 import { loadDb } from '../data/db';
 import { optionalAuth } from '../middleware/auth';
@@ -127,6 +128,7 @@ companiesRouter.get('/:slug', optionalAuth, (req: Request, res: Response) => {
     || (!!userId && (db.unlocks || []).some(
         (u: any) => u.user_id === userId && u.company_id === company.id && (u.status === 'active' || !u.status)
       ));
+  const member = isMember(db, userId);
   const ownsEveryModule = premiumIds.length > 0 && premiumIds.every((mid: string) => ownedModuleIds.includes(mid));
   const isUnlocked = isAdmin || company.is_free === true || companyUnlocked || ownsEveryModule || premiumIds.length === 0;
 
@@ -137,7 +139,8 @@ companiesRouter.get('/:slug', optionalAuth, (req: Request, res: Response) => {
   // Free modules remain fully readable — they are the honest showcase that sells the pack.
   if (sanitizedCompany.modules) {
     sanitizedCompany.modules.forEach((mod: any) => {
-      const owned = isUnlocked || ownedModuleIds.includes(mod.id);
+      // TieEdu members (Diwali 2026 offer) read pack-gated lesson modules; premium rounds stay paid.
+      const owned = isUnlocked || ownedModuleIds.includes(mod.id) || (mod.pack_gated === true && mod.is_premium !== true && member);
       // pack_gated: free module (outside the price ladder) whose items beyond the free preview need the pack.
       if ((mod.is_premium !== true && mod.pack_gated !== true) || owned) return;
 

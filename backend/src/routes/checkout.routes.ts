@@ -19,6 +19,7 @@ import {
 } from '../lib/coupons';
 import { events as msgEvents, sendToUser } from '../lib/messaging';
 import { effectiveCoursePrice, type ReadinessPath } from '../lib/readiness';
+import { activeFestival, salePrice, type Festival } from '../lib/festival';
 
 export const checkoutRouter = Router();
 
@@ -67,7 +68,12 @@ interface CartItem {
 // `byCompany` carries the per-company module count + the exact pack price charged,
 // so persisted order lines can be stamped with the price actually billed (never a
 // client-supplied or hardcoded number).
-export function summarizePack(items: CartItem[], capFor?: (companyId: string) => number | null) {
+export function summarizePack(
+  items: CartItem[],
+  capFor?: (companyId: string) => number | null,
+  /** Festival sale (lib/festival); identity outside a sale. */
+  sale: (price: number) => number = (p) => p
+) {
   const perCompany: Record<string, { id: string; name: string; moduleIds: Set<string>; isComplete: boolean }> = {};
 
   for (const it of items) {
@@ -89,7 +95,7 @@ export function summarizePack(items: CartItem[], capFor?: (companyId: string) =>
   let subtotal = 0;
   let listTotal = 0;
   const savingsByCompany: string[] = [];
-  const byCompany: Record<string, { name: string; module_count: number; pack_price: number; list_total: number; savings: number }> = {};
+  const byCompany: Record<string, { name: string; module_count: number; pack_price: number; pre_sale_price: number; list_total: number; savings: number }> = {};
 
   for (const c of Object.values(perCompany)) {
     // A plain company line (no module ids) = every round; array pack lines =
@@ -101,11 +107,12 @@ export function summarizePack(items: CartItem[], capFor?: (companyId: string) =>
     // published page — a client-sent price is never consulted.
     const ladder = packPrice(n);
     const cap = capFor ? capFor(c.id) : null;
-    const pack = cap !== null && cap !== undefined ? Math.min(ladder, cap) : ladder;
+    const preSale = cap !== null && cap !== undefined ? Math.min(ladder, cap) : ladder;
+    const pack = sale(preSale);
     const savings = Math.max(0, listPrice - pack);
     subtotal += pack;
     listTotal += listPrice;
-    byCompany[c.id] = { name: c.name, module_count: n, pack_price: pack, list_total: listPrice, savings };
+    byCompany[c.id] = { name: c.name, module_count: n, pack_price: pack, pre_sale_price: preSale, list_total: listPrice, savings };
     if (savings > 0) savingsByCompany.push(`Pack savings on ${c.name}: ₹${savings}`);
   }
 
@@ -131,9 +138,16 @@ type CourseLine = {
   price: number;
   readiness_path: ReadinessPath;
   credited_module_ids: string[];
+  /** What this line would cost without the festival sale. */
+  pre_sale_price: number;
 };
 
-function summarizeCourseLines(db: any, items: CartItem[], userId: string | null = null) {
+function summarizeCourseLines(
+  db: any,
+  items: CartItem[],
+  userId: string | null = null,
+  sale: (price: number) => number = (p) => p
+) {
   const lines: CourseLine[] = [];
   const seen = new Set<string>();
   let subtotal = 0;
@@ -151,7 +165,10 @@ function summarizeCourseLines(db: any, items: CartItem[], userId: string | null 
     // A learner who chose the personalised path after a readiness test pays the
     // offer price; that too is read from stored state, never from the cart.
     const effective = effectiveCoursePrice(db, userId, course);
-    const price = Math.max(0, effective.price_inr);
+    const preSale = Math.max(0, effective.price_inr);
+    // During a festival sale the buyer pays the lower of their own price
+    // (list or personalised path) and the sale price of the list price.
+    const price = Math.min(preSale, sale(Math.max(0, Number(course.price_inr) || 0)));
     if (price === 0) continue;
     if (seen.has(course.id)) continue;
     seen.add(course.id);
@@ -163,6 +180,7 @@ function summarizeCourseLines(db: any, items: CartItem[], userId: string | null 
       price,
       readiness_path: effective.path,
       credited_module_ids: effective.credited_module_ids,
+      pre_sale_price: preSale,
     });
     subtotal += price;
   }
@@ -178,6 +196,7 @@ function buildCourseOrderLines(courses: CourseLine[]) {
     course_id: c.course_id,
     name: c.title,
     price: c.price,
+    ...(c.pre_sale_price !== c.price ? { pre_sale_price: c.pre_sale_price } : {}),
     // Frozen at purchase: which modules a personalised-path buyer skips.
     ...(c.readiness_path === 'personalised'
       ? { readiness_path: c.readiness_path, credited_module_ids: c.credited_module_ids }
@@ -197,6 +216,11 @@ function computeDiscount(coupon: any, subtotal: number) {
     return Math.round(subtotal * coupon.discount_percent) / 100;
   }
   return coupon.discount_flat || 0;
+}
+
+/** A percent coupon bigger than the festival discount; only these can replace the sale. */
+function couponBeatsSale(coupon: any, fest: Festival): boolean {
+  return (Number(coupon?.discount_percent) || 0) > fest.discount_percent;
 }
 
 // GET /api/checkout/payment-info — merchant UPI details shown on the payment screen
@@ -256,6 +280,32 @@ checkoutRouter.post('/validate-coupon', (req: Request, res: Response) => {
     }
   }
 
+  // Diwali sale: a coupon never stacks on the sale price. Only a coupon that
+  // beats the sale is accepted, and then it replaces the sale (it is applied
+  // to the pre-sale subtotal the cart sends). Create-order enforces the same.
+  const fest = activeFestival(db);
+  if (fest) {
+    if (!couponBeatsSale(coupon, fest)) {
+      return res.json({
+        valid: false,
+        discount: 0,
+        sale_conflict: true,
+        message: `Diwali sale price (${fest.discount_percent}% OFF) is already applied — coupons can't be added on top.`,
+      });
+    }
+    const preSale = Number(req.body.pre_sale_subtotal) || subtotal;
+    const couponTotal = Math.max(0, preSale - Math.min(computeDiscount(coupon, preSale), preSale));
+    const discount = Math.max(0, subtotal - couponTotal);
+    return res.json({
+      valid: true,
+      discount,
+      code,
+      label: coupon.label,
+      replaces_sale: true,
+      message: 'Coupon beats the Diwali price — applied instead of the sale',
+    });
+  }
+
   const discount = Math.min(computeDiscount(coupon, subtotal), subtotal);
   res.json({
     valid: true,
@@ -275,7 +325,7 @@ checkoutRouter.post('/validate-coupon', (req: Request, res: Response) => {
  * with price 0. Previously every line was stamped with a flat price, so an order for a
  * 2-module pack (charged Rs 169) could show two Rs 99 lines that did not add up.
  */
-function buildOrderLines(items: CartItem[], byCompany: Record<string, { module_count: number; pack_price: number; list_total: number; savings: number }>) {
+function buildOrderLines(items: CartItem[], byCompany: Record<string, { module_count: number; pack_price: number; pre_sale_price: number; list_total: number; savings: number }>) {
   const pricedCompanies = new Set<string>();
   const seenLines = new Map<string, number>();
 
@@ -322,6 +372,7 @@ function buildOrderLines(items: CartItem[], byCompany: Record<string, { module_c
       module_count: bucket?.module_count ?? (it.module_id ? 1 : 0),
       list_total: bucket?.list_total ?? 0,
       pack_savings: bucket?.savings ?? 0,
+      ...(bucket && bucket.pre_sale_price !== bucket.pack_price && isFirstLineOfCompany ? { pre_sale_price: bucket.pre_sale_price } : {}),
     };
     });
 }
@@ -374,49 +425,71 @@ checkoutRouter.post('/create-order', async (req: Request, res: Response) => {
   // through to the client figure and happily charges Rs 500 for a free course.
   // Testing for the PRESENCE of course lines rather than the value of their sum
   // is what makes that impossible.
-  const pack = summarizePack(unowned as CartItem[], (companyId) => companyPackCap(db, companyId));
-  const courses = summarizeCourseLines(db, unowned as CartItem[], user_id);
+  const fest = activeFestival(db);
+  const priceCart = (sale: (p: number) => number) => {
+    const pack = summarizePack(unowned as CartItem[], (companyId) => companyPackCap(db, companyId), sale);
+    const courses = summarizeCourseLines(db, unowned as CartItem[], user_id, sale);
+    const subtotal = hasLadderableItems || hasCourseLines
+      ? pack.subtotal + courses.subtotal
+      : Number(amount) || pack.subtotal;
+    return { pack, courses, subtotal };
+  };
   const hasCourseLines = unowned.some((it: CartItem) => it.kind === 'course');
   const hasLadderableItems = unowned.some((it: CartItem) => it.kind !== 'plan' && it.kind !== 'course');
 
-  const subtotal = hasLadderableItems || hasCourseLines
-    ? pack.subtotal + courses.subtotal
-    : Number(amount) || pack.subtotal;
+  // A coupon's discount on a priced cart. A scoped coupon discounts only its
+  // target lines: resolve each course line's branch from the catalogue (the
+  // cart line is display-only) and let the coupon helpers decide the eligible
+  // subtotal. Anything else — vault packs, unmatched courses — pays full
+  // price. No eligible lines means no discount, never a cart-wide fallback.
+  const couponDiscount = (coupon: any, cart: ReturnType<typeof priceCart>) => {
+    const scopedLines = cart.courses.lines.map((l) => {
+      const record = (db.courses || []).find((c: any) => c.id === l.course_id);
+      return { price: l.price, course_id: l.course_id, branch: record?.branch || '' };
+    });
+    const { courseIds, branch } = couponScopeOf(coupon);
+    const base = courseIds.length === 0 && !branch
+      ? cart.subtotal
+      : couponEligibleSubtotal(coupon, scopedLines);
+    // A zero base discounts nothing: without this a flat-₹ coupon would
+    // take its full face value off an unrelated cart.
+    return base > 0 ? Math.min(computeDiscount(coupon, base), base) : 0;
+  };
 
-  if (hasCourseLines && courses.lines.length === 0) {
+  let cart = priceCart((p) => salePrice(p, fest));
+  let saleApplied = !!fest;
+
+  if (hasCourseLines && cart.courses.lines.length === 0) {
     return res.status(400).json({
       error: 'No purchasable course in this cart — free and already-owned courses are not for sale.',
     });
   }
 
-  if (subtotal <= 0) {
+  if (cart.subtotal <= 0) {
     return res.status(400).json({ error: 'Nothing in this cart costs anything.' });
   }
 
   let appliedCoupon: any = null;
   let discount = 0;
   const code = (coupon_code || '').trim().toUpperCase();
-  if (code) {
-    appliedCoupon = (db.coupons || []).find((c: any) => c.code === code);
-    if (appliedCoupon) {
-      // A scoped coupon discounts only its target lines: resolve each course
-      // line's branch from the catalogue (the cart line is display-only) and
-      // let the coupon helpers decide the eligible subtotal. Anything else —
-      // vault packs, unmatched courses — pays full price. No eligible lines
-      // means no discount, never a cart-wide fallback.
-      const scopedLines = courses.lines.map((l) => {
-        const record = (db.courses || []).find((c: any) => c.id === l.course_id);
-        return { price: l.price, course_id: l.course_id, branch: record?.branch || '' };
-      });
-      const { courseIds, branch } = couponScopeOf(appliedCoupon);
-      const base = courseIds.length === 0 && !branch
-        ? subtotal
-        : couponEligibleSubtotal(appliedCoupon, scopedLines);
-      // A zero base discounts nothing: without this a flat-₹ coupon would
-      // take its full face value off an unrelated cart.
-      discount = base > 0 ? Math.min(computeDiscount(appliedCoupon, base), base) : 0;
+  const found = code ? (db.coupons || []).find((c: any) => c.code === code) : null;
+  if (found && !fest) {
+    appliedCoupon = found;
+    discount = couponDiscount(found, cart);
+  } else if (found && fest && couponBeatsSale(found, fest)) {
+    // Never both: a coupon bigger than the sale is priced against the
+    // pre-sale cart, and only wins when it is actually cheaper. A coupon that
+    // loses is not applied, so its use is not consumed.
+    const full = priceCart((p) => p);
+    const d = couponDiscount(found, full);
+    if (full.subtotal - d < cart.subtotal) {
+      cart = full;
+      discount = d;
+      appliedCoupon = found;
+      saleApplied = false;
     }
   }
+  const { pack, courses, subtotal } = cart;
 
   const total = Math.max(0, subtotal - discount);
   const mode = effectivePaymentMode(db);
@@ -436,6 +509,7 @@ checkoutRouter.post('/create-order', async (req: Request, res: Response) => {
     pack_subtotal: pack.subtotal,
     list_total: pack.listTotal,
     pack_savings: pack.savingsTotal,
+    ...(saleApplied && fest ? { sale: fest.id } : {}),
     created_at: new Date().toISOString()
   };
 
@@ -472,6 +546,7 @@ checkoutRouter.post('/create-order', async (req: Request, res: Response) => {
     status: 'created',
     discount,
     coupon_code: appliedCoupon?.code || null,
+    sale: saleApplied && fest ? fest.id : null,
     gateway: created.gateway,
     gateway_order_id: created.gateway_order_id,
     key_id: created.key_id || undefined,

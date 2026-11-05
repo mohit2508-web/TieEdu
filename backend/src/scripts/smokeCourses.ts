@@ -12,6 +12,7 @@
 // certificate must stop verifying, and XP must not be farmable.
 
 process.env.PORT = process.env.SMOKE_PORT || '5311';
+process.env.FESTIVAL_MODE = 'off'; // regular prices; scripts/festival.test.ts covers the sale
 process.env.EMAIL_DISABLED = '1'; // signups here must never send real mail
 process.env.NEXT_PUBLIC_SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://tieedu.test';
 // A real Ed25519 keypair, generated per run. Certificates are signed and

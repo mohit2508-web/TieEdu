@@ -4,6 +4,7 @@ import { optionalAuth } from '../middleware/auth';
 import { buildPricingCatalog } from '../lib/pricing';
 import { ownedModuleIdsFor, unlockedCompanyIds } from '../payments/orders';
 import { companyPackCap } from '../lib/companyPage';
+import { saleFnFor } from '../lib/festival';
 
 export const pricingRouter = Router();
 
@@ -25,5 +26,5 @@ pricingRouter.get('/catalog', optionalAuth, (req: Request, res: Response) => {
   const owned = userId ? ownedModuleIdsFor(db, userId) : [];
   const unlocked = userId ? unlockedCompanyIds(db, userId) : [];
 
-  res.json(buildPricingCatalog(db.companies || [], owned, unlocked, isAdmin, (id) => companyPackCap(db, id)));
+  res.json(buildPricingCatalog(db.companies || [], owned, unlocked, isAdmin, (id) => companyPackCap(db, id), saleFnFor(db)));
 });
