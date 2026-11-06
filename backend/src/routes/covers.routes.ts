@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { loadDb } from '../data/db';
 import { dropArtSvg } from '../lib/dropArt';
+import { dropSnapshot } from '../lib/dropStore';
 
 /**
  * Generated course covers (1280×720 SVG) from the course's own title,
@@ -133,13 +134,25 @@ const sendSvg = (res: Response, svg: string, maxAge: number) => {
   res.send(svg);
 };
 
+/** Rendered posters, keyed by id + edit stamp + mode. Small: one entry per drop. */
+const artCache = new Map<string, string>();
+
 coversRouter.get('/drop/:file', (req: Request, res: Response) => {
   const id = String(req.params.file || '').replace(/\.svg$/, '');
   if (!/^[a-zA-Z0-9-]{1,80}$/.test(id)) return res.status(404).end();
-  const drop = (loadDb().drops || []).find((x: any) => x.id === id);
+  // Served from the in-memory drop snapshot — not a 14 MB file parse per image.
+  const drop: any = dropSnapshot().byId.get(id);
   if (!drop) return res.status(404).end();
-  // The feed URL carries ?v=<updated_at>, so an edit busts this cache.
-  sendSvg(res, dropArtSvg(drop), 3600);
+  const still = req.query.static === '1';
+  const key = `${id}|${drop.updated_at || drop.created_at}|${still ? 's' : 'a'}`;
+  let svg = artCache.get(key);
+  if (!svg) {
+    svg = dropArtSvg(drop, { still });
+    if (artCache.size > 400) artCache.clear();
+    artCache.set(key, svg);
+  }
+  // The feed URL carries ?v=<updated_at>, so an edit gets a new URL: cache hard.
+  sendSvg(res, svg, req.query.v ? 31536000 : 3600);
 });
 
 /**
@@ -149,5 +162,5 @@ coversRouter.get('/drop/:file', (req: Request, res: Response) => {
  */
 coversRouter.get('/drop-art.svg', (req: Request, res: Response) => {
   const q = (k: string, n: number) => String(req.query[k] || '').slice(0, n);
-  sendSvg(res, dropArtSvg({ art: q('art', 24), type: q('type', 24), art_text: q('text', 24), art_sub: q('sub', 48), id: q('seed', 40) }), 300);
+  sendSvg(res, dropArtSvg({ art: q('art', 24), type: q('type', 24), art_text: q('text', 24), art_sub: q('sub', 48), id: q('seed', 40) }, { still: req.query.static === '1' }), 300);
 });

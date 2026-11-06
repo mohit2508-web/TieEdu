@@ -32,7 +32,8 @@ export type NotifyEvent =
   | { type: 'course.published'; title: string; courseId: string; slug?: string }
   | { type: 'vault.updated'; title: string; detail?: string; slug?: string }
   | { type: 'module.added'; title: string; detail?: string; slug?: string }
-  | { type: 'course.incomplete'; courseTitle: string; remaining: number; total: number; slug?: string };
+  | { type: 'course.incomplete'; courseTitle: string; remaining: number; total: number; slug?: string }
+  | { type: 'drop.deadline'; title: string; dropId: string };
 
 type Copy = { title: string; body: string; url: string };
 
@@ -82,6 +83,11 @@ const TEMPLATES: Record<NotifyEvent['type'], (e: any) => Copy> = {
         ? 'You have 1 lesson left to finish this.'
         : `You have ${e.remaining} lessons left to finish this.`,
     url: slugPath('/courses', e.slug),
+  }),
+  'drop.deadline': (e) => ({
+    title: 'Closes tomorrow — you saved this',
+    body: e.title,
+    url: slugPath('/drops', e.dropId),
   }),
 };
 

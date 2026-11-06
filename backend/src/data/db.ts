@@ -1060,12 +1060,23 @@ export type DropType =
   | 'tip'
   | 'scholarship'
   | 'college'
-  | 'tieedu';
+  | 'tieedu'
+  | 'quiz';
 
 export const ALL_DROP_TYPES: DropType[] = [
   'company', 'job', 'vault', 'skilltest', 'course', 'contest',
-  'deadline', 'selected', 'tip', 'scholarship', 'college', 'tieedu',
+  'deadline', 'selected', 'tip', 'scholarship', 'college', 'tieedu', 'quiz',
 ];
+
+/** One tap-to-answer practice question on a quiz drop. */
+export interface DropQuiz {
+  question: string;
+  /** 2–4 options. */
+  options: string[];
+  /** Index into options. */
+  answer: number;
+  explain?: string;
+}
 
 /**
  * Lifecycle. `scheduled` is a real status, not just a future publish_at, so an
@@ -1099,6 +1110,14 @@ export interface DropStats {
   shares: number;
   saves: number;
   dwell_ms_total: number;
+  likes?: number;
+  /** Views shorter than SKIP_DWELL_MS — swiped past. */
+  skips?: number;
+  /** Story-page opens. */
+  reads?: number;
+  /** Continued to the external site from the leave-site page. */
+  outbound?: number;
+  quiz_answers?: number;
 }
 
 export interface Drop {
@@ -1130,6 +1149,13 @@ export interface Drop {
   art?: string;
   art_text?: string;
   art_sub?: string;
+  /** "Key facts" box on the story page — CTC, eligibility, last date… (≤ 6). */
+  facts?: { label: string; value: string }[];
+  /** Who the external link belongs to, shown on the leave-site page. */
+  source_name?: string;
+  /** Official page for the story (careers site, notice). Opened via the leave-site page. */
+  source_url?: string;
+  quiz?: DropQuiz;
   /** Media motion (Ken Burns, zoom…), overlay effect, headline entrance, sound. */
   motion?: string;
   effect?: string;
@@ -1173,7 +1199,14 @@ export interface DropBookmark {
   created_at: string;
 }
 
-export type DropEventKind = 'view' | 'cta_click' | 'share' | 'bookmark' | 'read_more';
+export type DropEventKind = 'view' | 'cta_click' | 'share' | 'bookmark' | 'read_more' | 'quiz_answer' | 'outbound';
+
+/** One viewer's like on one drop. */
+export interface DropLike {
+  user_id: string;
+  drop_id: string;
+  created_at: string;
+}
 
 export interface DropEvent {
   id: string;
@@ -2252,6 +2285,7 @@ const initialDbData = {
   drop_bookmarks: [],
   drop_events: [],
   drop_mutes: [],
+  drop_likes: [],
   // Email marketing — EMPTY until a real CSV import or automation writes rows.
   // No synthetic subscribers: consent records must be true.
   email_leads: [],
@@ -2395,6 +2429,7 @@ export function loadDb() {
       if (!Array.isArray(data.drop_bookmarks)) { data.drop_bookmarks = []; upgraded = true; }
       if (!Array.isArray(data.drop_events)) { data.drop_events = []; upgraded = true; }
       if (!Array.isArray(data.drop_mutes)) { data.drop_mutes = []; upgraded = true; }
+      if (!Array.isArray(data.drop_likes)) { data.drop_likes = []; upgraded = true; }
       // Email subsystem collections. Auto-created like the rest so an install
       // that predates email marketing boots with empty lists instead of
       // crashing on `db.email_leads.length`.

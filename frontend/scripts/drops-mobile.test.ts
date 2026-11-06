@@ -218,11 +218,15 @@ ok(sheet.includes('zIndex={65}') && muteSheet.includes('zIndex={65}'),
   'drops sheets stay above the header');
 
 console.log('\n--- share landing ---');
-ok(detail.includes('aspect-[16/10]'), 'the article creative reserves its box (no CLS)');
-ok(detail.includes('object-cover'), 'the article creative fills the reserved box');
-ok(detail.includes('min-h-[44px]'), 'the back link is a real tap target');
-ok(detail.includes('w-full') && detail.includes('sm:w-auto'), 'article CTAs go full-width on phones');
-ok(detail.includes('loading="lazy"'), 'the article creative does not compete with the first paint');
+// The share page renders <DropStory>; its layout rules live in drops-fx.css.
+const story = read('src/components/drops/DropStory.tsx');
+const fx = read('src/styles/drops-fx.css');
+ok(detail.includes('<DropStory'), 'the share page renders the story component');
+ok(/\.drop-story__hero \{[^}]*height: min\(46vh, 420px\)/.test(fx), 'the story hero reserves its box (no CLS)');
+ok(/\.drop-story__poster \{[^}]*object-fit: cover/.test(fx), 'the story creative fills the reserved box');
+ok(/\.drop-story__iconbtn \{[^}]*min-width: 44px;[^}]*height: 44px/.test(fx), 'the back control is a real tap target');
+ok(story.includes('btn btn-primary h-12 flex-1'), 'the story CTA fills the action bar on phones');
+ok(story.includes('loading="lazy"'), 'related-drop images do not compete with the first paint');
 
 console.log('\n--- homepage strip ---');
 ok(strip.includes('snap-x') && strip.includes('snap-mandatory'), 'the homepage strip snaps horizontally');

@@ -13,6 +13,7 @@ import { LESSON_EXTRAS } from '../data/interviewPrep/infosysSELessonExtras';
 import fs from 'fs';
 import path from 'path';
 import { FEED_V3 } from '../data/feedV3';
+import { FEED_V3_STORY, FEED_V3_QUIZ } from '../data/feedV3Content';
 import { validateDropInput, DROP_FILE_RE } from './drops';
 import { MPHASIS_BANK } from '../data/companyTests/mphasis';
 import { MPHASIS_TECHNICAL, MPHASIS_HR } from '../data/interviewPrep/mphasis';
@@ -458,6 +459,8 @@ export function seedFeedV3(db: any, nowMs = Date.now()): number {
   const iso = (ms: number) => new Date(ms).toISOString();
   const stamp = iso(nowMs);
   FEED_V3.forEach((spec, i) => {
+    const id = `drop-v3-${String(i + 1).padStart(2, '0')}`;
+    const story = FEED_V3_STORY[id];
     const publishMs = nowMs + spec.at * 86_400_000;
     const scheduled = spec.at > 0;
     const checked = validateDropInput({
@@ -466,7 +469,10 @@ export function seedFeedV3(db: any, nowMs = Date.now()): number {
       bullets: spec.bullets,
       cta_route: spec.route,
       target_slug: spec.route.startsWith('/company/') ? spec.route.split('/')[2].split('#')[0] : undefined,
-      body_md: spec.body,
+      body_md: story?.body || spec.body,
+      facts: (story?.facts || []).map(([label, value]) => ({ label, value })),
+      source_name: story?.source_name,
+      source_url: story?.source_url,
       deadline_at: spec.deadline,
       expires_at: spec.expires,
       publish_at: iso(publishMs),
@@ -489,7 +495,7 @@ export function seedFeedV3(db: any, nowMs = Date.now()): number {
     }
     db.drops.push({
       ...checked.value,
-      id: `drop-v3-${String(i + 1).padStart(2, '0')}`,
+      id,
       audience: {},
       stats: { views: 0, unique_viewers: 0, cta_clicks: 0, shares: 0, saves: 0, dwell_ms_total: 0 },
       author_id: 'system',
@@ -498,8 +504,80 @@ export function seedFeedV3(db: any, nowMs = Date.now()): number {
       updated_at: stamp,
     });
   });
+  addFeedV3Quizzes(db, nowMs);
   db.feed_v3_seeded = stamp;
+  db.feed_v3_1 = stamp;
   return db.drops.length;
+}
+
+/** The 12 practice-quiz drops; skips any id that already exists. */
+function addFeedV3Quizzes(db: any, nowMs: number): number {
+  if (!Array.isArray(db.drops)) db.drops = [];
+  const have = new Set(db.drops.map((d: any) => d.id));
+  const stamp = new Date(nowMs).toISOString();
+  let added = 0;
+  for (const q of FEED_V3_QUIZ) {
+    if (have.has(q.id)) continue;
+    const checked = validateDropInput({
+      type: 'quiz',
+      headline: q.headline,
+      bullets: [],
+      cta_route: q.route,
+      cta_label: 'Practise more',
+      status: 'published',
+      publish_at: new Date(nowMs + q.at * 86_400_000).toISOString(),
+      priority: 0,
+      tags: ['feed-v3', 'quiz', q.topic.toLowerCase()],
+      art: q.art,
+      art_text: 'QUIZ',
+      art_sub: `Practice · ${q.topic}`,
+      motion: 'kenburns',
+      effect: 'none',
+      text_anim: 'pop',
+      sound: 'pop',
+      quiz: q.quiz,
+      image_alt: q.headline,
+    });
+    if (!checked.ok) {
+      console.warn(`[seedFeedV3] skipped quiz "${q.headline}": ${checked.error}`);
+      continue;
+    }
+    db.drops.push({
+      ...checked.value,
+      id: q.id,
+      audience: {},
+      stats: { views: 0, unique_viewers: 0, cta_clicks: 0, shares: 0, saves: 0, dwell_ms_total: 0 },
+      author_id: 'system',
+      source: { kind: 'manual' },
+      created_at: stamp,
+      updated_at: stamp,
+    });
+    added += 1;
+  }
+  return added;
+}
+
+/**
+ * Feed v3.1, once per database that already ran v3: fill the story page
+ * (article, key facts, official link) on seeded drops the admin has not
+ * edited, and add the quiz drops. An edited drop (updated_at moved) is left
+ * exactly as the admin saved it.
+ */
+export function upgradeFeedV3_1(db: any, nowMs = Date.now()): number {
+  if (!db.feed_v3_seeded || db.feed_v3_1) return 0;
+  let changed = 0;
+  for (const d of Array.isArray(db.drops) ? db.drops : []) {
+    const story = FEED_V3_STORY[d?.id];
+    if (!story || d.updated_at !== d.created_at) continue;
+    d.body_md = d.body_md || story.body;
+    d.facts = story.facts ? story.facts.map(([label, value]) => ({ label, value })) : [];
+    if (story.source_name) d.source_name = story.source_name;
+    if (story.source_url) d.source_url = story.source_url;
+    changed += 1;
+  }
+  changed += addFeedV3Quizzes(db, nowMs);
+  db.feed_v3_1 = new Date(nowMs).toISOString();
+  return changed;
 }
 
 /**
@@ -631,7 +709,7 @@ export function ensureWiproIOSV1(db: any): number {
 
 /** Server start: add any missing 3T content. Returns true when something was added. */
 export function seedMissing3T(db: any): boolean {
-  const covers = seedCourseCovers(db) + seedFeedV3(db);
+  const covers = seedCourseCovers(db) + seedFeedV3(db) + upgradeFeedV3_1(db);
   const p = seedCompanyProfiles(db, true);
   const wipro = ensureWiproIOSV1(db);
   const t0 = COMPANY_TESTS.reduce((n, k) => n + seedSectionalTests(db, k, true), 0);

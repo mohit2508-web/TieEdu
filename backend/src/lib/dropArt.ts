@@ -58,6 +58,7 @@ const AUTO_ART: Record<string, string> = {
   college: 'calendar',
   tip: 'stars',
   tieedu: 'rocket',
+  quiz: 'stars',
 };
 
 interface Palette {
@@ -96,6 +97,13 @@ const COMPANY_VARIANTS: Palette[] = [
   { bg: ['#1F1303', '#5C3A06', '#B7791F'], accent: '#FDE68A', accent2: '#FFFFFF', ink: '#FFFFFF' },
   { bg: ['#0A1420', '#1E3A5F', '#0E7490'], accent: '#67E8F9', accent2: '#BEF264', ink: '#FFFFFF' },
 ];
+
+/**
+ * Lite mode: the same poster with every animation off. Elements that only
+ * exist mid-animation (firework bursts) are shown at their resting state so the
+ * still frame is not missing pieces.
+ */
+const STILL_CSS = `*{animation:none!important}.burst{opacity:.9;transform:scale(1)}.rise{opacity:0}`;
 
 /** Shared keyframes. `fill-box` makes every transform pivot on the shape itself. */
 const BASE_CSS = `
@@ -393,7 +401,7 @@ export function resolveArt(d: DropArtInput): string {
 }
 
 /** The full SVG document for one drop. */
-export function dropArtSvg(d: DropArtInput): string {
+export function dropArtSvg(d: DropArtInput, opts: { still?: boolean } = {}): string {
   const art = resolveArt(d);
   let p = PALETTES[art] || PALETTES.stars;
   // Company cards would all be the same blue; the company name picks one of a
@@ -432,7 +440,7 @@ export function dropArtSvg(d: DropArtInput): string {
   <linearGradient id="textGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="${p.accent}"/></linearGradient>
   <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse"><path d="M60 0H0V60" fill="none" stroke="#fff" stroke-opacity=".05" stroke-width="2"/></pattern>
 </defs>
-<style>${BASE_CSS}</style>
+<style>${BASE_CSS}${opts.still ? STILL_CSS : ''}</style>
 <rect width="${ART_W}" height="${ART_H}" fill="url(#bg)"/>
 <rect width="${ART_W}" height="${ART_H}" fill="url(#grid)"/>
 <circle class="blob" cx="200" cy="300" r="420" fill="${p.accent}" opacity=".10"/>

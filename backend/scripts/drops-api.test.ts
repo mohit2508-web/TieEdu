@@ -18,6 +18,7 @@ import { createAutoDrop } from '../src/lib/autoDrops';
 import { sweepDrops } from '../src/lib/dropScheduler';
 import { loadDb, saveDb } from '../src/data/db';
 import { MAX_ACTIVE_DROPS, MAX_PUBLISH_PER_DAY } from '../src/lib/drops';
+import { flushDropEvents } from '../src/lib/dropStore';
 import { _resetStaffCache } from '../src/store/staff';
 
 let pass = 0;
@@ -302,16 +303,60 @@ const main = async () => {
   eq('invalid event is 400', (await call('POST', `/api/drops/${fresh.id}/event`, { event: 'explode' })).status, 400);
   eq('event on an unknown drop is 404', (await call('POST', '/api/drops/no-such/event', { event: 'view' })).status, 404);
 
+  eq('events are queued, not written per request',
+    loadDb().drops.find((d: any) => d.id === fresh.id).stats.views, 0);
+
+  // The batched beacon the feed uses, plus likes.
+  const batch = await call('POST', '/api/drops/events', { events: [
+    { id: fresh.id, event: 'view', dwell_ms: 800 },
+    { id: fresh.id, event: 'outbound' },
+    { id: 'no-such', event: 'view' },
+    { id: fresh.id, event: 'explode' },
+  ] }, 'u-student');
+  eq('a batch skips unknown drops and kinds', batch.json.accepted, 2);
+  eq('anonymous like is 401', (await call('POST', `/api/drops/${fresh.id}/like`)).status, 401);
+  const liked = await call('POST', `/api/drops/${fresh.id}/like`, {}, 'u-student');
+  eq('like answers with the new state at once', [liked.json.liked, liked.json.likes], [true, 1]);
+  eq('the feed shows the like before any flush',
+    (await feed('', 'u-student')).items.find((d: any) => d.id === fresh.id)?.liked, true);
+  eq('liking twice is still one like',
+    (await call('POST', `/api/drops/${fresh.id}/like`, {}, 'u-student')).json.likes, 1);
+
+  eq('one flush applies the queue', flushDropEvents() > 0, true);
+  eq('a second flush has nothing to do', flushDropEvents(), 0);
+
   const dbAfterEvents = loadDb();
   const freshRow = dbAfterEvents.drops.find((d: any) => d.id === fresh.id);
-  eq('views are counted', freshRow.stats.views, 3);
+  eq('views are counted', freshRow.stats.views, 4);
+  eq('a sub-1.5s view counts as a skip', freshRow.stats.skips, 1);
+  eq('outbound clicks are counted', freshRow.stats.outbound, 1);
+  eq('likes are counted once', freshRow.stats.likes, 1);
+  eq('the like row is stored', dbAfterEvents.drop_likes.filter((l: any) => l.drop_id === fresh.id).length, 1);
+  await call('DELETE', `/api/drops/${fresh.id}/like`, undefined, 'u-student');
+  flushDropEvents();
+  eq('unlike removes it', loadDb().drops.find((d: any) => d.id === fresh.id).stats.likes, 0);
   eq('cta clicks are counted', freshRow.stats.cta_clicks, 1);
-  eq('dwell is accumulated', freshRow.stats.dwell_ms_total, 5000);
+  eq('dwell is accumulated', freshRow.stats.dwell_ms_total, 5800);
   eq('unique viewers count accounts once', freshRow.stats.unique_viewers, 1);
   eq('anonymous views leave no read-state row',
     dbAfterEvents.drop_views.filter((v: any) => v.drop_id === fresh.id && !v.user_id).length, 0);
   eq('event rows are recorded',
-    dbAfterEvents.drop_events.filter((e: any) => e.drop_id === fresh.id).length, 4);
+    dbAfterEvents.drop_events.filter((e: any) => e.drop_id === fresh.id).length, 6);
+
+  const freshDetail = await call('GET', `/api/drops/${fresh.id}`, undefined, 'u-student');
+  eq('detail carries the article fields', Array.isArray(freshDetail.json.drop.facts), true);
+  eq('detail carries related drops', Array.isArray(freshDetail.json.related), true);
+  const count = await call('GET', `/api/drops/count?since=${encodeURIComponent(past(10000))}`);
+  eq('new-count counts live drops since a time', count.json.new > 0 && count.json.new <= count.json.total, true);
+  eq('new-count without since is zero', (await call('GET', '/api/drops/count')).json.new, 0);
+
+  const quizBase = { ...baseDrop, type: 'quiz', bullets: [], image_stored_name: '', cta_route: '', target_slug: '', status: 'draft' };
+  await bad('quiz without options is 400', { ...quizBase, quiz: { question: 'What is 2 + 2?', options: ['4'], answer: 0 } });
+  await bad('quiz with an out-of-range answer is 400', { ...quizBase, quiz: { question: 'What is 2 + 2?', options: ['3', '4'], answer: 2 } });
+  const quiz = await call('POST', '/api/drops/admin', { ...quizBase, quiz: { question: 'What is 2 + 2?', options: ['3', '4'], answer: 1, explain: 'Basic sum.' } }, 'u-admin');
+  eq('a quiz drop needs no bullets or CTA', quiz.status, 201);
+  eq('...and keeps its question', quiz.json.drop.quiz.answer, 1);
+  await call('DELETE', `/api/drops/admin/${quiz.json.drop.id}`, undefined, 'u-admin');
 
   // ========================================================================
   // 8. Bookmarks
@@ -442,7 +487,7 @@ const main = async () => {
   // ========================================================================
   const analytics = await call('GET', '/api/drops/admin/analytics', undefined, 'u-admin');
   eq('analytics is readable with drops.read', analytics.status, 200);
-  eq('analytics covers all twelve types', analytics.json.by_type.length, 12);
+  eq('analytics covers every type', analytics.json.by_type.length, 13);
   eq('analytics counts the recorded views', analytics.json.totals.views >= 4, true);
   eq('analytics reports a live count', analytics.json.live >= 5, true);
   eq('analytics ranks top drops', analytics.json.top_drops.length >= 1, true);
@@ -579,7 +624,7 @@ const main = async () => {
   eq('the sweep reports both counts', sweep1.flipped >= 1 && sweep1.archived >= 1, true);
 
   const sweep2 = sweepDrops();
-  eq('a second sweep is a no-op', sweep2, { flipped: 0, archived: 0 });
+  eq('a second sweep is a no-op', sweep2, { flipped: 0, archived: 0, reminded: 0 });
 
   const routesSrc = fs.readFileSync(path.join(__dirname, '../src/routes/drops.routes.ts'), 'utf8');
   eq('mounting the drops router is what arms the scheduler',

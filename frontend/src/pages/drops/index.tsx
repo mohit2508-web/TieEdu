@@ -2,27 +2,29 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
-import { RefreshCw, Volume2, VolumeX, WifiOff, X } from 'lucide-react';
+import { Feather, RefreshCw, Volume2, VolumeX, WifiOff, X } from 'lucide-react';
 import { DropsFeed } from '@/components/drops/DropsFeed';
 import { DropsAside } from '@/components/drops/DropsAside';
 import { DropsFilterBar, type DropsFilter } from '@/components/drops/DropsFilterBar';
-import { DropDetailSheet } from '@/components/drops/DropDetailSheet';
+import { DropStory } from '@/components/drops/DropStory';
 import { DropNotInterestedSheet } from '@/components/drops/DropNotInterestedSheet';
 import { useAuth } from '@/context/AuthContext';
 import { apiAssetUrl } from '@/lib/assetUrl';
 import { playDropSound, setSoundPreference, soundPreference, stopDropSound, unlockDropSound } from '@/lib/dropSound';
 import {
-  fetchDropDetailApi,
   fetchDropFeedApi,
+  fetchDropStoryApi,
   fetchSavedDropsApi,
+  likeDropApi,
   muteDropApi,
-  postDropEventApi,
   saveDropApi,
   unsaveDropApi,
   type DropDetail,
   type DropFeedItem,
   type DropMuteKind,
 } from '@/lib/dropsApi';
+import { flushDropBeacons, trackDrop } from '@/lib/dropBeacon';
+import { DROPS_LAST_VISIT_KEY, litePreference, setLitePreference } from '@/lib/dropsLite';
 
 const AuthRequiredModal = dynamic(
   () => import('@/components/modals/AuthRequiredModal').then((m) => m.AuthRequiredModal),
@@ -80,12 +82,14 @@ export default function DropsPage() {
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [notice, setNotice] = useState<string>('');
 
-  const [detail, setDetail] = useState<DropDetail | null>(null);
-  const [savingDetail, setSavingDetail] = useState(false);
+  /** The story overlay (opened with shallow routing, so Back closes it). */
+  const [story, setStory] = useState<{ drop: DropDetail; related: DropFeedItem[] } | null>(null);
+  const [lite, setLite] = useState(false);
+  useEffect(() => setLite(litePreference()), []);
   const [mutedTarget, setMutedTarget] = useState<DropFeedItem | null>(null);
   const [muteBusy, setMuteBusy] = useState(false);
   const [muteError, setMuteError] = useState('');
-  const [authFor, setAuthFor] = useState<'save' | 'mute' | null>(null);
+  const [authFor, setAuthFor] = useState<'save' | 'mute' | 'like' | null>(null);
 
   const cursorRef = useRef<string | null>(null);
   const busyRef = useRef(false);
@@ -101,6 +105,8 @@ export default function DropsPage() {
   const [soundOn, setSoundOn] = useState(false);
   const soundOnRef = useRef(false);
   soundOnRef.current = soundOn;
+  const liteRef = useRef(false);
+  liteRef.current = lite;
   const activeItemRef = useRef<DropFeedItem | null>(null);
   useEffect(() => {
     if (!soundPreference()) return;
@@ -131,6 +137,25 @@ export default function DropsPage() {
     const t = window.setTimeout(() => setNotice(''), 4000);
     return () => window.clearTimeout(t);
   }, [notice]);
+
+  // This visit clears the nav badge; the analytics queue goes out on the way out.
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(DROPS_LAST_VISIT_KEY, new Date().toISOString());
+      window.dispatchEvent(new Event('tieedu:drops-visited'));
+    } catch {
+      /* private mode */
+    }
+    return () => flushDropBeacons();
+  }, []);
+
+  const toggleLite = () => {
+    const next = !lite;
+    setLite(next);
+    setLitePreference(next);
+    if (next) stopDropSound();
+    setNotice(next ? 'Lite mode on — still images, no effects. Smoother on slow phones and data.' : 'Lite mode off');
+  };
 
   /** Ids already beaconed as a view this session — one view per activation set. */
   const resetAndLoad = useCallback(async () => {
@@ -208,7 +233,7 @@ export default function DropsPage() {
   }, [filter, hasMore]);
 
   const needsAuth = useCallback(
-    (action: 'save' | 'mute'): boolean => {
+    (action: 'save' | 'mute' | 'like'): boolean => {
       if (user) return true;
       setAuthFor(action);
       return false;
@@ -218,7 +243,7 @@ export default function DropsPage() {
 
   const handleLeave = useCallback((item: DropFeedItem, dwellMs: number) => {
     // Fire-and-forget: a beacon must never block or surface UI.
-    postDropEventApi(item.id, 'view', Math.min(dwellMs, 600000)).catch(() => {});
+    trackDrop(item.id, 'view', Math.min(dwellMs, 600000));
   }, []);
 
   /**
@@ -233,16 +258,17 @@ export default function DropsPage() {
     if (!item) return;
     if (activeItemRef.current?.id !== item.id) {
       activeItemRef.current = item;
-      if (soundOnRef.current) playFor(item);
+      if (soundOnRef.current && !liteRef.current) playFor(item);
     }
     const list = itemsRef.current;
     const i = list.findIndex((x) => x.id === item.id);
     if (i < 0) return;
     setActiveIndex(i);
-    const next = list[i + 1];
-    if (next?.image_url && !prefetchedRef.current.has(next.id)) {
+    for (const next of list.slice(i + 1, i + 3)) {
+      if (!next?.image_url || prefetchedRef.current.has(next.id)) continue;
       prefetchedRef.current.add(next.id);
       const img = new Image();
+      img.decoding = 'async';
       img.src = apiAssetUrl(next.image_url);
     }
   }, []);
@@ -278,11 +304,11 @@ export default function DropsPage() {
     const url = `${window.location.origin}/drops/${item.id}`;
     const done = () => {
       setNotice('Link copied');
-      postDropEventApi(item.id, 'share').catch(() => {});
+      trackDrop(item.id, 'share');
     };
     if (typeof navigator.share === 'function') {
       navigator.share({ title: item.headline, url }).then(
-        () => postDropEventApi(item.id, 'share').catch(() => {}),
+        () => trackDrop(item.id, 'share'),
         () => {
           /* cancelled — not an error */
         }
@@ -292,11 +318,16 @@ export default function DropsPage() {
     }
   }, []);
 
+  /**
+   * The card's action. An outside link never opens directly: it goes through
+   * the leave-site page, which names the real domain and the safety rule.
+   */
   const handleCta = useCallback(
     (item: DropFeedItem) => {
-      postDropEventApi(item.id, 'cta_click').catch(() => {});
+      trackDrop(item.id, 'cta_click');
+      flushDropBeacons();
       if (item.cta_url) {
-        window.open(item.cta_url, '_blank', 'noopener,noreferrer');
+        router.push(`/drops/go/${item.id}`);
         return;
       }
       const route = item.cta_route || (item.target_slug ? `/company/${item.target_slug}` : null);
@@ -305,14 +336,70 @@ export default function DropsPage() {
     [router]
   );
 
-  const handleReadMore = useCallback(async (item: DropFeedItem) => {
-    postDropEventApi(item.id, 'read_more').catch(() => {});
-    try {
-      const full = await fetchDropDetailApi(item.id);
-      setDetail(full);
-    } catch (e) {
-      setNotice(errMsg(e));
-    }
+  /**
+   * Open the story over the feed. Shallow routing puts /drops/<id> in the
+   * address bar (shareable, and Back closes it) without unmounting the feed,
+   * so the reader returns to the exact card they left.
+   */
+  const handleReadMore = useCallback(
+    async (item: DropFeedItem) => {
+      trackDrop(item.id, 'read_more');
+      try {
+        const r = await fetchDropStoryApi(item.id);
+        // URL first, then the overlay: set the other way round, the render in
+        // between sees a story without ?story and the close-effect shuts it.
+        await router.push({ pathname: '/drops', query: { story: item.id } }, `/drops/${item.id}`, { shallow: true, scroll: false });
+        setStory(r);
+      } catch (e) {
+        setNotice(errMsg(e));
+      }
+    },
+    [router]
+  );
+
+  // Back (or any route change that drops ?story) closes the overlay.
+  useEffect(() => {
+    if (!router.query.story && story) setStory(null);
+  }, [router.query.story, story]);
+
+  // Overlay open: the page behind must not scroll.
+  useEffect(() => {
+    if (!story) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [story]);
+
+  /** Optimistic like; the server queues it (no disk write per tap). */
+  const handleLike = useCallback(
+    async (item: DropFeedItem) => {
+      if (!needsAuth('like')) return;
+      const on = !item.liked;
+      const patch = (d: DropFeedItem): DropFeedItem =>
+        d.id === item.id ? { ...d, liked: on, likes: Math.max(0, (d.likes || 0) + (on ? 1 : -1)) } : d;
+      setItems((prev) => prev.map(patch));
+      setStory((s) => (s && s.drop.id === item.id ? { ...s, drop: patch(s.drop) as DropDetail } : s));
+      try {
+        const r = await likeDropApi(item.id, on);
+        const fix = (d: DropFeedItem): DropFeedItem => (d.id === item.id ? { ...d, liked: r.liked, likes: r.likes } : d);
+        setItems((prev) => prev.map(fix));
+        setStory((s) => (s && s.drop.id === item.id ? { ...s, drop: fix(s.drop) as DropDetail } : s));
+      } catch (e) {
+        const undo = (d: DropFeedItem): DropFeedItem =>
+          d.id === item.id ? { ...d, liked: !on, likes: Math.max(0, (d.likes || 0) + (on ? -1 : 1)) } : d;
+        setItems((prev) => prev.map(undo));
+        setStory((s) => (s && s.drop.id === item.id ? { ...s, drop: undo(s.drop) as DropDetail } : s));
+        setNotice(errMsg(e));
+      }
+    },
+    [needsAuth]
+  );
+
+  const handleQuizAnswer = useCallback((item: DropFeedItem, correct: boolean) => {
+    trackDrop(item.id, 'quiz_answer');
+    if (correct) setNotice('Correct! Swipe up for the next one.');
   }, []);
 
   const handleMute = useCallback(
@@ -346,20 +433,10 @@ export default function DropsPage() {
     [mutedTarget, needsAuth]
   );
 
-  const detailSaved = detail ? savedIds.has(detail.id) : false;
 
   /** Progress fill for the 2px bar under the filters — transform only. */
   const progressScale = items.length > 0 ? Math.min(1, (activeIndex + 1) / items.length) : 0;
 
-  const toggleDetailSave = useCallback(async () => {
-    if (!detail) return;
-    setSavingDetail(true);
-    try {
-      await handleSave(detail);
-    } finally {
-      setSavingDetail(false);
-    }
-  }, [detail, handleSave]);
 
   return (
     <>
@@ -446,6 +523,16 @@ export default function DropsPage() {
                 <button
                   type="button"
                   className="btn btn-ghost h-8 gap-1.5 px-2.5 text-xs"
+                  aria-pressed={lite}
+                  onClick={toggleLite}
+                  title="Lite mode: still images and no effects — smoother on slow phones and data"
+                >
+                  <Feather size={13} strokeWidth={2.4} aria-hidden />
+                  {lite ? 'Lite on' : 'Lite'}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-ghost h-8 gap-1.5 px-2.5 text-xs"
                   onClick={resetAndLoad}
                   aria-label="Refresh the drops feed"
                 >
@@ -471,6 +558,9 @@ export default function DropsPage() {
               onSave={handleSave}
               onShare={handleShare}
               soundOn={soundOn}
+              lite={lite}
+              onLike={handleLike}
+              onQuizAnswer={handleQuizAnswer}
               onNotInterested={(item) => {
                 setMuteError('');
                 setMutedTarget(item);
@@ -481,14 +571,25 @@ export default function DropsPage() {
         <DropsAside items={items} onOpen={(i) => { if (items[i]) handleReadMore(items[i]); }} />
       </div>
 
-      <DropDetailSheet
-        drop={detail}
-        saved={detailSaved}
-        saving={savingDetail}
-        onClose={() => setDetail(null)}
-        onCta={() => detail && handleCta(detail)}
-        onSave={toggleDetailSave}
-      />
+      {story && (
+        <div className="drop-story-overlay" role="dialog" aria-modal="true" aria-label={story.drop.headline}>
+          <DropStory
+            drop={story.drop}
+            related={story.related}
+            saved={savedIds.has(story.drop.id)}
+            onClose={() => router.back()}
+            onSave={() => handleSave(story.drop)}
+            onLike={() => handleLike(story.drop)}
+            onShare={() => handleShare(story.drop)}
+            onCta={() => handleCta(story.drop)}
+            onSource={() => {
+              trackDrop(story.drop.id, 'cta_click');
+              router.push(`/drops/go/${story.drop.id}?to=source`);
+            }}
+            onOpenRelated={(r) => handleReadMore(r)}
+          />
+        </div>
+      )}
 
       <DropNotInterestedSheet
         drop={mutedTarget}
@@ -502,7 +603,7 @@ export default function DropsPage() {
         isOpen={!!authFor}
         onClose={() => setAuthFor(null)}
         onSuccess={() => setAuthFor(null)}
-        targetTitle={authFor === 'mute' ? 'Mute this drop' : 'Save this drop'}
+        targetTitle={authFor === 'mute' ? 'Mute this drop' : authFor === 'like' ? 'Like this drop' : 'Save this drop'}
       />
     </>
   );

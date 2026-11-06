@@ -21,7 +21,8 @@ export type DropType =
   | 'scholarship'
   | 'college'
   | 'tip'
-  | 'tieedu';
+  | 'tieedu'
+  | 'quiz';
 
 /** Chip labels, in the order the filter bar shows them. Server mirrors this. */
 export const DROP_TYPE_META: Record<DropType, { label: string; chip: string }> = {
@@ -37,7 +38,20 @@ export const DROP_TYPE_META: Record<DropType, { label: string; chip: string }> =
   college: { label: 'College', chip: 'var(--drop-college)' },
   tip: { label: 'Tips', chip: 'var(--drop-tip)' },
   tieedu: { label: 'TieEdu', chip: 'var(--drop-tieedu)' },
+  quiz: { label: 'Quiz', chip: 'var(--drop-quiz)' },
 };
+
+export interface DropQuiz {
+  question: string;
+  options: string[];
+  answer: number;
+  explain?: string;
+}
+
+export interface DropFact {
+  label: string;
+  value: string;
+}
 
 export const DROP_TYPES = Object.keys(DROP_TYPE_META) as DropType[];
 
@@ -141,10 +155,18 @@ export interface DropFeedItem {
   effect?: DropEffect;
   text_anim?: DropTextAnim;
   sound?: DropSound;
+  quiz?: DropQuiz | null;
+  likes?: number;
+  views?: number;
+  /** This viewer has liked it (always false signed-out). */
+  liked?: boolean;
 }
 
 export interface DropDetail extends DropFeedItem {
   body_md: string;
+  facts?: DropFact[];
+  source_name?: string | null;
+  source_url?: string | null;
   tags: string[];
   created_at: string;
   publish_at: string | null;
@@ -177,6 +199,11 @@ export interface DropStats {
   shares: number;
   saves: number;
   dwell_ms_total: number;
+  likes?: number;
+  skips?: number;
+  reads?: number;
+  outbound?: number;
+  quiz_answers?: number;
 }
 
 export interface AdminDrop extends DropFeedItem {
@@ -205,6 +232,9 @@ export interface AdminDrop extends DropFeedItem {
   art_sub?: string;
   /** Always the generated creative, even when an upload is set. */
   art_url: string;
+  facts?: DropFact[];
+  source_name?: string;
+  source_url?: string;
 }
 
 export interface DropAudience {
@@ -269,6 +299,10 @@ export interface DropWriteInput {
   effect?: DropEffect;
   text_anim?: DropTextAnim;
   sound?: DropSound;
+  facts?: DropFact[];
+  source_name?: string;
+  source_url?: string;
+  quiz?: DropQuiz;
 }
 
 const base = `${API_BASE_URL}/drops`;
@@ -305,9 +339,26 @@ export const fetchDropFeedApi = async (params: {
 };
 
 export const fetchDropDetailApi = async (id: string): Promise<DropDetail> =>
-  json<{ drop: DropDetail }>(await fetch(`${base}/${encodeURIComponent(id)}`)).then((r) => r.drop);
+  fetchDropStoryApi(id).then((r) => r.drop);
 
-export type DropEventKind = 'view' | 'cta_click' | 'share' | 'read_more';
+/** The story page: the drop plus up to four related drops. Sends auth for like state. */
+export const fetchDropStoryApi = async (id: string): Promise<{ drop: DropDetail; related: DropFeedItem[] }> => {
+  const r = await json<{ drop: DropDetail; related?: DropFeedItem[] }>(await apiFetch(`${base}/${encodeURIComponent(id)}`));
+  return { drop: r.drop, related: r.related || [] };
+};
+
+export const likeDropApi = async (id: string, on: boolean): Promise<{ liked: boolean; likes: number }> =>
+  json(await apiFetch(`${base}/${encodeURIComponent(id)}/like`, { method: on ? 'POST' : 'DELETE' }));
+
+/** Live drops published since `since` (the nav badge). */
+export const fetchDropNewCountApi = async (since: string): Promise<{ new: number; total: number }> =>
+  json(await apiFetch(`${base}/count?since=${encodeURIComponent(since)}`));
+
+/** Batched analytics beacon. `keepalive` lets it finish while the page unloads. */
+export const postDropEventsApi = async (events: { id: string; event: string; dwell_ms?: number }[]) =>
+  json(await apiFetch(`${base}/events`, { method: 'POST', body: JSON.stringify({ events }), keepalive: true }));
+
+export type DropEventKind = 'view' | 'cta_click' | 'share' | 'read_more' | 'quiz_answer' | 'outbound';
 
 export const postDropEventApi = async (id: string, event: DropEventKind, dwellMs?: number) =>
   json(await apiFetch(`${base}/${encodeURIComponent(id)}/event`, {

@@ -30,6 +30,7 @@ import {
   type HeaderScrollState,
 } from '@/lib/headerScroll';
 import { formatBadgeCount } from '@/lib/notifications';
+import { useDropsNewCount } from '@/lib/useDropsNewCount';
 import { NotificationBell } from '@/components/layout/NotificationBell';
 import { AccountMenu } from '@/components/layout/AccountMenu';
 import { MobileMenuButton } from '@/components/layout/MobileTabBar';
@@ -91,6 +92,7 @@ export const Header: React.FC = () => {
   const drillTitle = drillTitleOverride || (router.isReady ? resolveNavTitle(router.pathname) : '');
   const backHref = router.isReady ? resolveBackHref(router.pathname) : '/';
   const currentSection = resolveSection(router.pathname);
+  const dropsNew = useDropsNewCount(currentSection?.id !== 'feed');
 
   /*
     History first, href as the safety net. `history.length` is 1 for a deep link
@@ -350,15 +352,22 @@ export const Header: React.FC = () => {
           <nav aria-label="Primary" className="nav-pill hidden md:flex">
             {NAV_SECTIONS.map((section) => {
               const active = currentSection?.id === section.id;
+              const fresh = section.id === 'feed' && !active ? dropsNew : 0;
               return (
                 <Link
                   key={section.id}
                   href={sectionHref(section)}
                   aria-current={active ? 'page' : undefined}
-                  className="nav-link"
+                  className="nav-link relative"
+                  aria-label={fresh ? `${sectionLabel(lang, section.id, section.label)}, ${fresh} new` : undefined}
                 >
                   {/* Signed in, home is the Today screen (§5). */}
                   {section.id === 'home' && user ? sectionLabel(lang, 'today', 'Today') : sectionLabel(lang, section.id, section.label)}
+                  {fresh > 0 && (
+                    <span className="chrome-badge absolute -right-1 -top-1" aria-hidden>
+                      {formatBadgeCount(fresh)}
+                    </span>
+                  )}
                 </Link>
               );
             })}

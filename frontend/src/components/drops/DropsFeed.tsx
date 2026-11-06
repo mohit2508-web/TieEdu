@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Inbox } from 'lucide-react';
+import { ChevronDown, ChevronUp, Inbox } from 'lucide-react';
 import { DropCard } from './DropCard';
 import type { DropFeedItem } from '@/lib/dropsApi';
 
@@ -29,7 +29,19 @@ export interface DropsFeedProps {
   onNotInterested: (item: DropFeedItem) => void;
   /** Sound is on — passed to cards so an uploaded clip plays with audio. */
   soundOn?: boolean;
+  /** Lite mode — still posters, no effects. */
+  lite?: boolean;
+  onLike?: (item: DropFeedItem) => void;
+  onQuizAnswer?: (item: DropFeedItem, correct: boolean) => void;
 }
+
+/**
+ * Cards further than this from the one on screen render as empty slides.
+ * A long session no longer keeps 50 decoded posters and animations alive —
+ * the main reason a low-end phone stuttered — while the snap positions stay
+ * exactly where they were.
+ */
+const WINDOW = 2;
 
 const SkeletonCard: React.FC = () => (
   <div className="drop-slide" aria-hidden="true">
@@ -76,6 +88,9 @@ export const DropsFeed: React.FC<DropsFeedProps> = ({
   onShare,
   onNotInterested,
   soundOn = false,
+  lite = false,
+  onLike,
+  onQuizAnswer,
 }) => {
   /** The card on screen, as state: it switches that card's animations on. */
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -168,6 +183,35 @@ export const DropsFeed: React.FC<DropsFeedProps> = ({
     };
   }, [items, flushActive]);
 
+  const activeIndex = activeId ? items.findIndex((i) => i.id === activeId) : 0;
+  const centre = activeIndex < 0 ? 0 : activeIndex;
+
+  /** Move one card up or down (keyboard + desktop arrows). */
+  const step = useCallback((dir: 1 | -1) => {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+    viewport.scrollBy({ top: dir * viewport.clientHeight, behavior: 'smooth' });
+  }, []);
+
+  // ↓ / J / PageDown = next, ↑ / K / PageUp = previous. Ignored while typing
+  // or while a sheet/dialog has focus.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return;
+      const el = document.activeElement as HTMLElement | null;
+      if (el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) || el.closest('[role="dialog"]'))) return;
+      if (['ArrowDown', 'j', 'J', 'PageDown'].includes(e.key)) {
+        e.preventDefault();
+        step(1);
+      } else if (['ArrowUp', 'k', 'K', 'PageUp'].includes(e.key)) {
+        e.preventDefault();
+        step(-1);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [step]);
+
   if (loading && items.length === 0) {
     return (
       <div className="drops-viewport" ref={viewportRef} aria-busy="true" aria-label="Loading drops">
@@ -197,23 +241,31 @@ export const DropsFeed: React.FC<DropsFeedProps> = ({
   const shown = `${items.length} drop${items.length === 1 ? '' : 's'} shown`;
 
   return (
+    <div className="relative flex min-h-0 flex-1 flex-col">
     <div className="drops-viewport" ref={viewportRef}>
-      {items.map((item, index) => (
-        <div key={item.id} className="drop-slide" data-drop-id={item.id}>
-          <DropCard
-            item={item}
-            index={index}
-            active={activeId === item.id}
-            soundOn={soundOn}
-            saved={savedIds.has(item.id)}
-            onCta={onCta}
-            onReadMore={onReadMore}
-            onSave={onSave}
-            onShare={onShare}
-            onNotInterested={onNotInterested}
-          />
-        </div>
-      ))}
+      {items.map((item, index) =>
+        Math.abs(index - centre) > WINDOW ? (
+          <div key={item.id} className="drop-slide drop-slide--ghost" data-drop-id={item.id} aria-hidden="true" />
+        ) : (
+          <div key={item.id} className="drop-slide" data-drop-id={item.id}>
+            <DropCard
+              item={item}
+              index={index}
+              active={activeId === item.id}
+              soundOn={soundOn}
+              lite={lite}
+              saved={savedIds.has(item.id)}
+              onCta={onCta}
+              onReadMore={onReadMore}
+              onSave={onSave}
+              onShare={onShare}
+              onNotInterested={onNotInterested}
+              onLike={onLike}
+              onQuizAnswer={onQuizAnswer}
+            />
+          </div>
+        )
+      )}
 
       {loadingMore && (
         <div className="drop-slide flex items-center justify-center" aria-busy="true">
@@ -227,6 +279,15 @@ export const DropsFeed: React.FC<DropsFeedProps> = ({
           <p className="text-xs text-[var(--text-muted)]">{shown} — switch the filter to see more.</p>
         </div>
       )}
+    </div>
+    <div className="drops-nav-arrows">
+      <button type="button" onClick={() => step(-1)} disabled={centre <= 0} aria-label="Previous drop (↑)">
+        <ChevronUp size={20} strokeWidth={2.6} aria-hidden />
+      </button>
+      <button type="button" onClick={() => step(1)} disabled={centre >= items.length - 1 && !hasMore} aria-label="Next drop (↓)">
+        <ChevronDown size={20} strokeWidth={2.6} aria-hidden />
+      </button>
+    </div>
     </div>
   );
 };

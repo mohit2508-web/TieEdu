@@ -46,6 +46,7 @@ export const DROP_TYPE_META: Record<DropType, DropTypeMeta> = {
   college:     { chip: 'var(--drop-college)',     cta: 'View Details',          label: 'College',      order: 10 },
   tip:         { chip: 'var(--drop-tip)',         cta: 'Read Tip',              label: 'Tips',         order: 11 },
   tieedu:      { chip: 'var(--drop-tieedu)',      cta: 'Explore Now',           label: 'TieEdu',       order: 12 },
+  quiz:        { chip: 'var(--drop-quiz)',        cta: 'Practise More',         label: 'Quiz',         order: 13 },
 };
 
 export const isDropType = (value: unknown): value is DropType =>
@@ -368,7 +369,18 @@ export interface DropInput {
   effect?: unknown;
   text_anim?: unknown;
   sound?: unknown;
+  facts?: unknown;
+  source_name?: unknown;
+  source_url?: unknown;
+  quiz?: unknown;
 }
+
+/** Coerce the key-facts rows; blank rows are dropped, never an error. */
+const normaliseFacts = (raw: unknown): { label: string; value: string }[] =>
+  (Array.isArray(raw) ? raw : [])
+    .map((r: any) => ({ label: String(r?.label || '').trim().slice(0, 24), value: String(r?.value || '').trim().slice(0, 80) }))
+    .filter((r) => r.label && r.value)
+    .slice(0, 6);
 
 // ============================================================================
 // LOOK & FEEL — the presets the admin picks from (frontend mirrors these)
@@ -458,9 +470,23 @@ export const validateDropInput = (input: DropInput, opts: { requireImage?: boole
   if (headline.length < 10) return { ok: false, error: 'Headline kam se kam 10 characters ka hona chahiye' };
   if (headline.length > 100) return { ok: false, error: 'Headline 100 characters se bada hai' };
 
+  // A quiz drop carries its question instead of bullets.
+  let quiz: Drop['quiz'];
+  if (type === 'quiz') {
+    const q = (input.quiz || {}) as Record<string, unknown>;
+    const question = String(q.question || '').trim();
+    const options = (Array.isArray(q.options) ? q.options : []).map((o) => String(o || '').trim()).filter(Boolean);
+    const answer = Number(q.answer);
+    if (question.length < 5 || question.length > 300) return { ok: false, error: 'Quiz question 5–300 characters ka hona chahiye' };
+    if (options.length < 2 || options.length > 4) return { ok: false, error: 'Quiz mein 2 se 4 options chahiye' };
+    if (options.some((o) => o.length > 100)) return { ok: false, error: 'Har quiz option 100 characters tak' };
+    if (!Number.isInteger(answer) || answer < 0 || answer >= options.length) return { ok: false, error: 'Quiz ka sahi answer chuno' };
+    quiz = { question, options, answer, explain: String(q.explain || '').trim().slice(0, 400) || undefined };
+  }
+
   const rawBullets = Array.isArray(input.bullets) ? input.bullets : [];
   const bullets = rawBullets.map((b) => String(b || '').trim()).filter(Boolean);
-  if (bullets.length < 1) return { ok: false, error: 'Kam se kam 1 bullet chahiye' };
+  if (bullets.length < 1 && type !== 'quiz') return { ok: false, error: 'Kam se kam 1 bullet chahiye' };
   if (bullets.length > 3) return { ok: false, error: 'Maximum 3 bullets allowed hain' };
   for (const b of bullets) {
     if (b.length > 120) return { ok: false, error: 'Har bullet 120 characters se bada hai' };
@@ -506,11 +532,19 @@ export const validateDropInput = (input: DropInput, opts: { requireImage?: boole
     video_url = safe;
   }
 
-  if (!cta_route && !cta_url && !String(input.target_slug || '').trim()) {
+  if (type !== 'quiz' && !cta_route && !cta_url && !String(input.target_slug || '').trim()) {
     // A drop with no destination still renders, but Read More needs body_md.
     if (!String(input.body_md || '').trim()) {
       return { ok: false, error: 'CTA destination ya Read More content dono me se ek chahiye' };
     }
+  }
+
+  const sourceRaw = String(input.source_url || '').trim();
+  let source_url: string | undefined;
+  if (sourceRaw) {
+    const safe = safeUrl(sourceRaw);
+    if (!safe) return { ok: false, error: 'Source link valid http(s) link nahi hai' };
+    source_url = safe;
   }
 
   const statusRaw = String(input.status || 'draft');
@@ -568,6 +602,10 @@ export const validateDropInput = (input: DropInput, opts: { requireImage?: boole
     effect: oneOf(DROP_EFFECTS, input.effect, 'none'),
     text_anim: oneOf(DROP_TEXT_ANIMS, input.text_anim, 'rise'),
     sound,
+    facts: normaliseFacts(input.facts),
+    source_name: String(input.source_name || '').trim().slice(0, 60) || undefined,
+    source_url,
+    quiz,
   };
 
   // Always written (undefined when blank) so clearing the image in the console

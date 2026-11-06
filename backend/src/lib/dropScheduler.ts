@@ -19,6 +19,8 @@
  * call directly, an interval that never holds the process open, and a re-entry
  * guard so a slow pass cannot overlap itself.
  */
+import { notifyEvent } from './notify';
+import { invalidateDrops } from './dropStore';
 import { Drop, loadDb, saveDb } from '../data/db';
 
 /** Keep an expired row this long — the stats on it are still worth something. */
@@ -54,7 +56,12 @@ export const deadSince = (drop: Drop, now = Date.now()): number => {
 export interface DropSweep {
   flipped: number;
   archived: number;
+  /** Drops whose savers were reminded of the deadline this pass. */
+  reminded?: number;
 }
+
+/** Remind savers when a deadline is this close. */
+const REMIND_BEFORE_MS = 26 * 3600_000;
 
 /**
  * One pass. Pure over the rows it reads from the store; persists only when it
@@ -85,8 +92,28 @@ export const sweepDrops = (now = Date.now()): DropSweep => {
     }
   }
 
-  if (flipped || archived) saveDb(db);
-  return { flipped, archived };
+  // Saved-drop reminders: one push, about a day before a saved deadline.
+  const reminders = new Map<string, string[]>();
+  const byId = new Map(list.map((d) => [d.id, d]));
+  for (const b of (Array.isArray(db.drop_bookmarks) ? db.drop_bookmarks : []) as any[]) {
+    if (!b || b.reminded_at) continue;
+    const drop = byId.get(b.drop_id);
+    if (!drop || drop.status !== 'published') continue;
+    const due = parse(drop.deadline_at);
+    if (Number.isNaN(due) || due <= now || due - now > REMIND_BEFORE_MS) continue;
+    b.reminded_at = new Date(now).toISOString();
+    reminders.set(drop.id, [...(reminders.get(drop.id) || []), b.user_id]);
+  }
+  reminders.forEach((userIds, dropId) => {
+    const drop = byId.get(dropId)!;
+    void notifyEvent({ type: 'drop.deadline', title: drop.headline, dropId }, { kind: 'users', userIds });
+  });
+
+  if (flipped || archived || reminders.size) {
+    saveDb(db);
+    invalidateDrops();
+  }
+  return { flipped, archived, reminded: reminders.size };
 };
 
 /** How often the sweep runs. Publish timing is second-level in the feed; this is bookkeeping. */

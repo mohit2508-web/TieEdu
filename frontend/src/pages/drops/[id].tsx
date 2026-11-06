@@ -1,30 +1,43 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
-import ReactMarkdown from 'react-markdown';
-import { ArrowUpRight, ChevronLeft, CalendarClock } from 'lucide-react';
 import type { GetServerSideProps } from 'next';
-import { apiAssetUrl } from '@/lib/api';
 import { serverApiBase } from '@/lib/companyPagesApi';
-import { DROP_TYPE_META, fetchDropDetailApi, postDropEventApi, type DropDetail } from '@/lib/dropsApi';
-import { formatDay } from '@/lib/date';
+import {
+  fetchDropStoryApi,
+  fetchSavedDropsApi,
+  likeDropApi,
+  saveDropApi,
+  unsaveDropApi,
+  type DropDetail,
+  type DropFeedItem,
+} from '@/lib/dropsApi';
+import { trackDrop } from '@/lib/dropBeacon';
+import { useAuth } from '@/context/AuthContext';
+import { DropStory } from '@/components/drops/DropStory';
+
+const AuthRequiredModal = dynamic(
+  () => import('@/components/modals/AuthRequiredModal').then((m) => m.AuthRequiredModal),
+  { ssr: false }
+);
 
 const SITE_URL = 'https://tieedu.in';
 
 /**
- * The shareable page behind `/drops/:id`.
+ * The shareable story page behind `/drops/:id`.
  *
- * Server-rendered so a pasted link carries real Open Graph tags — a feed item
- * shared into a chat has to show its headline, not the site's default title.
- * The detail endpoint is public (a shared drop must render signed-out), and a
- * backend that was merely down at SSR time becomes a client retry rather than
- * a false 404: only an API that answered 404 produces `notFound`.
+ * Server-rendered so a pasted link carries real Open Graph tags; the body is
+ * the same <DropStory> the feed opens as an overlay. The detail endpoint is
+ * public (a shared drop must render signed-out), and a backend that was merely
+ * down at SSR time becomes a client retry rather than a false 404: only an API
+ * that answered 404 produces `notFound`.
  */
 
 /** First paragraph-shaped text, clipped — the description meta is one line. */
 const descriptionOf = (drop: DropDetail): string => {
-  const source = drop.bullets[0] || drop.body_md.replace(/[#*>`_-]/g, ' ').trim() || drop.headline;
+  const source = drop.bullets[0] || drop.body_md.replace(/[#*>`_|-]/g, ' ').replace(/\s+/g, ' ').trim() || drop.headline;
   return source.length > 180 ? `${source.slice(0, 177).trimEnd()}…` : source;
 };
 
@@ -36,8 +49,7 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
   let upstreamStatus: number | null = null;
 
   try {
-    // Absolute on the server: a relative /api URL cannot be fetched there, so
-    // every drop used to fall through to the client (no OG tags, no real 404).
+    // Absolute on the server: a relative /api URL cannot be fetched there.
     const res = await fetch(`${serverApiBase()}/drops/${encodeURIComponent(id)}`, { signal: AbortSignal.timeout(8000) });
     upstreamStatus = res.status;
     if (res.ok) {
@@ -56,30 +68,62 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
 
 export default function DropPage({ initialDrop, initialId }: { initialDrop: DropDetail | null; initialId: string }) {
   const router = useRouter();
+  const { user } = useAuth();
   const [drop, setDrop] = useState<DropDetail | null>(initialDrop);
+  const [related, setRelated] = useState<DropFeedItem[]>([]);
   const [failed, setFailed] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [authFor, setAuthFor] = useState<'save' | 'like' | null>(null);
+  const [notice, setNotice] = useState('');
   const openedAt = useRef(Date.now());
 
-  // Retry when SSR could not reach the API (same pattern as company/[slug]).
+  // Fresh story (like state, related drops) on the client — also the retry
+  // when SSR could not reach the API.
   useEffect(() => {
-    if (drop || failed) return;
-    fetchDropDetailApi(initialId).then(setDrop, () => setFailed(true));
-  }, [drop, failed, initialId]);
-
-  // One view beacon per page open, with the dwell the reader actually spent —
-  // the same unit the swipe feed bills, so the two add up cleanly.
-  useEffect(() => {
-    if (!drop) return;
-    const id = drop.id;
-    const opened = openedAt.current;
+    let live = true;
+    fetchDropStoryApi(initialId).then(
+      (r) => {
+        if (!live) return;
+        setDrop(r.drop);
+        setRelated(r.related);
+      },
+      () => {
+        if (live && !initialDrop) setFailed(true);
+      }
+    );
     return () => {
-      postDropEventApi(id, 'view', Math.min(Date.now() - opened, 600000)).catch(() => {});
+      live = false;
     };
-  }, [drop]);
+  }, [initialId, initialDrop]);
 
-  const meta = drop ? DROP_TYPE_META[drop.type] || null : null;
-  const description = drop ? descriptionOf(drop) : 'A drop from the TieEdu career feed.';
-  const ogImage = drop?.image_url ? (drop.image_url.startsWith('http') ? drop.image_url : `${SITE_URL}${drop.image_url}`) : null;
+  useEffect(() => {
+    if (!user) return;
+    fetchSavedDropsApi().then((r) => setSaved(r.items.some((i) => i.id === initialId)), () => {});
+  }, [user, initialId]);
+
+  // One read + one view per page open, with the dwell the reader actually spent.
+  const dropId = drop?.id;
+  useEffect(() => {
+    if (!dropId) return;
+    const opened = openedAt.current;
+    trackDrop(dropId, 'read_more');
+    return () => trackDrop(dropId, 'view', Date.now() - opened);
+  }, [dropId]);
+
+  useEffect(() => {
+    if (!notice) return;
+    const t = window.setTimeout(() => setNotice(''), 3000);
+    return () => window.clearTimeout(t);
+  }, [notice]);
+
+  const description = drop ? descriptionOf(drop) : 'A drop from TieEdu Drops.';
+  // Chat apps cannot preview SVG, so only an uploaded creative becomes og:image.
+  const ogImage =
+    drop?.image_url && !drop.is_generated_art
+      ? drop.image_url.startsWith('http')
+        ? drop.image_url
+        : `${SITE_URL}${drop.image_url}`
+      : null;
   const canonical = `${SITE_URL}/drops/${drop?.id || initialId}`;
 
   if (!drop) {
@@ -98,14 +142,48 @@ export default function DropPage({ initialDrop, initialId }: { initialDrop: Drop
             </button>
           )}
           <Link href="/drops" className="btn btn-ghost h-10">
-            Back to the feed
+            Back to Drops
           </Link>
         </div>
       </main>
     );
   }
 
-  const chipStyle = { '--drop-chip': meta?.chip } as React.CSSProperties;
+  const toggleSave = async () => {
+    if (!user) return setAuthFor('save');
+    const was = saved;
+    setSaved(!was);
+    try {
+      if (was) await unsaveDropApi(drop.id);
+      else await saveDropApi(drop.id);
+    } catch {
+      setSaved(was);
+    }
+  };
+
+  const toggleLike = async () => {
+    if (!user) return setAuthFor('like');
+    const on = !drop.liked;
+    setDrop({ ...drop, liked: on, likes: Math.max(0, (drop.likes || 0) + (on ? 1 : -1)) });
+    try {
+      const r = await likeDropApi(drop.id, on);
+      setDrop((d) => (d ? { ...d, liked: r.liked, likes: r.likes } : d));
+    } catch {
+      setDrop((d) => (d ? { ...d, liked: !on, likes: Math.max(0, (d.likes || 0) + (on ? -1 : 1)) } : d));
+    }
+  };
+
+  const share = () => {
+    trackDrop(drop.id, 'share');
+    if (typeof navigator.share === 'function') navigator.share({ title: drop.headline, url: canonical }).catch(() => {});
+    else navigator.clipboard.writeText(canonical).then(() => setNotice('Link copied'), () => {});
+  };
+
+  const cta = () => {
+    trackDrop(drop.id, 'cta_click');
+    if (drop.cta_url) router.push(`/drops/go/${drop.id}`);
+    else router.push(drop.cta_route || (drop.target_slug ? `/company/${drop.target_slug}` : '/drops'));
+  };
 
   return (
     <>
@@ -128,7 +206,7 @@ export default function DropPage({ initialDrop, initialId }: { initialDrop: Drop
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               '@context': 'https://schema.org',
-              '@type': 'Article',
+              '@type': 'NewsArticle',
               headline: drop.headline,
               description,
               datePublished: drop.publish_at || drop.created_at,
@@ -139,98 +217,31 @@ export default function DropPage({ initialDrop, initialId }: { initialDrop: Drop
         />
       </Head>
 
-      <main className="mx-auto w-full max-w-[720px] px-5 pb-16 pt-6" style={chipStyle} data-test="drop-detail">
-          <Link
-            href="/drops"
-            className="inline-flex min-h-[44px] items-center gap-1 text-sm font-bold text-link hover:underline"
-          >
-            <ChevronLeft size={17} strokeWidth={2.6} aria-hidden />
-            Back to the feed
-          </Link>
-
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <span className="drop-type-chip">{meta?.label || drop.type}</span>
-            {drop.sponsored && (
-              <span className="chip text-xs">{drop.sponsor_name || 'Sponsored'}</span>
-            )}
-            {drop.publish_at && (
-              <span className="text-xs font-semibold text-[var(--text-muted)]">{formatDay(drop.publish_at)}</span>
-            )}
-          </div>
-
-          <h1 className="mt-3 text-2xl font-extrabold leading-tight tracking-tight text-[var(--text-heading)] sm:text-3xl">
-            {drop.headline}
-          </h1>
-
-          {drop.bullets.length > 0 && (
-            <ul className="mt-3 space-y-1.5">
-              {drop.bullets.map((b) => (
-                <li key={b} className="text-sm font-semibold leading-relaxed text-[var(--text-body)]">
-                  • {b}
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {drop.deadline_at && (
-            <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[var(--brand-sky-soft)] px-3 py-1.5 text-xs font-bold text-link">
-              <CalendarClock size={14} strokeWidth={2.6} aria-hidden />
-              {formatDay(drop.deadline_at)}
-            </p>
-          )}
-
-          {drop.image_url && (
-            /*
-             * Fixed aspect box + object-cover: the CMS creative has no declared
-             * dimensions, and a bare <img> that resizes on load is a layout
-             * jump under the reader's thumb. The box reserves the space first;
-             * the image fills it.
-             */
-            <div className="relative mt-5 aspect-[16/10] w-full overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border-subtle)]">
-              {/* eslint-disable-next-line @next/next/no-img-element -- server-rendered article creative from the CMS, width unknown until it loads */}
-              <img
-                src={apiAssetUrl(drop.image_url)}
-                alt={drop.image_alt || drop.headline}
-                loading="lazy"
-                decoding="async"
-                className="h-full w-full object-cover"
-              />
-            </div>
-          )}
-
-          <div className="prose-article mt-6 text-base leading-relaxed text-[var(--text-body)]">
-            <ReactMarkdown>{drop.body_md}</ReactMarkdown>
-          </div>
-
-          {drop.tags.length > 0 && (
-            <div className="mt-6 flex flex-wrap gap-1.5">
-              {drop.tags.map((t) => (
-                <span key={t} className="chip text-xs">
-                  #{t}
-                </span>
-              ))}
-            </div>
-          )}
-
-          <div className="mt-8 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-            <button
-              type="button"
-              className="btn btn-primary h-12 w-full px-6 sm:w-auto"
-              onClick={() => {
-                postDropEventApi(drop.id, 'cta_click').catch(() => {});
-                if (drop.cta_url) window.open(drop.cta_url, '_blank', 'noopener,noreferrer');
-                else if (drop.cta_route) router.push(drop.cta_route);
-                else if (drop.target_slug) router.push(`/company/${drop.target_slug}`);
-              }}
-            >
-              {drop.cta_label}
-              <ArrowUpRight size={17} strokeWidth={2.6} aria-hidden />
-            </button>
-            <Link href="/drops" className="btn btn-ghost h-12 w-full px-5 sm:w-auto">
-              Keep swiping
-            </Link>
-          </div>
+      <main data-test="drop-detail">
+        <DropStory
+          drop={drop}
+          related={related}
+          saved={saved}
+          onSave={toggleSave}
+          onLike={toggleLike}
+          onShare={share}
+          onCta={cta}
+          onSource={() => router.push(`/drops/go/${drop.id}?to=source`)}
+          onOpenRelated={(r) => router.push(`/drops/${r.id}`)}
+        />
+        {notice && (
+          <p role="status" className="fixed bottom-24 left-1/2 z-[3] -translate-x-1/2 rounded-full bg-[var(--brand-ink)] px-4 py-2 text-xs font-bold text-white">
+            {notice}
+          </p>
+        )}
       </main>
+
+      <AuthRequiredModal
+        isOpen={!!authFor}
+        onClose={() => setAuthFor(null)}
+        onSuccess={() => setAuthFor(null)}
+        targetTitle={authFor === 'like' ? 'Like this drop' : 'Save this drop'}
+      />
     </>
   );
 }

@@ -34,6 +34,18 @@ import {
   DROP_FILE_RE,
 } from '../lib/drops';
 import { startDropScheduler } from '../lib/dropScheduler';
+import {
+  dropSnapshot,
+  flushDropEvents,
+  invalidateDrops,
+  pendingLikeDelta,
+  pendingLikeFor,
+  pendingSeenFor,
+  queueDropEvent,
+  queueDropLike,
+  startDropFlusher,
+  type DropSnapshot,
+} from '../lib/dropStore';
 
 export const dropsRouter = Router();
 
@@ -45,6 +57,7 @@ export const dropsRouter = Router();
  * remembering a second wiring step.
  */
 startDropScheduler();
+startDropFlusher();
 
 /*
  * TieEdu Drops — the vertical career feed.
@@ -151,7 +164,10 @@ function toPublicFeed(d: Drop) {
     deadline_at: d.deadline_at || null,
     sponsored: d.sponsored === true,
     sponsor_name: d.sponsor_name || null,
-    has_body: !!d.body_md,
+    has_body: !!d.body_md || (d.facts || []).length > 0,
+    quiz: d.quiz || null,
+    likes: d.stats?.likes || 0,
+    views: d.stats?.views || 0,
   };
 }
 
@@ -160,6 +176,9 @@ function toPublicDetail(d: Drop) {
   return {
     ...toPublicFeed(d),
     body_md: d.body_md || '',
+    facts: d.facts || [],
+    source_name: d.source_name || null,
+    source_url: d.source_url || null,
     tags: d.tags || [],
     created_at: d.created_at,
     publish_at: d.publish_at || null,
@@ -200,17 +219,19 @@ function subjectOf(req: Request): AudienceSubject | null {
   };
 }
 
-/** Viewer's read-state + mutes, so the feed can float unseen drops first. */
-function viewerSets(db: any, userId: string | undefined) {
+/**
+ * Viewer's read-state + mutes, so the feed can float unseen drops first.
+ * Read from the in-memory snapshot, plus this viewer's still-queued views.
+ */
+function viewerSets(snap: DropSnapshot, userId: string | undefined) {
   const seen = new Set<string>();
   const mutedDrops = new Set<string>();
   const mutedTypes = new Set<string>();
   const mutedCompanies = new Set<string>();
   if (!userId) return { seen, mutedDrops, mutedTypes, mutedCompanies };
-  for (const v of db.drop_views || []) {
-    if (v && v.user_id === userId) seen.add(v.drop_id);
-  }
-  for (const m of db.drop_mutes || []) {
+  snap.seenBy.get(userId)?.forEach((id) => seen.add(id));
+  pendingSeenFor(userId).forEach((id) => seen.add(id));
+  for (const m of snap.mutes) {
     if (!m || m.user_id !== userId) continue;
     if (m.kind === 'drop') mutedDrops.add(m.value);
     else if (m.kind === 'type') mutedTypes.add(m.value);
@@ -218,6 +239,19 @@ function viewerSets(db: any, userId: string | undefined) {
   }
   return { seen, mutedDrops, mutedTypes, mutedCompanies };
 }
+
+/** Like state + live counter for one viewer, queued likes included. */
+function likeView(snap: DropSnapshot, d: Drop, userId: string | undefined) {
+  const likedNow = (uid: string) => !!snap.likedBy.get(uid)?.has(d.id);
+  const pending = pendingLikeFor(userId, d.id);
+  return {
+    liked: !!userId && (pending !== undefined ? pending : likedNow(userId)),
+    likes: Math.max(0, (d.stats?.likes || 0) + pendingLikeDelta(d.id, likedNow)),
+  };
+}
+
+/** Public card + this viewer's like state. */
+const feedCard = (snap: DropSnapshot, d: Drop, userId: string | undefined) => ({ ...toPublicFeed(d), ...likeView(snap, d, userId) });
 
 /** The UTC calendar day a drop is counted against for the 10/day rule. */
 // `publishDay` + `checkCaps` moved to lib/drops.ts as `publishDay`/`checkDropCaps`
@@ -265,6 +299,10 @@ function mergeInput(current: Drop, body: Record<string, unknown>): DropInput {
     effect: pick('effect'),
     text_anim: pick('text_anim'),
     sound: pick('sound'),
+    facts: pick('facts'),
+    source_name: pick('source_name'),
+    source_url: pick('source_url'),
+    quiz: pick('quiz'),
   };
 }
 
@@ -347,7 +385,7 @@ dropsRouter.get('/file/:storedName', (req: Request, res: Response) => {
  * applied). Never cached — the response is per-viewer.
  */
 dropsRouter.get('/', optionalAuth, (req: Request, res: Response) => {
-  const db = loadDb();
+  const snap = dropSnapshot();
   const q = req.query || {};
 
   let type: DropType | null = null;
@@ -359,8 +397,8 @@ dropsRouter.get('/', optionalAuth, (req: Request, res: Response) => {
   const limitRaw = Number(q.limit);
   const limit = Number.isFinite(limitRaw) ? Math.min(Math.max(limitRaw, 1), FEED_MAX_LIMIT) : FEED_MAX_LIMIT;
 
-  const { seen, mutedDrops, mutedTypes, mutedCompanies } = viewerSets(db, req.userId);
-  const page = buildDropFeed(allDrops(db), {
+  const { seen, mutedDrops, mutedTypes, mutedCompanies } = viewerSets(snap, req.userId);
+  const page = buildDropFeed(snap.drops, {
     type,
     subject: subjectOf(req),
     seen,
@@ -373,7 +411,7 @@ dropsRouter.get('/', optionalAuth, (req: Request, res: Response) => {
 
   res.setHeader('Cache-Control', 'no-store');
   return res.json({
-    items: page.items.map(toPublicFeed),
+    items: page.items.map((d) => feedCard(snap, d, req.userId)),
     next_cursor: page.next_cursor,
     total: page.total,
     seen_count: page.items.filter((d) => seen.has(d.id)).length,
@@ -405,52 +443,70 @@ dropsRouter.delete('/mutes/:id', requireAuth, (req: Request, res: Response) => {
   db.drop_mutes = (db.drop_mutes || []).filter((m: any) => !(m.id === req.params.id && m.user_id === req.userId));
   if (db.drop_mutes.length === before) return res.status(404).json({ error: 'Mute not found' });
   saveDb(db);
+  invalidateDrops();
+  return res.json({ status: 'success' });
+});
+
+const PUBLIC_EVENTS = ['view', 'cta_click', 'share', 'read_more', 'quiz_answer', 'outbound'] as const;
+type PublicEvent = (typeof PUBLIC_EVENTS)[number];
+
+/**
+ * POST /api/drops/:id/event — one analytics beacon (kept for old clients).
+ * Queued, not written: see lib/dropStore.ts. `dwell_ms` is clamped there.
+ */
+dropsRouter.post('/:id/event', optionalAuth, rateLimit(120), (req: Request, res: Response) => {
+  if (!dropSnapshot().byId.has(req.params.id)) return res.status(404).json({ error: 'Drop not found' });
+  const event = String(req.body?.event || '');
+  if (!(PUBLIC_EVENTS as readonly string[]).includes(event)) return res.status(400).json({ error: 'Invalid event' });
+  queueDropEvent(req.params.id, req.userId || null, event as PublicEvent, Number(req.body?.dwell_ms) || 0);
   return res.json({ status: 'success' });
 });
 
 /**
- * POST /api/drops/:id/event — one analytics beacon.
- *
- * Anonymous views are recorded (event row, stats.views) but produce no
- * drop_view row: read-state is per-account, and a guest has none. `dwell_ms`
- * is clamped so a tab left open overnight cannot inflate the metric.
+ * POST /api/drops/events — the batched beacon the feed actually uses: up to
+ * 50 events per request, sent every ~10 cards and when the tab hides. Unknown
+ * drops and kinds are skipped rather than failing the batch.
  */
-dropsRouter.post('/:id/event', optionalAuth, rateLimit(120), (req: Request, res: Response) => {
-  const db = loadDb();
-  const drop = allDrops(db).find((d) => d.id === req.params.id);
+dropsRouter.post('/events', optionalAuth, rateLimit(60), (req: Request, res: Response) => {
+  const list = Array.isArray(req.body?.events) ? req.body.events.slice(0, 50) : [];
+  const snap = dropSnapshot();
+  let accepted = 0;
+  for (const e of list) {
+    const id = String(e?.id || '');
+    const event = String(e?.event || '');
+    if (!snap.byId.has(id) || !(PUBLIC_EVENTS as readonly string[]).includes(event)) continue;
+    queueDropEvent(id, req.userId || null, event as PublicEvent, Number(e?.dwell_ms) || 0);
+    accepted += 1;
+  }
+  return res.json({ status: 'success', accepted });
+});
+
+/** POST/DELETE /api/drops/:id/like — the heart. Queued like views. */
+const setLike = (on: boolean) => (req: Request, res: Response) => {
+  const snap = dropSnapshot();
+  const drop = snap.byId.get(req.params.id);
   if (!drop) return res.status(404).json({ error: 'Drop not found' });
+  queueDropLike(drop.id, req.userId!, on);
+  return res.json({ status: 'success', ...likeView(snap, drop, req.userId) });
+};
+dropsRouter.post('/:id/like', requireAuth, rateLimit(120), setLike(true));
+dropsRouter.delete('/:id/like', requireAuth, rateLimit(120), setLike(false));
 
-  const event = String(req.body?.event || '');
-  if (!['view', 'cta_click', 'share', 'read_more'].includes(event)) {
-    return res.status(400).json({ error: 'Invalid event' });
-  }
-  const dwell = Math.min(Math.max(Number(req.body?.dwell_ms) || 0, 0), 600000);
-
-  const uid = req.userId || null;
-  pushEvent(db, drop.id, uid, event as DropEventKind, { dwell_ms: dwell });
-
-  if (event === 'view') {
-    drop.stats.views += 1;
-    drop.stats.dwell_ms_total += dwell;
-    if (uid) {
-      const existing = (db.drop_views || []).find((v: any) => v.user_id === uid && v.drop_id === drop.id);
-      if (existing) {
-        existing.seen_at = new Date().toISOString();
-        existing.dwell_ms += dwell;
-      } else {
-        if (!Array.isArray(db.drop_views)) db.drop_views = [];
-        db.drop_views.push({ user_id: uid, drop_id: drop.id, seen_at: new Date().toISOString(), dwell_ms: dwell });
-        drop.stats.unique_viewers += 1;
-      }
-    }
-  } else if (event === 'cta_click') {
-    drop.stats.cta_clicks += 1;
-  } else if (event === 'share') {
-    drop.stats.shares += 1;
-  }
-
-  saveDb(db);
-  return res.json({ status: 'success' });
+/**
+ * GET /api/drops/count?since=ISO — how many live drops this viewer has not
+ * had the chance to see since `since`. Powers the "Drops • 5 new" badge;
+ * served from memory, so polling it is cheap.
+ */
+dropsRouter.get('/count', optionalAuth, (req: Request, res: Response) => {
+  const snap = dropSnapshot();
+  const since = Date.parse(String(req.query.since || ''));
+  const page = buildDropFeed(snap.drops, { subject: subjectOf(req), limit: FEED_MAX_LIMIT, ...viewerSets(snap, req.userId) });
+  const live = buildDropFeed(snap.drops, { subject: subjectOf(req), limit: 1 }).total;
+  const fresh = Number.isNaN(since)
+    ? 0
+    : snap.drops.filter((d) => isDropLive(d) && Date.parse(d.publish_at || d.created_at) > since).length;
+  res.setHeader('Cache-Control', 'private, max-age=60');
+  return res.json({ new: Math.min(fresh, page.total), total: live });
 });
 
 /** POST /api/drops/:id/bookmark — save for later (idempotent). */
@@ -466,6 +522,7 @@ dropsRouter.post('/:id/bookmark', requireAuth, (req: Request, res: Response) => 
     drop.stats.saves += 1;
     pushEvent(db, drop.id, req.userId!, 'bookmark');
     saveDb(db);
+    invalidateDrops();
   }
   return res.json({ status: 'success', saved: true });
 });
@@ -483,6 +540,7 @@ dropsRouter.delete('/:id/bookmark', requireAuth, (req: Request, res: Response) =
   if (db.drop_bookmarks.length < before) {
     drop.stats.saves = Math.max(0, drop.stats.saves - 1);
     saveDb(db);
+    invalidateDrops();
   }
   return res.json({ status: 'success', saved: false });
 });
@@ -523,6 +581,7 @@ dropsRouter.post('/:id/mute', requireAuth, (req: Request, res: Response) => {
       created_at: new Date().toISOString(),
     });
     saveDb(db);
+    invalidateDrops();
   }
   return res.json({ status: 'success', kind, value });
 });
@@ -535,6 +594,7 @@ dropsRouter.use('/admin', requireAdmin);
 
 /** GET /api/drops/admin — every drop for the console, live or not. */
 dropsRouter.get('/admin', requirePermission('drops.read'), (req: Request, res: Response) => {
+  flushDropEvents();
   const db = loadDb();
   const list = allDrops(db)
     .slice()
@@ -550,6 +610,7 @@ dropsRouter.get('/admin', requirePermission('drops.read'), (req: Request, res: R
 
 /** GET /api/drops/admin/analytics — aggregate numbers for the console. */
 dropsRouter.get('/admin/analytics', requirePermission('drops.read'), (_req: Request, res: Response) => {
+  flushDropEvents();
   const db = loadDb();
   const list = allDrops(db);
   const now = Date.now();
@@ -673,6 +734,7 @@ dropsRouter.post('/admin', requirePermission('drops.write'), async (req: Request
     detail: `${drop.type}: ${drop.headline.slice(0, 60)}`,
   });
   saveDb(db);
+  invalidateDrops();
   return res.status(201).json({ status: 'success', drop: toAdminShape(drop) });
 });
 
@@ -711,6 +773,7 @@ dropsRouter.put('/admin/:id', requirePermission('drops.write'), async (req: Requ
     detail: `status=${next.status} pinned=${next.pinned}`,
   });
   saveDb(db);
+  invalidateDrops();
   return res.json({ status: 'success', drop: toAdminShape(list[idx]) });
 });
 
@@ -730,6 +793,7 @@ dropsRouter.delete('/admin/:id', requirePermission('drops.write'), async (req: R
   db.drop_views = (db.drop_views || []).filter((v: any) => v.drop_id !== removed.id);
   db.drop_bookmarks = (db.drop_bookmarks || []).filter((b: any) => b.drop_id !== removed.id);
   db.drop_events = (db.drop_events || []).filter((e: any) => e.drop_id !== removed.id);
+  db.drop_likes = (db.drop_likes || []).filter((l: any) => l.drop_id !== removed.id);
 
   await appendAudit(db, {
     actor: req.userId,
@@ -738,6 +802,7 @@ dropsRouter.delete('/admin/:id', requirePermission('drops.write'), async (req: R
     detail: `${removed.type}: ${removed.headline.slice(0, 60)}`,
   });
   saveDb(db);
+  invalidateDrops();
   return res.json({ status: 'success', message: 'Drop deleted', remaining: list.length });
 });
 
@@ -748,13 +813,30 @@ dropsRouter.delete('/admin/:id', requirePermission('drops.write'), async (req: R
  * guest gets 404 rather than 403 so unpublished headlines are not enumerable.
  */
 dropsRouter.get('/:id', optionalAuth, (req: Request, res: Response) => {
-  const db = loadDb();
-  const drop = allDrops(db).find((d) => d.id === req.params.id);
+  const snap = dropSnapshot();
+  const drop = snap.byId.get(req.params.id);
   if (!drop) return res.status(404).json({ error: 'Drop not found' });
 
   const isAdmin = req.user?.role === 'admin';
   if (!isDropLive(drop) && !isAdmin) return res.status(404).json({ error: 'Drop not found' });
 
+  // "More like this": same company first, then same category, then shared tags.
+  const subject = subjectOf(req);
+  const tags = new Set(drop.tags || []);
+  const related = buildDropFeed(snap.drops, { subject, limit: FEED_MAX_LIMIT }).items
+    .filter((d) => d.id !== drop.id)
+    .map((d) => ({
+      d,
+      score:
+        (drop.target_slug && d.target_slug === drop.target_slug ? 4 : 0) +
+        (d.type === drop.type ? 2 : 0) +
+        (d.tags || []).filter((t) => tags.has(t) && t !== 'feed-v3').length,
+    }))
+    .filter((r) => r.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 4)
+    .map((r) => feedCard(snap, r.d, req.userId));
+
   res.setHeader('Cache-Control', 'no-store');
-  return res.json({ drop: toPublicDetail(drop) });
+  return res.json({ drop: { ...toPublicDetail(drop), ...likeView(snap, drop, req.userId) }, related });
 });

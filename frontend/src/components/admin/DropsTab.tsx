@@ -1,9 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import Link from 'next/link';
 import {
   Zap, Trash2, Loader2, CheckCircle2, ShieldAlert, Pin, Pencil, Plus, ExternalLink,
   Image as ImageIcon, X, Eye, BarChart3, Copy, Archive, RotateCcw, Search, Film,
-  Music, Volume2, Sparkles, CalendarClock, Send, FileText, Wand2,
+  Music, Volume2, Sparkles, CalendarClock, Send, FileText, Wand2, Heart, HelpCircle, Link2,
 } from 'lucide-react';
 import { apiAssetUrl } from '@/lib/api';
 import {
@@ -78,6 +80,13 @@ const EMPTY_FORM = {
   batches: '',
   branches: '',
   colleges: '',
+  facts: [] as { label: string; value: string }[],
+  source_name: '',
+  source_url: '',
+  quiz_question: '',
+  quiz_options: ['', '', '', ''],
+  quiz_answer: 0,
+  quiz_explain: '',
 };
 
 type FormState = typeof EMPTY_FORM;
@@ -144,6 +153,15 @@ const STATUS_PILL: Record<string, { text: string; cls: string }> = {
 
 const noop = () => {};
 
+/** The quiz as the API wants it: blank options dropped, answer re-indexed. */
+const quizOf = (f: FormState) => {
+  const filled = f.quiz_options.map((o, i) => ({ o: o.trim(), i })).filter((x) => x.o);
+  const answer = Math.max(0, filled.findIndex((x) => x.i === f.quiz_answer));
+  return { question: f.quiz_question.trim(), options: filled.map((x) => x.o), answer, explain: f.quiz_explain.trim() || undefined };
+};
+
+const pct = (part?: number, whole?: number) => (whole ? Math.round(((part || 0) / whole) * 100) : 0);
+
 export const DropsTab: React.FC = () => {
   const [drops, setDrops] = useState<AdminDrop[]>([]);
   const [caps, setCaps] = useState({ max_live: 100, max_per_day: 50 });
@@ -160,6 +178,7 @@ export const DropsTab: React.FC = () => {
   const [query, setQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<DropType | ''>('');
   const [previewKey, setPreviewKey] = useState(0);
+  const [articleTab, setArticleTab] = useState<'write' | 'preview'>('write');
   const imageInput = useRef<HTMLInputElement>(null);
   const videoInput = useRef<HTMLInputElement>(null);
   const audioInput = useRef<HTMLInputElement>(null);
@@ -295,6 +314,13 @@ export const DropsTab: React.FC = () => {
     batches: (d.audience?.batches || []).join(', '),
     branches: (d.audience?.branches || []).join(', '),
     colleges: (d.audience?.colleges || []).join(', '),
+    facts: (d.facts || []).map((f) => ({ ...f })),
+    source_name: d.source_name || '',
+    source_url: d.source_url || '',
+    quiz_question: d.quiz?.question || '',
+    quiz_options: [0, 1, 2, 3].map((i) => d.quiz?.options[i] || ''),
+    quiz_answer: d.quiz?.answer ?? 0,
+    quiz_explain: d.quiz?.explain || '',
   });
 
   const startEdit = (d: AdminDrop) => {
@@ -356,6 +382,10 @@ export const DropsTab: React.FC = () => {
       effect: f.effect,
       text_anim: f.text_anim,
       sound: f.sound,
+      facts: f.facts.map((x) => ({ label: x.label.trim(), value: x.value.trim() })).filter((x) => x.label && x.value),
+      source_name: f.source_name.trim(),
+      source_url: f.source_url.trim(),
+      ...(f.type === 'quiz' ? { quiz: quizOf(f) } : {}),
     };
   };
 
@@ -363,10 +393,18 @@ export const DropsTab: React.FC = () => {
     const h = f.headline.trim();
     if (h.length < 10) return 'Headline must be at least 10 characters';
     if (h.length > 100) return 'Headline must be 100 characters or fewer';
-    if (![f.bullet1, f.bullet2, f.bullet3].some((b) => b.trim())) return 'Add at least one bullet';
-    if (!f.cta_route.trim() && !f.cta_url.trim() && !f.target_slug.trim() && !f.body_md.trim()) {
-      return 'Add a button destination (route, URL or slug) or a Read More article';
+    if (f.type === 'quiz') {
+      const q = quizOf(f);
+      if (q.question.length < 5) return 'Write the quiz question';
+      if (q.options.length < 2) return 'A quiz needs at least 2 options';
+      if (!f.quiz_options[f.quiz_answer]?.trim()) return 'Mark which option is correct';
+    } else {
+      if (![f.bullet1, f.bullet2, f.bullet3].some((b) => b.trim())) return 'Add at least one bullet';
+      if (!f.cta_route.trim() && !f.cta_url.trim() && !f.target_slug.trim() && !f.body_md.trim()) {
+        return 'Add a button destination (route, URL or slug) or a Read More article';
+      }
     }
+    if (f.source_url.trim() && !/^https?:\/\//i.test(f.source_url.trim())) return 'The source link must start with https://';
     if (f.when === 'schedule') {
       const at = fromLocalInput(f.publish_at);
       if (!at) return 'Pick the date and time to publish';
@@ -457,12 +495,13 @@ export const DropsTab: React.FC = () => {
     deadline_at: fromLocalInput(form.deadline_at),
     sponsored: form.sponsored,
     sponsor_name: form.sponsor_name || null,
-    has_body: !!form.body_md.trim(),
     is_generated_art: !imageSrc,
     motion: form.motion,
     effect: form.effect,
     text_anim: form.text_anim,
     sound: form.sound,
+    quiz: form.type === 'quiz' ? quizOf(form) : null,
+    has_body: !!form.body_md.trim() || form.facts.some((x) => x.label && x.value),
   };
 
   // ─── list ───────────────────────────────────────────────────────────────
@@ -575,12 +614,30 @@ export const DropsTab: React.FC = () => {
               <input className={inputCls} maxLength={100} placeholder="TCS NQT registrations are open for the 2026 batch" value={form.headline} onChange={(e) => set('headline', e.target.value)} />
               <p className={`text-xs mt-1 ${form.headline.length > 0 && form.headline.length < 10 ? 'text-red-600 font-semibold' : 'text-gray-500'}`}>{form.headline.length}/100</p>
             </div>
-            <div className="space-y-2">
-              <label className={labelCls}>Bullets (1–3, up to 120 characters each)</label>
-              {(['bullet1', 'bullet2', 'bullet3'] as const).map((k, i) => (
-                <input key={k} className={inputCls} maxLength={120} placeholder={i === 0 ? 'Applications close 30 Nov' : ''} value={form[k]} onChange={(e) => set(k, e.target.value)} />
-              ))}
-            </div>
+            {form.type === 'quiz' ? (
+              <div className="space-y-2 rounded-2xl border border-purple-200 bg-purple-50/50 p-3">
+                <label className={labelCls}><HelpCircle className="inline w-3.5 h-3.5 mr-1" />Quiz question (shown on the card)</label>
+                <textarea className={`${inputCls} min-h-[70px] font-mono`} maxLength={300} placeholder="What is the output of …" value={form.quiz_question} onChange={(e) => set('quiz_question', e.target.value)} />
+                <p className="text-xs text-gray-500">Options — tick the correct one. Leave extra rows blank for 2 or 3 options.</p>
+                {form.quiz_options.map((opt, i) => (
+                  <label key={i} className="flex items-center gap-2">
+                    <input type="radio" name="quiz-answer" className="accent-signal w-4 h-4" checked={form.quiz_answer === i} onChange={() => set('quiz_answer', i)} aria-label={`Option ${String.fromCharCode(65 + i)} is correct`} />
+                    <span className="w-5 text-xs font-bold text-gray-500">{String.fromCharCode(65 + i)}</span>
+                    <input className={inputCls} maxLength={100} value={opt} onChange={(e) => set('quiz_options', form.quiz_options.map((o, j) => (j === i ? e.target.value : o)))} />
+                  </label>
+                ))}
+                <label className={labelCls}>Explanation (shown after answering)</label>
+                <textarea className={`${inputCls} min-h-[60px]`} maxLength={400} value={form.quiz_explain} onChange={(e) => set('quiz_explain', e.target.value)} />
+                <p className="text-xs text-gray-500">Label practice questions as practice — never call them previous-year questions.</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <label className={labelCls}>Bullets (1–3, up to 120 characters each)</label>
+                {(['bullet1', 'bullet2', 'bullet3'] as const).map((k, i) => (
+                  <input key={k} className={inputCls} maxLength={120} placeholder={i === 0 ? 'Applications close 30 Nov' : ''} value={form[k]} onChange={(e) => set(k, e.target.value)} />
+                ))}
+              </div>
+            )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className={labelCls}>Button text</label>
@@ -600,9 +657,55 @@ export const DropsTab: React.FC = () => {
               </div>
             </div>
             <div>
-              <label className={labelCls}>Read More article (markdown, optional)</label>
-              <textarea className={`${inputCls} min-h-[90px] resize-y`} placeholder={'## Why this matters\n\nOne or two paragraphs…'} value={form.body_md} onChange={(e) => set('body_md', e.target.value)} />
+              <div className="flex items-center justify-between">
+                <label className={labelCls}>Story article (markdown — opens on “Read story”)</label>
+                <div className="flex gap-1 mb-1">
+                  {(['write', 'preview'] as const).map((t) => (
+                    <button key={t} type="button" onClick={() => setArticleTab(t)} className={`px-2.5 py-1 rounded-lg text-xs font-bold ${articleTab === t ? 'bg-ink-soft text-white' : 'bg-gray-100 text-gray-600'}`}>
+                      {t === 'write' ? 'Write' : 'Preview'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {articleTab === 'write' ? (
+                <textarea className={`${inputCls} min-h-[160px] resize-y font-mono text-[13px]`} placeholder={'## What is new\n\nOne or two short paragraphs.\n\n| Role | CTC |\n|---|---|\n| SE | ₹3.6 LPA |'} value={form.body_md} onChange={(e) => set('body_md', e.target.value)} />
+              ) : (
+                <div className="drop-story__article min-h-[160px] rounded-xl border border-gray-200 bg-white px-4 py-2">
+                  {form.body_md.trim() ? <ReactMarkdown remarkPlugins={[remarkGfm]}>{form.body_md}</ReactMarkdown> : <p className="text-sm text-gray-400">Nothing written yet.</p>}
+                </div>
+              )}
+              <p className="text-xs text-gray-500 mt-1">Use ## headings, - lists and | tables |. About 150–250 words reads well.</p>
             </div>
+
+            <div>
+              <label className={labelCls}>Key facts (up to 6 — shown as tiles on the story page)</label>
+              <div className="space-y-1.5">
+                {form.facts.map((f, i) => (
+                  <div key={i} className="flex gap-1.5">
+                    <input className={`${inputCls} w-2/5`} maxLength={24} placeholder="CTC" value={f.label} onChange={(e) => set('facts', form.facts.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))} />
+                    <input className={inputCls} maxLength={80} placeholder="₹4.5 LPA" value={f.value} onChange={(e) => set('facts', form.facts.map((x, j) => (j === i ? { ...x, value: e.target.value } : x)))} />
+                    <button type="button" onClick={() => set('facts', form.facts.filter((_, j) => j !== i))} className="px-2 text-gray-400 hover:text-red-600" aria-label="Remove fact"><X className="w-4 h-4" /></button>
+                  </div>
+                ))}
+                {form.facts.length < 6 && (
+                  <button type="button" onClick={() => set('facts', [...form.facts, { label: '', value: '' }])} className="px-2.5 py-1.5 rounded-lg bg-gray-100 text-xs font-bold text-gray-600 hover:bg-gray-200">
+                    <Plus className="inline w-3 h-3" /> Add fact
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className={labelCls}><Link2 className="inline w-3.5 h-3.5 mr-1" />Official source link</label>
+                <input className={inputCls} placeholder="https://careers.company.com" value={form.source_url} onChange={(e) => set('source_url', e.target.value)} />
+              </div>
+              <div>
+                <label className={labelCls}>Source name</label>
+                <input className={inputCls} maxLength={60} placeholder="TCS careers" value={form.source_name} onChange={(e) => set('source_name', e.target.value)} />
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 -mt-2">Outside links always open through the “You are leaving TieEdu” page, never directly.</p>
           </section>
 
           {/* 2. Visual */}
@@ -886,11 +989,21 @@ export const DropsTab: React.FC = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            {shown.map((d) => {
+            {shown.map((d, i) => {
               const st = STATUS_PILL[d.list_status] || STATUS_PILL.draft;
+              // Scheduled tab reads as a calendar: a header for each new day.
+              const day = d.publish_at ? new Date(d.publish_at).toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short' }) : '';
+              const prevDay = i > 0 && shown[i - 1].publish_at ? new Date(shown[i - 1].publish_at!).toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short' }) : '';
+              const dayHeader = tab === 'scheduled' && day && day !== prevDay;
               const thumb = d.image_url || d.art_url;
               return (
-                <div key={d.id} className={`border rounded-2xl p-3 flex gap-3 ${editingId === d.id ? 'border-signal ring-2 ring-signal/15' : 'border-gray-200'}`}>
+                <React.Fragment key={d.id}>
+                {dayHeader && (
+                  <p className="lg:col-span-2 mt-2 text-xs font-extrabold uppercase tracking-wide text-amber-800 flex items-center gap-1.5">
+                    <CalendarClock className="w-3.5 h-3.5" /> {day}
+                  </p>
+                )}
+                <div className={`border rounded-2xl p-3 flex gap-3 ${editingId === d.id ? 'border-signal ring-2 ring-signal/15' : 'border-gray-200'}`}>
                   {/* eslint-disable-next-line @next/next/no-img-element -- API asset / generated SVG */}
                   <img src={apiAssetUrl(thumb)} alt="" className="w-[72px] h-[128px] shrink-0 rounded-xl object-cover bg-gray-900" loading="lazy" />
                   <div className="flex-1 min-w-0 space-y-1.5">
@@ -905,7 +1018,12 @@ export const DropsTab: React.FC = () => {
                     <p className="font-extrabold text-ink-soft text-sm leading-snug line-clamp-2">{d.headline}</p>
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-gray-500 font-mono">
                       <span className="inline-flex items-center gap-1"><Eye className="w-3 h-3" /> {d.stats?.views || 0}</span>
-                      <span>CTR {d.stats?.views ? Math.round(((d.stats?.cta_clicks || 0) / d.stats.views) * 100) : 0}%</span>
+                      <span className="inline-flex items-center gap-1"><Heart className="w-3 h-3" /> {d.stats?.likes || 0}</span>
+                      <span title="Opened the story">Read {pct(d.stats?.reads, d.stats?.views)}%</span>
+                      <span title="Swiped past in under 1.5 s">Skip {pct(d.stats?.skips, d.stats?.views)}%</span>
+                      <span title="Average time on the card">{d.stats?.views ? Math.round((d.stats.dwell_ms_total || 0) / d.stats.views / 100) / 10 : 0}s</span>
+                      <span>CTR {pct(d.stats?.cta_clicks, d.stats?.views)}%</span>
+                      {(d.stats?.outbound || 0) > 0 && <span title="Continued to the outside site">Out {d.stats?.outbound}</span>}
                       {d.publish_at && <span>{d.list_status === 'scheduled' ? 'Goes live' : 'Pub'} {fmtStamp(d.publish_at)}</span>}
                       {d.expires_at && <span>Ends {fmtStamp(d.expires_at)}</span>}
                     </div>
@@ -932,6 +1050,7 @@ export const DropsTab: React.FC = () => {
                     </div>
                   </div>
                 </div>
+                </React.Fragment>
               );
             })}
           </div>

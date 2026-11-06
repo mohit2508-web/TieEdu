@@ -14,6 +14,7 @@ import {
 import { useShell } from '@/context/ShellContext';
 import { useAuth } from '@/context/AuthContext';
 import { formatBadgeCount } from '@/lib/notifications';
+import { useDropsNewCount } from '@/lib/useDropsNewCount';
 import { useLang } from '@/lib/lang';
 import { sectionLabel } from '@/lib/navHinglish';
 
@@ -54,6 +55,7 @@ export const MobileTabBar: React.FC = () => {
   const [lang] = useLang();
   const atRoot = isRootDepth(router.pathname);
   const current = resolveSection(router.pathname);
+  const dropsNew = useDropsNewCount(current?.id !== 'feed');
 
   return (
     <nav
@@ -66,14 +68,21 @@ export const MobileTabBar: React.FC = () => {
         if (!section) return null;
         const active = current?.id === id;
         const Icon = section.icon;
+        const fresh = id === 'feed' && !active ? dropsNew : 0;
         return (
           <Link
             key={id}
             href={sectionHref(section)}
             aria-current={active ? 'page' : undefined}
-            className="tab-slot"
+            className="tab-slot relative"
+            aria-label={fresh ? `${sectionLabel(lang, section.id, section.label)}, ${fresh} new` : undefined}
           >
             <Icon size={20} strokeWidth={active ? 2.5 : 2} aria-hidden />
+            {fresh > 0 && (
+              <span className="chrome-badge absolute left-1/2 top-0.5 ml-1.5" aria-hidden>
+                {formatBadgeCount(fresh)}
+              </span>
+            )}
             <span>{section.id === 'home' && user ? sectionLabel(lang, 'today', 'Today') : sectionLabel(lang, section.id, section.label)}</span>
           </Link>
         );
