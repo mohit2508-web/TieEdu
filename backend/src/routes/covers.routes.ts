@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { loadDb } from '../data/db';
+import { dropArtSvg } from '../lib/dropArt';
 
 /**
  * Generated course covers (1280×720 SVG) from the course's own title,
@@ -123,50 +124,30 @@ coversRouter.get('/course/:file', (req: Request, res: Response) => {
   res.send(courseCoverSvg(course));
 });
 
-/* ---- Drop creatives (feed): 1080×1350 portrait in the type's colour ---- */
-const DROP_STYLE: Record<string, [string, string, string, string]> = {
-  company: ['#0B3A6B', '#2A7FD4', '▣', 'Companies'],
-  job: ['#0F4A2B', '#1F9D57', '✦', 'Jobs'],
-  deadline: ['#7A1B12', '#E0452A', '⏱', 'Deadline'],
-  vault: ['#2E1F6B', '#5B4BD8', '◈', 'Vault'],
-  skilltest: ['#3B1F6B', '#8E4BD8', '✓', 'Skill test'],
-  course: ['#7A3B07', '#E08A1E', '▶', 'Course'],
-  contest: ['#7A1745', '#E0457F', '★', 'Contest'],
-  selected: ['#0F4A2B', '#1FA36A', '✔', 'Selected'],
-  scholarship: ['#0B4A5E', '#1E9AB8', '◎', 'Scholarship'],
-  college: ['#3B1F6B', '#7A4BD8', '⌂', 'College'],
-  tip: ['#7A4A07', '#E0A21E', '!', 'Tip'],
-  tieedu: ['#0B4A43', '#14806F', 'T', 'TieEdu'],
+/* ---- Drop creatives (feed): animated 1080x1920 posters, lib/dropArt.ts ---- */
+const sendSvg = (res: Response, svg: string, maxAge: number) => {
+  res.setHeader('Content-Type', 'image/svg+xml; charset=utf-8');
+  res.setHeader('Cache-Control', `public, max-age=${maxAge}`);
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'");
+  res.send(svg);
 };
-
-export function dropCreativeSvg(d: { type: string; headline: string; sponsored?: boolean }): string {
-  // Artwork only: the card draws the type chip, headline, bullets and CTA over
-  // it, so the creative carries colour, shape and the type's glyph, no text.
-  const [from, to, glyph] = DROP_STYLE[d.type] || DROP_STYLE.tieedu;
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1350" width="1080" height="1350">
-  <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${from}"/><stop offset="1" stop-color="${to}"/></linearGradient>
-    <radialGradient id="r" cx=".7" cy=".3" r=".6"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
-    <pattern id="p" width="54" height="54" patternUnits="userSpaceOnUse"><path d="M54 0H0V54" fill="none" stroke="#fff" stroke-opacity=".07" stroke-width="2"/></pattern>
-  </defs>
-  <rect width="1080" height="1350" fill="url(#g)"/>
-  <rect width="1080" height="1350" fill="url(#p)"/>
-  <rect width="1080" height="1350" fill="url(#r)"/>
-  <circle cx="820" cy="380" r="300" fill="none" stroke="#fff" stroke-opacity=".14" stroke-width="3"/>
-  <circle cx="820" cy="380" r="210" fill="none" stroke="#fff" stroke-opacity=".10" stroke-width="2"/>
-  <circle cx="160" cy="1120" r="240" fill="#000" fill-opacity=".10"/>
-  <text x="820" y="500" text-anchor="middle" font-family="Poppins, 'Segoe UI', Arial, sans-serif" font-size="360" font-weight="800" fill="#fff" fill-opacity=".2">${esc(glyph)}</text>
-</svg>`;
-}
 
 coversRouter.get('/drop/:file', (req: Request, res: Response) => {
   const id = String(req.params.file || '').replace(/\.svg$/, '');
   if (!/^[a-zA-Z0-9-]{1,80}$/.test(id)) return res.status(404).end();
   const drop = (loadDb().drops || []).find((x: any) => x.id === id);
   if (!drop) return res.status(404).end();
-  res.setHeader('Content-Type', 'image/svg+xml; charset=utf-8');
-  res.setHeader('Cache-Control', 'public, max-age=3600');
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'");
-  res.send(dropCreativeSvg(drop));
+  // The feed URL carries ?v=<updated_at>, so an edit busts this cache.
+  sendSvg(res, dropArtSvg(drop), 3600);
+});
+
+/**
+ * GET /api/covers/drop-art.svg?art=&type=&text=&sub= — live preview for the
+ * admin console while a drop is being written. Pure render of the query, every
+ * value escaped and length-capped inside dropArtSvg.
+ */
+coversRouter.get('/drop-art.svg', (req: Request, res: Response) => {
+  const q = (k: string, n: number) => String(req.query[k] || '').slice(0, n);
+  sendSvg(res, dropArtSvg({ art: q('art', 24), type: q('type', 24), art_text: q('text', 24), art_sub: q('sub', 48), id: q('seed', 40) }), 300);
 });

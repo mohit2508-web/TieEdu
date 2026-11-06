@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { DropVideo } from './DropVideo';
+import { DropEffects } from './DropEffects';
 import {
   ArrowUpRight,
   Bookmark,
@@ -50,7 +51,42 @@ export interface DropCardProps {
   onNotInterested: (item: DropFeedItem) => void;
   /** Feed index — drives eager vs lazy image loading on the first paint. */
   index?: number;
+  /** This card owns the screen: its motion, effects and clip run only then. */
+  active?: boolean;
+  /** The viewer turned sound on — an uploaded clip plays with its audio. */
+  soundOn?: boolean;
 }
+
+/** An uploaded clip: muted autoplay loop, playing only while its card is on screen. */
+const DropClip: React.FC<{ src: string; poster?: string; active: boolean; soundOn: boolean; label: string }> = ({
+  src,
+  poster,
+  active,
+  soundOn,
+  label,
+}) => {
+  const ref = useRef<HTMLVideoElement | null>(null);
+  useEffect(() => {
+    const v = ref.current;
+    if (!v) return;
+    v.muted = !soundOn;
+    if (active) void v.play().catch(() => {});
+    else v.pause();
+  }, [active, soundOn]);
+  return (
+    <video
+      ref={ref}
+      className="drop-clip absolute inset-0 h-full w-full object-cover"
+      src={src}
+      poster={poster}
+      muted
+      loop
+      playsInline
+      preload={active ? 'auto' : 'metadata'}
+      aria-label={label}
+    />
+  );
+};
 
 /**
  * One screen of the feed.
@@ -73,6 +109,8 @@ export const DropCard: React.FC<DropCardProps> = ({
   onShare,
   onNotInterested,
   index = 0,
+  active = false,
+  soundOn = false,
 }) => {
   const meta = DROP_TYPE_META[item.type] || { label: item.type, chip: 'var(--brand-sky)' };
 
@@ -168,15 +206,23 @@ export const DropCard: React.FC<DropCardProps> = ({
   const eager = index <= 1;
 
   return (
-    <article className="drop-card" style={chipStyle(item.type)} aria-label={item.headline}>
+    <article className="drop-card" data-active={active} style={chipStyle(item.type)} aria-label={item.headline}>
       <div
-        className={cn('drop-media', !item.image_url && 'drop-media--empty')}
+        className={cn('drop-media', !item.image_url && 'drop-media--empty', `drop-motion--${item.motion || 'kenburns'}`)}
         onPointerDown={onMediaPointerDown}
         onPointerMove={onMediaPointerMove}
         onPointerUp={onMediaPointerUp}
         onPointerCancel={onMediaPointerCancel}
       >
-        {item.video_url ? (
+        {item.video_file_url ? (
+          <DropClip
+            src={apiAssetUrl(item.video_file_url)}
+            poster={item.image_url && !item.is_generated_art ? apiAssetUrl(item.image_url) : undefined}
+            active={active}
+            soundOn={soundOn}
+            label={item.headline}
+          />
+        ) : item.video_url ? (
           <DropVideo url={item.video_url} title={item.headline} />
         ) : item.image_url && (
           // eslint-disable-next-line @next/next/no-img-element -- a CMS creative with no declared dimensions, filling the 9:16 frame
@@ -248,13 +294,15 @@ export const DropCard: React.FC<DropCardProps> = ({
           </div>
         )}
 
+        {active && <DropEffects effect={item.effect} />}
+
         {/*
           Copy block. `pr-16` keeps it clear of the rail.
           `z-[2]` is required: `.drop-media::after` (the scrim) is generated as
           the last child and paints above every non-z-indexed overlay — without
           this the headline sits UNDER the gradient and washes out.
         */}
-        <div className="absolute inset-x-0 bottom-0 z-[2] p-4 pr-[68px]">
+        <div className={cn('absolute inset-x-0 bottom-0 z-[2] p-4 pr-[68px]', `drop-text--${item.text_anim || 'rise'}`)}>
           <h2 className="drop-headline text-xl font-extrabold leading-snug text-white">
             {item.headline}
           </h2>

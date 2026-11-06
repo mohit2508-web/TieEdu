@@ -79,7 +79,8 @@ const parseUrl = (url: string): URL | null => {
  */
 export const apiAssetUrl = (relativePath: string): string => {
   if (!relativePath) return '';
-  if (/^https?:\/\//i.test(relativePath)) return relativePath;
+  // Absolute, blob: (a local preview) and data: URLs are already complete.
+  if (/^(https?:\/\/|blob:|data:)/i.test(relativePath)) return relativePath;
   return `${API_ORIGIN}${relativePath.startsWith('/') ? relativePath : `/${relativePath}`}`;
 };
 

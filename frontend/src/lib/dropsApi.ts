@@ -1,5 +1,4 @@
 import { API_BASE_URL, apiFetch } from './api';
-import { getAccessToken } from './auth';
 
 // ============================================================================
 // DROPS API CLIENT
@@ -42,6 +41,78 @@ export const DROP_TYPE_META: Record<DropType, { label: string; chip: string }> =
 
 export const DROP_TYPES = Object.keys(DROP_TYPE_META) as DropType[];
 
+// ─── Look & feel presets (mirror backend/src/lib/drops.ts + lib/dropArt.ts) ──
+
+export const DROP_ARTS = {
+  auto: 'Auto (by type)',
+  diwali: 'Diwali night — diyas & lanterns',
+  'diwali-sale': 'Diwali sale — rays, diyas, fireworks',
+  fireworks: 'Fireworks',
+  gift: 'Gift box & confetti',
+  hiring: 'Hiring — briefcase',
+  company: 'Company — name in orbit',
+  countdown: 'Countdown clock',
+  trophy: 'Trophy',
+  code: 'Code terminal',
+  ai: 'AI network',
+  book: 'Open book',
+  mic: 'Microphone',
+  shield: 'Shield & check',
+  chart: 'Growth chart',
+  rocket: 'Rocket',
+  calendar: 'Calendar',
+  certificate: 'Certificate',
+  stars: 'Stars',
+} as const;
+export type DropArt = keyof typeof DROP_ARTS;
+
+export const DROP_MOTIONS = {
+  kenburns: 'Ken Burns (slow zoom + drift)',
+  zoom: 'Zoom in',
+  pan: 'Pan sideways',
+  float: 'Float',
+  pulse: 'Pulse',
+  none: 'Still',
+} as const;
+export type DropMotion = keyof typeof DROP_MOTIONS;
+
+export const DROP_EFFECTS = {
+  none: 'None',
+  confetti: 'Confetti',
+  fireworks: 'Fireworks',
+  sparkles: 'Sparkles',
+  diyas: 'Diya lights (rising)',
+  stars: 'Twinkling stars',
+  snow: 'Snow',
+  hearts: 'Hearts',
+  bubbles: 'Bubbles',
+} as const;
+export type DropEffect = keyof typeof DROP_EFFECTS;
+
+export const DROP_TEXT_ANIMS = {
+  rise: 'Rise up',
+  pop: 'Pop',
+  slide: 'Slide in',
+  typewriter: 'Typewriter',
+  none: 'None',
+} as const;
+export type DropTextAnim = keyof typeof DROP_TEXT_ANIMS;
+
+export const DROP_SOUNDS = {
+  none: 'No sound',
+  chime: 'Chime',
+  diwali: 'Diwali bells',
+  fireworks: 'Fireworks',
+  drumroll: 'Drum roll',
+  whoosh: 'Whoosh',
+  pop: 'Pop',
+  success: 'Success',
+  alert: 'Alert',
+  tick: 'Clock tick',
+  custom: 'Custom (upload audio)',
+} as const;
+export type DropSound = keyof typeof DROP_SOUNDS;
+
 export type DropStatus = 'draft' | 'scheduled' | 'published' | 'archived';
 
 export interface DropFeedItem {
@@ -60,6 +131,16 @@ export interface DropFeedItem {
   sponsored: boolean;
   sponsor_name: string | null;
   has_body: boolean;
+  /** Uploaded clip — plays muted and looped in place of the image. */
+  video_file_url?: string | null;
+  /** Uploaded sound for `sound: 'custom'`. */
+  audio_url?: string | null;
+  /** True when image_url is the generated animated creative. */
+  is_generated_art?: boolean;
+  motion?: DropMotion;
+  effect?: DropEffect;
+  text_anim?: DropTextAnim;
+  sound?: DropSound;
 }
 
 export interface DropDetail extends DropFeedItem {
@@ -117,10 +198,17 @@ export interface AdminDrop extends DropFeedItem {
      the creative a card already has instead of an empty well. */
   image_stored_name: string | null;
   image_file_name?: string;
+  video_stored_name?: string | null;
+  audio_stored_name?: string | null;
+  art?: DropArt;
+  art_text?: string;
+  art_sub?: string;
+  /** Always the generated creative, even when an upload is set. */
+  art_url: string;
 }
 
 export interface DropAudience {
-  grad_years?: (string | number)[];
+  batches?: (string | number)[];
   branches?: string[];
   colleges?: string[];
   skills?: string[];
@@ -172,6 +260,15 @@ export interface DropWriteInput {
   expires_at?: string;
   audience?: DropAudience;
   tags?: string[];
+  video_stored_name?: string;
+  audio_stored_name?: string;
+  art?: DropArt;
+  art_text?: string;
+  art_sub?: string;
+  motion?: DropMotion;
+  effect?: DropEffect;
+  text_anim?: DropTextAnim;
+  sound?: DropSound;
 }
 
 const base = `${API_BASE_URL}/drops`;
@@ -269,20 +366,33 @@ export const adminDeleteDropApi = (id: string) =>
     method: 'DELETE',
   });
 
-/** Multipart upload — deliberately NOT apiFetch, which always sets JSON content-type. */
-export const uploadDropImageApi = async (
-  file: File
-): Promise<{ status: string; stored_name: string; file_name: string; size_bytes: number }> => {
+export interface DropUploadResult {
+  status: string;
+  kind: 'image' | 'video' | 'audio';
+  stored_name: string;
+  file_name: string;
+  size_bytes: number;
+}
+
+/**
+ * Multipart upload of an image, clip or sound. Goes through apiFetch so an
+ * expired access token is refreshed and retried — the old hand-rolled fetch
+ * failed every upload once the admin had sat on the page past the token's
+ * lifetime. apiFetch leaves Content-Type unset for FormData, so the multipart
+ * boundary survives.
+ */
+export const uploadDropMediaApi = async (file: File | Blob, fileName?: string): Promise<DropUploadResult> => {
   const form = new FormData();
-  form.append('file', file);
-  const res = await fetch(`${adminBase}/upload`, {
-    method: 'POST',
-    body: form,
-    // apiFetch's Authorization header has to be reproduced by hand here: its
-    // JSON content-type would make the boundary vanish and the server would
-    // see an empty body.
-    headers: { Authorization: `Bearer ${getAccessToken() || ''}` },
-  });
+  form.append('file', file, fileName || (file instanceof File ? file.name : 'drop'));
+  const res = await apiFetch(`${adminBase}/upload`, { method: 'POST', body: form });
   if (res.status === 401) throw new Error('Session expired — sign in again to upload');
+  if (res.status === 413) {
+    let msg = 'File is too large for the server';
+    try { const b = await res.json(); if (b?.error) msg = b.error; } catch { /* proxy page, not JSON */ }
+    throw new Error(msg);
+  }
   return json(res);
 };
+
+/** Back-compat name. */
+export const uploadDropImageApi = (file: File | Blob, fileName?: string) => uploadDropMediaApi(file, fileName);

@@ -63,7 +63,7 @@ export const DropsAside: React.FC<{ items: DropFeedItem[]; onOpen: (index: numbe
 
       {mix.length > 0 && (
         <section className="rounded-card border border-line bg-card p-4 shadow-edge-neutral">
-          <h2 className="font-display text-base font-bold text-heading">In your feed</h2>
+          <h2 className="font-display text-base font-bold text-heading">In your Drops</h2>
           <ul className="mt-3 flex flex-wrap gap-2">
             {mix.map(([type, n]) => (
               <li key={type} className="inline-flex items-center gap-1.5 rounded-full border border-line px-2.5 py-1 text-sm text-body">

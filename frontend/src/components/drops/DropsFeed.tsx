@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Inbox } from 'lucide-react';
 import { DropCard } from './DropCard';
 import type { DropFeedItem } from '@/lib/dropsApi';
@@ -27,6 +27,8 @@ export interface DropsFeedProps {
   onSave: (item: DropFeedItem) => void;
   onShare: (item: DropFeedItem) => void;
   onNotInterested: (item: DropFeedItem) => void;
+  /** Sound is on — passed to cards so an uploaded clip plays with audio. */
+  soundOn?: boolean;
 }
 
 const SkeletonCard: React.FC = () => (
@@ -73,7 +75,10 @@ export const DropsFeed: React.FC<DropsFeedProps> = ({
   onSave,
   onShare,
   onNotInterested,
+  soundOn = false,
 }) => {
+  /** The card on screen, as state: it switches that card's animations on. */
+  const [activeId, setActiveId] = useState<string | null>(null);
   const viewportRef = useRef<HTMLDivElement | null>(null);
   /** id → the dwell entry, while the reader is sitting on that card. */
   const dwellRef = useRef<Map<string, { item: DropFeedItem; since: number }>>(new Map());
@@ -117,6 +122,7 @@ export const DropsFeed: React.FC<DropsFeedProps> = ({
       if (nextId !== activeIdRef.current) {
         flushActive(activeIdRef.current);
         activeIdRef.current = nextId;
+        setActiveId(nextId);
         if (nextId) {
           const item = items.find((i) => i.id === nextId) || null;
           if (item && !dwellRef.current.has(nextId)) {
@@ -197,6 +203,8 @@ export const DropsFeed: React.FC<DropsFeedProps> = ({
           <DropCard
             item={item}
             index={index}
+            active={activeId === item.id}
+            soundOn={soundOn}
             saved={savedIds.has(item.id)}
             onCta={onCta}
             onReadMore={onReadMore}

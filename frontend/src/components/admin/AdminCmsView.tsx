@@ -74,7 +74,7 @@ const NAV: { id: TabId; label: string; icon: any; section: SectionId }[] = [
   { id: 'pack', label: 'Pack editor', icon: Layers, section: 'content' },
   { id: 'courses', label: 'Courses', icon: GraduationCap, section: 'content' },
   { id: 'skilltest', label: 'Skill tests', icon: BrainCircuit, section: 'content' },
-  { id: 'drops', label: 'Feed (Drops)', icon: Newspaper, section: 'content' },
+  { id: 'drops', label: 'Drops', icon: Newspaper, section: 'content' },
   { id: 'drives', label: 'Mock drives', icon: ClipboardList, section: 'practice' },
   { id: 'reports', label: 'Candidate reports', icon: FileText, section: 'practice' },
   { id: 'offers', label: 'Offer wall', icon: BadgeCheck, section: 'practice' },

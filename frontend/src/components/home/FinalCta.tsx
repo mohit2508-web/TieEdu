@@ -34,7 +34,7 @@ export const FinalCta: React.FC = () => (
               href="/drops"
               className="btn btn-ghost w-full sm:w-auto min-h-[48px] justify-center px-6 py-3.5 text-base focus-ring"
             >
-              <Newspaper className="w-4 h-4" /> Open the career feed
+              <Newspaper className="w-4 h-4" /> Open Drops
             </Link>
             <Link
               href="/courses?src=finalcta"

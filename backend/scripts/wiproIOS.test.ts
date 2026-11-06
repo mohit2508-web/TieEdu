@@ -118,7 +118,7 @@ const today = new Date(Date.now() + 5.5 * 3600000).toISOString().slice(0, 10);
 if (today > '2026-11-02' && today < '2026-11-15') check('today lists catch-up lessons when behind', view.today.items.some((i: any) => /^Catch up:/.test(i.title)));
 
 // ---- live database: refresh once, then pick up bank changes without losing attempts
-const live: any = { companies: [], skills: [], topics: [], questions: [], assessments: [], company_focus_applied: 'x', company_focus_v2: 'x', company_mphasis_v1: 'x', feed_v2_seeded: 'x' };
+const live: any = { companies: [], skills: [], topics: [], questions: [], assessments: [], company_focus_applied: 'x', company_focus_v2: 'x', company_mphasis_v1: 'x', feed_v3_seeded: 'x' };
 seedMissing3T(live);
 const lc = live.companies.find((x: any) => x.slug === WIPRO_IOS_SLUG);
 check('server start creates the program', lc?.status === 'published');

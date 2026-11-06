@@ -218,12 +218,16 @@ export interface FeedPage {
   total: number;
 }
 
-/** Feed ceiling. The plan's 30-card window; keeps one response bounded. */
+/** Feed ceiling per page; the client pages through with the cursor. */
 export const FEED_MAX_LIMIT = 30;
-/** Hard cap on simultaneously live drops (editorial rule, server-enforced). */
-export const MAX_ACTIVE_DROPS = 30;
+/**
+ * Hard cap on simultaneously live drops (server-enforced). Raised from 30 when
+ * the owner asked for a 50-drop feed (2026-11-06): the old cap made every new
+ * upload fail with a 409 once the seeded set was live.
+ */
+export const MAX_ACTIVE_DROPS = 100;
 /** Hard cap on drops publishing on one calendar day (UTC). */
-export const MAX_PUBLISH_PER_DAY = 10;
+export const MAX_PUBLISH_PER_DAY = 50;
 
 /** The UTC calendar day a drop is counted against for the 10/day rule. */
 export const publishDay = (d: Drop): string => String(d.publish_at || d.created_at || '').slice(0, 10);
@@ -355,7 +359,46 @@ export interface DropInput {
   tags?: unknown;
   author_id?: unknown;
   source?: unknown;
+  video_stored_name?: unknown;
+  audio_stored_name?: unknown;
+  art?: unknown;
+  art_text?: unknown;
+  art_sub?: unknown;
+  motion?: unknown;
+  effect?: unknown;
+  text_anim?: unknown;
+  sound?: unknown;
 }
+
+// ============================================================================
+// LOOK & FEEL — the presets the admin picks from (frontend mirrors these)
+// ============================================================================
+
+/** Generated creative presets (routes/covers.routes.ts draws each one). */
+export const DROP_ARTS = [
+  'auto', 'diwali', 'diwali-sale', 'fireworks', 'gift', 'hiring', 'company', 'countdown', 'trophy',
+  'code', 'ai', 'book', 'mic', 'shield', 'chart', 'rocket', 'calendar', 'certificate', 'stars',
+] as const;
+/** Motion applied to the image/creative while the card is on screen. */
+export const DROP_MOTIONS = ['none', 'kenburns', 'zoom', 'pan', 'float', 'pulse'] as const;
+/** Particle layer over the creative. */
+export const DROP_EFFECTS = ['none', 'confetti', 'fireworks', 'sparkles', 'diyas', 'snow', 'hearts', 'bubbles', 'stars'] as const;
+/** How the headline and bullets enter. */
+export const DROP_TEXT_ANIMS = ['rise', 'pop', 'slide', 'typewriter', 'none'] as const;
+/** Sound played when the card comes on screen (only after the viewer turns sound on). */
+export const DROP_SOUNDS = [
+  'none', 'chime', 'diwali', 'fireworks', 'drumroll', 'whoosh', 'pop', 'success', 'alert', 'tick', 'custom',
+] as const;
+
+const oneOf = <T extends readonly string[]>(list: T, value: unknown, fallback: T[number] | undefined): T[number] | undefined => {
+  const v = String(value ?? '').trim();
+  return (list as readonly string[]).includes(v) ? (v as T[number]) : fallback;
+};
+
+/** Stored names the upload route hands out — anything else is refused. */
+export const DROP_FILE_RE = /^drop-[0-9]+-[a-z0-9]{4,10}\.(jpg|jpeg|png|webp|avif|gif|mp4|webm|mp3|wav|ogg|m4a)$/;
+const VIDEO_FILE_RE = /\.(mp4|webm)$/;
+const AUDIO_FILE_RE = /\.(mp3|wav|ogg|m4a)$/;
 
 export type DropValidation =
   | { ok: true; value: Partial<Drop> }
@@ -425,6 +468,17 @@ export const validateDropInput = (input: DropInput, opts: { requireImage?: boole
 
   const imageStored = String(input.image_stored_name || '');
   if (opts.requireImage && !imageStored) return { ok: false, error: 'Pehle ek drop image upload karo' };
+
+  const videoStored = String(input.video_stored_name || '').trim();
+  if (videoStored && !(DROP_FILE_RE.test(videoStored) && VIDEO_FILE_RE.test(videoStored))) {
+    return { ok: false, error: 'Video file valid nahi hai — dobara upload karo' };
+  }
+  const audioStored = String(input.audio_stored_name || '').trim();
+  if (audioStored && !(DROP_FILE_RE.test(audioStored) && AUDIO_FILE_RE.test(audioStored))) {
+    return { ok: false, error: 'Sound file valid nahi hai — dobara upload karo' };
+  }
+  const sound = oneOf(DROP_SOUNDS, input.sound, 'none');
+  if (sound === 'custom' && !audioStored) return { ok: false, error: 'Custom sound ke liye pehle audio file upload karo' };
 
   const ctaRouteRaw = String(input.cta_route || '').trim();
   let cta_route: string | undefined;
@@ -505,12 +559,21 @@ export const validateDropInput = (input: DropInput, opts: { requireImage?: boole
     expires_at,
     audience,
     tags,
+    video_stored_name: videoStored || undefined,
+    audio_stored_name: audioStored || undefined,
+    art: oneOf(DROP_ARTS, input.art, 'auto'),
+    art_text: String(input.art_text || '').trim().slice(0, 24) || undefined,
+    art_sub: String(input.art_sub || '').trim().slice(0, 48) || undefined,
+    motion: oneOf(DROP_MOTIONS, input.motion, 'kenburns'),
+    effect: oneOf(DROP_EFFECTS, input.effect, 'none'),
+    text_anim: oneOf(DROP_TEXT_ANIMS, input.text_anim, 'rise'),
+    sound,
   };
 
-  if (imageStored) {
-    value.image_stored_name = imageStored;
-    value.image_file_name = String(input.image_file_name || 'drop').slice(0, 200);
-  }
+  // Always written (undefined when blank) so clearing the image in the console
+  // really clears it — the card then falls back to the generated creative.
+  value.image_stored_name = imageStored || undefined;
+  value.image_file_name = imageStored ? String(input.image_file_name || 'drop').slice(0, 200) : undefined;
 
   return { ok: true, value };
 };
@@ -529,7 +592,10 @@ export const normaliseAudience = (raw: unknown): DropAudience => {
   const colleges = normList(a.colleges).slice(0, 20);
   if (colleges.length) out.colleges = colleges;
 
-  const batches = (Array.isArray(a.batches) ? a.batches : [])
+  // The console used to send `grad_years`; accept it as the same field so a
+  // batch-targeted drop actually targets instead of silently going to everyone.
+  const rawBatches = Array.isArray(a.batches) ? a.batches : Array.isArray(a.grad_years) ? a.grad_years : [];
+  const batches = rawBatches
     .map(Number)
     .filter((n) => Number.isFinite(n) && n > 2000 && n < 2100)
     .slice(0, 10);

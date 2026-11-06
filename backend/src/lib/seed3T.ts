@@ -10,7 +10,10 @@ import { INFOSYS_SE_BANK } from '../data/companyTests/infosysSE';
 import { TECHNICAL, HR, type PrepItem } from '../data/interviewPrep/infosysSE';
 import { LESSONS, type Lesson } from '../data/interviewPrep/infosysSELessons';
 import { LESSON_EXTRAS } from '../data/interviewPrep/infosysSELessonExtras';
-import { FEED_V2 } from '../data/feedV2';
+import fs from 'fs';
+import path from 'path';
+import { FEED_V3 } from '../data/feedV3';
+import { validateDropInput, DROP_FILE_RE } from './drops';
 import { MPHASIS_BANK } from '../data/companyTests/mphasis';
 import { MPHASIS_TECHNICAL, MPHASIS_HR } from '../data/interviewPrep/mphasis';
 import { MPHASIS_LESSONS, MPHASIS_LESSON_EXTRAS } from '../data/interviewPrep/mphasisLessons';
@@ -427,26 +430,76 @@ export function seedCourseCovers(db: any): number {
 }
 
 /**
- * Feed v2, once per database: the old demo drops move to "archived" (kept and
- * restorable in Admin → Drops, never deleted) and the new set is published.
+ * Feed v3, once per database (owner request, 2026-11-06: "remove all the
+ * seeded drops"). Every earlier drop is deleted — together with its views,
+ * saves, events, per-drop mutes and uploaded files — and the FEED_V3 set is
+ * written in its place. Each row goes through `validateDropInput`, the same
+ * gate the admin form uses, so a seeded card can never be one a human could
+ * not have created.
+ *
+ * Publish times are spread over the last few days (and a couple scheduled
+ * ahead) so the feed reads newest-first and today's publish quota stays free
+ * for the admin.
  */
-export function seedFeedV2(db: any): number {
-  if (db.feed_v2_seeded) return 0;
-  const now = new Date().toISOString();
-  db.drops = Array.isArray(db.drops) ? db.drops : [];
-  for (const d of db.drops) if (d.status !== 'archived') { d.status = 'archived'; d.updated_at = now; }
-  FEED_V2.forEach(([type, headline, bullets, cta_route, pinned, priority, sponsored], i) => {
+export function seedFeedV3(db: any, nowMs = Date.now()): number {
+  if (db.feed_v3_seeded) return 0;
+  const uploads = path.join(__dirname, '../../uploads/drops');
+  for (const d of Array.isArray(db.drops) ? db.drops : []) {
+    for (const name of [d?.image_stored_name, d?.video_stored_name, d?.audio_stored_name]) {
+      if (typeof name === 'string' && DROP_FILE_RE.test(name)) fs.rm(path.join(uploads, name), { force: true }, () => {});
+    }
+  }
+  db.drops = [];
+  db.drop_views = [];
+  db.drop_bookmarks = [];
+  db.drop_events = [];
+  db.drop_mutes = (Array.isArray(db.drop_mutes) ? db.drop_mutes : []).filter((m: any) => m && m.kind !== 'drop');
+
+  const iso = (ms: number) => new Date(ms).toISOString();
+  const stamp = iso(nowMs);
+  FEED_V3.forEach((spec, i) => {
+    const publishMs = nowMs + spec.at * 86_400_000;
+    const scheduled = spec.at > 0;
+    const checked = validateDropInput({
+      type: spec.type,
+      headline: spec.headline,
+      bullets: spec.bullets,
+      cta_route: spec.route,
+      target_slug: spec.route.startsWith('/company/') ? spec.route.split('/')[2].split('#')[0] : undefined,
+      body_md: spec.body,
+      deadline_at: spec.deadline,
+      expires_at: spec.expires,
+      publish_at: iso(publishMs),
+      status: scheduled ? 'scheduled' : 'published',
+      pinned: !!spec.pinned,
+      priority: spec.priority || 0,
+      tags: ['feed-v3', ...(spec.tags || [])],
+      art: spec.art,
+      art_text: spec.text,
+      art_sub: spec.sub,
+      motion: spec.motion,
+      effect: spec.effect,
+      text_anim: spec.text_anim,
+      sound: spec.sound,
+      image_alt: spec.headline,
+    });
+    if (!checked.ok) {
+      console.warn(`[seedFeedV3] skipped "${spec.headline}": ${checked.error}`);
+      return;
+    }
     db.drops.push({
-      id: `drop-v2-${String(i + 1).padStart(2, '0')}`, type, headline, bullets, image_alt: headline,
-      cta_route, target_slug: cta_route.startsWith('/company/') ? cta_route.split('/')[2].split('#')[0] : undefined,
-      sponsored: !!sponsored, sponsor_name: sponsored ? 'TieEdu' : undefined, pinned, priority,
-      status: 'published', publish_at: now, expires_at: null, audience: {}, tags: ['feed-v2'],
+      ...checked.value,
+      id: `drop-v3-${String(i + 1).padStart(2, '0')}`,
+      audience: {},
       stats: { views: 0, unique_viewers: 0, cta_clicks: 0, shares: 0, saves: 0, dwell_ms_total: 0 },
-      author_id: 'system', source: { kind: 'manual' }, created_at: now, updated_at: now,
+      author_id: 'system',
+      source: { kind: 'manual' },
+      created_at: stamp,
+      updated_at: stamp,
     });
   });
-  db.feed_v2_seeded = now;
-  return FEED_V2.length;
+  db.feed_v3_seeded = stamp;
+  return db.drops.length;
 }
 
 /**
@@ -578,7 +631,7 @@ export function ensureWiproIOSV1(db: any): number {
 
 /** Server start: add any missing 3T content. Returns true when something was added. */
 export function seedMissing3T(db: any): boolean {
-  const covers = seedCourseCovers(db) + seedFeedV2(db);
+  const covers = seedCourseCovers(db) + seedFeedV3(db);
   const p = seedCompanyProfiles(db, true);
   const wipro = ensureWiproIOSV1(db);
   const t0 = COMPANY_TESTS.reduce((n, k) => n + seedSectionalTests(db, k, true), 0);

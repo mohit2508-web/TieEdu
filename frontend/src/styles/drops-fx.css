@@ -1,0 +1,217 @@
+/*
+ * Drops motion layer: media motion, headline entrances and the particle
+ * effects (components/drops/DropEffects.tsx).
+ *
+ * Every animation is gated on `.drop-card[data-active='true']` — only the card
+ * on screen moves, and leaving a card resets it so the entrance replays when
+ * the reader comes back. Transform/opacity only, so a swipe never triggers
+ * layout. Reduced motion turns the whole layer off.
+ */
+
+/* ---- media motion (the image / uploaded clip) --------------------------- */
+.drop-media > img,
+.drop-media > .drop-clip {
+  will-change: transform;
+}
+.drop-card[data-active='true'] .drop-media.drop-motion--kenburns > img,
+.drop-card[data-active='true'] .drop-media.drop-motion--kenburns > .drop-clip {
+  animation: drop-kenburns 14s ease-in-out infinite alternate;
+}
+.drop-card[data-active='true'] .drop-media.drop-motion--zoom > img,
+.drop-card[data-active='true'] .drop-media.drop-motion--zoom > .drop-clip {
+  animation: drop-zoom 9s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+}
+.drop-card[data-active='true'] .drop-media.drop-motion--pan > img,
+.drop-card[data-active='true'] .drop-media.drop-motion--pan > .drop-clip {
+  animation: drop-pan 12s ease-in-out infinite alternate;
+}
+.drop-card[data-active='true'] .drop-media.drop-motion--float > img,
+.drop-card[data-active='true'] .drop-media.drop-motion--float > .drop-clip {
+  animation: drop-float 6s ease-in-out infinite;
+}
+.drop-card[data-active='true'] .drop-media.drop-motion--pulse > img,
+.drop-card[data-active='true'] .drop-media.drop-motion--pulse > .drop-clip {
+  animation: drop-pulse 2.6s ease-in-out infinite;
+}
+@keyframes drop-kenburns {
+  from { transform: scale(1.02) translate(0, 0); }
+  to { transform: scale(1.14) translate(-2%, -1.5%); }
+}
+@keyframes drop-zoom {
+  from { transform: scale(1.18); }
+  to { transform: scale(1.02); }
+}
+@keyframes drop-pan {
+  from { transform: scale(1.15) translateX(-4%); }
+  to { transform: scale(1.15) translateX(4%); }
+}
+@keyframes drop-float {
+  0%, 100% { transform: scale(1.06) translateY(0); }
+  50% { transform: scale(1.06) translateY(-2.2%); }
+}
+@keyframes drop-pulse {
+  0%, 100% { transform: scale(1.02); }
+  50% { transform: scale(1.07); }
+}
+
+/* ---- headline / bullets entrance ---------------------------------------- */
+.drop-card[data-active='true'] .drop-text--rise .drop-headline { animation: drop-t-rise 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.drop-card[data-active='true'] .drop-text--pop .drop-headline { animation: drop-t-pop 0.6s cubic-bezier(0.3, 1.5, 0.5, 1) both; }
+.drop-card[data-active='true'] .drop-text--slide .drop-headline { animation: drop-t-slide 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.drop-card[data-active='true'] .drop-text--typewriter .drop-headline { animation: drop-t-type 1.4s steps(30) both; }
+
+.drop-card[data-active='true'] .drop-text--rise .drop-bullets li,
+.drop-card[data-active='true'] .drop-text--pop .drop-bullets li,
+.drop-card[data-active='true'] .drop-text--typewriter .drop-bullets li {
+  animation: drop-t-rise 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.drop-card[data-active='true'] .drop-text--slide .drop-bullets li {
+  animation: drop-t-slide 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.drop-card[data-active='true'] .drop-bullets li:nth-child(1) { animation-delay: 0.25s; }
+.drop-card[data-active='true'] .drop-bullets li:nth-child(2) { animation-delay: 0.4s; }
+.drop-card[data-active='true'] .drop-bullets li:nth-child(3) { animation-delay: 0.55s; }
+.drop-card[data-active='true'] .drop-text--typewriter .drop-bullets li:nth-child(1) { animation-delay: 1.2s; }
+.drop-card[data-active='true'] .drop-text--typewriter .drop-bullets li:nth-child(2) { animation-delay: 1.35s; }
+.drop-card[data-active='true'] .drop-text--typewriter .drop-bullets li:nth-child(3) { animation-delay: 1.5s; }
+
+@keyframes drop-t-rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes drop-t-pop {
+  from { opacity: 0; transform: scale(0.82); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes drop-t-slide {
+  from { opacity: 0; transform: translateX(-28px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes drop-t-type {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+
+/* ---- particle effects ---------------------------------------------------- */
+.drop-fx {
+  position: absolute;
+  inset: 0;
+  /* Above the scrim (z 1), under the copy and rail (z 2, later in the DOM). */
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+}
+.drop-fx__p {
+  position: absolute;
+  display: block;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+
+.drop-fx--confetti .drop-fx__p {
+  top: -24px;
+  border-radius: 2px;
+  animation-name: drop-fx-fall;
+}
+.drop-fx--snow .drop-fx__p {
+  top: -12px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  animation-name: drop-fx-fall;
+}
+@keyframes drop-fx-fall {
+  from { transform: translate3d(0, 0, 0) rotate(0deg); opacity: 1; }
+  to { transform: translate3d(var(--drift, 0px), 110vh, 0) rotate(720deg); opacity: 0.9; }
+}
+
+.drop-fx--diyas .drop-fx__p {
+  bottom: -20px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff6c2 0%, #ffb020 45%, rgba(255, 122, 26, 0) 72%);
+  filter: blur(0.3px);
+  animation-name: drop-fx-rise;
+}
+.drop-fx--bubbles .drop-fx__p {
+  bottom: -30px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.05) 60%);
+  animation-name: drop-fx-rise;
+}
+.drop-fx--hearts .drop-fx__p {
+  bottom: -30px;
+  color: #ff5d8f;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  animation-name: drop-fx-rise;
+}
+@keyframes drop-fx-rise {
+  0% { transform: translate3d(0, 0, 0) scale(0.7); opacity: 0; }
+  12% { opacity: 1; }
+  100% { transform: translate3d(var(--drift, 0px), -105vh, 0) scale(1.1); opacity: 0; }
+}
+
+.drop-fx--sparkles .drop-fx__p {
+  background: #fff;
+  clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%);
+  filter: drop-shadow(0 0 6px rgba(255, 230, 150, 0.9));
+  animation-name: drop-fx-twinkle;
+  animation-timing-function: ease-in-out;
+}
+.drop-fx--stars .drop-fx__p {
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.9);
+  animation-name: drop-fx-twinkle;
+  animation-timing-function: ease-in-out;
+}
+@keyframes drop-fx-twinkle {
+  0%, 100% { transform: scale(0.3) rotate(0deg); opacity: 0.15; }
+  50% { transform: scale(1) rotate(45deg); opacity: 1; }
+}
+
+.drop-fx--fireworks .drop-fx__p {
+  width: 0;
+  height: 0;
+  animation-name: drop-fx-burst;
+  animation-timing-function: ease-out;
+}
+.drop-fx--fireworks .drop-fx__p i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 3px;
+  height: 46px;
+  margin-left: -1.5px;
+  border-radius: 3px;
+  transform-origin: 50% 0;
+  background: linear-gradient(to bottom, transparent, currentColor 60%, #fff);
+}
+@keyframes drop-fx-burst {
+  0% { transform: scale(0.1); opacity: 0; }
+  10% { opacity: 1; }
+  70% { opacity: 0.9; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+/* Only the card on screen runs its particles. */
+.drop-card:not([data-active='true']) .drop-fx { display: none; }
+
+/* ---- sound toggle: a gentle nudge while it is still off --------------- */
+.btn[data-on='false'][aria-pressed='false'] {
+  animation: drop-sound-nudge 2.4s ease-in-out 1.2s 3;
+}
+@keyframes drop-sound-nudge {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drop-fx { display: none !important; }
+  .drop-card[data-active='true'] .drop-media > img,
+  .drop-card[data-active='true'] .drop-media > .drop-clip,
+  .drop-card[data-active='true'] .drop-headline,
+  .drop-card[data-active='true'] .drop-bullets li,
+  .btn[data-on='false'][aria-pressed='false'] {
+    animation: none !important;
+  }
+}

@@ -32,7 +32,6 @@ import {
   Languages,
   LayoutGrid,
   MessageSquareText,
-  Newspaper,
   PartyPopper,
   Repeat,
   Route,
@@ -511,7 +510,7 @@ export const NAV_SECTIONS: NavSection[] = [
   { id: 'learn', label: 'Learn', icon: BookOpen, itemIds: ['courses', 'tracks', 'freeCourse', 'calendar', 'myCourses', 'myCertificates'] },
   { id: 'practise', label: 'Practise', icon: Target, itemIds: ['skillTest', 'daily', 'mockInterview', 'peerMock', 'englishCoach', 'drives'] },
   { id: 'companies', label: 'Companies', icon: Building2, itemIds: ['companies', 'compare', 'talent'], extraPrefixes: ['/company'] },
-  { id: 'feed', label: 'Feed', icon: Newspaper, itemIds: ['drops'] },
+  { id: 'feed', label: 'Drops', icon: Droplets, itemIds: ['drops'] },
 ];
 
 export const sectionHref = (section: NavSection): string => NAV_ITEMS[section.itemIds[0]].href;

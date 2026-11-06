@@ -17,6 +17,7 @@ import { dropsRouter } from '../src/routes/drops.routes';
 import { createAutoDrop } from '../src/lib/autoDrops';
 import { sweepDrops } from '../src/lib/dropScheduler';
 import { loadDb, saveDb } from '../src/data/db';
+import { MAX_ACTIVE_DROPS, MAX_PUBLISH_PER_DAY } from '../src/lib/drops';
 import { _resetStaffCache } from '../src/store/staff';
 
 let pass = 0;
@@ -159,7 +160,6 @@ const main = async () => {
   const bad = async (name: string, patch: any, expect = 400) =>
     eq(name, (await call('POST', '/api/drops/admin', { ...baseDrop, ...patch }, 'u-admin')).status, expect);
 
-  await bad('create without an image is 400', { image_stored_name: '' });
   await bad('create with a fake stored name is 400', { image_stored_name: 'drop-1-deadbeef.png' });
   await bad('unknown type is 400', { type: 'nonsense' });
   await bad('short headline is 400', { headline: 'Too short' });
@@ -171,6 +171,25 @@ const main = async () => {
   await bad('javascript cta_url is 400', { cta_url: 'javascript:alert(1)' });
   await bad('no CTA target and no article is 400', { cta_route: '', target_slug: '', cta_url: '' });
   await bad('expiry before publish is 400', { publish_at: future(2), expires_at: future(1) });
+  await bad('custom sound without an audio file is 400', { sound: 'custom' });
+  await bad('a video name that is really an image is 400', { video_stored_name: img.json.stored_name });
+
+  // No image is allowed now: the card draws the generated (animated) creative.
+  const artOnly = await call('POST', '/api/drops/admin', {
+    ...baseDrop, image_stored_name: '', status: 'draft', art: 'diwali', art_text: '50% OFF',
+    motion: 'zoom', effect: 'fireworks', text_anim: 'pop', sound: 'diwali',
+  }, 'u-admin');
+  eq('create without an image is 201', artOnly.status, 201);
+  eq('...keeps the look settings', [artOnly.json.drop.art, artOnly.json.drop.effect, artOnly.json.drop.sound], ['diwali', 'fireworks', 'diwali']);
+  eq('...and has no stored image', artOnly.json.drop.image_stored_name, undefined);
+  eq('...and a generated art url', /^\/api\/covers\/drop\/drop-.+\.svg\?v=/.test(artOnly.json.drop.art_url), true);
+  eq('unknown look values fall back to defaults',
+    (await call('PUT', `/api/drops/admin/${artOnly.json.drop.id}`, { motion: 'explode', effect: 'lava' }, 'u-admin')).json.drop.motion, 'kenburns');
+  await call('DELETE', `/api/drops/admin/${artOnly.json.drop.id}`, undefined, 'u-admin');
+
+  const mp3 = await upload('u-admin', 'chime.mp3', Buffer.from('ID3fakeaudio'), 'audio/mpeg');
+  eq('audio upload is 201', mp3.status, 201);
+  eq('...reported as audio', mp3.json.kind, 'audio');
 
   const created = await call('POST', '/api/drops/admin', baseDrop, 'u-admin');
   eq('valid create is 201', created.status, 201);
@@ -215,7 +234,7 @@ const main = async () => {
   eq('admin list marks the expired drop', findAdmin(expired.id).list_status, 'expired');
   eq('admin list marks the past-deadline drop expired', findAdmin(deadlinePast.id).list_status, 'expired');
   eq('admin list marks the typo-dated drop live', findAdmin(typo.id).list_status, 'live');
-  eq('admin list reports the caps', adminList.caps, { max_live: 30, max_per_day: 10 });
+  eq('admin list reports the caps', adminList.caps, { max_live: MAX_ACTIVE_DROPS, max_per_day: MAX_PUBLISH_PER_DAY });
 
   // ========================================================================
   // 5. Type filter, audience scoping, pagination, limit clamp
@@ -439,7 +458,7 @@ const main = async () => {
 
   const before = (await call('GET', '/api/drops/admin', undefined, 'u-admin')).json.items;
   const usedToday = before.filter(countedToday).length;
-  eq('the test has not already blown the daily quota', usedToday <= 10, true);
+  eq('the test has not already blown the daily quota', usedToday <= MAX_PUBLISH_PER_DAY, true);
 
   const seed = (n: number, patch: Record<string, unknown>) => {
     const db = loadDb();
@@ -457,24 +476,24 @@ const main = async () => {
     saveDb(db);
   };
 
-  seed(10 - usedToday, { publish_at: new Date().toISOString() });
+  seed(MAX_PUBLISH_PER_DAY - usedToday, { publish_at: new Date().toISOString() });
   const quotaHit = await call('POST', '/api/drops/admin', {
     ...baseDrop, headline: 'One drop too many for today', publish_at: new Date().toISOString(),
   }, 'u-admin');
-  eq('the 11th drop published on one day is 409', quotaHit.status, 409);
+  eq('one drop over the daily quota is 409', quotaHit.status, 409);
   eq('the daily-quota refusal names the limit', /quota bhar chuka hai/.test(quotaHit.json.error), true);
 
   const midList = (await call('GET', '/api/drops/admin', undefined, 'u-admin')).json.items;
   const liveNow = midList.filter((d: any) => d.is_live).length;
   eq('quota fills sit at or below ten for the day',
-    midList.filter(countedToday).length <= 10 || liveNow > 30, true);
-  seed(Math.max(0, 30 - liveNow), { publish_at: past(100) });
+    midList.filter(countedToday).length <= MAX_PUBLISH_PER_DAY || liveNow > MAX_ACTIVE_DROPS, true);
+  seed(Math.max(0, MAX_ACTIVE_DROPS - liveNow), { publish_at: past(100) });
 
   const liveHit = await call('POST', '/api/drops/admin', {
     ...baseDrop, headline: 'The thirty-first live drop', publish_at: past(200),
   }, 'u-admin');
-  eq('the 31st simultaneously live drop is 409', liveHit.status, 409);
-  eq('the live-cap refusal names the limit', /sirf 30 drops live/.test(liveHit.json.error), true);
+  eq('one drop over the live cap is 409', liveHit.status, 409);
+  eq('the live-cap refusal names the limit', new RegExp(`sirf ${MAX_ACTIVE_DROPS} drops live`).test(liveHit.json.error), true);
 
   // ========================================================================
   // 16. Auto-drops — dedupe, draft default, cap degradation

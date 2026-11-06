@@ -1119,6 +1119,22 @@ export interface Drop {
   cta_url?: string;
   /** YouTube or direct .mp4 link; the card plays it in place of the image. */
   video_url?: string;
+  /** Uploaded clip (uploads/drops), plays muted + looped in place of the image. */
+  video_stored_name?: string;
+  /** Uploaded sound (uploads/drops); used when `sound` is 'custom'. */
+  audio_stored_name?: string;
+  /**
+   * Generated animated creative (routes/covers.routes.ts) used when there is
+   * no upload. `art_text`/`art_sub` are the big poster words on it.
+   */
+  art?: string;
+  art_text?: string;
+  art_sub?: string;
+  /** Media motion (Ken Burns, zoom…), overlay effect, headline entrance, sound. */
+  motion?: string;
+  effect?: string;
+  text_anim?: string;
+  sound?: string;
   /** The entity this drop points at — company/course/skill slug. */
   target_slug?: string;
   /** Read More full article, rendered as markdown. */

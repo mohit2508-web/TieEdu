@@ -29,7 +29,7 @@ const COLUMNS: Col[] = [
     links: [
       { href: '/courses', label: 'Courses', navId: 'courses' },
       { href: '/companies', label: 'Companies', navId: 'companies' },
-      { href: '/drops', label: 'Feed', navId: 'drops' },
+      { href: '/drops', label: 'Drops', navId: 'drops' },
       { href: '/interview-course', label: 'Free interview course', navId: 'freeCourse' },
     ],
   },

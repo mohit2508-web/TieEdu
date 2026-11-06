@@ -15,7 +15,7 @@ export const SECTION_HI: Record<string, string> = {
   learn: 'Seekho',
   practise: 'Practice',
   companies: 'Companies',
-  feed: 'Feed',
+  feed: 'Drops',
   account: 'Account',
   today: 'Aaj',
 };

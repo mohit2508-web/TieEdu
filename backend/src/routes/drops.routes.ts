@@ -31,6 +31,7 @@ import {
   isDropType,
   validateDropInput,
   DropInput,
+  DROP_FILE_RE,
 } from '../lib/drops';
 import { startDropScheduler } from '../lib/dropScheduler';
 
@@ -68,8 +69,19 @@ const UPLOAD_DIR = path.join(__dirname, '../../uploads/drops');
 export const ensureDropUploadDir = () => fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 ensureDropUploadDir();
 
-const ALLOWED_EXT = new Set(['.jpg', '.jpeg', '.png', '.webp', '.avif']);
-const STORED_NAME_RE = /^drop-[0-9]+-[a-z0-9]{4,10}\.(jpg|jpeg|png|webp|avif)$/;
+/*
+ * One upload route for all three media kinds. Images arrive already resized to
+ * 1080x1920 by the console (DropMediaFitter), so the image ceiling is a guard,
+ * not a working size; GIFs and clips are passed through untouched.
+ */
+const IMAGE_EXT = new Set(['.jpg', '.jpeg', '.png', '.webp', '.avif', '.gif']);
+const VIDEO_EXT = new Set(['.mp4', '.webm']);
+const AUDIO_EXT = new Set(['.mp3', '.wav', '.ogg', '.m4a']);
+const ALLOWED_EXT = new Set([...IMAGE_EXT, ...VIDEO_EXT, ...AUDIO_EXT]);
+const STORED_NAME_RE = DROP_FILE_RE;
+const MAX_BYTES = { image: 10 * 1024 * 1024, video: 40 * 1024 * 1024, audio: 5 * 1024 * 1024 };
+const kindOfExt = (ext: string): 'image' | 'video' | 'audio' =>
+  VIDEO_EXT.has(ext) ? 'video' : AUDIO_EXT.has(ext) ? 'audio' : 'image';
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
@@ -83,14 +95,15 @@ const storage = multer.diskStorage({
 
 const fileFilter = (_req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
   const ext = path.extname(file.originalname || '').toLowerCase();
-  if (file.mimetype.startsWith('image/') && ALLOWED_EXT.has(ext)) cb(null, true);
+  const mimeOk = /^(image|video|audio)\//.test(file.mimetype) || file.mimetype === 'application/octet-stream';
+  if (mimeOk && ALLOWED_EXT.has(ext)) cb(null, true);
   else cb(new Error('ONLY_IMAGE_ALLOWED'));
 };
 
 const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 6 * 1024 * 1024 },
+  limits: { fileSize: MAX_BYTES.video },
 }).single('file');
 
 function unlinkStored(storedName: string | null | undefined) {
@@ -108,6 +121,11 @@ const newId = () => `drop-${Date.now()}-${Math.random().toString(36).slice(2, 8)
 
 const emptyStats = () => ({ views: 0, unique_viewers: 0, cta_clicks: 0, shares: 0, saves: 0, dwell_ms_total: 0 });
 
+const fileUrl = (name: string | undefined | null) => (name ? `/api/drops/file/${encodeURIComponent(name)}` : null);
+
+/** Version stamp on the generated creative so an edit is not hidden by the 1h cache. */
+const artVersion = (d: Drop) => String(Date.parse(d.updated_at || d.created_at || '') || 0).slice(-8);
+
 /** Public feed shape — no body_md (that ships on the detail route only). */
 function toPublicFeed(d: Drop) {
   return {
@@ -116,9 +134,16 @@ function toPublicFeed(d: Drop) {
     headline: d.headline,
     bullets: d.bullets || [],
     // No upload: a generated creative in the type's colour (routes/covers.routes.ts).
-    image_url: d.image_stored_name ? `/api/drops/file/${encodeURIComponent(d.image_stored_name)}` : `/api/covers/drop/${encodeURIComponent(d.id)}.svg`,
+    image_url: d.image_stored_name ? fileUrl(d.image_stored_name) : `/api/covers/drop/${encodeURIComponent(d.id)}.svg?v=${artVersion(d)}`,
     image_alt: d.image_alt || d.headline,
     video_url: d.video_url || null,
+    video_file_url: fileUrl(d.video_stored_name),
+    audio_url: d.sound === 'custom' ? fileUrl(d.audio_stored_name) : null,
+    is_generated_art: !d.image_stored_name,
+    motion: d.motion || 'kenburns',
+    effect: d.effect || 'none',
+    text_anim: d.text_anim || 'rise',
+    sound: d.sound || 'none',
     cta_label: dropCtaLabel(d),
     cta_route: d.cta_route || null,
     cta_url: d.cta_url || null,
@@ -147,7 +172,10 @@ function toAdminShape(d: Drop) {
     ...d,
     is_live: isDropLive(d),
     list_status: dropListStatus(d),
-    image_url: d.image_stored_name ? `/api/drops/file/${encodeURIComponent(d.image_stored_name)}` : null,
+    image_url: d.image_stored_name ? fileUrl(d.image_stored_name) : null,
+    art_url: `/api/covers/drop/${encodeURIComponent(d.id)}.svg?v=${artVersion(d)}`,
+    video_file_url: fileUrl(d.video_stored_name),
+    audio_url: fileUrl(d.audio_stored_name),
   };
 }
 
@@ -228,7 +256,37 @@ function mergeInput(current: Drop, body: Record<string, unknown>): DropInput {
     expires_at: pick('expires_at'),
     audience: pick('audience'),
     tags: pick('tags'),
+    video_stored_name: pick('video_stored_name'),
+    audio_stored_name: pick('audio_stored_name'),
+    art: pick('art'),
+    art_text: pick('art_text'),
+    art_sub: pick('art_sub'),
+    motion: pick('motion'),
+    effect: pick('effect'),
+    text_anim: pick('text_anim'),
+    sound: pick('sound'),
   };
+}
+
+/** Every uploaded file the payload names must exist on disk. */
+function missingUpload(body: Record<string, unknown>): string | null {
+  for (const key of ['image_stored_name', 'video_stored_name', 'audio_stored_name']) {
+    const name = String(body[key] || '');
+    if (!name) continue;
+    if (!STORED_NAME_RE.test(name) || !fs.existsSync(path.join(UPLOAD_DIR, name))) {
+      return 'Uploaded file server par nahi mili — dobara upload karo';
+    }
+  }
+  return null;
+}
+
+/** Delete a stored file unless another drop (a duplicate) still points at it. */
+function releaseFile(list: Drop[], ownerId: string, name: string | undefined) {
+  if (!name) return;
+  const stillUsed = list.some(
+    (d) => d.id !== ownerId && (d.image_stored_name === name || d.video_stored_name === name || d.audio_stored_name === name)
+  );
+  if (!stillUsed) unlinkStored(name);
 }
 
 function pushEvent(db: any, dropId: string, userId: string | null, event: DropEventKind, meta?: { dwell_ms?: number }) {
@@ -266,6 +324,13 @@ dropsRouter.get('/file/:storedName', (req: Request, res: Response) => {
     '.png': 'image/png',
     '.webp': 'image/webp',
     '.avif': 'image/avif',
+    '.gif': 'image/gif',
+    '.mp4': 'video/mp4',
+    '.webm': 'video/webm',
+    '.mp3': 'audio/mpeg',
+    '.wav': 'audio/wav',
+    '.ogg': 'audio/ogg',
+    '.m4a': 'audio/mp4',
   };
   res.setHeader('Content-Type', mime[ext] || 'application/octet-stream');
   // Names embed a timestamp + random suffix, so bytes never change for a name.
@@ -542,12 +607,12 @@ dropsRouter.get('/admin/analytics', requirePermission('drops.read'), (_req: Requ
 dropsRouter.post('/admin/upload', requirePermission('drops.write'), (req: Request, res: Response) => {
   upload(req, res, (err: any) => {
     if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
-      return res.status(413).json({ error: 'Image 6MB se bada hai' });
+      return res.status(413).json({ error: 'File 40MB se badi hai' });
     }
     if (err) {
       const msg = String(err.message || err);
       if (msg.includes('ONLY_IMAGE_ALLOWED')) {
-        return res.status(400).json({ error: 'Sirf JPG, PNG, WEBP ya AVIF image allowed hai' });
+        return res.status(400).json({ error: 'Sirf image (JPG/PNG/WEBP/AVIF/GIF), video (MP4/WEBM) ya audio (MP3/WAV/OGG/M4A) allowed hai' });
       }
       return res.status(400).json({ error: 'Upload failed: ' + msg });
     }
@@ -555,8 +620,17 @@ dropsRouter.post('/admin/upload', requirePermission('drops.write'), (req: Reques
     const file = req.file as Express.Multer.File | undefined;
     if (!file) return res.status(400).json({ error: 'No file field named "file"' });
 
+    const kind = kindOfExt(path.extname(file.filename).toLowerCase());
+    if (file.size > MAX_BYTES[kind]) {
+      unlinkStored(file.filename);
+      const mb = Math.round(MAX_BYTES[kind] / 1024 / 1024);
+      const label = kind === 'image' ? 'Image' : kind === 'video' ? 'Video' : 'Audio';
+      return res.status(413).json({ error: `${label} ${mb}MB se bada hai` });
+    }
+
     return res.status(201).json({
       status: 'success',
+      kind,
       stored_name: file.filename,
       file_name: file.originalname || 'drop',
       size_bytes: file.size,
@@ -569,12 +643,11 @@ dropsRouter.post('/admin', requirePermission('drops.write'), async (req: Request
   const db = loadDb();
   const body = req.body || {};
 
-  const storedName = String(body.image_stored_name || '');
-  if (storedName && (!STORED_NAME_RE.test(storedName) || !fs.existsSync(path.join(UPLOAD_DIR, storedName)))) {
-    return res.status(400).json({ error: 'Image disk par nahi mili — dobara upload karo' });
-  }
+  const missing = missingUpload(body);
+  if (missing) return res.status(400).json({ error: missing });
 
-  const result = validateDropInput(body, { requireImage: true });
+  // No image is fine: the feed draws the generated (animated) creative instead.
+  const result = validateDropInput(body);
   if (!result.ok) return res.status(400).json({ error: result.error });
 
   const now = new Date().toISOString();
@@ -613,22 +686,17 @@ dropsRouter.put('/admin/:id', requirePermission('drops.write'), async (req: Requ
   const body = req.body || {};
   const current = list[idx];
 
-  if (body.image_stored_name !== undefined && body.image_stored_name) {
-    const next = String(body.image_stored_name);
-    if (!STORED_NAME_RE.test(next) || !fs.existsSync(path.join(UPLOAD_DIR, next))) {
-      return res.status(400).json({ error: 'Nayi image valid nahi hai — dobara upload karo' });
-    }
-  }
+  const missing = missingUpload(body);
+  if (missing) return res.status(400).json({ error: missing });
 
-  const result = validateDropInput(mergeInput(current, body), { requireImage: true });
+  const result = validateDropInput(mergeInput(current, body));
   if (!result.ok) return res.status(400).json({ error: result.error });
 
   const patch = { ...result.value, updated_at: new Date().toISOString() } as Partial<Drop>;
   const next: Drop = { ...current, ...patch };
 
-  if (patch.image_stored_name !== undefined && patch.image_stored_name !== current.image_stored_name) {
-    const stillUsed = list.some((d) => d.id !== current.id && d.image_stored_name === current.image_stored_name);
-    if (!stillUsed) unlinkStored(current.image_stored_name);
+  for (const key of ['image_stored_name', 'video_stored_name', 'audio_stored_name'] as const) {
+    if (current[key] && next[key] !== current[key]) releaseFile(list, current.id, current[key]);
   }
 
   const capError = checkDropCaps(list, next, current.id);
@@ -654,8 +722,9 @@ dropsRouter.delete('/admin/:id', requirePermission('drops.write'), async (req: R
   if (idx === -1) return res.status(404).json({ error: 'Drop not found' });
 
   const [removed] = list.splice(idx, 1);
-  const stillUsed = list.some((d) => d.image_stored_name === removed.image_stored_name);
-  if (!stillUsed) unlinkStored(removed.image_stored_name);
+  releaseFile(list, removed.id, removed.image_stored_name);
+  releaseFile(list, removed.id, removed.video_stored_name);
+  releaseFile(list, removed.id, removed.audio_stored_name);
 
   db.drops = list;
   db.drop_views = (db.drop_views || []).filter((v: any) => v.drop_id !== removed.id);

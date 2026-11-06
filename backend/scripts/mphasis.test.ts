@@ -45,7 +45,7 @@ check('no empty sectional tests', seedSectionalTests(db, 'mphasis') === 0);
 check('no empty interview modules', seedInterviewPrep(db) === 0 && (c.modules || []).length === 0);
 
 // A live database with an old Mphasis draft gets the new profile once.
-const live: any = { companies: [{ id: 'comp-9', slug: 'mphasis-freshers', status: 'draft', name: 'old', modules: [{ id: 'keep' }] }], skills: [], topics: [], questions: [], assessments: [], company_focus_applied: 'x', company_focus_v2: 'x', feed_v2_seeded: 'x' };
+const live: any = { companies: [{ id: 'comp-9', slug: 'mphasis-freshers', status: 'draft', name: 'old', modules: [{ id: 'keep' }] }], skills: [], topics: [], questions: [], assessments: [], company_focus_applied: 'x', company_focus_v2: 'x', feed_v3_seeded: 'x' };
 seedMissing3T(live);
 const m = live.companies.find((x: any) => x.slug === 'mphasis-freshers');
 check('old draft is refreshed and published', m.status === 'published' && m.name.startsWith('Mphasis'));

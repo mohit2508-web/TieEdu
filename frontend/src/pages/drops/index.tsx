@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
-import { RefreshCw, WifiOff, X } from 'lucide-react';
+import { RefreshCw, Volume2, VolumeX, WifiOff, X } from 'lucide-react';
 import { DropsFeed } from '@/components/drops/DropsFeed';
 import { DropsAside } from '@/components/drops/DropsAside';
 import { DropsFilterBar, type DropsFilter } from '@/components/drops/DropsFilterBar';
@@ -10,6 +10,7 @@ import { DropDetailSheet } from '@/components/drops/DropDetailSheet';
 import { DropNotInterestedSheet } from '@/components/drops/DropNotInterestedSheet';
 import { useAuth } from '@/context/AuthContext';
 import { apiAssetUrl } from '@/lib/assetUrl';
+import { playDropSound, setSoundPreference, soundPreference, stopDropSound, unlockDropSound } from '@/lib/dropSound';
 import {
   fetchDropDetailApi,
   fetchDropFeedApi,
@@ -56,6 +57,12 @@ const writeCache = (items: DropFeedItem[]): void => {
   }
 };
 
+/** One card's sound. An uploaded clip carries its own audio, so no preset is layered over it. */
+const playFor = (item: DropFeedItem | null) => {
+  if (!item || item.video_file_url) return stopDropSound();
+  playDropSound(item.sound, item.audio_url ? apiAssetUrl(item.audio_url) : null);
+};
+
 const errMsg = (e: unknown): string => (e instanceof Error ? e.message : 'Something went wrong');
 
 export default function DropsPage() {
@@ -87,6 +94,37 @@ export default function DropsPage() {
   /** Creatives already kicked into the browser cache for this feed session. */
   const prefetchedRef = useRef<Set<string>>(new Set());
   const [activeIndex, setActiveIndex] = useState(0);
+
+  // Sound: off until the viewer taps the speaker (browsers block audio before
+  // a gesture). A remembered "on" still needs that first tap to unlock audio,
+  // so it is read here but only honoured once the context is running.
+  const [soundOn, setSoundOn] = useState(false);
+  const soundOnRef = useRef(false);
+  soundOnRef.current = soundOn;
+  const activeItemRef = useRef<DropFeedItem | null>(null);
+  useEffect(() => {
+    if (!soundPreference()) return;
+    // A remembered preference: arm on the first tap anywhere on the page.
+    const arm = () => {
+      void unlockDropSound().then(() => setSoundOn(true));
+    };
+    window.addEventListener('pointerdown', arm, { once: true });
+    return () => window.removeEventListener('pointerdown', arm);
+  }, []);
+  useEffect(() => () => stopDropSound(), []);
+
+  const toggleSound = async () => {
+    const next = !soundOn;
+    setSoundPreference(next);
+    if (next) {
+      await unlockDropSound();
+      setSoundOn(true);
+      playFor(activeItemRef.current);
+    } else {
+      setSoundOn(false);
+      stopDropSound();
+    }
+  };
 
   useEffect(() => {
     if (!notice) return;
@@ -193,6 +231,10 @@ export default function DropsPage() {
    */
   const handleActiveChange = useCallback((item: DropFeedItem | null) => {
     if (!item) return;
+    if (activeItemRef.current?.id !== item.id) {
+      activeItemRef.current = item;
+      if (soundOnRef.current) playFor(item);
+    }
     const list = itemsRef.current;
     const i = list.findIndex((x) => x.id === item.id);
     if (i < 0) return;
@@ -389,7 +431,18 @@ export default function DropsPage() {
               the affordance is a button instead.
             */}
             {!stale && items.length > 0 && (
-              <div className="flex justify-end px-3 pb-1">
+              <div className="flex justify-end gap-1 px-3 pb-1">
+                <button
+                  type="button"
+                  className="btn btn-ghost h-8 gap-1.5 px-2.5 text-xs"
+                  data-on={soundOn}
+                  aria-pressed={soundOn}
+                  onClick={toggleSound}
+                  aria-label={soundOn ? 'Turn drop sounds off' : 'Turn drop sounds on'}
+                >
+                  {soundOn ? <Volume2 size={14} strokeWidth={2.4} aria-hidden /> : <VolumeX size={14} strokeWidth={2.4} aria-hidden />}
+                  {soundOn ? 'Sound on' : 'Tap for sound'}
+                </button>
                 <button
                   type="button"
                   className="btn btn-ghost h-8 gap-1.5 px-2.5 text-xs"
@@ -417,6 +470,7 @@ export default function DropsPage() {
               onReadMore={handleReadMore}
               onSave={handleSave}
               onShare={handleShare}
+              soundOn={soundOn}
               onNotInterested={(item) => {
                 setMuteError('');
                 setMutedTarget(item);
