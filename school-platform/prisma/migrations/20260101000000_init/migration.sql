@@ -48,19 +48,19 @@ CREATE TYPE "BookingStatus" AS ENUM ('REQUESTED', 'CONFIRMED', 'COMPLETED', 'CAN
 
 -- CreateTable
 CREATE TABLE "School" (
-    "id" STRING NOT NULL,
-    "code" STRING NOT NULL,
-    "name" STRING NOT NULL,
-    "shortName" STRING,
-    "board" STRING,
-    "city" STRING,
-    "state" STRING,
+    "id" TEXT NOT NULL,
+    "code" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "shortName" TEXT,
+    "board" TEXT,
+    "city" TEXT,
+    "state" TEXT,
     "plan" "Plan" NOT NULL DEFAULT 'STARTER',
     "status" "SchoolStatus" NOT NULL DEFAULT 'ACTIVE',
-    "logoUrl" STRING,
-    "brandColor" STRING,
-    "referralCode" STRING NOT NULL,
-    "referredByCode" STRING,
+    "logoUrl" TEXT,
+    "brandColor" TEXT,
+    "referralCode" TEXT NOT NULL,
+    "referredByCode" TEXT,
     "trialEndsAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -70,14 +70,14 @@ CREATE TABLE "School" (
 
 -- CreateTable
 CREATE TABLE "User" (
-    "id" STRING NOT NULL,
-    "email" STRING,
-    "phone" STRING,
-    "name" STRING NOT NULL,
-    "passwordHash" STRING,
+    "id" TEXT NOT NULL,
+    "email" TEXT,
+    "phone" TEXT,
+    "name" TEXT NOT NULL,
+    "passwordHash" TEXT,
     "role" "PlatformRole",
-    "disabled" BOOL NOT NULL DEFAULT false,
-    "locale" STRING NOT NULL DEFAULT 'en',
+    "disabled" BOOLEAN NOT NULL DEFAULT false,
+    "locale" TEXT NOT NULL DEFAULT 'en',
     "lastLoginAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -87,14 +87,14 @@ CREATE TABLE "User" (
 
 -- CreateTable
 CREATE TABLE "Membership" (
-    "id" STRING NOT NULL,
-    "schoolId" STRING NOT NULL,
-    "userId" STRING NOT NULL,
+    "id" TEXT NOT NULL,
+    "schoolId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
     "role" "MemberRole" NOT NULL,
-    "classLevel" STRING,
-    "section" STRING,
-    "rollNo" STRING,
-    "pinHash" STRING,
+    "classLevel" TEXT,
+    "section" TEXT,
+    "rollNo" TEXT,
+    "pinHash" TEXT,
     "status" "MemberStatus" NOT NULL DEFAULT 'ACTIVE',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -104,11 +104,11 @@ CREATE TABLE "Membership" (
 
 -- CreateTable
 CREATE TABLE "Session" (
-    "id" STRING NOT NULL,
-    "userId" STRING NOT NULL,
-    "tokenHash" STRING NOT NULL,
-    "userAgent" STRING,
-    "ip" STRING,
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "tokenHash" TEXT NOT NULL,
+    "userAgent" TEXT,
+    "ip" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "expiresAt" TIMESTAMP(3) NOT NULL,
     "revokedAt" TIMESTAMP(3),
@@ -118,11 +118,11 @@ CREATE TABLE "Session" (
 
 -- CreateTable
 CREATE TABLE "OtpCode" (
-    "id" STRING NOT NULL,
-    "phone" STRING NOT NULL,
-    "codeHash" STRING NOT NULL,
+    "id" TEXT NOT NULL,
+    "phone" TEXT NOT NULL,
+    "codeHash" TEXT NOT NULL,
     "purpose" "OtpPurpose" NOT NULL DEFAULT 'LOGIN',
-    "attempts" INT4 NOT NULL DEFAULT 0,
+    "attempts" INTEGER NOT NULL DEFAULT 0,
     "expiresAt" TIMESTAMP(3) NOT NULL,
     "consumedAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -132,10 +132,10 @@ CREATE TABLE "OtpCode" (
 
 -- CreateTable
 CREATE TABLE "ParentConsent" (
-    "id" STRING NOT NULL,
-    "schoolId" STRING NOT NULL,
-    "subjectUserId" STRING NOT NULL,
-    "parentUserId" STRING NOT NULL,
+    "id" TEXT NOT NULL,
+    "schoolId" TEXT NOT NULL,
+    "subjectUserId" TEXT NOT NULL,
+    "parentUserId" TEXT NOT NULL,
     "grantedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "revokedAt" TIMESTAMP(3),
 
@@ -144,12 +144,12 @@ CREATE TABLE "ParentConsent" (
 
 -- CreateTable
 CREATE TABLE "Notice" (
-    "id" STRING NOT NULL,
-    "schoolId" STRING NOT NULL,
-    "title" STRING NOT NULL,
-    "body" STRING NOT NULL,
-    "kind" STRING NOT NULL DEFAULT 'general',
-    "pinned" BOOL NOT NULL DEFAULT false,
+    "id" TEXT NOT NULL,
+    "schoolId" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "body" TEXT NOT NULL,
+    "kind" TEXT NOT NULL DEFAULT 'general',
+    "pinned" BOOLEAN NOT NULL DEFAULT false,
     "publishedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Notice_pkey" PRIMARY KEY ("id")
@@ -157,13 +157,13 @@ CREATE TABLE "Notice" (
 
 -- CreateTable
 CREATE TABLE "SkillTrack" (
-    "id" STRING NOT NULL,
-    "slug" STRING NOT NULL,
-    "name" STRING NOT NULL,
-    "description" STRING,
-    "icon" STRING,
-    "color" STRING,
-    "sortOrder" INT4 NOT NULL DEFAULT 0,
+    "id" TEXT NOT NULL,
+    "slug" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "icon" TEXT,
+    "color" TEXT,
+    "sortOrder" INTEGER NOT NULL DEFAULT 0,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -172,23 +172,23 @@ CREATE TABLE "SkillTrack" (
 
 -- CreateTable
 CREATE TABLE "Course" (
-    "id" STRING NOT NULL,
-    "slug" STRING NOT NULL,
-    "title" STRING NOT NULL,
-    "summary" STRING,
-    "description" STRING,
-    "skillTrackId" STRING NOT NULL,
+    "id" TEXT NOT NULL,
+    "slug" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "summary" TEXT,
+    "description" TEXT,
+    "skillTrackId" TEXT NOT NULL,
     "level" "CourseLevel" NOT NULL DEFAULT 'BEGINNER',
-    "gradeMin" INT4 NOT NULL DEFAULT 3,
-    "gradeMax" INT4 NOT NULL DEFAULT 12,
-    "durationMins" INT4 NOT NULL DEFAULT 0,
+    "gradeMin" INTEGER NOT NULL DEFAULT 3,
+    "gradeMax" INTEGER NOT NULL DEFAULT 12,
+    "durationMins" INTEGER NOT NULL DEFAULT 0,
     "status" "CourseStatus" NOT NULL DEFAULT 'DRAFT',
-    "heroImageUrl" STRING,
-    "outcomes" STRING[],
-    "tags" STRING[],
-    "version" INT4 NOT NULL DEFAULT 1,
+    "heroImageUrl" TEXT,
+    "outcomes" TEXT[],
+    "tags" TEXT[],
+    "version" INTEGER NOT NULL DEFAULT 1,
     "publishedAt" TIMESTAMP(3),
-    "createdById" STRING,
+    "createdById" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -197,11 +197,11 @@ CREATE TABLE "Course" (
 
 -- CreateTable
 CREATE TABLE "Module" (
-    "id" STRING NOT NULL,
-    "courseId" STRING NOT NULL,
-    "title" STRING NOT NULL,
-    "summary" STRING,
-    "sortOrder" INT4 NOT NULL DEFAULT 0,
+    "id" TEXT NOT NULL,
+    "courseId" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "summary" TEXT,
+    "sortOrder" INTEGER NOT NULL DEFAULT 0,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -210,16 +210,16 @@ CREATE TABLE "Module" (
 
 -- CreateTable
 CREATE TABLE "Lesson" (
-    "id" STRING NOT NULL,
-    "moduleId" STRING NOT NULL,
-    "title" STRING NOT NULL,
-    "summary" STRING,
+    "id" TEXT NOT NULL,
+    "moduleId" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "summary" TEXT,
     "kind" "LessonKind" NOT NULL DEFAULT 'TEXT',
-    "durationMins" INT4 NOT NULL DEFAULT 0,
-    "sortOrder" INT4 NOT NULL DEFAULT 0,
-    "contentUrl" STRING,
-    "contentBody" STRING,
-    "isPreview" BOOL NOT NULL DEFAULT false,
+    "durationMins" INTEGER NOT NULL DEFAULT 0,
+    "sortOrder" INTEGER NOT NULL DEFAULT 0,
+    "contentUrl" TEXT,
+    "contentBody" TEXT,
+    "isPreview" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -228,12 +228,12 @@ CREATE TABLE "Lesson" (
 
 -- CreateTable
 CREATE TABLE "SchoolCourse" (
-    "id" STRING NOT NULL,
-    "schoolId" STRING NOT NULL,
-    "courseId" STRING NOT NULL,
+    "id" TEXT NOT NULL,
+    "schoolId" TEXT NOT NULL,
+    "courseId" TEXT NOT NULL,
     "status" "SchoolCourseStatus" NOT NULL DEFAULT 'ENABLED',
-    "note" STRING,
-    "addedById" STRING,
+    "note" TEXT,
+    "addedById" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -242,12 +242,12 @@ CREATE TABLE "SchoolCourse" (
 
 -- CreateTable
 CREATE TABLE "Enrollment" (
-    "id" STRING NOT NULL,
-    "schoolId" STRING NOT NULL,
-    "courseId" STRING NOT NULL,
-    "userId" STRING NOT NULL,
+    "id" TEXT NOT NULL,
+    "schoolId" TEXT NOT NULL,
+    "courseId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
     "status" "EnrollmentStatus" NOT NULL DEFAULT 'ACTIVE',
-    "progressPct" INT4 NOT NULL DEFAULT 0,
+    "progressPct" INTEGER NOT NULL DEFAULT 0,
     "startedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "completedAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -258,10 +258,10 @@ CREATE TABLE "Enrollment" (
 
 -- CreateTable
 CREATE TABLE "LessonProgress" (
-    "id" STRING NOT NULL,
-    "schoolId" STRING NOT NULL,
-    "enrollmentId" STRING NOT NULL,
-    "lessonId" STRING NOT NULL,
+    "id" TEXT NOT NULL,
+    "schoolId" TEXT NOT NULL,
+    "enrollmentId" TEXT NOT NULL,
+    "lessonId" TEXT NOT NULL,
     "status" "LessonProgressStatus" NOT NULL DEFAULT 'COMPLETED',
     "completedAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -272,43 +272,43 @@ CREATE TABLE "LessonProgress" (
 
 -- CreateTable
 CREATE TABLE "Quiz" (
-    "id" STRING NOT NULL,
-    "lessonId" STRING NOT NULL,
-    "passingScore" INT4 NOT NULL DEFAULT 60,
+    "id" TEXT NOT NULL,
+    "lessonId" TEXT NOT NULL,
+    "passingScore" INTEGER NOT NULL DEFAULT 60,
 
     CONSTRAINT "Quiz_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "QuizQuestion" (
-    "id" STRING NOT NULL,
-    "quizId" STRING NOT NULL,
-    "prompt" STRING NOT NULL,
-    "sortOrder" INT4 NOT NULL DEFAULT 0,
+    "id" TEXT NOT NULL,
+    "quizId" TEXT NOT NULL,
+    "prompt" TEXT NOT NULL,
+    "sortOrder" INTEGER NOT NULL DEFAULT 0,
 
     CONSTRAINT "QuizQuestion_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "QuizOption" (
-    "id" STRING NOT NULL,
-    "questionId" STRING NOT NULL,
-    "text" STRING NOT NULL,
-    "isCorrect" BOOL NOT NULL DEFAULT false,
-    "sortOrder" INT4 NOT NULL DEFAULT 0,
+    "id" TEXT NOT NULL,
+    "questionId" TEXT NOT NULL,
+    "text" TEXT NOT NULL,
+    "isCorrect" BOOLEAN NOT NULL DEFAULT false,
+    "sortOrder" INTEGER NOT NULL DEFAULT 0,
 
     CONSTRAINT "QuizOption_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "QuizAttempt" (
-    "id" STRING NOT NULL,
-    "schoolId" STRING NOT NULL,
-    "enrollmentId" STRING NOT NULL,
-    "quizId" STRING NOT NULL,
+    "id" TEXT NOT NULL,
+    "schoolId" TEXT NOT NULL,
+    "enrollmentId" TEXT NOT NULL,
+    "quizId" TEXT NOT NULL,
     "status" "AttemptStatus" NOT NULL DEFAULT 'SUBMITTED',
-    "score" INT4 NOT NULL DEFAULT 0,
-    "passed" BOOL NOT NULL DEFAULT false,
+    "score" INTEGER NOT NULL DEFAULT 0,
+    "passed" BOOLEAN NOT NULL DEFAULT false,
     "submittedAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -317,21 +317,21 @@ CREATE TABLE "QuizAttempt" (
 
 -- CreateTable
 CREATE TABLE "QuizAnswer" (
-    "id" STRING NOT NULL,
-    "attemptId" STRING NOT NULL,
-    "questionId" STRING NOT NULL,
-    "optionId" STRING NOT NULL,
-    "isCorrect" BOOL NOT NULL,
+    "id" TEXT NOT NULL,
+    "attemptId" TEXT NOT NULL,
+    "questionId" TEXT NOT NULL,
+    "optionId" TEXT NOT NULL,
+    "isCorrect" BOOLEAN NOT NULL,
 
     CONSTRAINT "QuizAnswer_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "TeacherCourseAssignment" (
-    "id" STRING NOT NULL,
-    "schoolId" STRING NOT NULL,
-    "courseId" STRING NOT NULL,
-    "userId" STRING NOT NULL,
+    "id" TEXT NOT NULL,
+    "schoolId" TEXT NOT NULL,
+    "courseId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -340,17 +340,17 @@ CREATE TABLE "TeacherCourseAssignment" (
 
 -- CreateTable
 CREATE TABLE "Invoice" (
-    "id" STRING NOT NULL,
-    "schoolId" STRING NOT NULL,
-    "number" STRING NOT NULL,
-    "amountPaise" INT4 NOT NULL,
-    "currency" STRING NOT NULL DEFAULT 'INR',
+    "id" TEXT NOT NULL,
+    "schoolId" TEXT NOT NULL,
+    "number" TEXT NOT NULL,
+    "amountPaise" INTEGER NOT NULL,
+    "currency" TEXT NOT NULL DEFAULT 'INR',
     "status" "InvoiceStatus" NOT NULL DEFAULT 'OPEN',
     "periodStart" TIMESTAMP(3),
     "periodEnd" TIMESTAMP(3),
     "issuedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "paidAt" TIMESTAMP(3),
-    "notes" STRING,
+    "notes" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -359,16 +359,16 @@ CREATE TABLE "Invoice" (
 
 -- CreateTable
 CREATE TABLE "Booking" (
-    "id" STRING NOT NULL,
-    "schoolId" STRING NOT NULL,
+    "id" TEXT NOT NULL,
+    "schoolId" TEXT NOT NULL,
     "type" "BookingType" NOT NULL DEFAULT 'AI_SEMINAR',
-    "title" STRING NOT NULL,
+    "title" TEXT NOT NULL,
     "preferredAt" TIMESTAMP(3) NOT NULL,
-    "mode" STRING NOT NULL DEFAULT 'ONLINE',
-    "participants" INT4 NOT NULL DEFAULT 0,
+    "mode" TEXT NOT NULL DEFAULT 'ONLINE',
+    "participants" INTEGER NOT NULL DEFAULT 0,
     "status" "BookingStatus" NOT NULL DEFAULT 'REQUESTED',
-    "notes" STRING,
-    "requestedById" STRING,
+    "notes" TEXT,
+    "requestedById" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -377,11 +377,11 @@ CREATE TABLE "Booking" (
 
 -- CreateTable
 CREATE TABLE "Certificate" (
-    "id" STRING NOT NULL,
-    "schoolId" STRING NOT NULL,
-    "courseId" STRING NOT NULL,
-    "userId" STRING NOT NULL,
-    "serial" STRING NOT NULL,
+    "id" TEXT NOT NULL,
+    "schoolId" TEXT NOT NULL,
+    "courseId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "serial" TEXT NOT NULL,
     "issuedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "revokedAt" TIMESTAMP(3),
 
@@ -390,45 +390,17 @@ CREATE TABLE "Certificate" (
 
 -- CreateTable
 CREATE TABLE "AuditLog" (
-    "id" STRING NOT NULL,
-    "actorUserId" STRING,
-    "schoolId" STRING,
-    "action" STRING NOT NULL,
-    "targetType" STRING,
-    "targetId" STRING,
+    "id" TEXT NOT NULL,
+    "actorUserId" TEXT,
+    "schoolId" TEXT,
+    "action" TEXT NOT NULL,
+    "targetType" TEXT,
+    "targetId" TEXT,
     "meta" JSONB,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "AuditLog_pkey" PRIMARY KEY ("id")
 );
-
--- Unlock tables before building indexes / foreign keys.
--- CockroachDB (this cluster) creates tables WITH (schema_locked = true) by
--- default, which forbids the subsequent schema changes. Unlock them here.
-ALTER TABLE "AuditLog" SET (schema_locked = false);
-ALTER TABLE "Booking" SET (schema_locked = false);
-ALTER TABLE "Certificate" SET (schema_locked = false);
-ALTER TABLE "Course" SET (schema_locked = false);
-ALTER TABLE "Enrollment" SET (schema_locked = false);
-ALTER TABLE "Invoice" SET (schema_locked = false);
-ALTER TABLE "Lesson" SET (schema_locked = false);
-ALTER TABLE "LessonProgress" SET (schema_locked = false);
-ALTER TABLE "Membership" SET (schema_locked = false);
-ALTER TABLE "Module" SET (schema_locked = false);
-ALTER TABLE "Notice" SET (schema_locked = false);
-ALTER TABLE "OtpCode" SET (schema_locked = false);
-ALTER TABLE "ParentConsent" SET (schema_locked = false);
-ALTER TABLE "Quiz" SET (schema_locked = false);
-ALTER TABLE "QuizAnswer" SET (schema_locked = false);
-ALTER TABLE "QuizAttempt" SET (schema_locked = false);
-ALTER TABLE "QuizOption" SET (schema_locked = false);
-ALTER TABLE "QuizQuestion" SET (schema_locked = false);
-ALTER TABLE "School" SET (schema_locked = false);
-ALTER TABLE "SchoolCourse" SET (schema_locked = false);
-ALTER TABLE "Session" SET (schema_locked = false);
-ALTER TABLE "SkillTrack" SET (schema_locked = false);
-ALTER TABLE "TeacherCourseAssignment" SET (schema_locked = false);
-ALTER TABLE "User" SET (schema_locked = false);
 
 -- CreateIndex
 CREATE UNIQUE INDEX "School_code_key" ON "School"("code");
@@ -660,3 +632,4 @@ ALTER TABLE "AuditLog" ADD CONSTRAINT "AuditLog_actorUserId_fkey" FOREIGN KEY ("
 
 -- AddForeignKey
 ALTER TABLE "AuditLog" ADD CONSTRAINT "AuditLog_schoolId_fkey" FOREIGN KEY ("schoolId") REFERENCES "School"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+

@@ -133,10 +133,32 @@ pm2 stop tiedu-backend && rm data/.pg-write-freeze && pm2 start tiedu-backend --
 
 ## 7. school-platform (separate)
 
-`school-platform/prisma/schema.prisma` uses `provider = "cockroachdb"` and its migration SQL uses
-CockroachDB-only `STRING`. Moving it means: switch the provider to `postgresql`, generate a fresh
-baseline migration, create `tieedu_school`, copy rows with the same `pg-migrate.ts`. Confirm first
-whether `tieedu-school` is in use and what its `DATABASE_URL` points at.
+Branch `feat/school-postgres` switches Prisma to `provider = "postgresql"` and replaces the init
+migration with a PostgreSQL baseline. The regenerated SQL was diffed against the CockroachDB one:
+same 24 tables, 16 enums, 43 indexes, 34 foreign keys; the only difference is CockroachDB's
+`schema_locked` lines. `pg-migrate.ts` skips `_prisma_migrations` (each side keeps its own history).
+
+**Do not deploy this branch before step 4** — it is the cutover itself for the school app.
+
+```bash
+# 1. databases (once)
+runuser -u postgres -- createdb -O tieedu tieedu_school
+runuser -u postgres -- createdb -O tieedu tieedu_school_staging
+SCHOOL_PG="postgresql://tieedu:<password from /root/tieedu-pg.env>@localhost:5432/tieedu_school"
+
+# 2. rehearsal, from a checkout of feat/school-postgres
+cd /var/www/tiedu/school-platform
+DATABASE_URL="${SCHOOL_PG}_staging" npx prisma migrate deploy
+cd ../backend
+SOURCE_DATABASE_URL="<school CockroachDB URL>" TARGET_DATABASE_URL="${SCHOOL_PG}_staging" npm run db:migrate -- plan
+SOURCE_DATABASE_URL="<school CockroachDB URL>" TARGET_DATABASE_URL="${SCHOOL_PG}_staging" npm run db:migrate -- copy --yes
+
+# 3. cutover: same as 2 against $SCHOOL_PG, with `pm2 stop tieedu-school` before the copy
+#    (the school app has no freeze flag; a stop of ~1 min at 03:00 is the freeze)
+# 4. deploy feat/school-postgres, set DATABASE_URL=$SCHOOL_PG in school-platform/.env,
+#    npm run build, pm2 start tieedu-school --update-env
+```
+Add `tieedu_school` to `DBS` in `/etc/cron.d/tieedu-backup` (`DBS="tieedu tieedu_school"`).
 
 ## What gets faster / what doesn't
 
