@@ -1,11 +1,12 @@
 import { Router, Request, Response } from 'express';
 import { loadDb } from '../data/db';
-import { optionalAuth } from '../middleware/auth';
+import { optionalAuth, requireAuth } from '../middleware/auth';
 import { packPrice } from '../lib/pricing';
 import { runnerConfigured } from '../lib/codeRunner';
 import { BANK, BANK_BY_ID, COMPANY_SETS, DSA_TOPICS, SET_BY_SLUG, type BankProblem } from '../lib/practice/bank';
 import { accessChecker, progressFor, statusOf, type ProblemProgress } from '../lib/practice/access';
 import { ownsCompanyPack } from './prep.routes';
+import { buildPrep, PREP_COMPANIES } from '../lib/prep';
 
 /**
  * The Practice hub (PRACTICE_MODE_PLAN.md §3): home, DSA sheet, company sets.
@@ -92,6 +93,57 @@ practiceRouter.get('/tests', optionalAuth, (req: Request, res: Response) => {
   res.json({
     companies: slugs.map((slug) => ({ ...companyMeta(db, slug, req.userId), tests: testsOf(db, slug, req.userId) })).filter((c) => c.tests.length)
       .sort((a, b) => Number(SET_BY_SLUG.has(b.slug)) - Number(SET_BY_SLUG.has(a.slug)) || a.name.localeCompare(b.name)),
+  });
+});
+
+/**
+ * A company test's report (PRACTICE_MODE_PLAN.md §7): score, sections against the
+ * previous attempt, the coding section per problem, the attempt history, what to
+ * fix next (weakest sections → their sectional test and lessons) and readiness.
+ */
+practiceRouter.get('/test-result/:attemptId', requireAuth, (req: Request, res: Response) => {
+  const db = loadDb();
+  const a = (db.attempts || []).find((x: any) => x.id === req.params.attemptId);
+  if (!a) return res.status(404).json({ error: 'Result not found' });
+  if (a.userId !== req.userId) return res.status(403).json({ error: 'Not your attempt' });
+  if (a.status !== 'submitted') return res.status(409).json({ error: 'This test is not submitted yet' });
+  const asm = (db.assessments || []).find((x: any) => x.id === a.assessmentId);
+  const skill = (db.skills || []).find((s: any) => s.id === a.skillId || s.id === asm?.skillId);
+  const slug = skill?.company_slug || '';
+  const topics = (db.topics || []).filter((t: any) => t.skillId === skill?.id);
+  const clean = (n: string) => String(n || '').replace(/\s*\(.*\)\s*$/, '');
+  const history = (db.attempts || []).filter((x: any) => x.userId === req.userId && x.assessmentId === a.assessmentId && x.status === 'submitted')
+    .sort((x: any, y: any) => String(x.submittedAt).localeCompare(String(y.submittedAt)));
+  const idx = history.findIndex((x: any) => x.id === a.id);
+  const prev = idx > 0 ? history[idx - 1] : null;
+  const pctOf = (att: any, topicId: string) => (att?.topicPerformance || []).find((t: any) => t.topicId === topicId)?.percentage ?? null;
+  const sectional = (db.skills || []).filter((s: any) => s.company_slug === slug && s.prep_role === 'sectional' && s.status === 'active');
+  const sections = (a.topicPerformance || []).map((tp: any) => {
+    const key = topics.find((t: any) => t.id === tp.topicId)?.slug || '';
+    return {
+      key, name: clean(tp.topicName), correct: tp.correct, total: tp.total, pct: tp.percentage,
+      prev_pct: prev ? pctOf(prev, tp.topicId) : null, practice_test: sectional.find((s: any) => s.section_key === key)?.slug || null,
+    };
+  });
+  const coding = (Array.isArray(a.coding_result) ? a.coding_result : Array.isArray(a.coding_self) ? a.coding_self : []).map((c: any) => ({
+    id: c.id, title: BANK_BY_ID.get(c.id)?.title || c.id, status: c.status, passed: c.passed ?? null, total: c.total ?? null,
+    language: c.language || '', graded: Array.isArray(a.coding_result),
+  }));
+  // Fresh readiness (the plan logs one value a day, so the previous value is "before this test").
+  const prep = slug && PREP_COMPANIES[slug] ? buildPrep(db, req.userId!, slug, ownsCompanyPack(db, req.userId!, slug)) : null;
+  const ms = (x: any) => Math.max(0, new Date(x.submittedAt).getTime() - new Date(x.startedAt).getTime());
+  res.json({
+    test: { slug: skill?.slug || '', name: skill?.name || 'Company test', company: slug ? companyMeta(db, slug, req.userId) : null, kind: skill?.prep_role === 'sectional' ? 'sectional' : 'full' },
+    attempt: {
+      id: a.id, score: Number(a.score) || 0, correct: a.correctAnswers || 0, incorrect: a.incorrectAnswers || 0, unanswered: a.unanswered || 0,
+      total: (a.correctAnswers || 0) + (a.incorrectAnswers || 0) + (a.unanswered || 0), minutes: Math.round(ms(a) / 60000), submitted_at: a.submittedAt,
+      number: idx + 1, prev_score: prev ? Number(prev.score) || 0 : null,
+    },
+    sections, coding,
+    history: history.slice(-10).map((x: any) => ({ id: x.id, score: Number(x.score) || 0, at: x.submittedAt })),
+    fix: [...sections].filter((s) => s.total > 0).sort((x, y) => x.pct - y.pct).slice(0, 2).filter((s) => s.pct < 80),
+    readiness: prep ? { now: prep.readiness.score, before: prep.readiness.previous, band: prep.readiness.band } : null,
+    prep: !!(slug && (db.companies || []).find((c: any) => c.slug === slug)),
   });
 });
 

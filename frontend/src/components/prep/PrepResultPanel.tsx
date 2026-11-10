@@ -37,7 +37,7 @@ export const PrepResultPanel: React.FC<{ slug: string }> = ({ slug }) => {
             <li key={l.id}><Link href={`/prep/${slug}/learn/${l.id}`} className="text-base font-semibold text-link">Read: {l.title.replace(/^[^:]+:\s*/, '')}</Link></li>
           ))}
         </ul>
-        {p.fix.test_slug && p.owned && <Link href={`/skill-test/${p.fix.test_slug}/assessment`} className="btn btn-ghost mt-3 min-h-[44px] px-4 text-base">Then retest {p.fix.name}</Link>}
+        {p.fix.test_slug && p.owned && <Link href={`/practice/test/${p.fix.test_slug}`} className="btn btn-ghost mt-3 min-h-[44px] px-4 text-base">Then retest {p.fix.name}</Link>}
       </div>
       <Link href={`/prep/${slug}`} className="btn btn-primary mt-5 min-h-[52px] w-full text-lg">Back to my {p.company.name} plan <ArrowRight className="h-5 w-5" aria-hidden /></Link>
     </section>

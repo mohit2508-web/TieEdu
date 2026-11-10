@@ -148,7 +148,9 @@ function AssessmentPage() {
     try {
       const res = await submitAttemptApi(attempt.id, buildPayload(answersState, marked, time));
       const a = res.attempt;
-      router.push(`/skill-test/${slug}/result/${a.id}?score=${a.score ?? 0}&correct=${a.correctAnswers ?? 0}&flags=${secureStrikesRef.current}`);
+      // Company tests run under /practice/test and get their own report.
+      if (router.pathname.startsWith('/practice/test')) router.push(`/practice/test/${slug}/result/${a.id}?flags=${secureStrikesRef.current}`);
+      else router.push(`/skill-test/${slug}/result/${a.id}?score=${a.score ?? 0}&correct=${a.correctAnswers ?? 0}&flags=${secureStrikesRef.current}`);
     } catch (e: any) {
       setError(e?.message || 'Submit failed. Please retry.');
       setSubmitting(false);
@@ -157,10 +159,12 @@ function AssessmentPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [attempt, submitting, marked, questions, slug]);
 
-  // Secure mode pauses in the coding section so students can run code in their own compiler.
+  // The coding section runs on its own clock. Secure mode stays on there (the IDE runs the
+  // code); it pauses only in the self-check fallback, where students need their own compiler.
   const [inCoding, setInCoding] = useState(false);
+  const [codingFallback, setCodingFallback] = useState(false);
   const secure = useSecureMode({
-    active: started && !submitting && !inCoding,
+    active: started && !submitting && !(inCoding && codingFallback),
     onLimit: () => doSubmit(answeredRef.current, timeLeftRef.current),
   });
 
@@ -331,8 +335,10 @@ function AssessmentPage() {
 
   if (sec.enabled && sec.done && codingCfg && attempt) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-surface">
+        <SecureModeWarning message={secure.warning} onResume={() => { secure.dismissWarning(); secure.enterFullscreen(); }} />
         <MockCoding
+          onFallback={setCodingFallback}
           config={codingCfg}
           attemptId={attempt.id}
           submitting={submitting}

@@ -177,7 +177,7 @@ export default function LessonPage() {
                 <div className="mt-4 flex flex-col gap-2 sm:flex-row">
                   {v.prev && <Link href={`/prep/${slug}/learn/${v.prev.id}`} className="btn btn-ghost min-h-[48px] px-5"><ArrowLeft className="h-5 w-5" aria-hidden /> Previous</Link>}
                   {sectionTest?.test_slug && (prep?.owned
-                    ? <Link href={`/skill-test/${sectionTest.test_slug}/assessment`} className="btn btn-ghost min-h-[48px] px-5">Take the {sectionTest.name} test</Link>
+                    ? <Link href={`/practice/test/${sectionTest.test_slug}`} className="btn btn-ghost min-h-[48px] px-5">Take the {sectionTest.name} test</Link>
                     : null)}
                   {v.next
                     ? <button type="button" onClick={() => push(`/prep/${slug}/learn/${v.next!.id}`)} className="btn btn-primary min-h-[48px] px-5 sm:ml-auto">Next lesson <ArrowRight className="h-5 w-5" aria-hidden /></button>

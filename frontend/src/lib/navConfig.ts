@@ -647,7 +647,7 @@ export const MOBILE_TAB_ACTIONS: NavActionItem['id'][] = ['search', 'cart'];
  */
 // `/mock-drive` left this list in Phase 5: it now sits inside the site shell under
 // Practise, with its five screens as an in-page strip (DriveShell).
-export const SHELL_EXCLUDED_ROUTES: string[] = ['/login', '/signup', '/admin', '/tpo', '/school', '/practice/problem', '/practice/test'];
+export const SHELL_EXCLUDED_ROUTES: string[] = ['/login', '/signup', '/admin', '/tpo', '/school', '/practice/problem'];
 
 /** True when this pathname opts out of the site shell entirely. */
 export const isShellExcluded = (pathname: string): boolean =>
@@ -655,7 +655,9 @@ export const isShellExcluded = (pathname: string): boolean =>
     (route) => pathname === route || pathname.startsWith(`${route}/`)
   )
   // A test in progress is exam-hall mode: no navbar, tab bar or footer to click away to.
-  || /^\/skill-test\/[^/]+\/assessment$/.test(pathname);
+  || /^\/skill-test\/[^/]+\/assessment$/.test(pathname)
+  // Company tests (Practice) are the same exam hall; their result pages keep the shell.
+  || /^\/practice\/test\/[^/]+$/.test(pathname);
 
 /** Trailing slashes are cosmetic; `next/router` can hand back either form. */
 const normalizePath = (value: string): string => {

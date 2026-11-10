@@ -63,8 +63,8 @@ check('coding lessons get no aptitude practice questions', lessons.items[1].less
 
 const page = derivePageContent(db, c);
 const st = page.sections.find((s: any) => s.type === 'rounds_route').data.stations as any[];
-check('Part A station: the full mock', st[0].test_href === '/skill-test/tcs-nqt-full-mock');
-check('Part B station: coding module and the mock', st[1].module_ids.includes('mod-prep-tcs-nqt-coding') && st[1].test_href === '/skill-test/tcs-nqt-full-mock', JSON.stringify(st[1].module_ids));
+check('Part A station: the full mock', st[0].test_href === '/practice/test/tcs-nqt-full-mock');
+check('Part B station: coding module and the mock', st[1].module_ids.includes('mod-prep-tcs-nqt-coding') && st[1].test_href === '/practice/test/tcs-nqt-full-mock', JSON.stringify(st[1].module_ids));
 check('Managerial station has its module', st[3].module_ids.includes('mod-prep-tcs-nqt-managerial'));
 check('HR station has only the HR module', st[4].module_ids.join() === 'mod-prep-tcs-nqt-hr', JSON.stringify(st[4].module_ids));
 

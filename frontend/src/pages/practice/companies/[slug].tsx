@@ -82,7 +82,7 @@ export default function CompanyPracticePage() {
                       {t.attempts > 0 && <span>Best {t.best}% · {t.attempts} attempt{t.attempts > 1 ? 's' : ''}</span>}
                     </p>
                   </div>
-                  {t.last && <Link href={`/skill-test/${t.slug}/result/${t.last.id}`} className="btn btn-ghost focus-ring min-h-[44px] px-4">Last result</Link>}
+                  {t.last && <Link href={`/practice/test/${t.slug}/result/${t.last.id}`} className="btn btn-ghost focus-ring min-h-[44px] px-4">Last result</Link>}
                   <Link href={`/practice/test/${t.slug}`} className="btn btn-primary focus-ring min-h-[44px] px-5">{t.attempts ? 'Retake' : 'Start'} <ArrowRight className="h-4 w-4" aria-hidden /></Link>
                 </div>
               ))}

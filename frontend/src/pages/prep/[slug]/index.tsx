@@ -165,7 +165,7 @@ export default function PrepPage() {
                   <h2 className="mt-1 font-display text-2xl font-bold text-white">Take the free demo test</h2>
                   <p className="mt-1 text-base text-white/80">{mockQs ? `${mockQs} questions in the real ${data.company.name} pattern.` : 'The real test pattern.'} You get your score in every section and exactly what to study first.</p>
                 </div>
-                <Link href={`/skill-test/${data.full_mock.slug}/assessment`} className="btn btn-primary min-h-[52px] shrink-0 px-6 text-lg">Start demo test <ArrowRight className="h-5 w-5" aria-hidden /></Link>
+                <Link href={`/practice/test/${data.full_mock.slug}`} className="btn btn-primary min-h-[52px] shrink-0 px-6 text-lg">Start demo test <ArrowRight className="h-5 w-5" aria-hidden /></Link>
               </section>
             )}
 
@@ -182,7 +182,7 @@ export default function PrepPage() {
                       {s.attempts ? `Last score ${s.score}% after ${s.attempts} attempt${s.attempts === 1 ? '' : 's'}. ` : ''}Timed, fresh questions every attempt, full explanations after you submit. Aim for 80%+ twice before the real test.
                     </p>
                   </div>
-                  <Link href={`/skill-test/${s.test_slug}/assessment`} className="btn btn-primary min-h-[52px] shrink-0 px-6 text-lg">{s.attempts ? 'Retake' : 'Start'} mock <ArrowRight className="h-5 w-5" aria-hidden /></Link>
+                  <Link href={`/practice/test/${s.test_slug}`} className="btn btn-primary min-h-[52px] shrink-0 px-6 text-lg">{s.attempts ? 'Retake' : 'Start'} mock <ArrowRight className="h-5 w-5" aria-hidden /></Link>
                 </section>
               );
             })()}
@@ -329,7 +329,7 @@ export default function PrepPage() {
                           <span className="block truncate text-base font-semibold text-heading">{a.title}</span>
                           <span className="block text-sm text-muted">{a.at ? new Date(a.at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) : ''}</span>
                         </span>
-                        <Link href={`/skill-test/${a.slug}/result/${a.id}`} className="shrink-0 text-base font-semibold text-link">{a.score}% · Review</Link>
+                        <Link href={`/practice/test/${a.slug}/result/${a.id}`} className="shrink-0 text-base font-semibold text-link">{a.score}% · Review</Link>
                       </li>
                     ))}
                   </ul>

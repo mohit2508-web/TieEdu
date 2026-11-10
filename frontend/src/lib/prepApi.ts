@@ -60,7 +60,7 @@ export const setPrepDate = (slug: string, date: string) =>
 export const prepHref = (slug: string, it: PrepItem) => {
   if (it.kind === 'lesson') return `/prep/${slug}/learn/${it.ref}`;
   if (it.kind === 'interview') return `/company/${slug}?m=${it.ref}`;
-  return it.ref ? `/skill-test/${it.ref}/assessment` : `/company/${slug}`;
+  return it.ref ? `/practice/test/${it.ref}` : `/company/${slug}`;
 };
 
 // ---- Target company (INFOSYS_SE_3T_UX_PLAN §1): one value every screen reads.

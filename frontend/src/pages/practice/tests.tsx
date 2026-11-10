@@ -40,7 +40,7 @@ export default function CompanyTestsPage() {
                   <p className="mt-2 text-[15px] text-body">{t.attempts ? `Best ${t.best}% after ${t.attempts} attempt${t.attempts > 1 ? 's' : ''}` : 'Not attempted yet'}</p>
                   <div className="mt-4 flex gap-2">
                     <Link href={`/practice/test/${t.slug}`} className="btn btn-primary focus-ring min-h-[44px] flex-1">{t.attempts ? 'Retake' : 'Start'} <ArrowRight className="h-4 w-4" aria-hidden /></Link>
-                    {t.last && <Link href={`/skill-test/${t.slug}/result/${t.last.id}`} className="btn btn-ghost focus-ring min-h-[44px] px-4">Last result</Link>}
+                    {t.last && <Link href={`/practice/test/${t.slug}/result/${t.last.id}`} className="btn btn-ghost focus-ring min-h-[44px] px-4">Last result</Link>}
                   </div>
                 </div>
               ))}

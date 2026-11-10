@@ -60,13 +60,25 @@ const StatusIcon = ({ s }: { s: string }) => s === 'solved' ? <CheckCircle2 clas
  * shortcuts (Ctrl+' run, Ctrl+Enter submit), a problem drawer, and a phone
  * layout with Problem / Code / Console tabs and a sticky Run / Submit bar.
  */
-export function Ide({ view, onReload, query }: { view: CodeProblemView; onReload: () => void; query: { company?: string; topic?: string } }) {
+/** Test mode (the coding section of a company test): problem tabs, timer and Finish instead of navigation. */
+export interface IdeTest {
+  attemptId: string; problems: Array<{ id: string; title: string; done?: boolean }>; onSwitch: (id: string) => void;
+  secondsLeft: number; onFinish: () => void; submitting: boolean;
+}
+
+const clock = (s: number) => `${Math.floor(s / 3600) ? `${Math.floor(s / 3600)}:` : ''}${String(Math.floor((s % 3600) / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+
+export function Ide({ view, onReload, query, test, onSubmitted }: {
+  view: CodeProblemView; onReload: () => void; query: { company?: string; topic?: string };
+  test?: IdeTest; onSubmitted?: (r: import('@/lib/codeApi').SuiteResult) => void;
+}) {
   const { user } = useAuth();
   const router = useRouter();
   const siteDark = useSiteDark();
   const wide = useWide();
   const p = view.problem;
-  const draftKey = useCallback((l: CodeLang) => `tieedu_ide_${p.id}_${l}`, [p.id]);
+  const draftKey = useCallback((l: CodeLang) => `tieedu_ide_${test ? `${test.attemptId}_` : ''}${p.id}_${l}`, [p.id, test]);
+  const attemptId = test?.attemptId;
 
   const [lang, setLang] = useState<CodeLang>('cpp');
   const [code, setCode] = useState('');
@@ -123,7 +135,7 @@ export function Ide({ view, onReload, query }: { view: CodeProblemView; onReload
     if (busy || !guard()) return;
     setBusy('run'); setError(''); setConsoleTab('result'); if (!wide) setMobileTab('console');
     try {
-      const r = await runCases(p.id, lang, code, cases.map((c) => ({ input: c.input, expected: c.expected.trim() ? c.expected : null })), view.in_mock ? router.query.attempt as string : undefined);
+      const r = await runCases(p.id, lang, code, cases.map((c) => ({ input: c.input, expected: c.expected.trim() ? c.expected : null })), attemptId);
       setResult({ kind: 'run', data: r });
       setDiags(r.compile_error ? parseDiagnostics(lang, r.compile_error) : r.verdict === 'runtime_error' ? parseDiagnostics(lang, r.cases.find((c) => c.stderr)?.stderr || '') : []);
     } catch (e) { fail(e); setConsoleTab('cases'); } finally { setBusy(''); }
@@ -132,8 +144,9 @@ export function Ide({ view, onReload, query }: { view: CodeProblemView; onReload
     if (busy || !guard()) return;
     setBusy('submit'); setError(''); setConsoleTab('result'); if (!wide) setMobileTab('console');
     try {
-      const r = await submitCode(p.id, lang, code, view.in_mock ? router.query.attempt as string : undefined);
+      const r = await submitCode(p.id, lang, code, attemptId);
       setResult({ kind: 'submit', data: r });
+      onSubmitted?.(r);
       setDiags(r.compile_error ? parseDiagnostics(lang, r.compile_error) : []);
       if (r.verdict === 'accepted') onReload();
     } catch (e) { fail(e); } finally { setBusy(''); }
@@ -155,7 +168,34 @@ export function Ide({ view, onReload, query }: { view: CodeProblemView; onReload
   const toggleFull = () => { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); else document.documentElement.requestFullscreen().catch(() => {}); };
   const pos = view.context ? view.context.items.findIndex((x) => x.id === p.id) + 1 : 0;
 
-  const header = (
+  const testHeader = test && (
+    <header className="flex h-14 shrink-0 items-center gap-2 border-b border-line bg-card px-3">
+      <div role="tablist" aria-label="Coding problems" className="flex min-w-0 gap-1 overflow-x-auto">
+        {test.problems.map((x, i) => (
+          <button key={x.id} type="button" role="tab" aria-selected={x.id === p.id} onClick={() => test.onSwitch(x.id)}
+            className={`inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg px-3 text-[15px] font-semibold focus-ring ${x.id === p.id ? 'bg-surface-hover text-heading' : 'text-muted hover:text-heading'}`}>
+            {x.done && <CheckCircle2 className="h-4 w-4 text-success" aria-hidden />}Problem {i + 1}
+          </button>
+        ))}
+      </div>
+      {wide && (
+        <div className="mx-auto flex items-center gap-2">
+          <button type="button" onClick={run} disabled={!!busy} title="Run (Ctrl + ')" className="btn btn-ghost focus-ring h-10 px-4 text-[15px]">
+            {busy === 'run' ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Play className="h-4 w-4" aria-hidden />} Run
+          </button>
+          <button type="button" onClick={submit} disabled={!!busy} title="Submit (Ctrl + Enter)" className="btn btn-primary focus-ring h-10 px-5 text-[15px]">
+            {busy === 'submit' ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Send className="h-4 w-4" aria-hidden />} Submit
+          </button>
+        </div>
+      )}
+      <div className="ml-auto flex items-center gap-2">
+        <span className={`inline-flex h-10 items-center rounded-lg px-3 font-mono text-base font-semibold tabular-nums ${test.secondsLeft < 300 ? 'bg-danger-soft text-danger' : 'bg-surface-hover text-heading'}`} aria-label="Time left">{clock(test.secondsLeft)}</span>
+        <button type="button" disabled={test.submitting} onClick={test.onFinish} className="btn btn-ghost focus-ring h-10 px-4 text-[15px]">{test.submitting ? 'Submitting…' : 'Finish test'}</button>
+      </div>
+    </header>
+  );
+
+  const header = testHeader || (
     <header className="flex h-14 shrink-0 items-center gap-2 border-b border-line bg-card px-3">
       <Link href={back} className="inline-flex h-10 items-center gap-1 rounded-lg px-2 text-[15px] font-semibold text-heading hover:bg-surface-hover focus-ring" aria-label="Back to the problem list">
         <ArrowLeft className="h-5 w-5" aria-hidden /><span className="hidden sm:inline">{view.context?.name || 'Practice'}</span>

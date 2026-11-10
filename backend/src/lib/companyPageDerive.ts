@@ -188,7 +188,7 @@ export function derivePageContent(db: any, company: any): PageContent {
         : interview ? 'Practise answering out loud in a mock interview, then compare with the model answers above.'
         : skills.length ? 'A free skill test on this round’s topics. Timed, in secure mode.' : '',
       test_label: useMock || mockCoding ? 'Start the full mock' : interview ? 'Start a mock interview' : skills.length ? 'Take the skill test' : '',
-      test_href: useMock || mockCoding ? `/skill-test/${companyMock.slug}` : interview ? '/mock-interview' : skills.length ? `/skill-test/${skills[0]}` : '',
+      test_href: useMock || mockCoding ? `/practice/test/${companyMock.slug}` : interview ? '/mock-interview' : skills.length ? `/skill-test/${skills[0]}` : '',
       skill_slugs: skills,
       track_text: mockCoding ? 'After the mock, mark each problem solved, partly solved or not solved. Your coding score shows here.' : useMock ? 'Take the mock to see your weakest sections here.' : interview ? 'Answer quality over attempts, from your mock interviews.' : skills.length ? 'Take the skill test to see your weakest topics here.' : '',
       tip: '',

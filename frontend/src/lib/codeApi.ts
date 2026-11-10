@@ -90,3 +90,16 @@ export const VERDICT_LABEL: Record<string, string> = {
   time_limit: 'Time limit exceeded', system_error: 'Runner unavailable', ran: 'Ran', ok: 'Ran',
 };
 export const fetchPracticeTests = () => call<{ companies: Array<CompanyMeta & { tests: CompanyTest[] }> }>('practice', '/tests');
+
+// ---- Company test report
+export interface TestReport {
+  test: { slug: string; name: string; company: CompanyMeta | null; kind: 'full' | 'sectional' };
+  attempt: { id: string; score: number; correct: number; incorrect: number; unanswered: number; total: number; minutes: number; submitted_at: string; number: number; prev_score: number | null };
+  sections: Array<{ key: string; name: string; correct: number; total: number; pct: number; prev_pct: number | null; practice_test: string | null }>;
+  coding: Array<{ id: string; title: string; status: 'solved' | 'partial' | 'not'; passed: number | null; total: number | null; language: string; graded: boolean }>;
+  history: Array<{ id: string; score: number; at: string }>;
+  fix: Array<{ key: string; name: string; pct: number; practice_test: string | null }>;
+  readiness: { now: number; before: number | null; band: string } | null;
+  prep: boolean;
+}
+export const fetchTestReport = (attemptId: string) => call<TestReport>('practice', `/test-result/${encodeURIComponent(attemptId)}`);
