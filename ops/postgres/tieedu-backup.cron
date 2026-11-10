@@ -1,0 +1,8 @@
+# Install: sudo cp ops/postgres/tieedu-backup.cron /etc/cron.d/tieedu-backup
+# (cron.d files must be owned by root, mode 644, and end with a newline)
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+*/15 * * * * root /var/www/tiedu/ops/postgres/backup.sh frequent >> /var/log/tieedu-backup.log 2>&1
+30 2 * * *   root /var/www/tiedu/ops/postgres/backup.sh daily    >> /var/log/tieedu-backup.log 2>&1
+0 4 * * 0    root /var/www/tiedu/ops/postgres/restore-check.sh   >> /var/log/tieedu-backup.log 2>&1

@@ -62,6 +62,7 @@ import { collegesRouter, collegesAdminRouter } from './routes/colleges.routes';
 import { campusPagesRouter } from './routes/campusPages.routes';
 import driveAdminRouter from './routes/driveAdmin.routes';
 import { runDriveBridgeMigrations } from './db/driveBridgeMigrate';
+import { writeFreezeMiddleware, PG_WRITE_FROZEN } from './db/writeFreeze';
 import { emailLeadsRouter } from './routes/emailLeads.routes';
 import { emailCampaignsRouter } from './routes/emailCampaigns.routes';
 import { emailPublicRouter } from './routes/emailPublic.routes';
@@ -117,6 +118,10 @@ app.use((req: any, res: any, next: any) => {
   });
   next();
 });
+
+// Cutover write freeze: PG-only write routes answer 503 "try again in a minute"
+// while backend/data/.pg-write-freeze exists. A no-op otherwise.
+app.use(writeFreezeMiddleware);
 
 // Malformed JSON bodies ko crash hone se rokta hai (400 dekar, kaam jari rakhta hai).
 // The general error handler lives at the BOTTOM of this file, after every route —
@@ -272,6 +277,11 @@ app.use((err: any, req: any, res: any, next: any) => {
   }
   if (err?.type === 'entity.too.large') {
     return res.status(413).json({ error: 'Request body too large' });
+  }
+  // A write refused by the cutover freeze (db/writeFreeze.ts) is a pause, not a fault.
+  if (err?.code === PG_WRITE_FROZEN) {
+    res.setHeader('Retry-After', '60');
+    return res.status(503).json({ error: err.message, code: PG_WRITE_FROZEN });
   }
 
   // Honour an explicit status when a handler set one, but never let a thrown

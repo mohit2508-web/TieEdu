@@ -1,5 +1,6 @@
 import { Pool } from 'pg';
 import dotenv from 'dotenv';
+import { isPgWriteFrozen, isWriteSql, PgWriteFrozenError } from './writeFreeze';
 
 dotenv.config();
 
@@ -22,19 +23,51 @@ const MISSING_URL_MESSAGE =
 let pool: Pool | null = null;
 let poolError: string | null = null;
 
+// A managed cluster (CockroachDB Cloud) needs TLS; a PostgreSQL on the same box
+// listening on localhost has none, and forcing it fails every connection with
+// "The server does not support SSL connections". DATABASE_SSL=0 turns it off;
+// unset keeps the managed-cluster behaviour. Leave `sslmode` out of the URL
+// when turning it off — a URL parameter overrides this option in node-postgres.
+export function sslOption(value: string | undefined = process.env.DATABASE_SSL): false | { rejectUnauthorized: false } {
+  return /^(0|false|off|disable)$/i.test((value || '').trim()) ? false : { rejectUnauthorized: false };
+}
+
+// Wraps a physical client's query so write SQL is refused while a cutover holds
+// the write freeze (see db/writeFreeze.ts). pool.query() and pool.connect() both
+// go through client.query, so guarding here covers transactions too. Handles the
+// callback form, which pg-pool itself uses.
+export function guardClientWrites(client: any): void {
+  if (client.__freezeGuarded) return;
+  client.__freezeGuarded = true;
+  const original = client.query.bind(client);
+  client.query = (config: any, values?: any, callback?: any) => {
+    const text = typeof config === 'string' ? config : config?.text;
+    if (isWriteSql(text) && isPgWriteFrozen()) {
+      const err = new PgWriteFrozenError();
+      const cb = typeof values === 'function' ? values : typeof callback === 'function' ? callback : config?.callback;
+      if (cb) {
+        process.nextTick(() => cb(err));
+        return undefined;
+      }
+      return Promise.reject(err);
+    }
+    return original(config, values, callback);
+  };
+}
+
 const getPoolInternal = (): Pool => {
   if (!connectionString) throw new Error(MISSING_URL_MESSAGE);
   if (!pool) {
     pool = new Pool({
       connectionString,
-      ssl: {
-        rejectUnauthorized: false
-      },
+      ssl: sslOption(),
       max: 10,
       idleTimeoutMillis: 10000,
       connectionTimeoutMillis: 5000, // Fast 5-second connection check
       keepAlive: true
     });
+
+    pool.on('connect', guardClientWrites);
 
     // The host is redacted deliberately: connection logs are routinely shipped to
     // aggregators, and a cluster hostname is an unguessable identifier for a live

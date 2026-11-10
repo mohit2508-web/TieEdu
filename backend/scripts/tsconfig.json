@@ -6,5 +6,5 @@
     "noEmit": true,
     "types": ["node"]
   },
-  "files": ["./drops-api.test.ts", "./drive-bridge.test.ts", "./mock-provider.ts"]
+  "files": ["./drops-api.test.ts", "./drive-bridge.test.ts", "./mock-provider.ts", "./pg-migrate.ts", "./write-freeze.test.ts"]
 }
