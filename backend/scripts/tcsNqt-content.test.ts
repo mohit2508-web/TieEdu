@@ -56,7 +56,7 @@ const coding = c.modules.find((m: any) => m.id === 'mod-prep-tcs-nqt-coding');
 check('coding module: pack-gated, outside the price ladder', coding.pack_gated === true && coding.is_premium === false);
 check('coding items keep their problem id', coding.items[0].id === `mod-prep-tcs-nqt-coding-${FIRST.id}`);
 const md = coding.items[0].blocks[0].payload.text as string;
-check('coding item: title line first, then samples and solutions', md.split('\n')[0].startsWith(`**${FIRST.title}**`) && md.includes(`](/code/${FIRST.id})`) && md.includes('**Sample 2**') && md.includes('**Solution · C++**') && md.includes('```python') && !md.includes('"sample"'));
+check('coding item: title line first, then samples and solutions', md.split('\n')[0].startsWith(`**${FIRST.title}**`) && md.includes(`](/practice/problem/${FIRST.id}?company=tcs-nqt)`) && md.includes('**Sample 2**') && md.includes('**Solution · C++**') && md.includes('```python') && !md.includes('"sample"'));
 check('3 paid interview modules (pack = ₹219 on the ladder)', c.modules.filter((m: any) => m.is_premium).length === 3);
 const lessons = c.modules.find((m: any) => m.id === 'mod-prep-tcs-nqt-oa');
 check('coding lessons get no aptitude practice questions', lessons.items[1].lesson.practice.length === 0 && lessons.items[0].lesson.practice.length >= 3);

@@ -435,7 +435,7 @@ const FENCE = '`'.repeat(3);
 export function codingMarkdown(p: CodingProblem): string {
   const block = (x: string, lang = '') => `${FENCE}${lang}\n${x.replace(/\s+$/, '')}\n${FENCE}`;
   return [
-    `**${p.title}** · ${p.topic} · ${p.difficulty} · [Solve it in the code editor](/code/${p.id})`,
+    `**${p.title}** · ${p.topic} · ${p.difficulty} · [Solve it in the code editor](/practice/problem/${p.id}?company=tcs-nqt)`,
     p.statement,
     `**Input format**\n\n${p.input_format}`,
     `**Output format**\n\n${p.output_format}`,

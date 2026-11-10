@@ -195,6 +195,11 @@ export default function CompanyVaultPage({
    * the item reader at their first item instead.
    */
   const showModule = (mod: ContentModule) => {
+    // Coding problems live in the Practice hub with the code editor (PRACTICE_MODE_PLAN.md §3), not in this reader.
+    if ((mod as any).module_type === 'dsa_question' && (mod as any).pack_gated && company) {
+      router.push(`/practice/companies/${company.slug}`);
+      return;
+    }
     // Prep companies: lessons open in the lesson reader inside the plan (INFOSYS_SE_3T_UX_PLAN §3).
     if ((mod as any).pack_gated && company && prepSlugs.includes(company.slug) && (mod.items?.[0] as any)?.lesson) {
       router.push(`/prep/${company.slug}/learn/${mod.items![0].id}`);
@@ -218,6 +223,9 @@ export default function CompanyVaultPage({
     }
     const items: ContentItem[] = (company.modules || []).flatMap((mod: ContentModule) => mod.items || []);
     if (urlItemId) {
+      // A coding item (e.g. a solution link from a test) opens in the IDE.
+      const codingMod = (company.modules || []).find((m: any) => m.module_type === 'dsa_question' && m.pack_gated && (m.items || []).some((i: any) => i.id === urlItemId));
+      if (codingMod) { router.replace(`/practice/problem/${String(urlItemId).slice(codingMod.id.length + 1)}?company=${company.slug}`); return; }
       const item = items.find(i => i.id === urlItemId);
       if (item) { setSelectedItem(item); setActiveReaderTab('content'); return; }
     }

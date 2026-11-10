@@ -164,7 +164,7 @@ export async function claimMembership(): Promise<Membership> {
 const QUIET_PREFIXES = [
   '/skill-test/', '/mock-drive', '/mock-interview', '/drive-day', '/peer-mock', '/prep/',
   '/admin', '/school', '/tpo', '/parent', '/verify', '/login', '/signup', '/reset-password',
-  '/forgot-password', '/daily', '/english-coach', '/project-pulse', '/p/',
+  '/forgot-password', '/daily', '/english-coach', '/project-pulse', '/p/', '/practice/problem', '/practice/test',
 ];
 
 export function isQuietRoute(pathname: string): boolean {

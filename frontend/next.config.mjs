@@ -136,6 +136,9 @@ const nextConfig = {
         destination: '/mock-drive/drives',
         permanent: true,
       },
+      // The first coding pages moved into the Practice hub (PRACTICE_MODE_PLAN.md §3).
+      { source: '/code', destination: '/practice/dsa', permanent: true },
+      { source: '/code/:id', destination: '/practice/problem/:id', permanent: true },
     ];
   },
 

@@ -16,6 +16,8 @@ import type { LucideIcon } from 'lucide-react';
 import { driveBackHref, isDriveRootPath } from '@/lib/mockDriveNav';
 import {
   Award,
+  Code2,
+  Dumbbell,
   BadgeCheck,
   BookOpen,
   BrainCircuit,
@@ -221,6 +223,47 @@ export const NAV_ITEMS: Record<string, NavItem> = {
     description: 'Side-by-side rounds, pay and process data',
     primary: true,
     keywords: ['versus', 'vs', 'side by side', 'matrix', 'difference'],
+  },
+  practice: {
+    id: 'practice',
+    href: '/practice',
+    label: 'Practice home',
+    icon: Dumbbell,
+    match: 'exact',
+    description: 'Continue where you stopped: DSA, company sets and tests in one place',
+    primary: true,
+    tab: true,
+    keywords: ['practice', 'practise', 'coding', 'dsa', 'problems'],
+  },
+  dsa: {
+    id: 'dsa',
+    href: '/practice/dsa',
+    label: 'DSA sheet',
+    icon: Code2,
+    match: 'prefix',
+    description: 'Coding problems topic by topic, with a code editor and real test cases',
+    primary: true,
+    keywords: ['dsa', 'coding', 'problems', 'arrays', 'strings', 'dynamic programming', 'leetcode', 'compiler', 'ide'],
+  },
+  companySets: {
+    id: 'companySets',
+    href: '/practice/companies',
+    label: 'Company sets',
+    icon: Building2,
+    match: 'prefix',
+    description: 'Coding questions and tests for every company, in the order to practise them',
+    primary: true,
+    keywords: ['company', 'tcs', 'infosys', 'coding questions', 'pyq', 'previous year'],
+  },
+  companyTests: {
+    id: 'companyTests',
+    href: '/practice/tests',
+    label: 'Company tests',
+    icon: ClipboardList,
+    match: 'prefix',
+    description: 'Full mocks and sectional tests in the real pattern of each company',
+    primary: true,
+    keywords: ['mock', 'company test', 'full mock', 'sectional', 'nqt'],
   },
   skillTest: {
     id: 'skillTest',
@@ -508,7 +551,7 @@ export interface NavSection {
 export const NAV_SECTIONS: NavSection[] = [
   { id: 'home', label: 'Home', icon: House, itemIds: ['home'] },
   { id: 'learn', label: 'Learn', icon: BookOpen, itemIds: ['courses', 'tracks', 'freeCourse', 'calendar', 'myCourses', 'myCertificates'] },
-  { id: 'practise', label: 'Practise', icon: Target, itemIds: ['skillTest', 'daily', 'mockInterview', 'peerMock', 'englishCoach', 'drives'] },
+  { id: 'practise', label: 'Practise', icon: Target, itemIds: ['practice', 'dsa', 'companySets', 'companyTests', 'skillTest', 'daily', 'mockInterview', 'peerMock', 'englishCoach', 'drives'], extraPrefixes: ['/practice'] },
   { id: 'companies', label: 'Companies', icon: Building2, itemIds: ['companies', 'compare', 'talent'], extraPrefixes: ['/company'] },
   { id: 'feed', label: 'Drops', icon: Droplets, itemIds: ['drops'] },
 ];
@@ -604,7 +647,7 @@ export const MOBILE_TAB_ACTIONS: NavActionItem['id'][] = ['search', 'cart'];
  */
 // `/mock-drive` left this list in Phase 5: it now sits inside the site shell under
 // Practise, with its five screens as an in-page strip (DriveShell).
-export const SHELL_EXCLUDED_ROUTES: string[] = ['/login', '/signup', '/admin', '/tpo', '/school'];
+export const SHELL_EXCLUDED_ROUTES: string[] = ['/login', '/signup', '/admin', '/tpo', '/school', '/practice/problem', '/practice/test'];
 
 /** True when this pathname opts out of the site shell entirely. */
 export const isShellExcluded = (pathname: string): boolean =>
