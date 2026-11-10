@@ -125,11 +125,12 @@ const MARKS: Array<[CodingMark['status'], string]> = [['solved', 'Solved: every 
 
 /** The attempt's problems: `count` distinct ones, fixed per attempt so a reload shows the same paper. */
 export function pickProblems(cfg: CodingConfig, attemptId: string): CodingProblemView[] {
-  let seed = [...attemptId].reduce((n, c) => (n * 31 + c.charCodeAt(0)) >>> 0, 7);
+  let seed = [...attemptId].reduce((n, c) => (Math.imul(n, 31) + c.charCodeAt(0)) >>> 0, 7);
   const pool = [...cfg.problems];
   const out: CodingProblemView[] = [];
   while (out.length < cfg.count && pool.length) {
-    seed = (seed * 1103515245 + 12345) >>> 0;
+    // Math.imul keeps the multiply exact; the server repeats this draw (code.routes pickCodingIds).
+    seed = (Math.imul(seed, 1103515245) + 12345) >>> 0;
     out.push(pool.splice(seed % pool.length, 1)[0]);
   }
   return out;

@@ -180,7 +180,7 @@ export function buildPrep(db: any, userId: string, slug: string, owned: boolean)
       (hist[key] = hist[key] || []).push(Number(tp.percentage) || 0);
     }
     // The mock's coding section (no runner): the student's own marks, solved 100 · partly 50 · not solved 0.
-    const marks: any[] = Array.isArray(a.coding_self) ? a.coding_self : [];
+    const marks: any[] = Array.isArray(a.coding_result) ? a.coding_result : Array.isArray(a.coding_self) ? a.coding_self : [];
     if (marks.length) (hist.coding = hist.coding || []).push(Math.round(marks.reduce((n, m) => n + (m.status === 'solved' ? 100 : m.status === 'partial' ? 50 : 0), 0) / marks.length));
   }
   const mockAttempts = attempts.filter((a: any) => asmBySkill.get(a.assessmentId) === fullMock?.id);

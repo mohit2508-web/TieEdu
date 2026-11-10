@@ -16,7 +16,8 @@ import {
   startAssessmentApi, saveAttemptApi, submitAttemptApi, fetchSkillDetailApi,
   SkillTestAttempt, SafeQuestion,
 } from '@/lib/skillTestApi';
-import { useSections, SectionBar, SectionSubmitSheet, WritingTask, CodingTask, type TestSection, type WritingConfig, type CodingConfig, type CodingMark } from '@/components/skill-test/Sectional';
+import { useSections, SectionBar, SectionSubmitSheet, WritingTask, type TestSection, type WritingConfig, type CodingConfig, type CodingMark } from '@/components/skill-test/Sectional';
+import { MockCoding } from '@/components/code/MockCoding';
 
 import { nameFromSlug, withPageTitle } from '@/components/common/withPageTitle';
 type AnswerState = Record<string, string[]>; // questionId -> selected option indexes (as strings)
@@ -290,7 +291,7 @@ function AssessmentPage() {
                 <li>Each section has its own timer. When it ends, the next section opens.</li>
                 <li>A submitted section cannot be reopened.</li>
                 <li>Secure mode: stay in fullscreen. Leaving the test 3 times submits it.</li>
-                {codingCfg && <li>The coding problems come last. Secure mode pauses there, so you can run your code in your own compiler; then mark how each problem went.</li>}
+                {codingCfg && <li>The coding problems come last, with a code editor: run your code on the samples, then submit it against hidden tests. Your best submission per problem is scored.</li>}
               </ul>
             </>
           ) : (
@@ -331,7 +332,7 @@ function AssessmentPage() {
   if (sec.enabled && sec.done && codingCfg && attempt) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <CodingTask
+        <MockCoding
           config={codingCfg}
           attemptId={attempt.id}
           submitting={submitting}

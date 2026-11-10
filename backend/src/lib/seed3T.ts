@@ -435,7 +435,7 @@ const FENCE = '`'.repeat(3);
 export function codingMarkdown(p: CodingProblem): string {
   const block = (x: string, lang = '') => `${FENCE}${lang}\n${x.replace(/\s+$/, '')}\n${FENCE}`;
   return [
-    `**${p.title}** · ${p.topic} · ${p.difficulty}`,
+    `**${p.title}** · ${p.topic} · ${p.difficulty} · [Solve it in the code editor](/code/${p.id})`,
     p.statement,
     `**Input format**\n\n${p.input_format}`,
     `**Output format**\n\n${p.output_format}`,
@@ -463,7 +463,7 @@ const SETS: Array<{
   // TCS NQT (owner, 2026-11-10): empty until the owner's content lands; sets with no items are skipped.
   // Coding problems are pack-gated like lessons (outside the price ladder); the 3 interview rounds are the paid modules.
   { slug: 'tcs-nqt', id: 'mod-prep-tcs-nqt-oa', type: 'preparation_guide', round: 'OA', title: 'NQT Parts A and B: topic lessons', order: 1, items: TCS_NQT_LESSONS.map(lessonAsItem), lesson: TCS_NQT_LESSON_SOURCE, role: 'Ninja / Digital / Prime' },
-  { slug: 'tcs-nqt', id: 'mod-prep-tcs-nqt-coding', type: 'dsa_question', round: 'Coding', title: 'Coding round: problems and solutions', order: 2, items: TCS_NQT_CODING.map(codingAsItem), markdown: TCS_NQT_CODING.map(codingMarkdown), itemIds: TCS_NQT_CODING.map((p) => p.id), gated: true, hash: md5(JSON.stringify(TCS_NQT_CODING)), role: 'Digital / Prime' },
+  { slug: 'tcs-nqt', id: 'mod-prep-tcs-nqt-coding', type: 'dsa_question', round: 'Coding', title: 'Coding round: problems and solutions', order: 2, items: TCS_NQT_CODING.map(codingAsItem), markdown: TCS_NQT_CODING.map(codingMarkdown), itemIds: TCS_NQT_CODING.map((p) => p.id), gated: true, hash: md5(JSON.stringify(TCS_NQT_CODING.map(codingMarkdown))), role: 'Digital / Prime' },
   { slug: 'tcs-nqt', id: 'mod-prep-tcs-nqt-tech', type: 'technical_question', round: 'Technical', title: 'Technical interview: questions and model answers', order: 3, items: TCS_NQT_TECHNICAL, role: 'Ninja / Digital / Prime' },
   { slug: 'tcs-nqt', id: 'mod-prep-tcs-nqt-managerial', type: 'hr_question', round: 'Managerial', title: 'Managerial interview: questions and model answers', order: 4, items: TCS_NQT_MANAGERIAL, role: 'Ninja / Digital / Prime' },
   { slug: 'tcs-nqt', id: 'mod-prep-tcs-nqt-hr', type: 'hr_question', round: 'HR', title: 'HR interview: questions and model answers', order: 5, items: TCS_NQT_HR, role: 'Ninja / Digital / Prime' },

@@ -54,14 +54,14 @@ check('page: package stat says being verified', (stats.data.stats as any[]).find
 check('no prep plan registered yet', !PREP_COMPANIES['tcs-nqt']);
 check('no half-empty mock', seedCompanyTest(db, 'tcs-nqt') === 0 && !db.skills.length);
 check('no empty sectional tests', seedSectionalTests(db, 'tcs-nqt') === 0);
-check('no empty modules', seedInterviewPrep(db) === 0 && (c.modules || []).length === 0);
+check('only the filled coding module is added (the rest stay off while empty)', seedInterviewPrep(db) === 1 && c.modules.map((m: any) => m.id).join() === 'mod-prep-tcs-nqt-coding');
 
 // A live database: the old profile is rewritten once, modules kept, admin edits after that stay.
 const live: any = { companies: [{ id: 'comp-3', slug: 'tcs-nqt', status: 'published', name: 'TCS — NQT', careers_link: 'https://www.tcsion.com/hub/national-qualifier-test/', modules: [{ id: 'keep' }] }], skills: [], topics: [], questions: [], assessments: [], company_focus_applied: 'x', company_focus_v2: 'x', company_mphasis_v1: 'x', feed_v3_seeded: 'x', feed_v3_1: 'x' };
 seedMissing3T(live);
 const t = live.companies.find((x: any) => x.slug === 'tcs-nqt');
 check('old profile refreshed', t.careers_link === 'https://nextstep.tcs.com' && t.profile.apply_steps.length === 5);
-check('its modules are kept', t.modules.length === 1 && t.modules[0].id === 'keep');
+check('its modules are kept', t.modules.some((m: any) => m.id === 'keep'));
 t.tagline = 'Admin edit';
 seedMissing3T(live);
 check('refresh runs only once (admin edits stay)', t.tagline === 'Admin edit');

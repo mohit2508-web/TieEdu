@@ -1,4 +1,5 @@
 ﻿import { isMember, MEMBER_EXTRA_MOCK_ATTEMPTS } from '../lib/festival';
+import { codingResultFor } from './code.routes';
 import { Router, Request, Response } from 'express';
 import { ownedModuleIdsFor, unlockedCompanyIds } from '../payments/orders';
 import crypto from 'crypto';
@@ -232,9 +233,12 @@ skillTestRouter.post('/attempts/:attemptId/submit', requireAuth, (req: Request, 
     }));
   }
   if (typeof req.body?.timeRemainingSec === 'number') attempt.timeRemainingSec = req.body.timeRemainingSec;
-  // Coding section (no code runner): the student's own mark per problem. Not part of the score; feeds the prep plan.
+  // Coding section: graded submissions made during this attempt win (code.routes); without them (runner
+  // down) the student's own mark per problem is kept. Not part of the MCQ score; feeds the prep plan.
+  const graded = codingResultFor(db, attempt);
+  if (graded) (attempt as any).coding_result = graded;
   const codingIds = new Set(((assessment as any)?.coding?.problems || []).map((p: any) => p.id));
-  if (Array.isArray(req.body?.coding_self) && codingIds.size) {
+  if (!graded && Array.isArray(req.body?.coding_self) && codingIds.size) {
     (attempt as any).coding_self = req.body.coding_self
       .filter((m: any) => codingIds.has(String(m?.id)) && ['solved', 'partial', 'not'].includes(m?.status))
       .slice(0, 5)

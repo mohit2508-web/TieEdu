@@ -20,15 +20,7 @@ for (const topic of ['numerical', 'verbal', 'reasoning', 'advanced']) {
     TCS_NQT_BANK.push({ source: 'Test fixture', topic, difficulty: 'medium', question: `${topic} question ${i}?`, options: ['A', 'B', 'C', 'D'], correct: i % 4, explanation: 'Because.', code: false });
   }
 }
-for (let i = 1; i <= 6; i++) {
-  TCS_NQT_CODING.push({
-    id: `tcs-c-00${i}`, title: `Problem ${i}`, difficulty: 'medium', topic: 'Arrays', statement: 'Find the sum.',
-    input_format: 'N, then N numbers', output_format: 'The sum', constraints: ['1 ≤ N ≤ 10^5'],
-    samples: [{ input: '3\n1 2 3', output: '6' }, { input: '1\n5', output: '5' }],
-    hints: ['Add them up.'], approach: 'One pass.', complexity: 'O(n) time, O(1) space',
-    solutions: { cpp: '#include <bits/stdc++.h>\nint main(){}', python: 'print(sum(...))' }, source: 'Test fixture',
-  });
-}
+const FIRST = TCS_NQT_CODING[0];
 TCS_NQT_LESSONS.push(['Numerical', 'Percentages', ['Rule'], 'Example', 'Trap'], ['Coding', 'Two pointers', ['Rule'], 'Example', 'Trap']);
 TCS_NQT_TECHNICAL.push(['What is OOP?', 'easy', 'high', ['Classes'], 'Answer', 'Follow-up']);
 TCS_NQT_MANAGERIAL.push(['Tell me about a conflict.', 'medium', 'high', ['STAR'], 'Answer', 'Follow-up']);
@@ -48,21 +40,23 @@ const mock = db.skills.find((s: any) => s.slug === 'tcs-nqt-full-mock');
 const asm = db.assessments.find((a: any) => a.skillId === mock.id);
 check('mock: 190 minutes with coding', asm.durationMinutes === 190 && mock.avgCompletionTime === 190 && mock.has_coding === true);
 check('mock: 4 MCQ sections in the paper order', asm.sections.map((s: any) => s.count).join(',') === '20,25,20,15');
-check('mock: coding section with the whole pool', asm.coding.count === 2 && asm.coding.minutes === 90 && asm.coding.problems.length === 6);
-check('mock: no hints or solutions reach the test page', !/solutions|hints|approach/.test(JSON.stringify(asm.coding)));
-check('mock: solution link opens the Train item', asm.coding.problems[0].solution_href === '/company/tcs-nqt?m=mod-prep-tcs-nqt-coding&q=mod-prep-tcs-nqt-coding-tcs-c-001');
+check('mock: coding section with the whole pool', asm.coding.count === 2 && asm.coding.minutes === 90 && asm.coding.problems.length === TCS_NQT_CODING.length);
+check('mock: no hints, solutions or tests reach the test page', !/"(solutions|hints|approach|tests)"/.test(JSON.stringify(asm.coding)));
+check('mock: solution link opens the Train item', asm.coding.problems[0].solution_href === `/company/tcs-nqt?m=mod-prep-tcs-nqt-coding&q=mod-prep-tcs-nqt-coding-${FIRST.id}`);
 check('4 sectional tests', seedSectionalTests(db, 'tcs-nqt') === 4);
 const hash = mock.bank_hash;
-TCS_NQT_CODING[0].title = 'Problem 1 (edited)';
+const oldTitle = FIRST.title;
+FIRST.title = oldTitle + ' (edited)';
 seedCompanyTest(db, 'tcs-nqt', true);
-check('an edited coding problem reaches a live database', mock.bank_hash !== hash && asm.coding.problems[0].title === 'Problem 1 (edited)');
+check('an edited coding problem reaches a live database', mock.bank_hash !== hash && asm.coding.problems[0].title === oldTitle + ' (edited)');
+FIRST.title = oldTitle;
 
 check('5 modules', seedInterviewPrep(db) === 5 && c.modules.length === 5);
 const coding = c.modules.find((m: any) => m.id === 'mod-prep-tcs-nqt-coding');
 check('coding module: pack-gated, outside the price ladder', coding.pack_gated === true && coding.is_premium === false);
-check('coding items keep their problem id', coding.items[0].id === 'mod-prep-tcs-nqt-coding-tcs-c-001');
+check('coding items keep their problem id', coding.items[0].id === `mod-prep-tcs-nqt-coding-${FIRST.id}`);
 const md = coding.items[0].blocks[0].payload.text as string;
-check('coding item: title line first, then samples and solutions', md.split('\n')[0] === '**Problem 1** · Arrays · medium' && md.includes('**Sample 2**') && md.includes('**Solution · C++**') && md.includes('```python'));
+check('coding item: title line first, then samples and solutions', md.split('\n')[0].startsWith(`**${FIRST.title}**`) && md.includes(`](/code/${FIRST.id})`) && md.includes('**Sample 2**') && md.includes('**Solution · C++**') && md.includes('```python') && !md.includes('"sample"'));
 check('3 paid interview modules (pack = ₹219 on the ladder)', c.modules.filter((m: any) => m.is_premium).length === 3);
 const lessons = c.modules.find((m: any) => m.id === 'mod-prep-tcs-nqt-oa');
 check('coding lessons get no aptitude practice questions', lessons.items[1].lesson.practice.length === 0 && lessons.items[0].lesson.practice.length >= 3);
