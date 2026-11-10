@@ -16,6 +16,7 @@ import { GuaranteeTab } from '@/components/admin/GuaranteeTab';
 import { RecruitersTab } from '@/components/admin/RecruitersTab';
 import { ExperimentsTab } from '@/components/admin/ExperimentsTab';
 import { ThreeTStatusTab } from '@/components/admin/ThreeTStatusTab';
+import { CodingPracticeTab } from '@/components/admin/CodingPracticeTab';
 import { FestivalTab } from '@/components/admin/FestivalTab';
 import { AnalyticsTab } from '@/components/admin/AnalyticsTab';
 import { SettingsTab } from '@/components/admin/SettingsTab';
@@ -31,14 +32,14 @@ import { MessageLogTab } from '@/components/admin/MessageLogTab';
 import {
   BookOpen, Building2, BarChart3, ClipboardList, FileText, Layers, LayoutDashboard,
   LogOut, Mail, RefreshCw, Settings2, ShoppingBag, Ticket, Users, ExternalLink, Wallet,
-GraduationCap, Award, Zap, BellRing, Send, BrainCircuit, Newspaper, BadgeCheck, Briefcase, FlaskConical, ShieldCheck, ListChecks, Inbox, ScrollText, Sparkles } from 'lucide-react';
+GraduationCap, Award, Zap, BellRing, Send, BrainCircuit, Newspaper, BadgeCheck, Briefcase, FlaskConical, ShieldCheck, ListChecks, Inbox, ScrollText, Sparkles, Code2 } from 'lucide-react';
 import { AdminCoursesTab } from '@/components/admin/course/AdminCoursesTab';
 import { AdminCertificatesTab } from '@/components/admin/course/AdminCertificatesTab';
 import { AdminXpTab } from '@/components/admin/course/AdminXpTab';
 import { NotificationBell } from '@/components/layout/NotificationBell';
 import { AccountMenu } from '@/components/layout/AccountMenu';
 
-type TabId = 'overview' | 'orders' | 'payments' | 'users' | 'analytics' | 'hub' | 'content' | 'pack' | 'drops' | 'coupons' | 'courses' | 'certificates' | 'xp' | 'skilltest' | 'drives' | 'reports' | 'offers' | 'guarantee' | 'recruiters' | 'experiments' | 'threet' | 'festival' | 'emails' | 'notifications' | 'broadcast' | 'settings' | 'support' | 'messagelog';
+type TabId = 'overview' | 'orders' | 'payments' | 'users' | 'analytics' | 'hub' | 'content' | 'pack' | 'drops' | 'coupons' | 'courses' | 'certificates' | 'xp' | 'skilltest' | 'drives' | 'reports' | 'offers' | 'guarantee' | 'recruiters' | 'experiments' | 'threet' | 'festival' | 'emails' | 'notifications' | 'broadcast' | 'settings' | 'support' | 'messagelog' | 'coding';
 type SectionId = 'home' | 'students' | 'sales' | 'content' | 'practice' | 'messaging' | 'settings';
 
 /**
@@ -52,7 +53,7 @@ const SECTIONS: { id: SectionId; label: string; icon: any; hint: string }[] = [
   { id: 'students', label: 'Students', icon: Users, hint: 'Accounts, certificates, XP, claims' },
   { id: 'sales', label: 'Sales', icon: Wallet, hint: 'Orders, payments, coupons' },
   { id: 'content', label: 'Content', icon: BookOpen, hint: 'Companies, courses, tests, feed' },
-  { id: 'practice', label: 'Practice', icon: ClipboardList, hint: 'Mock drives, reports, offers, recruiters' },
+  { id: 'practice', label: 'Practice', icon: ClipboardList, hint: 'Coding practice, mock drives, reports, offers, recruiters' },
   { id: 'messaging', label: 'Messaging', icon: Mail, hint: 'Support, email, notifications' },
   { id: 'settings', label: 'Settings', icon: Settings2, hint: 'Site settings and experiments' },
 ];
@@ -75,6 +76,7 @@ const NAV: { id: TabId; label: string; icon: any; section: SectionId }[] = [
   { id: 'courses', label: 'Courses', icon: GraduationCap, section: 'content' },
   { id: 'skilltest', label: 'Skill tests', icon: BrainCircuit, section: 'content' },
   { id: 'drops', label: 'Drops', icon: Newspaper, section: 'content' },
+  { id: 'coding', label: 'Coding practice', icon: Code2, section: 'practice' },
   { id: 'drives', label: 'Mock drives', icon: ClipboardList, section: 'practice' },
   { id: 'reports', label: 'Candidate reports', icon: FileText, section: 'practice' },
   { id: 'offers', label: 'Offer wall', icon: BadgeCheck, section: 'practice' },
@@ -425,6 +427,7 @@ export const AdminCmsView: React.FC = () => {
             {activeTab === 'recruiters' && <RecruitersTab />}
             {activeTab === 'experiments' && <ExperimentsTab />}
             {activeTab === 'threet' && <ThreeTStatusTab companies={companiesList} />}
+            {activeTab === 'coding' && <CodingPracticeTab />}
             {activeTab === 'festival' && <FestivalTab />}
 
             {/* TAB: EMAIL MARKETING — leads, campaigns, templates */}

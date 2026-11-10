@@ -23,6 +23,7 @@ import { coversRouter } from './routes/covers.routes';
 import { prepRouter } from './routes/prep.routes';
 import { codeRouter } from './routes/code.routes';
 import { practiceRouter } from './routes/practice.routes';
+import { adminPracticeRouter } from './routes/adminPractice.routes';
 import { guaranteeRouter, guaranteeAdminRouter } from './routes/guarantee.routes';
 import { supportRouter, supportAdminRouter } from './routes/support.routes';
 import { messagingAdminRouter } from './routes/messagingAdmin.routes';
@@ -154,6 +155,7 @@ app.use('/api/auth', authRouter);
 // Before the general admin router, so its catch-all cannot swallow /offers.
 app.use('/api/festival', festivalRouter);
 app.use('/api/admin/festival', requireAdmin, festivalAdminRouter);
+app.use('/api/admin/practice', requireAdmin, adminPracticeRouter);
 app.use('/api/admin/offers', requireAdmin, offersAdminRouter);
 app.use('/api/admin/guarantee', requireAdmin, guaranteeAdminRouter);
 app.use('/api/admin/support', requireAdmin, supportAdminRouter);

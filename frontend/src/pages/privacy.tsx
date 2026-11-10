@@ -29,6 +29,7 @@ const sections: LegalSection[] = [
         rows={[
           ['Account', 'Name, email, password (stored hashed), college, graduation year, branch', 'You, when you sign up or edit your profile'],
           ['Learning activity', 'Lessons opened and completed, test answers and scores, XP, streaks, certificates, mock interview answers and feedback', 'Created as you use the site'],
+          ['Code you submit', 'Your programs, the language, and which test cases passed. TiEEdu staff can read submitted code to check problems and help students; drafts you never run or submit stay in your browser', 'You, when you press Run or Submit in the code editor'],
           ['Preferences', 'Target company, interests, notification choices, language, theme, cookie choice', 'You'],
           ['Purchases', 'What you bought, amount, order and payment ids, UPI reference you share with us', 'You and our payment partner (we never see your card or UPI PIN)'],
           ['Device', 'Browser and device type, push notification token, installed-app status, approximate time zone', 'Your browser'],
