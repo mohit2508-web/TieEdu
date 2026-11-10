@@ -39,6 +39,11 @@ type Column = { name: string; type: string };
 type Table = { name: string; columns: Column[]; pk: string[] };
 
 const identity = { getTypeParser: () => (v: any) => v };
+
+// Each side's migrator owns its own history. Copying Prisma's table would hand
+// the target the source's checksums, and `prisma migrate deploy` would then
+// refuse a baseline that was regenerated for PostgreSQL.
+const SKIP_TABLES = new Set(['_prisma_migrations']);
 const q = (id: string) => '"' + id.replace(/"/g, '""') + '"';
 
 function sideUrl(side: Side): string {
@@ -103,7 +108,7 @@ async function readTables(c: Client): Promise<Map<string, Table>> {
   const out = new Map<string, Table>();
   for (const r of cols.rows) {
     // CockroachDB exposes its hidden rowid on tables without a primary key.
-    if (r.column_name === 'rowid') continue;
+    if (r.column_name === 'rowid' || SKIP_TABLES.has(r.table_name)) continue;
     if (!out.has(r.table_name)) out.set(r.table_name, { name: r.table_name, columns: [], pk: [] });
     out.get(r.table_name)!.columns.push({ name: r.column_name, type: String(r.data_type).toLowerCase() });
   }

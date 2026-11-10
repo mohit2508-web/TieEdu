@@ -30,9 +30,15 @@ log() { echo "$(date -u +%FT%TZ) [$KIND] $*"; }
 
 for db in $DBS; do
   out="$WORK/pg-$db-$TS.dump"
-  runuser -u postgres -- pg_dump --format=custom --compress=6 "$db" > "$out"
-  pg_restore --list "$out" > /dev/null
-  log "dumped $db ($(du -h "$out" | cut -f1))"
+  # One bad database must not cost the rest of the run - db.json especially.
+  # The run still exits 1 and leaves tieedu-backup.last stale, so it is noticed.
+  if runuser -u postgres -- pg_dump --format=custom --compress=6 "$db" > "$out" && pg_restore --list "$out" > /dev/null; then
+    log "dumped $db ($(du -h "$out" | cut -f1))"
+  else
+    log "ERROR: dump of $db failed - continuing with the rest"
+    rm -f "$out"
+    FAILED=1
+  fi
 done
 
 # db.json is replaced by atomic rename, so a plain copy is a complete file.
@@ -65,6 +71,7 @@ else
   rclone delete --min-age 35d "$REMOTE/daily/"
 fi
 
+[ -z "${FAILED:-}" ] || { log "finished WITH ERRORS"; exit 1; }
 date -u +%FT%TZ > /var/log/tieedu-backup.last
 [ -n "$HEALTHCHECK_URL" ] && curl -fsS -m 10 "$HEALTHCHECK_URL" > /dev/null || true
 log "done"
