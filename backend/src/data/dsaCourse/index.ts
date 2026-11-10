@@ -294,7 +294,7 @@ export function getDsaMasteryCourse(): Course {
       'Complexity, arrays, trees, graphs and DP — the patterns that clear OAs and technical rounds',
     description: `Data structures and algorithms remain the single highest-leverage filter in engineering hiring. This course teaches the patterns interviewers actually use, not a tour of every exotic structure: Big-O fluency and constraint budgets, two pointers and sliding windows, hashing and monotonic stacks, linked-list surgery, trees and BSTs, heaps and greedy proofs, graph templates (BFS, DFS, Dijkstra, topological sort), and a dynamic-programming recipe that turns "hard" problems into state-recurrence work. A final lesson covers the 45-minute interview conversation itself — clarify, example, brute force, optimize, code, test.
 
-Four modules, eight lessons on the nine-step standard: objective, hook, concept, worked example, practice, common mistakes, exam angle, server-graded quiz and revision summary. A 30-question bank feeds the timed final; passing earns a verifiable TieEdu certificate.
+Four modules, eight lessons on the nine-step standard: objective, hook, concept, worked example, practice, common mistakes, exam angle, server-graded quiz and revision summary. A 30-question bank feeds the timed final; passing earns a verifiable TiEEdu certificate.
 
 **Who this is for:** students preparing for campus placements, off-campus OAs and interviews at product and service companies. Assumes you can write basic code in any language; every pattern is shown with complexity and edge cases called out.
 
@@ -329,7 +329,7 @@ Four modules, eight lessons on the nine-step standard: objective, hook, concept,
 
 Each lesson is a compact nine-block unit: why the pattern matters, the mental model, a fully worked example, practice with hints, the traps that cost offers, and the exact question an interviewer will ask next. The closing playbook turns technical communication into a skill you can rehearse — not just algorithm recognition.
 
-A 15-question timed exam from a 30-question bank gates the verifiable TieEdu certificate.`,
+A 15-question timed exam from a 30-question bank gates the verifiable TiEEdu certificate.`,
     prerequisites: [
       'Comfort writing basic programs (loops, functions, arrays) in any language',
     ],

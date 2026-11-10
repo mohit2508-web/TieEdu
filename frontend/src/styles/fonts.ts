@@ -1,5 +1,5 @@
 /*
- * TieEdu type system — "Warm Paper" (UI_REDESIGN_PLAN_V3 §5), self-hosted
+ * TiEEdu type system — "Warm Paper" (UI_REDESIGN_PLAN_V3 §5), self-hosted
  * through next/font.
  *
  *   display  Poppins          headings, buttons, numbers, prices (500–800)

@@ -182,7 +182,7 @@ export const createTeacherAccount = (db: any, admin: U, body: { email?: string; 
 export const appointTeacher = (db: any, admin: U, rawEmail: string) => {
   const e = email(rawEmail);
   const user = (db.users || []).find((x: any) => String(x.email || '').toLowerCase() === e);
-  if (!user) throw new PulseError(404, 'No TieEdu account with that email.');
+  if (!user) throw new PulseError(404, 'No TiEEdu account with that email.');
   const p = pulseOf(db);
   const row = p.teachers.find((t) => t.user_id === user.id);
   if (row) { row.revoked_at = null; row.granted_by = admin.id; row.granted_at = iso(); }

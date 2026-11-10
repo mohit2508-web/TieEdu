@@ -21,22 +21,22 @@ export interface StoryContent {
 }
 
 const prep = (company: string) =>
-  `\n\n## How to prepare on TieEdu\n\nOpen the ${company} page for the round-by-round pattern, topic lessons and timed mocks. Take one full mock under real timing before the test day and review every wrong answer the same evening.`;
+  `\n\n## How to prepare on TiEEdu\n\nOpen the ${company} page for the round-by-round pattern, topic lessons and timed mocks. Take one full mock under real timing before the test day and review every wrong answer the same evening.`;
 
 const verify = '\n\n> Figures can change between drives. Always confirm pay, bond and eligibility in the official notice and your offer letter.';
 
 export const FEED_V3_STORY: Record<string, StoryContent> = {
   // ─── Diwali ──────────────────────────────────────────────────────────────
   'drop-v3-01': {
-    body: '## What is on sale\n\nEvery **paid course** and every **company prep pack** on TieEdu is **50% off** until **10 November 2026, 11:59 PM IST**. Free courses stay free.\n\n## How the price works\n\n- The discount is applied by the server at checkout — the price you see is the price you pay\n- Coupons do not stack on the sale price; only a coupon bigger than 50% replaces it\n- After the sale ends, prices return to normal automatically\n\n## Also this Diwali\n\nA free 3-month TieEdu membership and the internship board. Both are on the Diwali page.',
+    body: '## What is on sale\n\nEvery **paid course** and every **company prep pack** on TiEEdu is **50% off** until **10 November 2026, 11:59 PM IST**. Free courses stay free.\n\n## How the price works\n\n- The discount is applied by the server at checkout — the price you see is the price you pay\n- Coupons do not stack on the sale price; only a coupon bigger than 50% replaces it\n- After the sale ends, prices return to normal automatically\n\n## Also this Diwali\n\nA free 3-month TiEEdu membership and the internship board. Both are on the Diwali page.',
     facts: [['Discount', '50% off'], ['Applies to', 'Paid courses + prep packs'], ['Ends', '10 Nov 2026, 11:59 PM IST'], ['Free courses', 'Stay free']],
   },
   'drop-v3-02': {
-    body: '## What you get\n\nA **free TieEdu membership for 3 months**, claimed in one tap during the Diwali Sale.\n\n- **Extra company mocks** — two more free attempts on top of the default\n- **Every prep lesson** in the company packs\n- **The internship board** — members apply in one tap\n\n## What it costs\n\nNothing. No card, no auto-debit, nothing renews by itself. A membership claimed during the sale stays active for its full 3 months, even after the sale ends.',
+    body: '## What you get\n\nA **free TiEEdu membership for 3 months**, claimed in one tap during the Diwali Sale.\n\n- **Extra company mocks** — two more free attempts on top of the default\n- **Every prep lesson** in the company packs\n- **The internship board** — members apply in one tap\n\n## What it costs\n\nNothing. No card, no auto-debit, nothing renews by itself. A membership claimed during the sale stays active for its full 3 months, even after the sale ends.',
     facts: [['Price', 'Free'], ['Length', '3 months'], ['Card needed', 'No'], ['Claim by', '10 Nov 2026']],
   },
   'drop-v3-03': {
-    body: '## The course\n\n**AI.FIRST** is TieEdu\'s flagship AI course: 12 modules and 48 lessons covering how AI and LLMs work, prompting and context, checking AI output, building with APIs and agents, and AI ethics and safety.\n\n## Start with the readiness test\n\nA timed test checks what you already know module by module. Ace a module and you can skip it.\n\n## Diwali price\n\n**₹49 instead of ₹99** until 10 November, 11:59 PM IST.\n\n## The certificate\n\nIssued only after the final exam and a capstone project you defend — it shows real skill, not just attendance.',
+    body: '## The course\n\n**AI.FIRST** is TiEEdu\'s flagship AI course: 12 modules and 48 lessons covering how AI and LLMs work, prompting and context, checking AI output, building with APIs and agents, and AI ethics and safety.\n\n## Start with the readiness test\n\nA timed test checks what you already know module by module. Ace a module and you can skip it.\n\n## Diwali price\n\n**₹49 instead of ₹99** until 10 November, 11:59 PM IST.\n\n## The certificate\n\nIssued only after the final exam and a capstone project you defend — it shows real skill, not just attendance.',
     facts: [['Sale price', '₹49'], ['Regular price', '₹99'], ['Modules', '12'], ['Lessons', '48']],
   },
   'drop-v3-04': {
@@ -52,11 +52,11 @@ export const FEED_V3_STORY: Record<string, StoryContent> = {
     facts: [['Discount', '50% off'], ['Free courses', 'Stay free'], ['Ends', '10 Nov 2026']],
   },
   'drop-v3-07': {
-    body: '## TieEdu internships\n\nThe internship board lists roles our team has checked before they go up. Members apply in one tap.\n\n## How to get access\n\n1. Claim the free 3-month Diwali membership\n2. Open the internship board\n3. Apply to the roles that fit\n\nNew listings appear on the board first.',
+    body: '## TiEEdu internships\n\nThe internship board lists roles our team has checked before they go up. Members apply in one tap.\n\n## How to get access\n\n1. Claim the free 3-month Diwali membership\n2. Open the internship board\n3. Apply to the roles that fit\n\nNew listings appear on the board first.',
     facts: [['Who can apply', 'Members'], ['Membership', 'Free this Diwali'], ['Apply', 'One tap']],
   },
   'drop-v3-08': {
-    body: '## Happy Diwali\n\nFrom all of us at TieEdu — happy Diwali to you and your family.\n\n## One small gift to your prep\n\nTake **one full mock this week**, under real timing. It shows you exactly which section to fix before the next drive.\n\nThe Diwali Sale runs until 10 November: half price on paid courses and prep packs, and a free 3-month membership.',
+    body: '## Happy Diwali\n\nFrom all of us at TiEEdu — happy Diwali to you and your family.\n\n## One small gift to your prep\n\nTake **one full mock this week**, under real timing. It shows you exactly which section to fix before the next drive.\n\nThe Diwali Sale runs until 10 November: half price on paid courses and prep packs, and a free 3-month membership.',
     facts: [['Sale ends', '10 Nov 2026'], ['This week', 'One full mock']],
   },
   'drop-v3-09': {
@@ -66,11 +66,11 @@ export const FEED_V3_STORY: Record<string, StoryContent> = {
 
   // ─── Wipro iOS ──────────────────────────────────────────────────────────
   'drop-v3-10': {
-    body: '## A free iOS program\n\nThe Wipro iOS (Swift) training program on TieEdu is **completely free**: 12 modules, lessons, guess papers with memory tricks, cheat sheets, milestone tests and a full course mock.\n\n## Milestone dates\n\n| Test | Date |\n|---|---|\n| Milestone 1 | 15 Nov |\n| Milestone 2 | 25 Nov |\n| Milestone 3 | 4 Dec |\n| Milestone 4 | 10 Dec |\n| Final | 13 Dec |\n\nThe plan counts down to the next milestone and tells you what to study each day.',
+    body: '## A free iOS program\n\nThe Wipro iOS (Swift) training program on TiEEdu is **completely free**: 12 modules, lessons, guess papers with memory tricks, cheat sheets, milestone tests and a full course mock.\n\n## Milestone dates\n\n| Test | Date |\n|---|---|\n| Milestone 1 | 15 Nov |\n| Milestone 2 | 25 Nov |\n| Milestone 3 | 4 Dec |\n| Milestone 4 | 10 Dec |\n| Final | 13 Dec |\n\nThe plan counts down to the next milestone and tells you what to study each day.',
     facts: [['Price', 'Free'], ['Modules', '12'], ['Milestone 1', '15 Nov'], ['Final', '13 Dec']],
   },
   'drop-v3-11': {
-    body: '## Milestone 1 is on 15 November\n\nRevise the modules up to M1 with the guess papers — every question has a memory trick — then take the M1 milestone test on TieEdu before the real one.\n\n## The last three days\n\n1. Day 1: guess papers, mark what you got wrong\n2. Day 2: cheat sheets for those topics only\n3. Day 3: the milestone test under time, then rest',
+    body: '## Milestone 1 is on 15 November\n\nRevise the modules up to M1 with the guess papers — every question has a memory trick — then take the M1 milestone test on TiEEdu before the real one.\n\n## The last three days\n\n1. Day 1: guess papers, mark what you got wrong\n2. Day 2: cheat sheets for those topics only\n3. Day 3: the milestone test under time, then rest',
     facts: [['Test', 'Milestone 1'], ['Date', '15 Nov'], ['Price', 'Free']],
   },
   'drop-v3-12': {
@@ -90,7 +90,7 @@ export const FEED_V3_STORY: Record<string, StoryContent> = {
     source_name: 'Accenture India careers', source_url: 'https://www.accenture.com/in-en/careers',
   },
   'drop-v3-15': {
-    body: '## Infosys Systems Engineer\n\nInfosys\'s main mass-hiring role, with foundation training often at the Mysuru campus. CTC from recent drives is about **₹3.6–4.2 LPA**.\n\n## The rounds\n\n1. **Online assessment** — 54 questions in 100 minutes: quant, reasoning, verbal and pseudocode\n2. **Technical interview** — project, OOP, DBMS, DSA\n3. **HR interview**\n\n## Eligibility\n\nB.E./B.Tech, M.E./M.Tech, MCA, M.Sc in CS-related and circuit branches; 60% or 6.0 CGPA throughout; no active backlogs; up to a 2-year gap.\n\n## On TieEdu\n\nThe Infosys SE page has 25 free topic lessons, the full 54-question mock and 32 interview answers in the pack.' + verify,
+    body: '## Infosys Systems Engineer\n\nInfosys\'s main mass-hiring role, with foundation training often at the Mysuru campus. CTC from recent drives is about **₹3.6–4.2 LPA**.\n\n## The rounds\n\n1. **Online assessment** — 54 questions in 100 minutes: quant, reasoning, verbal and pseudocode\n2. **Technical interview** — project, OOP, DBMS, DSA\n3. **HR interview**\n\n## Eligibility\n\nB.E./B.Tech, M.E./M.Tech, MCA, M.Sc in CS-related and circuit branches; 60% or 6.0 CGPA throughout; no active backlogs; up to a 2-year gap.\n\n## On TiEEdu\n\nThe Infosys SE page has 25 free topic lessons, the full 54-question mock and 32 interview answers in the pack.' + verify,
     facts: [['CTC', '~₹3.6–4.2 LPA'], ['Online test', '54 Qs, 100 min'], ['Cut-off', '60% / 6.0 CGPA'], ['Gap allowed', 'Up to 2 years']],
     source_name: 'Infosys careers', source_url: 'https://www.infosys.com/careers/',
   },
@@ -212,7 +212,7 @@ export const FEED_V3_STORY: Record<string, StoryContent> = {
     facts: [['Questions', '54'], ['Sections', '5 + email task'], ['Mode', 'Secure, timed']],
   },
   'drop-v3-40': {
-    body: '## Skill Passport\n\nEvery badge, certificate and score you earn on TieEdu, on **one page behind one link**. Share it with recruiters or add it to your resume — anyone can verify it.',
+    body: '## Skill Passport\n\nEvery badge, certificate and score you earn on TiEEdu, on **one page behind one link**. Share it with recruiters or add it to your resume — anyone can verify it.',
     facts: [['Shows', 'Badges, certificates, scores'], ['Share', 'One link'], ['Price', 'Free']],
   },
   'drop-v3-41': {
@@ -232,7 +232,7 @@ export const FEED_V3_STORY: Record<string, StoryContent> = {
     facts: [['Time', '~10 min'], ['Each day', 'Aptitude + coding + HR'], ['Price', 'Free']],
   },
   'drop-v3-45': {
-    body: '## A plan for every day\n\nEnter your test date and TieEdu builds a day-by-day plan: a countdown, one Train and one Test task a day, and a **readiness score** that tells you what to fix next.',
+    body: '## A plan for every day\n\nEnter your test date and TiEEdu builds a day-by-day plan: a countdown, one Train and one Test task a day, and a **readiness score** that tells you what to fix next.',
     facts: [['Input', 'Your test date'], ['Each day', '1 Train + 1 Test task'], ['Tracks', 'Readiness score']],
   },
   'drop-v3-46': {
@@ -244,7 +244,7 @@ export const FEED_V3_STORY: Record<string, StoryContent> = {
     facts: [['Compares', 'Pay, rounds, eligibility'], ['Companies', 'Any two']],
   },
   'drop-v3-48': {
-    body: '## Where does your campus stand?\n\nThe college leaderboard ranks campuses by **tested skills** on TieEdu — not claims. Every test you take adds to your college\'s standing.',
+    body: '## Where does your campus stand?\n\nThe college leaderboard ranks campuses by **tested skills** on TiEEdu — not claims. Every test you take adds to your college\'s standing.',
     facts: [['Ranked by', 'Tested skills'], ['Updates', 'As students practise']],
   },
 

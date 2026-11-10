@@ -57,8 +57,8 @@ export const DriveShell: React.FC<{ children: React.ReactNode; title?: string; s
   // One <title> for every Mock Drive screen (the tab, history and screen readers all read it).
   const head = (
     <Head>
-      <title>{heading === 'Mock Drives' ? 'Mock Drives · TieEdu' : `${heading} · Mock Drives · TieEdu`}</title>
-      <meta name="description" content="Practise real placement drives on TieEdu: apply, take the assessment, sit the interview and see your result." />
+      <title>{heading === 'Mock Drives' ? 'Mock Drives · TiEEdu' : `${heading} · Mock Drives · TiEEdu`}</title>
+      <meta name="description" content="Practise real placement drives on TiEEdu: apply, take the assessment, sit the interview and see your result." />
     </Head>
   );
 

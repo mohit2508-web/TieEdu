@@ -3,7 +3,7 @@
 //
 // Why this one first: it is the fastest first-certificate hook in the plan.
 // A learner with no prior course can finish it in an evening and walk away with
-// a verifiable TieEdu certificate, which is what makes the free tier feel worth
+// a verifiable TiEEdu certificate, which is what makes the free tier feel worth
 // starting. It is deliberately short — four modules, each closing one loop —
 // rather than padded, because the micro-course's whole job is to be finishable.
 //
@@ -1769,7 +1769,7 @@ export function getResumeLinkedinCourse(): Course {
     subtitle: 'The fastest first certificate — build a resume that survives the six-second skim and a LinkedIn recruiters can find',
     description: `You do not need more projects to get an interview. You need the projects you already have to survive a six-second skim and a keyword search.
 
-This is the shortest course on TieEdu on purpose. Four modules, eight lessons, two hours. It takes a resume that lists duties and turns it into one that leads with outcomes; it makes that resume readable by the applicant tracking systems that filter most online applications; and it rebuilds your LinkedIn so a recruiter searching "react intern" actually finds you.
+This is the shortest course on TiEEdu on purpose. Four modules, eight lessons, two hours. It takes a resume that lists duties and turns it into one that leads with outcomes; it makes that resume readable by the applicant tracking systems that filter most online applications; and it rebuilds your LinkedIn so a recruiter searching "react intern" actually finds you.
 
 By the end you will have a one-page resume you can defend line by line, a LinkedIn profile that is a searchable version of it, and a tracking sheet so your application season is a process instead of a hope.
 

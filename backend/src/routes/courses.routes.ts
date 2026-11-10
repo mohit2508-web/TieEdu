@@ -694,7 +694,7 @@ coursesRouter.get('/verify/:serial', rateLimit(60), (req: Request, res: Response
       found: false,
       check: result.check,
       message:
-        'No certificate exists on TieEdu with this serial. It was never issued here, or it has a typo.',
+        'No certificate exists on TiEEdu with this serial. It was never issued here, or it has a typo.',
     });
   }
 
@@ -721,8 +721,8 @@ coursesRouter.get('/verify/:serial', rateLimit(60), (req: Request, res: Response
     explanation: !check.signature_valid
       ? 'The stored record does not match the signature made over it. This certificate was tampered with or fabricated.'
       : check.status === 'revoked'
-        ? `Issued by TieEdu but revoked on ${certificate!.revoked_at}. Reason: ${certificate!.revoked_reason || 'not stated'}.`
-        : 'Issued by TieEdu, signature intact, and not revoked.',
+        ? `Issued by TiEEdu but revoked on ${certificate!.revoked_at}. Reason: ${certificate!.revoked_reason || 'not stated'}.`
+        : 'Issued by TiEEdu, signature intact, and not revoked.',
   });
 });
 
@@ -1663,7 +1663,7 @@ coursesRouter.post('/:slug/certificate', requireAuth, (req: Request, res: Respon
     serial = generateSerial();
   }
 
-  const recipientName = req.user!.name || 'TieEdu Learner';
+  const recipientName = req.user!.name || 'TiEEdu Learner';
   const progressForCert = getProgress(db, userId, course.id);
   // The assessment numbers go ON the certificate: a tier with no score is a
   // claim nobody can check, so the pass mark and the project are read from the
@@ -1808,7 +1808,7 @@ coursesRouter.get('/certificates/:serial/download', requireAuth, async (req: Req
   const pdf = await buildCertificatePdf(certificate, course);
 
   const disposition = req.query.inline === '1' ? 'inline' : 'attachment';
-  const fileName = `TieEdu-Certificate-${certificate.serial}.pdf`;
+  const fileName = `TiEEdu-Certificate-${certificate.serial}.pdf`;
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Length', String(pdf.length));
   res.setHeader('Content-Disposition', `${disposition}; filename="${fileName}"`);

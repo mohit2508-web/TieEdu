@@ -69,7 +69,7 @@ export const InternshipsBoard: React.FC = () => {
           <div className="flex items-start justify-between gap-3">
             <div>
               <h3 className="font-display text-lg font-extrabold text-heading">{i.title}</h3>
-              <p className="text-sm font-semibold text-muted">{i.is_tieedu ? 'at TieEdu' : i.company}</p>
+              <p className="text-sm font-semibold text-muted">{i.is_tieedu ? 'at TiEEdu' : i.company}</p>
             </div>
             <span className="rounded-full bg-signal-soft px-2.5 py-1 text-xs font-bold capitalize text-signal-ink">{i.mode}</span>
           </div>

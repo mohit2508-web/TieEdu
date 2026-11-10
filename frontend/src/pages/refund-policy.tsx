@@ -66,7 +66,7 @@ const sections: LegalSection[] = [
     title: 'Cancellation',
     body: (
       <p>
-        Purchases on TieEdu are one-time payments, not subscriptions, so there is nothing to cancel and no automatic
+        Purchases on TiEEdu are one-time payments, not subscriptions, so there is nothing to cancel and no automatic
         renewal. If we ever add a subscription, you will be able to cancel it from your account at any time.
       </p>
     ),
@@ -78,7 +78,7 @@ export default function RefundPolicyPage() {
     <LegalPage
       path="/refund-policy"
       title="Refund & Cancellation Policy"
-      description={`TieEdu refunds courses and company packs within ${days} days of purchase. How to ask, and when the money arrives.`}
+      description={`TiEEdu refunds courses and company packs within ${days} days of purchase. How to ask, and when the money arrives.`}
       summary={<p>Not right for you? Ask within {days} days and we refund in full. Refunds reach your account in 5–7 working days.</p>}
       sections={sections}
     />

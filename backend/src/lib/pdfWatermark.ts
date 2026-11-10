@@ -38,7 +38,7 @@ export async function buildPersonalizedPdf(
   const studentEmail = cleanText(opts.studentEmail) || 'student@tieedu.com';
   const rollNo = cleanText(opts.rollNo) || 'N/A';
   const licenseId = cleanText(opts.licenseId) || 'LIC-000000';
-  const companyName = cleanText(opts.companyName) || 'TieEdu Placement Vault';
+  const companyName = cleanText(opts.companyName) || 'TiEEdu Placement Vault';
   const moduleTitle = cleanText(opts.moduleTitle) || 'Study Material';
 
   // 1. If explicit cover page insertion is requested for plain PDFs without cover template
@@ -177,7 +177,7 @@ export async function buildPersonalizedPdf(
     const boxH = 76;
 
     // Fill rectangle over the placeholder text inside the Red Box on Page 1
-    // Color matches the light red fill (#FDF2F2) of the TieEdu template box
+    // Color matches the light red fill (#FDF2F2) of the TiEEdu template box
     page1.drawRectangle({
       x: boxX,
       y: boxY,

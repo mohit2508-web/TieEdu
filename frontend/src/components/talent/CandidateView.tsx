@@ -26,7 +26,7 @@ export function CandidateView({ card, action }: { card: CandidateCard; action?: 
             ))}
           </ul>
         )}
-      {card.certificates.length > 0 && <p className="mt-2 text-xs text-muted">Certificates (verified by TieEdu): {card.certificates.map((c) => c.title).join(', ')}</p>}
+      {card.certificates.length > 0 && <p className="mt-2 text-xs text-muted">Certificates (verified by TiEEdu): {card.certificates.map((c) => c.title).join(', ')}</p>}
     </Card>
   );
 }

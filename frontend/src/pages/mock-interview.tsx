@@ -95,7 +95,7 @@ export default function MockInterviewPage() {
   return (
     <>
       <Head>
-        <title>Mock interview · TieEdu</title>
+        <title>Mock interview · TiEEdu</title>
         <meta name="description" content="Practise HR and technical interview questions and get feedback on every answer." />
       </Head>
       <main className="mx-auto w-full max-w-[760px] px-4 pb-14 pt-6 sm:px-6 sm:pt-10">

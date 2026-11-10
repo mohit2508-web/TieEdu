@@ -133,7 +133,7 @@ export default function App({ Component, pageProps }: AppProps) {
         ) : (
           <link rel="canonical" href={canonicalFor(router.asPath)} key="canonical" />
         )}
-        <meta property="og:site_name" content="TieEdu" key="og:site_name" />
+        <meta property="og:site_name" content="TiEEdu" key="og:site_name" />
         <meta name="twitter:card" content="summary_large_image" key="twitter:card" />
       </Head>
       {/*

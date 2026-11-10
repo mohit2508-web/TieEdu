@@ -37,8 +37,8 @@ const FAQ = [
   },
   {
     id: 'college',
-    question: 'I am a TPO / placement officer. How do we use TieEdu for our college?',
-    answer: <>See <Link className="font-semibold text-link underline" href="/colleges">TieEdu for colleges</Link>, or send us a message with topic “For colleges / TPO”.</>,
+    question: 'I am a TPO / placement officer. How do we use TiEEdu for our college?',
+    answer: <>See <Link className="font-semibold text-link underline" href="/colleges">TiEEdu for colleges</Link>, or send us a message with topic “For colleges / TPO”.</>,
   },
 ];
 
@@ -84,7 +84,7 @@ export default function ContactPage() {
     <>
       <Head>
         <title>{`Contact & support · ${LEGAL.brand}`}</title>
-        <meta name="description" content="Get help with payments, courses, certificates and drives, or reach the TieEdu team." />
+        <meta name="description" content="Get help with payments, courses, certificates and drives, or reach the TiEEdu team." />
         <link key="canonical" rel="canonical" href={`${LEGAL.siteUrl}/contact`} />
       </Head>
       <main className="mx-auto w-full max-w-6xl px-4 pb-16 pt-8 sm:px-6 sm:pt-12">

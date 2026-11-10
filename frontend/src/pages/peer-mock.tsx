@@ -10,7 +10,7 @@ import {
 } from '@/lib/peerMockApi';
 
 /*
- * Peer mock interviews (C4). One student interviews another with TieEdu's
+ * Peer mock interviews (C4). One student interviews another with TiEEdu's
  * questions and rubric, in person or on a call; both earn XP. Pairing is by a
  * short code only (backend lib/peerMock).
  */
@@ -72,14 +72,14 @@ export default function PeerMockPage() {
   return (
     <>
       <Head>
-        <title>Peer mock interview · TieEdu</title>
-        <meta name="description" content="Interview a friend with TieEdu's questions and rubric, then swap. Both of you earn points." />
+        <title>Peer mock interview · TiEEdu</title>
+        <meta name="description" content="Interview a friend with TiEEdu's questions and rubric, then swap. Both of you earn points." />
       </Head>
       <main className="mx-auto w-full max-w-[760px] px-4 pb-14 pt-6 sm:px-6 sm:pt-10">
         <p className="eyebrow text-link">Peer mock interview</p>
         <h1 className="mt-1 font-display text-3xl font-bold text-heading sm:text-4xl">Interview a friend, then swap</h1>
         <p className="mt-2 text-base text-body">
-          One of you asks, one of you answers, in person or on a call. TieEdu gives the interviewer the questions and what a good answer covers. Both of you earn points.
+          One of you asks, one of you answers, in person or on a call. TiEEdu gives the interviewer the questions and what a good answer covers. Both of you earn points.
         </p>
 
         {!loading && !user && (
@@ -145,7 +145,7 @@ export default function PeerMockPage() {
 function Waiting({ s, busy, onCancel }: { s: PeerSessionView; busy: boolean; onCancel: () => void }) {
   const [copied, setCopied] = useState(false);
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
-  const text = `Let's do a mock interview on TieEdu. Open ${origin}/peer-mock and enter my code: ${s.code}`;
+  const text = `Let's do a mock interview on TiEEdu. Open ${origin}/peer-mock and enter my code: ${s.code}`;
   return (
     <Card variant="raised" pad="lg" className="mt-2 text-center">
       <p className="text-sm font-semibold text-muted">Give your friend this code</p>

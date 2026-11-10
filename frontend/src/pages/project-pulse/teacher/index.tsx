@@ -42,7 +42,7 @@ const AdminPanel: React.FC = () => {
     setForm({ name: '', email: '', college: '', password: '' });
     setLink(r.created && r.link ? { title: `Login created for ${form.email}`, link: r.link, emailed: r.emailed } : null);
     if (r.password_set) setMsg(`Login created. Give ${form.email} the password you set; they sign in at tieedu.in/login.`);
-    else if (!r.created) setMsg(`${form.email} already had a TieEdu account; they are now a teacher and sign in with their own password${form.password ? ' (the password you typed was not used; use Set password if needed)' : ''}.`);
+    else if (!r.created) setMsg(`${form.email} already had a TiEEdu account; they are now a teacher and sign in with their own password${form.password ? ' (the password you typed was not used; use Set password if needed)' : ''}.`);
     return { teachers: r.teachers };
   });
   return (
@@ -133,7 +133,7 @@ const Home: React.FC = () => {
       <PulseShell title="Teacher portal" role={null}>
         <div className="mx-auto max-w-lg rounded-band border border-line bg-card p-8 text-center">
           <h2 className="font-display text-h2 text-heading">You are not a Pulse teacher yet</h2>
-          <p className="mt-2 text-sm text-muted">Teacher logins are created only by TieEdu admins; there is no sign-up for teachers. Ask your college’s TieEdu contact, or write to us from the Contact page.</p>
+          <p className="mt-2 text-sm text-muted">Teacher logins are created only by TiEEdu admins; there is no sign-up for teachers. Ask your college’s TiEEdu contact, or write to us from the Contact page.</p>
           <div className="mt-5 flex justify-center gap-2">
             <Link href={nav.href('/project-pulse/demo')} className={primary}>See the demo</Link>
             {me.tasks.length ? <Link href={nav.href('/project-pulse/student')} className="inline-flex h-10 items-center rounded-cell border border-line px-4 text-sm font-semibold text-heading">My tasks</Link> : null}

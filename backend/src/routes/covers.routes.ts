@@ -81,7 +81,7 @@ function aiFirstCoverSvg(): string {
   <text x="82" y="412" font-family="${F}" font-size="24" font-weight="500" fill="#DDD6FE">Understand it · verify it · build with it · answer for it</text>
   ${chips}
   <text x="82" y="620" font-family="${F}" font-size="24" font-weight="700" fill="#fff" fill-opacity=".9">12 modules  ·  48 lessons  ·  ~34 hours  ·  12 proofs of work  ·  3 pathways</text>
-  <text x="1200" y="636" text-anchor="end" font-family="${F}" font-size="30" font-weight="800" fill="#fff" fill-opacity=".9">TieEdu</text>
+  <text x="1200" y="636" text-anchor="end" font-family="${F}" font-size="30" font-weight="800" fill="#fff" fill-opacity=".9">TiEEdu</text>
 </svg>`;
 }
 
@@ -109,7 +109,7 @@ export function courseCoverSvg(course: { title: string; category?: string; level
   ${lines.map((l, i) => `<text x="80" y="${startY + i * size * 1.08}" font-family="Poppins, 'Segoe UI', Arial, sans-serif" font-size="${size}" font-weight="800" fill="#fff" letter-spacing="-2">${esc(l)}</text>`).join('\n  ')}
   ${sub ? `<text x="82" y="${startY + lines.length * size * 1.08 + 10}" font-family="Poppins, 'Segoe UI', Arial, sans-serif" font-size="30" font-weight="500" fill="#fff" fill-opacity=".85">${esc(wrap(sub, 52, 1)[0])}</text>` : ''}
   ${level ? `<rect x="80" y="604" rx="20" height="40" width="${34 + level.length * 14}" fill="#FDB022"/><text x="97" y="631" font-family="Poppins, 'Segoe UI', Arial, sans-serif" font-size="20" font-weight="700" fill="#2A1E14">${esc(level)}</text>` : ''}
-  <text x="1200" y="636" text-anchor="end" font-family="Poppins, 'Segoe UI', Arial, sans-serif" font-size="30" font-weight="800" fill="#fff" fill-opacity=".9">TieEdu</text>
+  <text x="1200" y="636" text-anchor="end" font-family="Poppins, 'Segoe UI', Arial, sans-serif" font-size="30" font-weight="800" fill="#fff" fill-opacity=".9">TiEEdu</text>
 </svg>`;
 }
 

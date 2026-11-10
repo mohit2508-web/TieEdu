@@ -60,7 +60,7 @@ export default function LessonPage() {
 
   return (
     <>
-      <Head><title>{v?.title || 'Lesson'} | TieEdu</title></Head>
+      <Head><title>{v?.title || 'Lesson'} | TiEEdu</title></Head>
       <PrepNav slug={slug} name={prep?.company.name || 'My prep'} active="train" lab={!!prep?.lab} wide />
       <div className="sticky top-[calc(var(--header-pin)+3.25rem)] z-10 transition-[top] duration-200 motion-reduce:transition-none border-b border-line bg-app-warm/95 backdrop-blur">
         <div className="mx-auto flex max-w-[1280px] items-center gap-3 px-4 py-2 sm:px-6 lg:px-8">

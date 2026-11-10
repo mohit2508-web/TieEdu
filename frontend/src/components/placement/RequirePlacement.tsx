@@ -66,7 +66,7 @@ const PlacementGate: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         </p>
         <div className="flex gap-3 mt-2">
           <button onClick={() => router.replace('/')} className="btn btn-primary py-3 px-5 text-sm focus-ring">
-            Go to TieEdu home
+            Go to TiEEdu home
           </button>
         </div>
         <p className="text-sm text-[--text-muted]">

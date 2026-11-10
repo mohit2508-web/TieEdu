@@ -45,7 +45,7 @@ const checkPassword = (pw: unknown) => {
 const sendInvite = (cls: any, row: any, token: string, teacher: any) => sendDriveEmail({
   to: row.email,
   subject: `${teacher?.name || 'Your teacher'} invited you to ${cls.name} on Project Pulse`,
-  body: `Hi ${row.name},\n\nYou have been added to ${cls.name} (${cls.subject}) on TieEdu Project Pulse. You will link one GitHub repo for the whole class, and put each task in its own folder.\n\nOpen the link and sign in with this email (${row.email}) to join.\n\nOr go to ${site() || 'tieedu.in'}/project-pulse/join and enter the class code: ${cls.join_code}`,
+  body: `Hi ${row.name},\n\nYou have been added to ${cls.name} (${cls.subject}) on TiEEdu Project Pulse. You will link one GitHub repo for the whole class, and put each task in its own folder.\n\nOpen the link and sign in with this email (${row.email}) to join.\n\nOr go to ${site() || 'tieedu.in'}/project-pulse/join and enter the class code: ${cls.join_code}`,
   driveName: 'Project Pulse',
   url: `/project-pulse/join?token=${encodeURIComponent(token)}`,
   ctaLabel: 'Join the class',
@@ -59,12 +59,12 @@ const sendTeacherWelcome = (db: any, user: any) => {
   const link = `${site()}/reset-password?token=${encodeURIComponent(token)}`;
   const mail = sendDriveEmail({
     to: user.email,
-    subject: 'Your TieEdu Project Pulse teacher login',
-    body: `Hi ${user.name},\n\nTieEdu has created your teacher login for Project Pulse (${user.email}). Set your password with the link below; it works once and expires in 7 days.\n\nThen sign in and open Project Pulse → Teacher portal to create your classes.`,
+    subject: 'Your TiEEdu Project Pulse teacher login',
+    body: `Hi ${user.name},\n\nTiEEdu has created your teacher login for Project Pulse (${user.email}). Set your password with the link below; it works once and expires in 7 days.\n\nThen sign in and open Project Pulse → Teacher portal to create your classes.`,
     driveName: 'Project Pulse',
     url: `/reset-password?token=${encodeURIComponent(token)}`,
     ctaLabel: 'Set my password',
-    note: 'Only TieEdu admins can create teacher logins. If you did not expect this, ignore it.',
+    note: 'Only TiEEdu admins can create teacher logins. If you did not expect this, ignore it.',
   });
   return { link, mail };
 };

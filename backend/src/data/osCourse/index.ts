@@ -299,7 +299,7 @@ export function getOperatingSystemsCourse(): Course {
       'Processes, scheduling, concurrency, deadlock, memory, paging, virtual memory and file systems — exam + interview core',
     description: `Operating Systems is the course every CSE/IT syllabus shares and every product interview still asks about. This course covers the full university core in eight compact lessons: process models and PCBs, FCFS through Round Robin with Gantt-chart arithmetic, critical sections with mutexes and semaphores, the classic producer-consumer and deadlock conditions, paging with TLB math, page replacement including Belady and thrashing, file inodes and allocation, and disk scheduling with RAID.
 
-Every lesson uses the nine-block structure (objectives, hook, concept, worked example, practice, common mistakes, exam angle, graded quiz, summary). A 30-question bank feeds a 15-question timed final. Passing earns a verifiable TieEdu certificate.
+Every lesson uses the nine-block structure (objectives, hook, concept, worked example, practice, common mistakes, exam angle, graded quiz, summary). A 30-question bank feeds a 15-question timed final. Passing earns a verifiable TiEEdu certificate.
 
 **Who this is for:** second- and third-year CSE/IT students preparing for university exams, GATE fundamentals, and placement interviews that ask OS questions.
 

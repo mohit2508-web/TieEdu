@@ -205,7 +205,7 @@ function ProvidersPanel({ providers, onDone, setError }: { providers: AdminProvi
       <div className="rounded-3xl border border-line bg-white p-6 shadow-xs">
         <h3 className="text-sm font-extrabold text-heading">Register a provider</h3>
         <p className="mt-1 text-xs text-gray-500">
-          The secret env prefix names the environment variables TieEdu reads for HMAC keys. Secret values never enter the database.
+          The secret env prefix names the environment variables TiEEdu reads for HMAC keys. Secret values never enter the database.
         </p>
         <div className="mt-4 space-y-2">
           <input className={input} placeholder="code (e.g. skillverify)" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} />
@@ -1817,7 +1817,7 @@ const DRIVE_STEPS: { n: number; title: string; tab: string; body: string }[] = [
 
 const HELP_FAQ: [string, string][] = [
   ['Link open nahi ho raha', 'Booking ka status live hona chahiye aur time slot window ke andar hona chahiye. Bookings card par “Link: live” chip check karo, warna Release karo.'],
-  ['Student ko login maang raha hai', 'Usne raw test URL khola hai. Student ko sirf apne drive page ka Start test button use karne ko bolo — TieEdu auto-login se andar kar deta hai. Raw URL kabhi mat bhejo.'],
+  ['Student ko login maang raha hai', 'Usne raw test URL khola hai. Student ko sirf apne drive page ka Start test button use karne ko bolo — TiEEdu auto-login se andar kar deta hai. Raw URL kabhi mat bhejo.'],
   ['“Link already used / expired” aa raha hai', 'Link ek hi baar khulta hai aur 5 min valid hota hai. Wapas drive page par Start test button dabao — naya link khud ban jaata hai.'],
   ['Student ko doosra slot chahiye', 'Bookings me uski booking Cancel karo — seat turant free ho jaayegi, student dobara book kar lega.'],
   ['Payment reject ho gaya', 'Student portal se dobara upload kar sakta hai — Payments section me naya proof approve kar dena.'],
@@ -1860,7 +1860,7 @@ export function DriveHelp({ onTab }: { onTab: (s: Section) => void }) {
             <b> “Start test”</b> button uske slot window me khul jaata hai — start se 5 min pehle se, slot end tak.
           </p>
           <p>
-            <b>3.</b> Student sirf <b>Start test</b> button dabata hai — TieEdu usko seedha exam platform par bina login ke
+            <b>3.</b> Student sirf <b>Start test</b> button dabata hai — TiEEdu usko seedha exam platform par bina login ke
             pahuncha deta hai (auto-login). Button dikh raha hai matlab sab set hai.
           </p>
           <p className="rounded-xl bg-amber-50 px-3.5 py-2.5 text-sm font-medium text-amber-800">

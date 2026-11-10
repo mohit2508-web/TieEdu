@@ -328,7 +328,7 @@ export function buildGuide(c: any, topic: GuideTopic): Guide | null {
         title: `How to Prepare for ${short}: ${prep!.defaultDays}-Day Plan`,
         h1: `How to prepare for ${name}`,
         description: `A ${prep!.defaultDays}-day ${name} preparation plan: what to study each day, sectional tests, and a readiness score that shows when you are ready.`,
-        intro: `The TieEdu plan for ${name} splits your days by how many questions each section carries, tests you section by section, and tracks a readiness score — so you know what to fix before the test.`,
+        intro: `The TiEEdu plan for ${name} splits your days by how many questions each section carries, tests you section by section, and tracks a readiness score — so you know what to fix before the test.`,
         sections: [
           {
             heading: 'Train · Test · Track',

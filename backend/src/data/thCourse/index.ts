@@ -389,7 +389,7 @@ export function getThermodynamicsCourse(): Course {
       'Laws, entropy & availability, gas and vapour power cycles, refrigeration, combustion and psychrometrics — ME exam + interview core',
     description: `Thermodynamics is a gatekeeper subject in every mechanical engineering programme and a staple of core placement interviews. This course compresses the full standard syllabus into eight compact lessons: systems, the state postulate and the four laws with Clausius inequality; boundary work and pure-substance property evaluation with steam tables; entropy, isentropic efficiencies and availability (exergy) analysis; Otto, Diesel and Dual air-standard cycles with MEP; the Rankine cycle with reheat and regeneration; vapour-compression refrigeration with COP; combustion equations, excess air and adiabatic flame temperature; and psychrometrics for HVAC.
 
-Every lesson uses the nine-block structure (objectives, hook, concept, worked example, practice, common mistakes, exam angle, graded quiz, summary). A 30-question bank feeds a 15-question timed final. Passing earns a verifiable TieEdu certificate.
+Every lesson uses the nine-block structure (objectives, hook, concept, worked example, practice, common mistakes, exam angle, graded quiz, summary). A 30-question bank feeds a 15-question timed final. Passing earns a verifiable TiEEdu certificate.
 
 **Who this is for:** ME/PI/automotive students in semester 3–5 preparing for university exams, GATE ME fundamentals, and placement interviews that ask thermo questions.
 

@@ -185,12 +185,12 @@ export async function sendToUser(userId: string, ev: MessageEvent, now = new Dat
         to: user.email,
         subject: ev.title,
         body: ev.body,
-        driveName: 'TieEdu',
+        driveName: 'TiEEdu',
         url: ev.url,
-        ctaLabel: ev.ctaLabel || 'Open TieEdu',
+        ctaLabel: ev.ctaLabel || 'Open TiEEdu',
         note: ev.transactional && TOPICS.find((t) => t.id === ev.topic)?.required
-          ? 'TieEdu · You get this because of activity on your account.'
-          : 'TieEdu · Choose what we send in Account › Notifications (tieedu.in/account/notifications).',
+          ? 'TiEEdu · You get this because of activity on your account.'
+          : 'TiEEdu · Choose what we send in Account › Notifications (tieedu.in/account/notifications).',
       });
     }
     if (result.push) {
@@ -219,8 +219,8 @@ export const events = {
       type: 'account.new_sign_in',
       topic: 'account',
       transactional: true,
-      title: `New sign-in to TieEdu on ${device}`,
-      body: `Your TieEdu account was just signed in on ${device} (${when} IST).\n\nIf this was you, there is nothing to do.\n\nIf it was not you, reset your password now — that signs out every device — and then check Your devices in your account.`,
+      title: `New sign-in to TiEEdu on ${device}`,
+      body: `Your TiEEdu account was just signed in on ${device} (${when} IST).\n\nIf this was you, there is nothing to do.\n\nIf it was not you, reset your password now — that signs out every device — and then check Your devices in your account.`,
       pushBody: `New sign-in on ${device}`,
       url: '/account/devices',
       ctaLabel: 'Review my devices',
@@ -232,7 +232,7 @@ export const events = {
       type: 'account.welcome',
       topic: 'account',
       transactional: true,
-      title: 'Welcome to TieEdu',
+      title: 'Welcome to TiEEdu',
       body: `Glad you are here, ${String(name || '').split(/\s+/)[0] || 'there'}.\n\nStart with your Today page: it shows the one next step for your year — a lesson, a test or your target company's weakest round.`,
       url: '/',
       ctaLabel: 'Open my Today page',
@@ -262,7 +262,7 @@ export const events = {
       topic: 'learning',
       transactional: true,
       title: `Your certificate for ${c.course_title}`,
-      body: `Congratulations on finishing ${c.course_title}!\n\nYour certificate is ready. Its serial is ${c.serial}, and anyone — a recruiter, your college — can check it on TieEdu without an account.\n\nAdd it to your LinkedIn and resume.`,
+      body: `Congratulations on finishing ${c.course_title}!\n\nYour certificate is ready. Its serial is ${c.serial}, and anyone — a recruiter, your college — can check it on TiEEdu without an account.\n\nAdd it to your LinkedIn and resume.`,
       pushBody: `Certificate ready: ${c.course_title}`,
       url: `/verify/${encodeURIComponent(c.serial)}`,
       ctaLabel: 'View my certificate',

@@ -294,7 +294,7 @@ export function getBasicElectricalCourse(): Course {
       'DC circuits, network theorems, AC fundamentals and machines — the universal first-year subject, exam-ready',
     description: `Basic Electrical Engineering is the first-year subject shared by EEE, ECE, Mechanical and Civil cohorts — and the one that sets the tone for every machines and power course that follows. This course covers the full foundation in eight compact lessons: Ohm's law and power, series-parallel networks with KVL/KCL, superposition and Thevenin/Norton equivalents, maximum power transfer, AC phasors and RLC impedance, real/reactive/apparent power with power-factor correction, and a machines/transformer primer with the EMF and turns-ratio equations.
 
-Every lesson follows the nine-step structure: objective, hook, concept, worked example, practice, common mistakes, the exam angle, a server-graded quiz and a one-screen summary. A 30-question bank feeds a 15-question timed final; passing earns a verifiable TieEdu certificate.
+Every lesson follows the nine-step structure: objective, hook, concept, worked example, practice, common mistakes, the exam angle, a server-graded quiz and a one-screen summary. A 30-question bank feeds a 15-question timed final; passing earns a verifiable TiEEdu certificate.
 
 **Who this is for:** first-year engineering students facing their BEE mid-terms and finals, and anyone who wants the electrical fundamentals that electronics and power courses assume. The course is exam-oriented — every worked example is the type of problem that appears on university papers.
 
@@ -326,7 +326,7 @@ Every lesson follows the nine-step structure: objective, hook, concept, worked e
 
 DC circuits and network theorems come first because every later topic assumes KVL/KCL fluency and Thevenin thinking. AC fundamentals teach phasors as the tool that converts calculus into the DC methods already learned. Power and power factor close the "why industries care" loop. The machines module is deliberately a primer — enough EMF, torque and transformer theory to pass BEE exams and to understand the courses that come next, without pretending to be a full machines course.
 
-Each lesson ends with a quiz graded on the server, and the course finishes with a 15-question timed exam from a 30-question bank. Passing earns a verifiable TieEdu certificate.`,
+Each lesson ends with a quiz graded on the server, and the course finishes with a 15-question timed exam from a 30-question bank. Passing earns a verifiable TiEEdu certificate.`,
     prerequisites: [
       'Basic high-school algebra and complex numbers (helpful, re-taught where needed)',
     ],

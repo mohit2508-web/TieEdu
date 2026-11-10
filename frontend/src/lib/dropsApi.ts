@@ -37,7 +37,7 @@ export const DROP_TYPE_META: Record<DropType, { label: string; chip: string }> =
   scholarship: { label: 'Scholarships', chip: 'var(--drop-scholarship)' },
   college: { label: 'College', chip: 'var(--drop-college)' },
   tip: { label: 'Tips', chip: 'var(--drop-tip)' },
-  tieedu: { label: 'TieEdu', chip: 'var(--drop-tieedu)' },
+  tieedu: { label: 'TiEEdu', chip: 'var(--drop-tieedu)' },
   quiz: { label: 'Quiz', chip: 'var(--drop-quiz)' },
 };
 

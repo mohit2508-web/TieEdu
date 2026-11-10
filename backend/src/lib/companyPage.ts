@@ -783,12 +783,12 @@ function station(title: string, short: string, topics: string[], skills: string[
 const DEFAULT_SETTINGS = {
   accent: 'violet',
   hero_style: 'ink',
-  seo_title: '{company} placement preparation 2026–27 | TieEdu',
+  seo_title: '{company} placement preparation 2026–27 | TiEEdu',
   seo_description: 'Eligibility, round pattern, a free readiness check and a day-by-day plan for the {company} drive.',
   sticky_enabled: true,
   sticky_text: 'Get the full {company} prep pack',
   sticky_label: 'Get the pack',
-  disclaimer: 'TieEdu is not affiliated with {company}. Company names are used for identification only.',
+  disclaimer: 'TiEEdu is not affiliated with {company}. Company names are used for identification only.',
 };
 
 export function buildTemplate(key: TemplateKey): PageContent {
@@ -870,7 +870,7 @@ export function buildTemplate(key: TemplateKey): PageContent {
   if (key === 'product_company') {
     return {
       schema_version: 1,
-      settings: { ...DEFAULT_SETTINGS, accent: 'sky', seo_title: '{company} interview preparation | TieEdu' },
+      settings: { ...DEFAULT_SETTINGS, accent: 'sky', seo_title: '{company} interview preparation | TiEEdu' },
       sections: [
         hero, stats, nav, rounds, pack, community,
         sec('experiences', { eyebrow: 'From candidates', title: 'Interview experiences' }),

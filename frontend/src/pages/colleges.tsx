@@ -8,7 +8,7 @@ import { API_BASE_URL } from '@/lib/api';
 import type { BatchReadiness } from '@/lib/placementApi';
 
 /**
- * /colleges — TieEdu for placement cells (UI_REDESIGN_PLAN_V2 §7.1).
+ * /colleges — TiEEdu for placement cells (UI_REDESIGN_PLAN_V2 §7.1).
  *
  * The product tour is the real batch-readiness component rendering sample
  * data, labelled as such on screen. Nothing on this page states a price, a
@@ -61,7 +61,7 @@ const FEATURES = [
   {
     icon: Download,
     title: 'Your data, exportable',
-    body: 'Download what you see as CSV for your own reports. Nothing is locked inside TieEdu.',
+    body: 'Download what you see as CSV for your own reports. Nothing is locked inside TiEEdu.',
   },
 ];
 
@@ -152,7 +152,7 @@ export default function CollegesPage() {
   return (
     <>
       <Head>
-        <title>TieEdu for colleges — batch placement readiness in one screen</title>
+        <title>TiEEdu for colleges — batch placement readiness in one screen</title>
         <meta
           name="description"
           content="For placement cells: see every student's readiness for the companies coming to campus, run mock drives, and export it all. Book a 20-minute demo."
@@ -215,7 +215,7 @@ export default function CollegesPage() {
               <div>
                 <SectionHead eyebrow="Student data" title="What you see, and what you don't" />
                 <p className="mt-4 text-base leading-relaxed text-body">
-                  Students join your college&apos;s view themselves, by adding their college and roll number to their TieEdu
+                  Students join your college&apos;s view themselves, by adding their college and roll number to their TiEEdu
                   profile. Nothing is imported behind their back.
                 </p>
               </div>

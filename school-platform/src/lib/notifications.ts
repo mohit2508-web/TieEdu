@@ -51,5 +51,5 @@ export function sendEmail(to: string, subject: string, text: string) {
 
 export function sendOtp(phone: string, code: string, purpose: string) {
   const label = purpose.toLowerCase().replace('_', ' ');
-  return sendSms(phone, `Your TieEdu ${label} code is ${code}. It expires in 5 minutes.`);
+  return sendSms(phone, `Your TiEEdu ${label} code is ${code}. It expires in 5 minutes.`);
 }

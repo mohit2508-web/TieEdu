@@ -89,7 +89,7 @@ export default function NotificationsPage() {
   return (
     <>
       <Head>
-        <title>Notifications · TieEdu</title>
+        <title>Notifications · TiEEdu</title>
         <meta name="robots" content="noindex" />
       </Head>
       <main className="mx-auto w-full max-w-3xl px-4 pb-16 pt-6 sm:px-6 sm:pt-10">

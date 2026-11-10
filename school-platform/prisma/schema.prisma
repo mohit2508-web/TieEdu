@@ -1,5 +1,5 @@
 // ============================================================================
-// TieEdu School of Technology — database schema
+// TiEEdu School of Technology — database schema
 //
 // Phase 1 (Foundation): tenancy, identity, RBAC, sessions, OTP, audit.
 //
@@ -26,7 +26,7 @@ datasource db {
 // Enums
 // ---------------------------------------------------------------------------
 
-/// Platform-staff roles (TieEdu employees). Ordinary users have `role = null`.
+/// Platform-staff roles (TiEEdu employees). Ordinary users have `role = null`.
 enum PlatformRole {
   SUPER_ADMIN
   OPS
@@ -310,7 +310,7 @@ model Notice {
 // ---------------------------------------------------------------------------
 // Catalog (Phase 2, spec §5) — PLATFORM content, deliberately NOT tenant-scoped.
 //
-// Courses are owned by TieEdu content staff and shared by every school. A
+// Courses are owned by TiEEdu content staff and shared by every school. A
 // school opts in to a course through the tenant-scoped `SchoolCourse` row, so
 // enabling a course can never leak across schools.
 // ---------------------------------------------------------------------------

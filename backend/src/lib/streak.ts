@@ -1,5 +1,5 @@
 /**
- * The study streak — one per student, across everything they do on TieEdu.
+ * The study streak — one per student, across everything they do on TiEEdu.
  *
  * UI_REDESIGN_PLAN_V2 §6.4: "Streaks with a weekly freeze (missing one day
  * doesn't wipe you out)". The habit we want is "most days", not "every day or

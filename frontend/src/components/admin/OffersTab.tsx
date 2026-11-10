@@ -7,7 +7,7 @@ import { cn } from '@/lib/cn';
 /**
  * Offer wall moderation (C1). Approve or reject student stories; mark one
  * "verified" only after confirming the offer with the student (the author's
- * account email is shown here, and only here, for that). TieEdu does not
+ * account email is shown here, and only here, for that). TiEEdu does not
  * collect offer letters.
  */
 export const OffersTab: React.FC = () => {

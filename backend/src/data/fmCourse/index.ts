@@ -339,7 +339,7 @@ export function getFluidMechanicsCourse(): Course {
       'Fluid statics, Bernoulli, flow measurement, momentum forces, pipe losses, dimensional analysis and open-channel flow — ME exam + interview core',
     description: `Fluid Mechanics underpins civil, mechanical and ocean engineering, and it is a favourite of core placement interviews. This course compresses the standard syllabus into eight compact lessons: the hydrostatic law with manometers, hydrostatic force and centre of pressure, buoyancy with metacentre stability, flow kinematics and the Bernoulli equation, venturi/orifice flow measurement, the momentum equation with jet and pipe-bend forces, Darcy–Weisbach pipe losses with the Moody diagram, and dimensional analysis plus open-channel flow with hydraulic jumps.
 
-Every lesson uses the nine-block structure (objectives, hook, concept, worked example, practice, common mistakes, exam angle, graded quiz, summary). A 30-question bank feeds a 15-question timed final. Passing earns a verifiable TieEdu certificate.
+Every lesson uses the nine-block structure (objectives, hook, concept, worked example, practice, common mistakes, exam angle, graded quiz, summary). A 30-question bank feeds a 15-question timed final. Passing earns a verifiable TiEEdu certificate.
 
 **Who this is for:** ME/CE students in semester 3–5 preparing for university exams, GATE ME/CE fundamentals, and placement interviews that ask fluid-mechanics questions.
 

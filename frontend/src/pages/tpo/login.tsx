@@ -105,7 +105,7 @@ export default function TpoLoginPage() {
   return (
     <>
       <Head>
-        <title>Campus TPO Portal — TieEdu</title>
+        <title>Campus TPO Portal — TiEEdu</title>
         <meta name="robots" content="noindex, nofollow" />
       </Head>
 
@@ -121,7 +121,7 @@ export default function TpoLoginPage() {
             </div>
             <h1 className="display-2 mb-1.5">Placement portal</h1>
             <p className="text-base text-[--text-muted] mb-7">
-              For Training &amp; Placement cells, data officers and campus leadership. Your regular TieEdu
+              For Training &amp; Placement cells, data officers and campus leadership. Your regular TiEEdu
               account works here — if your college has given you placement access.
             </p>
 
@@ -130,7 +130,7 @@ export default function TpoLoginPage() {
                 {notice}
                 <div className="mt-2 flex flex-wrap gap-3">
                   <Link href="/" className="inline-flex items-center gap-1 font-bold text-link">
-                    Go to TieEdu home <ExternalLink className="w-3 h-3" />
+                    Go to TiEEdu home <ExternalLink className="w-3 h-3" />
                   </Link>
                   <button
                     type="button"

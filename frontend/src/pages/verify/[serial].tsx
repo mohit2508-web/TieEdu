@@ -90,7 +90,7 @@ export default function VerifyPage() {
   return (
     <>
       <Head>
-        <title>{serial ? `Verify ${serial} · TieEdu` : 'Verify a certificate · TieEdu'}</title>
+        <title>{serial ? `Verify ${serial} · TiEEdu` : 'Verify a certificate · TiEEdu'}</title>
         <meta name="robots" content="noindex" />
       </Head>
 
@@ -99,7 +99,7 @@ export default function VerifyPage() {
           Certificate verification
         </h1>
         <p className="mt-2 text-sm text-[var(--text-body)]">
-          Every certificate TieEdu issues is signed. Enter a serial to check the signature against
+          Every certificate TiEEdu issues is signed. Enter a serial to check the signature against
           the record we hold.
         </p>
 

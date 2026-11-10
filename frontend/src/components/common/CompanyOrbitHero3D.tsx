@@ -47,7 +47,7 @@ export const CompanyOrbitHero3D: React.FC<CompanyOrbitProps> = ({ companies = DE
     dirLight.position.set(5, 10, 7);
     scene.add(dirLight);
 
-    // 3. Central TiEedu Glowing Core (3D Sphere + Ring)
+    // 3. Central TiEEdu Glowing Core (3D Sphere + Ring)
     const coreGroup = new THREE.Group();
 
     // Central Sphere

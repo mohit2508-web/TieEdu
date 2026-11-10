@@ -57,8 +57,8 @@ export default function CompanyGuidePage({ guide }: { guide: Guide }) {
         description: guide.description,
         url,
         ...(guide.updated ? { dateModified: guide.updated } : {}),
-        author: { '@type': 'Organization', name: 'TieEdu', url: SITE },
-        publisher: { '@type': 'Organization', name: 'TieEdu', logo: { '@type': 'ImageObject', url: `${SITE}/email/logo.png` } },
+        author: { '@type': 'Organization', name: 'TiEEdu', url: SITE },
+        publisher: { '@type': 'Organization', name: 'TiEEdu', logo: { '@type': 'ImageObject', url: `${SITE}/email/logo.png` } },
         about: { '@type': 'Organization', name: c.name.split(/[ (]/)[0] },
       },
       {
@@ -82,7 +82,7 @@ export default function CompanyGuidePage({ guide }: { guide: Guide }) {
   return (
     <>
       <Head>
-        <title>{`${guide.title} | TieEdu`}</title>
+        <title>{`${guide.title} | TiEEdu`}</title>
         <meta name="description" content={guide.description.slice(0, 160)} />
         <link key="canonical" rel="canonical" href={url} />
         <meta property="og:title" content={guide.title} key="og:title" />

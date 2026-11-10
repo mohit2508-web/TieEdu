@@ -45,7 +45,7 @@ export const DROP_TYPE_META: Record<DropType, DropTypeMeta> = {
   scholarship: { chip: 'var(--drop-scholarship)', cta: 'View Scholarship',      label: 'Scholarships', order: 9 },
   college:     { chip: 'var(--drop-college)',     cta: 'View Details',          label: 'College',      order: 10 },
   tip:         { chip: 'var(--drop-tip)',         cta: 'Read Tip',              label: 'Tips',         order: 11 },
-  tieedu:      { chip: 'var(--drop-tieedu)',      cta: 'Explore Now',           label: 'TieEdu',       order: 12 },
+  tieedu:      { chip: 'var(--drop-tieedu)',      cta: 'Explore Now',           label: 'TiEEdu',       order: 12 },
   quiz:        { chip: 'var(--drop-quiz)',        cta: 'Practise More',         label: 'Quiz',         order: 13 },
 };
 
@@ -713,7 +713,7 @@ export const autoDropTemplate = (
       };
     case 'selected':
       return {
-        headline: `Another TieEdu student cracked ${title}`,
+        headline: `Another TiEEdu student cracked ${title}`,
         bullets: [
           detail || 'Selection confirmed',
           'Preparation journey available',
@@ -723,7 +723,7 @@ export const autoDropTemplate = (
     default:
       return {
         headline: title,
-        bullets: [detail || 'New update on TieEdu', 'Tap for details'].slice(0, 2),
+        bullets: [detail || 'New update on TiEEdu', 'Tap for details'].slice(0, 2),
       };
   }
 };

@@ -51,8 +51,8 @@ export default function CampusPage({ page }: { page: CampusPublic }) {
   return (
     <>
       <Head>
-        <title>{`${college.name} · Placement prep on TieEdu`}</title>
-        <meta name="description" content={`How students of ${college.name} are preparing for placements on TieEdu.`} />
+        <title>{`${college.name} · Placement prep on TiEEdu`}</title>
+        <meta name="description" content={`How students of ${college.name} are preparing for placements on TiEEdu.`} />
       </Head>
       <div className="flex min-h-screen flex-col bg-paper">
         <main className="flex-1">
@@ -63,11 +63,11 @@ export default function CampusPage({ page }: { page: CampusPublic }) {
               <p className="eyebrow text-money">Campus page</p>
               <h1 className="mt-3 font-display text-4xl font-bold tracking-tight text-white sm:text-5xl">{college.name}</h1>
               <p className="mt-4 max-w-2xl text-lg leading-relaxed text-white/80">
-                {page.intro || `Placement preparation for ${college.short_name || college.name} students: company rounds, free skill tests and courses on TieEdu.`}
+                {page.intro || `Placement preparation for ${college.short_name || college.name} students: company rounds, free skill tests and courses on TiEEdu.`}
               </p>
               <p className="mt-6 inline-flex items-center gap-2 text-sm text-white/80">
                 <Users className="h-4 w-4" aria-hidden />
-                <span className="tabular-nums">{a.students_linked}</span> student{a.students_linked === 1 ? '' : 's'} preparing on TieEdu
+                <span className="tabular-nums">{a.students_linked}</span> student{a.students_linked === 1 ? '' : 's'} preparing on TiEEdu
               </p>
             </div>
           </section>

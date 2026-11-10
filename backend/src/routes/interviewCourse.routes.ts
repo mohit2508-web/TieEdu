@@ -89,7 +89,7 @@ export const INTERVIEW_MODULES: InterviewModule[] = [
     category: 'Modules 1 - 10',
     title: '#5 — How to Predict Interview Questions',
     question: 'How can you anticipate 80% of questions before the interview?',
-    summary: 'Reverse-engineer job descriptions, company tech stacks, and recent glassdoor/TieEdu vault submissions.',
+    summary: 'Reverse-engineer job descriptions, company tech stacks, and recent glassdoor/TiEEdu vault submissions.',
     sample_answer: "I break down the job description requirements into core competency pillars. For every bullet point in the job spec, I prepare two concrete STAR anecdotes showing I have already solved similar problems.",
     expert_tip: "Look at the company's recent engineering blog posts or press releases for current priorities.",
     red_flag_trap: "Preparing generic answers that could apply to any company.",

@@ -20,7 +20,7 @@ const API_KEY = () => (process.env.RESEND_API_KEY || '').trim();
 
 /** The from-address. Verified domain required — see EMAIL_MARKETING_PLAN.md §5. */
 export const EMAIL_FROM = () =>
-  (process.env.EMAIL_FROM || '').trim() || 'TieEdu <onboarding@resend.dev>';
+  (process.env.EMAIL_FROM || '').trim() || 'TiEEdu <onboarding@resend.dev>';
 
 export const EMAIL_REPLY_TO = (): string | undefined => {
   const v = (process.env.EMAIL_REPLY_TO || '').trim();

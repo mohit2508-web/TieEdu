@@ -82,7 +82,7 @@ export const emitDriveNotification = async (input: DriveNotifyInput): Promise<bo
         void (async () => {
           const to = lookupEmail(input.userId);
           if (!to) return;
-          let driveName = 'TieEdu';
+          let driveName = 'TiEEdu';
           if (input.driveId) {
             try {
               const d = await getPool().query(`SELECT title FROM mock_drive WHERE drive_id=$1`, [input.driveId]);

@@ -369,7 +369,7 @@ export function getSignalsSystemsCourse(): Course {
       'Convolution, Fourier series & transform, sampling theorem, Laplace & Z-transforms, Bode plots and modulation — ECE exam + interview core',
     description: `Signals & Systems is the language every ECE, EE and AI-DS student is expected to speak in university exams, GATE and core interviews. This course covers the full standard syllabus in eight compact lessons: signal classification and the four system properties (linearity, TI, causality, BIBO stability), the convolution integral/sum with the graphical method, Fourier series with symmetry shortcuts, the Fourier transform and its properties, the sampling theorem with Nyquist rate and aliasing, Laplace transforms with ROC-based stability reading, the Z-transform as the discrete twin, Bode plots and filter prototypes, and amplitude modulation as the flagship application of frequency shifting.
 
-Every lesson uses the nine-block structure (objectives, hook, concept, worked example, practice, common mistakes, exam angle, graded quiz, summary). A 30-question bank feeds a 15-question timed final. Passing earns a verifiable TieEdu certificate.
+Every lesson uses the nine-block structure (objectives, hook, concept, worked example, practice, common mistakes, exam angle, graded quiz, summary). A 30-question bank feeds a 15-question timed final. Passing earns a verifiable TiEEdu certificate.
 
 **Who this is for:** ECE/EE/CS students in semester 3–6 preparing for university exams, GATE EC/EE fundamentals, and interviews that ask signals-and-systems questions.
 

@@ -72,7 +72,7 @@ export const CertificatePreview: React.FC<{
         ))}
 
         <rect x="8" y="8" width="304" height="20" fill={NAVY} />
-        <text x="16" y="22" fontFamily={SERIF} fontSize="9.5" fontWeight="700" fill="#FFFFFF">TieEdu</text>
+        <text x="16" y="22" fontFamily={SERIF} fontSize="9.5" fontWeight="700" fill="#FFFFFF">TiEEdu</text>
         <text x="304" y="21" textAnchor="end" fontSize="4.2" fontWeight="700" letterSpacing="0.3" fill="#DEEAF5">
           CERTIFICATE OF COURSE COMPLETION
         </text>
@@ -101,7 +101,7 @@ export const CertificatePreview: React.FC<{
 
         <line x1="24" y1="176" x2="296" y2="176" stroke="#E8DFD0" strokeWidth="0.4" />
         <text x="24" y="188" fontSize="3.6" fontWeight="700" fill="#6B5B4B" letterSpacing="0.3">ISSUED BY</text>
-        <text x="24" y="196" fontSize="4.6" fontWeight="700" fill="#2A1E14">TieEdu Placement Intelligence</text>
+        <text x="24" y="196" fontSize="4.6" fontWeight="700" fill="#2A1E14">TiEEdu Placement Intelligence</text>
         <text x="240" y="196" textAnchor="end" fontSize="3.8" fill="#6B5B4B">Serial · Ed25519 signature</text>
         <rect x="270" y="182" width="22" height="22" fill="none" stroke="#2A1E14" strokeWidth="0.6" />
         <rect x="274" y="186" width="5" height="5" fill="#2A1E14" />

@@ -147,7 +147,7 @@ const ClassBody: React.FC<{ id: string }> = ({ id }) => {
           {cls.is_owner ? (
             <section className="rounded-card border border-line bg-card p-4">
               <h2 className="font-display text-h3 text-heading">Co-teachers</h2>
-              <p className="mt-0.5 text-xs text-muted">As many as you need. They see and manage this class like you. Someone without a teacher login is sent to the TieEdu admin to approve.</p>
+              <p className="mt-0.5 text-xs text-muted">As many as you need. They see and manage this class like you. Someone without a teacher login is sent to the TiEEdu admin to approve.</p>
               <ul className="mt-2 space-y-1 text-sm">
                 {cls.co_teachers.map((t) => <li key={t.id}>{t.name}</li>)}
                 {cls.co_requests.map((r) => <li key={r.id} className="text-muted">{r.name} · <span className="text-warning">waiting for admin</span></li>)}
@@ -155,7 +155,7 @@ const ClassBody: React.FC<{ id: string }> = ({ id }) => {
               </ul>
               <form className="mt-2 space-y-2" onSubmit={(e) => { e.preventDefault(); run(async () => {
                 const r = await pulseApi.addCoTeacher(cls.id, co); setCo({ name: '', email: '' });
-                setMsg(r.result === 'added' ? `${co.email} added as co-teacher.` : `Request sent to the TieEdu admin for ${co.email}. They are added once approved.`);
+                setMsg(r.result === 'added' ? `${co.email} added as co-teacher.` : `Request sent to the TiEEdu admin for ${co.email}. They are added once approved.`);
               }); }}>
                 <input className={`${input} h-9`} required value={co.name} onChange={(e) => setCo({ ...co, name: e.target.value })} placeholder="Co-teacher’s name" aria-label="Co-teacher name" />
                 <div className="flex gap-2">

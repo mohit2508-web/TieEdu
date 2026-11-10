@@ -137,10 +137,10 @@ export default function BranchPage({ initialData, branch }: { initialData: Cours
   return (
     <>
       <Head>
-        <title>{`Courses for ${meta.short} students · TieEdu`}</title>
+        <title>{`Courses for ${meta.short} students · TiEEdu`}</title>
         <meta name="description" content={`${meta.blurb} Structured courses with verified progress and signed certificates.`} />
         <link key="canonical" rel="canonical" href={`${SITE_URL}/courses/branch/${branch}`} />
-        <meta property="og:title" content={`Courses for ${meta.short} students · TieEdu`} />
+        <meta property="og:title" content={`Courses for ${meta.short} students · TiEEdu`} />
         <meta property="og:description" content={meta.blurb} />
         <meta property="og:url" content={`${SITE_URL}/courses/branch/${branch}`} />
       </Head>

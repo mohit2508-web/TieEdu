@@ -45,7 +45,7 @@ export default function DropGoPage() {
   return (
     <>
       <Head>
-        <title>Leaving TieEdu</title>
+        <title>Leaving TiEEdu</title>
         <meta name="robots" content="noindex,nofollow" />
       </Head>
       <main className="mx-auto flex min-h-[70vh] w-full max-w-[560px] flex-col justify-center px-5 py-10">
@@ -67,7 +67,7 @@ export default function DropGoPage() {
             <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-[var(--brand-sky-soft)] text-link">
               <ExternalLink size={26} strokeWidth={2.2} aria-hidden />
             </div>
-            <h1 className="mt-4 text-center font-display text-xl font-black text-[var(--text-heading)]">You are leaving TieEdu</h1>
+            <h1 className="mt-4 text-center font-display text-xl font-black text-[var(--text-heading)]">You are leaving TiEEdu</h1>
             <p className="mt-1 text-center text-sm text-[var(--text-muted)]">for an outside website</p>
 
             <div className="mt-5 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-app)] p-4">
@@ -76,7 +76,7 @@ export default function DropGoPage() {
               {drop.source_name && wantSource && <p className="text-sm font-semibold text-[var(--text-body)]">{drop.source_name}</p>}
               <p className="mt-3 flex items-start gap-1.5 text-xs font-semibold text-[var(--text-muted)]">
                 <ShieldCheck size={15} className="mt-px flex-none text-emerald-600" aria-hidden />
-                Link added by the TieEdu team for “{drop.headline}”{meta ? ` (${meta.label})` : ''}.
+                Link added by the TiEEdu team for “{drop.headline}”{meta ? ` (${meta.label})` : ''}.
               </p>
             </div>
 
@@ -94,7 +94,7 @@ export default function DropGoPage() {
                 <ArrowUpRight size={18} strokeWidth={2.6} aria-hidden />
               </button>
               <Link href={prepHref} className="btn btn-ghost h-12 w-full">
-                <GraduationCap size={18} strokeWidth={2.4} aria-hidden /> Prepare on TieEdu first
+                <GraduationCap size={18} strokeWidth={2.4} aria-hidden /> Prepare on TiEEdu first
               </Link>
             </div>
           </div>

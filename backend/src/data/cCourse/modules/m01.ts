@@ -634,7 +634,7 @@ Turn on \`-Wall -Wextra\` and these are the ones you will meet in the first mont
 int count = 5;
 printf("Count: %d\\n", count);   // fine
 
-const char *name = "TieEdu";
+const char *name = "TiEEdu";
 printf("Count: %s\\n", name);    // fine
 
 printf("Count: %s\\n", count);   // DANGER: the compiler will stop you

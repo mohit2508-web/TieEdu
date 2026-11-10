@@ -35,8 +35,8 @@ export default function OffersPage() {
   return (
     <>
       <Head>
-        <title>Offers and the routes that got them · TieEdu</title>
-        <meta name="description" content="Real placement offers from TieEdu students, and how each one prepared: the rounds, the practice and what made the difference." />
+        <title>Offers and the routes that got them · TiEEdu</title>
+        <meta name="description" content="Real placement offers from TiEEdu students, and how each one prepared: the rounds, the practice and what made the difference." />
       </Head>
       <main className="mx-auto w-full max-w-[880px] px-4 pb-14 pt-6 sm:px-6 sm:pt-10">
         <p className="eyebrow text-link">Offer wall</p>
@@ -70,7 +70,7 @@ export default function OffersPage() {
                           {
                             eyebrow: m.verified ? 'Verified offer' : 'Offer',
                             headline: `Placed at ${m.company}`,
-                            lines: [m.role, 'How I prepared is on the TieEdu offer wall'],
+                            lines: [m.role, 'How I prepared is on the TiEEdu offer wall'],
                             url: `${window.location.host}/offers`,
                           },
                           'portrait',

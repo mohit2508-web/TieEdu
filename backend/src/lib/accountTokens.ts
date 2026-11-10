@@ -54,24 +54,24 @@ export function consumeAccountToken(db: any, token: string, kind: AccountTokenKi
 export function sendPasswordResetEmail(to: string, name: string, token: string) {
   return sendDriveEmail({
     to,
-    subject: 'Reset your TieEdu password',
-    body: `Someone (hopefully you) asked to reset the password for this TieEdu account. The link below works once and expires in 30 minutes.\n\nIf you did not ask for this, you can ignore this email; your password stays the same.`,
-    driveName: 'TieEdu',
+    subject: 'Reset your TiEEdu password',
+    body: `Someone (hopefully you) asked to reset the password for this TiEEdu account. The link below works once and expires in 30 minutes.\n\nIf you did not ask for this, you can ignore this email; your password stays the same.`,
+    driveName: 'TiEEdu',
     url: `/reset-password?token=${encodeURIComponent(token)}`,
     ctaLabel: 'Choose a new password',
-    note: 'TieEdu · You are getting this because a password reset was requested for your account.',
+    note: 'TiEEdu · You are getting this because a password reset was requested for your account.',
   });
 }
 
 export function sendVerifyEmail(to: string, name: string, token: string) {
   return sendDriveEmail({
     to,
-    subject: 'Confirm your email for TieEdu',
-    body: `Welcome to TieEdu, ${firstName(name)}! Please confirm this is your email so we can send your results, receipts and certificates here. The link is valid for 3 days.`,
-    driveName: 'TieEdu',
+    subject: 'Confirm your email for TiEEdu',
+    body: `Welcome to TiEEdu, ${firstName(name)}! Please confirm this is your email so we can send your results, receipts and certificates here. The link is valid for 3 days.`,
+    driveName: 'TiEEdu',
     url: `/verify-email?token=${encodeURIComponent(token)}`,
     ctaLabel: 'Confirm my email',
-    note: 'TieEdu · You are getting this because this email was used to create a TieEdu account.',
+    note: 'TiEEdu · You are getting this because this email was used to create a TiEEdu account.',
   });
 }
 

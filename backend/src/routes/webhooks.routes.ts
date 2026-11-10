@@ -25,7 +25,7 @@ webhooksRouter.post('/razorpay', async (req: Request, res: Response) => {
   const payload = req.body?.payload || {};
   const rzpOrderId = payload?.payment?.entity?.order_id || payload?.order?.entity?.id || '';
 
-  // Map razorpay order id -> our TieEdu order
+  // Map razorpay order id -> our TiEEdu order
   const order = (db.orders || []).find(
     (o: any) => o.gateway_order_id === rzpOrderId || o.id === rzpOrderId
   );

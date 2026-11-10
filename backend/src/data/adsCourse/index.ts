@@ -865,7 +865,7 @@ The second thread is measurement. Complexity classes are treated honestly throug
 
 What you are explicitly not getting: a catalogue of every structure that exists, and interview puzzle patterns. Coverage is three modules, and it is meant to be complete rather than padded — you should finish able to defend a choice, not able to recite a table of bounds.`,
     prerequisites: [
-      'C Programming on TieEdu, or equivalent fluency with pointers and manual memory',
+      'C Programming on TiEEdu, or equivalent fluency with pointers and manual memory',
       'Comfort reading and writing recursive functions',
       'Working knowledge of arrays, loops and basic complexity notation',
       'A language runtime for the examples — the course uses TypeScript',

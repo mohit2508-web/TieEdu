@@ -374,7 +374,7 @@ export function getDbmsCourse(): Course {
       'ER models, SQL, normalization, transactions, concurrency control and crash recovery — exam + interview core',
     description: `DBMS is one of the highest-weight subjects in every CSE university paper and a favourite of placement interviewers. This course covers the full core in eight compact lessons: ER diagrams and their relational mapping, keys and relational algebra including division, SQL core with joins and aggregation, subqueries/views/indexes, functional dependencies with attribute closure, normalization from 1NF through BCNF with lossless-join checks, transactions with ACID and serializability, and concurrency control with 2PL plus write-ahead-logging recovery.
 
-Every lesson uses the nine-block structure (objectives, hook, concept, worked example, practice, common mistakes, exam angle, graded quiz, summary). A 30-question bank feeds a 15-question timed final. Passing earns a verifiable TieEdu certificate.
+Every lesson uses the nine-block structure (objectives, hook, concept, worked example, practice, common mistakes, exam angle, graded quiz, summary). A 30-question bank feeds a 15-question timed final. Passing earns a verifiable TiEEdu certificate.
 
 **Who this is for:** second- and third-year CSE/IT students preparing for university exams, GATE fundamentals, and placement interviews that ask database questions.
 

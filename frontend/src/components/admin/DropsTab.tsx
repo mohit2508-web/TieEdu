@@ -705,7 +705,7 @@ export const DropsTab: React.FC = () => {
                 <input className={inputCls} maxLength={60} placeholder="TCS careers" value={form.source_name} onChange={(e) => set('source_name', e.target.value)} />
               </div>
             </div>
-            <p className="text-xs text-gray-500 -mt-2">Outside links always open through the “You are leaving TieEdu” page, never directly.</p>
+            <p className="text-xs text-gray-500 -mt-2">Outside links always open through the “You are leaving TiEEdu” page, never directly.</p>
           </section>
 
           {/* 2. Visual */}

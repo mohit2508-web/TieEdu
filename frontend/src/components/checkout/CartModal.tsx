@@ -62,7 +62,7 @@ export const CartModal: React.FC = () => {
   const [order, setOrder] = useState<any>(null);
   const [upiId, setUpiId] = useState('');
   const [upiQr, setUpiQr] = useState('');
-  const [merchantName, setMerchantName] = useState('TieEdu');
+  const [merchantName, setMerchantName] = useState('TiEEdu');
   const [upiInstructions, setUpiInstructions] = useState('');
   const [paymentMode, setPaymentMode] = useState<'upi' | 'razorpay'>('upi');
   const [copied, setCopied] = useState(false);
@@ -85,7 +85,7 @@ export const CartModal: React.FC = () => {
     getCheckoutPaymentInfoApi().then((info) => {
       if (cancelled) return;
       setPaymentMode(info.mode || 'upi');
-      setMerchantName(info.merchant_name || 'TieEdu');
+      setMerchantName(info.merchant_name || 'TiEEdu');
       setUpiInstructions(info.instructions || '');
     }).catch(() => { /* keep defaults */ });
     fetchActiveCouponsApi().then((data) => {
@@ -306,7 +306,7 @@ export const CartModal: React.FC = () => {
           key: created.key_id,
           amount: created.amount_paisa,
           currency: 'INR',
-          name: 'TieEdu',
+          name: 'TiEEdu',
           description: 'Vault access unlock',
           order_id: created.gateway_order_id,
           handler: async (resp: any) => {

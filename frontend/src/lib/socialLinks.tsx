@@ -8,7 +8,7 @@ export interface SocialLink {
 }
 
 /**
- * Official TieEdu social handles. Single source of truth — the footer, the
+ * Official TiEEdu social handles. Single source of truth — the footer, the
  * join-channels popup, and any future surface all import from here so the
  * links cannot drift apart.
  */

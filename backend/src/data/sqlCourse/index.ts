@@ -293,7 +293,7 @@ export function getSqlDatabasesCourse(): Course {
     subtitle: 'Query, join, aggregate, design and tune the database every placement test and production service depends on',
     description: `Every software role — backend, data analyst, full-stack, even ML engineering — screens with SQL. This course takes you from writing a first SELECT to designing normalised schemas, choosing indexes that actually get used, reasoning about transactions, and using window functions for the analytics queries that appear in real take-home tests.
 
-Eight lessons across four modules. Every lesson follows the nine-step structure: objective, hook, concept, worked example, practice, common mistakes, the exam angle, a server-graded quiz and a one-screen summary. A 30-question bank feeds a 15-question timed final exam; passing earns a verifiable TieEdu certificate.
+Eight lessons across four modules. Every lesson follows the nine-step structure: objective, hook, concept, worked example, practice, common mistakes, the exam angle, a server-graded quiz and a one-screen summary. A 30-question bank feeds a 15-question timed final exam; passing earns a verifiable TiEEdu certificate.
 
 **Who this is for:** any student or working developer who wants SQL to be a strength rather than something to google under deadline pressure. Campus OA database rounds, analyst interviews and backend screens all draw from the same pool of patterns taught here.
 
@@ -327,7 +327,7 @@ This course builds the mental model first. Query evaluation order explains why a
 
 Normalization and transactions close the loop: you will be able to design a small schema that does not corrupt itself under concurrent writes, and defend those design choices in an interview. Window functions finish the course with the analytics pattern that modern take-home tests assume.
 
-Every lesson ends with a quiz graded on the server, and the course finishes with a 15-question timed exam drawn from a 30-question bank. Passing earns a verifiable TieEdu certificate.`,
+Every lesson ends with a quiz graded on the server, and the course finishes with a 15-question timed exam drawn from a 30-question bank. Passing earns a verifiable TiEEdu certificate.`,
     prerequisites: [
       'Basic computer literacy',
       'Willingness to run practice queries on a free PostgreSQL or MySQL instance',

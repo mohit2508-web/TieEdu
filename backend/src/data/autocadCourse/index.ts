@@ -295,7 +295,7 @@ export function getAutoCADCourse(): Course {
       'Precision 2D drafting, layers and blocks, plotting and collaboration — skills architecture, civil and mechanical juniors are hired for',
     description: `AutoCAD remains the common language of 2D engineering documentation. This course takes you from a blank sheet to issued PDFs: units and coordinates, object snap, the draw/modify commands that dominate daily work, layer standards, blocks with attributes, dimensions, floor-plan and section workflows, paper-space viewports at true scale, plotting with CTB, xrefs and file hygiene, and a portfolio checklist aimed at junior drafting roles.
 
-Four modules, eight lessons on the nine-step standard: objective, hook, concept, worked example, practice, common mistakes, exam angle, server-graded quiz and revision summary. A 30-question bank feeds the timed final; passing earns a verifiable TieEdu certificate.
+Four modules, eight lessons on the nine-step standard: objective, hook, concept, worked example, practice, common mistakes, exam angle, server-graded quiz and revision summary. A 30-question bank feeds the timed final; passing earns a verifiable TiEEdu certificate.
 
 **Who this is for:** students in architecture, civil, mechanical, interior design and related fields who need employable CAD habits — not just command trivia. Anyone who has "played with AutoCAD" but has never issued a correctly scaled sheet will find the missing pieces here.
 

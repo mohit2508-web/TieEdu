@@ -477,7 +477,7 @@ export const downloadCertificatePdf = async (downloadPath: string): Promise<{ bl
   const serial = downloadPath.split('/').slice(-2, -1)[0] || 'certificate';
   return {
     blobUrl: URL.createObjectURL(blob),
-    filename: `TieEdu-Certificate-${decodeURIComponent(serial)}.pdf`,
+    filename: `TiEEdu-Certificate-${decodeURIComponent(serial)}.pdf`,
   };
 };
 

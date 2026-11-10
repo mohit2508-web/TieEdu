@@ -70,9 +70,9 @@ export const PWAInstallPrompt: React.FC = () => {
           <Download size={20} className="text-link" strokeWidth={2.2} />
         </div>
         <div className="min-w-0 flex-1">
-          <h2 className="text-sm font-bold text-heading">Get the TieEdu App</h2>
+          <h2 className="text-sm font-bold text-heading">Get the TiEEdu App</h2>
           <p className="mt-0.5 text-xs text-text-light">
-            Install TieEdu for faster access, offline support & a native app experience.
+            Install TiEEdu for faster access, offline support & a native app experience.
           </p>
           <div className="mt-3 flex gap-2">
             <button

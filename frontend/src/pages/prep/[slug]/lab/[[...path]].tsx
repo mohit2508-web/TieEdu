@@ -82,7 +82,7 @@ export default function PrepLabPage() {
 
   return (
     <>
-      <Head><title>{`${prep?.company.name || 'Lab'} lab | TieEdu`}</title></Head>
+      <Head><title>{`${prep?.company.name || 'Lab'} lab | TiEEdu`}</title></Head>
       {prep && <PrepNav slug={slug} name={prep.company.name} active="lab" lab={!!prep.lab} wide />}
       {user ? body : <PulseGate title="Lab">{null}</PulseGate>}
     </>

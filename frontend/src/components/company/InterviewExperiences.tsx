@@ -94,7 +94,7 @@ export const InterviewExperiences: React.FC<InterviewExperiencesProps> = ({
             Verified {companyName} Interview Experiences ({count})
           </h3>
           <p className="text-sm text-[--text-muted] mt-0.5">
-            Real candidate round-by-round reports published on TieEdu.
+            Real candidate round-by-round reports published on TiEEdu.
           </p>
         </div>
 
@@ -171,7 +171,7 @@ export const InterviewExperiences: React.FC<InterviewExperiencesProps> = ({
 
             <p className="flex items-start gap-1.5 text-xs text-[--text-muted]">
                 <MessageSquare className="w-3.5 h-3.5 text-amber-deep mt-0.5 shrink-0" />
-                Candidate-verified drive log — reviewed by TieEdu content editors.
+                Candidate-verified drive log — reviewed by TiEEdu content editors.
               </p>
           </div>
         ))}

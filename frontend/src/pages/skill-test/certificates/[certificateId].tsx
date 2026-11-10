@@ -70,7 +70,7 @@ function CertificatePage() {
   const shareLinkedIn = () => {
     if (!cert) return;
     const url = encodeURIComponent(`${window.location.origin}/skill-test/certificates/${cert.certificateId}`);
-    const title = encodeURIComponent(`${cert.skillName} — ${cert.skillLevelText} (${cert.score}/100) | TieEdu`);
+    const title = encodeURIComponent(`${cert.skillName} — ${cert.skillLevelText} (${cert.score}/100) | TiEEdu`);
     window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank', 'noopener');
     void title;
   };
@@ -108,7 +108,7 @@ function CertificatePage() {
             <XCircle className="h-7 w-7 text-red-500" />
           </div>
           <h1 className="mt-4 text-xl font-bold text-red-600">Certificate Revoked</h1>
-          <p className="mt-2 text-sm text-gray-600">This certificate has been revoked by TieEdu and is no longer valid.</p>
+          <p className="mt-2 text-sm text-gray-600">This certificate has been revoked by TiEEdu and is no longer valid.</p>
           {cert.revokeReason && <p className="mt-1 text-xs text-gray-500">Reason: {cert.revokeReason}</p>}
           <p className="mt-4 text-xs text-gray-400">ID: {cert.certificateId}</p>
         </div>
@@ -131,7 +131,7 @@ function CertificatePage() {
           <CheckCircle2 className="h-6 w-6 text-emerald-500 flex-none" />
           <div>
             <p className="text-sm font-semibold text-emerald-800">Verified Certificate</p>
-            <p className="text-xs text-emerald-600">Issued by TieEdu · Status: Valid</p>
+            <p className="text-xs text-emerald-600">Issued by TiEEdu · Status: Valid</p>
           </div>
         </div>
 
@@ -145,7 +145,7 @@ function CertificatePage() {
 
             <div className="flex items-center justify-center gap-2 mb-4">
               <Award className="h-6 w-6 text-link" />
-              <span className="text-lg font-bold text-link tracking-wider">TieEdu</span>
+              <span className="text-lg font-bold text-link tracking-wider">TiEEdu</span>
             </div>
 
             <p className="text-xs font-medium tracking-[0.3em] text-gray-400 uppercase">Certificate of Skill Proficiency</p>
@@ -178,7 +178,7 @@ function CertificatePage() {
                 </div>
                 <div className="text-left">
                   <p className="text-xs text-gray-400 uppercase tracking-wider">Verified by</p>
-                  <p className="text-sm font-semibold text-gray-700">TieEdu</p>
+                  <p className="text-sm font-semibold text-gray-700">TiEEdu</p>
                 </div>
               </div>
             </div>

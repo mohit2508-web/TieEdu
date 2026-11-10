@@ -79,7 +79,7 @@ export function buildTpoAlerts(batch: BatchReadiness, drives: DriveDeadline[], n
       id: 'not_started',
       level: notStarted >= 20 ? 'watch' : 'info',
       title: `${notStarted} ${notStarted === 1 ? 'student has' : 'students have'} not started`,
-      detail: 'Registered with your college on TieEdu but no lesson or test yet.',
+      detail: 'Registered with your college on TiEEdu but no lesson or test yet.',
       count: notStarted,
       examples: students.filter((s) => s.segment === 'not_started').slice(0, 8).map((s) => s.label),
       nudge_segment: 'not_started',

@@ -14,7 +14,7 @@
  *     `expandGrant` in rbac.ts. A grant is never a full replacement.
  *   - `management` gets aggregate reads only — no `students.pii`, no writes.
  *
- * The wildcard `*` exists only for the placement `super_admin` (the TieEdu
+ * The wildcard `*` exists only for the placement `super_admin` (the TiEEdu
  * platform owner bootstrapped at boot). No college-scoped role ever holds it.
  */
 

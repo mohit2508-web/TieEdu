@@ -380,7 +380,7 @@ export default function DesignPage() {
   return (
     <>
       <Head>
-        <title>Design system — TieEdu</title>
+        <title>Design system — TiEEdu</title>
         <meta name="robots" content="noindex" />
       </Head>
       <RequireAdmin>

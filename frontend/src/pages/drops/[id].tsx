@@ -116,7 +116,7 @@ export default function DropPage({ initialDrop, initialId }: { initialDrop: Drop
     return () => window.clearTimeout(t);
   }, [notice]);
 
-  const description = drop ? descriptionOf(drop) : 'A drop from TieEdu Drops.';
+  const description = drop ? descriptionOf(drop) : 'A drop from TiEEdu Drops.';
   // Chat apps cannot preview SVG, so only an uploaded creative becomes og:image.
   const ogImage =
     drop?.image_url && !drop.is_generated_art
@@ -130,7 +130,7 @@ export default function DropPage({ initialDrop, initialId }: { initialDrop: Drop
     return (
       <main className="mx-auto flex min-h-[50vh] w-full max-w-[720px] flex-col items-center justify-center gap-3 px-5 text-center" data-test="drop-detail-loading">
         <Head>
-          <title>Drop · TieEdu</title>
+          <title>Drop · TiEEdu</title>
         </Head>
         <p className="text-sm font-semibold text-[var(--text-body)]" role="status">
           {failed ? 'This drop could not be loaded.' : 'Loading drop…'}
@@ -188,7 +188,7 @@ export default function DropPage({ initialDrop, initialId }: { initialDrop: Drop
   return (
     <>
       <Head>
-        <title>{`${drop.headline} · TieEdu`}</title>
+        <title>{`${drop.headline} · TiEEdu`}</title>
         <meta name="description" content={description} />
         <link key="canonical" rel="canonical" href={canonical} />
         <meta property="og:type" content="article" />
@@ -210,7 +210,7 @@ export default function DropPage({ initialDrop, initialId }: { initialDrop: Drop
               headline: drop.headline,
               description,
               datePublished: drop.publish_at || drop.created_at,
-              publisher: { '@type': 'Organization', name: 'TieEdu', url: SITE_URL },
+              publisher: { '@type': 'Organization', name: 'TiEEdu', url: SITE_URL },
               url: canonical,
             }),
           }}

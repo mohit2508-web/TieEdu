@@ -13,7 +13,7 @@ export default function ParentEmailStop() {
   const [busy, setBusy] = useState(false);
   return (
     <>
-      <Head><title>Unsubscribe · TieEdu</title><meta name="robots" content="noindex, nofollow" /></Head>
+      <Head><title>Unsubscribe · TiEEdu</title><meta name="robots" content="noindex, nofollow" /></Head>
       <main className="mx-auto w-full max-w-[560px] px-4 py-16">
         <Card pad="lg">
           <p className="flex items-center gap-2 font-display text-xl font-bold text-heading"><BellOff className="h-6 w-6 text-muted" aria-hidden /> Stop weekly emails · ईमेल बंद करें</p>

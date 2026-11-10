@@ -53,7 +53,7 @@ export default function AdminPage() {
   return (
     <RequireAdmin>
       <Head>
-        <title>TieEdu Admin — Control Plane</title>
+        <title>TiEEdu Admin — Control Plane</title>
       </Head>
       <AdminBootGate />
     </RequireAdmin>

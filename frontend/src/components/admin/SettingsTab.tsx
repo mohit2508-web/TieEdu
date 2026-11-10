@@ -11,7 +11,7 @@ const emptySettings: PlatformSettings = {
   support_phone: '',
   upi_id: '',
   upi_qr: '',
-  merchant_name: 'TieEdu',
+  merchant_name: 'TiEEdu',
   upi_instructions: 'Scan with any UPI app (Paytm, GPay, PhonePe) and transfer the exact amount.',
 };
 

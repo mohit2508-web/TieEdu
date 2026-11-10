@@ -342,7 +342,7 @@ export const Header: React.FC = () => {
         }
       >
         <div className="flex min-w-0 items-center gap-2 sm:gap-6 md:gap-3 lg:gap-6">
-          <Link href="/" className="flex flex-none items-center" aria-label="TieEdu home">
+          <Link href="/" className="flex flex-none items-center" aria-label="TiEEdu home">
             <TieEduLogo size="sm" />
           </Link>
 

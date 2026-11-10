@@ -60,7 +60,7 @@ startDropScheduler();
 startDropFlusher();
 
 /*
- * TieEdu Drops — the vertical career feed.
+ * TiEEdu Drops — the vertical career feed.
  *
  * Split mirrors posters.routes.ts: public reads (the feed has to work for a
  * logged-out visitor on the landing page) and a `/admin` subtree behind

@@ -273,7 +273,7 @@ export function buildPrep(db: any, userId: string, slug: string, owned: boolean)
   return {
     company: { name: company.name, slug },
     owned,
-    /** Lessons readable: pack owners and TieEdu members. */
+    /** Lessons readable: pack owners and TiEEdu members. */
     lessons_open: owned || isMember(db, userId),
     test_date: testDate,
     days_left: Math.max(0, diffDays(today, testDate)),

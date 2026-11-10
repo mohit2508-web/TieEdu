@@ -39,7 +39,7 @@ export const DiwaliHero: React.FC<{ compact?: boolean }> = ({ compact = false })
         </div>
 
         <p className="text-xs font-extrabold uppercase tracking-[0.35em] text-[#FFD966]">
-          {peak ? '✨ Today is Diwali ✨' : 'TieEdu Diwali Sale'}
+          {peak ? '✨ Today is Diwali ✨' : 'TiEEdu Diwali Sale'}
         </p>
         <h1 className="mt-3 font-display text-4xl font-black leading-[1.05] sm:text-6xl" style={{ color: '#FFF8EE' }}>
           {peak ? 'Happy Diwali!' : 'This Diwali, light up'}{' '}
@@ -47,7 +47,7 @@ export const DiwaliHero: React.FC<{ compact?: boolean }> = ({ compact = false })
         </h1>
         <p className="mt-4 max-w-2xl text-base font-semibold text-white/85 sm:text-lg">
           <b className="text-[#FFD966]">{f.discount_percent}% OFF</b> every course and company pack, plus a{' '}
-          <b className="text-[#FFD966]">FREE TieEdu Membership</b> and internship opportunities.
+          <b className="text-[#FFD966]">FREE TiEEdu Membership</b> and internship opportunities.
         </p>
 
         <div className="mt-7 flex flex-wrap items-center justify-center gap-3">

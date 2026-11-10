@@ -124,7 +124,7 @@ function MoreTab() {
         </button>
 
         <p className="mt-4 text-center text-xs" style={{ color: 'var(--apple-label-2)' }}>
-          Mock Drives · TieEdu
+          Mock Drives · TiEEdu
         </p>
       </div>
     </DriveShell>

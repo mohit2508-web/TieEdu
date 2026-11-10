@@ -1,6 +1,6 @@
 {
-  "name": "TieEdu - Company Vaults & Courses",
-  "short_name": "TieEdu",
+  "name": "TiEEdu - Company Vaults & Courses",
+  "short_name": "TiEEdu",
   "description": "Company interview vaults, courses and placement-season XP rankings.",
   "id": "/",
   "start_url": "/?source=pwa",

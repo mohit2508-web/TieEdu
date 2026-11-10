@@ -58,7 +58,7 @@ const LoginScreen: React.FC = () => {
       }}
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <span style={{ fontSize: 20, fontWeight: 700 }}>TieEdu School</span>
+        <span style={{ fontSize: 20, fontWeight: 700 }}>TiEEdu School</span>
         <span style={{ color: 'var(--text-muted)', fontSize: 14 }}>
           {step === 'code' ? 'Enter your school code' : `Signing in to ${school?.name || 'your school'}`}
         </span>

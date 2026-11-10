@@ -50,7 +50,7 @@ export default function CollegeLeaderboardPage() {
   return (
     <>
       <Head>
-        <title>College leaderboard · TieEdu</title>
+        <title>College leaderboard · TiEEdu</title>
         <meta name="robots" content="noindex" />
       </Head>
       <main className="mx-auto w-full max-w-[680px] px-4 pb-14 pt-6 sm:px-6 sm:pt-10">
@@ -61,7 +61,7 @@ export default function CollegeLeaderboardPage() {
         {!loading && !user && <Card pad="lg" className="mt-6 text-center"><Button href="/login?next=%2Fcollege-leaderboard">Sign in</Button></Card>}
         {user && board === undefined && !err && <Skeleton className="mt-6 h-64 w-full rounded-card" />}
         {err && <p className="mt-4 text-sm text-danger" role="alert">{err}</p>}
-        {user && board === null && <Card pad="lg" className="mt-6"><p className="text-body">This needs your college on TieEdu. Once your placement cell adds your batch, your college’s board appears here.</p></Card>}
+        {user && board === null && <Card pad="lg" className="mt-6"><p className="text-body">This needs your college on TiEEdu. Once your placement cell adds your batch, your college’s board appears here.</p></Card>}
 
         {board && (
           <>

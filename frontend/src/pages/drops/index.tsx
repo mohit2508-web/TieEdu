@@ -441,10 +441,10 @@ export default function DropsPage() {
   return (
     <>
       <Head>
-        <title>Drops — TieEdu</title>
+        <title>Drops — TiEEdu</title>
         <meta
           name="description"
-          content="Swipe the TieEdu career feed — jobs, vaults, contests, deadlines and tips."
+          content="Swipe the TiEEdu career feed — jobs, vaults, contests, deadlines and tips."
         />
       </Head>
 

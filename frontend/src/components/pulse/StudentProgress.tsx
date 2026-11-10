@@ -128,7 +128,7 @@ export const StudentProgress: React.FC<StudentProgressProps> = ({ data, tasks, p
           <p className="mt-1 text-sm text-muted">Make one public GitHub repo (for example <span className="font-mono">c-lab-2026</span>) and paste its link. Every task of {cls.name} is a folder in it — {task.folder ? <span className="font-mono">{task.folder}/</span> : null} for this one — so you do this only once.</p>
           <form onSubmit={link} className="mt-5 max-w-xl">
             <label htmlFor="repo-url" className="flex items-center gap-1.5 font-semibold text-heading"><Link2 className="h-4 w-4" /> Your GitHub repo link</label>
-            <p className="mt-1 text-xs text-muted">Public repo, or private with the TieEdu bot added as a collaborator (ask your teacher).</p>
+            <p className="mt-1 text-xs text-muted">Public repo, or private with the TiEEdu bot added as a collaborator (ask your teacher).</p>
             <input id="repo-url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://github.com/your-name/c-lab-2026"
               aria-invalid={!!urlError} aria-describedby={urlError ? 'repo-url-err' : undefined}
               className="mt-3 h-10 w-full rounded-cell border border-line-strong/60 bg-card px-3 font-mono text-sm text-body focus:outline focus:outline-2 focus:outline-[var(--focus)]" />

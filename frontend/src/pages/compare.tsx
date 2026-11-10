@@ -146,7 +146,7 @@ export default function ComparePage() {
   return (
     <>
       <Head>
-        <title>Side-by-Side Company Comparison Matrix | TieEdu</title>
+        <title>Side-by-Side Company Comparison Matrix | TiEEdu</title>
         <meta
           name="description"
           content="Compare vault size, hiring rounds, CTC, process duration and candidate-verified match accuracy across company interview vaults. Every count is derived live from real records."

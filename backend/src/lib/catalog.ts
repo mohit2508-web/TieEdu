@@ -582,7 +582,7 @@ export function relatedCourses(source: Course, all: Course[], limit = 4): Course
       // Topical overlap is the gate, and shared difficulty alone does not
       // qualify: a cooking course and a C course are both "beginner", and
       // recommending one after the other is worse than recommending nothing.
-      // Category is accepted as a second, weaker signal because TieEdu
+      // Category is accepted as a second, weaker signal because TiEEdu
       // legitimately keeps several courses inside one broad category.
       const sameCategory = course.category === source.category;
       if (shared === 0 && !sameCategory) return null;

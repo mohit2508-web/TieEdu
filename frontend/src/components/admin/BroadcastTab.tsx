@@ -169,7 +169,7 @@ export default function BroadcastTab() {
             <p className="eyebrow">Messaging</p>
             <h2 className="text-xl font-extrabold text-heading mt-1">Broadcast to students</h2>
             <p className="text-sm text-gray-600 mt-1">
-              Sends a notification to the phones of students who have added TieEdu to their
+              Sends a notification to the phones of students who have added TiEEdu to their
               Home Screen and allowed notifications. Students who have not cannot be reached —
               the message is not delivered quietly, it simply has nowhere to go.
             </p>

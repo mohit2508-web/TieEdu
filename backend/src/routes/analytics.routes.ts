@@ -19,7 +19,7 @@ analyticsRouter.use(requireAdmin);
 analyticsRouter.get('/', (req: Request, res: Response) => {
   const db = loadDb();
   res.json({
-    service: 'TieEdu Express Backend API',
+    service: 'TiEEdu Express Backend API',
     status: 'ok',
     honest: true,
     meta: {

@@ -8,7 +8,7 @@ import {
 } from '../school/tenant';
 
 /**
- * TieEdu Schools guards — a NEW file, same rule as placementAuth.ts: the
+ * TiEEdu Schools guards — a NEW file, same rule as placementAuth.ts: the
  * existing product guards mean "session" or "admin"; the school segment needs
  * "session AND a school membership".
  *

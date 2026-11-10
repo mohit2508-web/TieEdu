@@ -585,7 +585,7 @@ driveAdminRouter.post('/:driveId/registrations', async (req: Request, res: Respo
 });
 
 /**
- * Roster import. Rows are matched to TieEdu users by roll_no through
+ * Roster import. Rows are matched to TiEEdu users by roll_no through
  * placement_student_link (the same key the TPO portal already uses), so an
  * operator imports a CSV of roll numbers and gets registrations without having
  * to know internal user ids.

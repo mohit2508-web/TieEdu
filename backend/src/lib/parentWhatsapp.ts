@@ -126,8 +126,8 @@ export function studentWaStatus(user: any) {
  * Template parameters may not contain line breaks, so {{2}} is one line.
  */
 export const TEMPLATE_TEXT: Record<ParentLang, string> = {
-  hi: 'नमस्ते! TieEdu पर {{1}} का इस हफ़्ते का हाल: {{2}} पूरी जानकारी: {{3}} ये संदेश बंद करने के लिए: {{4}}',
-  en: 'Hello! {{1}}’s week on TieEdu: {{2}} Full details: {{3}} To stop these messages: {{4}}',
+  hi: 'नमस्ते! TiEEdu पर {{1}} का इस हफ़्ते का हाल: {{2}} पूरी जानकारी: {{3}} ये संदेश बंद करने के लिए: {{4}}',
+  en: 'Hello! {{1}}’s week on TiEEdu: {{2}} Full details: {{3}} To stop these messages: {{4}}',
 };
 
 export interface WeeklyMessage {

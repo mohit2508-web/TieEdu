@@ -106,7 +106,7 @@ export async function buildSkillCertPdf(cert: SkillCertificate): Promise<Buffer>
 
   // --- Brand header ------------------------------------------------------
   page.drawRectangle({ x: 22, y: H - 96, width: W - 44, height: 52, color: NAVY });
-  page.drawText('TieEdu', { x: 44, y: H - 68, size: 25, font: serifBold, color: rgb(1, 1, 1) });
+  page.drawText('TiEEdu', { x: 44, y: H - 68, size: 25, font: serifBold, color: rgb(1, 1, 1) });
   page.drawText('Technology  ×  Intelligence  ×  Education', { x: 140, y: H - 66, size: 9.5, font: sans, color: AMBER });
   const headerRight = 'CERTIFICATE OF SKILL PROFICIENCY';
   page.drawText(headerRight, {
@@ -127,7 +127,7 @@ export async function buildSkillCertPdf(cert: SkillCertificate): Promise<Buffer>
     y: H - 200, size: 13, font: sans, color: MUTED,
   });
 
-  const recipient = ascii(cert.studentName) || 'TieEdu Learner';
+  const recipient = ascii(cert.studentName) || 'TiEEdu Learner';
   const recipientSize = recipient.length > 34 ? 30 : 36;
   page.drawText(recipient, {
     x: (W - serifBold.widthOfTextAtSize(recipient, recipientSize)) / 2,
@@ -192,7 +192,7 @@ export async function buildSkillCertPdf(cert: SkillCertificate): Promise<Buffer>
   const footerY = 62;
 
   page.drawText('ISSUED BY', { x: 60, y: footerY + 44, size: 8, font: sansBold, color: MUTED });
-  page.drawText('TieEdu Skill Assessments', { x: 60, y: footerY + 27, size: 12.5, font: serifBold, color: INK });
+  page.drawText('TiEEdu Skill Assessments', { x: 60, y: footerY + 27, size: 12.5, font: serifBold, color: INK });
   page.drawLine({
     start: { x: 60, y: footerY + 20 }, end: { x: 250, y: footerY + 20 },
     thickness: 0.8, color: INK,
@@ -265,10 +265,10 @@ export async function buildSkillCertPdf(cert: SkillCertificate): Promise<Buffer>
   }
 
   // --- PDF metadata ------------------------------------------------------
-  pdf.setTitle(`TieEdu Skill Certificate ${cert.certificateId}`);
+  pdf.setTitle(`TiEEdu Skill Certificate ${cert.certificateId}`);
   pdf.setSubject(`Skill proficiency: ${ascii(cert.skillName)} (${ascii(cert.skillLevelText)})`);
-  pdf.setAuthor('TieEdu');
-  pdf.setProducer('TieEdu Skill Certificate Service');
+  pdf.setAuthor('TiEEdu');
+  pdf.setProducer('TiEEdu Skill Certificate Service');
   pdf.setKeywords([cert.certificateId, cert.skillSlug, 'tieedu', 'skill certificate']);
   pdf.setCreationDate(new Date(cert.issueDate));
 

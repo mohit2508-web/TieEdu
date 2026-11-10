@@ -36,7 +36,7 @@ export const DeviceLimitSheet: React.FC = () => {
       <div className="p-5 sm:p-6">
         <h2 className="font-display text-2xl font-extrabold tracking-tight text-heading">You&rsquo;re signed in on {devices?.length ?? 2} devices</h2>
         <p className="mt-2 text-sm text-body">
-          A TieEdu account can be signed in on two devices at a time. Choose one to sign out of, and we&rsquo;ll sign you in here.
+          A TiEEdu account can be signed in on two devices at a time. Choose one to sign out of, and we&rsquo;ll sign you in here.
         </p>
         <fieldset className="mt-5">
           <legend className="sr-only">Device to sign out of</legend>

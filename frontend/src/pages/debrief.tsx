@@ -61,7 +61,7 @@ export default function DebriefPage() {
   return (
     <>
       <Head>
-        <title>After a rejection · TieEdu</title>
+        <title>After a rejection · TiEEdu</title>
         <meta name="description" content="Got a no from a company? Note what happened in two minutes and get a plan for the next one." />
       </Head>
       <main className="mx-auto w-full max-w-[760px] px-4 pb-14 pt-6 sm:px-6 sm:pt-10">

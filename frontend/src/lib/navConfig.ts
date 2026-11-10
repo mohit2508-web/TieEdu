@@ -689,7 +689,7 @@ export const resolveSection = (pathname: string): NavSection | null => {
  */
 export const resolveNavTitle = (pathname: string): string => {
   const item = resolveNavItem(pathname);
-  return item ? item.label : 'TieEdu';
+  return item ? item.label : 'TiEEdu';
 };
 
 /**

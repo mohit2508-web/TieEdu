@@ -186,7 +186,7 @@ pdfLibraryRouter.get('/file/:storedName', optionalAuth, async (req: Request, res
       studentEmail,
       rollNo,
       licenseId,
-      companyName: owner.company?.name || 'TieEdu Placement Vault',
+      companyName: owner.company?.name || 'TiEEdu Placement Vault',
       moduleTitle: owner.module?.title || pdfMeta?.title || 'Study Material',
     });
 

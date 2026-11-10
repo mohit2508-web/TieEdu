@@ -96,4 +96,4 @@ const SCHOOL_TITLES: Record<string, string> = {
 export default withPageTitle(SchoolApp, (q) => {
   const first = Array.isArray(q.path) ? q.path[0] : q.path;
   return `${(first && SCHOOL_TITLES[first]) || 'Home'} · School`;
-}, () => 'Your school on TieEdu: courses, notices and progress in one place.');
+}, () => 'Your school on TiEEdu: courses, notices and progress in one place.');

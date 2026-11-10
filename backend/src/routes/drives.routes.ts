@@ -869,10 +869,10 @@ drivesRouter.get('/config', async (_req: Request, res: Response) => {
     return res.json({
       support_phone: s.support_phone || '',
       support_email: s.support_email || '',
-      platform_name: s.platform_name || 'TieEdu',
+      platform_name: s.platform_name || 'TiEEdu',
       upi_id: s.upi_id || '',
       upi_qr: s.upi_qr || '',
-      merchant_name: s.merchant_name || 'TieEdu',
+      merchant_name: s.merchant_name || 'TiEEdu',
       upi_instructions: s.upi_instructions || '',
     });
   } catch (err: any) {

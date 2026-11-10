@@ -42,7 +42,7 @@ export function getCProgrammingCourse(): Course {
 
 Fifteen modules take you from writing and compiling your first program through types, control flow, functions, arrays, pointers, dynamic memory, structs, files, the preprocessor, and the standard library — then close with two capstones (a reusable dynamic string and string map, and a recursively destroyed binary search tree) and a cumulative final assessment.
 
-Every lesson is short, runs real compilable C, and is paired with interactive visualisations: watch the stack and heap change step by step, trace a program line by line, see bytes and bit-fields laid out, and follow arguments across a function call. There is no sign-up wall and no paid tier — finish the modules, pass the quizzes, and you earn a verifiable TieEdu certificate plus XP on the leaderboard.
+Every lesson is short, runs real compilable C, and is paired with interactive visualisations: watch the stack and heap change step by step, trace a program line by line, see bytes and bit-fields laid out, and follow arguments across a function call. There is no sign-up wall and no paid tier — finish the modules, pass the quizzes, and you earn a verifiable TiEEdu certificate plus XP on the leaderboard.
 
 **Who this is for:** students who have finished Coding Foundations or written a little code in any language, and anyone preparing for placements who needs to be able to read and write C with confidence.
 

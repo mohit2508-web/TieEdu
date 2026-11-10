@@ -3,7 +3,7 @@
  *
  * The rules (set by the platform owner):
  *  - Recruiters: anyone signed in may apply with company, website and work
- *    email; a TieEdu admin approves each one before they can search. Admins
+ *    email; a TiEEdu admin approves each one before they can search. Admins
  *    can also reject or suspend.
  *  - Students opt in to being searchable, and can stop at any time.
  *  - Results are anonymous: "Candidate #A7F2C9", verified skill scores and
@@ -94,7 +94,7 @@ export function applyAsRecruiter(db: any, userId: string, input: any, now = new 
 
   const existing = recruitersOf(db).find((r) => r.user_id === userId);
   if (existing && (existing.status === 'pending' || existing.status === 'approved')) throw new TalentError(409, existing.status === 'approved' ? 'You are already a verified recruiter.' : 'Your application is being reviewed.');
-  if (existing?.status === 'suspended') throw new TalentError(403, 'This recruiter account is suspended. Contact TieEdu support.');
+  if (existing?.status === 'suspended') throw new TalentError(403, 'This recruiter account is suspended. Contact TiEEdu support.');
   const r: Recruiter = { id: existing?.id || `rec-${crypto.randomBytes(6).toString('hex')}`, user_id: userId, company, website, work_email, status: 'pending', applied_at: now.toISOString(), decided_by: null, decided_at: null, admin_note: null };
   if (existing) Object.assign(existing, r);
   else recruitersOf(db).push(r);
@@ -208,7 +208,7 @@ export function sendInterest(db: any, userId: string, input: any, now = new Date
 
   const i: Interest = { id: `int-${crypto.randomBytes(6).toString('hex')}`, recruiter_id: r.id, student_id: student.id, role, location, pay_range, note, status: 'pending', created_at: now.toISOString(), decided_at: null };
   interestsOf(db).push(i);
-  return { interest: i, push: { userId: student.id, title: `${r.company} is interested in you`, body: `${role} · ${location} · ${pay_range}. Open TieEdu to accept or decline.`, url: '/talent' } };
+  return { interest: i, push: { userId: student.id, title: `${r.company} is interested in you`, body: `${role} · ${location} · ${pay_range}. Open TiEEdu to accept or decline.`, url: '/talent' } };
 }
 
 export function decideInterest(db: any, studentId: string, id: string, accept: boolean, now = new Date()): Interest {

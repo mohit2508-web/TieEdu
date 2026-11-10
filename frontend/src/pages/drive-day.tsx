@@ -84,7 +84,7 @@ export default function DriveDayPage() {
   return (
     <>
       <Head>
-        <title>{`${title} · TieEdu`}</title>
+        <title>{`${title} · TiEEdu`}</title>
         <meta name="description" content="Everything for the day of a placement test: reporting time, documents checklist, 15-minute revision and a breathing timer." />
       </Head>
       <main className="mx-auto w-full max-w-[760px] px-4 pb-14 pt-6 sm:px-6 sm:pt-10">

@@ -1588,7 +1588,7 @@ Eight lessons across four modules: number system and HCF/LCM, ratio-partnership-
 
 Quant (Modules 1-3) is taught with the techniques that replace calculator work: power cycles, HCF-of-differences, the alligation cross, the SI-CI difference formula, relative speed and work rates. Reasoning (Module 4) is taught with the diagrams that make wrong options visibly wrong: difference rows for series, position tables for coding, family trees for blood relations, compass grids for direction, and Venn circles for syllogisms.
 
-Every lesson ends with a quiz graded on the server, and the course finishes with a 15-question timed exam drawn from a 30-question bank. Passing earns a verifiable TieEdu certificate.`,
+Every lesson ends with a quiz graded on the server, and the course finishes with a 15-question timed exam drawn from a 30-question bank. Passing earns a verifiable TiEEdu certificate.`,
     prerequisites: [
       'Class-10 arithmetic (fractions, percentages, basic algebra)',
       'No calculator needed - every technique is mental or rough-paper',

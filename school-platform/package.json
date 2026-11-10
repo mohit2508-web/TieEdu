@@ -2,7 +2,7 @@
   "name": "tieedu-school-platform",
   "version": "0.1.0",
   "private": true,
-  "description": "TieEdu School of Technology — multi-tenant K-12 school platform",
+  "description": "TiEEdu School of Technology — multi-tenant K-12 school platform",
   "scripts": {
     "dev": "next dev -p 3300",
     "build": "prisma generate && next build",

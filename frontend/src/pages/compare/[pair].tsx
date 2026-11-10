@@ -43,8 +43,8 @@ export default function ComparePairPage({ cmp }: { cmp: Comparison }) {
         description: cmp.description,
         url,
         ...(cmp.updated ? { dateModified: cmp.updated } : {}),
-        author: { '@type': 'Organization', name: 'TieEdu', url: SITE },
-        publisher: { '@type': 'Organization', name: 'TieEdu', logo: { '@type': 'ImageObject', url: `${SITE}/email/logo.png` } },
+        author: { '@type': 'Organization', name: 'TiEEdu', url: SITE },
+        publisher: { '@type': 'Organization', name: 'TiEEdu', logo: { '@type': 'ImageObject', url: `${SITE}/email/logo.png` } },
       },
       {
         '@type': 'BreadcrumbList',
@@ -63,7 +63,7 @@ export default function ComparePairPage({ cmp }: { cmp: Comparison }) {
   return (
     <>
       <Head>
-        <title>{`${cmp.title} | TieEdu`}</title>
+        <title>{`${cmp.title} | TiEEdu`}</title>
         <meta name="description" content={cmp.description.slice(0, 160)} />
         <link key="canonical" rel="canonical" href={url} />
         <meta property="og:title" content={cmp.title} key="og:title" />

@@ -139,7 +139,7 @@ companiesRouter.get('/:slug', optionalAuth, (req: Request, res: Response) => {
   // Free modules remain fully readable — they are the honest showcase that sells the pack.
   if (sanitizedCompany.modules) {
     sanitizedCompany.modules.forEach((mod: any) => {
-      // TieEdu members (Diwali 2026 offer) read pack-gated lesson modules; premium rounds stay paid.
+      // TiEEdu members (Diwali 2026 offer) read pack-gated lesson modules; premium rounds stay paid.
       const owned = isUnlocked || ownedModuleIds.includes(mod.id) || (mod.pack_gated === true && mod.is_premium !== true && member);
       // pack_gated: free module (outside the price ladder) whose items beyond the free preview need the pack.
       if ((mod.is_premium !== true && mod.pack_gated !== true) || owned) return;

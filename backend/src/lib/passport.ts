@@ -140,7 +140,7 @@ export function buildPassport(db: any, user: any, now = new Date()): PassportVie
 
   return {
     handle: String(user.passport?.handle),
-    name: String(user.name || 'TieEdu student'),
+    name: String(user.name || 'TiEEdu student'),
     year: Number.isFinite(user.grad_year) ? yearLabel(user.grad_year, now) : null,
     xp: totalXpForUser(db, userId),
     best_streak: streakView(db, userId, now).best,

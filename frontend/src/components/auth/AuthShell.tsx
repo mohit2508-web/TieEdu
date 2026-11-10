@@ -13,7 +13,7 @@ export const AuthShell: React.FC<{ title: string; eyebrow: string; heading: stri
 }) => (
   <>
     <Head>
-      <title>{`${title} — TieEdu`}</title>
+      <title>{`${title} — TiEEdu`}</title>
       <meta name="robots" content="noindex" />
     </Head>
     <div className="min-h-screen hero-mesh flex flex-col items-center justify-center px-4 py-12">

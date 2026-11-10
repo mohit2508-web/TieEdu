@@ -226,7 +226,7 @@ export const AdminCmsView: React.FC = () => {
       {/* Sidebar (lg+) */}
       <aside className="hidden lg:flex w-[250px] shrink-0 flex-col border-r border-line bg-white">
         <div className="p-5 border-b border-line">
-          <p className="text-xs font-mono font-bold text-link uppercase tracking-[0.2em]">TieEdu</p>
+          <p className="text-xs font-mono font-bold text-link uppercase tracking-[0.2em]">TiEEdu</p>
           <h1 className="text-lg font-extrabold text-heading tracking-tight">Admin Control Plane</h1>
           <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full bg-warning-soft text-amber-deep text-xs font-bold font-mono">OWNER BACKOFFICE</span>
         </div>

@@ -159,7 +159,7 @@ const SkillTest: React.FC<TemplateProps> = (p) => {
     <Layout preview="20 questions, an instant score, a certificate." unsubUrl={p.unsubUrl}>
       <P>{greeting(p)}</P>
       <P>
-        Resume lines are cheap. A verified score with a link anyone can check is not. The TieEdu
+        Resume lines are cheap. A verified score with a link anyone can check is not. The TiEEdu
         skill test is free: answer the questions, get your score immediately, and if you clear the
         threshold, a signed certificate you can put on your resume and share.
       </P>
@@ -268,8 +268,8 @@ const DriveUpdate: React.FC<TemplateProps> = (p) => {
   const ctaLabel = V(p, 'cta_label', 'Open your drive page');
   const paragraphs = body.split(/\n\s*\n/).filter((s) => s.trim());
   return (
-    <Layout preview={V(p, 'body', V(p, 'subject', 'Update on your TieEdu mock drive')).slice(0, 110)} unsubUrl={p.unsubUrl} transactional={p.transactional}>
-      <Headline>{V(p, 'subject', 'Update on your TieEdu mock drive')}</Headline>
+    <Layout preview={V(p, 'body', V(p, 'subject', 'Update on your TiEEdu mock drive')).slice(0, 110)} unsubUrl={p.unsubUrl} transactional={p.transactional}>
+      <Headline>{V(p, 'subject', 'Update on your TiEEdu mock drive')}</Headline>
       <P>{greeting(p)}</P>
       {paragraphs.map((para, i) => (
         <P key={i}>{para.split(/\n/).map((line, j) => (
@@ -277,7 +277,7 @@ const DriveUpdate: React.FC<TemplateProps> = (p) => {
         ))}</P>
       ))}
       {ctaUrl ? <Button href={p.href(ctaUrl)}>{ctaLabel}</Button> : null}
-      <Note>{V(p, 'note', '') || `${v.drive_name || 'TieEdu'} · An update about your TieEdu account.`}</Note>
+      <Note>{V(p, 'note', '') || `${v.drive_name || 'TiEEdu'} · An update about your TiEEdu account.`}</Note>
     </Layout>
   );
 };
@@ -326,13 +326,13 @@ export const TEMPLATES: Record<EmailTemplateId, TemplateDef> = {
     Component: Reengage,
   },
   'drive-update': {
-    subject: (p) => (V(p, 'subject', '') || 'Update on your TieEdu mock drive').slice(0, 150),
+    subject: (p) => (V(p, 'subject', '') || 'Update on your TiEEdu mock drive').slice(0, 150),
     preheader: (p) => (V(p, 'body', '') || 'A drive update.').replace(/\s+/g, ' ').slice(0, 120),
     Component: DriveUpdate,
   },
   'infosys-se': {
     subject: () => 'Your Infosys SE prep plan is live',
-    preheader: () => '54 questions, 100 minutes. Train · Test · Track for it on TieEdu.',
+    preheader: () => '54 questions, 100 minutes. Train · Test · Track for it on TiEEdu.',
     Component: InfosysSe,
   },
 };

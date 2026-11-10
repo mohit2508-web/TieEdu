@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "TieEdu School of Technology",
+    "appName": "TiEEdu School of Technology",
     "tagline": "Make your school future-ready",
     "language": "Language",
     "loading": "Loading…",
@@ -123,7 +123,7 @@
   },
   "schoolCourses": {
     "title": "School courses",
-    "subtitle": "Switch TieEdu courses on for your students.",
+    "subtitle": "Switch TiEEdu courses on for your students.",
     "empty": "No published courses are available yet.",
     "enable": "Enable",
     "disable": "Disable",
@@ -177,7 +177,7 @@
   },
   "teachers": {
     "title": "Teachers",
-    "subtitle": "Assign TieEdu courses to your teachers.",
+    "subtitle": "Assign TiEEdu courses to your teachers.",
     "teacher": "Teacher",
     "course": "Course",
     "pickTeacher": "Choose a teacher",

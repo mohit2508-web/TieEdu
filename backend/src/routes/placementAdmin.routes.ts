@@ -239,7 +239,7 @@ placementAdminRouter.get(
 
 /**
  * POST /colleges/:id/access — direct grant for an account that already exists
- * (the college's T&P Head who already has a TieEdu login). The invite flow
+ * (the college's T&P Head who already has a TiEEdu login). The invite flow
  * exists for people who do not; both write the same row shape.
  */
 placementAdminRouter.post(
@@ -271,7 +271,7 @@ placementAdminRouter.post(
     const user = (db.users || []).find((u: any) => u.email === email && !u.disabled);
     if (!user) {
       res.status(404).json({
-        error: `No TieEdu account exists for ${email} — send an invite instead`,
+        error: `No TiEEdu account exists for ${email} — send an invite instead`,
         invite_required: true,
       });
       return;

@@ -896,7 +896,7 @@ async function main() {
   await prisma.user.upsert({
     where: { email: adminEmail },
     update: {},
-    create: { name: 'TieEdu Admin', email: adminEmail, passwordHash: hash(adminPassword), role: 'SUPER_ADMIN' },
+    create: { name: 'TiEEdu Admin', email: adminEmail, passwordHash: hash(adminPassword), role: 'SUPER_ADMIN' },
   });
   console.log(`[seed] platform admin: ${adminEmail} / ${adminPassword}`);
 

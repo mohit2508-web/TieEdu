@@ -1073,12 +1073,12 @@ adminRouter.put('/users/:id/status', requirePermission('users.status'), (req: Re
 adminRouter.get('/settings', requirePermission('settings.read'), (req: Request, res: Response) => {
   const db = loadDb();
   const defaults = {
-    platform_name: 'TieEdu',
+    platform_name: 'TiEEdu',
     support_email: 'contact@tieedu.in',
     support_phone: '',
     upi_id: '',
     upi_qr: '',
-    merchant_name: 'TieEdu',
+    merchant_name: 'TiEEdu',
     upi_instructions: 'Scan with any UPI app (Paytm, GPay, PhonePe) and transfer the exact amount.',
     accuracy_guarantee_enabled: false,
     accuracy_guarantee_amount: 99,

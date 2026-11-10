@@ -38,7 +38,7 @@ export const FestivalBar: React.FC<{ onDismiss: () => void }> = ({ onDismiss }) 
       <span aria-hidden>🪔</span>
       <span className="hidden sm:inline">
         {f.is_last_day ? 'Last day! ' : f.is_peak_day ? 'Happy Diwali! ' : 'Diwali Sale: '}
-        All courses &amp; packs <b>{f.discount_percent}% OFF</b> + FREE TieEdu Membership
+        All courses &amp; packs <b>{f.discount_percent}% OFF</b> + FREE TiEEdu Membership
       </span>
       <span className="sm:hidden"><b>{f.discount_percent}% OFF</b> + Free Membership</span>
       <span className="festival-bar__clock hidden sm:inline" aria-live="off">

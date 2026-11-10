@@ -293,7 +293,7 @@ export function getEngineeringMaths1Course(): Course {
     subtitle: 'The Year-1 maths every branch shares — limits and series, optimisation, integration, matrices and eigenvalues, taught with the exam shortcuts that save minutes',
     description: `Every engineering branch starts from the same mathematics. This course covers the Year-1 syllabus that AKTU, VTU and MU curricula share: limits and continuity, series expansions, applications of derivatives, integration and its uses, and the linear algebra that later semesters assume without re-teaching.
 
-Eight lessons across four modules. Every lesson follows the nine-step structure: objective, hook, concept, worked example, practice, common mistakes, the exam angle, a server-graded quiz and a one-screen summary. A 30-question bank feeds a 15-question timed final exam; passing earns a verifiable TieEdu certificate.
+Eight lessons across four modules. Every lesson follows the nine-step structure: objective, hook, concept, worked example, practice, common mistakes, the exam angle, a server-graded quiz and a one-screen summary. A 30-question bank feeds a 15-question timed final exam; passing earns a verifiable TiEEdu certificate.
 
 **Who this is for:** first-year students of every branch who want the maths to click once, properly, rather than re-deriving it under exam pressure each semester. Also useful for GATE/PSU aspirants revisiting the basics.
 
@@ -325,7 +325,7 @@ Eight lessons across four modules. Every lesson follows the nine-step structure:
 
 Calculus (Modules 1 and 3) is taught with the standard limit laws, the four memorised series, and a technique-selection table for integration that tells you which tool matches which integrand shape. Applications (Module 2) emphasise the setup of optimisation problems and the five-step curve-tracing checklist rather than blind differentiation. Linear algebra (Module 4) is taught through rank and eigenvalues, the two ideas that carry into every later semester from circuits to control theory to data science.
 
-Every lesson ends with a quiz graded on the server, and the course finishes with a 15-question timed exam drawn from a 30-question bank. Passing earns a verifiable TieEdu certificate.`,
+Every lesson ends with a quiz graded on the server, and the course finishes with a 15-question timed exam drawn from a 30-question bank. Passing earns a verifiable TiEEdu certificate.`,
     prerequisites: [
       'Class-12 calculus (derivatives, basic integrals)',
       'Class-12 algebra (quadratics, simultaneous equations)',

@@ -3,7 +3,7 @@
  *
  * Listings are entered by an admin and nothing is invented: a listing is a real
  * opening with a real way to apply. Public readers see only `open` listings
- * whose deadline has not passed. Applying in-app needs a signed-in TieEdu
+ * whose deadline has not passed. Applying in-app needs a signed-in TiEEdu
  * member; a listing with an external `apply_url` sends the student there.
  */
 import crypto from 'crypto';
@@ -16,7 +16,7 @@ export interface Internship {
   id: string;
   title: string;
   company: string;
-  /** True for roles at TieEdu itself — shown as "at TieEdu". */
+  /** True for roles at TiEEdu itself — shown as "at TiEEdu". */
   is_tieedu: boolean;
   mode: WorkMode;
   location: string;
@@ -84,7 +84,7 @@ export function publicInternships(db: any, userId: string | null, nowMs = Date.n
 export function applyToInternship(db: any, userId: string, id: string, note: unknown, nowMs = Date.now()): InternshipApplication {
   const i = listOf(db).find((x) => x.id === id);
   if (!i || i.status !== 'open' || deadlinePassed(i, nowMs)) throw new InternshipError(404, 'This internship is no longer open.');
-  if (!isMember(db, userId, nowMs)) throw new InternshipError(403, 'Claim your free TieEdu membership to apply.');
+  if (!isMember(db, userId, nowMs)) throw new InternshipError(403, 'Claim your free TiEEdu membership to apply.');
   if (i.apply_url) throw new InternshipError(400, 'Apply on the company page for this one.');
   const existing = appsOf(db).find((a) => a.internship_id === id && a.user_id === userId);
   if (existing) return existing;
@@ -148,16 +148,16 @@ export function adminInternships(db: any) {
 }
 
 /**
- * Drafts for TieEdu's own roles, seeded once so the owner only has to review
+ * Drafts for TiEEdu's own roles, seeded once so the owner only has to review
  * and open them. They are never public until an admin sets status 'open'.
  */
 export function seedTieEduInternshipDrafts(db: any): boolean {
   if (db.internships_seeded_diwali_2026) return false;
-  const base = { company: 'TieEdu', is_tieedu: true, mode: 'remote' as WorkMode, location: 'Remote (India)', apply_url: '', deadline: '2026-11-30', status: 'draft' as InternshipStatus };
+  const base = { company: 'TiEEdu', is_tieedu: true, mode: 'remote' as WorkMode, location: 'Remote (India)', apply_url: '', deadline: '2026-11-30', status: 'draft' as InternshipStatus };
   const drafts = [
-    { title: 'Campus Ambassador', duration: '3 months', stipend: 'Owner to fill', eligibility: 'Any college student in India', description: 'Bring TieEdu to your campus: run prep sessions, share drives and help classmates plan for placements.' },
-    { title: 'Content Intern — Placement Prep', duration: '2–3 months', stipend: 'Owner to fill', eligibility: 'Final or pre-final year, strong aptitude and writing', description: 'Write and review company-wise prep lessons and practice questions with the TieEdu team.' },
-    { title: 'Community Intern', duration: '2 months', stipend: 'Owner to fill', eligibility: 'Any year, active on student communities', description: 'Help run the TieEdu student community, answer doubts and host weekly prep check-ins.' },
+    { title: 'Campus Ambassador', duration: '3 months', stipend: 'Owner to fill', eligibility: 'Any college student in India', description: 'Bring TiEEdu to your campus: run prep sessions, share drives and help classmates plan for placements.' },
+    { title: 'Content Intern — Placement Prep', duration: '2–3 months', stipend: 'Owner to fill', eligibility: 'Final or pre-final year, strong aptitude and writing', description: 'Write and review company-wise prep lessons and practice questions with the TiEEdu team.' },
+    { title: 'Community Intern', duration: '2 months', stipend: 'Owner to fill', eligibility: 'Any year, active on student communities', description: 'Help run the TiEEdu student community, answer doubts and host weekly prep check-ins.' },
   ];
   for (const d of drafts) upsertInternship(db, { ...base, ...d });
   db.internships_seeded_diwali_2026 = true;

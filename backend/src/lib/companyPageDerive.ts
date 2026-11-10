@@ -397,13 +397,13 @@ export function derivePageContent(db: any, company: any): PageContent {
     settings: {
       accent: 'sky',
       hero_style: 'ink',
-      seo_title: '{company} interview preparation: rounds and questions | TieEdu',
+      seo_title: '{company} interview preparation: rounds and questions | TiEEdu',
       seo_description:
         'Round-by-round preparation for {company}: each round’s questions, a free skill test for its topics, and every figure marked as checked or being verified.',
       sticky_enabled: premium.length > 0,
       sticky_text: 'Get the full {company} prep pack',
       sticky_label: 'Get the pack',
-      disclaimer: 'TieEdu is not affiliated with {company}. Company names are used for identification only.',
+      disclaimer: 'TiEEdu is not affiliated with {company}. Company names are used for identification only.',
     },
     sections,
   });

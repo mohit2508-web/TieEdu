@@ -68,7 +68,7 @@ export const SupportInboxTab: React.FC = () => {
                 </div>
                 <div className="flex shrink-0 gap-2">
                   <a
-                    href={`mailto:${r.email}?subject=${encodeURIComponent(`Re: your TieEdu message (${r.ref})`)}`}
+                    href={`mailto:${r.email}?subject=${encodeURIComponent(`Re: your TiEEdu message (${r.ref})`)}`}
                     className="inline-flex items-center gap-1.5 rounded-xl border border-line px-3 py-2 text-xs font-bold text-link"
                   >
                     <Mail className="h-3.5 w-3.5" /> Reply

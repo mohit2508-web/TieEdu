@@ -104,7 +104,7 @@ export async function renderShareCard(input: ShareCardInput, format: ShareFormat
   ctx.fillStyle = '#FFFFFF';
   ctx.font = `700 ${34 * scale}px ${display}`;
   ctx.textBaseline = 'alphabetic';
-  ctx.fillText('TieEdu', pad, pad + 30 * scale);
+  ctx.fillText('TiEEdu', pad, pad + 30 * scale);
 
   // Eyebrow.
   // Portrait has room to spare: start the text lower so the card is not top-heavy.

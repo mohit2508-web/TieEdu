@@ -60,7 +60,7 @@ export const SchoolShell: React.FC<SchoolShellProps> = ({ children }) => {
             style={{ display: 'flex', flexDirection: 'column', gap: 2 }}
           >
             <span style={{ fontSize: scrolled ? 16 : 20, fontWeight: 700, color: 'var(--text-heading)', transition: 'font-size 160ms ease' }}>
-              {school?.short_name || school?.name || 'TieEdu School'}
+              {school?.short_name || school?.name || 'TiEEdu School'}
             </span>
             <span style={{ fontSize: scrolled ? 10 : 11, color: 'var(--text-muted)', transition: 'font-size 160ms ease' }}>{school?.motto || 'Curiosity first'}</span>
           </Pressable>

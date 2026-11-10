@@ -3,7 +3,7 @@
  *
  * A student shares their offer and how they prepared. Nothing is public until
  * an admin approves it. "Verified" is a separate flag an admin sets after
- * confirming the offer out of band (an email exchange); TieEdu never asks for
+ * confirming the offer out of band (an email exchange); TiEEdu never asks for
  * or stores an offer letter, which is a personal document.
  *
  * The student chooses how they appear: first name, initials, or anonymous.
@@ -83,7 +83,7 @@ export function submitOffer(db: any, userId: string, input: any, now = new Date(
 /** How the author appears publicly, from their account name and their choice. */
 export function displayName(fullName: string, mode: NameMode): string {
   const parts = String(fullName || '').trim().split(/\s+/).filter(Boolean);
-  if (mode === 'anonymous' || parts.length === 0) return 'A TieEdu student';
+  if (mode === 'anonymous' || parts.length === 0) return 'A TiEEdu student';
   if (mode === 'initials') return parts.map((p) => p[0].toUpperCase() + '.').join(' ');
   return parts[0];
 }

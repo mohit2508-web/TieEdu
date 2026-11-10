@@ -2,7 +2,7 @@ import { Response } from 'express';
 import { getPool } from '../db/client';
 
 /**
- * TieEdu Schools data access.
+ * TiEEdu Schools data access.
  *
  * Every reader/writer in this module takes a `schoolId` as a REQUIRED parameter
  * and the WHERE clause always includes it. There is deliberately no "load

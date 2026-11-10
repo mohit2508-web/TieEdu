@@ -10,7 +10,7 @@ import {
 } from '@/lib/talentApi';
 
 /*
- * For recruiters (E4). Apply; once TieEdu verifies the company, search
+ * For recruiters (E4). Apply; once TiEEdu verifies the company, search
  * students by tested skill. Candidates are anonymous until they accept a
  * request, which shares their name and email (backend lib/talentSearch).
  */
@@ -32,20 +32,20 @@ export default function RecruitersPage() {
   return (
     <>
       <Head>
-        <title>Hire on tested skills · TieEdu</title>
+        <title>Hire on tested skills · TiEEdu</title>
         <meta name="description" content="Search students by verified skill-test scores. Verified recruiters only; candidates share contact when they accept." />
       </Head>
       <main className="mx-auto w-full max-w-[900px] px-4 pb-14 pt-6 sm:px-6 sm:pt-10">
         <p className="eyebrow text-link">For recruiters</p>
         <h1 className="mt-1 font-display text-3xl font-bold text-heading sm:text-4xl">Hire on tested skills</h1>
         <p className="mt-2 text-base text-body">
-          Search students by their verified TieEdu skill-test scores. Candidates are anonymous; send a request with the role and pay, and they choose whether to share their contact.
+          Search students by their verified TiEEdu skill-test scores. Candidates are anonymous; send a request with the role and pay, and they choose whether to share their contact.
         </p>
 
         {!loading && !user && (
           <Card pad="lg" className="mt-6 text-center">
             <p className="font-display text-xl font-bold text-heading">Sign in to apply</p>
-            <p className="mt-1 text-sm text-muted">Use any TieEdu account; you will add your work email next.</p>
+            <p className="mt-1 text-sm text-muted">Use any TiEEdu account; you will add your work email next.</p>
             <Button href="/login?next=%2Frecruiters" className="mt-4">Sign in</Button>
           </Card>
         )}
@@ -56,10 +56,10 @@ export default function RecruitersPage() {
         {r?.status === 'pending' && (
           <Card pad="lg" className="mt-6">
             <p className="flex items-center gap-2 font-display text-lg font-bold text-heading"><Clock className="h-5 w-5 text-link" aria-hidden /> Application received</p>
-            <p className="mt-1 text-body">TieEdu checks {r.company} and {r.work_email} before you can search. You will be able to search here once verified.</p>
+            <p className="mt-1 text-body">TiEEdu checks {r.company} and {r.work_email} before you can search. You will be able to search here once verified.</p>
           </Card>
         )}
-        {r?.status === 'suspended' && <Card pad="lg" className="mt-6"><p className="text-body">This recruiter account is suspended. Contact TieEdu support.</p></Card>}
+        {r?.status === 'suspended' && <Card pad="lg" className="mt-6"><p className="text-body">This recruiter account is suspended. Contact TiEEdu support.</p></Card>}
         {r?.status === 'approved' && !home!.enabled && <Card pad="lg" className="mt-6"><p className="text-body">You are verified. Search opens soon.</p></Card>}
         {r?.status === 'approved' && home!.enabled && <Workspace home={home!} setHome={setHome} />}
       </main>
@@ -90,7 +90,7 @@ function Apply({ rejectedNote, onDone }: { rejectedNote: string | null; onDone: 
         <div className="sm:col-span-3">
           <Button type="submit" disabled={busy}>{busy ? 'Sending…' : 'Apply'}</Button>
           {err && <span className="ml-3 text-sm text-danger">{err}</span>}
-          <p className="mt-2 text-xs text-muted">Use an email on your company’s own domain. TieEdu checks every recruiter before they can see students.</p>
+          <p className="mt-2 text-xs text-muted">Use an email on your company’s own domain. TiEEdu checks every recruiter before they can see students.</p>
         </div>
       </form>
     </Card>

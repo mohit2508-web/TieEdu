@@ -71,7 +71,7 @@ export const GiftPopup: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        aria-label="Your Diwali gift from TieEdu"
+        aria-label="Your Diwali gift from TiEEdu"
         onClick={(e) => e.stopPropagation()}
         className="relative w-full max-w-lg overflow-hidden rounded-3xl text-white shadow-2xl"
         style={{ background: 'radial-gradient(90% 70% at 50% 115%, rgba(255,170,40,0.28) 0%, transparent 60%), radial-gradient(120% 100% at 50% 0%, #6B1530 0%, #3A0A1C 52%, #1A050D 100%)', maxHeight: '92vh', overflowY: 'auto' }}
@@ -92,7 +92,7 @@ export const GiftPopup: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         <div className="relative px-6 pb-6 pt-8 text-center">
           <p className="text-xs font-extrabold uppercase tracking-[0.3em] text-[#FFD966]">Happy Diwali</p>
           <h2 className="mt-1 font-display text-3xl font-black sm:text-4xl" style={{ color: '#FFF8EE' }}>
-            <span className="diwali-gold-text">TieEdu Diwali Sale</span>
+            <span className="diwali-gold-text">TiEEdu Diwali Sale</span>
           </h2>
 
           <AnimatePresence mode="wait">

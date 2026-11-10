@@ -97,7 +97,7 @@ prepRouter.get('/:slug/lesson/:id', requireAuth, (req: Request, res: Response) =
   const at = items.findIndex((it: any) => it.id === req.params.id);
   if (at < 0) return res.status(404).json({ error: 'Lesson not found' });
   const it = items[at];
-  // TieEdu members (Diwali 2026 offer) read every lesson; tests stay pack-only.
+  // TiEEdu members (Diwali 2026 offer) read every lesson; tests stay pack-only.
   const owned = ownsCompanyPack(db, req.userId!, slug) || isMember(db, req.userId);
   const nav = (x: any) => (x ? { id: x.id, title: String(x.question_text || '') } : null);
   const base = { id: it.id, title: String(it.question_text || ''), index: at + 1, total: items.length, prev: nav(items[at - 1]), next: nav(items[at + 1]), owned, free: !!it.is_free_preview };

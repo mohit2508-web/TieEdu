@@ -12,7 +12,7 @@ export interface PrepSection {
 export interface PrepView {
   company: { name: string; slug: string };
   owned: boolean;
-  /** Lessons readable: pack owners and TieEdu members (Diwali 2026). */
+  /** Lessons readable: pack owners and TiEEdu members (Diwali 2026). */
   lessons_open?: boolean;
   test_date: string;
   days_left: number;

@@ -180,7 +180,7 @@ export const SubmitReportModal: React.FC<SubmitReportModalProps> = ({
                 rows={3}
                 required
                 enterKeyHint="done"
-                placeholder="Detail the questions asked, difficulty, and whether TieEdu vault content matched your interview..."
+                placeholder="Detail the questions asked, difficulty, and whether TiEEdu vault content matched your interview..."
                 value={roundSummary}
                 onChange={(e) => setRoundSummary(e.target.value)}
                 className="w-full p-3 border rounded-lg text-base md:text-sm text-heading"

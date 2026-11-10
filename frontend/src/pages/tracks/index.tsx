@@ -80,7 +80,7 @@ export default function TracksPage() {
   return (
     <>
       <Head>
-        <title>Career Tracks · TieEdu</title>
+        <title>Career Tracks · TiEEdu</title>
         <meta
           name="description"
           content="Sequenced course tracks that end in a verified Career Track certificate."

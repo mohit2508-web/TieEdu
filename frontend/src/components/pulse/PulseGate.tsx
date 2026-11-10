@@ -35,7 +35,7 @@ export const PulseGate: React.FC<{ title: string; children: React.ReactNode }> =
         <div className="mx-auto max-w-md rounded-band border border-line bg-card p-8 text-center">
           <Lock className="mx-auto h-8 w-8 text-muted" />
           <h2 className="mt-3 font-display text-h2 text-heading">Sign in to continue</h2>
-          <p className="mt-1 text-sm text-muted">Project Pulse is invite-only. Sign in with the email your teacher or TieEdu used.</p>
+          <p className="mt-1 text-sm text-muted">Project Pulse is invite-only. Sign in with the email your teacher or TiEEdu used.</p>
           <Link href={`/login?next=${encodeURIComponent(router.asPath)}`} className="mt-5 inline-flex h-11 items-center rounded-cell bg-signal px-5 font-display text-label text-on-primary shadow-edge-primary">Sign in</Link>
         </div>
       </PulseShell>

@@ -68,7 +68,7 @@ export const ReadinessView: React.FC<{ data: BatchReadiness }> = ({ data }) => {
       <EmptyState
         icon={Users}
         title="No students from this college have linked their profile yet."
-        note="Students appear here once they fill in their college and roll number on TieEdu."
+        note="Students appear here once they fill in their college and roll number on TiEEdu."
       />
     );
   }

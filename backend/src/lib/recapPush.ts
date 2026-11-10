@@ -51,7 +51,7 @@ export function planWeeklyRecaps(db: any, now = new Date()): PlannedRecap[] {
     out.push({
       user_id: user.id,
       week,
-      title: 'Your week on TieEdu',
+      title: 'Your week on TiEEdu',
       body: `${did.length ? `${did.join(', ')}.` : `${r.xp} XP earned.`}${improved} Next: ${today.next_step.title}`.slice(0, 180),
       url: '/',
     });

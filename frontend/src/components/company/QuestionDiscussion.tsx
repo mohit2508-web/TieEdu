@@ -130,7 +130,7 @@ const composerRef = useRef<HTMLTextAreaElement | null>(null);
 
         <div className="flex justify-between items-center">
           <span className="text-xs text-gray-500 ">
-            {getAccessToken() ? 'Posted as your account' : 'Posted as TieEdu Student (sign in to use your name)'}
+            {getAccessToken() ? 'Posted as your account' : 'Posted as TiEEdu Student (sign in to use your name)'}
           </span>
           <button
             type="submit"

@@ -6,8 +6,8 @@
  * a placeholder. Fill these in before launch (PROFESSIONAL_PLATFORM_PLAN §14).
  */
 export const LEGAL = {
-  brand: 'TieEdu',
-  companyName: 'TieEdu Technologies',
+  brand: 'TiEEdu',
+  companyName: 'TiEEdu Technologies',
   siteUrl: 'https://tieedu.in',
   supportEmail: 'contact@tieedu.in',
   /** Registered office address, one line. */

@@ -54,7 +54,7 @@ const FAQ: Array<{ q: string; a: React.ReactNode }> = [
     ),
   },
   {
-    q: 'What if a round was different from what TieEdu showed?',
+    q: 'What if a round was different from what TiEEdu showed?',
     a: (
       <>
         The{' '}
@@ -75,7 +75,7 @@ const FAQ: Array<{ q: string; a: React.ReactNode }> = [
     ),
   },
   {
-    q: 'Can I use TieEdu in Hinglish?',
+    q: 'Can I use TiEEdu in Hinglish?',
     a: <>Yes. Switch the language from the header (or the menu on a phone), and the app follows.</>,
   },
   {
@@ -83,12 +83,12 @@ const FAQ: Array<{ q: string; a: React.ReactNode }> = [
     a: <>By UPI. Your purchase unlocks as soon as the payment is verified, and it stays unlocked.</>,
   },
   {
-    q: 'Can my college use TieEdu?',
+    q: 'Can my college use TiEEdu?',
     a: (
       <>
         Yes. Placement officers get a dashboard for their batch. See{' '}
         <Link href="/colleges" className="font-semibold text-link hover:underline">
-          TieEdu for colleges
+          TiEEdu for colleges
         </Link>
         .
       </>

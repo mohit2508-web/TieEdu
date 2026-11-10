@@ -110,7 +110,7 @@ skillTestRouter.post('/assessments/:slug/start', requireAuth, (req: Request, res
       || user?.role === 'admin'
       || unlockedCompanyIds(db, userId).includes(company.id)
       || (premiumIds.length > 0 && premiumIds.every((id: string) => owned.includes(id)));
-    // TieEdu members (Diwali 2026 offer) get extra free attempts.
+    // TiEEdu members (Diwali 2026 offer) get extra free attempts.
     const freeAttempts = Number((assessment as any).freeAttempts ?? 1)
       + (isMember(db, userId) ? MEMBER_EXTRA_MOCK_ATTEMPTS : 0);
     if (!unlocked && priorAttempts.length >= freeAttempts) {
@@ -533,7 +533,7 @@ skillTestRouter.get('/certificates/:certificateId/pdf', async (req: Request, res
 
   try {
     const pdf = await buildSkillCertPdf(cert);
-    const filename = `TieEdu-Skill-Certificate-${cert.certificateId}.pdf`;
+    const filename = `TiEEdu-Skill-Certificate-${cert.certificateId}.pdf`;
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename="${filename}"`,

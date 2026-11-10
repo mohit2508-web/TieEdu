@@ -1608,7 +1608,7 @@ courseAdminRouter.post('/certificates/:serial/revoke', async (req: Request, res:
   }
 
   certificate.status = 'revoked';
-  certificate.revoked_reason = str(req.body?.reason, 300) || 'Revoked by TieEdu administrator';
+  certificate.revoked_reason = str(req.body?.reason, 300) || 'Revoked by TiEEdu administrator';
   certificate.revoked_at = new Date().toISOString();
   await appendAudit(db, { actor: req.user?.email, action: 'certificate.revoke', detail: `Revoked ${serial}: ${certificate.revoked_reason}` });
   saveDb(db);

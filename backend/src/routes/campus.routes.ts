@@ -65,7 +65,7 @@ campusRouter.get('/cohort', (req: Request, res: Response) => {
     }));
 
   res.json({
-    institution_name: 'TieEdu Placement Cell',
+    institution_name: 'TiEEdu Placement Cell',
     batch_year: new Date().getFullYear(),
     total_students: totalStudents,
     active_prep_students: activePrepStudents.length,

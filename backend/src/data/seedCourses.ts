@@ -74,7 +74,7 @@ export function getSeedCourses(): Course[] {
       subtitle: 'A free, end-to-end introduction to how programs actually work',
       description: `Most placement prep assumes you can already read code. This course starts one step earlier and walks the whole loop: what a program *is*, how a computer stores and moves data, how to express a problem as instructions, and how to debug when it does not work.
 
-Every lesson is short, written in plain language, and ends with something you can check yourself. There is no sign-up wall, no trial, and no paid tier — finish all four modules and you get a verifiable TieEdu certificate plus your XP on the leaderboard.
+Every lesson is short, written in plain language, and ends with something you can check yourself. There is no sign-up wall, no trial, and no paid tier — finish all four modules and you get a verifiable TiEEdu certificate plus your XP on the leaderboard.
 
 **Who this is for:** first-year and second-year students, commerce and arts students switching into tech, and anyone who has been copying code without understanding it.
 
@@ -208,7 +208,7 @@ This is why a program that is logically correct but written with millions of ste
               blocks: [
                 md(`## Everything a computer holds is a value
 
-A **value** is a piece of information: the number \`42\`, the text \`"TieEdu"\`, the answer \`True\`. A computer stores billions of these, and to use one it needs two things:
+A **value** is a piece of information: the number \`42\`, the text \`"TiEEdu"\`, the answer \`True\`. A computer stores billions of these, and to use one it needs two things:
 
 - **Where** it lives (an address in memory).
 - **What kind** of thing it is (its data type).
@@ -929,7 +929,7 @@ You need **70% to pass**. You may retake it as many times as you like; only your
 
 **What this quiz assumes you have done:** every lesson in all four modules, including all three videos. It is deliberately cumulative — several questions combine ideas from more than one module, which is exactly how placement questions are written.
 
-Pass this and the course is complete: you will be able to download your TieEdu certificate and leave feedback, and the next course in your sequence unlocks.`),
+Pass this and the course is complete: you will be able to download your TiEEdu certificate and leave feedback, and the next course in your sequence unlocks.`),
                 table('Marking scheme', ['Rule', 'Value'], [
                   ['Pass mark', '70%'],
                   ['Attempts allowed', 'Unlimited'],

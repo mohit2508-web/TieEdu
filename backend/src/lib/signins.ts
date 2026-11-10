@@ -18,7 +18,7 @@ export interface SignIn {
   last_active_at: string;
 }
 
-/** "Chrome on Windows", "Safari on iPhone", "TieEdu app on Android"… */
+/** "Chrome on Windows", "Safari on iPhone", "TiEEdu app on Android"… */
 export function deviceNameFromUA(ua: unknown, standalone = false): string {
   const s = String(ua || '');
   if (!s) return 'Unknown device';
@@ -31,7 +31,7 @@ export function deviceNameFromUA(ua: unknown, standalone = false): string {
     : /Mac OS X|Macintosh/i.test(s) ? 'Mac'
     : /Linux/i.test(s) ? 'Linux'
     : 'device';
-  if (standalone) return `TieEdu app on ${os}`;
+  if (standalone) return `TiEEdu app on ${os}`;
   const browser =
     /Edg\//i.test(s) ? 'Edge'
     : /OPR\/|Opera/i.test(s) ? 'Opera'

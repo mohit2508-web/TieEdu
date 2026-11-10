@@ -105,7 +105,7 @@ export default function PrepPage() {
 
   return (
     <>
-      <Head><title>My {data.company.name} prep | TieEdu</title></Head>
+      <Head><title>My {data.company.name} prep | TiEEdu</title></Head>
       <PrepNav slug={slug} name={data.company.name} active={tab} onTab={setTab} lab={!!data.lab} wide />
       <main className="mx-auto w-full max-w-[1280px] px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
         <div className="flex flex-wrap items-center gap-3">

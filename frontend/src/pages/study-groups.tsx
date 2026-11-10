@@ -28,7 +28,7 @@ export default function StudyGroupsPage() {
   return (
     <>
       <Head>
-        <title>Study groups · TieEdu</title>
+        <title>Study groups · TiEEdu</title>
         <meta name="description" content="Prepare for a company together: see who else is practising and nudge each other to keep going." />
       </Head>
       <main className="mx-auto w-full max-w-[760px] px-4 pb-14 pt-6 sm:px-6 sm:pt-10">

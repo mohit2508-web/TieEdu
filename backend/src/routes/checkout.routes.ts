@@ -231,7 +231,7 @@ checkoutRouter.get('/payment-info', (req: Request, res: Response) => {
     mode: effectivePaymentMode(db),
     upi_id: s.upi_id || '',
     upi_qr: s.upi_qr || '',
-    merchant_name: s.merchant_name || 'TieEdu',
+    merchant_name: s.merchant_name || 'TiEEdu',
     instructions: s.upi_instructions || 'Scan with any UPI app (Paytm, GPay, PhonePe) and transfer the exact amount.',
   });
 });
@@ -607,7 +607,7 @@ checkoutRouter.get('/order/:orderId/status', (req: Request, res: Response) => {
     const s = db.settings || {};
     safe.upi_id = s.upi_id || '';
     safe.upi_qr = s.upi_qr || '';
-    safe.merchant_name = s.merchant_name || 'TieEdu';
+    safe.merchant_name = s.merchant_name || 'TiEEdu';
     safe.instructions = s.upi_instructions || 'Scan with any UPI app (Paytm, GPay, PhonePe) and transfer the exact amount.';
   }
   if (order.status === 'paid') {

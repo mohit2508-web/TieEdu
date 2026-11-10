@@ -54,8 +54,8 @@ export default function GuaranteePage() {
   return (
     <>
       <Head>
-        <title>Accuracy guarantee · TieEdu</title>
-        <meta name="description" content="If a round's pattern was different from what TieEdu showed, get your money back for that company's content." />
+        <title>Accuracy guarantee · TiEEdu</title>
+        <meta name="description" content="If a round's pattern was different from what TiEEdu showed, get your money back for that company's content." />
       </Head>
       <main className="mx-auto w-full max-w-[760px] px-4 pb-14 pt-6 sm:px-6 sm:pt-10">
         <p className="eyebrow text-link">Our promise</p>

@@ -6,7 +6,7 @@ import { LandingHead, LandingSection } from './LandingHead';
 
 /**
  * E6 · "Your route to the offer" (UI_REDESIGN_PLAN_V3 §9): a company's rounds
- * as TieEdu's own route line, ending at the offer stamp, beside a test-day
+ * as TiEEdu's own route line, ending at the offer stamp, beside a test-day
  * card with a readiness bar and its goal tick. Sample data, labelled.
  */
 export const RoutePath: React.FC = () => (
@@ -14,7 +14,7 @@ export const RoutePath: React.FC = () => (
     <LandingHead
       id="route-title"
       eyebrow="Exam prep"
-      title="Tell TieEdu the drive date. Get a plan for every day."
+      title="Tell TiEEdu the drive date. Get a plan for every day."
       lead="Your company's rounds, in order, with the days between them filled in."
     />
 

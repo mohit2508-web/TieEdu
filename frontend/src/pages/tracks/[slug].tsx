@@ -159,7 +159,7 @@ export default function TrackDetailPage() {
       );
       const a = document.createElement('a');
       a.href = blobUrl;
-      a.download = filename || `TieEdu-Track-Certificate-${track.certificate.serial}.pdf`;
+      a.download = filename || `TiEEdu-Track-Certificate-${track.certificate.serial}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -206,7 +206,7 @@ export default function TrackDetailPage() {
   return (
     <>
       <Head>
-        <title>{track.title} · Career Track · TieEdu</title>
+        <title>{track.title} · Career Track · TiEEdu</title>
         <meta name="description" content={track.tagline} />
       </Head>
 

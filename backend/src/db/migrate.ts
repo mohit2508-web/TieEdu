@@ -1,6 +1,6 @@
 import { getPool, isDbReachable, lastPoolError } from './client';
 
-// Phase O migration: TieEdu stores its entire document as ONE JSONB row.
+// Phase O migration: TiEEdu stores its entire document as ONE JSONB row.
 // CockroachDB has no `SERIAL`, so the old schema (which used `INT SERIAL PRIMARY KEY`
 // and seeded FAKE unlock_count=1420 rows) never worked — and also violated the
 // "no fake data" rule. This migration creates only the app_state replica table and
@@ -235,7 +235,7 @@ export async function runMigrations(): Promise<boolean> {
     return true;
   } catch (err: any) {
     console.log('💡 [PostgreSQL] Migration failed: ' + err.message);
-    console.log('💡 [TieEdu] Serving from local-json-repository (backend/data/db.json). No data is in a half-migrated state.');
+    console.log('💡 [TiEEdu] Serving from local-json-repository (backend/data/db.json). No data is in a half-migrated state.');
     return false;
   }
 }

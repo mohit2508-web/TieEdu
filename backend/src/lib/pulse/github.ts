@@ -28,9 +28,9 @@ export const parseRepo = (input: string): string | null => {
 const gh = async (p: string) => {
   const token = process.env.PULSE_GITHUB_TOKEN;
   const res = await fetch(API + p, {
-    headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'TieEdu-Project-Pulse', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'TiEEdu-Project-Pulse', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
   });
-  if (res.status === 404) throw new PulseError(404, 'Repo not found. Make it public, or add the TieEdu bot account as a collaborator.');
+  if (res.status === 404) throw new PulseError(404, 'Repo not found. Make it public, or add the TiEEdu bot account as a collaborator.');
   if (res.status === 409) return null; // empty repository
   if (res.status === 403 || res.status === 429) throw new PulseError(429, 'GitHub rate limit reached. It will retry automatically.');
   if (!res.ok) throw new PulseError(502, `GitHub answered ${res.status}.`);
@@ -122,7 +122,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - name: TieEdu Project Pulse autograder
+      - name: TiEEdu Project Pulse autograder
         env:
           PULSE_API: ${apiBase}
           GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}
@@ -136,7 +136,7 @@ export const workflowIntact = (code: string | undefined) => {
   return norm(code) === norm(workflowYaml('x'));
 };
 
-export const GRADER_JS = `// TieEdu Project Pulse autograder. Runs inside GitHub Actions; read-only on your code.
+export const GRADER_JS = `// TiEEdu Project Pulse autograder. Runs inside GitHub Actions; read-only on your code.
 const { spawnSync } = require('child_process');
 const fs = require('fs'); const os = require('os'); const path = require('path');
 const API = process.env.PULSE_API, repo = process.env.GITHUB_REPOSITORY, sha = process.env.GITHUB_SHA, token = process.env.GITHUB_TOKEN;

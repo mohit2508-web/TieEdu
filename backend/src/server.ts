@@ -184,7 +184,7 @@ app.use('/api/campus-pages', campusPagesRouter);
 app.use('/api/admin/college-requests', requireAdmin, collegesAdminRouter);
 app.use('/api/me', requireAuth, studentProfileRouter);
 app.use('/api/admin/drives', requireAdmin, driveAdminRouter);
-// TieEdu Schools router applies requireSchoolAuth itself — session + a school
+// TiEEdu Schools router applies requireSchoolAuth itself — session + a school
 // membership, which is neither requireAuth nor requireAdmin.
 app.use('/api/school', schoolRouter);
 // Project Pulse (PROJECT_PULSE_PLAN.md): its own auth inside; autograder endpoints are public.
@@ -244,7 +244,7 @@ app.use('/api/admin/company-pages', requireAdmin, companyPagesAdminRouter);
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
-    service: 'TieEdu Express Backend API',
+    service: 'TiEEdu Express Backend API',
     port: PORT,
     storage: storage.status(),
     auth: 'enabled',
@@ -360,7 +360,7 @@ function ensureSeedData() {
     db.users = db.users || [];
     bootstrapAdmin = {
       id: `user-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`,
-      name: 'TieEdu Admin',
+      name: 'TiEEdu Admin',
       email,
       password_hash: bcrypt.hashSync(password, 12),
       role: 'admin',
@@ -422,7 +422,7 @@ function ensureSeedData() {
 export const httpServer = app.listen(PORT, async () => {
   ensureSeedData();
   try { seedSkillTest(); } catch (e: any) { console.error('[SkillTest] Seed failed:', e?.message); }
-  console.log(`⚡ [TieEdu Backend API] Server running on http://localhost:${PORT}`);
+  console.log(`⚡ [TiEEdu Backend API] Server running on http://localhost:${PORT}`);
   // Off unless WEEKLY_RECAP_PUSH=1 (lib/recapPush): dev shares real push subscriptions.
   startWeeklyRecapScheduler();
   startParentWhatsappScheduler();
@@ -438,7 +438,7 @@ export const httpServer = app.listen(PORT, async () => {
   }
   try {
     const db = loadDb();
-    if (seedTieEduInternshipDrafts(db)) { safeSaveDb(db); console.log('[Diwali] seeded TieEdu internship drafts'); }
+    if (seedTieEduInternshipDrafts(db)) { safeSaveDb(db); console.log('[Diwali] seeded TiEEdu internship drafts'); }
   } catch (e: any) {
     console.warn('[Diwali] internship seeding skipped:', e?.message);
   }
@@ -516,7 +516,7 @@ export const httpServer = app.listen(PORT, async () => {
     console.log('💡 [DriveBridge] Boot skipped: ' + (e?.message || e));
   }
 
-  // TieEdu Schools — same isolation contract as placement: PostgreSQL-only,
+  // TiEEdu Schools — same isolation contract as placement: PostgreSQL-only,
   // its own schema, optional demo seed (SCHOOL_SEED=1). A failure here must
   // never take down the college portal or be blamed on it, so it reports its
   // own failures and the server continues.

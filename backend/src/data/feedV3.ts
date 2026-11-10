@@ -2,7 +2,7 @@
  * Feed v3 (owner request, 2026-11-06): every earlier drop is removed and this
  * set replaces it. Facts come from the fact-checked company profiles
  * (companyProfiles2026.ts), the Diwali sale config (lib/festival.ts), the
- * course catalogue and TieEdu's own features — nothing invented, no fake
+ * course catalogue and TiEEdu's own features — nothing invented, no fake
  * "selected" stories or scholarships.
  *
  * Seeded once per database by lib/seed3T.ts `seedFeedV3`; everything here is
@@ -50,7 +50,7 @@ export const FEED_V3: FeedV3Spec[] = [
   },
   {
     type: 'tieedu', pinned: true, priority: 1, at: -0.03, expires: SALE_ENDS,
-    headline: 'Claim a free 3-month TieEdu membership this Diwali',
+    headline: 'Claim a free 3-month TiEEdu membership this Diwali',
     bullets: ['Extra mocks, every prep lesson and the internship board', 'One tap to claim — no card, no auto-debit'],
     route: '/diwali', art: 'gift', text: 'FREE', sub: '3-month membership',
     motion: 'float', effect: 'confetti', text_anim: 'pop', sound: 'success', tags: ['diwali', 'offer', 'membership'],
@@ -85,16 +85,16 @@ export const FEED_V3: FeedV3Spec[] = [
   },
   {
     type: 'tieedu', at: -0.15, expires: SALE_ENDS,
-    headline: 'TieEdu internships: members apply in one tap',
+    headline: 'TiEEdu internships: members apply in one tap',
     bullets: ['Every listing is checked by our team before it goes up', 'Claim the free Diwali membership first, then apply'],
     route: '/internships', art: 'rocket', text: 'INTERNSHIPS', sub: 'For members',
     motion: 'float', effect: 'stars', text_anim: 'rise', sound: 'whoosh', tags: ['diwali', 'internships'],
   },
   {
     type: 'tip', at: -0.2, expires: SALE_ENDS,
-    headline: 'Happy Diwali from TieEdu: light one diya for your prep',
+    headline: 'Happy Diwali from TiEEdu: light one diya for your prep',
     bullets: ['One full mock this week is the best gift to your preparation', 'Sale prices end on 10 Nov'],
-    route: '/diwali', art: 'diwali', text: 'HAPPY DIWALI', sub: 'From team TieEdu',
+    route: '/diwali', art: 'diwali', text: 'HAPPY DIWALI', sub: 'From team TiEEdu',
     motion: 'kenburns', effect: 'diyas', text_anim: 'typewriter', sound: 'diwali', tags: ['diwali'],
   },
   {
@@ -307,7 +307,7 @@ export const FEED_V3: FeedV3Spec[] = [
     motion: 'float', effect: 'none', text_anim: 'rise', sound: 'pop', tags: ['course', 'resume'],
   },
 
-  // ─── Skill tests & TieEdu features ────────────────────────────────────
+  // ─── Skill tests & TiEEdu features ────────────────────────────────────
   {
     type: 'skilltest', priority: 1, at: -3.0,
     headline: 'Know your level in 15 minutes: 100 free skill tests',

@@ -295,7 +295,7 @@ export function getDigitalElectronicsCourse(): Course {
       'Number systems, Boolean algebra, K-maps, combinational and sequential circuits — the ECE exam and Viva foundation',
     description: `Digital Electronics is the first serious ECE/EEE course in most university syllabi, and the one every Viva and written exam tests hardest. This course covers the full foundation in eight compact lessons: binary, octal, hex, BCD and Gray codes; Boolean algebra with De Morgan and K-map minimization; adders, multiplexers, decoders and encoders; and sequential logic from flip-flops through counters and finite state machines.
 
-Every lesson follows the nine-step structure: objective, hook, concept, worked example, practice, common mistakes, the exam angle, a server-graded quiz and a one-screen summary. A 30-question bank feeds a 15-question timed final; passing earns a verifiable TieEdu certificate.
+Every lesson follows the nine-step structure: objective, hook, concept, worked example, practice, common mistakes, the exam angle, a server-graded quiz and a one-screen summary. A 30-question bank feeds a 15-question timed final; passing earns a verifiable TiEEdu certificate.
 
 **Who this is for:** first- and second-year ECE/EEE students, and any CS student who wants the hardware fundamentals that interviews still ask. The course is exam-oriented without being shallow — every worked example is the kind of problem that appears on mid-terms and in placement screening.
 
@@ -327,7 +327,7 @@ Every lesson follows the nine-step structure: objective, hook, concept, worked e
 
 Codes and conversions come first because every later topic assumes them. Boolean algebra and K-maps are taught as a single minimization workflow — not as isolated tricks. Combinational circuits are presented as a fixed vocabulary (adders, MUX, decoders) that you recombine rather than re-derive. Sequential circuits close the course with the design recipe that answers "design a mod-6 counter" or "draw a traffic-light FSM" — the two questions that appear most often in exams and interviews.
 
-Each lesson ends with a quiz graded on the server, and the course finishes with a 15-question timed exam from a 30-question bank. Passing earns a verifiable TieEdu certificate.`,
+Each lesson ends with a quiz graded on the server, and the course finishes with a 15-question timed exam from a 30-question bank. Passing earns a verifiable TiEEdu certificate.`,
     prerequisites: [
       'Basic high-school algebra',
       'Comfort with binary numbers (helpful but re-taught in Module 1)',

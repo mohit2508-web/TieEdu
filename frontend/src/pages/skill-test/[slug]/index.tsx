@@ -71,7 +71,7 @@ function SkillDetail({ initial = null }: { initial?: SkillInitial }) {
   return (
     <div className="min-h-screen bg-gray-50">
       <Head>
-        <title>{`${pageTitle} | TieEdu`}</title>
+        <title>{`${pageTitle} | TiEEdu`}</title>
         <meta name="description" content={pageDesc} />
         <link rel="canonical" href={url} key="canonical" />
         <meta property="og:title" content={pageTitle} key="og:title" />
@@ -92,7 +92,7 @@ function SkillDetail({ initial = null }: { initial?: SkillInitial }) {
                   about: topics.slice(0, 12).map((t) => ({ '@type': 'Thing', name: t.name })),
                   timeRequired: `PT${minutes}M`,
                   isAccessibleForFree: true,
-                  provider: { '@type': 'Organization', name: 'TieEdu', url: SITE },
+                  provider: { '@type': 'Organization', name: 'TiEEdu', url: SITE },
                 },
                 {
                   '@type': 'BreadcrumbList',
@@ -178,7 +178,7 @@ function SkillDetail({ initial = null }: { initial?: SkillInitial }) {
 }
 
 export default withPageTitle(SkillDetail, (q) => `${nameFromSlug(q.slug)} skill test`,
-  (q) => `Take the free ${nameFromSlug(q.slug)} skill test on TieEdu: see where you stand topic by topic and earn a verifiable certificate.`
+  (q) => `Take the free ${nameFromSlug(q.slug)} skill test on TiEEdu: see where you stand topic by topic and earn a verifiable certificate.`
 );
 
 /**

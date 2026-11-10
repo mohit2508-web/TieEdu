@@ -63,7 +63,7 @@ export default function NotificationSettings({ compact = false }: { compact?: bo
       } else if (res.reason === 'not_supported') {
         setMessage({
           tone: 'warn',
-          text: 'This browser cannot show push notifications. On iPhone, install TieEdu to the Home Screen first (iOS 16.4 or newer).',
+          text: 'This browser cannot show push notifications. On iPhone, install TiEEdu to the Home Screen first (iOS 16.4 or newer).',
         });
       } else if (res.reason === 'no_vapid') {
         setMessage({ tone: 'error', text: 'Push is not configured on the server yet. Please try again later.' });
@@ -74,7 +74,7 @@ export default function NotificationSettings({ compact = false }: { compact?: bo
         // that is not going to change on its own.
         setMessage({
           tone: 'error',
-          text: 'This app cannot reach the TieEdu server, so notifications cannot be set up. Check your connection and try again.',
+          text: 'This app cannot reach the TiEEdu server, so notifications cannot be set up. Check your connection and try again.',
         });
       } else {
         setMessage({ tone: 'error', text: `Could not enable notifications (${res.reason}). Please try again.` });
@@ -92,7 +92,7 @@ export default function NotificationSettings({ compact = false }: { compact?: bo
       <div className="vault-card p-4 flex items-start gap-3">
         <BellOff className="w-4 h-4 text-[--text-muted] shrink-0 mt-0.5" />
         <p className="text-xs text-[--text-muted] leading-relaxed">
-          This browser cannot show push notifications. Install TieEdu to your Home Screen or desktop to
+          This browser cannot show push notifications. Install TiEEdu to your Home Screen or desktop to
           receive announcements. On iPhone this needs iOS 16.4 or newer.
         </p>
       </div>
@@ -109,7 +109,7 @@ export default function NotificationSettings({ compact = false }: { compact?: bo
           <p className="text-xs text-[--text-muted] mt-1 leading-relaxed">
             {on
               ? 'On. You will get new courses, new lessons in courses you are taking, new company material, and a weekly reminder if you have lessons left.'
-              : 'Turn on to hear about new courses, new lessons in courses you are taking, new company material and announcements from TieEdu — even when the app is closed.'}
+              : 'Turn on to hear about new courses, new lessons in courses you are taking, new company material and announcements from TiEEdu — even when the app is closed.'}
           </p>
           {on && (
             <p className="text-xs text-[--text-muted] mt-1.5 leading-relaxed">

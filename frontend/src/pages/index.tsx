@@ -91,7 +91,7 @@ export default function Home() {
     return (
       <>
         <Head>
-          <title>Today · TieEdu</title>
+          <title>Today · TiEEdu</title>
         </Head>
         <div className="flex min-h-screen flex-col bg-paper">
           <TodayScreen ready={!authLoading} />
@@ -104,15 +104,15 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>TieEdu — Placement preparation for engineering students</title>
+        <title>TiEEdu — Placement preparation for engineering students</title>
         <meta name="description" content="Company-by-company placement prep for engineering students: round patterns, practice questions, free skill tests and courses, and a plan for your test date." />
         <link key="canonical" rel="canonical" href="https://tieedu.in/" />
-        <meta property="og:site_name" content="TieEdu" key="og:site_name" />
-        <meta property="og:title" content="TieEdu — Placement preparation for engineering students" />
+        <meta property="og:site_name" content="TiEEdu" key="og:site_name" />
+        <meta property="og:title" content="TiEEdu — Placement preparation for engineering students" />
         <meta property="og:url" content="https://tieedu.in/" />
         <meta property="og:type" content="website" />
         <meta property="og:image" content="https://tieedu.in/email/logo.png" />
-        {/* Brand identity for search: tells Google that "TieEdu" is this site,
+        {/* Brand identity for search: tells Google that "TiEEdu" is this site,
             its logo and its official profiles (helps the brand-name search). */}
         <script
           type="application/ld+json"
@@ -123,8 +123,8 @@ export default function Home() {
                 {
                   '@type': 'Organization',
                   '@id': 'https://tieedu.in/#organization',
-                  name: 'TieEdu',
-                  alternateName: ['TieEdu Technologies', 'Tie Edu'],
+                  name: 'TiEEdu',
+                  alternateName: ['TiEEdu Technologies', 'TieEdu', 'Tie Edu'],
                   url: 'https://tieedu.in/',
                   logo: 'https://tieedu.in/email/logo.png',
                   email: 'contact@tieedu.in',
@@ -133,8 +133,8 @@ export default function Home() {
                 {
                   '@type': 'WebSite',
                   '@id': 'https://tieedu.in/#website',
-                  name: 'TieEdu',
-                  alternateName: 'Tie Edu',
+                  name: 'TiEEdu',
+                  alternateName: ['TieEdu', 'Tie Edu'],
                   url: 'https://tieedu.in/',
                   publisher: { '@id': 'https://tieedu.in/#organization' },
                 },

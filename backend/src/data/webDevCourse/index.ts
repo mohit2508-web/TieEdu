@@ -293,7 +293,7 @@ export function getWebDevBootcampCourse(): Course {
     subtitle: 'HTML, modern CSS, JavaScript, forms, APIs and performance — the frontend stack every product team hires for',
     description: `Every product has a web interface, and every product team needs people who can build one properly. This bootcamp covers the foundation the frameworks assume you already know: semantic HTML, the CSS box model, flexbox and grid, modern JavaScript with the DOM, accessible forms, REST API integration and a performance workflow with the browser DevTools.
 
-Eight lessons across four modules. Every lesson follows the nine-step structure: objective, hook, concept, worked example, practice, common mistakes, the exam angle, a server-graded quiz and a one-screen summary. A 30-question bank feeds a 15-question timed final exam; passing earns a verifiable TieEdu certificate.
+Eight lessons across four modules. Every lesson follows the nine-step structure: objective, hook, concept, worked example, practice, common mistakes, the exam angle, a server-graded quiz and a one-screen summary. A 30-question bank feeds a 15-question timed final exam; passing earns a verifiable TiEEdu certificate.
 
 **Who this is for:** students who have copied tutorial code but cannot yet build a page from scratch, and anyone preparing for a junior frontend interview. The course deliberately teaches the platform (HTML/CSS/JS) before any framework, so React or Vue later becomes an acceleration rather than a crutch.
 
@@ -325,7 +325,7 @@ Eight lessons across four modules. Every lesson follows the nine-step structure:
 
 HTML is taught as meaning, not tags — landmarks, heading order, and why a button is not a div. CSS is taught through the box model and cascade so layout stops being guesswork; flex and grid then become tools with clear jobs. JavaScript covers the modern subset actually used in production: immutable bindings, pure array transforms, the practical event loop, and fetch with real error handling. Forms and performance close the loop with the accessibility and measurement habits that separate professionals from tutorial-followers.
 
-Every lesson ends with a quiz graded on the server, and the course finishes with a 15-question timed exam drawn from a 30-question bank. Passing earns a verifiable TieEdu certificate.`,
+Every lesson ends with a quiz graded on the server, and the course finishes with a 15-question timed exam drawn from a 30-question bank. Passing earns a verifiable TiEEdu certificate.`,
     prerequisites: [
       'Basic computer literacy',
       'A browser and text editor (VS Code recommended)',

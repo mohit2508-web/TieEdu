@@ -6,7 +6,7 @@ import { isLocale } from '@/i18n/config';
 import '../globals.css';
 
 export const metadata: Metadata = {
-  title: 'TieEdu School of Technology',
+  title: 'TiEEdu School of Technology',
   description: 'AI, coding, robotics and future-skills education for K-12 schools.',
 };
 

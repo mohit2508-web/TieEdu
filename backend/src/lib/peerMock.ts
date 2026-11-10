@@ -1,10 +1,10 @@
 /**
  * Peer mock interviews (C4). Two students interview each other with a rubric
- * TieEdu provides, and both earn XP.
+ * TiEEdu provides, and both earn XP.
  *
  * How it works: the interviewer starts a session and gets a short code, shares
  * it with a friend (in person, WhatsApp, a study group), and they talk however
- * they like — in the same room or on a call. TieEdu supplies the questions,
+ * they like — in the same room or on a call. TiEEdu supplies the questions,
  * shows the interviewer the points a strong answer covers, and collects a
  * three-part rating per question. The candidate sees the questions and the
  * key points only once the interviewer submits.

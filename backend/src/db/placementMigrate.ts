@@ -118,7 +118,7 @@ export async function ensurePlacementInviteTable(): Promise<void> {
   await getPool().query(`CREATE INDEX IF NOT EXISTS placement_invite_college_idx ON placement_invite(college_id);`);
 }
 
-/** Links an imported student row to the TieEdu account that owns it. */
+/** Links an imported student row to the TiEEdu account that owns it. */
 export async function ensurePlacementStudentLinkTable(): Promise<void> {
   await getPool().query(`
     CREATE TABLE IF NOT EXISTS placement_student_link (

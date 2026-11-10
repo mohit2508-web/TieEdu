@@ -4,10 +4,10 @@
  * Hand-rolled table layout rather than a framework: every major client (Gmail
  * web, Gmail app, Outlook, Apple Mail) is still on partial CSS support, and a
  * 600px single-column table with inline styles is the only construct that
- * renders identically everywhere. The header carries the real TieEdu logo as a
+ * renders identically everywhere. The header carries the real TiEEdu logo as a
  * hosted PNG (EMAIL_LIFECYCLE_AND_DEVICES_PLAN §1) — SVG is not rendered by
  * Gmail or Outlook — with alt text styled as the wordmark, so an inbox that
- * blocks images still shows "TieEdu" in the brand colour, not a broken box.
+ * blocks images still shows "TiEEdu" in the brand colour, not a broken box.
  *
  * Every template receives `href()` rather than raw URLs. It rewrites through
  * the click endpoint (see lib/email/links.ts) so clicks are attributed to the
@@ -212,7 +212,7 @@ export const Layout: React.FC<{
                         src={`${site}/email/logo.png`}
                         width="96"
                         height="62"
-                        alt="TieEdu"
+                        alt="TiEEdu"
                         style={{ display: 'block', border: 0, fontFamily: font, fontSize: '24px', fontWeight: 800, color: LOGO }}
                       />
                     </a>
@@ -231,7 +231,7 @@ export const Layout: React.FC<{
           {/* Footer */}
           <Section style={{ background: SURFACE, padding: '22px 32px', borderTop: `1px solid ${BORDER}` }}>
             <Text style={{ fontFamily: font, fontSize: '13px', lineHeight: '1.7', color: DARK, fontWeight: 700, margin: 0 }}>
-              TieEdu — placement prep, done properly.
+              TiEEdu — placement prep, done properly.
             </Text>
             <Text style={{ fontFamily: font, fontSize: '12px', lineHeight: '1.8', color: MUTED, margin: '6px 0 0' }}>
               <a href={`${site}/contact`} style={link}>Help &amp; support</a>
@@ -252,10 +252,10 @@ export const Layout: React.FC<{
             </Text>
             <Text style={{ fontFamily: font, fontSize: '11px', lineHeight: '1.7', color: MUTED, margin: '10px 0 0' }}>
               {transactional
-                ? 'You are getting this because of activity on your TieEdu account.'
-                : 'You are getting this because you have a TieEdu account or signed up for updates.'}
+                ? 'You are getting this because of activity on your TiEEdu account.'
+                : 'You are getting this because you have a TiEEdu account or signed up for updates.'}
               <br />
-              © {new Date().getFullYear()} TieEdu Technologies{address ? ` · ${address}` : ''}
+              © {new Date().getFullYear()} TiEEdu Technologies{address ? ` · ${address}` : ''}
             </Text>
           </Section>
         </Container>

@@ -327,7 +327,7 @@ export function getComputerNetworksCourse(): Course {
       'OSI to TCP/IP, subnetting, TCP internals, DNS/HTTP/DHCP, TLS security and modern delivery — exam + interview core',
     description: `Computer Networks is the CSE subject that shows up in university exams, GATE and every infrastructure or backend interview. This course covers the full core in eight compact lessons: layered models and encapsulation, MAC/IP/port addressing with ARP, framing and CRC, switches and routers, IPv4 subnetting arithmetic, distance-vector vs link-state routing, the TCP handshake with flow and congestion control, DNS/HTTP/DHCP, TLS with firewalls, and wireless/SDN/CDN for modern context.
 
-Every lesson uses the nine-block structure (objectives, hook, concept, worked example, practice, common mistakes, exam angle, graded quiz, summary). A 30-question bank feeds a 15-question timed final. Passing earns a verifiable TieEdu certificate.
+Every lesson uses the nine-block structure (objectives, hook, concept, worked example, practice, common mistakes, exam angle, graded quiz, summary). A 30-question bank feeds a 15-question timed final. Passing earns a verifiable TiEEdu certificate.
 
 **Who this is for:** second- and third-year CSE/IT students preparing for university exams, GATE fundamentals, and placement interviews that ask networking questions.
 

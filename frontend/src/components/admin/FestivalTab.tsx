@@ -95,7 +95,7 @@ export const FestivalTab: React.FC = () => {
           <h2 className="text-lg font-extrabold text-heading">Internships</h2>
           <button type="button" className="rounded-lg bg-signal px-4 py-2 text-sm font-bold text-on-primary" onClick={() => setEdit({ ...EMPTY })}>+ Add listing</button>
         </div>
-        <p className="mt-1 text-sm text-muted">Only <b>open</b> listings are public. TieEdu roles were seeded as drafts — fill in the stipend and open them.</p>
+        <p className="mt-1 text-sm text-muted">Only <b>open</b> listings are public. TiEEdu roles were seeded as drafts — fill in the stipend and open them.</p>
 
         {edit && (
           <div className="mt-4 grid gap-3 rounded-xl border border-line p-4 md:grid-cols-2">
@@ -119,7 +119,7 @@ export const FestivalTab: React.FC = () => {
               </select>
             </label>
             <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={!!edit.is_tieedu} onChange={(e) => setEdit({ ...edit, is_tieedu: e.target.checked })} /> Role at TieEdu
+              <input type="checkbox" checked={!!edit.is_tieedu} onChange={(e) => setEdit({ ...edit, is_tieedu: e.target.checked })} /> Role at TiEEdu
             </label>
             <div className="flex gap-2 md:col-span-2">
               <button type="button" className="rounded-lg bg-signal px-4 py-2 text-sm font-bold text-on-primary" onClick={save}>Save</button>

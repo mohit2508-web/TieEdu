@@ -1370,7 +1370,7 @@ const initialDbData = {
       accuracy_score: null,
       last_updated_days_ago: 2,
       status: 'published',
-      seo_title: 'Zscaler Interview Questions & Vault | TieEdu',
+      seo_title: 'Zscaler Interview Questions & Vault | TiEEdu',
       seo_description: 'Round-by-round interview intelligence, HR Qs, Technical DSA bank, and Zero Trust system design guides for Zscaler.',
       trust_stats: {
         rating: 0,
@@ -1541,7 +1541,7 @@ const initialDbData = {
       accuracy_score: null,
       last_updated_days_ago: 4,
       status: 'published',
-      seo_title: 'Palo Alto Networks Interview Intelligence | TieEdu',
+      seo_title: 'Palo Alto Networks Interview Intelligence | TiEEdu',
       seo_description: 'Complete Palo Alto Networks interview vault including PAN-OS architecture questions, DSA problems, and compensation insights.',
       modules: [
         {
@@ -1642,7 +1642,7 @@ const initialDbData = {
       accuracy_score: null,
       last_updated_days_ago: 1,
       status: 'published',
-      seo_title: 'Razorpay Interview Vault & System Design | TieEdu',
+      seo_title: 'Razorpay Interview Vault & System Design | TiEEdu',
       seo_description: 'Razorpay hiring process questions, idempotent payment system design, and SDE interview breakdowns.',
       modules: [
         {
@@ -1736,7 +1736,7 @@ const initialDbData = {
       accuracy_score: null,
       last_updated_days_ago: 1,
       status: 'published',
-      seo_title: 'TCS NQT & Digital Interview Preparation Guide 2026 | TieEdu',
+      seo_title: 'TCS NQT & Digital Interview Preparation Guide 2026 | TiEEdu',
       seo_description: 'Crack TCS NQT Ninja, Digital & Prime cadres with repeated coding questions, aptitude patterns, and HR questions.',
       modules: [
         {
@@ -1830,7 +1830,7 @@ const initialDbData = {
       accuracy_score: null,
       last_updated_days_ago: 2,
       status: 'published',
-      seo_title: 'Infosys HackWithInfy & Specialist Programmer Guide | TieEdu',
+      seo_title: 'Infosys HackWithInfy & Specialist Programmer Guide | TiEEdu',
       seo_description: 'Infosys SP (Specialist Programmer - 9.5 LPA) and DSE (Digital Specialist Engineer - 6.2 LPA) interview vaults.',
       modules: [
         {
@@ -1883,7 +1883,7 @@ const initialDbData = {
       accuracy_score: null,
       last_updated_days_ago: 1,
       status: 'published',
-      seo_title: 'Google SDE L3/L4 Interview Questions & Vault | TieEdu',
+      seo_title: 'Google SDE L3/L4 Interview Questions & Vault | TiEEdu',
       seo_description: 'Google coding rounds, Googliness & Leadership scenarios, and Large Scale Distributed System Design diagrams.',
       modules: [
         {
@@ -2017,7 +2017,7 @@ const initialDbData = {
       accuracy_score: null,
       last_updated_days_ago: 3,
       status: 'published',
-      seo_title: 'Microsoft SDE Interview Questions & As-Appropriate Round | TieEdu',
+      seo_title: 'Microsoft SDE Interview Questions & As-Appropriate Round | TiEEdu',
       seo_description: 'Microsoft hiring rounds, AA (As-Appropriate) Bar Raiser interview questions, and Azure Cloud system design.',
       modules: [
         {
@@ -2070,7 +2070,7 @@ const initialDbData = {
       accuracy_score: null,
       last_updated_days_ago: 1,
       status: 'published',
-      seo_title: 'Amazon 16 Leadership Principles & SDE Vault | TieEdu',
+      seo_title: 'Amazon 16 Leadership Principles & SDE Vault | TiEEdu',
       seo_description: 'Master Amazon 16 Leadership Principles with STAR stories, Bar Raiser interview questions, and AWS system design guides.',
       modules: [
         {
@@ -2131,7 +2131,7 @@ const initialDbData = {
       accuracy_score: null,
       last_updated_days_ago: 3,
       status: 'published',
-      seo_title: 'Adobe Interview Questions & C++ DSA Vault | TieEdu',
+      seo_title: 'Adobe Interview Questions & C++ DSA Vault | TiEEdu',
       seo_description: 'Adobe Member of Technical Staff (MTS) interview questions, C++ memory optimization, and tree/graph DSA bank.',
       modules: [
         {
@@ -2184,7 +2184,7 @@ const initialDbData = {
       accuracy_score: null,
       last_updated_days_ago: 1,
       status: 'published',
-      seo_title: 'Capgemini Exceller Interview Questions & Pseudo Code Guide | TieEdu',
+      seo_title: 'Capgemini Exceller Interview Questions & Pseudo Code Guide | TiEEdu',
       seo_description: 'Crack Capgemini Exceller drive with pseudo-code MCQs, coding questions, and technical interview questions.',
       modules: [
         {
@@ -2294,7 +2294,7 @@ const initialDbData = {
   email_activities: [],
   email_automation_fires: [],
   settings: {
-    platform_name: 'TieEdu',
+    platform_name: 'TiEEdu',
     support_email: 'contact@tieedu.in',
     demo_mode: true
   }

@@ -60,7 +60,7 @@ export default function DailyChallengePage() {
   return (
     <>
       <Head>
-        <title>Daily challenge · TieEdu</title>
+        <title>Daily challenge · TiEEdu</title>
         <meta name="description" content="Ten minutes a day: one aptitude question, one coding question and one HR answer, the same three for every student. Keep your streak going." />
       </Head>
       <main className="mx-auto w-full max-w-[760px] px-4 pb-14 pt-6 sm:px-6 sm:pt-10">
@@ -271,11 +271,11 @@ function HrCard({ n, item, signedIn, onNeedSignIn, onAnswered }: {
 
 function CompletionCard({ correct, mcqs, xp, streak }: { correct: number; mcqs: number; xp: number | null; streak: number | null }) {
   const [shared, setShared] = useState(false);
-  const text = `I finished today’s TieEdu daily challenge: ${correct} of ${mcqs} right.`;
+  const text = `I finished today’s TiEEdu daily challenge: ${correct} of ${mcqs} right.`;
   const share = async () => {
     const url = typeof window !== 'undefined' ? `${window.location.origin}/daily` : '/daily';
     try {
-      if (navigator.share) await navigator.share({ title: 'TieEdu daily challenge', text, url });
+      if (navigator.share) await navigator.share({ title: 'TiEEdu daily challenge', text, url });
       else { await navigator.clipboard.writeText(`${text} ${url}`); setShared(true); }
     } catch { /* the share sheet was dismissed */ }
   };

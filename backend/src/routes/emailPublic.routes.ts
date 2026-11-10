@@ -220,7 +220,7 @@ a{color:#0284C7}</style></head>
   // Clear the identity cookie: an unsubscribed browser should not keep being
   // tracked as an interested lead.
   res.clearCookie(LEAD_COOKIE_NAME, { path: '/' });
-  page('You are unsubscribed', `${lead.email} will not receive further emails from TieEdu. This took effect immediately.`, true);
+  page('You are unsubscribed', `${lead.email} will not receive further emails from TiEEdu. This took effect immediately.`, true);
 });
 
 /**

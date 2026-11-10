@@ -28,7 +28,7 @@ export default function AboutPage() {
     <>
       <Head>
         <title>{`About · ${LEGAL.brand}`}</title>
-        <meta name="description" content="TieEdu helps engineering students prepare for placements with Train, Test and Track: courses, company-pattern tests and a readiness score." />
+        <meta name="description" content="TiEEdu helps engineering students prepare for placements with Train, Test and Track: courses, company-pattern tests and a readiness score." />
         <link key="canonical" rel="canonical" href={`${LEGAL.siteUrl}/about`} />
       </Head>
       <main className="mx-auto w-full max-w-6xl px-4 pb-16 pt-8 sm:px-6 sm:pt-12">

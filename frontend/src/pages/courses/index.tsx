@@ -240,13 +240,13 @@ export default function CoursesPage({ initialData }: { initialData: CourseCatalo
   return (
     <>
       <Head>
-        <title>Courses · TieEdu</title>
+        <title>Courses · TiEEdu</title>
         <meta
           name="description"
-          content="Free, structured programming courses from TieEdu. Filter by topic, level and course type, and finish with a certificate whose signature anyone can verify."
+          content="Free, structured programming courses from TiEEdu. Filter by topic, level and course type, and finish with a certificate whose signature anyone can verify."
         />
         <link key="canonical" rel="canonical" href={`${SITE_URL}/courses`} />
-        <meta property="og:title" content="Courses · TieEdu" />
+        <meta property="og:title" content="Courses · TiEEdu" />
         <meta
           property="og:description"
           content="Structured, sequential programming courses with verified progress and signed, verifiable certificates."
@@ -260,7 +260,7 @@ export default function CoursesPage({ initialData }: { initialData: CourseCatalo
               __html: JSON.stringify({
                 '@context': 'https://schema.org',
                 '@type': 'ItemList',
-                name: 'TieEdu courses',
+                name: 'TiEEdu courses',
                 numberOfItems: total,
                 itemListElement: courses.slice(0, 40).map((c, i) => ({
                   '@type': 'ListItem',
@@ -608,11 +608,11 @@ const CatalogueSeoCopy: React.FC<{ facets: CatalogFacets; total: number }> = ({ 
   return (
     <section className="mt-20 max-w-3xl border-t border-[var(--border-subtle)] pt-10">
       <h2 className="text-2xl font-extrabold tracking-tight text-[var(--ink)]">
-        How TieEdu courses work
+        How TiEEdu courses work
       </h2>
       <div className="mt-4 space-y-4 text-sm leading-relaxed text-[var(--text-body)]">
         <p>
-          Every TieEdu course is a fixed sequence of modules and lessons. Nothing is unlocked out of
+          Every TiEEdu course is a fixed sequence of modules and lessons. Nothing is unlocked out of
           order, so a lesson you have reached is a lesson whose prerequisites you have already met.
           Progress is recorded on the server as you read or watch, which is why it survives a cleared
           browser and a new phone.
@@ -627,7 +627,7 @@ const CatalogueSeoCopy: React.FC<{ facets: CatalogFacets; total: number }> = ({ 
           {freeCount > 0 && freeCount === total
             ? 'All of these courses are free to start.'
             : `${freeCount} of these courses are free to start.`}{' '}
-          Finishing any of them issues a certificate signed by TieEdu, and its serial can be checked
+          Finishing any of them issues a certificate signed by TiEEdu, and its serial can be checked
           by anyone at tieedu.in/verify without an account.
         </p>
         {levels.length > 0 && topics.length > 0 && (

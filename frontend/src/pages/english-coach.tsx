@@ -76,7 +76,7 @@ export default function EnglishCoachPage() {
   return (
     <>
       <Head>
-        <title>English coach · TieEdu</title>
+        <title>English coach · TiEEdu</title>
         <meta name="description" content="Practise speaking English for interviews and get gentle feedback, explained in English and Hinglish." />
       </Head>
       <main className="mx-auto w-full max-w-[760px] px-4 pb-14 pt-6 sm:px-6 sm:pt-10">

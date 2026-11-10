@@ -9,7 +9,7 @@ import { CandidateView } from '@/components/talent/CandidateView';
 
 /*
  * Get found by recruiters (E4, the student's side). Opt in to verified skill
- * search; recruiters TieEdu has checked see an anonymous card and can ask to
+ * search; recruiters TiEEdu has checked see an anonymous card and can ask to
  * contact you. Your name and email go only to a recruiter you accept
  * (backend lib/talentSearch).
  */
@@ -51,14 +51,14 @@ export default function TalentPage() {
   return (
     <>
       <Head>
-        <title>Get found by recruiters · TieEdu</title>
+        <title>Get found by recruiters · TiEEdu</title>
         <meta name="description" content="Let verified recruiters find you by your tested skills. Your name and contact stay private until you accept." />
       </Head>
       <main className="mx-auto w-full max-w-[760px] px-4 pb-14 pt-6 sm:px-6 sm:pt-10">
         <p className="eyebrow text-link">Get found</p>
         <h1 className="mt-1 font-display text-3xl font-bold text-heading sm:text-4xl">Let recruiters find you by your skills</h1>
         <p className="mt-2 text-base text-body">
-          Small companies hire on what you can do, not where you studied. Recruiters TieEdu has checked can see your tested scores, anonymously, and ask to get in touch.
+          Small companies hire on what you can do, not where you studied. Recruiters TiEEdu has checked can see your tested scores, anonymously, and ask to get in touch.
         </p>
 
         {!loading && !user && (
@@ -106,7 +106,7 @@ export default function TalentPage() {
                       <p className="mt-1 text-xs text-muted">
                         {shortDate.format(new Date(r.created_at))}
                         {r.website && <> · <a href={r.website} target="_blank" rel="noopener noreferrer nofollow" className="font-semibold text-link hover:underline">company website</a></>}
-                        {' '}· verified by TieEdu
+                        {' '}· verified by TiEEdu
                       </p>
                       {r.status === 'pending' ? (
                         <div className="mt-3 flex flex-wrap gap-2">

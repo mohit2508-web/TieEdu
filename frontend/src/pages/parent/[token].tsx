@@ -35,7 +35,7 @@ export default function ParentPage({ view: v, token, stop }: { view: ParentView;
   return (
     <>
       <Head>
-        <title>{`${v.first_name}'s progress · TieEdu`}</title>
+        <title>{`${v.first_name}'s progress · TiEEdu`}</title>
         <meta name="robots" content="noindex, nofollow" />
       </Head>
       <div className="flex min-h-screen flex-col bg-paper">
@@ -46,7 +46,7 @@ export default function ParentPage({ view: v, token, stop }: { view: ParentView;
               How {v.first_name} is preparing for placements
             </h1>
             <p className="mt-3 text-base text-muted">
-              {v.year ? `${v.year}. ` : ''}This page shows effort and results on TieEdu. {v.first_name} can turn it off at any time.
+              {v.year ? `${v.year}. ` : ''}This page shows effort and results on TiEEdu. {v.first_name} can turn it off at any time.
             </p>
           </header>
 

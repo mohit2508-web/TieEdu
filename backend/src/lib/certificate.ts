@@ -682,7 +682,7 @@ export async function buildCertificatePdf(
 
   // --- Brand header -----------------------------------------------------
   page.drawRectangle({ x: 22, y: H - 96, width: W - 44, height: 52, color: NAVY });
-  page.drawText('TieEdu', {
+  page.drawText('TiEEdu', {
     x: 44, y: H - 68, size: 25, font: serifBold, color: rgb(1, 1, 1),
   });
   page.drawText('Technology  ×  Intelligence  ×  Education', {
@@ -708,7 +708,7 @@ export async function buildCertificatePdf(
   });
 
   // --- Recipient -------------------------------------------------------
-  const recipient = ascii(certificate.recipient_name) || 'TieEdu Learner';
+  const recipient = ascii(certificate.recipient_name) || 'TiEEdu Learner';
   const recipientSize = recipient.length > 34 ? 30 : 36;
   page.drawText(recipient, {
     x: (W - serifBold.widthOfTextAtSize(recipient, recipientSize)) / 2,
@@ -777,7 +777,7 @@ export async function buildCertificatePdf(
   page.drawText('ISSUED BY', {
     x: 60, y: footerY + 44, size: 8, font: sansBold, color: MUTED,
   });
-  page.drawText('TieEdu Placement Intelligence', {
+  page.drawText('TiEEdu Placement Intelligence', {
     x: 60, y: footerY + 27, size: 12.5, font: serifBold, color: INK,
   });
   page.drawLine({
@@ -856,10 +856,10 @@ export async function buildCertificatePdf(
   }
 
   // --- PDF metadata ----------------------------------------------------
-  pdf.setTitle(`TieEdu Certificate ${certificate.serial}`);
+  pdf.setTitle(`TiEEdu Certificate ${certificate.serial}`);
   pdf.setSubject(`Course completion: ${courseTitle}`);
-  pdf.setAuthor('TieEdu');
-  pdf.setProducer('TieEdu Certificate Service');
+  pdf.setAuthor('TiEEdu');
+  pdf.setProducer('TiEEdu Certificate Service');
   pdf.setKeywords([certificate.serial, 'tieedu', 'certificate']);
   pdf.setCreationDate(new Date(certificate.issued_at));
 

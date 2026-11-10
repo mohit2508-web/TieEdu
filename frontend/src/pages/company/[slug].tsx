@@ -424,7 +424,7 @@ export default function CompanyVaultPage({
 
   useCartScope(cartScope);
 
-  // The phone's back bar shows the company, not the generic "TieEdu" fallback
+  // The phone's back bar shows the company, not the generic "TiEEdu" fallback
   // (no nav item owns /company/[slug]). Same hand-off as the course page.
   useEffect(() => {
     setDrillTitle(company?.name || null);
@@ -556,7 +556,7 @@ export default function CompanyVaultPage({
   return (
     <>
       <Head>
-        <title>{cpTitle || company.seo_title || `${company.name} Interview Questions 2026 | TieEdu`}</title>
+        <title>{cpTitle || company.seo_title || `${company.name} Interview Questions 2026 | TiEEdu`}</title>
         <meta name="description" content={cpDescription || company.seo_description || ''} />
       </Head>
 

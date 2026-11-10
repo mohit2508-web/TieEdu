@@ -1,5 +1,5 @@
 /**
- * TieEdu service worker — Phase 0 (MOBILE_APP_UI_PLAN.md §0.5).
+ * TiEEdu service worker — Phase 0 (MOBILE_APP_UI_PLAN.md §0.5).
  *
  * Strategy is chosen per resource class, not globally, because this app mixes
  * public reference data with paid, per-user entitlement state. A single

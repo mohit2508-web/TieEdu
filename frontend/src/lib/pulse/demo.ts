@@ -105,7 +105,7 @@ export const DEMO_TASK: PulseTask = {
   ],
   starter: [
     { path: 'main.c', code: '#include <stdio.h>\n\nint main(void) {\n    // TODO: build the student record manager\n    return 0;\n}\n' },
-    { path: 'README.md', code: '# Task 3 — Student Record Manager\n\nSee the task sheet on TieEdu Project Pulse.\n' },
+    { path: 'README.md', code: '# Task 3 — Student Record Manager\n\nSee the task sheet on TiEEdu Project Pulse.\n' },
   ],
 };
 

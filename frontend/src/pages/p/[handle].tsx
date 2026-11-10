@@ -68,9 +68,9 @@ export default function PassportPage({ passport: p }: { passport: PassportView }
   return (
     <>
       <Head>
-        <title>{`${p.name} · Placement Passport | TieEdu`}</title>
+        <title>{`${p.name} · Placement Passport | TiEEdu`}</title>
         <meta name="robots" content="noindex" />
-        <meta name="description" content={`${p.name}'s verified skills, certificates and company readiness on TieEdu.`} />
+        <meta name="description" content={`${p.name}'s verified skills, certificates and company readiness on TiEEdu.`} />
         <meta property="og:title" content={`${p.name} · Placement Passport`} />
         <meta property="og:description" content={`${totalCerts} verified certificates${topCompany ? ` · ${topCompany.readiness}% ready for ${topCompany.name}` : ''}`} />
       </Head>
@@ -216,7 +216,7 @@ export default function PassportPage({ passport: p }: { passport: PassportView }
             )}
 
             <p className="text-center text-sm text-muted">
-              <Chip>TieEdu</Chip> <span className="ml-2">Placement prep for engineering students.</span>{' '}
+              <Chip>TiEEdu</Chip> <span className="ml-2">Placement prep for engineering students.</span>{' '}
               <Link href="/" className="font-semibold text-link hover:underline">
                 Make your own passport
               </Link>

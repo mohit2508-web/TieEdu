@@ -85,7 +85,7 @@ export const JoinChannelsPopup: React.FC = () => {
         </span>
 
         <p className="mx-auto mt-1.5 max-w-xs text-sm leading-relaxed text-gray-600">
-          Drive alerts, free-test drops and placement tips — straight from TieEdu on the platforms
+          Drive alerts, free-test drops and placement tips — straight from TiEEdu on the platforms
           you already use.
         </p>
 

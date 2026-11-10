@@ -12,8 +12,8 @@ const fmtDate = (iso: string) =>
 export const MEMBER_PERKS = [
   '3 free attempts on every company mock (instead of 1)',
   'Every company prep lesson unlocked',
-  'Apply to TieEdu internships in one tap',
-  'Gold "TieEdu Member" badge',
+  'Apply to TiEEdu internships in one tap',
+  'Gold "TiEEdu Member" badge',
 ];
 
 /**
@@ -52,7 +52,7 @@ export const MembershipClaim: React.FC<{ compact?: boolean }> = ({ compact = fal
           <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest" style={{ color: 'rgb(var(--diwali-rani))' }}>
             <Sparkles size={14} aria-hidden /> Diwali gift
           </div>
-          <h3 className="mt-1 font-display text-xl font-extrabold text-heading">FREE TieEdu Membership · {Math.round(f.membership_days / 30)} months</h3>
+          <h3 className="mt-1 font-display text-xl font-extrabold text-heading">FREE TiEEdu Membership · {Math.round(f.membership_days / 30)} months</h3>
           {!compact && (
             <ul className="mt-3 space-y-1.5 text-sm text-body">
               {MEMBER_PERKS.map((p) => <li key={p}>✨ {p}</li>)}
@@ -74,7 +74,7 @@ export const MembershipClaim: React.FC<{ compact?: boolean }> = ({ compact = fal
         {/* Back: the member card */}
         <div className="member-card__face member-card__back member-gold flex flex-col justify-between rounded-2xl p-5 text-[#2A1400] shadow-xl">
           <div className="flex items-center justify-between">
-            <span className="font-display text-lg font-black tracking-wide">TieEdu Member</span>
+            <span className="font-display text-lg font-black tracking-wide">TiEEdu Member</span>
             <Crown size={26} aria-hidden />
           </div>
           <div>
@@ -83,7 +83,7 @@ export const MembershipClaim: React.FC<{ compact?: boolean }> = ({ compact = fal
               {member ? `Valid till ${fmtDate(member.expires_at)}` : ''} · Diwali 2026
             </p>
           </div>
-          <p className="text-xs font-bold">You&apos;re a TieEdu Member now ✨ Happy Diwali!</p>
+          <p className="text-xs font-bold">You&apos;re a TiEEdu Member now ✨ Happy Diwali!</p>
         </div>
       </div>
     </div>

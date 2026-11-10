@@ -53,7 +53,7 @@ export const OfferStories: React.FC<{ total?: number }> = ({ total }) => {
                   {initials(o.name || o.company)}
                 </span>
                 <span className="min-w-0">
-                  <span className="block truncate font-display text-label text-heading">{o.name || 'A TieEdu student'}</span>
+                  <span className="block truncate font-display text-label text-heading">{o.name || 'A TiEEdu student'}</span>
                   <span className="block truncate text-caption text-muted">{o.college || o.company}</span>
                 </span>
               </span>

@@ -126,7 +126,7 @@ export default function DriveDetailPage() {
   return (
     <>
       <Head>
-        <title>{drive.title} · Mock drive · TieEdu</title>
+        <title>{drive.title} · Mock drive · TiEEdu</title>
       </Head>
       <main className="min-h-screen w-full px-4 pb-28 pt-8 sm:px-6" style={{ background: 'var(--apple-bg)' }}>
         <div className="mx-auto max-w-3xl">

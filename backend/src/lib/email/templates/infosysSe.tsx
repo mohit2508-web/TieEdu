@@ -3,7 +3,7 @@
  * announcement to final-year and graduated students.
  *
  * More colourful than the other templates on purpose: it is a launch, and the
- * owner asked for it to read as an official TieEdu mail. The colour still comes
+ * owner asked for it to read as an official TiEEdu mail. The colour still comes
  * only from hosted PNGs (public/email/infosys, drawn by
  * scripts/email-art/infosys_se_art.py) and table-cell backgrounds, because
  * Gmail and Outlook drop CSS gradients and never render SVG. Every image has
@@ -137,7 +137,7 @@ export const InfosysSe: React.FC<TemplateProps> = (p) => {
   const site = (process.env.NEXT_PUBLIC_SITE_URL || 'https://tieedu.in').replace(/\/+$/, '');
   const start = p.href(PREP_PATH);
   const first = firstName(p);
-  const senderName = V(p, 'sender_name', 'Team TieEdu');
+  const senderName = V(p, 'sender_name', 'Team TiEEdu');
   const senderRole = V(p, 'sender_role', '');
   const contactEmail = V(p, 'contact_email', 'contact@tieedu.in');
   const contactPhone = V(p, 'contact_phone', '');
@@ -153,7 +153,7 @@ export const InfosysSe: React.FC<TemplateProps> = (p) => {
         <Img
           src={`${site}/email/infosys/hero.png`}
           width="536"
-          alt="Infosys System Engineer — your complete prep plan is live on TieEdu"
+          alt="Infosys System Engineer — your complete prep plan is live on TiEEdu"
           style={{ display: 'block', width: '100%', maxWidth: '536px', height: 'auto', border: 0, borderRadius: '14px', margin: '8px 0 20px', ...txt(20, TEAL, 800) }}
         />
       </a>
@@ -165,7 +165,7 @@ export const InfosysSe: React.FC<TemplateProps> = (p) => {
         test pattern before the test</strong>.
       </P>
       <P>
-        So we have built a <strong style={{ color: TEAL }}>complete Infosys SE preparation program on TieEdu</strong>, made
+        So we have built a <strong style={{ color: TEAL }}>complete Infosys SE preparation program on TiEEdu</strong>, made
         only for this exam.
       </P>
 
@@ -229,7 +229,7 @@ export const InfosysSe: React.FC<TemplateProps> = (p) => {
 
       {/* Train · Test · Track */}
       <Eyebrow colour={TEAL}>Step 2 · Prepare</Eyebrow>
-      <H2>What you get on TieEdu: Train · Test · Track</H2>
+      <H2>What you get on TiEEdu: Train · Test · Track</H2>
 
       <Pillar site={site} icon="train" step="1 · TRAIN" title="25 topic lessons" colour={TEAL} tint="#E9F4F2">
         <p style={txt(14, BODY)}>
@@ -308,7 +308,7 @@ export const InfosysSe: React.FC<TemplateProps> = (p) => {
       <Eyebrow colour="#16A064">Step 3 · Start today</Eyebrow>
       <H2>Do these 3 things today</H2>
       <Step n={1} colour={TEAL}>
-        Log in to TieEdu and open{' '}
+        Log in to TiEEdu and open{' '}
         <a href={start} style={{ color: TEAL, fontWeight: 700 }}>
           Infosys System Engineer
         </a>
@@ -369,7 +369,7 @@ export const InfosysSe: React.FC<TemplateProps> = (p) => {
       <p style={{ ...txt(15, BODY), margin: '22px 0 0' }}>Warm regards,</p>
       <p style={{ ...txt(16, DARK, 800), margin: '4px 0 0' }}>{senderName}</p>
       {senderRole ? <p style={txt(14, MUTED)}>{senderRole}</p> : null}
-      <p style={{ ...txt(14, ORANGE, 800), margin: '2px 0 0' }}>TieEdu · tieedu.in</p>
+      <p style={{ ...txt(14, ORANGE, 800), margin: '2px 0 0' }}>TiEEdu · tieedu.in</p>
     </Layout>
   );
 };

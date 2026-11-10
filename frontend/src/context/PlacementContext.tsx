@@ -32,7 +32,7 @@ import {
 export type PlacementStatus =
   | 'loading'
   | 'ready'
-  | 'signed-out' // no TieEdu session at all → /tpo/login
+  | 'signed-out' // no TiEEdu session at all → /tpo/login
   | 'denied' // session fine, zero placement grants → 403 screen
   | 'error'; // network / 5xx / 503 (PG down) → retryable screen
 

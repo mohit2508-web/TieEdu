@@ -24,9 +24,9 @@ export default function DiwaliPage() {
   return (
     <>
       <Head>
-        <title>Diwali Sale — 50% OFF + Free Membership | TieEdu</title>
-        <meta name="description" content="TieEdu Diwali Sale: 50% off every course and company prep pack, a free 3-month TieEdu membership and internship opportunities. Till 10 Nov 2026." />
-        <meta property="og:title" content="TieEdu Diwali Sale — 50% OFF + Free Membership" />
+        <title>Diwali Sale — 50% OFF + Free Membership | TiEEdu</title>
+        <meta name="description" content="TiEEdu Diwali Sale: 50% off every course and company prep pack, a free 3-month TiEEdu membership and internship opportunities. Till 10 Nov 2026." />
+        <meta property="og:title" content="TiEEdu Diwali Sale — 50% OFF + Free Membership" />
         <meta property="og:description" content="50% OFF every course and company pack, a free membership and internships. Until 10 Nov." />
         <meta property="og:url" content="https://tieedu.in/diwali" />
       </Head>
@@ -73,7 +73,7 @@ export default function DiwaliPage() {
             </section>
 
             <section id="membership" aria-labelledby="member-h" className="scroll-mt-32">
-              <h2 id="member-h" className="font-display text-3xl font-black text-heading">Free TieEdu Membership</h2>
+              <h2 id="member-h" className="font-display text-3xl font-black text-heading">Free TiEEdu Membership</h2>
               <p className="mt-1 text-body">Claim in one tap — no card, no auto-debit.</p>
               <div className="mt-6 max-w-md"><MembershipClaim /></div>
             </section>

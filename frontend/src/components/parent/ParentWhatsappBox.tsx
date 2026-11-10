@@ -87,7 +87,7 @@ export const ParentWhatsappBox: React.FC<{ token: string; name: string; stop: bo
         </fieldset>
         <label className="flex items-start gap-2 text-sm text-body">
           <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 h-4 w-4 accent-signal" />
-          <span>मैं TieEdu से हफ़्ते में एक WhatsApp संदेश पाने के लिए सहमत हूँ। हर संदेश में बंद करने का लिंक होगा। · I agree to one WhatsApp message a week from TieEdu. Every message has a link to stop.</span>
+          <span>मैं TiEEdu से हफ़्ते में एक WhatsApp संदेश पाने के लिए सहमत हूँ। हर संदेश में बंद करने का लिंक होगा। · I agree to one WhatsApp message a week from TiEEdu. Every message has a link to stop.</span>
         </label>
         <Button type="submit" disabled={busy || !consent || phone.replace(/\D/g, '').length < 10}>शुरू करें · Start updates</Button>
         {err && <p className="text-sm text-danger" role="alert">{err}</p>}

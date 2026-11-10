@@ -42,7 +42,7 @@ export const sendDriveEmail = async (input: DriveEmailInput): Promise<boolean> =
       vars: {
         subject,
         body,
-        drive_name: String(input.driveName || 'TieEdu').slice(0, 120),
+        drive_name: String(input.driveName || 'TiEEdu').slice(0, 120),
         cta_url: typeof input.url === 'string' && input.url.startsWith('/') ? input.url : '',
         cta_label: String(input.ctaLabel || 'Open your drive page').slice(0, 80),
         ...(input.note ? { note: String(input.note).slice(0, 200) } : {}),

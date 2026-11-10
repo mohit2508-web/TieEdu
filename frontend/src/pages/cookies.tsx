@@ -77,7 +77,7 @@ export default function CookiesPage() {
     <LegalPage
       path="/cookies"
       title="Cookie Policy"
-      description="Which cookies TieEdu uses, why, how long they last, and how to change your choice."
+      description="Which cookies TiEEdu uses, why, how long they last, and how to change your choice."
       summary={<p>Only necessary cookies are on by default. Personalisation, analytics and advertising cookies are used only if you allow them.</p>}
       sections={sections}
     />

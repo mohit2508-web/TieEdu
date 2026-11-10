@@ -46,8 +46,8 @@ export default function SignupPage() {
   return (
     <>
       <Head>
-        <title>Create account — TieEdu</title>
-        <meta name="description" content="Create a free TieEdu account to save your placement prep: course progress, skill-test results, certificates and company packs." />
+        <title>Create account — TiEEdu</title>
+        <meta name="description" content="Create a free TiEEdu account to save your placement prep: course progress, skill-test results, certificates and company packs." />
       </Head>
 
       <div className="min-h-screen hero-mesh flex flex-col items-center justify-center px-4 py-12">

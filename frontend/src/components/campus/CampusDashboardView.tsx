@@ -75,7 +75,7 @@ export const CampusDashboardView: React.FC = () => {
             <span className="font-serif-heading text-3xl font-bold text-brand-ink">{cohort.avg_xp ?? 0}</span>
             <Award className="w-5 h-5 text-brand-ink" />
           </div>
-          <span className="text-xs text-emerald-600 font-semibold block">Live from registered TieEdu accounts</span>
+          <span className="text-xs text-emerald-600 font-semibold block">Live from registered TiEEdu accounts</span>
         </div>
 
         <div className="bg-white p-5 rounded-2xl border border-line shadow-sm space-y-1">

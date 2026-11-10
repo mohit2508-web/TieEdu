@@ -43,7 +43,7 @@ export interface CodingProblem {
   complexity: string;
   /** Model solutions, full programs that read stdin and print stdout. At least one. */
   solutions: { c?: string; cpp?: string; java?: string; python?: string };
-  /** Where it came from, e.g. "TieEdu practice set 2". Never call a practice problem a PYQ. */
+  /** Where it came from, e.g. "TiEEdu practice set 2". Never call a practice problem a PYQ. */
   source: string;
   /** Server-only test cases for the code runner. */
   tests?: CodingTest[];

@@ -9,7 +9,7 @@ import type { PublicStats } from '@/lib/api';
 /**
  * E3 · Hero and E4 · product mock-up (UI_REDESIGN_PLAN_V3 §9).
  *
- * Ruled exercise-book paper with TieEdu's teal margin line (D2), a proof line
+ * Ruled exercise-book paper with TiEEdu's teal margin line (D2), a proof line
  * that only appears with a real student count, the headline with the
  * highlighter on its last phrase, the company finder (the page's one
  * question), then the Today screen in a browser frame — a phone frame on
@@ -101,7 +101,7 @@ export const LandingHero: React.FC<{
           ) : null}
 
           <h1 id="hero-title" className="font-display text-[clamp(30px,10.6vw,46px)] leading-[1.04] tracking-[-0.04em] text-heading sm:text-headline">
-            Placement test coming up? TieEdu gets you <span className="marker">ready, round by round</span>.
+            Placement test coming up? TiEEdu gets you <span className="marker">ready, round by round</span>.
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-body-lg text-muted">
             Pick your company and your test date. You get the real rounds, a skill test for each, and a plan for every

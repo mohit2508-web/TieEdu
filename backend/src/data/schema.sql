@@ -1,4 +1,4 @@
--- TieEdu Platform Production PostgreSQL Database DDL Schema Specification (v3)
+-- TiEEdu Platform Production PostgreSQL Database DDL Schema Specification (v3)
 -- Fully optimized for PgBouncer pooling & read-replica scaling
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";

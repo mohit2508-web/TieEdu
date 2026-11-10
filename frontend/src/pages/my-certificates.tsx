@@ -53,7 +53,7 @@ export default function MyCertificatesPage() {
       const { blobUrl, filename } = await downloadCertificatePdf(certificateDownloadPath(c.serial));
       const a = document.createElement('a');
       a.href = blobUrl;
-      a.download = filename || `TieEdu-Certificate-${c.serial}.pdf`;
+      a.download = filename || `TiEEdu-Certificate-${c.serial}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -68,7 +68,7 @@ export default function MyCertificatesPage() {
   return (
     <>
       <Head>
-        <title>My Certificates · TieEdu</title>
+        <title>My Certificates · TiEEdu</title>
         <meta name="description" content="Your earned certificates, verifiable and downloadable." />
       </Head>
 

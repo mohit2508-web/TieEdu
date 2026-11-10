@@ -81,7 +81,7 @@ export default function MyCoursesPage() {
   return (
     <>
       <Head>
-        <title>My courses · TieEdu</title>
+        <title>My courses · TiEEdu</title>
       </Head>
 
       <main className="mx-auto w-full max-w-5xl px-6 pb-24 pt-14">

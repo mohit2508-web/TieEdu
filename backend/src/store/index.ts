@@ -1,6 +1,6 @@
 // ----- Phase O: Pluggable storage layer (IStore) -----
 //
-// The whole TieEdu document (companies/modules/orders/users/audit...) is treated as
+// The whole TiEEdu document (companies/modules/orders/users/audit...) is treated as
 // ONE JSON document. Two stores implement the IStore contract:
 //   - JsonStore : the real-time file ledger (backend/data/db.json) — SOURCE OF TRUTH.
 //   - PgStore   : optional CockroachDB replica (app_state table) — off-box backup that

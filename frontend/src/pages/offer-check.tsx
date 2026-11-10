@@ -49,7 +49,7 @@ export default function OfferCheckPage() {
   return (
     <>
       <Head>
-        <title>Is this job offer real? Free fake job offer checker · TieEdu</title>
+        <title>Is this job offer real? Free fake job offer checker · TiEEdu</title>
         <meta name="description" content="Paste a job offer, email or WhatsApp message and check it for the signs of a fake offer: fees, UPI requests, look-alike company domains and more. Free, and private: it runs on your phone." />
       </Head>
       <main className="mx-auto w-full max-w-[760px] px-4 pb-14 pt-6 sm:px-6 sm:pt-10">

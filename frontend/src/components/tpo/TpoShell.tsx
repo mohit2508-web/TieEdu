@@ -155,7 +155,7 @@ export const TpoShell: React.FC<{ children: React.ReactNode; title?: string }> =
         <div className="mx-auto max-w-[1180px] px-4 h-12 flex items-center gap-3">
           <button
             onClick={() => router.push('/')}
-            aria-label="Back to TieEdu"
+            aria-label="Back to TiEEdu"
             className="w-8 h-8 rounded-lg flex items-center justify-center text-body hover:bg-surface-hover focus-ring shrink-0"
           >
             <Home className="w-4 h-4" />

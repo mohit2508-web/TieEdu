@@ -23,7 +23,7 @@ export function withPageTitle<P extends object>(
     return (
       <>
         <Head>
-          <title>{`${title(query)} · TieEdu`}</title>
+          <title>{`${title(query)} · TiEEdu`}</title>
           {description && <meta name="description" content={description(query)} />}
         </Head>
         <Page {...props} />

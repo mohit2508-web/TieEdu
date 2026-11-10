@@ -478,7 +478,7 @@ const AccountPageContent: React.FC = () => {
   return (
     <RequireAuth>
       <Head>
-        <title>My Account — TiEedu</title>
+        <title>My Account — TiEEdu</title>
       </Head>
 
       <div className="min-h-screen flex flex-col bg-app-warm text-heading">

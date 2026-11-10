@@ -48,7 +48,7 @@ commentsRouter.post('/', optionalAuth, (req: Request, res: Response) => {
     id: `c-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     item_id,
     user_id: user?.id,
-    user_name: (user?.name || 'TieEdu Student'),
+    user_name: (user?.name || 'TiEEdu Student'),
     user_avatar: user?.avatar || undefined,
     text: body,
     created_at: new Date().toISOString(),

@@ -7,7 +7,7 @@
  * On top of that, any branch with fewer than MIN_GROUP students is folded into
  * "Other branches", because a tiny group's totals can identify a student.
  *
- * Sections: who is on TieEdu and how ready they are (the batch-readiness
+ * Sections: who is on TiEEdu and how ready they are (the batch-readiness
  * segments the TPO already sees), the same by branch, practice in the chosen
  * period, and placement results by year as recorded by the placement cell
  * (lib/campusIntel). It is offered as supporting evidence for NAAC Criterion 5
@@ -153,7 +153,7 @@ const ACCENT = rgb(0.043, 0.310, 0.290);
 export async function renderCollegeReportPdf(r: CollegeReport): Promise<Uint8Array> {
   const pdf = await PDFDocument.create();
   pdf.setTitle(ascii(`${r.college} - placement readiness report`));
-  pdf.setAuthor('TieEdu');
+  pdf.setAuthor('TiEEdu');
   pdf.setSubject('Aggregate placement readiness for management and NAAC (Criterion 5)');
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
@@ -201,13 +201,13 @@ export async function renderCollegeReportPdf(r: CollegeReport): Promise<Uint8Arr
   y -= 18;
   text(`Period ${fmtDate(r.period.from)} to ${fmtDate(r.period.to)}${r.batch ? `  |  Batch ${r.batch}` : '  |  All batches'}  |  Generated ${fmtDate(r.generated.slice(0, 10))}`, M, 9.5, font, MUTED);
   y -= 16;
-  para('Aggregate figures only: this report contains no student names, roll numbers or individual results. Branches with fewer than 5 students are combined so that no individual can be identified. Readiness uses the same records students see on TieEdu. Suitable as supporting evidence for NAAC Criterion 5 (Student Support and Progression).', 9);
+  para('Aggregate figures only: this report contains no student names, roll numbers or individual results. Branches with fewer than 5 students are combined so that no individual can be identified. Readiness uses the same records students see on TiEEdu. Suitable as supporting evidence for NAAC Criterion 5 (Student Support and Progression).', 9);
 
   heading('1. Students and readiness');
   table(
     [{ label: '', w: 0.5 }, { label: 'Students', w: 0.25, right: true }, { label: 'Share', w: 0.25, right: true }],
     [
-      ['Students of the college on TieEdu', String(r.students), ''],
+      ['Students of the college on TiEEdu', String(r.students), ''],
       ['Practised during the period', String(r.active_in_period), pct(r.active_in_period, r.students)],
       ...SEGS.map((g) => [`Readiness: ${SEG_LABEL[g]}`, String(r.segments[g]), pct(r.segments[g], r.students)]),
     ]
@@ -248,13 +248,13 @@ export async function renderCollegeReportPdf(r: CollegeReport): Promise<Uint8Arr
       y -= 15;
       table([{ label: 'Company', w: 0.7 }, { label: 'Selected', w: 0.3, right: true }], x.detail.map((d) => [d.company, d.selected === null ? 'not recorded' : String(d.selected)]));
     }
-    para('Results as recorded by the college placement cell in TieEdu. Change compares students selected with the previous year that has recorded numbers; companies with no number recorded are not counted.', 8.5);
+    para('Results as recorded by the college placement cell in TiEEdu. Change compares students selected with the previous year that has recorded numbers; companies with no number recorded are not counted.', 8.5);
   }
 
   // Footer on every page
   const pages = pdf.getPages();
   pages.forEach((p, i) => {
-    p.drawText(ascii(`${r.college} | TieEdu placement readiness report | Page ${i + 1} of ${pages.length}`), { x: M, y: 28, size: 8, font, color: MUTED });
+    p.drawText(ascii(`${r.college} | TiEEdu placement readiness report | Page ${i + 1} of ${pages.length}`), { x: M, y: 28, size: 8, font, color: MUTED });
   });
   return pdf.save();
 }

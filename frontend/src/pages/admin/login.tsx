@@ -50,7 +50,7 @@ export default function AdminLoginPage() {
   return (
     <>
       <Head>
-        <title>Admin Portal — TieEdu</title>
+        <title>Admin Portal — TiEEdu</title>
       </Head>
 
       <div className="min-h-screen hero-mesh flex flex-col items-center justify-center px-4 py-12">
@@ -65,7 +65,7 @@ export default function AdminLoginPage() {
             </div>
             <h1 className="display-2 mb-1.5">Platform admin portal</h1>
             <p className="text-base text-[--text-muted] mb-7">
-              This surface is only for TieEdu platform owners. Guest access is not allowed.
+              This surface is only for TiEEdu platform owners. Guest access is not allowed.
             </p>
 
             {error && (

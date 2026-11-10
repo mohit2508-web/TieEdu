@@ -42,8 +42,8 @@ export default function LoginPage() {
   return (
     <>
       <Head>
-        <title>Sign in — TieEdu</title>
-        <meta name="description" content="Sign in to TieEdu to pick up your placement prep: your courses, skill tests, company packs and progress." />
+        <title>Sign in — TiEEdu</title>
+        <meta name="description" content="Sign in to TiEEdu to pick up your placement prep: your courses, skill tests, company packs and progress." />
       </Head>
 
       <div className="min-h-screen hero-mesh flex flex-col items-center justify-center px-4 py-12">
@@ -54,7 +54,7 @@ export default function LoginPage() {
 
           <div className="vault-card p-8 shadow-raised">
             <span className="eyebrow">Account Access</span>
-            <h1 className="display-2 mt-1 mb-1.5">Sign in to TieEdu</h1>
+            <h1 className="display-2 mt-1 mb-1.5">Sign in to TiEEdu</h1>
             <p className="text-base text-[--text-muted] mb-7">
               Your purchased vaults, unlocks and progress all live here.
             </p>

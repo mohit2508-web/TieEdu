@@ -64,7 +64,7 @@ reportsRouter.post('/', optionalAuth, (req: Request, res: Response) => {
     company_id,
     company_name: company_name || 'Company',
     user_id: user?.id || null,
-    user_name: user_name || user?.name || 'TieEdu Student',
+    user_name: user_name || user?.name || 'TiEEdu Student',
     user_role: user_role || 'Applicant',
     rounds: [
       {
@@ -175,7 +175,7 @@ reportsRouter.patch('/:id', requireAdmin, (req: Request, res: Response) => {
       bullets: copy.bullets,
       ctaRoute: company?.slug ? `/company/${company.slug}` : undefined,
       targetSlug: company?.slug,
-      bodyMd: company ? undefined : `An interview experience shared by ${report.user_name} on TieEdu.`,
+      bodyMd: company ? undefined : `An interview experience shared by ${report.user_name} on TiEEdu.`,
       actorId: req.userId,
     });
   }

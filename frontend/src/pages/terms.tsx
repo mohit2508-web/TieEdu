@@ -25,7 +25,7 @@ const sections: LegalSection[] = [
         items={[
           'Give true details and keep your password private. You are responsible for activity on your account.',
           'One account per person. Accounts cannot be sold, shared or transferred.',
-          'If you are under 18, use TieEdu with a parent’s or guardian’s consent.',
+          'If you are under 18, use TiEEdu with a parent’s or guardian’s consent.',
           'Tell us at once at ' + LEGAL.supportEmail + ' if you think someone else has used your account.',
         ]}
       />
@@ -38,7 +38,7 @@ const sections: LegalSection[] = [
       <>
         <p>
           When you buy a course, a company pack or a drive, you get a personal, non-transferable licence to use it for
-          your own preparation, for as long as the product stays available on TieEdu.
+          your own preparation, for as long as the product stays available on TiEEdu.
         </p>
         <LegalList
           items={[
@@ -96,8 +96,8 @@ const sections: LegalSection[] = [
     title: 'What you post',
     body: (
       <p>
-        You own what you write. By posting an interview experience, review or answer on TieEdu you let us show it on
-        TieEdu (anonymously where the feature says so), and edit it for length, clarity or privacy.
+        You own what you write. By posting an interview experience, review or answer on TiEEdu you let us show it on
+        TiEEdu (anonymously where the feature says so), and edit it for length, clarity or privacy.
       </p>
     ),
   },
@@ -106,7 +106,7 @@ const sections: LegalSection[] = [
     title: 'Service changes',
     body: (
       <p>
-        We keep improving TieEdu, so features may change. If we stop offering something you paid for before you could
+        We keep improving TiEEdu, so features may change. If we stop offering something you paid for before you could
         use it, we will offer an equivalent product or a fair refund.
       </p>
     ),
@@ -116,7 +116,7 @@ const sections: LegalSection[] = [
     title: 'Limits of liability',
     body: (
       <p>
-        TieEdu is provided &ldquo;as is&rdquo;. To the extent the law allows, we are not liable for indirect losses, and our
+        TiEEdu is provided &ldquo;as is&rdquo;. To the extent the law allows, we are not liable for indirect losses, and our
         total liability for any claim is limited to the amount you paid us in the 12 months before it.
       </p>
     ),
@@ -148,10 +148,10 @@ export default function TermsPage() {
     <LegalPage
       path="/terms"
       title="Terms of Service"
-      description="The rules for using TieEdu: accounts, paid content, tests and certificates, payments and acceptable use."
+      description="The rules for using TiEEdu: accounts, paid content, tests and certificates, payments and acceptable use."
       summary={
         <p>
-          Use TieEdu for your own preparation, keep paid content to yourself, take tests honestly, and be respectful.
+          Use TiEEdu for your own preparation, keep paid content to yourself, take tests honestly, and be respectful.
           We keep your progress safe, issue honest certificates and refund fairly.
         </p>
       }

@@ -43,8 +43,8 @@ export default function VerifyIndexPage() {
   return (
     <>
       <Head>
-        <title>Verify a certificate · TieEdu</title>
-        <meta name="description" content="Check that a TieEdu certificate is genuine: enter its serial to see who earned it, for what, and when." />
+        <title>Verify a certificate · TiEEdu</title>
+        <meta name="description" content="Check that a TiEEdu certificate is genuine: enter its serial to see who earned it, for what, and when." />
         <meta name="robots" content="noindex" />
       </Head>
 
@@ -56,7 +56,7 @@ export default function VerifyIndexPage() {
           </h1>
         </div>
         <p className="mt-2 text-sm leading-relaxed text-[var(--text-body)]">
-          Every certificate TieEdu issues is signed. Enter the serial printed on it and we will
+          Every certificate TiEEdu issues is signed. Enter the serial printed on it and we will
           check that signature against the record we hold — no account needed.
         </p>
 

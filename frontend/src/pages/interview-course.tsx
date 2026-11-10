@@ -84,7 +84,7 @@ export default function InterviewCoursePage() {
   return (
     <>
       <Head>
-        <title>Free Online Interview Training Course | 50 Masterclass Modules | TiEedu</title>
+        <title>Free Online Interview Training Course | 50 Masterclass Modules | TiEEdu</title>
         <meta
           name="description"
           content="Learn how to make a great first impression, master the STAR technique, answer probing HR questions, and secure top placement job offers with 50 practice modules."
@@ -102,7 +102,7 @@ export default function InterviewCoursePage() {
               description: 'Comprehensive masterclass on job interview preparation, STAR behavioral response framework, body language, and salary negotiation.',
               provider: {
                 '@type': 'Organization',
-                name: 'TiEedu Placement Intelligence',
+                name: 'TiEEdu Placement Intelligence',
                 sameAs: 'https://tieedu.in'
               }
             })

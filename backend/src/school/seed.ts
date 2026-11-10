@@ -5,7 +5,7 @@ import { getPool } from '../db/client';
 import { runSchoolMigrations } from '../db/schoolMigrate';
 
 /**
- * TieEdu Schools seed — opt-in via SCHOOL_SEED=1, mirroring PLACEMENT_SEED.
+ * TiEEdu Schools seed — opt-in via SCHOOL_SEED=1, mirroring PLACEMENT_SEED.
  *
  * Contract shared with the placement seed (and enforced here):
  *  - A seeded user is a real JSON-ledger `users` row with the same fields a

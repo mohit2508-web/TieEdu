@@ -294,7 +294,7 @@ export function getGenAICourse(): Course {
       'LLM fundamentals, prompting, RAG and applied workflows — the AI literacy every placement and product role expects',
     description: `Generative AI stopped being a novelty and became a baseline skill on job descriptions. This course gives you the mental model and the working habits: how language models actually predict text, why they hallucinate, how to write prompts that behave like briefs, how retrieval-augmented generation grounds answers in real documents, and how to evaluate, cost and secure a GenAI feature.
 
-Four modules, eight lessons on the nine-step standard: objective, hook, concept, worked example, practice, common mistakes, exam angle, server-graded quiz and revision summary. A 30-question bank feeds the timed final exam; passing earns a verifiable TieEdu certificate.
+Four modules, eight lessons on the nine-step standard: objective, hook, concept, worked example, practice, common mistakes, exam angle, server-graded quiz and revision summary. A 30-question bank feeds the timed final exam; passing earns a verifiable TiEEdu certificate.
 
 **Who this is for:** students and early-career engineers who use chatbots daily but cannot yet explain tokens, context windows or RAG — and who need repeatable workflows for research, writing, coding and placement prep without getting burned by fabricated citations.
 
@@ -327,7 +327,7 @@ Four modules, eight lessons on the nine-step standard: objective, hook, concept,
 
 Module 1 builds the probability-machine mental model — tokens, windows, sampling, hallucination and retrieval — so every later trick has an explanation. Module 2 turns prompting from incantation into brief-writing with a reusable skeleton and chain patterns. Module 3 covers what happens when you ship: chunking, hybrid retrieval, structured outputs, evaluation, cost tiers and safety. Module 4 applies all of it to study, writing, coding and career workflows, with verification treated as part of the workflow rather than an afterthought.
 
-Each lesson ends with a server-graded quiz; the course closes with a 15-question timed exam from a 30-question bank. Passing earns a verifiable TieEdu certificate.`,
+Each lesson ends with a server-graded quiz; the course closes with a 15-question timed exam from a 30-question bank. Passing earns a verifiable TiEEdu certificate.`,
     prerequisites: [
       'Daily comfort using a chat assistant (any tool)',
       'Basic computer literacy; no programming required',

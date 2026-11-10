@@ -75,7 +75,7 @@ const ReportsBody: React.FC = () => {
           <Card>
             <p className="eyebrow text-muted">Students and readiness</p>
             <p className="mt-2 font-display text-3xl font-bold text-heading">{data.students}</p>
-            <p className="text-sm text-muted">students on TieEdu · {data.active_in_period} practised in the period</p>
+            <p className="text-sm text-muted">students on TiEEdu · {data.active_in_period} practised in the period</p>
             <ul className="mt-3 grid grid-cols-2 gap-2 text-sm">
               {Object.entries(data.segments).map(([k, v]) => <li key={k} className="rounded-lg bg-surface-hover px-3 py-2"><span className="block text-muted">{SEG_LABEL[k]}</span><span className="font-bold text-heading">{String(v)}</span></li>)}
             </ul>

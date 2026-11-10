@@ -25,7 +25,7 @@ export const PulseShell: React.FC<{
   return (
   <>
     <Head>
-      <title>{`${title} — Project Pulse · TieEdu`}</title>
+      <title>{`${title} — Project Pulse · TiEEdu`}</title>
       <meta name="robots" content="noindex, nofollow" />
     </Head>
     <div className="mx-auto w-full max-w-[1280px] px-4 pb-10 pt-4 sm:px-6 lg:px-8">
@@ -34,7 +34,7 @@ export const PulseShell: React.FC<{
         <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
         <p>
           <span className="font-semibold text-heading">Design preview.</span> Sample class and sample code, so you can see every screen.
-          The real portal is invite-only: teachers are appointed by TieEdu, students are invited by their teacher.
+          The real portal is invite-only: teachers are appointed by TiEEdu, students are invited by their teacher.
         </p>
       </div>
       ) : null}

@@ -82,7 +82,7 @@ export const NotificationsTab: React.FC = () => {
     } else if (r.reason === 'not_supported') {
       setResult({
         tone: 'warn',
-        text: 'This browser cannot show push. On iPhone, install TieEdu to the Home Screen first (iOS 16.4+).',
+        text: 'This browser cannot show push. On iPhone, install TiEEdu to the Home Screen first (iOS 16.4+).',
       });
     } else if (r.reason === 'no_vapid') {
       setResult({ tone: 'error', text: 'Push keys are not configured on the server.' });
@@ -176,7 +176,7 @@ export const NotificationsTab: React.FC = () => {
             </h3>
             <p className="text-xs text-text-light mt-1.5 leading-relaxed max-w-2xl">
               Push only works from an installed app. Open the site in a browser tab and Chrome or Safari will
-              refuse permission; add TieEdu to your Home Screen first. On iPhone this needs iOS 16.4 or newer.
+              refuse permission; add TiEEdu to your Home Screen first. On iPhone this needs iOS 16.4 or newer.
             </p>
           </div>
           {!supported ? (

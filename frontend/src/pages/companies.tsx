@@ -29,7 +29,7 @@ import { AdSlot } from '@/components/ads/AdSlot';
 
 type SortKey = 'popular' | 'name' | 'ctc';
 
-/** The company TieEdu is completing first (INFOSYS_SE_PREP_PLAN.md) leads the list. */
+/** The company TiEEdu is completing first (INFOSYS_SE_PREP_PLAN.md) leads the list. */
 const FOCUS_SLUG = 'infosys-systems-engineer';
 
 const SORTS: Array<[SortKey, string]> = [
@@ -106,7 +106,7 @@ export default function CompaniesPage({ initialCompanies = [] }: { initialCompan
   return (
     <>
       <Head>
-        <title>{`Company-wise Placement Preparation${companies.length ? ` — ${companies.slice(0, 3).map((c) => c.name.split(/[ (—-]/)[0]).filter((v, i, a) => a.indexOf(v) === i).join(', ')} & more` : ''} | TieEdu`}</title>
+        <title>{`Company-wise Placement Preparation${companies.length ? ` — ${companies.slice(0, 3).map((c) => c.name.split(/[ (—-]/)[0]).filter((v, i, a) => a.indexOf(v) === i).join(', ')} & more` : ''} | TiEEdu`}</title>
         <meta
           name="description"
           content="Placement preparation company by company: every round, exam pattern, interview questions, CTC and hiring process for freshers — with each figure marked as checked or still being verified."
@@ -119,7 +119,7 @@ export default function CompaniesPage({ initialCompanies = [] }: { initialCompan
               '@graph': [
                 {
                   '@type': 'ItemList',
-                  name: 'Company-wise placement preparation on TieEdu',
+                  name: 'Company-wise placement preparation on TiEEdu',
                   itemListElement: companies.slice(0, 50).map((c, i) => ({
                     '@type': 'ListItem',
                     position: i + 1,

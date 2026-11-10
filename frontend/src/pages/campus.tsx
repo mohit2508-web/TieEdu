@@ -8,7 +8,7 @@ export default function CampusPage() {
   return (
     <RequireAdmin>
       <Head>
-        <title>Institutional B2B Campus Placement Portal | TieEdu</title>
+        <title>Institutional B2B Campus Placement Portal | TiEEdu</title>
         <meta name="robots" content="noindex, nofollow" />
         <meta name="description" content="Cohort dashboards for college placement cells tracking batch readiness, company target stats, and verified interview reports." />
       </Head>

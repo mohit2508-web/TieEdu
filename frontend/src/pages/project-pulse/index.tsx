@@ -48,7 +48,7 @@ export default function ProjectPulseHome() {
           href="/project-pulse/teacher"
           icon={Presentation}
           title="Teacher"
-          who="Appointed by TieEdu. Sees only the classes they own."
+          who="Appointed by TiEEdu. Sees only the classes they own."
           points={[
             'Whole class at a glance: status donut, daily commits, the hardest requirement',
             'Student × requirement matrix and a sortable table',
@@ -88,7 +88,7 @@ export default function ProjectPulseHome() {
         <div className="flex-1">
           <p className="font-display text-h3">Invite-only, by design</p>
           <p className="mt-1 text-sm text-hero-muted">
-            A TieEdu account is not enough. Teachers are appointed by TieEdu; students get in only through their teacher’s invite,
+            A TiEEdu account is not enough. Teachers are appointed by TiEEdu; students get in only through their teacher’s invite,
             with the same email. Every check runs on the server, and every teacher view of a student’s code is logged.
           </p>
         </div>

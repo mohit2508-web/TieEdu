@@ -13,8 +13,8 @@ import {
 
 /**
  * Provider-facing bridge endpoints. These are called server-to-server by the
- * assessment platform (and, when it is TieEdu's own skill-test engine, by
- * TieEdu itself). They are NOT part of the student session API and are never
+ * assessment platform (and, when it is TiEEdu's own skill-test engine, by
+ * TiEEdu itself). They are NOT part of the student session API and are never
  * reachable with a student JWT.
  *
  * Auth is per-provider HMAC keyed on three distinct secrets so that read
@@ -167,7 +167,7 @@ router.post('/introspect', bridgeAuth('introspect', (s) => s.introspect), async 
       );
     }
 
-    // Record the stable provider<->TieEdu identity binding (candidate id = users.id).
+    // Record the stable provider<->TiEEdu identity binding (candidate id = users.id).
     await getPool().query(
       `INSERT INTO drive_identity (user_id, provider_id, provider_candidate_id, last_seen_at)
        VALUES ($1,$2,$1,NOW())
@@ -236,7 +236,7 @@ router.post('/events', bridgeAuth('webhook', (s) => s.webhook), async (req: Requ
 });
 
 /* ---------------------------------------------------------------------------
- * POST /api/bridge/ack — provider confirms it received a TieEdu push.
+ * POST /api/bridge/ack — provider confirms it received a TiEEdu push.
  * ------------------------------------------------------------------------- */
 router.post('/ack', bridgeAuth('webhook', (s) => s.webhook), async (req: Request, res: Response) => {
   const externalId = req.body?.event_id ? String(req.body.event_id) : '';
@@ -313,7 +313,7 @@ async function applyEvent(provider: DriveProviderRow, body: any): Promise<EventR
   }
   if (!driveId || !testId) return { status: 'unmatched', error: 'cannot map event to drive/test' };
 
-  // Provenance: an attempt is only believed if TieEdu issued a launch for this
+  // Provenance: an attempt is only believed if TiEEdu issued a launch for this
   // exact (user, drive, test, provider). This is what stops a provider — or an
   // attacker with a leaked webhook secret — from injecting results for a drive
   // the student never signed up to.

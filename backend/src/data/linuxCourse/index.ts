@@ -324,7 +324,7 @@ export function getLinuxShellCourse(): Course {
       'Navigate the filesystem, filter text like a pro, manage processes and write your first real bash scripts',
     description: `Linux shows up everywhere: lab machines, cloud VMs, CI runners and almost every backend interview. This course teaches the shell you actually use — navigation and permissions, the grep/sed/awk pipeline that beats any GUI for logs, processes with kill and systemd, packages, SSH and network checks, then enough bash to automate the boring half of your day.
 
-Eight compact lessons, each with a worked example you can type along, a practice prompt and a server-graded quiz. Finish with the timed final exam and a verifiable TieEdu certificate.
+Eight compact lessons, each with a worked example you can type along, a practice prompt and a server-graded quiz. Finish with the timed final exam and a verifiable TiEEdu certificate.
 
 **Who this is for:** first-years who have only used Windows, placement candidates facing Linux rounds, and anyone deploying a project to a cloud box for the first time.
 

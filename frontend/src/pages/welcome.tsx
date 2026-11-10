@@ -85,7 +85,7 @@ export default function WelcomePage() {
       wide
       title="Welcome"
       eyebrow={`Step ${step + 1} of ${STEPS.length} · ${STEPS[step]}`}
-      heading={step === 0 ? `Welcome${firstName ? `, ${firstName}` : ''}! Which year are you in?` : step === 1 ? 'What do you want from TieEdu?' : 'How should we keep you updated?'}
+      heading={step === 0 ? `Welcome${firstName ? `, ${firstName}` : ''}! Which year are you in?` : step === 1 ? 'What do you want from TiEEdu?' : 'How should we keep you updated?'}
       lede={
         step === 0
           ? 'We show first-years foundations and final-years company prep — so you only see what helps you now.'

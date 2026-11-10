@@ -286,6 +286,6 @@ export const testPush = async (req: any, res: Response) => {
       required_permission: 'broadcasts.send',
     });
   }
-  const r = await sendPushToUser(req.user.id, { title: 'TieEdu', body: 'Test notification' });
+  const r = await sendPushToUser(req.user.id, { title: 'TiEEdu', body: 'Test notification' });
   res.json(r);
 };

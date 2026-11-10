@@ -31,7 +31,7 @@ export default function ParentEmailConfirm() {
 
   return (
     <>
-      <Head><title>Confirm weekly updates · TieEdu</title><meta name="robots" content="noindex, nofollow" /></Head>
+      <Head><title>Confirm weekly updates · TiEEdu</title><meta name="robots" content="noindex, nofollow" /></Head>
       <main className="mx-auto w-full max-w-[560px] px-4 py-16">
         <Card pad="lg">
           <p className="flex items-center gap-2 font-display text-xl font-bold text-heading"><MailCheck className="h-6 w-6 text-success" aria-hidden /> Weekly updates · हर हफ़्ते अपडेट</p>
@@ -39,7 +39,7 @@ export default function ParentEmailConfirm() {
             <p className="mt-3 text-body">Done. You will get a short email every Sunday about {name || 'your child'}’s week. Every email has an unsubscribe link.</p>
           ) : (
             <>
-              <p className="mt-3 text-body">Confirm that you want one short email every Sunday about your child’s preparation on TieEdu. · हर रविवार एक छोटी ईमेल के लिए पुष्टि करें।</p>
+              <p className="mt-3 text-body">Confirm that you want one short email every Sunday about your child’s preparation on TiEEdu. · हर रविवार एक छोटी ईमेल के लिए पुष्टि करें।</p>
               <Button className="mt-4" onClick={go} disabled={!t || state === 'busy'}>Yes, send weekly updates · हाँ, भेजें</Button>
               {state === 'error' && <p className="mt-3 text-sm text-danger" role="alert">{err}</p>}
               <p className="mt-4 text-xs text-muted">If you did not ask for this, close this page. You will not get another email.</p>

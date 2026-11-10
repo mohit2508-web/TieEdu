@@ -50,7 +50,7 @@ export default function VerifyEmailPage() {
             <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-[var(--color-success)]" />
             <span>Thanks — <strong>{message}</strong> is confirmed. Results, receipts and certificates will come here.</span>
           </p>
-          <Link href="/" className="btn btn-primary mt-6 w-full py-3.5 text-sm">Continue to TieEdu</Link>
+          <Link href="/" className="btn btn-primary mt-6 w-full py-3.5 text-sm">Continue to TiEEdu</Link>
         </>
       )}
       {state === 'error' && (

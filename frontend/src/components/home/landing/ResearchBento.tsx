@@ -8,8 +8,8 @@ import { LandingHead, LandingSection } from './LandingHead';
  *
  * Real, linked studies only. Each card states what the study found in plain
  * words, with no number we have not checked against the paper, and cites it in
- * full with its DOI. The last card says how TieEdu uses the finding — a
- * description of the product, not a result. A TieEdu-data card joins only when
+ * full with its DOI. The last card says how TiEEdu uses the finding — a
+ * description of the product, not a result. A TiEEdu-data card joins only when
  * we have a measured result to show.
  */
 
@@ -58,7 +58,7 @@ export const ResearchBento: React.FC = () => (
       id="research-title"
       eyebrow="The research"
       title="Why practising this way works"
-      lead="TieEdu is built on two of the best-tested findings about learning."
+      lead="TiEEdu is built on two of the best-tested findings about learning."
     />
 
     <div className="mt-12 grid grid-cols-1 gap-4 lg:grid-cols-4 lg:grid-rows-2">
@@ -83,7 +83,7 @@ export const ResearchBento: React.FC = () => (
       ))}
 
       <div className="flex flex-col rounded-band border border-line bg-card p-6 sm:p-8 lg:col-span-2">
-        <p className="eyebrow">How TieEdu uses it</p>
+        <p className="eyebrow">How TiEEdu uses it</p>
         <ul className="mt-4 space-y-3 text-body-md text-body">
           <li>
             <span className="font-display font-semibold text-heading">Practice testing:</span> every round has a skill test, and

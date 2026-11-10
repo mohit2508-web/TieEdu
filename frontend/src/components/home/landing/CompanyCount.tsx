@@ -63,7 +63,7 @@ export const CompanyCount: React.FC<{ companies: Company[]; stats: PublicStats |
       </div>
 
       <div className="relative mt-12 space-y-4">
-        <Marquee label="Companies on TieEdu">
+        <Marquee label="Companies on TiEEdu">
           {rowA.map((c, i) => (
             <CompanyMini key={`a-${c.id}-${i}`} c={c} repeat={i >= half} />
           ))}

@@ -1,7 +1,7 @@
 import { getPool } from './client';
 
 /**
- * TieEdu Schools segment — schema.
+ * TiEEdu Schools segment — schema.
  *
  * A separate segment from the placement/college module and from the JSON-ledger
  * product: every `school_*` table is PostgreSQL/CockroachDB only, exactly like

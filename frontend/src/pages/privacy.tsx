@@ -131,7 +131,7 @@ const sections: LegalSection[] = [
     title: 'Students under 18',
     body: (
       <p>
-        TieEdu is made for college students. If you are under 18, please use it with a parent&apos;s or guardian&apos;s
+        TiEEdu is made for college students. If you are under 18, please use it with a parent&apos;s or guardian&apos;s
         consent. If we learn that we hold a minor&apos;s data without that consent, we will delete it.
       </p>
     ),
@@ -178,7 +178,7 @@ export default function PrivacyPage() {
     <LegalPage
       path="/privacy"
       title="Privacy Policy"
-      description="What TieEdu collects, why, who it is shared with, how long it is kept, and your rights."
+      description="What TiEEdu collects, why, who it is shared with, how long it is kept, and your rights."
       summary={
         <p>
           We collect what we need to teach you, test you and track your progress. We never sell your data. Optional

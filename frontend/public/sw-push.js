@@ -13,7 +13,7 @@ self.addEventListener('push', function (event) {
   try {
     data = (event.data && event.data.json()) || {};
   } catch (e) {
-    data = { title: 'TieEdu', body: (event.data && event.data.text()) || '' };
+    data = { title: 'TiEEdu', body: (event.data && event.data.text()) || '' };
   }
 
   var options = {
@@ -30,7 +30,7 @@ self.addEventListener('push', function (event) {
     tag: 'tieedu-notif'
   };
 
-  event.waitUntil(self.registration.showNotification(data.title || 'TieEdu', options));
+  event.waitUntil(self.registration.showNotification(data.title || 'TiEEdu', options));
 });
 
 self.addEventListener('notificationclick', function (event) {

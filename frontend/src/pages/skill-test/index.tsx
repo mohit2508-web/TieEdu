@@ -210,7 +210,7 @@ export default function SkillTestLanding({ initialSkills = [] }: { initialSkills
   return (
     <>
       <Head>
-        <title>Free Skill Tests with Certificate — Java, Python, DBMS, Aptitude & more | TieEdu</title>
+        <title>Free Skill Tests with Certificate — Java, Python, DBMS, Aptitude & more | TiEEdu</title>
         <meta
           name="description"
           content="Free online skill tests for engineering students: programming, core CS, aptitude, data and cloud. See your score by topic and earn a certificate anyone can verify."
@@ -223,7 +223,7 @@ export default function SkillTestLanding({ initialSkills = [] }: { initialSkills
               '@graph': [
                 {
                   '@type': 'ItemList',
-                  name: 'Free skill tests on TieEdu',
+                  name: 'Free skill tests on TiEEdu',
                   itemListElement: skills.slice(0, 100).map((s, i) => ({
                     '@type': 'ListItem',
                     position: i + 1,

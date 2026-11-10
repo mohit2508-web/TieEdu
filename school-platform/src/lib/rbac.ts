@@ -7,7 +7,7 @@ import type { MemberRole, PlatformRole } from '@prisma/client';
  */
 
 export const PERMISSIONS = [
-  // Platform (TieEdu staff)
+  // Platform (TiEEdu staff)
   'platform.manage', // schools CRUD, plan assignment, renewals
   'leads.manage', // CRM pipeline
   'content.manage', // courses, lessons, quizzes, papers

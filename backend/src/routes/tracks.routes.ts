@@ -238,7 +238,7 @@ tracksRouter.post('/:slug/certificate', requireAuth, (req: Request, res: Respons
     serial = generateSerial();
   }
 
-  const recipientName = req.user!.name || 'TieEdu Learner';
+  const recipientName = req.user!.name || 'TiEEdu Learner';
   const fields = {
     serial,
     user_id: userId,

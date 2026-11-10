@@ -412,10 +412,10 @@ export default function CoursePage({
    */
   const pageSlug = course?.slug || preview?.slug || null;
   const pageTitle = course
-    ? `${course.title} · TieEdu`
+    ? `${course.title} · TiEEdu`
     : preview
-      ? `${preview.title} · TieEdu`
-      : 'Course · TieEdu';
+      ? `${preview.title} · TiEEdu`
+      : 'Course · TiEEdu';
 
   // The single source of truth for "what should this button say and look like",
   // shared with the catalogue card via lib/courseFormat.ts.
@@ -445,7 +445,7 @@ export default function CoursePage({
         // it is what a crawler gets. Falling back to the generic sentence here
         // would index the same boilerplate on every paid course on the site.
         plainText(preview.description || preview.subtitle, 155)
-      : 'A structured, sequential TieEdu course with server-tracked progress and a verifiable certificate.';
+      : 'A structured, sequential TiEEdu course with server-tracked progress and a verifiable certificate.';
 
   /**
    * The one enrolment control for this page.
@@ -627,7 +627,7 @@ export default function CoursePage({
                 // mode is not worth the markup; the fields above are all facts the
                 // API actually published.
                 ...(preview.thumbnail_url ? { image: apiAssetUrl(preview.thumbnail_url) } : {}),
-                provider: { '@type': 'Organization', name: 'TieEdu', url: SITE_URL },
+                provider: { '@type': 'Organization', name: 'TiEEdu', url: SITE_URL },
               }),
             }}
           />
@@ -651,7 +651,7 @@ export default function CoursePage({
                     // author has filled the field in.
                     ...(course.audio_language ? { inLanguage: course.audio_language } : { inLanguage: 'en' }),
                     ...(coverImage ? { image: coverImage } : {}),
-                    provider: { '@type': 'Organization', name: 'TieEdu', url: SITE_URL },
+                    provider: { '@type': 'Organization', name: 'TiEEdu', url: SITE_URL },
                     ...(course.category ? { educationalLevel: course.category } : {}),
 
                     /**
@@ -683,7 +683,7 @@ export default function CoursePage({
                     /**
                      * The teacher, as a `Person` when one is assigned.
                      *
-                     * This used to always be `Organization: TieEdu`, which is not
+                     * This used to always be `Organization: TiEEdu`, which is not
                      * wrong so much as useless: it told a search engine that the
                      * publisher teaches the course, when the record may name someone
                      * else entirely. Falls back to the publisher only when no
@@ -711,7 +711,7 @@ export default function CoursePage({
                             '@type': 'CourseInstance',
                             courseMode: 'online',
                             ...(duration ? { courseWorkload: duration } : {}),
-                            instructor: { '@type': 'Organization', name: 'TieEdu' },
+                            instructor: { '@type': 'Organization', name: 'TiEEdu' },
                           },
                         }),
 

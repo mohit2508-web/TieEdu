@@ -69,7 +69,7 @@ export const HeaderDiya: React.FC = () => {
     try { localStorage.setItem(LIT_KEY, '1'); } catch { /* ignore */ }
     crackle(600);
     const name = user?.name?.split(' ')[0];
-    setToast(`🪔 Happy Diwali${name ? `, ${name}` : ''}! ${f.membership ? 'You are a TieEdu Member ✨' : `Your ${f.discount_percent}% OFF is active`}`);
+    setToast(`🪔 Happy Diwali${name ? `, ${name}` : ''}! ${f.membership ? 'You are a TiEEdu Member ✨' : `Your ${f.discount_percent}% OFF is active`}`);
     window.setTimeout(() => setToast(''), 4200);
   };
 

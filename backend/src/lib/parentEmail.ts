@@ -65,7 +65,7 @@ export function parentEmailStatus(db: any, linkToken: string) {
 
 function confirmMessage(name: string, lang: ParentLang, confirmUrl: string, stopUrl: string) {
   const hi = lang === 'hi';
-  const subject = hi ? `${name} का साप्ताहिक TieEdu अपडेट — ईमेल की पुष्टि करें` : `Confirm weekly TieEdu updates about ${name}`;
+  const subject = hi ? `${name} का साप्ताहिक TiEEdu अपडेट — ईमेल की पुष्टि करें` : `Confirm weekly TiEEdu updates about ${name}`;
   const line1 = hi
     ? `${name} ने अपनी प्लेसमेंट की तैयारी आपके साथ साझा की है। हर रविवार एक छोटी ईमेल पाने के लिए नीचे क्लिक करें।`
     : `${name} has shared their placement preparation with you. Click below to get one short email every Sunday.`;
@@ -149,7 +149,7 @@ export function planWeeklyEmails(db: any, site: string, now = new Date()): Weekl
     const page = `${base}/parent/${u.parent_link.token}`;
     const stop = `${base}/parent-email/stop?t=${sub.token}`;
     const hi = sub.lang === 'hi';
-    const subject = hi ? `${name} का इस हफ़्ते का TieEdu अपडेट` : `${name}'s week on TieEdu`;
+    const subject = hi ? `${name} का इस हफ़्ते का TiEEdu अपडेट` : `${name}'s week on TiEEdu`;
     const more = hi ? 'पूरी जानकारी' : 'Full details';
     out.push({
       user_id: u.id, to: sub.email, week, readiness, subject,
