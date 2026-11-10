@@ -2,10 +2,12 @@ import React from 'react';
 import Link from 'next/link';
 import { Check, Lock } from 'lucide-react';
 import { Sheet } from '@/components/ui';
+import { usePrepCompanies } from '@/lib/prepApi';
 
 /**
  * "Unlock the prep pack" (INFOSYS_SE_3T_UX_PLAN §2a): shown whenever a locked
- * lesson, test or answer is opened. One price, one list of what is inside.
+ * lesson, test or answer is opened. One price, one list of what is inside,
+ * both from /prep/companies for this company (the Infosys list is the fallback).
  */
 export const PACK_PRICE = 169;
 export const PACK_CONTENTS = [
@@ -16,17 +18,22 @@ export const PACK_CONTENTS = [
   '20 technical and 12 HR interview questions with model answers',
 ];
 
-export const BuyPackSheet: React.FC<{ open: boolean; onClose: () => void; slug: string; name: string; what?: string }> = ({ open, onClose, slug, name, what }) => (
-  <Sheet open={open} onClose={onClose} title={`Unlock the ${name} prep pack`} side="bottom">
-    <div className="space-y-4 p-5 sm:p-6">
-      <p className="flex items-center gap-2 text-base text-body"><Lock className="h-5 w-5 text-amber-deep" aria-hidden /> {what ? `${what} is in the prep pack.` : 'This is in the prep pack.'}</p>
-      <ul className="space-y-2">
-        {PACK_CONTENTS.map((c) => (
-          <li key={c} className="flex items-start gap-2 text-base text-heading"><Check className="mt-0.5 h-5 w-5 shrink-0 text-success" aria-hidden />{c}</li>
-        ))}
-      </ul>
-      <Link href={`/company/${slug}?buy=1`} className="btn btn-primary min-h-[52px] w-full text-lg">Buy pack · ₹{PACK_PRICE}</Link>
-      <button type="button" onClick={onClose} className="btn btn-ghost min-h-[44px] w-full">Not now</button>
-    </div>
-  </Sheet>
-);
+export const BuyPackSheet: React.FC<{ open: boolean; onClose: () => void; slug: string; name?: string; what?: string }> = ({ open, onClose, slug, name, what }) => {
+  const live = usePrepCompanies()?.find((c) => c.slug === slug);
+  const contents = live?.pack.length ? live.pack : PACK_CONTENTS;
+  const price = live?.price || PACK_PRICE;
+  return (
+    <Sheet open={open} onClose={onClose} title={`Unlock the ${name || live?.name || 'company'} prep pack`} side="bottom">
+      <div className="space-y-4 p-5 sm:p-6">
+        <p className="flex items-center gap-2 text-base text-body"><Lock className="h-5 w-5 text-amber-deep" aria-hidden /> {what ? `${what} is in the prep pack.` : 'This is in the prep pack.'}</p>
+        <ul className="space-y-2">
+          {contents.map((c) => (
+            <li key={c} className="flex items-start gap-2 text-base text-heading"><Check className="mt-0.5 h-5 w-5 shrink-0 text-success" aria-hidden />{c}</li>
+          ))}
+        </ul>
+        <Link href={`/company/${slug}?buy=1`} className="btn btn-primary min-h-[52px] w-full text-lg">Buy pack · ₹{price}</Link>
+        <button type="button" onClick={onClose} className="btn btn-ghost min-h-[44px] w-full">Not now</button>
+      </div>
+    </Sheet>
+  );
+};

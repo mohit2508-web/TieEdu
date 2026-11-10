@@ -4,6 +4,7 @@ import { requireAuth } from '../middleware/auth';
 import { ownedModuleIdsFor, unlockedCompanyIds } from '../payments/orders';
 import { isMember } from '../lib/festival';
 import { buildPrep, progressOf, touchActivity, PREP_COMPANIES } from '../lib/prep';
+import { packPrice } from '../lib/pricing';
 
 /**
  * "My <company> prep" (INFOSYS_SE_PREP_PLAN.md): the plan, readiness and fix
@@ -37,6 +38,38 @@ prepRouter.get('/target', requireAuth, (req: Request, res: Response) => {
   const company = (db.companies || []).find((c: any) => c.slug === slug);
   const data = buildPrep(db, req.userId!, slug, ownsCompanyPack(db, req.userId!, slug));
   res.json({ slug, name: company?.name || slug, owned: data?.owned || false, test_date: data?.test_date, days_left: data?.days_left, readiness: data?.readiness.score ?? 0, asked: true });
+});
+
+/**
+ * Companies with a live prep plan, for the target picker and the buy sheet:
+ * name, one-line summary, pack price (the real checkout ladder) and what the
+ * pack holds. A company appears here only once its content is in.
+ */
+prepRouter.get('/companies', (_req: Request, res: Response) => {
+  const db = loadDb();
+  const out = Object.entries(PREP_COMPANIES).flatMap(([slug, cfg]) => {
+    const company = (db.companies || []).find((c: any) => c.slug === slug && c.status === 'published');
+    if (!company) return [];
+    const modules: any[] = company.modules || [];
+    const premium = modules.filter((m) => m.is_premium);
+    const skills = (db.skills || []).filter((s: any) => s.company_slug === slug && s.status === 'active');
+    const mock = skills.find((s: any) => s.prep_role !== 'sectional');
+    const lessons = (modules.find((m) => m.id === cfg.lessonModule)?.items || []).length;
+    const gated = modules.filter((m) => m.pack_gated && m.id !== cfg.lessonModule && (m.items || []).length);
+    const pack = cfg.pack || [
+      lessons ? `${lessons} topic lessons with worked examples and practice questions` : '',
+      ...gated.map((m) => `${String(m.title).replace(/:.*/, '')}: ${(m.items || []).length} items with full solutions`),
+      `${skills.filter((s: any) => s.prep_role === 'sectional').length} section tests, unlimited retakes`,
+      mock ? `Unlimited full mocks: ${mock.totalQuestions} questions${mock.has_coding ? ' plus the coding round' : ''}, real pattern` : '',
+      'Day-by-day plan to your test date, readiness score and weak-area fix list',
+      ...premium.map((m) => `${String(m.title).replace(/:.*/, '')}: ${(m.items || []).length} questions with model answers`),
+    ].filter(Boolean);
+    return [{
+      slug, name: cfg.target?.name || company.name, meta: cfg.target?.meta || '', free: !!company.is_free,
+      price: company.is_free ? 0 : packPrice(premium.length), pack,
+    }];
+  });
+  res.json({ companies: out });
 });
 
 prepRouter.post('/target', requireAuth, (req: Request, res: Response) => {

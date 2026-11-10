@@ -4,18 +4,20 @@ import { Sheet } from '@/components/ui';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
 import { isCompanyStage } from '@/lib/onboardingApi';
-import { fetchTarget, saveTarget, OPEN_TARGET_EVENT } from '@/lib/prepApi';
+import { fetchTarget, saveTarget, usePrepCompanies, OPEN_TARGET_EVENT } from '@/lib/prepApi';
 
 /**
  * "Which company are you preparing for?" (INFOSYS_SE_3T_UX_PLAN §1). Asked
  * once after sign-in; reopened from the Today screen or the header chip via
- * OPEN_TARGET_EVENT. Only companies with a full prep plan can be picked.
+ * OPEN_TARGET_EVENT. Only companies with a full prep plan can be picked: the
+ * live list comes from /prep/companies (a company joins once its content is in);
+ * READY is the fallback while it loads.
  */
 const READY = [
   { slug: 'infosys-systems-engineer', name: 'Infosys Systems Engineer (SE)', meta: 'Online test 54 Qs · Technical · HR · ₹3.6–4.2 LPA' },
   { slug: 'wipro-ios-swift', name: 'Wipro iOS Developer Training (Swift)', meta: 'Free · 12 modules · 4 milestone tests · full course mock' },
 ];
-const SOON = ['TCS NQT', 'Accenture', 'Wipro Elite NTH', 'Cognizant GenC'];
+const SOON = ['TCS NQT', 'Accenture', 'Wipro Elite NTH', 'Cognizant GenC', 'Mphasis'];
 
 // Pages where the sheet must never pop up on its own.
 const QUIET_PATHS = ['/welcome', '/login', '/signup', '/forgot-password', '/reset-password', '/verify-email'];
@@ -37,6 +39,9 @@ export const TargetSheet: React.FC = () => {
   const [date, setDate] = useState('');
   const [busy, setBusy] = useState(false);
   const isAdmin = (user as { role?: string } | null)?.role === 'admin';
+  const live = usePrepCompanies();
+  const ready = live?.length ? live : READY;
+  const soon = SOON.filter((n) => !ready.some((c) => c.name.toLowerCase().startsWith(n.toLowerCase())));
 
   useEffect(() => {
     if (!user || isAdmin) return;
@@ -61,7 +66,7 @@ export const TargetSheet: React.FC = () => {
       <div className="space-y-5 p-5 sm:p-6">
         <p className="text-base text-body">Pick one. Your plan, tests, readiness and days left will all be for this company.</p>
         <ul className="space-y-2">
-          {READY.map((c) => (
+          {ready.map((c) => (
             <li key={c.slug}>
               <button
                 type="button"
@@ -77,7 +82,7 @@ export const TargetSheet: React.FC = () => {
               </button>
             </li>
           ))}
-          {SOON.map((n) => (
+          {soon.map((n) => (
             <li key={n} className="flex items-center justify-between rounded-card border border-line bg-surface-hover p-4 text-muted">
               <span className="font-semibold">{n}</span><span className="text-sm">Plan coming soon</span>
             </li>

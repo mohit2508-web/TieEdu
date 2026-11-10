@@ -105,9 +105,14 @@ export function derivePageContent(db: any, company: any): PageContent {
     (Array.isArray(db.skills) ? db.skills : []).filter((s: any) => s?.status === 'active').map((s: any) => s.slug)
   );
   const skillsFor = (r: RoundKey | null) => (r ? ROUND_SKILLS[r].filter((x) => skillSlugs.has(x)).slice(0, 3) : []);
-  const modulesFor = (r: RoundKey | null) =>
+  // `raw`: the pipeline's own round type, for rounds outside the four keys (TCS "Coding", "Managerial").
+  // A module filed under such a round belongs to that round only (TCS Managerial is not HR).
+  const ownRounds = new Set(pipeline.map((p: any) => String(p.round_type || '')).filter((x: string) => x && !asRound(x)));
+  const modulesFor = (r: RoundKey | null, raw?: string) =>
     modules
       .filter((m) => {
+        const mRaw = String(m.round_type || '');
+        if (ownRounds.has(mRaw)) return !r && raw === mRaw;
         const mr = moduleRound(m);
         if (r && mr === r) return true;
         // Last resort for a module with no type at all: its own title names the round.
@@ -151,6 +156,8 @@ export function derivePageContent(db: any, company: any): PageContent {
     const skills = skillsFor(st.key);
     const p = st.step || {};
     const useMock = !!companyMock && !mockUsed && ['mcq', 'pseudocode'].includes(p.test_type);
+    // A mock that ends with a coding section (TCS Part B) is also the test for the coding round.
+    const mockCoding = !useMock && !!companyMock?.has_coding && p.test_type === 'coding';
     // Interview rounds are practised in the mock interview, not a quiz.
     const interview = !useMock && ['live_interview', 'video_interview'].includes(p.test_type);
     if (useMock) mockUsed = true;
@@ -174,15 +181,16 @@ export function derivePageContent(db: any, company: any): PageContent {
       test_type: p.test_type || null,
       weight: typeof p.weight === 'number' ? p.weight : null,
       train_text: topics.length ? `${topics.join(', ')}.` : st.train || 'Questions from this round, with worked answers.',
-      module_ids: modulesFor(st.key),
+      module_ids: modulesFor(st.key, p.round_type ? String(p.round_type) : undefined),
       test_text: useMock
-        ? `The full ${companyMock.name} in the real pattern, ${companyMock.totalQuestions} questions in ${companyMock.avgCompletionTime} minutes. Timed, in secure mode.`
+        ? `The full ${companyMock.name} in the real pattern, ${companyMock.totalQuestions} questions${companyMock.has_coding ? ' plus the coding round' : ''} in ${companyMock.avgCompletionTime} minutes. Timed, in secure mode.`
+        : mockCoding ? `The ${companyMock.name} ends with this round: the coding problems, timed, after the MCQ sections.`
         : interview ? 'Practise answering out loud in a mock interview, then compare with the model answers above.'
         : skills.length ? 'A free skill test on this round’s topics. Timed, in secure mode.' : '',
-      test_label: useMock ? 'Start the full mock' : interview ? 'Start a mock interview' : skills.length ? 'Take the skill test' : '',
-      test_href: useMock ? `/skill-test/${companyMock.slug}` : interview ? '/mock-interview' : skills.length ? `/skill-test/${skills[0]}` : '',
+      test_label: useMock || mockCoding ? 'Start the full mock' : interview ? 'Start a mock interview' : skills.length ? 'Take the skill test' : '',
+      test_href: useMock || mockCoding ? `/skill-test/${companyMock.slug}` : interview ? '/mock-interview' : skills.length ? `/skill-test/${skills[0]}` : '',
       skill_slugs: skills,
-      track_text: useMock ? 'Take the mock to see your weakest sections here.' : interview ? 'Answer quality over attempts, from your mock interviews.' : skills.length ? 'Take the skill test to see your weakest topics here.' : '',
+      track_text: mockCoding ? 'After the mock, mark each problem solved, partly solved or not solved. Your coding score shows here.' : useMock ? 'Take the mock to see your weakest sections here.' : interview ? 'Answer quality over attempts, from your mock interviews.' : skills.length ? 'Take the skill test to see your weakest topics here.' : '',
       tip: '',
     };
   });
@@ -270,13 +278,16 @@ export function derivePageContent(db: any, company: any): PageContent {
         eligibility_title: 'Eligibility',
         rows,
         apply_title: 'How to apply',
-        steps: [
+        // The owner's own steps when the profile has them; else the generic four.
+        steps: Array.isArray(prof.apply_steps) && prof.apply_steps.length
+          ? prof.apply_steps.slice(0, 6).map((x: any, i: number) => ({ id: `ap${i + 1}`, title: x.title, body: x.body || '', link_label: x.link_label || '', link_href: x.link_href || '' }))
+          : [
           { id: 'ap1', title: 'Register', body: company.careers_link ? 'On the official careers page, or through your college placement cell.' : 'Through your college placement cell or the official listing.', link_label: company.careers_link ? 'Official careers page' : '', link_href: company.careers_link || '' },
           { id: 'ap2', title: 'Get your test invite', body: 'Check your email, including spam.', link_label: '', link_href: '' },
           { id: 'ap3', title: 'Clear the rounds', body: roundStations.map((r) => r.title).join(', ') + '.', link_label: '', link_href: '' },
           { id: 'ap4', title: 'Offer and onboarding', body: prof.training ? String(prof.training) : 'Read the offer letter before you accept.', link_label: '', link_href: '' },
-        ],
-        last_confirmed: company.fact_checked_at ? String(company.fact_checked_at).slice(0, 10) : '',
+          ],
+        last_confirmed: String((pipeline[0]?.pattern_checked_at) || company.fact_checked_at || '').slice(0, 10),
         source_label: prof.source || '',
         source_url: '',
       })
@@ -287,7 +298,7 @@ export function derivePageContent(db: any, company: any): PageContent {
         sec('role_compare', {
           title: 'Which role should you aim for?',
           picker_label: 'Aim for',
-          roles: roles.map((r, i) => ({ id: `r${i}`, title: r.title, short: r.title, ctc: r.ctc || '', stamp: company.fact_checked_at ? 'verified' : 'being_verified' })),
+          roles: roles.map((r, i) => ({ id: `r${i}`, title: r.title, short: r.title, ctc: r.ctc || '', stamp: company.fact_checked_at && sources.ctc ? 'verified' : 'being_verified' })),
           rows: [{ id: 'rw1', attribute: 'What gets you there', role_1: 'Clear the standard rounds', role_2: prof.higher_package || '', role_3: roles[2] ? prof.higher_package || '' : '' }],
         })
       );
@@ -297,8 +308,13 @@ export function derivePageContent(db: any, company: any): PageContent {
       prof.bond && ['Is there a bond or service agreement?', prof.bond],
       prof.training && ['What training happens after joining?', prof.training],
       prof.hiring_window && ['When does hiring happen?', prof.hiring_window],
+      ...(Array.isArray(prof.faq) ? prof.faq.map((x: any) => [x.q, x.a]) : []),
       prof.note && ['How reliable is this information?', `${prof.note} Always confirm in the official notice and your offer letter.`],
     ].filter(Boolean) as string[][];
+    // The owner's notes (e.g. "two NQTs", the drive timeline, the 90-day plan) as text blocks.
+    for (const n of Array.isArray(prof.page_notes) ? prof.page_notes : []) {
+      if (n?.title && n?.body) sections.push(sec('rich_text', { title: String(n.title), tone: n.tone || 'plain', body: String(n.body) }));
+    }
     if (faq.length) sections.push(sec('faq', { title: 'Questions students ask', items: faq.map(([q, a], i) => ({ id: `fq${i}`, q, a })) }));
   }
 

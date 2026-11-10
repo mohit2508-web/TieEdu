@@ -342,7 +342,7 @@ export function buildGuide(c: any, topic: GuideTopic): Guide | null {
             heading: 'How the days are split',
             table: {
               head: ['Section', 'Questions in the test', 'Share of your plan'],
-              rows: prep!.sections.map((s) => [s.name, String(s.weight), `${Math.round((s.weight / total) * 100)}%`]),
+              rows: prep!.sections.map((s) => [s.name, s.questions || String(s.weight), `${Math.round((s.weight / total) * 100)}%`]),
             },
           },
           { heading: 'Set your test date', paragraphs: [`Tell the plan your test date and it re-splits the days for you. No date? It uses ${prep!.defaultDays} days.`] },

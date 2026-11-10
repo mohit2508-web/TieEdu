@@ -8,11 +8,14 @@
 import { isMember } from './festival';
 import { MPHASIS_BANK } from '../data/companyTests/mphasis';
 import { MPHASIS_LESSONS } from '../data/interviewPrep/mphasisLessons';
+import { TCS_NQT_BANK } from '../data/companyTests/tcsNqt';
+import { TCS_NQT_LESSONS } from '../data/interviewPrep/tcsNqtLessons';
 import { MILESTONES, WIPRO_IOS_SLUG, curriculumDays } from '../data/wiproIOS';
 import { LABS, WIPRO_IOS_PACK, type Lab } from '../data/wiproIOS/labs';
 import { pulseOf, studentView } from './pulse/store';
 
-export interface PrepSection { key: string; name: string; weight: number }
+/** weight: questions in the real test (splits the days and the readiness score); questions: label when it is not a count. */
+export interface PrepSection { key: string; name: string; weight: number; questions?: string }
 
 /**
  * A fixed course calendar instead of the generated Learn/Strengthen/Final plan
@@ -32,10 +35,16 @@ interface PrepConfig {
   schedule?: PrepSchedule; labels?: Partial<PrepLabels>;
   /** Hands-on labs tracked in Project Pulse (Lab tab). */
   labs?: { pack: string; list: Lab[] };
+  /** "Which company are you preparing for?" picker: display name and one-line summary. */
+  target?: { name: string; meta: string };
+  /** What the prep pack holds, for the buy sheet (default: built from the content counts). */
+  pack?: string[];
 }
 
 /** Mphasis prep turns on once its lessons and a full mock's worth of questions exist. */
 const MPHASIS_READY = MPHASIS_LESSONS.length > 0 && MPHASIS_BANK.length >= 75;
+/** TCS NQT prep turns on once its lessons and a full mock's worth of MCQs (20+25+20+15) exist. */
+export const TCS_NQT_READY = TCS_NQT_LESSONS.length > 0 && TCS_NQT_BANK.length >= 80;
 
 export const PREP_COMPANIES: Record<string, PrepConfig> = {
   'infosys-systems-engineer': {
@@ -49,6 +58,14 @@ export const PREP_COMPANIES: Record<string, PrepConfig> = {
     lessonModule: 'mod-prep-infosys-se-oa',
     interviewModules: ['mod-prep-infosys-se-tech', 'mod-prep-infosys-se-hr'],
     defaultDays: 50,
+    target: { name: 'Infosys Systems Engineer (SE)', meta: 'Online test 54 Qs · Technical · HR · ₹3.6–4.2 LPA' },
+    pack: [
+      '25 topic lessons with worked examples and practice questions',
+      '5 section tests (Math, Reasoning, Verbal, Pseudocode, Puzzle), unlimited retakes',
+      'Unlimited full mocks: 54 questions, real Infosys pattern',
+      'Day-by-day plan to your test date, readiness score and weak-area fix list',
+      '20 technical and 12 HR interview questions with model answers',
+    ],
   },
   // Free program on the owner's course calendar; sections are the milestones.
   [WIPRO_IOS_SLUG]: {
@@ -58,6 +75,7 @@ export const PREP_COMPANIES: Record<string, PrepConfig> = {
     defaultDays: 45,
     schedule: { days: curriculumDays(), milestones: MILESTONES },
     labs: { pack: WIPRO_IOS_PACK, list: LABS },
+    target: { name: 'Wipro iOS Developer Training (Swift)', meta: 'Free · 12 modules · 4 milestone tests · full course mock' },
     labels: {
       section_tests: 'Milestone tests', section_test: 'milestone test', full_mock: 'Full course mock',
       mock_blurb: 'One timed section per milestone, fresh questions every attempt.',
@@ -75,6 +93,24 @@ export const PREP_COMPANIES: Record<string, PrepConfig> = {
       lessonModule: 'mod-prep-mphasis-oa',
       interviewModules: ['mod-prep-mphasis-tech', 'mod-prep-mphasis-hr'],
       defaultDays: 45,
+      target: { name: 'Mphasis Software Engineer', meta: 'Online test 75 Qs · Coding · Technical · HR · ₹4.25–6.25 LPA' },
+    },
+  } : {}),
+  // TCS NQT (owner's 2027 guide): Part A + Part B MCQ sections, and the coding round scored from the mock's coding section.
+  ...(TCS_NQT_READY ? {
+    'tcs-nqt': {
+      sections: [
+        { key: 'numerical', name: 'Numerical Ability', weight: 20 },
+        { key: 'verbal', name: 'Verbal Ability', weight: 25 },
+        { key: 'reasoning', name: 'Reasoning Ability', weight: 20 },
+        { key: 'advanced', name: 'Advanced Quant & Reasoning', weight: 15 },
+        { key: 'coding', name: 'Advanced Coding', weight: 20, questions: '2 problems' },
+      ],
+      lessonModule: 'mod-prep-tcs-nqt-oa',
+      interviewModules: ['mod-prep-tcs-nqt-tech', 'mod-prep-tcs-nqt-managerial', 'mod-prep-tcs-nqt-hr'],
+      defaultDays: 90,
+      target: { name: 'TCS NQT (Ninja / Digital / Prime)', meta: 'NQT 190 min · Part A + Part B coding · 3 interviews · ~₹3.3–11.5 LPA' },
+      labels: { mock_blurb: 'Part A and Part B in the real order, 190 minutes, with the coding round at the end.' },
     },
   } : {}),
 };
@@ -83,9 +119,14 @@ export const PREP_COMPANIES: Record<string, PrepConfig> = {
 const LESSON_SECTION: Record<string, string> = {
   math: 'math', reasoning: 'reasoning', verbal: 'verbal', pseudocode: 'pseudocode', puzzles: 'puzzle', email: 'verbal',
   quant: 'quant', programming: 'programming', coding: 'programming', svar: 'verbal',
+  numerical: 'numerical', advanced: 'advanced',
   m1: 'm1', m2: 'm2', m3: 'm3', m4: 'm4', final: 'final',
 };
-const lessonSection = (title: string) => LESSON_SECTION[(title.split(':')[0] || '').trim().toLowerCase()] || 'verbal';
+/** A section key the company itself has wins ("Coding" is its own section for TCS, Programming for Mphasis). */
+const lessonSection = (title: string, own: PrepSection[] = []) => {
+  const head = (title.split(':')[0] || '').trim().toLowerCase();
+  return own.some((s) => s.key === head) ? head : LESSON_SECTION[head] || 'verbal';
+};
 
 const ist = (d = new Date()) => new Date(d.getTime() + 5.5 * 3600000).toISOString().slice(0, 10);
 const addDays = (day: string, n: number) => new Date(new Date(day + 'T00:00:00Z').getTime() + n * 86400000).toISOString().slice(0, 10);
@@ -119,7 +160,7 @@ export function buildPrep(db: any, userId: string, slug: string, owned: boolean)
   // ---- content
   const lessonMod = (company.modules || []).find((m: any) => m.id === cfg.lessonModule);
   const lessons = (lessonMod?.items || []).map((it: any) => ({
-    id: it.id, title: String(it.question_text || ''), section: lessonSection(String(it.question_text || '')), done: p.lessons_done.includes(it.id), free: !!it.is_free_preview,
+    id: it.id, title: String(it.question_text || ''), section: lessonSection(String(it.question_text || ''), cfg.sections), done: p.lessons_done.includes(it.id), free: !!it.is_free_preview,
   }));
   const skills = (db.skills || []).filter((s: any) => s.company_slug === slug && s.status === 'active');
   const fullMock = skills.find((s: any) => s.prep_role !== 'sectional');
@@ -138,6 +179,9 @@ export function buildPrep(db: any, userId: string, slug: string, owned: boolean)
       if (!key) continue;
       (hist[key] = hist[key] || []).push(Number(tp.percentage) || 0);
     }
+    // The mock's coding section (no runner): the student's own marks, solved 100 · partly 50 · not solved 0.
+    const marks: any[] = Array.isArray(a.coding_self) ? a.coding_self : [];
+    if (marks.length) (hist.coding = hist.coding || []).push(Math.round(marks.reduce((n, m) => n + (m.status === 'solved' ? 100 : m.status === 'partial' ? 50 : 0), 0) / marks.length));
   }
   const mockAttempts = attempts.filter((a: any) => asmBySkill.get(a.assessmentId) === fullMock?.id);
 
@@ -196,7 +240,8 @@ export function buildPrep(db: any, userId: string, slug: string, owned: boolean)
   const order = cfg.sections.map((s) => s.key);
   const queue = order.flatMap((k) => [
     ...lessons.filter((l: any) => l.section === k).map((l: any): Item => ({ kind: 'lesson', ref: l.id, title: l.title, done: l.done })),
-    { kind: 'sectional' as const, ref: sectional[k]?.slug || '', title: `${cfg.sections.find((s) => s.key === k)!.name} test`, done: (hist[k] || []).length > 0 },
+    // A section with no sectional test of its own (TCS coding) is practised in the full mock.
+    ...(sectional[k] || k !== 'coding' ? [{ kind: 'sectional' as const, ref: sectional[k]?.slug || '', title: `${cfg.sections.find((s) => s.key === k)!.name} test`, done: (hist[k] || []).length > 0 }] : []),
   ]);
   const perDay = Math.max(1, Math.ceil(queue.length / Math.max(1, learnDays)));
   let qi = 0;
@@ -205,12 +250,12 @@ export function buildPrep(db: any, userId: string, slug: string, owned: boolean)
     const phase = d < learnDays ? 'Learn' : d < learnDays + strengthenDays ? 'Strengthen' : 'Final';
     const items: Item[] = [];
     if (phase === 'Learn') { for (let k = 0; k < perDay && qi < queue.length; k++) items.push(queue[qi++]); }
-    if ((d + 1) % 7 === 0 || d === totalDays - 1) items.push({ kind: 'mock', ref: fullMock?.slug || '', title: `Full mock: ${wTotal} Qs, real pattern`, done: mockAttempts.some((a: any) => String(a.submittedAt || '').slice(0, 10) >= date) });
+    if ((d + 1) % 7 === 0 || d === totalDays - 1) items.push({ kind: 'mock', ref: fullMock?.slug || '', title: `Full mock: ${Number(fullMock?.totalQuestions) || wTotal} Qs${fullMock?.has_coding ? ' + coding' : ''}, real pattern`, done: mockAttempts.some((a: any) => String(a.submittedAt || '').slice(0, 10) >= date) });
     if (phase !== 'Learn' && items.length < 2) {
       const target = phase === 'Strengthen' ? weak : sections[d % sections.length];
       items.push({ kind: 'revision', ref: target.test_slug || '', title: `Revision test: ${target.name}`, done: false });
     }
-    if (phase === 'Final' && d >= totalDays - 3) items.push({ kind: 'interview', ref: cfg.interviewModules[0], title: 'Interview prep: technical and HR answers', done: false });
+    if (phase === 'Final' && d >= totalDays - 3) items.push({ kind: 'interview', ref: cfg.interviewModules[0], title: cfg.interviewModules.length > 2 ? 'Interview prep: technical, managerial and HR answers' : 'Interview prep: technical and HR answers', done: false });
     if (!items.length) items.push({ kind: 'revision', ref: weak.test_slug || '', title: `Revision: ${weak.name}`, done: false });
     plan.push({ day: d + 1, date, phase, items });
   }

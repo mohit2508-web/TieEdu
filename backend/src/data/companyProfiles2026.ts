@@ -25,6 +25,14 @@ export interface Profile {
   syllabus?: Array<[string, string[]]>;
   /** Free program: every lesson and test is open to every student (no pack). */
   is_free?: boolean;
+  /** CTC figures are third-party estimates: shown, never stamped verified. */
+  ctc_estimate?: boolean;
+  /** How-to-apply steps for the company page: [title, detail, link label?, link?]. */
+  apply_steps?: Array<[string, string, string?, string?]>;
+  /** Extra text blocks on the company page (markdown body). */
+  page_notes?: Array<{ title: string; tone: 'plain' | 'note' | 'tip' | 'warning'; body: string }>;
+  /** Extra FAQ entries for the company page: [question, answer]. */
+  faq?: Array<[string, string]>;
 }
 
 const APT = ['Quant', 'Logical reasoning', 'Verbal'];
@@ -58,24 +66,103 @@ export const PROFILES: Profile[] = [
   {
     slug: 'tcs-nqt', company: 'TCS', name: 'TCS — NQT', industry: 'IT Services & Consulting',
     tagline: 'One test, three tracks: Ninja, Digital, Prime',
-    about: "Flagship IT services company of the Tata Group and India's largest IT employer (~5.98 lakh people). Hires engineering freshers through the National Qualifier Test (NQT), a single integrated test whose score routes candidates to Ninja, Digital or Prime interviews.",
-    hq: 'Mumbai, India', founded: '1968', size: '~598,056', careers: 'https://www.tcsion.com/hub/national-qualifier-test/',
-    tags: ['Ninja ₹3.36 LPA', 'Digital ₹7 LPA', 'Prime ₹9–11.5 LPA', 'NQT 190 min', 'PYQs', 'Cheatsheets'],
+    about: "Flagship IT services company of the Tata Group and India's largest IT employer (~5.98 lakh people). Hires engineering freshers through the TCS NQT hiring drive: one 190-minute test whose score decides whether you are called for a Ninja, Digital or Prime interview. Not to be confused with the paid TCS iON NQT, a scorecard you can use to apply to many companies.",
+    hq: 'Mumbai, India', founded: '1968', size: '~598,056', careers: 'https://nextstep.tcs.com',
+    tags: ['Ninja ~₹3.3–3.6 LPA', 'Digital ~₹7–7.5 LPA', 'Prime ~₹9–11.5 LPA', 'NQT 190 min', 'Coding in Part B'],
     program_type: 'Mass hiring — one integrated test, three pay tiers',
-    roles: [['Ninja', '₹3.36 LPA'], ['Digital', '₹7.0–7.3 LPA'], ['Prime', '₹9.09–9.3 LPA (UG)']], ctc: [3.36, 9.3],
-    elig: { degrees: 'B.E./B.Tech, M.E./M.Tech, MCA, M.Sc', batches: '2024, 2025 and 2026 graduates', cutoff: '60% throughout (10th, 12th/diploma, graduation) — enforced at offer stage', backlogs: 'No active backlogs', gap: 'Must be declared and justified; check the current notice' },
+    roles: [['Ninja', '~₹3.3–3.6 LPA'], ['Digital', '~₹7–7.5 LPA'], ['Prime', '~₹9–11.5 LPA']], ctc: [3.3, 11.5], ctc_estimate: true,
+    elig: {
+      degrees: 'B.E./B.Tech, M.E./M.Tech, MCA and M.Sc. in past drives',
+      batches: '2027 is the target batch, but each drive names its own batches (the Feb 2026 drive covered 2024, 2025 and 2026)',
+      cutoff: 'About 60% or 6.0 CGPA throughout academics (10th, 12th/diploma, graduation)',
+      backlogs: 'Rules differ by drive: the 2027 priority-institute notice allowed at most one; other drives asked for none active at joining',
+      gap: 'Must be declared and justified; check the current notice',
+    },
     rounds: [
-      ['NQT Part A — Foundation', 'OA', 'mcq', undefined, 75, true, ['Numerical ability', 'Verbal ability', 'Reasoning']],
-      ['NQT Part B — Advanced', 'Coding', 'coding', undefined, 115, undefined, ['Advanced quant & reasoning', 'Advanced coding']],
-      ['Technical interview', 'Technical', 'live_interview', undefined, undefined, undefined, TECH_IV],
-      ['Managerial interview', 'Managerial', 'live_interview', undefined, undefined, undefined, ['Situational questions', 'Teamwork']],
-      ['HR interview', 'HR', 'live_interview', undefined, undefined, undefined, HR_IV],
+      ['NQT Part A — Foundation', 'OA', 'mcq', 65, 75, true, ['Numerical ability', 'Verbal ability', 'Reasoning ability']],
+      ['NQT Part B — Advanced', 'Coding', 'coding', undefined, 115, undefined, ['Advanced quant & reasoning', 'Advanced coding (2 problems)']],
+      ['Technical interview', 'Technical', 'live_interview', undefined, undefined, undefined, ['Your coding language', 'OOP', 'DBMS & SQL', 'OS & networks', 'DSA', 'Project walk-through']],
+      ['Managerial interview', 'Managerial', 'live_interview', undefined, undefined, undefined, ['Situational questions', 'Teamwork and conflict', 'Willingness to relocate and learn']],
+      ['HR interview', 'HR', 'live_interview', undefined, undefined, undefined, ['Introduction', 'Relocation and shifts', 'Documents', 'Service agreement']],
     ],
-    higher: 'Advanced section performance (especially coding) qualifies you for Digital or Prime interviews',
+    oa_pattern: [
+      ['Part A · Numerical Ability', 'About 20', 25, 'Easy–Medium'],
+      ['Part A · Verbal Ability', 'About 25', 25, 'Easy–Medium'],
+      ['Part A · Reasoning Ability', 'About 20', 25, 'Medium'],
+      ['Part B · Advanced Quantitative & Reasoning', 'About 15', 25, 'Medium–High'],
+      ['Part B · Advanced Coding', '2 problems', 90, 'Medium–High'],
+    ],
+    syllabus: [
+      ['Part A · Numerical Ability', [
+        'Number system: divisibility, HCF & LCM, remainders, unit digits',
+        'Arithmetic: percentages, profit and loss, simple & compound interest, ratio & proportion, averages, mixtures & alligations',
+        'Time & work, pipes & cisterns; time, speed & distance, trains, boats & streams',
+        'Permutations & combinations, probability',
+        'Mensuration, progressions (AP/GP), basic algebra',
+        'Data interpretation: tables, bar, line and pie charts',
+      ]],
+      ['Part A · Verbal Ability', [
+        'Reading comprehension',
+        'Sentence completion and fill in the blanks',
+        'Error spotting and sentence correction',
+        'Para jumbles (sentence ordering)',
+        'Vocabulary: synonyms, antonyms, word usage',
+      ]],
+      ['Part A · Reasoning Ability', [
+        'Number and letter series, coding-decoding',
+        'Blood relations, direction sense',
+        'Seating arrangements and puzzles',
+        'Syllogisms, statements and conclusions',
+        'Data sufficiency, visual / non-verbal reasoning',
+      ]],
+      ['Part B · Advanced Quantitative & Reasoning', [
+        'Harder number theory, P&C and probability',
+        'Geometry and mensuration',
+        'Multi-step data interpretation',
+        'Complex arrangements, cubes and logical puzzles',
+      ]],
+      ['Part B · Advanced Coding (C, C++, Java or Python)', [
+        'Arrays and strings: two pointers, sliding window, prefix sums',
+        'Hashing: counting, frequency maps, duplicates',
+        'Sorting and searching, binary search on the answer',
+        'Recursion and basic dynamic programming',
+        'Math logic: primes, GCD, digit problems, number patterns',
+        'Reading input exactly as given, and printing output in the exact format',
+      ]],
+    ],
+    higher: 'Part B (Advanced) decides it: skip it and you are only in the running for Ninja; strong coding plus advanced aptitude gets a Digital interview, and the top of the score range gets Prime',
     difficulty: 3, bond: 'Not stated in current notices — read the offer letter', training: 'Initial Learning Program (ILP) after joining',
-    window: 'NQT runs several cycles a year; campus drives Aug–Dec',
-    seo: ['TCS NQT Fresher Hiring: Ninja, Digital & Prime CTC', 'TCS NQT for B.Tech CSE freshers: Ninja at ₹3.36 LPA, Digital at ₹7 LPA, Prime at ₹9–11.5 LPA. 190-min NQT, then technical, managerial and HR interview.'],
-    confidence: 'high', note: 'High for pattern and tiers; CTC widely reported, not an official pay sheet.',
+    window: 'The last three hiring drives opened in Feb or Mar. The 2027 drive is expected around Feb–Mar 2027 (not confirmed). Priority institutes may get an earlier college-routed NQT',
+    seo: ['TCS NQT 2027: Exam Pattern, Eligibility, Ninja/Digital/Prime', 'TCS NQT 2027 for B.Tech freshers: 190-minute test (Part A Foundation 75 min, Part B Advanced 115 min with coding), eligibility, registration on NextStep, and Ninja, Digital and Prime pay.'],
+    confidence: 'high', pattern_checked: '2026-11-10',
+    note: "Pattern, eligibility and dates from the owner's TCS NQT 2027 guide (10 Nov 2026), based on recent TCS notices. Section question counts are reported, not official. Pay figures are third-party estimates from the 2026 cycle (UG hires); TCS does not publish a CTC for the NQT drive.",
+    apply_steps: [
+      ['Use TCS NextStep', 'Register under the “IT” category, from TCS’s own pages only. careers.tcs.com is not the registration portal.', 'TCS NextStep', 'https://nextstep.tcs.com'],
+      ['Use a personal email you check daily', 'Enter your academic details exactly. TCS warns against misrepresentation.'],
+      ['Complete the NQT application', 'A NextStep account alone does not finish it. Apply to the NQT drive itself.'],
+      ['Book your slot', 'In 2026 the test was in person at TCS iON centres. Watch your email for the hall ticket.'],
+      ['Fix errors before the closing date', 'Then carry your hall ticket and a valid photo ID to the centre.'],
+    ],
+    page_notes: [
+      {
+        title: 'There are two “NQTs”. Don’t mix them up.', tone: 'note',
+        body: '**TCS NQT hiring drive** · free · hires for TCS\n- Apply on TCS NextStep, under the “IT” category\n- One drive at a time, announced by TCS\n- Leads to Ninja, Digital or Prime interviews at TCS\n\n**TCS iON NQT** · paid · a scorecard\n- Apply on tcsion.com\n- Runs every 2–4 weeks, all year\n- A score valid for 2 years that you use to apply to many companies, TCS included\n- Open to pre-final and final-year students passing out 2021–2027, aged 17 to 30\n\nThis page covers the **TCS hiring drive**. The iON score is a strong backup, and a good rehearsal before the drive.',
+      },
+      {
+        title: 'The 2027 drive is not open yet', tone: 'warning',
+        body: 'How the 2026 cycle ran:\n\n| When | What | Status |\n|---|---|---|\n| 18 Feb – 20 Mar 2026 | Last TCS NQT hiring drive, for batches 2024–2026. Tests from 10 Mar. | Closed |\n| 8 – 15 May 2026 | NQT for 2027-batch students of priority institutes, routed through colleges. Ask your TnP cell. | Closed |\n| Until 12 Nov 2026 | TCS iON NQT cycle (paid scorecard). | Open |\n| **Feb – Mar 2027** | **Expected window for the 2027 drive. Plan for it, then confirm.** | Expected |\n\nAlways confirm dates in the official TCS notice.',
+      },
+      {
+        title: 'Your 90-day plan', tone: 'tip',
+        body: '**Days 1–30 · Build the base.** Quant basics, reasoning patterns, grammar and reading. Pick one coding language and get fluent with loops, arrays and strings.\n\n**Days 31–60 · Go deeper.** Advanced quant and reasoning sets. DSA basics: hashing, recursion, sorting. Solve one or two coding problems a day.\n\n**Days 61–90 · Simulate the test.** A full 190-minute mock every week. Review every wrong answer, then revise only your weak topics.\n\n**Every day:** about 1 hour of aptitude and 2 hours of coding. C, C++, Java and Python have been allowed, so Java is not mandatory.\n\n**4 mistakes that cost offers:** skipping the Advanced section when you want Digital or Prime; watching tutorials instead of solving problems; never sitting a full, timed mock; waiting for the notice before you start.',
+      },
+    ],
+    faq: [
+      ['Is there negative marking in TCS NQT?', 'No negative marking has been reported for the iON NQT, so attempt every question. Check the 2027 notice for the hiring drive.'],
+      ['Which coding languages are allowed?', 'C, C++, Java and Python have been allowed. Pick one and stick with it.'],
+      ['Is Part B compulsory?', 'Only if you want Digital or Prime. Without Part B you are only in the running for Ninja.'],
+      ['Is the test online from home?', 'In 2026 it was held in person at TCS iON centres. Check your hall ticket for the 2027 mode.'],
+    ],
   },
   {
     slug: 'capgemini-exceller', company: 'Capgemini', name: 'Capgemini Exceller', industry: 'IT Services & Consulting',

@@ -117,5 +117,24 @@ export const fetchLesson = async (slug: string, id: string): Promise<LessonView>
   return body as LessonView;
 };
 
-/** Companies with a full Train · Test · Track plan. */
+/** Companies with a full Train · Test · Track plan (fallback until /prep/companies answers). */
 export const PREP_SLUGS = ['infosys-systems-engineer', 'wipro-ios-swift'];
+
+/** A company with a live prep plan: picker line, pack price (real checkout ladder) and pack contents. */
+export interface PrepCompany { slug: string; name: string; meta: string; free: boolean; price: number; pack: string[] }
+let companiesCache: Promise<PrepCompany[]> | null = null;
+export const fetchPrepCompanies = () => {
+  if (!companiesCache) {
+    companiesCache = apiFetch(`${API_BASE_URL}/prep/companies`)
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`Request failed (${r.status})`))))
+      .then((b) => (Array.isArray(b?.companies) ? b.companies : []))
+      .catch((e) => { companiesCache = null; throw e; });
+  }
+  return companiesCache;
+};
+/** The live prep companies; null while loading or when the request failed. */
+export function usePrepCompanies() {
+  const [list, setList] = useState<PrepCompany[] | null>(null);
+  useEffect(() => { fetchPrepCompanies().then(setList).catch(() => setList(null)); }, []);
+  return list;
+}

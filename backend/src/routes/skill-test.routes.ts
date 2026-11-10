@@ -232,6 +232,14 @@ skillTestRouter.post('/attempts/:attemptId/submit', requireAuth, (req: Request, 
     }));
   }
   if (typeof req.body?.timeRemainingSec === 'number') attempt.timeRemainingSec = req.body.timeRemainingSec;
+  // Coding section (no code runner): the student's own mark per problem. Not part of the score; feeds the prep plan.
+  const codingIds = new Set(((assessment as any)?.coding?.problems || []).map((p: any) => p.id));
+  if (Array.isArray(req.body?.coding_self) && codingIds.size) {
+    (attempt as any).coding_self = req.body.coding_self
+      .filter((m: any) => codingIds.has(String(m?.id)) && ['solved', 'partial', 'not'].includes(m?.status))
+      .slice(0, 5)
+      .map((m: any) => ({ id: String(m.id), status: m.status, language: String(m.language || '').slice(0, 12) }));
+  }
 
   // ── Score server-side ──
   const answersByQid: Record<string, any> = {};

@@ -16,7 +16,7 @@ import {
   startAssessmentApi, saveAttemptApi, submitAttemptApi, fetchSkillDetailApi,
   SkillTestAttempt, SafeQuestion,
 } from '@/lib/skillTestApi';
-import { useSections, SectionBar, SectionSubmitSheet, WritingTask, type TestSection, type WritingConfig } from '@/components/skill-test/Sectional';
+import { useSections, SectionBar, SectionSubmitSheet, WritingTask, CodingTask, type TestSection, type WritingConfig, type CodingConfig, type CodingMark } from '@/components/skill-test/Sectional';
 
 import { nameFromSlug, withPageTitle } from '@/components/common/withPageTitle';
 type AnswerState = Record<string, string[]>; // questionId -> selected option indexes (as strings)
@@ -44,6 +44,9 @@ function AssessmentPage() {
   // Sectional mode (company mocks): per-section timers, no going back, optional writing task.
   const [sectionsCfg, setSectionsCfg] = useState<TestSection[] | null>(null);
   const [writingCfg, setWritingCfg] = useState<WritingConfig | null>(null);
+  // Coding section after the MCQ sections (TCS Part B); the student's own marks go in with the submit.
+  const [codingCfg, setCodingCfg] = useState<CodingConfig | null>(null);
+  const codingMarksRef = useRef<CodingMark[] | null>(null);
   const [showSectionSubmit, setShowSectionSubmit] = useState(false);
   const [testTitle, setTestTitle] = useState('');
   const [companySlug, setCompanySlug] = useState('');
@@ -59,6 +62,7 @@ function AssessmentPage() {
         if ((skill as any)?.company_slug) setCompanySlug((skill as any).company_slug);
         if (Array.isArray(a?.sections) && a.sections.length) setSectionsCfg(a.sections);
         if (a?.writing?.tasks?.length) setWritingCfg(a.writing);
+        if (a?.coding?.problems?.length) setCodingCfg(a.coding);
       })
       .catch(() => { /* plain single-timer mode */ });
   }, [slug]);
@@ -134,6 +138,7 @@ function AssessmentPage() {
       timeSpentSec: 0,
     })),
     timeRemainingSec: time,
+    ...(codingMarksRef.current ? { coding_self: codingMarksRef.current } : {}),
   });
 
   const doSubmit = useCallback(async (answersState: AnswerState, time: number) => {
@@ -151,8 +156,10 @@ function AssessmentPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [attempt, submitting, marked, questions, slug]);
 
+  // Secure mode pauses in the coding section so students can run code in their own compiler.
+  const [inCoding, setInCoding] = useState(false);
   const secure = useSecureMode({
-    active: started && !submitting,
+    active: started && !submitting && !inCoding,
     onLimit: () => doSubmit(answeredRef.current, timeLeftRef.current),
   });
 
@@ -161,14 +168,16 @@ function AssessmentPage() {
   const sec = useSections({ attemptId: attempt?.id ?? null, questions, sections: sectionsCfg, active: started && !submitting });
   // A new section opens on its first question.
   useEffect(() => { if (sec.enabled) setCurrent(sec.range[0]); }, [sec.enabled, sec.idx]); // eslint-disable-line react-hooks/exhaustive-deps
-  // All sections closed with no writing task: submit.
+  // All sections closed with no writing or coding task: submit.
   useEffect(() => {
-    if (sec.enabled && sec.done && !writingCfg && started && !submitting) doSubmit(answeredRef.current, timeLeftRef.current);
+    if (sec.enabled && sec.done && !writingCfg && !codingCfg && started && !submitting) doSubmit(answeredRef.current, timeLeftRef.current);
   }, [sec.enabled, sec.done]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { setInCoding(!!(sec.enabled && sec.done && codingCfg)); }, [sec.enabled, sec.done, codingCfg]);
 
   // auto submit when timer hits 0
   useEffect(() => {
-    if (timeLeft === 0 && started && attempt && attempt.status === 'in_progress') {
+    // The coding section runs on its own clock and ends in the self-check.
+    if (timeLeft === 0 && started && !inCoding && attempt && attempt.status === 'in_progress') {
       doSubmit(answeredRef.current, 0);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -244,7 +253,7 @@ function AssessmentPage() {
           {sectionsCfg ? (
             <>
               <p className="mt-1 text-sm text-gray-500">
-                {sectionsCfg.reduce((n, s) => n + s.count, 0)} questions · {sectionsCfg.reduce((n, s) => n + s.minutes, 0)} minutes
+                {sectionsCfg.reduce((n, s) => n + s.count, 0)} questions{codingCfg ? ` + ${codingCfg.count} coding problems` : ''} · {sectionsCfg.reduce((n, s) => n + s.minutes, 0) + (codingCfg?.minutes || 0)} minutes
               </p>
               {/* The real paper's pattern, section by section. */}
               <table className="mt-4 w-full text-left text-sm">
@@ -263,6 +272,13 @@ function AssessmentPage() {
                       <td className="py-2 text-right tabular-nums">{s.minutes} min</td>
                     </tr>
                   ))}
+                  {codingCfg && (
+                    <tr className="border-b border-gray-100">
+                      <td className="py-2 text-gray-900">{String.fromCharCode(65 + sectionsCfg.length)}. {codingCfg.title}</td>
+                      <td className="py-2 text-right tabular-nums">{codingCfg.count}</td>
+                      <td className="py-2 text-right tabular-nums">{codingCfg.minutes} min</td>
+                    </tr>
+                  )}
                   {writingCfg && (
                     <tr>
                       <td className="py-2 text-gray-500" colSpan={3}>Then: {writingCfg.title} (optional, {writingCfg.words[0]}–{writingCfg.words[1]} words)</td>
@@ -274,6 +290,7 @@ function AssessmentPage() {
                 <li>Each section has its own timer. When it ends, the next section opens.</li>
                 <li>A submitted section cannot be reopened.</li>
                 <li>Secure mode: stay in fullscreen. Leaving the test 3 times submits it.</li>
+                {codingCfg && <li>The coding problems come last. Secure mode pauses there, so you can run your code in your own compiler; then mark how each problem went.</li>}
               </ul>
             </>
           ) : (
@@ -285,7 +302,7 @@ function AssessmentPage() {
               <button type="button" onClick={() => setPackOpen(true)} className="btn btn-primary focus-ring mt-3 inline-flex min-h-[44px] px-5">
                 See what&apos;s in the pack
               </button>
-              <BuyPackSheet open={packOpen} onClose={() => setPackOpen(false)} slug={companySlug} name="Infosys SE" what="This test" />
+              <BuyPackSheet open={packOpen} onClose={() => setPackOpen(false)} slug={companySlug} what="This test" />
             </>
           )}
           <button
@@ -307,6 +324,19 @@ function AssessmentPage() {
           <p className="text-gray-600">No questions available for this assessment.</p>
           <Link href={companySlug ? `/prep/${companySlug}` : `/skill-test/${slug}`} className="mt-3 inline-block text-link font-medium">Back</Link>
         </div>
+      </div>
+    );
+  }
+
+  if (sec.enabled && sec.done && codingCfg && attempt) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <CodingTask
+          config={codingCfg}
+          attemptId={attempt.id}
+          submitting={submitting}
+          onSubmit={(marks) => { codingMarksRef.current = marks; doSubmit(answers, timeLeft); }}
+        />
       </div>
     );
   }

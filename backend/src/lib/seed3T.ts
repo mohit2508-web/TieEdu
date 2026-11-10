@@ -20,6 +20,10 @@ import { MPHASIS_TECHNICAL, MPHASIS_HR } from '../data/interviewPrep/mphasis';
 import { MPHASIS_LESSONS, MPHASIS_LESSON_EXTRAS } from '../data/interviewPrep/mphasisLessons';
 import { WIPRO_IOS_BANK, WIPRO_IOS_LESSONS, WIPRO_IOS_LESSON_EXTRAS, WIPRO_IOS_SLUG } from '../data/wiproIOS';
 import { CHEAT_SHEETS } from '../data/wiproIOS/cheatsheets';
+import { TCS_NQT_BANK } from '../data/companyTests/tcsNqt';
+import { TCS_NQT_CODING, CODING_PER_MOCK, CODING_MINUTES, CODING_MIN, type CodingProblem } from '../data/companyTests/tcsNqtCoding';
+import { TCS_NQT_TECHNICAL, TCS_NQT_MANAGERIAL, TCS_NQT_HR } from '../data/interviewPrep/tcsNqt';
+import { TCS_NQT_LESSONS, TCS_NQT_LESSON_EXTRAS } from '../data/interviewPrep/tcsNqtLessons';
 
 export function seedCompanyProfiles(db: any, onlyMissing = false, only?: string[]): { created: number; updated: number } {
   const FACT_CHECKED = '2026-10-27';
@@ -78,8 +82,11 @@ export function seedCompanyProfiles(db: any, onlyMissing = false, only?: string[
       metric_sources: p.confidence === 'low'
         ? (p.pattern_checked ? { rounds: { source: "Owner's exam-pattern document", verified_at: p.pattern_checked } } : {})
         : {
-        ctc: { source: 'Company profiles (prep sites, recent drives)', verified_at: FACT_CHECKED },
-        rounds: { source: 'Company profiles (recent drives)', verified_at: FACT_CHECKED },
+        // Estimated pay is shown but never stamped verified.
+        ...(p.ctc_estimate ? {} : { ctc: { source: 'Company profiles (prep sites, recent drives)', verified_at: FACT_CHECKED } }),
+        rounds: p.pattern_checked
+          ? { source: "Owner's exam-pattern document", verified_at: p.pattern_checked }
+          : { source: 'Company profiles (recent drives)', verified_at: FACT_CHECKED },
         difficulty: { source: 'Editorial estimate', verified_at: FACT_CHECKED },
       },
       profile: {
@@ -96,6 +103,9 @@ export function seedCompanyProfiles(db: any, onlyMissing = false, only?: string[
         source: 'Company profiles, fact-checked 27 Oct 2026',
         ...(p.oa_pattern ? { oa_pattern: p.oa_pattern.map(([section, questions, minutes, difficulty]) => ({ section, questions, minutes, difficulty })) } : {}),
         ...(p.syllabus ? { syllabus: p.syllabus.map(([section, topics]) => ({ section, topics })) } : {}),
+        ...(p.apply_steps ? { apply_steps: p.apply_steps.map(([title, body, link_label, link_href]) => ({ title, body, link_label: link_label || '', link_href: link_href || '' })) } : {}),
+        ...(p.page_notes ? { page_notes: p.page_notes } : {}),
+        ...(p.faq ? { faq: p.faq.map(([q, a]) => ({ q, a })) } : {}),
       },
     };
 
@@ -126,6 +136,12 @@ interface Config {
   stable?: boolean;
   /** Optional, ungraded task shown after the last section (Infosys: an email, 120–150 words). */
   writing?: { title: string; words: [number, number]; tasks: WritingTask[] };
+  /**
+   * Coding section after the MCQ sections (TCS Part B): `count` problems from
+   * the pool in `minutes`. No code runner: the student checks against the
+   * samples and marks each problem. Added only once the pool has `min`.
+   */
+  coding?: { title: string; count: number; minutes: number; min: number; pool: CodingProblem[]; module: string };
 }
 
 const CONFIGS: Record<string, Config> = {
@@ -193,7 +209,42 @@ CONFIGS['wipro-ios'] = {
   ],
 };
 
-const BANKS: Record<string, any[]> = { 'infosys-se': INFOSYS_SE_BANK, mphasis: MPHASIS_BANK, 'wipro-ios': WIPRO_IOS_BANK };
+// TCS NQT (owner's 2027 guide, 2026-11-10): Part A Foundation + Part B Advanced MCQs, then Part B coding.
+CONFIGS['tcs-nqt'] = {
+  slug: 'tcs-nqt-full-mock',
+  name: 'TCS NQT Full Mock',
+  short: 'TCS NQT',
+  company_slug: 'tcs-nqt',
+  description: 'Full TCS NQT mock in the reported 2026 pattern. Part A (Foundation): Numerical 20, Verbal 25, Reasoning 20, 25 minutes each. Part B (Advanced): Advanced Quant & Reasoning 15 in 25 minutes, then 2 coding problems in 90 minutes. 190 minutes, timed, secure mode.',
+  minutes: 100,
+  stable: true,
+  sections: [
+    { key: 'numerical', name: 'Part A · Numerical Ability', count: 20, minutes: 25 },
+    { key: 'verbal', name: 'Part A · Verbal Ability', count: 25, minutes: 25 },
+    { key: 'reasoning', name: 'Part A · Reasoning Ability', count: 20, minutes: 25 },
+    { key: 'advanced', name: 'Part B · Advanced Quant & Reasoning', count: 15, minutes: 25 },
+  ],
+  coding: { title: 'Part B · Advanced Coding', count: CODING_PER_MOCK, minutes: CODING_MINUTES, min: CODING_MIN, pool: TCS_NQT_CODING, module: 'mod-prep-tcs-nqt-coding' },
+};
+
+const BANKS: Record<string, any[]> = { 'infosys-se': INFOSYS_SE_BANK, mphasis: MPHASIS_BANK, 'wipro-ios': WIPRO_IOS_BANK, 'tcs-nqt': TCS_NQT_BANK };
+
+/**
+ * What the test page gets for the coding section: statements and samples only.
+ * Hints and model solutions stay in the Train module (pack content).
+ */
+export function codingSectionOf(cfg: Config): Record<string, unknown> | null {
+  const c = cfg.coding;
+  if (!c || c.pool.length < c.min) return null;
+  return {
+    title: c.title, count: c.count, minutes: c.minutes,
+    problems: c.pool.map((p) => ({
+      id: p.id, title: p.title, difficulty: p.difficulty, topic: p.topic, statement: p.statement,
+      input_format: p.input_format, output_format: p.output_format, constraints: p.constraints, samples: p.samples,
+      solution_href: `/company/${cfg.company_slug}?m=${c.module}&q=${c.module}-${p.id}`,
+    })),
+  };
+}
 
 const md5 = (x: string) => crypto.createHash('md5').update(x).digest('hex').slice(0, 12);
 const bankHash = (bank: any[]) => md5(JSON.stringify(bank));
@@ -239,7 +290,9 @@ export function seedCompanyTest(db: any, key: string, onlyMissing = false): numb
   for (const k of ['skills', 'topics', 'questions', 'assessments']) db[k] = Array.isArray(db[k]) ? db[k] : [];
 
   let skill = db.skills.find((s: any) => s.slug === cfg.slug);
-  const hash = cfg.stable ? bankHash(bank) : undefined;
+  // The coding pool is part of the hash, so new problems reach a live database on the next start.
+  const hash = cfg.stable ? bankHash(cfg.coding ? [bank, cfg.coding.pool] : bank) : undefined;
+  const coding = codingSectionOf(cfg);
   if (skill && onlyMissing && (!cfg.stable || skill.bank_hash === hash)) return 0;
   if (!skill) {
     skill = { id: id('skl'), slug: cfg.slug, created_at: now };
@@ -250,7 +303,8 @@ export function seedCompanyTest(db: any, key: string, onlyMissing = false): numb
     name: cfg.name, category: 'Company mocks', description: cfg.description, shortDescription: `${cfg.name} mock`,
     status: 'active', isPopular: true, certificateAvailable: false, displayOrder: 0,
     tags: ['company', key, cfg.company_slug], totalQuestions: cfg.sections.reduce((n, s) => n + s.count, 0),
-    avgCompletionTime: cfg.minutes, company_slug: cfg.company_slug, prep_role: 'full', updated_at: now,
+    avgCompletionTime: cfg.minutes + (coding ? cfg.coding!.minutes : 0), company_slug: cfg.company_slug, prep_role: 'full',
+    has_coding: !!coding, updated_at: now,
   });
 
   const topicId: Record<string, string> = {};
@@ -277,12 +331,13 @@ export function seedCompanyTest(db: any, key: string, onlyMissing = false): numb
   let asm = db.assessments.find((a: any) => a.skillId === skill.id && a.isDefault);
   if (!asm) { asm = { id: id('asm'), skillId: skill.id, created_at: now }; db.assessments.push(asm); }
   Object.assign(asm, {
-    title: cfg.name, description: cfg.description, durationMinutes: cfg.minutes,
+    title: cfg.name, description: cfg.description, durationMinutes: cfg.minutes + (coding ? cfg.coding!.minutes : 0),
     totalQuestions: cfg.sections.reduce((n, s) => n + s.count, 0), passingScore: 60,
     topicBlueprint: cfg.sections.map((s) => ({ topicId: topicId[s.key], questionCount: s.count })),
     // Sectional mode: the test page runs one timer per section, in this order, with no going back.
     sections: cfg.sections.map((s) => ({ topicId: topicId[s.key], name: s.name, count: s.count, minutes: s.minutes })),
     writing: cfg.writing || null,
+    coding,
     // Section counts decide the paper; no extra difficulty fill on top.
     difficultyBlueprint: { beginner: 0, intermediate: 0, advanced: 0, expert: 0 },
     certificateThresholds: { pass: 60, proficient: 75, advanced: 85, expert: 90 },
@@ -291,7 +346,7 @@ export function seedCompanyTest(db: any, key: string, onlyMissing = false): numb
     shuffleQuestions: false, shuffleOptions: true, showExplanationAfterSubmit: true,
     requireFullScreen: true, tabSwitchLimit: 3,
     instructions: [
-      `${cfg.sections.map((s) => `${s.name}: ${s.count}`).join(' · ')}`,
+      `${cfg.sections.map((s) => `${s.name}: ${s.count}`).join(' · ')}${coding ? ` · ${cfg.coding!.title}: ${cfg.coding!.count} problems` : ''}`,
       'Timed and in secure mode: stay in fullscreen; leaving the test 3 times submits it.',
       'Every attempt draws a fresh set of questions from the bank.',
     ],
@@ -319,6 +374,11 @@ const INFOSYS_LESSONS: LessonSource = {
 const MPHASIS_LESSON_SOURCE: LessonSource = {
   lessons: MPHASIS_LESSONS, extras: MPHASIS_LESSON_EXTRAS, bank: MPHASIS_BANK,
   topic: { Quant: 'quant', Reasoning: 'reasoning', Verbal: 'verbal', Programming: 'programming', Coding: 'programming', SVAR: 'verbal' },
+};
+
+const TCS_NQT_LESSON_SOURCE: LessonSource = {
+  lessons: TCS_NQT_LESSONS, extras: TCS_NQT_LESSON_EXTRAS, bank: TCS_NQT_BANK,
+  topic: { Numerical: 'numerical', Verbal: 'verbal', Reasoning: 'reasoning', Advanced: 'advanced', Coding: 'coding' },
 };
 
 const WIPRO_IOS_LESSON_SOURCE: LessonSource = {
@@ -368,7 +428,31 @@ const LESSON_VERSION = 3;
 /** Free sets: every item readable, nothing in the pack. hash: content hash that replaces LESSON_VERSION for this set. */
 const WIPRO_IOS_HASH = md5(JSON.stringify([WIPRO_IOS_LESSONS, WIPRO_IOS_LESSON_EXTRAS, WIPRO_IOS_BANK, CHEAT_SHEETS]));
 
-const SETS: Array<{ slug: string; id: string; type: string; round: string; title: string; order: number; items: PrepItem[]; lesson?: LessonSource; role: string; free?: boolean; hash?: string }> = [
+const LANG: Array<[keyof CodingProblem['solutions'], string]> = [['c', 'C'], ['cpp', 'C++'], ['java', 'Java'], ['python', 'Python']];
+const FENCE = '`'.repeat(3);
+
+/** One coding problem as a reader item: title line first (all a locked item keeps), then statement, samples, hints, approach, solutions. */
+export function codingMarkdown(p: CodingProblem): string {
+  const block = (x: string, lang = '') => `${FENCE}${lang}\n${x.replace(/\s+$/, '')}\n${FENCE}`;
+  return [
+    `**${p.title}** · ${p.topic} · ${p.difficulty}`,
+    p.statement,
+    `**Input format**\n\n${p.input_format}`,
+    `**Output format**\n\n${p.output_format}`,
+    p.constraints.length ? `**Constraints**\n${p.constraints.map((c) => `- ${c}`).join('\n')}` : '',
+    ...p.samples.map((x, i) => `**Sample ${i + 1}**\n\nInput\n\n${block(x.input)}\n\nOutput\n\n${block(x.output)}${x.explain ? `\n\n${x.explain}` : ''}`),
+    p.hints.length ? `**Hints**\n${p.hints.map((h, i) => `${i + 1}. ${h}`).join('\n')}` : '',
+    `**Approach**\n\n${p.approach}\n\n**Complexity:** ${p.complexity}`,
+    ...LANG.filter(([k]) => p.solutions[k]).map(([k, label]) => `**Solution · ${label}**\n\n${block(p.solutions[k]!, k)}`),
+  ].filter(Boolean).join('\n\n');
+}
+const codingAsItem = (p: CodingProblem): PrepItem => [`Coding: ${p.title}`, p.difficulty, 'high', [p.topic], '', ''];
+
+const SETS: Array<{
+  slug: string; id: string; type: string; round: string; title: string; order: number; items: PrepItem[]; lesson?: LessonSource; role: string; free?: boolean; hash?: string;
+  /** Item markdown that replaces the generated one; itemIds: stable item ids; gated: pack-gated but outside the price ladder. */
+  markdown?: string[]; itemIds?: string[]; gated?: boolean;
+}> = [
   { slug: 'infosys-systems-engineer', id: 'mod-prep-infosys-se-oa', type: 'preparation_guide', round: 'OA', title: 'Online assessment: topic lessons', order: 1, items: LESSONS.map(lessonAsItem), lesson: INFOSYS_LESSONS, role: 'Systems Engineer' },
   { slug: 'infosys-systems-engineer', id: 'mod-prep-infosys-se-tech', type: 'technical_question', round: 'Technical', title: 'Technical interview: questions and model answers', order: 2, items: TECHNICAL, role: 'Systems Engineer' },
   { slug: 'infosys-systems-engineer', id: 'mod-prep-infosys-se-hr', type: 'hr_question', round: 'HR', title: 'HR interview: questions and model answers', order: 3, items: HR, role: 'Systems Engineer' },
@@ -376,6 +460,13 @@ const SETS: Array<{ slug: string; id: string; type: string; round: string; title
   { slug: 'mphasis-freshers', id: 'mod-prep-mphasis-oa', type: 'preparation_guide', round: 'OA', title: 'Online assessment: topic lessons', order: 1, items: MPHASIS_LESSONS.map(lessonAsItem), lesson: MPHASIS_LESSON_SOURCE, role: 'Software Engineer' },
   { slug: 'mphasis-freshers', id: 'mod-prep-mphasis-tech', type: 'technical_question', round: 'Technical', title: 'Technical interview: questions and model answers', order: 2, items: MPHASIS_TECHNICAL, role: 'Software Engineer' },
   { slug: 'mphasis-freshers', id: 'mod-prep-mphasis-hr', type: 'hr_question', round: 'HR', title: 'HR interview: questions and model answers', order: 3, items: MPHASIS_HR, role: 'Software Engineer' },
+  // TCS NQT (owner, 2026-11-10): empty until the owner's content lands; sets with no items are skipped.
+  // Coding problems are pack-gated like lessons (outside the price ladder); the 3 interview rounds are the paid modules.
+  { slug: 'tcs-nqt', id: 'mod-prep-tcs-nqt-oa', type: 'preparation_guide', round: 'OA', title: 'NQT Parts A and B: topic lessons', order: 1, items: TCS_NQT_LESSONS.map(lessonAsItem), lesson: TCS_NQT_LESSON_SOURCE, role: 'Ninja / Digital / Prime' },
+  { slug: 'tcs-nqt', id: 'mod-prep-tcs-nqt-coding', type: 'dsa_question', round: 'Coding', title: 'Coding round: problems and solutions', order: 2, items: TCS_NQT_CODING.map(codingAsItem), markdown: TCS_NQT_CODING.map(codingMarkdown), itemIds: TCS_NQT_CODING.map((p) => p.id), gated: true, hash: md5(JSON.stringify(TCS_NQT_CODING)), role: 'Digital / Prime' },
+  { slug: 'tcs-nqt', id: 'mod-prep-tcs-nqt-tech', type: 'technical_question', round: 'Technical', title: 'Technical interview: questions and model answers', order: 3, items: TCS_NQT_TECHNICAL, role: 'Ninja / Digital / Prime' },
+  { slug: 'tcs-nqt', id: 'mod-prep-tcs-nqt-managerial', type: 'hr_question', round: 'Managerial', title: 'Managerial interview: questions and model answers', order: 4, items: TCS_NQT_MANAGERIAL, role: 'Ninja / Digital / Prime' },
+  { slug: 'tcs-nqt', id: 'mod-prep-tcs-nqt-hr', type: 'hr_question', round: 'HR', title: 'HR interview: questions and model answers', order: 5, items: TCS_NQT_HR, role: 'Ninja / Digital / Prime' },
   // Wipro iOS (owner, 2026-11-04): free program, every lesson open.
   { slug: WIPRO_IOS_SLUG, id: 'mod-prep-wipro-ios-lessons', type: 'preparation_guide', round: 'OA', title: 'iOS training: topic lessons', order: 1, items: WIPRO_IOS_LESSONS.map(lessonAsItem), lesson: WIPRO_IOS_LESSON_SOURCE, role: 'iOS Developer', free: true, hash: WIPRO_IOS_HASH },
 ];
@@ -402,15 +493,15 @@ export function seedInterviewPrep(db: any, onlyMissing = false): number {
       id: set.id, company_id: company.id, module_type: set.type, round_type: set.round, title: set.title,
       // Topic lessons are free (design: Free = topic notes); interview answers are in the pack, first FREE_PREVIEW readable.
       // Lessons stay out of the price ladder (is_premium false) but are pack-gated: the first lesson of each section is free.
-      sort_order: set.order, is_premium: !set.free && !set.lesson, pack_gated: !set.free && !!set.lesson,
+      sort_order: set.order, is_premium: !set.free && !set.lesson && !set.gated, pack_gated: !set.free && (!!set.lesson || !!set.gated),
       content_version: set.lesson && !set.hash ? LESSON_VERSION : undefined, content_hash: set.hash,
       items: set.items.map((it, i) => ({
         // Hash-versioned sets key items by title, so a lesson inserted mid-list keeps every student's "done" ticks.
-        id: set.hash ? `${set.id}-${md5(it[0])}` : `${set.id}-${i + 1}`, module_id: set.id, question_text: it[0],
+        id: set.itemIds ? `${set.id}-${set.itemIds[i]}` : set.hash ? `${set.id}-${md5(it[0])}` : `${set.id}-${i + 1}`, module_id: set.id, question_text: it[0],
         is_free_preview: set.free || (set.lesson ? firstOfSection.has(i) : i < FREE_PREVIEW), lesson: set.lesson ? rich[i] : undefined,
         difficulty: it[1], role_tag: set.role, frequency_tag: it[2], round_type: set.round, status: 'published',
         comments_count: 0, upvotes_count: 0,
-        blocks: [{ id: `${set.id}-${i + 1}-b1`, block_type: 'markdown', block_order: 1, payload: { text: md(it, !!set.lesson) } }],
+        blocks: [{ id: `${set.id}-${i + 1}-b1`, block_type: 'markdown', block_order: 1, payload: { text: set.markdown?.[i] ?? md(it, !!set.lesson) } }],
       })),
     };
     const at = company.modules.findIndex((m: any) => m.id === set.id);
@@ -599,6 +690,12 @@ const SECTIONAL: Record<string, Array<{ key: string; name: string; count: number
     { key: 'verbal', name: 'Verbal English', count: 10, minutes: 10 },
     { key: 'programming', name: 'Computer Programming', count: 8, minutes: 10 },
   ],
+  'tcs-nqt': [
+    { key: 'numerical', name: 'Numerical Ability', count: 10, minutes: 13 },
+    { key: 'verbal', name: 'Verbal Ability', count: 10, minutes: 10 },
+    { key: 'reasoning', name: 'Reasoning Ability', count: 10, minutes: 13 },
+    { key: 'advanced', name: 'Advanced Quant & Reasoning', count: 8, minutes: 14 },
+  ],
   // Milestone tests: the M1 test is the 15 Nov mock (40 of 118 questions, fresh draw every attempt).
   'wipro-ios': [
     { key: 'm1', name: 'Milestone 1 · Swift foundations', count: 40, minutes: 50 },
@@ -695,6 +792,18 @@ export function ensureMphasisV1(db: any): number {
 }
 
 /**
+ * TCS NQT (owner, 2026-11-10): rewrite the profile once from the owner's 2027
+ * guide (pattern, eligibility, apply steps, timeline). Modules on the record
+ * are kept, and later admin edits are not touched again.
+ */
+export function ensureTcsNqtV1(db: any): number {
+  if (db.company_tcs_nqt_v1) return 0;
+  seedCompanyProfiles(db, false, ['tcs-nqt']);
+  db.company_tcs_nqt_v1 = new Date().toISOString();
+  return 1;
+}
+
+/**
  * Wipro iOS (owner, 2026-11-04): publish the program once with its full
  * profile, even if an older record with the slug exists.
  */
@@ -718,5 +827,6 @@ export function seedMissing3T(db: any): boolean {
   const focus = applyCompanyFocus(db);
   const focusFix = ensureFocusLive(db);
   const mphasis = ensureMphasisV1(db);
-  return covers + t0 + focus + focusFix + mphasis + wipro + p.created + t + i > 0;
+  const tcs = ensureTcsNqtV1(db);
+  return covers + t0 + focus + focusFix + mphasis + tcs + wipro + p.created + t + i > 0;
 }

@@ -1,4 +1,4 @@
-import { PREP_SLUGS } from '@/lib/prepApi';
+import { PREP_SLUGS, usePrepCompanies } from '@/lib/prepApi';
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -137,6 +137,8 @@ export default function CompanyVaultPage({
   const { openOverlay, setDrillTitle } = useShell();
 
   const [company, setCompany] = useState<Company | null>(initialCompany);
+  const livePrep = usePrepCompanies();
+  const prepSlugs = livePrep ? livePrep.map((c) => c.slug) : PREP_SLUGS;
   useTrackView('company', company?.slug, company?.name, !!company);
   const [allCompanies, setAllCompanies] = useState<Company[]>([]);
   const [activeRoundTab, setActiveRoundTab] = useState<'all' | RoundType>('all');
@@ -194,7 +196,7 @@ export default function CompanyVaultPage({
    */
   const showModule = (mod: ContentModule) => {
     // Prep companies: lessons open in the lesson reader inside the plan (INFOSYS_SE_3T_UX_PLAN §3).
-    if ((mod as any).pack_gated && company && PREP_SLUGS.includes(company.slug) && (mod.items || []).length) {
+    if ((mod as any).pack_gated && company && prepSlugs.includes(company.slug) && (mod.items?.[0] as any)?.lesson) {
       router.push(`/prep/${company.slug}/learn/${mod.items![0].id}`);
       return;
     }
@@ -257,10 +259,11 @@ export default function CompanyVaultPage({
   const vaultUnlocked = isUnlocked || !!company?.is_unlocked;
   // INFOSYS_SE_3T_UX_PLAN §2b: a pack owner's company page is their prep dashboard (?view=info shows this page).
   useEffect(() => {
-    if (user && company && vaultUnlocked && PREP_SLUGS.includes(company.slug) && router.query.view !== 'info') {
+    // A link to one module or item (e.g. a coding solution from the mock) opens here, not in the plan.
+    if (user && company && vaultUnlocked && prepSlugs.includes(company.slug) && router.query.view !== 'info' && !router.query.m && !router.query.q) {
       router.replace(`/prep/${company.slug}`);
     }
-  }, [user, company, vaultUnlocked, router]);
+  }, [user, company, vaultUnlocked, router, prepSlugs.join(',')]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (user?.id && company?.id && vaultUnlocked) markVaultSeen(company.id, user.id);
   }, [company?.id, vaultUnlocked, user?.id]);
