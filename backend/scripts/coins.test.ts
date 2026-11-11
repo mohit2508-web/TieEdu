@@ -118,6 +118,14 @@ async function main() {
   const locked = BANK.find((p) => !FREE_CORE.has(p.id) && p.companies.some((c) => c.slug === 'tcs-nqt'));
   if (locked) check('a locked solution is refused', (await get(`/code/problem/${locked.id}/solution`, auth)).status === 403);
 
+  // "Set as my goal"
+  const post = async (p: string, body: unknown) => { const r = await fetch(base + p, { method: 'POST', headers: { ...auth, 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); return { status: r.status, body: await r.json().catch(() => null) }; };
+  const goal1 = await post('/coins/goal', { item_id: 'tshirt' });
+  check('a store item can be the goal', goal1.status === 200 && goal1.body.goal?.item_id === 'tshirt' && goal1.body.goal.coins === 5500);
+  check('the goal shows on /me and /summary', (await get('/coins/me', auth)).body.goal?.item_id === 'tshirt' && (await get('/coins/summary', auth)).body.goal?.name === 'TiEEdu T-shirt');
+  check('an unknown or switched-off item cannot be the goal', (await post('/coins/goal', { item_id: 'nope' })).status === 400 && (await post('/coins/goal', { item_id: 'hoodie' })).status === 400);
+  check('null clears the goal', (await post('/coins/goal', { item_id: null })).body.goal === null);
+
   server.close();
   fs.rmSync(file, { force: true });
   console.log(`\ncoins: ${pass} passed, ${fail} failed`);

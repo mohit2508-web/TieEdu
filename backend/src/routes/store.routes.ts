@@ -48,6 +48,7 @@ storeRouter.get('/', optionalAuth, (req: Request, res: Response) => {
     repairable_days: repairableDays(db, req.userId),
     repairs_left: 3 - (db.streak_repairs || []).filter((r: any) => r.user_id === req.userId && String(r.day).slice(0, 7) === new Date(Date.now() + 5.5 * 3_600_000).toISOString().slice(0, 7)).length,
     pack_companies: packCompanies(db),
+    goal_item_id: user?.coin_goal || null,
   });
 });
 

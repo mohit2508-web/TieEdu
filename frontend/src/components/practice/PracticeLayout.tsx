@@ -6,6 +6,9 @@ import { LayoutGrid, Code2, Building2, ListChecks, ChevronDown, PanelLeftClose, 
 import { cn } from '@/lib/cn';
 import { usePracticeSummary, streakOf } from './usePracticeSummary';
 import { NAV_ITEMS } from '@/lib/navConfig';
+import { GoalBar } from '@/components/coins/GoalBar';
+import { COINS_EVENT, fetchCoinSummary, type CoinGoal } from '@/lib/coinsApi';
+import { useAuth } from '@/context/AuthContext';
 
 /** The rest of the Practise section (they were the header's sub-tabs, hidden on practice pages). */
 const MORE = ['skillTest', 'daily', 'mockInterview', 'peerMock', 'englishCoach', 'drives'].map((id) => NAV_ITEMS[id]).filter(Boolean);
@@ -35,6 +38,16 @@ export function PracticeLayout({ title, intro, children, actions, crumb, icon }:
 }) {
   const { pathname, asPath } = useRouter();
   const summary = usePracticeSummary();
+  const { user } = useAuth();
+  // The goal the student is saving for (TiE Coins), in the right rail.
+  const [coinGoal, setCoinGoal] = useState<{ coins: number; goal: CoinGoal | null } | null>(null);
+  useEffect(() => {
+    if (!user) { setCoinGoal(null); return; }
+    const load = () => fetchCoinSummary().then((s) => setCoinGoal(s.signed_in ? { coins: s.coins, goal: s.goal || null } : null)).catch(() => undefined);
+    load();
+    window.addEventListener(COINS_EVENT, load);
+    return () => window.removeEventListener(COINS_EVENT, load);
+  }, [user]);
   const [collapsed, setCollapsed] = useState(false);
   const [menu, setMenu] = useState(false);
   useEffect(() => { try { setCollapsed(localStorage.getItem(RAIL_KEY) === 'icons'); } catch { /* private mode */ } }, []);
@@ -158,6 +171,7 @@ export function PracticeLayout({ title, intro, children, actions, crumb, icon }:
               <p className="mt-1 font-display text-3xl font-bold tabular-nums text-heading">{streak}<span className="text-lg font-semibold text-muted"> day{streak === 1 ? '' : 's'}</span></p>
               <p className="text-body-md text-body">{summary ? (streak ? 'Solve one today to keep it going.' : 'Solve one problem today to start a streak.') : ' '}</p>
             </div>
+            {coinGoal && <GoalBar goal={coinGoal.goal} coins={coinGoal.coins} compact />}
             {summary?.continue && (
               <Link href={`/practice/problem/${summary.continue.id}`} className="block rounded-2xl border border-line bg-card p-5 transition-colors hover:border-line-strong focus-ring">
                 <p className="text-sm font-semibold text-muted">Continue</p>

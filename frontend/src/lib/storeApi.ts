@@ -8,7 +8,7 @@ export interface StoreItemView {
 }
 export interface StoreView {
   items: StoreItemView[]; signed_in: boolean; coins?: number; swag_ok?: boolean; swag_reason?: string | null;
-  repairable_days?: string[]; repairs_left?: number; pack_companies?: Array<{ slug: string; name: string; price: number }>;
+  repairable_days?: string[]; repairs_left?: number; pack_companies?: Array<{ slug: string; name: string; price: number }>; goal_item_id?: string | null;
 }
 export type OrderStatus = 'placed' | 'approved' | 'packed' | 'shipped' | 'delivered' | 'rejected' | 'cancelled';
 export interface Address { name: string; line1: string; line2?: string; city: string; state: string; pincode: string }

@@ -9,6 +9,7 @@ import { BrandLoader } from '@/components/brand/BrandLoader';
 import { ErrorState } from '@/components/common/ErrorState';
 import { fetchCoinRules, fetchCoinsMe, type CoinRuleView, type CoinsMe } from '@/lib/coinsApi';
 import { cn } from '@/lib/cn';
+import { GoalBar } from '@/components/coins/GoalBar';
 
 const RULE_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
   checkin: CalendarCheck, daily_problem: Code2, daily_mcq: CheckCircle2, solve: Code2, streak: Flame, month_perfect: Trophy, month_25: Trophy,
@@ -75,6 +76,7 @@ export default function RewardsPage() {
                         </span>
                       ))}
                     </div>
+                    <GoalBar goal={me.goal} coins={me.coins} className="mt-4" />
                     {me.next_milestone && (
                       <p className="mt-3 text-body-md text-body"><span className="font-semibold text-heading">{me.next_milestone.days - me.streak.current} more day{me.next_milestone.days - me.streak.current === 1 ? '' : 's'}</span> to your {me.next_milestone.days}-day streak bonus (+{me.next_milestone.coins}).</p>
                     )}

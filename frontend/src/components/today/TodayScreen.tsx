@@ -14,6 +14,7 @@ import { CollegePulseLine } from './CollegePulseLine';
 import { useLang, type Lang } from '@/lib/lang';
 import { ForYou } from '@/components/personal/ForYou';
 import { DiwaliTodayCard } from '@/components/festival/DiwaliTodayCard';
+import { CoinsStrip } from '@/components/coins/CoinsStrip';
 
 /**
  * Today — the signed-in home (UI_REDESIGN_PLAN_V2 §6.1).
@@ -208,6 +209,9 @@ export const TodayScreen: React.FC<{ ready: boolean }> = ({ ready }) => {
         </h1>
         <CollegePulseLine ready={ready} />
       </header>
+
+      {/* Coins, streak, today's tasks and the goal (TIE_COINS_STORE_PLAN.md §6.1). */}
+      <CoinsStrip signedIn className="mt-6" />
 
       {/* The target company's prep: readiness, days left, today's task (one source for days left). */}
       <DiwaliTodayCard />

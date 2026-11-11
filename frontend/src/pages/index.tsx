@@ -23,6 +23,7 @@ import { TodayScreen } from '@/components/today/TodayScreen';
 import { Company } from '@/types';
 import { useFestival } from '@/lib/festival';
 import { DiwaliHero } from '@/components/festival/DiwaliHero';
+import { CoinsStrip } from '@/components/coins/CoinsStrip';
 
 const JoinChannelsPopup = dynamic(
   () => import('@/components/home/JoinChannelsPopup').then((m) => m.JoinChannelsPopup),
@@ -158,6 +159,11 @@ export default function Home() {
           {!festival.active && <PromoBar />}
 
           <LandingHero companies={companies} stats={stats} searchQuery={searchQuery} onSearch={setSearchQuery} />
+
+          {/* TiE Coins call to action (TIE_COINS_STORE_PLAN.md §6.1). */}
+          <div className="mx-auto w-full max-w-6xl px-4 pt-6 sm:px-6">
+            <CoinsStrip signedIn={false} />
+          </div>
 
           {dataError && (
             <div className="w-full border-b border-signal/30 bg-signal-soft px-4 py-2.5 text-center">

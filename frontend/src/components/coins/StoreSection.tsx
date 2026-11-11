@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { X, CheckCircle2, Copy, Package, Truck, Lock } from 'lucide-react';
+import { X, CheckCircle2, Copy, Package, Truck, Lock, Target } from 'lucide-react';
 import { CoinIcon } from './CoinIcon';
 import { SwagArt } from './SwagArt';
 import { Segmented } from '@/components/ui/Segmented';
 import { ErrorState } from '@/components/common/ErrorState';
 import { BrandLoader } from '@/components/brand/BrandLoader';
-import { announceCoins } from '@/lib/coinsApi';
+import { announceCoins, setCoinGoal } from '@/lib/coinsApi';
 import { cancelOrder, fetchMyOrders, fetchStore, redeemItem, ORDER_LABEL, type Address, type StoreItemView, type StoreOrder, type StoreView } from '@/lib/storeApi';
 import { cn } from '@/lib/cn';
 
@@ -16,7 +16,7 @@ const nice = (d: string) => new Date(`${d}T00:00:00Z`).toLocaleDateString('en-IN
 const field = 'mt-1 w-full rounded-lg border border-line bg-card px-3 py-2.5 text-body-md text-heading focus:border-signal focus:outline-none';
 
 /** One store card: what it is, what it costs, and whether you can get it now. */
-function ItemCard({ item, view, onPick }: { item: StoreItemView; view: StoreView; onPick: () => void }) {
+function ItemCard({ item, view, onPick, isGoal, onGoal }: { item: StoreItemView; view: StoreView; onPick: () => void; isGoal: boolean; onGoal: () => void }) {
   const coins = view.coins ?? 0;
   const short = Math.max(0, item.coins - coins);
   const maxed = !!item.limit_per_user && (item.redeemed || 0) >= item.limit_per_user;
@@ -27,6 +27,7 @@ function ItemCard({ item, view, onPick }: { item: StoreItemView; view: StoreView
       <div className="relative grid h-40 place-items-center bg-surface-hover/70 p-3">
         <SwagArt art={item.art} image={item.image} label={item.name} className="h-full w-full" />
         {item.kind === 'physical' && <span className="absolute left-3 top-3 rounded-full bg-card px-2 py-0.5 text-xs font-semibold text-muted">TiEEdu swag</span>}
+        {isGoal && <span className="absolute bottom-3 left-3 inline-flex items-center gap-1 rounded-full bg-signal px-2 py-0.5 text-xs font-semibold text-on-primary"><Target className="h-3.5 w-3.5" aria-hidden /> Your goal</span>}
         {soon && <span className="absolute right-3 top-3 rounded-full bg-heading px-2 py-0.5 text-xs font-semibold text-paper">Launching soon</span>}
       </div>
       <div className="flex flex-1 flex-col p-4">
@@ -36,7 +37,9 @@ function ItemCard({ item, view, onPick }: { item: StoreItemView; view: StoreView
         {view.signed_in && !maxed && short > 0 && (
           <div className="mt-2">
             <div className="h-1.5 overflow-hidden rounded-full bg-surface-hover"><div className="h-full rounded-full bg-signal" style={{ width: `${pct}%` }} /></div>
-            <p className="mt-1 text-sm text-muted">{inr(short)} more coins</p>
+            <p className="mt-1 flex items-center justify-between gap-2 text-sm text-muted">{inr(short)} more coins
+              {!isGoal && <button type="button" onClick={onGoal} className="inline-flex items-center gap-1 font-semibold text-link hover:underline"><Target className="h-3.5 w-3.5" aria-hidden /> Set as my goal</button>}
+            </p>
           </div>
         )}
         <div className="mt-3">
@@ -225,7 +228,10 @@ export function StoreSection({ signedIn }: { signedIn: boolean }) {
       {!view && !error && <BrandLoader caption="Opening the store…" />}
       {view && (
         <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {items.map((i) => <ItemCard key={i.id} item={i} view={view} onPick={() => setPick(i)} />)}
+          {items.map((i) => (
+            <ItemCard key={i.id} item={i} view={view} onPick={() => setPick(i)} isGoal={view.goal_item_id === i.id}
+              onGoal={() => setCoinGoal(i.id).then(() => { setView({ ...view, goal_item_id: i.id }); announceCoins([{ rule: 'goal', coins: 0, note: i.name }]); }).catch(() => undefined)} />
+          ))}
         </div>
       )}
       {orders && orders.length > 0 && (
