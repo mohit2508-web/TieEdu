@@ -46,7 +46,7 @@ function AssessmentsScreen() {
 
   return (
     <DriveShell title="Assessments">
-      <div className="mx-auto w-full max-w-[880px] px-4 pb-8 pt-4">
+      <div className="w-full max-w-[1200px] px-4 sm:px-6 lg:px-0 pb-8 pt-4">
         {/* Segmented tabs */}
         <div className="flex gap-1 rounded-[10px] p-1" style={{ background: 'var(--apple-fill)' }}>
           {TABS.map((t) => (

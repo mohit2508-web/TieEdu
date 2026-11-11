@@ -38,7 +38,7 @@ function InterviewsScreen() {
 
   return (
     <DriveShell title="Interviews">
-      <div className="mx-auto w-full max-w-[880px] px-4 pb-8 pt-4">
+      <div className="w-full max-w-[1200px] px-4 sm:px-6 lg:px-0 pb-8 pt-4">
         {loading ? (
           <div className="space-y-3">{[0, 1].map((i) => <Skeleton key={i} className="h-24 w-full" />)}</div>
         ) : error ? (

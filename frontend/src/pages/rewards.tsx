@@ -45,7 +45,7 @@ export default function RewardsPage() {
         <title>TiE Coins and rewards · TiEEdu</title>
         <meta name="description" content="Practise every day on TiEEdu, earn TiE Coins and spend them on company packs, membership and TiEEdu swag." />
       </Head>
-      <main className="mx-auto w-full max-w-6xl px-4 pb-16 pt-6 sm:px-6 lg:pt-10">
+      <main className="w-full max-w-[1200px] px-4 pb-14 pt-6 sm:px-6 lg:px-0 lg:pt-0">
         {/* Hero */}
         <section className="overflow-hidden rounded-3xl border border-line bg-card">
           <div className="grid gap-6 p-6 sm:p-8 lg:grid-cols-[1.2fr_1fr] lg:items-center">

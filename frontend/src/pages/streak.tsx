@@ -74,7 +74,7 @@ export default function StreakPageView() {
   return (
     <>
       <Head><title>Your streak · TiEEdu</title></Head>
-      <main className="mx-auto w-full max-w-6xl px-4 pb-16 pt-6 sm:px-6 lg:pt-10">
+      <main className="w-full max-w-[1200px] px-4 pb-14 pt-6 sm:px-6 lg:px-0 lg:pt-0">
         {error && <ErrorState message={error} onRetry={load} />}
         {!p && !error && <BrandLoader caption="Loading your streak…" />}
         {p && (

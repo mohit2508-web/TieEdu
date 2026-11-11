@@ -68,7 +68,7 @@ function HomeTab() {
 
   return (
     <DriveShell title="Mock Drives">
-      <div className="mx-auto w-full max-w-[880px] px-4 pb-8 pt-4">
+      <div className="w-full max-w-[1200px] px-4 sm:px-6 lg:px-0 pb-8 pt-4">
         {/* Hero — greeting + headline numbers on the brand's navy band (dark in both
             themes, so the white text holds). The shell owns the page's h1. */}
         <div className="rounded-[18px] bg-brand-ink p-4 text-white shadow-sm sm:p-5">

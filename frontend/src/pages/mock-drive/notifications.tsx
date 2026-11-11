@@ -46,7 +46,7 @@ function NotificationsScreen() {
 
   return (
     <DriveShell title="Notifications">
-      <div className="mx-auto w-full max-w-[880px] px-4 pb-8 pt-4">
+      <div className="w-full max-w-[1200px] px-4 sm:px-6 lg:px-0 pb-8 pt-4">
         {unread > 0 && (
           <div className="mb-3 flex justify-end">
             <button

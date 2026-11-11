@@ -71,7 +71,7 @@ function DriveDetailScreen() {
   if (loading) {
     return (
       <DriveShell title="Drive">
-        <div className="mx-auto w-full max-w-[880px] space-y-4 px-4 pb-8 pt-4">
+        <div className="w-full max-w-[1200px] space-y-4 px-4 sm:px-6 lg:px-0 pb-8 pt-4">
           <Skeleton className="h-24 w-full" />
           <Skeleton className="h-10 w-full" />
           <Skeleton className="h-40 w-full" />
@@ -83,7 +83,7 @@ function DriveDetailScreen() {
   if (error && !detail) {
     return (
       <DriveShell title="Drive">
-        <div className="mx-auto w-full max-w-[880px] px-4 pb-8 pt-10">
+        <div className="w-full max-w-[1200px] px-4 sm:px-6 lg:px-0 pb-8 pt-10">
           <div className="flex items-start gap-2.5 rounded-[12px] px-4 py-3 text-sm" style={{ background: 'var(--apple-red-soft)', color: 'var(--apple-red)' }}>
             <AlertCircle size={16} className="mt-0.5 shrink-0" />
             <span>{error}</span>
@@ -110,7 +110,7 @@ function DriveDetailScreen() {
 
   return (
     <DriveShell title={drive.company_name || 'Drive'}>
-      <div className="mx-auto w-full max-w-[880px] px-4 pb-8 pt-4">
+      <div className="w-full max-w-[1200px] px-4 sm:px-6 lg:px-0 pb-8 pt-4">
         {/* Header card */}
         <div className="rounded-card border p-4" style={{ background: 'var(--apple-surface)', borderColor: 'var(--apple-separator)' }}>
           <div className="flex items-start gap-3">

@@ -52,7 +52,7 @@ export default function OfferCheckPage() {
         <title>Is this job offer real? Free fake job offer checker · TiEEdu</title>
         <meta name="description" content="Paste a job offer, email or WhatsApp message and check it for the signs of a fake offer: fees, UPI requests, look-alike company domains and more. Free, and private: it runs on your phone." />
       </Head>
-      <main className="mx-auto w-full max-w-[760px] px-4 pb-14 pt-6 sm:px-6 sm:pt-10">
+      <main className="w-full max-w-[1200px] px-4 pb-14 pt-6 sm:px-6 lg:px-0 lg:pt-0">
         <p className="eyebrow text-link">Free tool</p>
         <h1 className="mt-1 font-display text-3xl font-bold text-heading sm:text-4xl">Is this job offer real?</h1>
         <p className="mt-2 text-base text-body">

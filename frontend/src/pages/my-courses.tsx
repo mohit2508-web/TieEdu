@@ -85,7 +85,7 @@ export default function MyCoursesPage() {
         <title>My courses · TiEEdu</title>
       </Head>
 
-      <main className="mx-auto w-full max-w-5xl px-6 pb-24 pt-14">
+      <main className="w-full max-w-[1200px] px-4 pb-14 pt-6 sm:px-6 lg:px-0 lg:pt-0">
         <header className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="text-3xl font-extrabold tracking-tight text-[var(--ink)]">My courses</h1>

@@ -13,7 +13,7 @@ export default function InternshipsPage() {
         <title>Internships | TiEEdu</title>
         <meta name="description" content="Internship opportunities for TiEEdu members — real listings, apply in one tap." />
       </Head>
-      <main className="mx-auto max-w-6xl px-5 py-12">
+      <main className="w-full max-w-[1200px] px-4 pb-14 pt-6 sm:px-6 lg:px-0 lg:pt-0">
         <h1 className="font-display text-4xl font-extrabold text-heading">Internships</h1>
         <p className="mt-2 text-body">Real internship listings for TiEEdu members. Members apply in one tap.</p>
         {f.active && !f.membership && (

@@ -54,7 +54,7 @@ export default function TalentPage() {
         <title>Get found by recruiters · TiEEdu</title>
         <meta name="description" content="Let verified recruiters find you by your tested skills. Your name and contact stay private until you accept." />
       </Head>
-      <main className="mx-auto w-full max-w-[760px] px-4 pb-14 pt-6 sm:px-6 sm:pt-10">
+      <main className="w-full max-w-[1200px] px-4 pb-14 pt-6 sm:px-6 lg:px-0 lg:pt-0">
         <p className="eyebrow text-link">Get found</p>
         <h1 className="mt-1 font-display text-3xl font-bold text-heading sm:text-4xl">Let recruiters find you by your skills</h1>
         <p className="mt-2 text-base text-body">

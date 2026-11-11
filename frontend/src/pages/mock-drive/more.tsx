@@ -26,7 +26,7 @@ function MoreTab() {
 
   return (
     <DriveShell title="More">
-      <div className="mx-auto w-full max-w-[880px] px-4 pb-8 pt-4">
+      <div className="w-full max-w-[1200px] px-4 sm:px-6 lg:px-0 pb-8 pt-4">
         {/* Account card */}
         <div className="flex items-center gap-3 rounded-card border p-4" style={{ background: 'var(--apple-surface)', borderColor: 'var(--apple-separator)' }}>
           <span

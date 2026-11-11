@@ -64,7 +64,7 @@ export default function DebriefPage() {
         <title>After a rejection · TiEEdu</title>
         <meta name="description" content="Got a no from a company? Note what happened in two minutes and get a plan for the next one." />
       </Head>
-      <main className="mx-auto w-full max-w-[760px] px-4 pb-14 pt-6 sm:px-6 sm:pt-10">
+      <main className="w-full max-w-[1200px] px-4 pb-14 pt-6 sm:px-6 lg:px-0 lg:pt-0">
         <p className="eyebrow text-link">After a rejection</p>
         <h1 className="mt-1 font-display text-3xl font-bold text-heading sm:text-4xl">A no is information, not a verdict</h1>
         <p className="mt-2 text-base text-body">

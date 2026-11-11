@@ -63,7 +63,7 @@ export default function DailyChallengePage() {
         <title>Daily challenge · TiEEdu</title>
         <meta name="description" content="Ten minutes a day: one aptitude question, one coding question and one HR answer, the same three for every student. Keep your streak going." />
       </Head>
-      <main className="mx-auto w-full max-w-[760px] px-4 pb-14 pt-6 sm:px-6 sm:pt-10">
+      <main className="w-full max-w-[1200px] px-4 pb-14 pt-6 sm:px-6 lg:px-0 lg:pt-0">
         <p className="eyebrow text-link">{view ? longDate.format(new Date(`${view.day}T00:00:00Z`)) : 'Daily challenge'}</p>
         <h1 className="mt-1 font-display text-3xl font-bold text-heading sm:text-4xl">Today’s 10-minute challenge</h1>
         <p className="mt-2 max-w-[560px] text-base text-body">

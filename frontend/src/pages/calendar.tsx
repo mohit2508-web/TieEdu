@@ -76,7 +76,7 @@ export default function CalendarPage() {
         <title>Test dates and countdown · TiEEdu</title>
         <meta name="description" content="Every company test date in one place, a countdown to each, and a day-by-day plan to the next one." />
       </Head>
-      <main className="mx-auto w-full max-w-[880px] px-4 pb-14 pt-6 sm:px-6 sm:pt-10">
+      <main className="w-full max-w-[1200px] px-4 pb-14 pt-6 sm:px-6 lg:px-0 lg:pt-0">
         <p className="eyebrow text-link">Your calendar</p>
         <h1 className="mt-1 font-display text-3xl font-bold text-heading sm:text-4xl">Test dates and countdown</h1>
         <p className="mt-2 max-w-[600px] text-base text-body">

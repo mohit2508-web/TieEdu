@@ -98,7 +98,7 @@ export default function MockInterviewPage() {
         <title>Mock interview · TiEEdu</title>
         <meta name="description" content="Practise HR and technical interview questions and get feedback on every answer." />
       </Head>
-      <main className="mx-auto w-full max-w-[760px] px-4 pb-14 pt-6 sm:px-6 sm:pt-10">
+      <main className="w-full max-w-[1200px] px-4 pb-14 pt-6 sm:px-6 lg:px-0 lg:pt-0">
         <p className="eyebrow text-link">Mock interview</p>
         <h1 className="mt-1 font-display text-3xl font-bold text-heading sm:text-4xl">Say it here before you say it there</h1>
         <p className="mt-2 text-base text-body">

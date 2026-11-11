@@ -84,7 +84,7 @@ function SettingsScreen() {
 
   return (
     <DriveShell title="Settings">
-      <div className="mx-auto w-full max-w-[880px] px-4 pb-8 pt-4">
+      <div className="w-full max-w-[1200px] px-4 sm:px-6 lg:px-0 pb-8 pt-4">
         {error && (
           <div className="mb-3 flex items-start gap-2 rounded-[10px] px-3 py-2 text-sm" style={{ background: 'var(--apple-red-soft)', color: 'var(--apple-red)' }}>
             <AlertCircle size={14} className="mt-0.5 shrink-0" /> {error}

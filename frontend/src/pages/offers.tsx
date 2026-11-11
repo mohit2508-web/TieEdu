@@ -38,7 +38,7 @@ export default function OffersPage() {
         <title>Offers and the routes that got them · TiEEdu</title>
         <meta name="description" content="Real placement offers from TiEEdu students, and how each one prepared: the rounds, the practice and what made the difference." />
       </Head>
-      <main className="mx-auto w-full max-w-[880px] px-4 pb-14 pt-6 sm:px-6 sm:pt-10">
+      <main className="w-full max-w-[1200px] px-4 pb-14 pt-6 sm:px-6 lg:px-0 lg:pt-0">
         <p className="eyebrow text-link">Offer wall</p>
         <h1 className="mt-1 font-display text-3xl font-bold text-heading sm:text-4xl">Offers, and the route that got them</h1>
         <p className="mt-2 text-base text-body">Students who got placed, in their own words: what they practised, what was asked, and what made the difference.</p>

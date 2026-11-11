@@ -31,7 +31,7 @@ export default function StudyGroupsPage() {
         <title>Study groups · TiEEdu</title>
         <meta name="description" content="Prepare for a company together: see who else is practising and nudge each other to keep going." />
       </Head>
-      <main className="mx-auto w-full max-w-[760px] px-4 pb-14 pt-6 sm:px-6 sm:pt-10">
+      <main className="w-full max-w-[1200px] px-4 pb-14 pt-6 sm:px-6 lg:px-0 lg:pt-0">
         {!loading && !user && (
           <>
             <Intro />

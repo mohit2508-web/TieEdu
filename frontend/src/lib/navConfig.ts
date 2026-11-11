@@ -37,6 +37,7 @@ import {
   MessageSquareText,
   PartyPopper,
   Repeat,
+  Rocket,
   Route,
   Search,
   Target,
@@ -398,6 +399,26 @@ export const NAV_ITEMS: Record<string, NavItem> = {
     primary: false,
     keywords: ['english', 'spoken english', 'speaking', 'communication', 'fluency', 'confidence', 'hinglish', 'grammar', 'pronunciation', 'english practice'],
   },
+  driveDay: {
+    id: 'driveDay',
+    href: '/drive-day',
+    label: 'Drive day',
+    icon: CalendarCheck,
+    match: 'exact',
+    description: 'Your checklist and reminders for the day of a placement drive',
+    primary: false,
+    keywords: ['drive day', 'documents', 'checklist', 'reporting time', 'placement drive'],
+  },
+  internships: {
+    id: 'internships',
+    href: '/internships',
+    label: 'Internships',
+    icon: Rocket,
+    match: 'exact',
+    description: 'Real internship listings for TiEEdu members',
+    primary: false,
+    keywords: ['internship', 'internships', 'jobs', 'apply'],
+  },
   streak: {
     id: 'streak',
     href: '/streak',
@@ -572,8 +593,8 @@ export interface NavSection {
 export const NAV_SECTIONS: NavSection[] = [
   { id: 'home', label: 'Home', icon: House, itemIds: ['home'] },
   { id: 'learn', label: 'Learn', icon: BookOpen, itemIds: ['courses', 'tracks', 'freeCourse', 'calendar', 'myCourses', 'myCertificates'] },
-  { id: 'practise', label: 'Practise', icon: Target, itemIds: ['practice', 'dsa', 'companySets', 'companyTests', 'skillTest', 'daily', 'mockInterview', 'peerMock', 'englishCoach', 'drives', 'streak', 'rewards'], extraPrefixes: ['/practice', '/mock-drive'] },
-  { id: 'companies', label: 'Companies', icon: Building2, itemIds: ['companies', 'compare', 'talent'], extraPrefixes: ['/company'] },
+  { id: 'practise', label: 'Practise', icon: Target, itemIds: ['practice', 'dsa', 'companySets', 'companyTests', 'skillTest', 'daily', 'mockInterview', 'peerMock', 'englishCoach', 'drives', 'studyGroups', 'driveDay', 'debrief', 'offerCheck', 'streak', 'rewards'], extraPrefixes: ['/practice', '/mock-drive'] },
+  { id: 'companies', label: 'Companies', icon: Building2, itemIds: ['companies', 'compare', 'offers', 'internships', 'talent'], extraPrefixes: ['/company'] },
   { id: 'feed', label: 'Drops', icon: Droplets, itemIds: ['drops'] },
 ];
 
@@ -591,9 +612,10 @@ export const SECTION_RAILS: Partial<Record<NavSection['id'], RailGroup[]>> = {
     { title: 'Coding', itemIds: ['practice', 'dsa', 'companySets', 'companyTests'] },
     { title: 'Tests & interviews', itemIds: ['skillTest', 'daily', 'mockInterview', 'peerMock', 'drives'] },
     { title: 'Skills', itemIds: ['englishCoach'] },
+    { title: 'Placement tools', itemIds: ['studyGroups', 'driveDay', 'debrief', 'offerCheck'] },
     { title: 'Rewards', itemIds: ['streak', 'rewards'] },
   ],
-  companies: [{ itemIds: ['companies', 'compare', 'talent'] }],
+  companies: [{ itemIds: ['companies', 'compare', 'offers', 'internships'] }, { title: 'For you', itemIds: ['talent'] }],
 };
 export const RAIL_PERSONAL = new Set(['myCourses', 'myCertificates', 'calendar', 'streak']);
 

@@ -75,7 +75,7 @@ export default function PeerMockPage() {
         <title>Peer mock interview · TiEEdu</title>
         <meta name="description" content="Interview a friend with TiEEdu's questions and rubric, then swap. Both of you earn points." />
       </Head>
-      <main className="mx-auto w-full max-w-[760px] px-4 pb-14 pt-6 sm:px-6 sm:pt-10">
+      <main className="w-full max-w-[1200px] px-4 pb-14 pt-6 sm:px-6 lg:px-0 lg:pt-0">
         <p className="eyebrow text-link">Peer mock interview</p>
         <h1 className="mt-1 font-display text-3xl font-bold text-heading sm:text-4xl">Interview a friend, then swap</h1>
         <p className="mt-2 text-base text-body">

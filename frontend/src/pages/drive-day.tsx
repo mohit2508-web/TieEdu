@@ -87,7 +87,7 @@ export default function DriveDayPage() {
         <title>{`${title} · TiEEdu`}</title>
         <meta name="description" content="Everything for the day of a placement test: reporting time, documents checklist, 15-minute revision and a breathing timer." />
       </Head>
-      <main className="mx-auto w-full max-w-[760px] px-4 pb-14 pt-6 sm:px-6 sm:pt-10">
+      <main className="w-full max-w-[1200px] px-4 pb-14 pt-6 sm:px-6 lg:px-0 lg:pt-0">
         <p className="eyebrow text-link">Drive-day mode</p>
         <h1 className="mt-1 font-display text-3xl font-bold text-heading sm:text-4xl">{title}</h1>
         <p className="mt-2 text-base text-body">You have prepared. This page is for the day itself. What you type here stays on this phone.</p>
