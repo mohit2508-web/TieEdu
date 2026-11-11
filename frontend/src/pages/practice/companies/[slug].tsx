@@ -6,7 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { PracticeLayout, Progress } from '@/components/practice/PracticeLayout';
 import { ProblemRow } from '@/components/practice/ProblemRow';
 import { BuyPackSheet } from '@/components/prep/BuyPackSheet';
-import { Tabs } from '@/components/ui/Tabs';
+import { Segmented } from '@/components/ui/Segmented';
 import { Chip } from '@/components/ui/Chip';
 import { fetchCompanyPractice, type CompanyPractice } from '@/lib/codeApi';
 import { PracticeSkeleton } from '@/components/practice/PracticeSkeleton';
@@ -44,7 +44,7 @@ export default function CompanyPracticePage() {
             <p className="text-body-md text-body"><span className="font-semibold text-heading">{d.progress.solved}</span> of {d.progress.total} coding problems solved</p>
             <div className="mt-2"><Progress done={d.progress.solved} total={d.progress.total} label="Set progress" /></div>
           </div>
-          <Tabs className="mt-6" label="Company practice" value={tab} onChange={setTab}
+          <Segmented className="mt-6" label="Company practice" value={tab} onChange={setTab}
             items={[{ key: 'coding', label: 'Coding set', icon: Code2, badge: d.progress.total }, { key: 'tests', label: 'Tests', icon: ListChecks, badge: d.tests.length }]} />
 
           {tab === 'coding' && (

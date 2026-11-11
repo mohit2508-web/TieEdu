@@ -32,6 +32,8 @@ export const SectionSubnav: React.FC = () => {
   const [lang] = useLang();
   const section = resolveSection(router.pathname);
   if (!section || !isRootDepth(router.pathname)) return null;
+  // Practice pages carry their own rail with these links (PRACTICE_POLISH_PLAN.md §4): one navigation level, not two.
+  if (section.id === 'practise' && router.pathname.startsWith('/practice')) return null;
 
   const items = section.itemIds
     .map((id) => NAV_ITEMS[id])
