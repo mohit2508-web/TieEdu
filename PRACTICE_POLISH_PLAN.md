@@ -1,6 +1,8 @@
 # Practice Polish Plan: loaders, error pages, layout, IDE themes, company sets
 
-Status: **plan, waiting for the owner's choices (§9)**. Date: 2026-11-11.
+Status: **built 2026-11-11** (owner: "logo final, proceed 100%"; L1–L6 taken as suggested). Commits: 2509f67 brand + app splash, 8560eb3 loader + errors, 93d0574 layout, 1cb443f IDE, 417eabc company sets v2, 18c818c daily problem + milestones.
+
+Not built: the IDE timer, font/ligature choice, format button, layout presets, per-case runtime/memory; "Asked in" year/shift badges (the problem data has no shift field yet); a sticky bottom summary on phones.
 
 Follows PRACTICE_MODE_PLAN.md (phases 1–5 and 7 are built). The loader options can be seen live in the artifact "TiEEdu Loading States".
 
