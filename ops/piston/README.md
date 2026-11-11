@@ -63,3 +63,16 @@ Then restart the backend.
 | Rate | 20 runs or submits per student per minute |
 
 Untrusted code never runs on the TieEdu server itself. There is no local fallback, unlike ContestOS.
+
+## Output limit (2026-11-11)
+
+Piston allows only 1024 characters of output by default. A program that prints more
+is killed ("stdout length exceeded", status `OL`, "Sandbox keeper received fatal
+signal 6"). Six TCS NQT problems print 1.6–16 KB, so on a default box their correct
+solutions fail. Fix once on the VM with `raise-output-limit.sh` (Azure portal → VM →
+Run command → RunShellScript). It sets `PISTON_OUTPUT_MAX_SIZE=65536`, keeps the
+installed runtimes and keeps the old container for rollback.
+
+Then re-check every reference solution:
+
+    PISTON_API_URL=http://<host>:2000/api/v2 npx ts-node --transpile-only scripts/verifyCodingSolutions.live.ts
