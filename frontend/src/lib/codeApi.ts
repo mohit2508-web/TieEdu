@@ -66,9 +66,13 @@ export const submitCode = (problemId: string, language: CodeLang, code: string, 
   call<SuiteResult & { submission_id: string }>('code', '/submit', post({ problem_id: problemId, language, code, attempt_id: attemptId }));
 
 // ---- Practice hub
-export interface PracticeRow { id: string; title: string; difficulty: string; topic_key: string; kind: string; companies: CompanyTagView[]; status: ProblemStatus; open: boolean; lock_company: { slug: string; name: string } | null }
+export interface PracticeRow { id: string; title: string; difficulty: string; topic_key: string; kind: string; companies: CompanyTagView[]; status: ProblemStatus; open: boolean; lock_company: { slug: string; name: string } | null; solve_rate?: number | null }
 export interface Counts { total: number; solved: number; attempted: number }
-export interface CompanyMeta { slug: string; name: string; logo_url: string; tagline: string; owned: boolean; price: number; free_program: boolean }
+export interface CompanyMeta { slug: string; name: string; logo_url: string; tagline: string; owned: boolean; price: number; free_program: boolean; brand_color?: string | null }
+/** Company sets v2 (PRACTICE_POLISH_PLAN.md §6): what a card needs to say what to do next. */
+export interface SetInsights { mix: { easy: number; medium: number; hard: number }; reported: number; continue: { id: string; title: string; level: string; started: boolean } | null; readiness: number | null }
+export type CompanyCard = CompanyMeta & Counts & SetInsights & { locked: number; tests: number; best_mock: number | null; levels: number; target: boolean };
+export interface ComingSoonCompany { slug: string; name: string; logo_url: string; notify: boolean }
 export interface CompanyTest { slug: string; name: string; kind: 'full' | 'sectional'; questions: number; minutes: number; coding: boolean; attempts: number; best: number | null; last: { id: string; score: number } | null }
 export interface PracticeHome {
   runner: boolean; totals: Counts & { active_days: number };
@@ -78,11 +82,13 @@ export interface PracticeHome {
 export interface DsaSheet { topics: Array<Counts & { key: string; name: string; blurb: string; problems: PracticeRow[] }>; companies: Array<{ slug: string; name: string }> }
 export interface CompanyPractice {
   company: CompanyMeta; progress: Counts & { locked: number };
-  levels: Array<Counts & { name: string; blurb: string; problems: PracticeRow[] }>; tests: CompanyTest[]; prep: boolean;
+  insights: SetInsights;
+  levels: Array<Counts & { name: string; blurb: string; problems: PracticeRow[]; recommended: string | null; locked: number }>; tests: CompanyTest[]; prep: boolean;
 }
 export const fetchPracticeHome = () => call<PracticeHome>('practice', '/home');
 export const fetchDsaSheet = () => call<DsaSheet>('practice', '/dsa');
-export const fetchPracticeCompanies = () => call<{ companies: Array<CompanyMeta & Counts & { locked: number; tests: number }> }>('practice', '/companies');
+export const fetchPracticeCompanies = () => call<{ companies: CompanyCard[]; coming_soon: ComingSoonCompany[] }>('practice', '/companies');
+export const setPracticeNotify = (slug: string, on: boolean) => call<{ slug: string; notify: boolean }>('practice', '/notify', post({ slug, on }));
 export const fetchCompanyPractice = (slug: string) => call<CompanyPractice>('practice', `/companies/${encodeURIComponent(slug)}`);
 
 export const VERDICT_LABEL: Record<string, string> = {

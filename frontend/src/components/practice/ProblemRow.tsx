@@ -31,6 +31,7 @@ export function ProblemRow({ row, href, index, onUnlock, showCompanies = true }:
       </Link>
       <div className="flex shrink-0 flex-wrap items-center gap-2">
         {showCompanies && row.companies.map((c) => <Chip key={c.slug} className="hidden md:inline-flex">{c.name}</Chip>)}
+        {row.solve_rate != null && <span className="hidden text-sm tabular-nums text-muted sm:inline" title="Among students who tried it">Solved by {row.solve_rate}%</span>}
         <Chip tone={tone as 'success' | 'warning' | 'danger' | 'neutral'}>{label}</Chip>
         {!row.open && row.lock_company && (
           <button type="button" onClick={() => onUnlock(row.lock_company!)}
