@@ -5,13 +5,13 @@ import { useRouter } from 'next/router';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import {
   ArrowLeft, ChevronLeft, ChevronRight, List, Play, Send, Settings2, Maximize2, Minimize2, RotateCcw, Lock,
-  CheckCircle2, Circle, CircleDot, X, AlertTriangle,
+  CheckCircle2, Circle, CircleDot, X, AlertTriangle, Sun, Moon, Keyboard, PanelLeftClose, PanelLeftOpen,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { BuyPackSheet } from '@/components/prep/BuyPackSheet';
 import { ProblemPanel } from './ProblemPanel';
 import { ConsolePanel, type ConsoleCase, type ConsoleResult, type ConsoleTab } from './ConsolePanel';
-import { DEFAULT_SETTINGS, type IdeSettings } from './ideSettings';
+import { DEFAULT_SETTINGS, IDE_THEMES, flipTheme, normaliseSettings, pickTheme, resolveTheme, themeIsDark, type IdeSettings } from './ideSettings';
 import { parseDiagnostics, type CodeDiagnostic } from '@/lib/compileErrors';
 import { CodeApiError, LANG_LABEL, runCases, submitCode, type CodeLang, type CodeProblemView } from '@/lib/codeApi';
 import { BrandLoader } from '@/components/brand/BrandLoader';
@@ -68,6 +68,11 @@ export interface IdeTest {
   secondsLeft: number; onFinish: () => void; submitting: boolean;
 }
 
+const SHORTCUTS: Array<[string, string]> = [
+  ['Run your cases', "Ctrl + '"], ['Submit (hidden tests)', 'Ctrl + Enter'], ['Indent / outdent', 'Tab / Shift + Tab'], ['Comment a line', 'Ctrl + /'],
+  ['Find in code', 'Ctrl + F'], ['Undo / redo', 'Ctrl + Z / Ctrl + Y'], ['Leave focus mode', 'Esc'], ['This list', '?'],
+];
+
 const clock = (s: number) => `${Math.floor(s / 3600) ? `${Math.floor(s / 3600)}:` : ''}${String(Math.floor((s % 3600) / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 
 export function Ide({ view, onReload, query, test, onSubmitted }: {
@@ -97,10 +102,14 @@ export function Ide({ view, onReload, query, test, onSubmitted }: {
   const [pack, setPack] = useState(false);
   const [full, setFull] = useState(false);
   const [mobileTab, setMobileTab] = useState<'problem' | 'code' | 'console'>('problem');
+  const [zen, setZen] = useState(false);
+  const [keys, setKeys] = useState(false);
+  const themeId = resolveTheme(settings, siteDark);
+  const ideDark = themeIsDark(themeId);
 
   // Restore settings, language, this problem's draft and its example cases.
   useEffect(() => {
-    try { const s = JSON.parse(store.get(SETTINGS_KEY) || 'null'); if (s) setSettings({ ...DEFAULT_SETTINGS, ...s }); } catch { /* defaults */ }
+    try { setSettings(normaliseSettings(JSON.parse(store.get(SETTINGS_KEY) || 'null'))); } catch { /* defaults */ }
     const saved = store.get(LANG_KEY) as CodeLang | null;
     const l = saved && view.languages.includes(saved) ? saved : 'cpp';
     setLang(l);
@@ -153,9 +162,12 @@ export function Ide({ view, onReload, query, test, onSubmitted }: {
       if (r.verdict === 'accepted') onReload();
     } catch (e) { fail(e); } finally { setBusy(''); }
   };
-  // The editor handles its own shortcuts; this covers focus outside it.
+  // The editor handles its own shortcuts; this covers focus outside it. ? opens the shortcuts list, Esc leaves focus mode.
   useEffect(() => {
     const on = (e: KeyboardEvent) => {
+      const typing = (e.target as HTMLElement | null)?.closest?.('input, textarea, select, [contenteditable="true"]');
+      if (e.key === '?' && !typing) { e.preventDefault(); setKeys((k) => !k); return; }
+      if (e.key === 'Escape' && !document.querySelector('.cm-tooltip-autocomplete')) { if (keys) setKeys(false); else if (zen) setZen(false); return; }
       if (!(e.ctrlKey || e.metaKey)) return;
       if (e.key === "'") { e.preventDefault(); run(); }
       else if (e.key === 'Enter') { e.preventDefault(); submit(); }
@@ -237,6 +249,18 @@ export function Ide({ view, onReload, query, test, onSubmitted }: {
       </select>
       {lang === 'java' && <span className="hidden text-sm text-muted xl:inline">Class name must be <code className="font-mono">Main</code></span>}
       <div className="ml-auto flex items-center gap-1">
+        <div role="group" aria-label="Editor theme" className="mr-1 inline-flex rounded-full border border-line bg-surface-hover p-0.5">
+          <button type="button" aria-pressed={!ideDark} aria-label="Light editor" title="Light editor" onClick={() => ideDark && saveSettings(flipTheme(settings, siteDark))}
+            className={`grid h-7 w-8 place-items-center rounded-full focus-ring ${!ideDark ? 'bg-card text-signal-ink shadow-sm' : 'text-muted hover:text-heading'}`}><Sun className="h-4 w-4" aria-hidden /></button>
+          <button type="button" aria-pressed={ideDark} aria-label="Dark editor" title="Dark editor" onClick={() => !ideDark && saveSettings(flipTheme(settings, siteDark))}
+            className={`grid h-7 w-8 place-items-center rounded-full focus-ring ${ideDark ? 'bg-card text-signal shadow-sm' : 'text-muted hover:text-heading'}`}><Moon className="h-4 w-4" aria-hidden /></button>
+        </div>
+        {wide && !test && (
+          <button type="button" onClick={() => setZen(!zen)} aria-pressed={zen} aria-label={zen ? 'Show the problem' : 'Focus mode: hide the problem'} title={zen ? 'Show the problem (Esc)' : 'Focus mode'} className="h-9 w-9 rounded-lg text-muted hover:bg-surface-hover hover:text-heading focus-ring">
+            {zen ? <PanelLeftOpen className="mx-auto h-4 w-4" aria-hidden /> : <PanelLeftClose className="mx-auto h-4 w-4" aria-hidden />}
+          </button>
+        )}
+        <button type="button" onClick={() => setKeys(true)} aria-label="Keyboard shortcuts" title="Shortcuts (?)" className="hidden h-9 w-9 rounded-lg text-muted hover:bg-surface-hover hover:text-heading focus-ring md:block"><Keyboard className="mx-auto h-4 w-4" aria-hidden /></button>
         <button type="button" onClick={reset} aria-label="Reset to starter code" title="Reset" className="h-9 w-9 rounded-lg text-muted hover:bg-surface-hover hover:text-heading focus-ring"><RotateCcw className="mx-auto h-4 w-4" aria-hidden /></button>
         <button type="button" onClick={() => setMenu(!menu)} aria-expanded={menu} aria-label="Editor settings" title="Settings" className="h-9 w-9 rounded-lg text-muted hover:bg-surface-hover hover:text-heading focus-ring"><Settings2 className="mx-auto h-4 w-4" aria-hidden /></button>
       </div>
@@ -254,12 +278,12 @@ export function Ide({ view, onReload, query, test, onSubmitted }: {
             <select value={settings.tabSize} onChange={(e) => saveSettings({ ...settings, tabSize: Number(e.target.value) as 2 | 4 })} className="h-8 rounded-md border border-line bg-card px-2 focus-ring"><option value={2}>2 spaces</option><option value={4}>4 spaces</option></select>
           </label>
           <label className="flex items-center justify-between text-body-md text-body">Theme
-            <select value={settings.theme} onChange={(e) => saveSettings({ ...settings, theme: e.target.value as IdeSettings['theme'] })} className="h-8 rounded-md border border-line bg-card px-2 focus-ring"><option value="auto">Same as site</option><option value="light">Light</option><option value="dark">Dark</option></select>
+            <select value={settings.theme} onChange={(e) => saveSettings(pickTheme(settings, e.target.value as IdeSettings['theme']))} className="h-8 rounded-md border border-line bg-card px-2 focus-ring"><option value="auto">Same as site</option>{IDE_THEMES.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}</select>
           </label>
           <label className="flex items-center justify-between text-body-md text-body">Wrap long lines
             <input type="checkbox" checked={settings.wrap} onChange={(e) => saveSettings({ ...settings, wrap: e.target.checked })} />
           </label>
-          <p className="border-t border-line pt-3 text-sm text-muted">Run: Ctrl + &apos; · Submit: Ctrl + Enter</p>
+          <p className="border-t border-line pt-3 text-sm text-muted">Run: Ctrl + &apos; · Submit: Ctrl + Enter · All shortcuts: ?</p>
         </div>
       )}
     </div>
@@ -283,7 +307,11 @@ export function Ide({ view, onReload, query, test, onSubmitted }: {
       <IdeEditor value={code} onChange={change} lang={lang} settings={settings} siteDark={siteDark} diagnostics={diags} onRun={run} onSubmit={submit} label={`Your ${LANG_LABEL[lang]} code for ${p.title}`} />
     </div>
   );
-  const consolePanel = <ConsolePanel tab={consoleTab} onTab={setConsoleTab} cases={cases} onCases={setCases} active={active} onActive={setActive} result={result} busy={busy} />;
+  const nextItem = !test && view.next ? view.context?.items.find((x) => x.id === view.next) : undefined;
+  const consolePanel = (
+    <ConsolePanel tab={consoleTab} onTab={setConsoleTab} cases={cases} onCases={setCases} active={active} onActive={setActive} result={result} busy={busy}
+      next={nextItem ? { title: nextItem.title, go: () => go(nextItem.id) } : undefined} />
+  );
   const problemPanel = <ProblemPanel view={view} signedIn={!!user} onUnlock={() => setPack(true)} onLoadCode={loadCode} />;
 
   const handle = (dir: 'v' | 'h') => (
@@ -318,13 +346,13 @@ export function Ide({ view, onReload, query, test, onSubmitted }: {
   );
 
   return (
-    <div className="fixed inset-0 z-30 flex flex-col bg-surface">
+    <div className={`ide-scope ${ideDark ? 'ide-dark' : 'ide-light'} fixed inset-0 z-30 flex flex-col bg-surface text-body`}>
       {header}
       {wide ? (
         <PanelGroup direction="horizontal" autoSaveId="tieedu-ide-h" className="min-h-0 flex-1">
-          <Panel defaultSize={42} minSize={25}>{problemPanel}</Panel>
-          {handle('h')}
-          <Panel minSize={35}>
+          {!zen && <Panel id="problem" order={1} defaultSize={42} minSize={25}>{problemPanel}</Panel>}
+          {!zen && handle('h')}
+          <Panel id="code" order={2} minSize={35}>
             <PanelGroup direction="vertical" autoSaveId="tieedu-ide-v">
               <Panel defaultSize={62} minSize={25}>
                 <div className="flex h-full flex-col bg-card">{toolbar}{notices}{editor}</div>
@@ -361,6 +389,19 @@ export function Ide({ view, onReload, query, test, onSubmitted }: {
         </>
       )}
       {drawerEl}
+      {keys && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" role="dialog" aria-label="Keyboard shortcuts" onClick={() => setKeys(false)}>
+          <div className="w-full max-w-md rounded-2xl border border-line bg-card p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between"><p className="text-lg font-semibold text-heading">Keyboard shortcuts</p><button type="button" aria-label="Close" onClick={() => setKeys(false)} className="rounded p-1 text-muted hover:text-heading focus-ring"><X className="h-5 w-5" aria-hidden /></button></div>
+            <dl className="mt-4 grid grid-cols-[1fr_auto] gap-x-6 gap-y-3 text-body-md">
+              {SHORTCUTS.map(([what, key]) => (
+                <React.Fragment key={what}><dt className="text-body">{what}</dt><dd className="text-right"><kbd className="rounded-md border border-line bg-surface-hover px-2 py-0.5 text-sm font-semibold text-heading">{key}</kbd></dd></React.Fragment>
+              ))}
+            </dl>
+            <p className="mt-4 text-sm text-muted">On a Mac, use Cmd instead of Ctrl.</p>
+          </div>
+        </div>
+      )}
       <BuyPackSheet open={pack} onClose={() => setPack(false)} slug={view.access.company?.slug || view.company} what="This problem" />
     </div>
   );

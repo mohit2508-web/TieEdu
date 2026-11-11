@@ -9,6 +9,7 @@ import '@/styles/globals.css';
 import '@/styles/diwali.css';
 import '@/styles/drops-fx.css';
 import '@/styles/brand.css';
+import '@/styles/ide-scope.css';
 // The type system (body, display, serif, mono), self-hosted via next/font.
 // Replaces Carlito, the Calibri clone the whole site used to render in.
 import { fontVariablesCss } from '@/styles/fonts';

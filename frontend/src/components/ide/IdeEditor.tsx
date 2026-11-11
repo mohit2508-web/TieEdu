@@ -8,7 +8,8 @@ import { indentUnit } from '@codemirror/language';
 import { lintGutter, setDiagnostics, type Diagnostic } from '@codemirror/lint';
 import type { CodeLang } from '@/lib/codeApi';
 import type { CodeDiagnostic } from '@/lib/compileErrors';
-import type { IdeSettings } from './ideSettings';
+import { resolveTheme, type IdeSettings } from './ideSettings';
+import { editorTheme } from './editorThemes';
 
 
 /**
@@ -53,14 +54,14 @@ export default function IdeEditor({ value, onChange, lang, settings, siteDark, d
     view.dispatch(setDiagnostics(view.state, diags));
   }, [diagnostics, value]);
 
-  const dark = settings.theme === 'dark' || (settings.theme === 'auto' && siteDark);
+  const themeId = resolveTheme(settings, siteDark);
   return (
     <CodeMirror
       ref={ref}
       value={value}
       onChange={onChange}
       height="100%"
-      theme={dark ? 'dark' : 'light'}
+      theme={editorTheme(themeId)}
       extensions={extensions}
       basicSetup={{ lineNumbers: true, foldGutter: true, highlightActiveLine: true, autocompletion: true, closeBrackets: true, bracketMatching: true, indentOnInput: true, tabSize: settings.tabSize }}
       indentWithTab

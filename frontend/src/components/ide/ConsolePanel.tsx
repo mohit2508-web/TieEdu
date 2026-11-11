@@ -1,8 +1,9 @@
 import React from 'react';
-import { Plus, X, CheckCircle2, XCircle } from 'lucide-react';
+import { Plus, X, CheckCircle2, XCircle, ArrowRight } from 'lucide-react';
 import { Tabs } from '@/components/ui/Tabs';
 import { VERDICT_LABEL, type CaseRun, type SuiteResult } from '@/lib/codeApi';
 import { BrandLoader } from '@/components/brand/BrandLoader';
+import { firstDiff } from '@/lib/outputDiff';
 
 export interface ConsoleCase { input: string; expected: string; sample: boolean }
 export type ConsoleResult = { kind: 'run'; data: CaseRun } | { kind: 'submit'; data: SuiteResult } | null;
@@ -20,13 +21,32 @@ function Out({ title, text, tone }: { title: string; text: string; tone?: 'bad' 
   );
 }
 
+/** Your output with the first differing line marked, and a one-line explanation. */
+function DiffOut({ actual, expected }: { actual: string; expected: string }) {
+  const d = firstDiff(actual, expected);
+  const lines = actual.replace(/\r\n/g, '\n').split('\n');
+  return (
+    <div>
+      <p className="text-sm font-medium text-muted">Your output</p>
+      <pre className="mt-1 max-h-48 overflow-auto rounded-lg bg-danger-soft p-3 font-mono text-sm leading-relaxed text-heading">
+        {lines.map((l, i) => (
+          <span key={i} className={`block ${d && i + 1 === d.line ? 'rounded bg-danger/15 outline outline-1 outline-danger/40' : ''}`}>{l || ' '}</span>
+        ))}
+      </pre>
+      {d && <p className="mt-1 text-sm text-body">First difference: line {d.line}, column {d.col}. Expected <code className="font-mono font-semibold text-heading">{d.want}</code>, got <code className="font-mono font-semibold text-danger">{d.got}</code>.</p>}
+    </div>
+  );
+}
+
 /**
  * The IDE console: Testcases (edit the examples, add your own, up to 8) and
  * Result (per-case output for Run; samples + hidden-test strip for Submit).
  */
-export function ConsolePanel({ tab, onTab, cases, onCases, active, onActive, result, busy, onJumpLine }: {
+export function ConsolePanel({ tab, onTab, cases, onCases, active, onActive, result, busy, onJumpLine, next }: {
   tab: ConsoleTab; onTab: (t: ConsoleTab) => void; cases: ConsoleCase[]; onCases: (c: ConsoleCase[]) => void;
   active: number; onActive: (i: number) => void; result: ConsoleResult; busy: '' | 'run' | 'submit'; onJumpLine?: (line: number) => void;
+  /** The next problem in the same list, offered after an Accepted submit. */
+  next?: { title: string; go: () => void };
 }) {
   const c = cases[Math.min(active, cases.length - 1)];
   const set = (i: number, k: 'input' | 'expected', v: string) => onCases(cases.map((x, j) => (j === i ? { ...x, [k]: v } : x)));
@@ -73,6 +93,20 @@ export function ConsolePanel({ tab, onTab, cases, onCases, active, onActive, res
           <p className="text-base text-muted">Run your code to see the output here.</p>
         ) : (
           <div className="space-y-4" aria-live="polite">
+            {suite && good && (
+              <div className="ide-accepted flex flex-wrap items-center gap-4 rounded-2xl border border-success/30 bg-success-soft p-4">
+                <span className="ide-accepted-badge grid h-12 w-12 shrink-0 place-items-center rounded-full bg-success text-white"><CheckCircle2 className="h-7 w-7" aria-hidden /></span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-lg font-bold text-heading">Accepted. All {suite.total} tests passed.</p>
+                  <p className="text-body-md text-body">{next ? 'Nicely done. Keep the streak going with the next one.' : 'Nicely done. That was the last problem in this list.'}</p>
+                </div>
+                {next && (
+                  <button type="button" onClick={next.go} className="btn btn-primary focus-ring inline-flex min-h-[44px] items-center gap-2 px-4">
+                    Next: {next.title} <ArrowRight className="h-4 w-4" aria-hidden />
+                  </button>
+                )}
+              </div>
+            )}
             <div className="flex flex-wrap items-baseline gap-3">
               <p className={`text-xl font-bold ${good ? 'text-success' : verdict === 'ran' ? 'text-heading' : 'text-danger'}`}>{VERDICT_LABEL[verdict || ''] || verdict}</p>
               {suite && suite.verdict !== 'compile_error' && <p className="text-base text-body">{suite.passed} / {suite.total} tests passed</p>}
@@ -104,7 +138,9 @@ export function ConsolePanel({ tab, onTab, cases, onCases, active, onActive, res
                   return (
                     <div className="space-y-3">
                       <Out title="Input" text={cases[Math.min(active, cases.length - 1)]?.input || ''} />
-                      <Out title="Your output" text={x.stdout} tone={x.passed === false ? 'bad' : x.passed ? 'good' : undefined} />
+                      {x.passed === false && x.status === 'ok' && x.expected !== null
+                        ? <DiffOut actual={x.stdout} expected={x.expected} />
+                        : <Out title="Your output" text={x.stdout} tone={x.passed === false ? 'bad' : x.passed ? 'good' : undefined} />}
                       {x.expected !== null && <Out title="Expected" text={x.expected} />}
                       {x.stderr && <Out title={x.status === 'time_limit' ? 'Time limit exceeded' : 'Error'} text={x.stderr} tone="bad" />}
                     </div>
@@ -119,7 +155,7 @@ export function ConsolePanel({ tab, onTab, cases, onCases, active, onActive, res
                   <div key={t.index} className="space-y-3">
                     <p className="text-base font-semibold text-heading">First failing example: case {t.index}</p>
                     <Out title="Input" text={t.input || ''} />
-                    <Out title="Your output" text={t.actual || ''} tone="bad" />
+                    {t.status === 'ok' ? <DiffOut actual={t.actual || ''} expected={t.expected || ''} /> : <Out title="Your output" text={t.actual || ''} tone="bad" />}
                     <Out title="Expected" text={t.expected || ''} />
                     {t.stderr && <Out title="Error" text={t.stderr} tone="bad" />}
                   </div>
