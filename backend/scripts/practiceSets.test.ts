@@ -81,6 +81,16 @@ async function main() {
   check('insights on the company page', page.insights.continue?.id === second && page.insights.mix.easy >= 1);
   check('the problem exists in the bank', !!BANK_BY_ID.get(first));
 
+  // Daily problem (§7, L6)
+  const { dailyProblem } = await import('../src/routes/practice.routes');
+  const { FREE_CORE } = await import('../src/lib/practice/bank');
+  const d1 = dailyProblem('2026-11-11');
+  check('daily problem is the same for a date and from the free core', !!d1 && d1.id === dailyProblem('2026-11-11')!.id && FREE_CORE.has(d1.id));
+  const week = new Set(Array.from({ length: 7 }, (_, i) => dailyProblem(`2026-11-${String(10 + i).padStart(2, '0')}`)!.id));
+  check('it changes across days', week.size >= 4, String(week.size));
+  const home = (await call('/home', 'u1')).body;
+  check('home carries the daily problem for today', !!home.daily && home.daily.id && typeof home.daily.solved_today === 'number' && home.daily.mine === false, JSON.stringify(home.daily));
+
   server.close();
   fs.rmSync(file, { force: true });
   console.log(`\npractice sets: ${pass} passed, ${fail} failed`);

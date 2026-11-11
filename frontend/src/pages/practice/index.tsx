@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Code2, Building2, ClipboardList, Flame } from 'lucide-react';
+import { ArrowRight, Code2, Building2, ClipboardList, Flame, CalendarCheck, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { PracticeLayout, Progress } from '@/components/practice/PracticeLayout';
 import { fetchPracticeHome, type PracticeHome } from '@/lib/codeApi';
 import { PracticeSkeleton } from '@/components/practice/PracticeSkeleton';
+import { ErrorState } from '@/components/common/ErrorState';
 
 /** The last 12 weeks as a grid of days; a filled cell = practised that day. */
 function Heatmap({ days }: { days: string[] }) {
@@ -31,10 +32,27 @@ export default function PracticeHomePage() {
 
   return (
     <PracticeLayout title="Practice" intro="Coding problems topic by topic, every company's question set, and tests in the real pattern. Pick up where you left off.">
-      {error && <p className="text-base text-danger">{error}</p>}
+      {error && <ErrorState message={error} onRetry={() => { setError(''); fetchPracticeHome().then(setH).catch((e) => setError(e.message)); }} />}
       {!h && !error && <PracticeSkeleton kind="home" label="Loading your practice" />}
       {h && (
         <div className="space-y-10">
+          {h.daily && (
+            <section aria-label="Daily problem" className="flex flex-wrap items-center gap-4 rounded-2xl border border-signal/40 bg-signal-soft/50 p-5">
+              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-card text-signal-ink shadow-sm"><CalendarCheck className="h-6 w-6" aria-hidden /></span>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-signal-ink">Today&apos;s problem · same for everyone</p>
+                <p className="text-lg font-semibold text-heading">{h.daily.title}</p>
+                <p className="text-body-md text-body">
+                  {h.daily.topic} · {h.daily.difficulty} · {h.daily.solved_today ? `${h.daily.solved_today} student${h.daily.solved_today === 1 ? '' : 's'} solved it today` : 'Be the first to solve it today'}
+                </p>
+              </div>
+              {h.daily.mine ? (
+                <span className="inline-flex items-center gap-2 text-body-md font-semibold text-success"><CheckCircle2 className="h-5 w-5" aria-hidden /> Solved today</span>
+              ) : (
+                <Link href={`/practice/problem/${h.daily.id}`} className="btn btn-primary focus-ring inline-flex min-h-[48px] items-center gap-2 px-5">Solve today&apos;s problem <ArrowRight className="h-4 w-4" aria-hidden /></Link>
+              )}
+            </section>
+          )}
           <section className="grid gap-4 md:grid-cols-3">
             <div className="rounded-2xl border border-line bg-card p-5 md:col-span-2">
               <p className="text-sm font-medium text-muted">{h.continue ? 'Continue' : 'Start here'}</p>

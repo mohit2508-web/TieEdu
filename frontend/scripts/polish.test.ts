@@ -6,6 +6,7 @@ import { editDistance, suggestPath } from '../src/lib/didYouMean';
 import { newErrorRef } from '../src/lib/clientErrors';
 import { SPLASH_BOOT, SPLASH_CSS, SPLASH_MOUNT } from '../src/lib/splash';
 import { firstDiff } from '../src/lib/outputDiff';
+import { milestoneFor } from '../src/lib/milestones';
 import { DEFAULT_SETTINGS, flipTheme, normaliseSettings, pickTheme, resolveTheme } from '../src/components/ide/ideSettings';
 import { readFileSync } from 'fs';
 import { join } from 'path';
@@ -57,6 +58,9 @@ const pairs = [...darkBlock.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/(--rgb-[a
 const darkScope = scope.slice(scope.indexOf('.ide-scope.ide-dark'), scope.indexOf('.ide-scope.ide-light'));
 const missing = pairs.filter((x) => !darkScope.includes(x));
 check('ide-scope.css carries every dark token from globals.css', pairs.length > 20 && missing.length === 0, `${pairs.length} tokens; missing ${missing.slice(0, 3).join(' ')}`);
+
+// Milestones (§7): only at 1, every 10th, and all
+check('milestones: first, every 10th, all, and quiet otherwise', !!milestoneFor(1, 65) && !!milestoneFor(20, 65) && /all 65/.test(milestoneFor(65, 65) || '') && milestoneFor(7, 65) === null && milestoneFor(0, 65) === null);
 
 console.log(`\npolish: ${pass} passed, ${fail} failed`);
 if (fail) process.exit(1);

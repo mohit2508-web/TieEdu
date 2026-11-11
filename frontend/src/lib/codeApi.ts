@@ -74,8 +74,10 @@ export interface SetInsights { mix: { easy: number; medium: number; hard: number
 export type CompanyCard = CompanyMeta & Counts & SetInsights & { locked: number; tests: number; best_mock: number | null; levels: number; target: boolean };
 export interface ComingSoonCompany { slug: string; name: string; logo_url: string; notify: boolean }
 export interface CompanyTest { slug: string; name: string; kind: 'full' | 'sectional'; questions: number; minutes: number; coding: boolean; attempts: number; best: number | null; last: { id: string; score: number } | null }
+/** The daily problem (PRACTICE_POLISH_PLAN.md §7): the same for everyone, from the free core. */
+export interface DailyProblem { date: string; id: string; title: string; difficulty: string; topic: string; solved_today: number; mine: boolean }
 export interface PracticeHome {
-  runner: boolean; totals: Counts & { active_days: number };
+  runner: boolean; daily?: DailyProblem | null; totals: Counts & { active_days: number };
   continue: { id: string; title: string; status: ProblemStatus } | null; next: { id: string; title: string; topic: string } | null;
   activity: string[]; topics: Array<Counts & { key: string; name: string }>; companies: Array<CompanyMeta & Counts & { tests: number }>;
 }

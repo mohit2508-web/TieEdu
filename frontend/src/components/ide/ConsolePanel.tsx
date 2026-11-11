@@ -42,11 +42,13 @@ function DiffOut({ actual, expected }: { actual: string; expected: string }) {
  * The IDE console: Testcases (edit the examples, add your own, up to 8) and
  * Result (per-case output for Run; samples + hidden-test strip for Submit).
  */
-export function ConsolePanel({ tab, onTab, cases, onCases, active, onActive, result, busy, onJumpLine, next }: {
+export function ConsolePanel({ tab, onTab, cases, onCases, active, onActive, result, busy, onJumpLine, next, milestone }: {
   tab: ConsoleTab; onTab: (t: ConsoleTab) => void; cases: ConsoleCase[]; onCases: (c: ConsoleCase[]) => void;
   active: number; onActive: (i: number) => void; result: ConsoleResult; busy: '' | 'run' | 'submit'; onJumpLine?: (line: number) => void;
   /** The next problem in the same list, offered after an Accepted submit. */
   next?: { title: string; go: () => void };
+  /** A milestone reached with this Accepted (first problem, every 10th). */
+  milestone?: string | null;
 }) {
   const c = cases[Math.min(active, cases.length - 1)];
   const set = (i: number, k: 'input' | 'expected', v: string) => onCases(cases.map((x, j) => (j === i ? { ...x, [k]: v } : x)));
@@ -98,6 +100,7 @@ export function ConsolePanel({ tab, onTab, cases, onCases, active, onActive, res
                 <span className="ide-accepted-badge grid h-12 w-12 shrink-0 place-items-center rounded-full bg-success text-white"><CheckCircle2 className="h-7 w-7" aria-hidden /></span>
                 <div className="min-w-0 flex-1">
                   <p className="text-lg font-bold text-heading">Accepted. All {suite.total} tests passed.</p>
+                  {milestone && <p className="text-body-md font-semibold text-success">{milestone}</p>}
                   <p className="text-body-md text-body">{next ? 'Nicely done. Keep the streak going with the next one.' : 'Nicely done. That was the last problem in this list.'}</p>
                 </div>
                 {next && (

@@ -13,7 +13,8 @@ import { ProblemPanel } from './ProblemPanel';
 import { ConsolePanel, type ConsoleCase, type ConsoleResult, type ConsoleTab } from './ConsolePanel';
 import { DEFAULT_SETTINGS, IDE_THEMES, flipTheme, normaliseSettings, pickTheme, resolveTheme, themeIsDark, type IdeSettings } from './ideSettings';
 import { parseDiagnostics, type CodeDiagnostic } from '@/lib/compileErrors';
-import { CodeApiError, LANG_LABEL, runCases, submitCode, type CodeLang, type CodeProblemView } from '@/lib/codeApi';
+import { CodeApiError, LANG_LABEL, fetchPracticeHome, runCases, submitCode, type CodeLang, type CodeProblemView } from '@/lib/codeApi';
+import { milestoneFor } from '@/lib/milestones';
 import { BrandLoader } from '@/components/brand/BrandLoader';
 import { BrandMark } from '@/components/brand/BrandMark';
 
@@ -104,6 +105,7 @@ export function Ide({ view, onReload, query, test, onSubmitted }: {
   const [mobileTab, setMobileTab] = useState<'problem' | 'code' | 'console'>('problem');
   const [zen, setZen] = useState(false);
   const [keys, setKeys] = useState(false);
+  const [milestone, setMilestone] = useState<string | null>(null);
   const themeId = resolveTheme(settings, siteDark);
   const ideDark = themeIsDark(themeId);
 
@@ -157,9 +159,14 @@ export function Ide({ view, onReload, query, test, onSubmitted }: {
     try {
       const r = await submitCode(p.id, lang, code, attemptId);
       setResult({ kind: 'submit', data: r });
+      setMilestone(null);
       onSubmitted?.(r);
       setDiags(r.compile_error ? parseDiagnostics(lang, r.compile_error) : []);
-      if (r.verdict === 'accepted') onReload();
+      if (r.verdict === 'accepted') {
+        onReload();
+        // Practice only (not inside a test): a small milestone line in the Accepted banner.
+        if (!test) fetchPracticeHome().then((h) => setMilestone(milestoneFor(h.totals.solved, h.totals.total))).catch(() => undefined);
+      }
     } catch (e) { fail(e); } finally { setBusy(''); }
   };
   // The editor handles its own shortcuts; this covers focus outside it. ? opens the shortcuts list, Esc leaves focus mode.
@@ -310,7 +317,7 @@ export function Ide({ view, onReload, query, test, onSubmitted }: {
   const nextItem = !test && view.next ? view.context?.items.find((x) => x.id === view.next) : undefined;
   const consolePanel = (
     <ConsolePanel tab={consoleTab} onTab={setConsoleTab} cases={cases} onCases={setCases} active={active} onActive={setActive} result={result} busy={busy}
-      next={nextItem ? { title: nextItem.title, go: () => go(nextItem.id) } : undefined} />
+      next={nextItem ? { title: nextItem.title, go: () => go(nextItem.id) } : undefined} milestone={milestone} />
   );
   const problemPanel = <ProblemPanel view={view} signedIn={!!user} onUnlock={() => setPack(true)} onLoadCode={loadCode} />;
 
