@@ -47,7 +47,8 @@ import { unlockRouter } from './routes/unlock.routes';
 import { notificationsRouter } from './routes/notifications.routes';
 import { authRouter } from './routes/auth.routes';
 import { requireAdmin, requireAuth, optionalAuth, assertAuthConfigured } from './middleware/auth';
-import { loadDb, saveDb, safeSaveDb, setMirrorHook } from './data/db';
+import { performance } from 'perf_hooks';
+import { loadDb, saveDb, safeSaveDb, setMirrorHook, dbTimings, dbStats, invalidateDbCache } from './data/db';
 import { devicesRouter, adminDevicesRouter } from './routes/devices.routes';
 import { storage } from './store';
 import { skillTestRouter } from './routes/skill-test.routes';
@@ -105,6 +106,22 @@ app.use(cors({
   credentials: true,
   exposedHeaders: ['Content-Range', 'Accept-Ranges', 'Content-Length']
 }));
+// Store timings (STORE_3D_SHOWCASE_AND_SPEED_PLAN.md Part A): a Server-Timing header on
+// every response, so the in-memory store's effect shows in DevTools on the live site; and
+// a failed request's unsaved partial edits are dropped from the in-memory store.
+app.use((req, res, next) => {
+  const t = { load: 0, save: 0, disk: 0 };
+  const start = performance.now();
+  const writeHead = res.writeHead;
+  (res as any).writeHead = function (...args: any[]) {
+    try {
+      if (!res.headersSent) res.setHeader('Server-Timing', `db;desc="store read";dur=${t.load.toFixed(1)}, dbsave;desc="store write";dur=${t.save.toFixed(1)}, dbdisk;desc="disk loads";dur=${t.disk}, app;dur=${(performance.now() - start).toFixed(1)}`);
+    } catch { /* headers already sent */ }
+    return (writeHead as any).apply(this, args);
+  };
+  res.on('finish', () => { if (res.statusCode === 400 || res.statusCode === 409 || res.statusCode === 422 || res.statusCode >= 500) invalidateDbCache(); });
+  dbTimings.run(t, next);
+});
 app.use(express.json({
   limit: '1mb',
   verify: (req: any, res, buf) => { req.rawBody = buf.toString('utf8'); } // byte-exact body for webhook HMAC
@@ -262,6 +279,7 @@ app.get('/api/health', (req, res) => {
     service: 'TiEEdu Express Backend API',
     port: PORT,
     storage: storage.status(),
+    store_memory: { ...dbStats, cache: process.env.DB_CACHE !== '0' },
     auth: 'enabled',
     timestamp: new Date(),
   });

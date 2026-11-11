@@ -39,6 +39,19 @@ export interface StoreItem {
   active: boolean;
   featured?: boolean;
   sort: number;
+  // Showcase (STORE_3D_SHOWCASE_AND_SPEED_PLAN.md §C). Unset fields fall back to lib/storeContent.
+  details?: string;
+  specs?: Array<[string, string]>;
+  in_box?: string[];
+  colors?: Array<{ name: string; hex: string }>;
+  model?: string | null;
+  /** Admin-uploaded artwork printed on the 3D model (front / back). */
+  print_front?: string | null;
+  print_back?: string | null;
+  /** Real product photos, shown next to the 3D view. */
+  gallery?: string[];
+  /** Rotates in the home-page promo. */
+  promo?: boolean;
 }
 
 export const PHYSICAL_MIN_AGE_DAYS = 30;
@@ -243,6 +256,16 @@ export function updateItem(db: any, id: string, patch: any): StoreItem {
   if (typeof patch?.featured === 'boolean') item.featured = patch.featured;
   if (typeof patch?.image === 'string') item.image = clean(patch.image, 500) || null;
   if (Number.isFinite(Number(patch?.sort))) item.sort = Math.round(Number(patch.sort));
+  // Showcase fields. An empty value clears the override, so the default content shows again.
+  const url = (v: unknown) => { const u = clean(v, 500); return /^(https:\/\/|\/api\/store\/media\/)/.test(u) ? u : null; };
+  if (typeof patch?.details === 'string') item.details = clean(patch.details, 2000) || undefined;
+  if (Array.isArray(patch?.specs)) item.specs = patch.specs.filter((r: any) => Array.isArray(r) && r[0] && r[1]).slice(0, 12).map((r: any) => [clean(r[0], 40), clean(r[1], 120)] as [string, string]);
+  if (Array.isArray(patch?.in_box)) item.in_box = patch.in_box.map((x: unknown) => clean(x, 80)).filter(Boolean).slice(0, 12);
+  if (Array.isArray(patch?.colors)) item.colors = patch.colors.filter((c: any) => c && /^#[0-9a-fA-F]{6}$/.test(c.hex) && c.name).slice(0, 4).map((c: any) => ({ name: clean(c.name, 30), hex: c.hex }));
+  if (patch?.print_front !== undefined) item.print_front = patch.print_front ? url(patch.print_front) : null;
+  if (patch?.print_back !== undefined) item.print_back = patch.print_back ? url(patch.print_back) : null;
+  if (Array.isArray(patch?.gallery)) item.gallery = patch.gallery.map(url).filter(Boolean).slice(0, 8) as string[];
+  if (typeof patch?.promo === 'boolean') item.promo = patch.promo;
   if (patch?.limit_per_user === null || Number.isFinite(Number(patch?.limit_per_user))) item.limit_per_user = patch.limit_per_user === null ? undefined : Math.max(0, Math.round(Number(patch.limit_per_user))) || undefined;
   if (item.kind === 'physical' && patch?.stock && typeof patch.stock === 'object') {
     const keys = item.sizes?.length ? item.sizes : ['one'];

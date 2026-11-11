@@ -1,4 +1,5 @@
 import React from 'react';
+import { mediaUrl } from '@/lib/storeApi';
 
 /**
  * TiEEdu swag and reward illustrations (TIE_COINS_STORE_PLAN.md §4.2): flat drawings with the
@@ -142,10 +143,17 @@ const ART: Record<string, React.ReactNode> = {
 
 const RING: Record<string, string> = { 'frame-bronze': '#B8743A', 'frame-silver': '#A8A9AD', 'frame-gold': '#E3B232' };
 
+const RENDERS = new Set(['bottle', 'mug', 'tshirt', 'hoodie', 'cap', 'stickers', 'keychain', 'notebook', 'kit']);
+
 export const SwagArt: React.FC<{ art: string; image?: string | null; className?: string; label: string }> = ({ art, image, className = '', label }) => {
   if (image) {
     // eslint-disable-next-line @next/next/no-img-element -- admin-uploaded product photo
-    return <img src={image} alt={label} className={`h-full w-full object-contain ${className}`} loading="lazy" />;
+    return <img src={mediaUrl(image) || image} alt={label} className={`h-full w-full object-contain ${className}`} loading="lazy" decoding="async" />;
+  }
+  if (RENDERS.has(art)) {
+    // Studio renders of the 3D models (public/store/renders, made from components/store3d/models.ts).
+    // eslint-disable-next-line @next/next/no-img-element -- small static WebP, already sized
+    return <img src={`/store/renders/${art}.webp?v=1`} alt={label} width={480} height={480} className={`h-full w-full object-contain drop-shadow-[0_10px_14px_rgba(0,0,0,0.18)] ${className}`} loading="lazy" decoding="async" />;
   }
   const ring = RING[art];
   return (

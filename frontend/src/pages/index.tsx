@@ -24,6 +24,7 @@ import { Company } from '@/types';
 import { useFestival } from '@/lib/festival';
 import { DiwaliHero } from '@/components/festival/DiwaliHero';
 import { CoinsStrip } from '@/components/coins/CoinsStrip';
+import { SwagBand, SwagPromo } from '@/components/store3d/SwagPromo';
 
 const JoinChannelsPopup = dynamic(
   () => import('@/components/home/JoinChannelsPopup').then((m) => m.JoinChannelsPopup),
@@ -163,7 +164,9 @@ export default function Home() {
           {/* TiE Coins call to action (TIE_COINS_STORE_PLAN.md §6.1). */}
           <div className="mx-auto w-full max-w-6xl px-4 pt-6 sm:px-6">
             <CoinsStrip signedIn={false} />
+            <SwagBand signedIn={false} />
           </div>
+          <SwagPromo />
 
           {dataError && (
             <div className="w-full border-b border-signal/30 bg-signal-soft px-4 py-2.5 text-center">

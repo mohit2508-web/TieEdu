@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { X, CheckCircle2, Copy, Package, Truck, Lock, Target, Gift } from 'lucide-react';
+import { X, CheckCircle2, Copy, Package, Truck, Target, Gift } from 'lucide-react';
 import { CoinIcon } from './CoinIcon';
 import { SwagArt } from './SwagArt';
 import { Segmented } from '@/components/ui/Segmented';
@@ -9,27 +9,41 @@ import { BrandLoader } from '@/components/brand/BrandLoader';
 import { announceCoins, setCoinGoal } from '@/lib/coinsApi';
 import { cancelOrder, fetchMyOrders, fetchStore, redeemItem, ORDER_LABEL, type Address, type StoreItemView, type StoreOrder, type StoreView } from '@/lib/storeApi';
 import { cn } from '@/lib/cn';
+import { ProductSheet } from '@/components/store3d/ProductSheet';
+import { ShowcaseHero } from '@/components/store3d/ShowcaseHero';
+import { EarnGuide } from '@/components/store3d/EarnGuide';
+import type { CoinRuleView } from '@/lib/coinsApi';
+import { planFor } from '@/lib/storeEarn';
 
 type Filter = 'all' | 'digital' | 'physical';
 const inr = (n: number) => n.toLocaleString('en-IN');
 const nice = (d: string) => new Date(`${d}T00:00:00Z`).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
 const field = 'mt-1 w-full rounded-lg border border-line bg-card px-3 py-2.5 text-body-md text-heading focus:border-signal focus:outline-none';
 
-/** One store card: what it is, what it costs, and whether you can get it now. */
-function ItemCard({ item, view, onPick, isGoal, onGoal }: { item: StoreItemView; view: StoreView; onPick: () => void; isGoal: boolean; onGoal: () => void }) {
+/** One store tile: a studio stage that tilts toward the pointer, the price and your progress. Click opens the product popup. */
+function ItemCard({ item, view, onOpen, isGoal, onGoal }: { item: StoreItemView; view: StoreView; onOpen: () => void; isGoal: boolean; onGoal: () => void }) {
   const coins = view.coins ?? 0;
   const short = Math.max(0, item.coins - coins);
   const maxed = !!item.limit_per_user && (item.redeemed || 0) >= item.limit_per_user;
   const soon = item.kind === 'physical' && !item.in_stock;
   const pct = Math.min(100, view.signed_in ? (coins / item.coins) * 100 : 0);
+  const tilt = (e: React.MouseEvent<HTMLElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    e.currentTarget.style.setProperty('--ry', `${((e.clientX - r.left) / r.width - 0.5) * 10}deg`);
+    e.currentTarget.style.setProperty('--rx', `${-((e.clientY - r.top) / r.height - 0.5) * 8}deg`);
+  };
+  const reset = (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.setProperty('--rx', '0deg'); e.currentTarget.style.setProperty('--ry', '0deg'); };
   return (
-    <article className={cn('flex flex-col overflow-hidden rounded-2xl border bg-card transition-shadow hover:shadow-md', item.featured ? 'border-signal/50' : 'border-line')}>
-      <div className="relative grid h-40 place-items-center bg-surface-hover/70 p-3">
-        <SwagArt art={item.art} image={item.image} label={item.name} className="h-full w-full" />
-        {item.kind === 'physical' && <span className="absolute left-3 top-3 rounded-full bg-card px-2 py-0.5 text-xs font-semibold text-muted">TiEEdu swag</span>}
+    <article onMouseMove={tilt} onMouseLeave={reset}
+      className={cn('swag-tilt group relative flex flex-col overflow-hidden rounded-2xl border bg-card', item.featured ? 'border-signal/50' : 'border-line')}>
+      <button type="button" onClick={onOpen} aria-label={`${item.name}: see details${item.model ? ' and 3D view' : ''}`} className="relative grid h-48 place-items-center overflow-hidden swag-stage p-4 focus-ring">
+        <SwagArt art={item.art} image={item.image} label={item.name} className="swag-art h-full w-full" />
+        <span className="swag-shine" aria-hidden />
+        {item.kind === 'physical' && !soon && <span className="absolute left-3 top-3 rounded-full bg-card px-2 py-0.5 text-xs font-semibold text-muted">TiEEdu swag</span>}
+        {item.model && <span className="absolute bottom-3 right-3 rounded-full bg-heading/85 px-2 py-0.5 text-[11px] font-bold tracking-wide text-paper opacity-90 group-hover:opacity-100">3D</span>}
         {isGoal && <span className="absolute bottom-3 left-3 inline-flex items-center gap-1 rounded-full bg-signal px-2 py-0.5 text-xs font-semibold text-on-primary"><Target className="h-3.5 w-3.5" aria-hidden /> Your goal</span>}
-        {soon && <span className="absolute right-3 top-3 rounded-full bg-heading px-2 py-0.5 text-xs font-semibold text-paper">Launching soon</span>}
-      </div>
+        {soon && <span className="absolute left-3 top-3 rounded-full bg-heading px-2 py-0.5 text-xs font-semibold text-paper">Launching soon</span>}
+      </button>
       <div className="flex flex-1 flex-col p-4">
         <h3 className="text-lg font-semibold text-heading">{item.name}</h3>
         <p className="mt-1 flex-1 text-body-md text-body">{item.blurb}</p>
@@ -43,16 +57,11 @@ function ItemCard({ item, view, onPick, isGoal, onGoal }: { item: StoreItemView;
           </div>
         )}
         <div className="mt-3">
-          {!view.signed_in ? (
-            <Link href="/signup?next=/rewards" className="btn btn-secondary focus-ring flex min-h-[44px] w-full items-center justify-center">Sign up to start earning</Link>
-          ) : maxed ? (
+          {maxed ? (
             <p className="flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-success-soft text-body-md font-semibold text-success"><CheckCircle2 className="h-4 w-4" aria-hidden /> You have this</p>
-          ) : soon ? (
-            <p className="flex min-h-[44px] items-center justify-center rounded-xl bg-surface-hover text-body-md font-semibold text-muted">Opens when stock arrives</p>
           ) : (
-            <button type="button" onClick={onPick} disabled={short > 0}
-              className="btn btn-primary focus-ring flex min-h-[44px] w-full items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-50">
-              {short > 0 ? <><Lock className="h-4 w-4" aria-hidden /> Keep earning</> : 'Get it'}
+            <button type="button" onClick={onOpen} className={cn('btn focus-ring flex min-h-[44px] w-full items-center justify-center gap-2', view.signed_in && short === 0 && !soon ? 'btn-primary' : 'btn-secondary')}>
+              {view.signed_in && short === 0 && !soon ? 'Get it' : soon ? 'See it · launching soon' : item.model ? 'See it in 3D' : 'See details'}
             </button>
           )}
         </div>
@@ -204,17 +213,29 @@ function OrderRow({ o, onCancel }: { o: StoreOrder; onCancel: () => void }) {
 }
 
 /** The store on /rewards (TIE_COINS_STORE_PLAN.md §4): digital rewards and TiEEdu swag. */
-export function StoreSection({ signedIn }: { signedIn: boolean }) {
+export function StoreSection({ signedIn, rules = null, userName = null }: { signedIn: boolean; rules?: CoinRuleView[] | null; userName?: string | null }) {
   const [view, setView] = useState<StoreView | null>(null);
   const [orders, setOrders] = useState<StoreOrder[] | null>(null);
   const [error, setError] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
   const [pick, setPick] = useState<StoreItemView | null>(null);
   const [claim, setClaim] = useState<string | undefined>(undefined);
+  const [detail, setDetail] = useState<StoreItemView | null>(null);
+  const typical = useMemo(() => (rules ? planFor(30, rules).perDay : 25), [rules]);
+  const setGoal = (i: StoreItemView) => { if (!view) return; setCoinGoal(i.id).then(() => { setView({ ...view, goal_item_id: i.id }); announceCoins([{ rule: 'goal', coins: 0, note: i.name }]); }).catch(() => undefined); };
   const load = () => { setError(''); fetchStore().then(setView).catch((e) => setError(e.message)); if (signedIn) fetchMyOrders().then((r) => setOrders(r.orders)).catch(() => setOrders([])); };
   useEffect(load, [signedIn]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const items = useMemo(() => (view?.items || []).filter((i) => filter === 'all' || i.kind === filter), [view, filter]);
+  // /rewards?item=<id> (from the home-page promo) opens that item's popup once the store loads.
+  const [asked, setAsked] = useState<string | null>(null);
+  useEffect(() => { setAsked(new URLSearchParams(window.location.search).get('item')); }, []);
+  useEffect(() => {
+    if (!asked || !view) return;
+    const it = view.items.find((i) => i.id === asked);
+    if (it) setDetail(it);
+    setAsked(null);
+  }, [asked, view]);
 
   return (
     <section id="store" className="mt-10 scroll-mt-24">
@@ -241,13 +262,19 @@ export function StoreSection({ signedIn }: { signedIn: boolean }) {
           </ul>
         </div>
       )}
+      {view && filter !== 'digital' && <ShowcaseHero items={view.items} view={view} typicalPerDay={typical} onOpen={setDetail} onGoal={setGoal} />}
       {view && (
         <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {items.map((i) => (
-            <ItemCard key={i.id} item={i} view={view} onPick={() => { setClaim(undefined); setPick(i); }} isGoal={view.goal_item_id === i.id}
-              onGoal={() => setCoinGoal(i.id).then(() => { setView({ ...view, goal_item_id: i.id }); announceCoins([{ rule: 'goal', coins: 0, note: i.name }]); }).catch(() => undefined)} />
+            <ItemCard key={i.id} item={i} view={view} onOpen={() => setDetail(i)} isGoal={view.goal_item_id === i.id} onGoal={() => setGoal(i)} />
           ))}
         </div>
+      )}
+      {view && rules && <EarnGuide rules={rules} items={view.items} coins={view.coins ?? 0} signedIn={view.signed_in} pace={view.pace} onOpen={setDetail} />}
+      {detail && (
+        <ProductSheet item={detail} view={view} rules={rules} userName={userName} isGoal={view?.goal_item_id === detail.id}
+          onClose={() => setDetail(null)} onGoal={() => setGoal(detail)}
+          onGet={() => { const it = detail; setDetail(null); setClaim(undefined); setPick(it); }} />
       )}
       {orders && orders.length > 0 && (
         <div className="mt-10">

@@ -3021,3 +3021,48 @@ body {
   .plan-loader-dot { animation: none; }
   .plan-loader-day { background: rgb(var(--rgb-signal-soft)); box-shadow: inset 0 -4px 0 rgb(var(--rgb-signal)); }
 }
+
+/* ---- TiEEdu Store showcase (STORE_3D_SHOWCASE_AND_SPEED_PLAN.md §B) ---- */
+/* A slow light sweep across a profile-frame ring. */
+.frame-sweep {
+  background: conic-gradient(from 0deg, transparent 0 70%, rgba(255, 255, 255, 0.55) 80%, transparent 90%);
+  mix-blend-mode: soft-light;
+  animation: frame-sweep 3.6s linear infinite;
+}
+@keyframes frame-sweep { to { transform: rotate(360deg); } }
+
+/* Store tiles: a soft studio stage, a hover tilt set from JS (--rx, --ry) and a shine pass. */
+.swag-stage {
+  background:
+    radial-gradient(120% 90% at 50% 100%, rgb(var(--rgb-ink, 20 20 20) / 0.10), transparent 60%),
+    radial-gradient(90% 70% at 50% 0%, rgb(255 255 255 / 0.55), transparent 70%),
+    rgb(var(--rgb-bg-surface-hover));
+}
+.swag-tilt {
+  transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  transform-style: preserve-3d;
+}
+.swag-tilt:hover { box-shadow: 0 18px 40px -18px rgb(0 0 0 / 0.35); }
+.swag-art { transition: transform 0.35s ease; transform: translateZ(30px); }
+.swag-tilt:hover .swag-art { transform: translateZ(40px) scale(1.06); }
+.swag-shine { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.swag-shine::after {
+  content: ''; position: absolute; top: -50%; left: -60%; width: 40%; height: 200%;
+  background: linear-gradient(105deg, transparent, rgb(255 255 255 / 0.45), transparent);
+  transform: rotate(8deg) translateX(-120%);
+}
+.swag-tilt:hover .swag-shine::after { animation: swag-shine 0.9s ease forwards; }
+@keyframes swag-shine { to { transform: rotate(8deg) translateX(520%); } }
+
+/* Home promo: slides in from the side, the item bobs gently. */
+.swag-promo-in { animation: swag-promo-in 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
+@keyframes swag-promo-in { from { opacity: 0; transform: translateY(24px) scale(0.96); } to { opacity: 1; transform: none; } }
+.swag-bob { animation: swag-bob 3.2s ease-in-out infinite; }
+@keyframes swag-bob { 50% { transform: translateY(-6px) rotate(-2deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .frame-sweep, .swag-bob, .swag-promo-in { animation: none; }
+  .swag-tilt, .swag-art { transition: none; transform: none !important; }
+  .swag-tilt:hover .swag-shine::after { animation: none; }
+}

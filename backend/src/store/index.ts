@@ -55,7 +55,6 @@ let mirrorEnabled = false;
 let mirrorHealthy = false;
 let mirrorLastSync: string | null = null;
 let mirrorSyncError: string | null = null;
-let mirrorWriteQueue: Promise<void> = Promise.resolve();
 
 export class PgStore implements IStore {
   readonly name = 'cockroachdb-replica';
@@ -68,28 +67,64 @@ export class PgStore implements IStore {
 
   bindPool(poolInstance: Pool) { this.pool = poolInstance; }
 
-  async save(data: any): Promise<void> {
-    if (!mirrorEnabled || !this.pool) return;
+  /**
+   * Coalesced replica write. Every saveDb() used to queue its own full upload, so a
+   * burst of 100 saves meant 100 full-document uploads in a row. Now at most one
+   * upload is in flight, a newer state replaces any waiting one, and uploads are
+   * at least MIRROR_MIN_INTERVAL_MS apart. The local file stays the source of
+   * truth; the promise resolves once a write containing this state has finished.
+   */
+  private pending: any = null;
+  private waiters: Array<() => void> = [];
+  private timer: NodeJS.Timeout | null = null;
+  private inflight = false;
+  private lastAt = 0;
+
+  save(data: any): Promise<void> {
+    if (!mirrorEnabled || !this.pool) return Promise.resolve();
     if (!data || typeof data !== 'object' || !Array.isArray(data.companies)) {
-      throw new Error('Refusing to mirror a corrupt database state');
+      return Promise.reject(new Error('Refusing to mirror a corrupt database state'));
     }
-    // Serialize writes so upserts never interleave.
-    mirrorWriteQueue = mirrorWriteQueue.then(async () => {
-      try {
-        await this.pool!.query(
-          `INSERT INTO app_state (id, doc, updated_at)
-           VALUES ('main', $1::jsonb, NOW())
-           ON CONFLICT (id) DO UPDATE SET doc = EXCLUDED.doc, updated_at = NOW()`,
-          [JSON.stringify(data)]
-        );
-        mirrorLastSync = new Date().toISOString();
-        mirrorSyncError = null;
-      } catch (e: any) {
-        mirrorSyncError = e?.message || 'mirror write failed';
-        mirrorHealthy = false; // honest degradation — the file ledger is still safe
-      }
-    });
-    return mirrorWriteQueue;
+    this.pending = data;
+    const done = new Promise<void>((resolve) => this.waiters.push(resolve));
+    this.kick();
+    return done;
+  }
+
+  private kick() {
+    if (this.inflight || this.timer || !this.pending) return;
+    const min = Number(process.env.MIRROR_MIN_INTERVAL_MS ?? 5000);
+    const wait = Math.max(0, this.lastAt + min - Date.now());
+    this.timer = setTimeout(() => { this.timer = null; void this.flush(); }, wait);
+    // Never keep the process alive just for a replica write.
+    this.timer.unref?.();
+  }
+
+  private async flush() {
+    const data = this.pending;
+    const waiters = this.waiters;
+    this.pending = null;
+    this.waiters = [];
+    if (!data) return;
+    this.inflight = true;
+    try {
+      await this.pool!.query(
+        `INSERT INTO app_state (id, doc, updated_at)
+         VALUES ('main', $1::jsonb, NOW())
+         ON CONFLICT (id) DO UPDATE SET doc = EXCLUDED.doc, updated_at = NOW()`,
+        [JSON.stringify(data)]
+      );
+      mirrorLastSync = new Date().toISOString();
+      mirrorSyncError = null;
+    } catch (e: any) {
+      mirrorSyncError = e?.message || 'mirror write failed';
+      mirrorHealthy = false; // honest degradation — the file ledger is still safe
+    } finally {
+      this.inflight = false;
+      this.lastAt = Date.now();
+      for (const w of waiters) w();
+      this.kick();
+    }
   }
 
   async load(): Promise<any | null> {

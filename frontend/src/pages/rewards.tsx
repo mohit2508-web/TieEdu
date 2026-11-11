@@ -103,7 +103,7 @@ export default function RewardsPage() {
           </section>
         )}
 
-        <StoreSection signedIn={!!user} />
+        <StoreSection signedIn={!!user} rules={rules} userName={user?.name || null} />
 
         {/* How to earn */}
         <section className="mt-10">

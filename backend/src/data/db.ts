@@ -1,5 +1,7 @@
 import fs from 'fs';
 import path from 'path';
+import { AsyncLocalStorage } from 'async_hooks';
+import { performance } from 'perf_hooks';
 import { getSeedCourses } from './seedCourses';
 import { getSeedTracks } from './seedTracks';
 
@@ -2334,7 +2336,52 @@ export function withCourseDimensions<T extends Course>(course: T): T {
   return course;
 }
 
+// ---------------------------------------------------------------------------
+// In-memory store (STORE_3D_SHOWCASE_AND_SPEED_PLAN.md Part A)
+//
+// loadDb() used to read and JSON.parse the whole db.json on every call (85 ms+
+// for 14 MB, and every API request calls it), which blocked Node's single
+// thread for every user. Now the parsed object stays in memory and is re-read
+// only when the file changes on disk (mtime, size or inode differ: another
+// process, a test or a manual restore). saveDb() refreshes the copy.
+//
+// Callers share one object. That also ends lost updates between overlapping
+// requests (each used to save its own stale copy). A request that fails after a
+// partial change has its unsaved edits dropped: server.ts calls
+// invalidateDbCache() on 400/409/422/5xx responses. DB_CACHE=0 restores the old
+// read-every-time behaviour.
+// ---------------------------------------------------------------------------
+const DB_CACHE_ON = process.env.DB_CACHE !== '0';
+let dbCache: { data: any; key: string } | null = null;
+const fileKey = () => {
+  try { const s = fs.statSync(DB_FILE); return `${s.mtimeMs}:${s.size}:${s.ino}`; } catch { return ''; }
+};
+
+/** Per-request store timings for the Server-Timing header (set by server.ts). */
+export const dbTimings = new AsyncLocalStorage<{ load: number; save: number; disk: number }>();
+export const dbStats = { diskLoads: 0, lastDiskLoadMs: 0, lastSaveMs: 0, bytes: 0 };
+
 export function loadDb() {
+  const t0 = performance.now();
+  try {
+    if (!DB_CACHE_ON) { dbStats.diskLoads++; return loadDbFromDisk(); }
+    const key = fileKey();
+    if (dbCache && key && dbCache.key === key) return dbCache.data;
+    const data = loadDbFromDisk();
+    dbStats.diskLoads++;
+    dbStats.lastDiskLoadMs = Math.round(performance.now() - t0);
+    const t = dbTimings.getStore(); if (t) t.disk++;
+    dbCache = { data, key: fileKey() };
+    return data;
+  } finally {
+    const t = dbTimings.getStore(); if (t) t.load += performance.now() - t0;
+  }
+}
+
+/** Drop the in-memory copy; the next loadDb() reads the file again. */
+export function invalidateDbCache() { dbCache = null; }
+
+function loadDbFromDisk() {
   if (!fs.existsSync(DATA_DIR)) {
     fs.mkdirSync(DATA_DIR, { recursive: true });
   }
@@ -2667,7 +2714,14 @@ export function saveDb(data: any) {
   if (!fs.existsSync(DATA_DIR)) {
     fs.mkdirSync(DATA_DIR, { recursive: true });
   }
-  writeFileAtomic(DB_FILE, JSON.stringify(data, null, 2));
+  const t0 = performance.now();
+  // Compact JSON: about 30% smaller and faster to write than pretty-printed.
+  const json = JSON.stringify(data);
+  writeFileAtomic(DB_FILE, json);
+  if (DB_CACHE_ON) dbCache = { data, key: fileKey() };
+  dbStats.bytes = json.length;
+  dbStats.lastSaveMs = Math.round(performance.now() - t0);
+  const t = dbTimings.getStore(); if (t) t.save += performance.now() - t0;
   // Async waterfall to the CockroachDB replica (if enabled). Never blocks the sync API.
   if (mirrorHook) {
     try {
