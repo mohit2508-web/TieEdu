@@ -38,3 +38,16 @@ export function announceCoins(gains: CoinGain[] | undefined) {
   window.dispatchEvent(new CustomEvent(COINS_EVENT, { detail: gains }));
 }
 export const sumCoins = (gains: CoinGain[] | undefined) => (gains || []).reduce((s, g) => s + g.coins, 0);
+
+/** The streak page (backend lib/streakBadges.ts). */
+export type StreakDayState = 'solved' | 'practised' | 'frozen' | 'repaired' | 'missed' | 'today' | 'future';
+export interface StreakPage {
+  month: string; today: string; current: number; best: number;
+  days: Array<{ day: string; state: StreakDayState; daily: boolean }>;
+  month_badge: { key: string; name: string; done: number; total: number; earned: boolean };
+  year_badges: Array<{ key: string; name: string; days: number; progress: number; earned: boolean }>;
+  milestones: Array<{ days: number; key: string; name: string; earned: boolean }>;
+  earned: Array<{ key: string; name: string; earned_at: string }>;
+  daily_today_done: boolean; repairable_days: string[]; repairs_left: number;
+}
+export const fetchStreakPage = (month?: string) => get<StreakPage>(`/streak${month ? `?month=${month}` : ''}`);

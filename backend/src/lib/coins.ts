@@ -13,6 +13,7 @@
 // ============================================================================
 import crypto from 'crypto';
 import { istDate, touchStreak, type StreakRecord } from './streak';
+import { badgeName, checkStreakBadges } from './streakBadges';
 
 export type CoinRuleId =
   | 'checkin' | 'daily_problem' | 'daily_mcq' | 'solve' | 'streak' | 'month_perfect' | 'month_25'
@@ -131,6 +132,11 @@ export function spend(db: any, userId: string, key: string, coins: number, note:
 export interface CoinGain { rule: string; coins: number; note: string }
 const gainOf = (e: CoinEvent | null): CoinGain[] => (e ? [{ rule: e.rule, coins: e.coins, note: e.note }] : []);
 
+/** New streak / monthly / yearly badges, as zero-coin gains so the same "+coins" moment can show them. */
+export function badgeGains(db: any, userId: string, now = new Date()): CoinGain[] {
+  return checkStreakBadges(db, userId, now).map((k) => ({ rule: 'badge', coins: 0, note: `Badge: ${badgeName(k)}` }));
+}
+
 // ---- hooks ----------------------------------------------------------------
 
 /**
@@ -146,6 +152,7 @@ export function recordStudyDay(db: any, userId: string, now = new Date()): { str
   for (const [days, coins] of Object.entries(ms)) {
     if (r.current >= Number(days)) gains.push(...gainOf(grant(db, userId, 'streak', `streak:${userId}:${days}:${runStart}`, coins, `${days}-day streak`, null, now)));
   }
+  gains.push(...badgeGains(db, userId, now));
   return { streak: r, gains };
 }
 
@@ -163,6 +170,7 @@ export function recordSolve(db: any, userId: string, p: { id: string; title: str
     const repaired = (db.streak_repairs || []).some((x: any) => x.user_id === userId && String(x.day).startsWith(month));
     if (n >= daysInMonth && !repaired) gains.push(...gainOf(grant(db, userId, 'month_perfect', `monthall:${userId}:${month}`, ruleOf(db, 'month_perfect').coins, `Every daily problem in ${month}`, null, now)));
   }
+  if (opts.daily) gains.push(...badgeGains(db, userId, now));
   if (!opts.solutionSeen) {
     const by = ruleOf(db, 'solve').by_difficulty || { easy: 0, medium: 0, hard: 0 };
     const c = by[(p.difficulty as 'easy' | 'medium' | 'hard')] ?? by.easy;

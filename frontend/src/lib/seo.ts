@@ -24,6 +24,7 @@ const NOINDEX_PREFIXES = [
   '/parent',
   '/parent-email',
   '/my-courses',
+  '/streak',
   '/my-certificates',
   '/calendar',
   '/debrief',

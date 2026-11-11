@@ -2,9 +2,10 @@ import { Router, Request, Response } from 'express';
 import { loadDb, safeSaveDb } from '../data/db';
 import { optionalAuth, requireAuth } from '../middleware/auth';
 import { balanceOf, recentCoins, rulesOf, todayTasks } from '../lib/coins';
-import { istDate, streakView } from '../lib/streak';
+import { istDate, repairableDays, streakView } from '../lib/streak';
 import { dailyProblem } from '../lib/practice/daily';
 import { itemById } from '../lib/store';
+import { streakPage } from '../lib/streakBadges';
 
 /**
  * TiE Coins (TIE_COINS_STORE_PLAN.md).
@@ -53,6 +54,19 @@ coinsRouter.post('/goal', requireAuth, (req: Request, res: Response) => {
   user.coin_goal = id;
   safeSaveDb(db);
   res.json({ goal: goalOf(db, req.userId!), coins: balanceOf(db, req.userId!) });
+});
+
+/** The streak page: a month's calendar (?month=YYYY-MM), milestones, monthly and yearly badges, repairs left. */
+coinsRouter.get('/streak', requireAuth, (req: Request, res: Response) => {
+  const db: any = loadDb();
+  res.setHeader('Cache-Control', 'private, no-store');
+  const page = streakPage(db, req.userId!, String(req.query.month || ''));
+  const month = istDate().slice(0, 7);
+  res.json({
+    ...page,
+    repairable_days: repairableDays(db, req.userId!),
+    repairs_left: 3 - (db.streak_repairs || []).filter((r: any) => r.user_id === req.userId && String(r.day).slice(0, 7) === month).length,
+  });
 });
 
 /** Signed-out visitors still see the earning table; this keeps one call for the header. */

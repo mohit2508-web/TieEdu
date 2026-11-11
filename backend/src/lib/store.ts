@@ -13,6 +13,7 @@
 import crypto from 'crypto';
 import { balanceOf, grant, spend, CoinError } from './coins';
 import { repairStreakDay } from './streak';
+import { checkStreakBadges } from './streakBadges';
 import { istDate } from './streak';
 import { packPrice } from './pricing';
 import { SET_BY_SLUG } from './practice/bank';
@@ -159,6 +160,7 @@ export function redeem(db: any, userId: string, input: RedeemInput, now = new Da
     if (!Array.isArray(db.streak_repairs)) db.streak_repairs = [];
     db.streak_repairs.push({ user_id: userId, day, at: now.toISOString(), order_id: id });
     order.result = { day, streak: String(r.current) };
+    checkStreakBadges(db, userId, now);
   } else if (item.action === 'coupon') {
     let code = '';
     for (let i = 0; i < 10 && !code; i++) {

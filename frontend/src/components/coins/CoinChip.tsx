@@ -55,7 +55,7 @@ export const CoinChip: React.FC<{ className?: string }> = ({ className = '' }) =
         <div role="dialog" aria-label="Your streak and TiE Coins" className="absolute right-0 top-[calc(100%+8px)] z-50 w-[320px] max-w-[calc(100vw-24px)] rounded-2xl border border-line bg-card p-4 shadow-xl">
           <div className="flex items-center justify-between">
             <p className="flex items-center gap-2 text-lg font-bold text-heading"><CoinIcon size={22} />{sum.coins.toLocaleString('en-IN')} <span className="text-sm font-semibold text-muted">TiE Coins</span></p>
-            <p className="flex items-center gap-1 text-body-md font-semibold text-heading"><Flame size={16} className="text-signal-hover" aria-hidden />{sum.streak} day{sum.streak === 1 ? '' : 's'}</p>
+            <Link href="/streak" onClick={() => setOpen(false)} className="flex items-center gap-1 rounded-lg px-1 text-body-md font-semibold text-heading hover:bg-surface-hover focus-ring"><Flame size={16} className="text-signal-hover" aria-hidden />{sum.streak} day{sum.streak === 1 ? '' : 's'}</Link>
           </div>
           <p className="mt-3 text-sm font-semibold text-muted">Today</p>
           <ul className="mt-1 space-y-1">

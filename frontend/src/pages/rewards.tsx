@@ -66,7 +66,7 @@ export default function RewardsPage() {
                   <>
                     <div className="flex flex-wrap items-end justify-between gap-3">
                       <p className="flex items-center gap-2 font-display text-4xl font-bold tabular-nums text-heading"><CoinIcon size={34} />{me.coins.toLocaleString('en-IN')}</p>
-                      <p className="flex items-center gap-1.5 text-lg font-semibold text-heading"><Flame className="h-5 w-5 text-signal-hover" aria-hidden /> {me.streak.current}-day streak</p>
+                      <Link href="/streak" className="flex items-center gap-1.5 text-lg font-semibold text-heading hover:underline focus-ring"><Flame className="h-5 w-5 text-signal-hover" aria-hidden /> {me.streak.current}-day streak</Link>
                     </div>
                     <div className="mt-4 grid grid-cols-7 gap-1.5" aria-label="Last 7 days">
                       {me.streak.week.map((d) => (
