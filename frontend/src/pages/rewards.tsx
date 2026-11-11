@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Flame, CheckCircle2, Circle, ArrowRight, Trophy, CalendarCheck, Code2, Building2, GraduationCap, ClipboardList } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { CoinIcon } from '@/components/coins/CoinIcon';
+import { StoreSection } from '@/components/coins/StoreSection';
 import { BrandLoader } from '@/components/brand/BrandLoader';
 import { ErrorState } from '@/components/common/ErrorState';
 import { fetchCoinRules, fetchCoinsMe, type CoinRuleView, type CoinsMe } from '@/lib/coinsApi';
@@ -54,7 +55,7 @@ export default function RewardsPage() {
               {!user && !loading && (
                 <div className="mt-5 flex flex-wrap gap-3">
                   <Link href="/signup?next=/practice" className="btn btn-primary focus-ring inline-flex min-h-[48px] items-center gap-2 px-6">Start your streak <ArrowRight className="h-4 w-4" aria-hidden /></Link>
-                  <Link href="/practice" className="btn btn-secondary focus-ring inline-flex min-h-[48px] items-center px-5">See today&apos;s problem</Link>
+                  <a href="#store" className="btn btn-secondary focus-ring inline-flex min-h-[48px] items-center px-5">See the store</a>
                 </div>
               )}
             </div>
@@ -99,6 +100,8 @@ export default function RewardsPage() {
             </div>
           </section>
         )}
+
+        <StoreSection signedIn={!!user} />
 
         {/* How to earn */}
         <section className="mt-10">

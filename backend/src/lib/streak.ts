@@ -39,7 +39,8 @@ export interface StreakRecord {
   days: string[];
 }
 
-const KEEP_DAYS = 60;
+// 400: a year-long streak must stay recomputable (Streak Repair, lib/store.ts).
+const KEEP_DAYS = 400;
 
 export function streaksOf(db: any): StreakRecord[] {
   if (!Array.isArray(db.user_streaks)) db.user_streaks = [];
@@ -82,7 +83,7 @@ export function touchStreak(db: any, userId: string, now = new Date()): StreakRe
   } else if (gap === 2 && freezeFree(r, addDays(today, -1))) {
     const missed = addDays(today, -1);
     r.freezes_used = [...r.freezes_used, isoWeek(missed)].slice(-12);
-    r.frozen_days = [...r.frozen_days, missed].slice(-12);
+    r.frozen_days = [...r.frozen_days, missed].slice(-KEEP_DAYS);
     r.current += 1;
   } else {
     r.current = 1;
@@ -114,7 +115,8 @@ export function streakView(db: any, userId: string, now = new Date()): StreakVie
   const today = istDate(now);
   const r = findStreak(db, userId);
   const done = new Set(r?.days || []);
-  const frozen = new Set(r?.frozen_days || []);
+  // Repaired days (Streak Repair) read like frozen ones: covered, not practised.
+  const frozen = new Set([...(r?.frozen_days || []), ...((r as any)?.repaired_days || [])]);
   const week = Array.from({ length: 7 }, (_, i) => {
     const day = addDays(today, i - 6);
     const state: StreakView['week'][number]['state'] = done.has(day)
@@ -140,4 +142,46 @@ export function streakView(db: any, userId: string, now = new Date()): StreakVie
     freeze_available_this_week: freezeFree(r, today),
     week,
   };
+}
+
+/**
+ * Streak Repair (TIE_COINS_STORE_PLAN.md §4.1, LeetCode's Time Travel Ticket): fill one
+ * missed day of the current IST month and recount the run. At most 3 a month; past days
+ * only. Returns the new record. Throws a message string when the day cannot be repaired.
+ */
+export function repairStreakDay(db: any, userId: string, day: string, now = new Date()): StreakRecord & { repaired_days?: string[] } {
+  const today = istDate(now);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) throw new Error('Pick a day to repair');
+  if (day >= today) throw new Error('Only a missed day before today can be repaired');
+  if (day.slice(0, 7) !== today.slice(0, 7)) throw new Error('Only days in this month can be repaired');
+  const r = (findStreak(db, userId) || null) as (StreakRecord & { repaired_days?: string[] }) | null;
+  if (!r) throw new Error('Start a streak first');
+  const repaired = r.repaired_days || [];
+  if (r.days.includes(day) || r.frozen_days.includes(day) || repaired.includes(day)) throw new Error('That day is already counted');
+  if (repaired.filter((d) => d.slice(0, 7) === today.slice(0, 7)).length >= 3) throw new Error('You have used all 3 repairs this month');
+  r.repaired_days = [...repaired, day].slice(-KEEP_DAYS);
+  // Recount: consecutive counted days ending at the latest counted day.
+  const counted = new Set([...r.days, ...r.frozen_days, ...r.repaired_days]);
+  const latest = [...counted].sort().pop()!;
+  let n = 0;
+  let d = latest;
+  while (counted.has(d)) { n += 1; d = addDays(d, -1); }
+  r.current = n;
+  r.run_start = addDays(latest, -(n - 1));
+  r.last_day = latest > (r.last_day || '') ? latest : r.last_day;
+  r.best = Math.max(r.best, r.current);
+  const user = (db.users || []).find((u: any) => u.id === userId);
+  if (user) user.streak = r.current;
+  return r;
+}
+
+/** Days in the current IST month that a repair could fill (missed, before today). */
+export function repairableDays(db: any, userId: string, now = new Date()): string[] {
+  const today = istDate(now);
+  const r = findStreak(db, userId) as (StreakRecord & { repaired_days?: string[] }) | null;
+  if (!r) return [];
+  const counted = new Set([...r.days, ...r.frozen_days, ...(r.repaired_days || [])]);
+  const out: string[] = [];
+  for (let d = `${today.slice(0, 7)}-01`; d < today; d = addDays(d, 1)) if (!counted.has(d)) out.push(d);
+  return out;
 }

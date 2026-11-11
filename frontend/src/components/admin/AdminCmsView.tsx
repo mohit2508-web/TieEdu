@@ -18,6 +18,7 @@ import { ExperimentsTab } from '@/components/admin/ExperimentsTab';
 import { ThreeTStatusTab } from '@/components/admin/ThreeTStatusTab';
 import { CodingPracticeTab } from '@/components/admin/CodingPracticeTab';
 import { ClientErrorsTab } from '@/components/admin/ClientErrorsTab';
+import { StoreAdminTab } from '@/components/admin/StoreAdminTab';
 import { FestivalTab } from '@/components/admin/FestivalTab';
 import { AnalyticsTab } from '@/components/admin/AnalyticsTab';
 import { SettingsTab } from '@/components/admin/SettingsTab';
@@ -33,7 +34,7 @@ import { MessageLogTab } from '@/components/admin/MessageLogTab';
 import {
   BookOpen, Building2, BarChart3, ClipboardList, FileText, Layers, LayoutDashboard,
   LogOut, Mail, RefreshCw, Settings2, ShoppingBag, Ticket, Users, ExternalLink, Wallet,
-GraduationCap, Award, Zap, BellRing, Send, BrainCircuit, Newspaper, BadgeCheck, Briefcase, FlaskConical, ShieldCheck, ListChecks, Inbox, ScrollText, Sparkles, Code2, Bug } from 'lucide-react';
+GraduationCap, Award, Zap, BellRing, Send, BrainCircuit, Newspaper, BadgeCheck, Briefcase, FlaskConical, ShieldCheck, ListChecks, Inbox, ScrollText, Sparkles, Code2, Bug, Gift } from 'lucide-react';
 import { AdminCoursesTab } from '@/components/admin/course/AdminCoursesTab';
 import { AdminCertificatesTab } from '@/components/admin/course/AdminCertificatesTab';
 import { AdminXpTab } from '@/components/admin/course/AdminXpTab';
@@ -41,7 +42,7 @@ import { NotificationBell } from '@/components/layout/NotificationBell';
 import { AccountMenu } from '@/components/layout/AccountMenu';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 
-type TabId = 'overview' | 'orders' | 'payments' | 'users' | 'analytics' | 'hub' | 'content' | 'pack' | 'drops' | 'coupons' | 'courses' | 'certificates' | 'xp' | 'skilltest' | 'drives' | 'reports' | 'offers' | 'guarantee' | 'recruiters' | 'experiments' | 'threet' | 'festival' | 'emails' | 'notifications' | 'broadcast' | 'settings' | 'support' | 'messagelog' | 'coding' | 'errors';
+type TabId = 'overview' | 'orders' | 'payments' | 'users' | 'analytics' | 'hub' | 'content' | 'pack' | 'drops' | 'coupons' | 'courses' | 'certificates' | 'xp' | 'skilltest' | 'drives' | 'reports' | 'offers' | 'guarantee' | 'recruiters' | 'experiments' | 'threet' | 'festival' | 'emails' | 'notifications' | 'broadcast' | 'settings' | 'support' | 'messagelog' | 'coding' | 'errors' | 'store';
 type SectionId = 'home' | 'students' | 'sales' | 'content' | 'practice' | 'messaging' | 'settings';
 
 /**
@@ -79,6 +80,7 @@ const NAV: { id: TabId; label: string; icon: any; section: SectionId }[] = [
   { id: 'skilltest', label: 'Skill tests', icon: BrainCircuit, section: 'content' },
   { id: 'drops', label: 'Drops', icon: Newspaper, section: 'content' },
   { id: 'coding', label: 'Coding practice', icon: Code2, section: 'practice' },
+  { id: 'store', label: 'Rewards & store', icon: Gift, section: 'practice' },
   { id: 'drives', label: 'Mock drives', icon: ClipboardList, section: 'practice' },
   { id: 'reports', label: 'Candidate reports', icon: FileText, section: 'practice' },
   { id: 'offers', label: 'Offer wall', icon: BadgeCheck, section: 'practice' },
@@ -433,6 +435,7 @@ export const AdminCmsView: React.FC = () => {
             {activeTab === 'experiments' && <ExperimentsTab />}
             {activeTab === 'threet' && <ThreeTStatusTab companies={companiesList} />}
             {activeTab === 'coding' && <CodingPracticeTab />}
+            {activeTab === 'store' && <StoreAdminTab />}
             {activeTab === 'festival' && <FestivalTab />}
 
             {/* TAB: EMAIL MARKETING — leads, campaigns, templates */}
