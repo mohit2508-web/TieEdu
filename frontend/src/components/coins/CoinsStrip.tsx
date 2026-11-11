@@ -6,6 +6,7 @@ import { SwagArt } from './SwagArt';
 import { GoalBar } from './GoalBar';
 import { COINS_EVENT, fetchCoinsMe, type CoinsMe } from '@/lib/coinsApi';
 import { cn } from '@/lib/cn';
+import { useAuth } from '@/context/AuthContext';
 
 /** The swag the strip shows, with their store prices (TIE_COINS_STORE_PLAN.md §4.2). */
 const SHOWCASE = [
@@ -22,16 +23,21 @@ const SHOWCASE = [
  * - Signed in: your coins, streak, today's three tasks and the goal you are saving for.
  */
 export const CoinsStrip: React.FC<{ signedIn: boolean; className?: string }> = ({ signedIn, className = '' }) => {
+  const { user } = useAuth();
   const [me, setMe] = useState<CoinsMe | null>(null);
+  const [failed, setFailed] = useState(false);
   useEffect(() => {
-    if (!signedIn) return;
-    const load = () => fetchCoinsMe().then(setMe).catch(() => undefined);
+    if (!signedIn || !user) return;
+    // One retry (the first request can race the token right after sign-in); then hide, never a stuck skeleton.
+    const load = () => fetchCoinsMe().then((d) => { setMe(d); setFailed(false); })
+      .catch(() => new Promise((r) => setTimeout(r, 1500)).then(fetchCoinsMe).then(setMe).catch(() => setFailed(true)));
     load();
     window.addEventListener(COINS_EVENT, load);
     return () => window.removeEventListener(COINS_EVENT, load);
-  }, [signedIn]);
+  }, [signedIn, user]);
 
   if (signedIn) {
+    if (failed) return null;
     if (!me) return <div className={cn('h-36 animate-pulse rounded-3xl bg-surface-hover', className)} aria-hidden />;
     const done = me.today.filter((t) => t.done).length;
     return (

@@ -10,6 +10,7 @@ import { PrepNav, type PrepTab } from '@/components/prep/PrepNav';
 import { BuyPackSheet } from '@/components/prep/BuyPackSheet';
 import { PlanLoader } from '@/components/prep/PlanLoader';
 import { fetchPrep, markLesson, prepHref, setPrepDate, type PrepItem, type PrepView } from '@/lib/prepApi';
+import { ErrorState } from '@/components/common/ErrorState';
 
 /**
  * My company prep (INFOSYS_SE_3T_UX_PLAN §2b): readiness and days left on top,
@@ -50,7 +51,17 @@ export default function PrepPage() {
       </main>
     );
   }
-  if (error) return <main className="mx-auto max-w-xl px-4 py-16 text-center text-base text-muted">{error}</main>;
+  if (error) {
+    const notOpen = /no prep plan|not found|unknown company/i.test(error);
+    return (
+      <main className="mx-auto max-w-xl px-4 py-16">
+        <ErrorState kind={notOpen ? 'notfound' : 'network'} title={notOpen ? 'This plan is not open yet' : undefined}
+          message={notOpen ? "The day-by-day plan opens when this company's question bank is complete. You can practise its coding set and tests now." : error}
+          onRetry={notOpen ? undefined : () => { setError(''); load(); }}
+          action={notOpen ? { label: 'Practise this company', href: `/practice/companies/${slug}` } : undefined} />
+      </main>
+    );
+  }
   if (!data) return <PlanLoader />;
 
   const r = data.readiness;

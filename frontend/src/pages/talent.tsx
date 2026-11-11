@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Button, Card, Skeleton } from '@/components/ui';
 import { answerRequest, getStudentTalent, saveStudentTalent, type CandidateCard, type StudentTalent } from '@/lib/talentApi';
 import { CandidateView } from '@/components/talent/CandidateView';
+import { ErrorState } from '@/components/common/ErrorState';
 
 /*
  * Get found by recruiters (E4, the student's side). Opt in to verified skill
@@ -68,7 +69,8 @@ export default function TalentPage() {
           </Card>
         )}
         {user && !data && !err && <Skeleton className="mt-6 h-48 w-full rounded-card" />}
-        {err && <p className="mt-4 text-sm text-danger" role="alert">{err}</p>}
+        {err && !data && <ErrorState className="mt-6" message={err} onRetry={() => { setErr(null); getStudentTalent().then(setData).catch((e) => setErr((e as Error).message)); }} />}
+        {err && data && <p className="mt-4 text-sm text-danger" role="alert">{err}</p>}
 
         {user && data && (
           <>

@@ -42,6 +42,9 @@ export const getSessionUser = (): AuthUser | null => sessionUser;
 let sessionSignedOut = false;
 export const isSessionSignedOut = (): boolean => sessionSignedOut;
 
+/** Fired when a refresh fails: the session ended (expired, revoked, or the cookie never stored). */
+export const SESSION_ENDED_EVENT = 'tie:session-ended';
+
 export const tryRefreshSession = (): Promise<boolean> => {
   if (!refreshInFlight) {
     refreshInFlight = apiRefresh()
@@ -55,6 +58,8 @@ setAuthSession(data.accessToken, data.user?.id || getUserId());
       setAuthSession(null, null);
       sessionUser = null;
       sessionSignedOut = true;
+      // Tell the app (AuthContext) the session is gone, so it shows signed-out instead of failing on every page.
+      if (typeof window !== 'undefined') window.dispatchEvent(new Event(SESSION_ENDED_EVENT));
       return false;
       })
       .finally(() => { refreshInFlight = null; });

@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useLayoutEffect, useState,
 import {
   AuthUser, AuthLoginPayload, apiLogin, apiSignup, apiLogout, setAuthSession, getUserId,
 } from '@/lib/auth';
-import { tryRefreshSession, getSessionUser } from '@/lib/api';
+import { tryRefreshSession, SESSION_ENDED_EVENT, getSessionUser } from '@/lib/api';
 import { clearPlacementAccess } from '@/lib/placementApi';
 
 interface AuthContextValue {
@@ -75,6 +75,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setLoading(false);
     })();
     return () => { active = false; };
+  }, []);
+
+  // A refresh that fails later (session expired or revoked) signs the visitor out in the UI too.
+  useEffect(() => {
+    const ended = () => { setUser(null); try { localStorage.removeItem('tieedu_cached_user'); } catch {} };
+    window.addEventListener(SESSION_ENDED_EVENT, ended);
+    return () => window.removeEventListener(SESSION_ENDED_EVENT, ended);
   }, []);
 
   const adoptSession = (data: AuthLoginPayload) => {

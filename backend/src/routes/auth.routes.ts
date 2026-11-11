@@ -16,10 +16,15 @@ export const authRouter = Router();
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+/** Not a local machine: the cookie stays Secure everywhere except http://localhost runs. */
+const isRemoteHost = (res: Response): boolean => !/^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/i.test(String(res.req?.headers['x-forwarded-host'] || res.req?.headers.host || ''));
+
 function setRefreshCookie(res: Response, token: string) {
   res.cookie(COOKIE_NAME, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    // Secure only over HTTPS: a production build served on http://localhost would otherwise never
+    // store the cookie, and every page fails with "Session expired" once the 15-minute token ends.
+    secure: process.env.NODE_ENV === 'production' && isRemoteHost(res),
     sameSite: 'lax',
     path: '/',
     maxAge: REFRESH_TTL_DAYS * 24 * 60 * 60 * 1000,

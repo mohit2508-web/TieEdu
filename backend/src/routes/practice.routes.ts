@@ -215,7 +215,7 @@ practiceRouter.get('/test-result/:attemptId', requireAuth, (req: Request, res: R
     history: history.slice(-10).map((x: any) => ({ id: x.id, score: Number(x.score) || 0, at: x.submittedAt })),
     fix: [...sections].filter((s) => s.total > 0).sort((x, y) => x.pct - y.pct).slice(0, 2).filter((s) => s.pct < 80),
     readiness: prep ? { now: prep.readiness.score, before: prep.readiness.previous, band: prep.readiness.band } : null,
-    prep: !!(slug && (db.companies || []).find((c: any) => c.slug === slug)),
+    prep: !!(slug && PREP_COMPANIES[slug] && (db.companies || []).find((c: any) => c.slug === slug)),
   });
 });
 
@@ -272,6 +272,6 @@ practiceRouter.get('/companies/:slug', optionalAuth, (req: Request, res: Respons
       };
     }),
     tests: testsOf(db, set.slug, req.userId),
-    prep: !!(db.companies || []).find((c: any) => c.slug === set.slug),
+    prep: !!(PREP_COMPANIES[set.slug] && (db.companies || []).find((c: any) => c.slug === set.slug)),
   });
 });
