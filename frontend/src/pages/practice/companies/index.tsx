@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { PracticeLayout, Progress } from '@/components/practice/PracticeLayout';
 import { Chip } from '@/components/ui/Chip';
 import { fetchPracticeCompanies, type CompanyMeta, type Counts } from '@/lib/codeApi';
+import { PracticeSkeleton } from '@/components/practice/PracticeSkeleton';
 
 /** Company sets (PRACTICE_MODE_PLAN.md §3.3): each company's coding set and tests, with progress and pack state. */
 export default function CompanySetsPage() {
@@ -16,7 +17,7 @@ export default function CompanySetsPage() {
   return (
     <PracticeLayout title="Company sets" intro="The coding questions each company asks, in the order to practise them, plus its tests in the real pattern. Problems many companies ask appear in every set that has them.">
       {error && <p className="text-base text-danger">{error}</p>}
-      {!list && !error && <p className="text-base text-muted">Loading…</p>}
+      {!list && !error && <PracticeSkeleton kind="cards" label="Loading company sets" />}
       {list && (
         <div className="grid gap-4 md:grid-cols-2">
           {list.map((c) => (

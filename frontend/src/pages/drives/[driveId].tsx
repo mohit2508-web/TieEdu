@@ -14,6 +14,7 @@ import {
 } from '@/lib/drivesApi';
 import StatusPill, { driveStatusTone } from '@/components/apple/StatusPill';
 import ScoreRing from '@/components/apple/ScoreRing';
+import { BrandLoader } from '@/components/brand/BrandLoader';
 
 export default function DriveDetailPage() {
   const router = useRouter();
@@ -100,7 +101,7 @@ export default function DriveDetailPage() {
   }
 
   if (loading) {
-    return <main className="mx-auto w-full max-w-3xl px-4 py-16 text-sm text-[var(--apple-label-2)]" style={{ background: 'var(--apple-bg)' }}>Loading…</main>;
+    return <main className="mx-auto w-full max-w-3xl px-4 py-16" style={{ background: 'var(--apple-bg)' }}><BrandLoader caption="Loading this drive…" /></main>;
   }
 
   if (!detail) {

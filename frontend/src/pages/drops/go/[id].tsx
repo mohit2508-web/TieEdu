@@ -55,7 +55,7 @@ export default function DropGoPage() {
 
         {!drop ? (
           <p className="text-center text-sm font-semibold text-[var(--text-body)]" role="status">
-            {failed ? 'This link is no longer available.' : 'Loading…'}
+            {failed ? 'This link is no longer available.' : 'Opening the link…'}
           </p>
         ) : !target ? (
           <div className="space-y-4 text-center">

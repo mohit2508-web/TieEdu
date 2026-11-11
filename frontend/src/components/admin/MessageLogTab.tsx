@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { fetchMessageLogApi, type MessageLogRowView } from '@/lib/api';
+import { BrandLoader } from '@/components/brand/BrandLoader';
 
 /**
  * Every decision the messaging rulebook made (lib/messaging): what went out
@@ -83,7 +84,7 @@ export const MessageLogTab: React.FC = () => {
           </thead>
           <tbody>
             {data === null ? (
-              <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-400">Loading…</td></tr>
+              <tr><td colSpan={5}><BrandLoader caption="Loading the message log…" /></td></tr>
             ) : rows.length === 0 ? (
               <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-400">No messages yet. Receipts, certificates and results appear here as they happen.</td></tr>
             ) : (

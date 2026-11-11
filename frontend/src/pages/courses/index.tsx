@@ -394,7 +394,7 @@ export default function CoursesPage({ initialData }: { initialData: CourseCatalo
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <p className="text-sm text-[var(--text-muted)]" role="status" aria-live="polite">
             {status === 'loading'
-              ? 'Loading…'
+              ? 'Loading courses…'
               : `${total} ${total === 1 ? 'course' : 'courses'}${filters.q ? ` for “${filters.q}”` : ''}`}
           </p>
           {pills.map((pill) => (

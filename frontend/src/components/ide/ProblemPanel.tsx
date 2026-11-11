@@ -3,6 +3,7 @@ import { Copy, Check, Lightbulb, Lock, BookOpen, History, FileText, CheckCircle2
 import { Chip } from '@/components/ui/Chip';
 import { Tabs } from '@/components/ui/Tabs';
 import { fetchSubmissions, LANG_LABEL, VERDICT_LABEL, type CodeLang, type CodeProblemView, type Submission } from '@/lib/codeApi';
+import { BrandLoader } from '@/components/brand/BrandLoader';
 
 type Tab = 'description' | 'hints' | 'solution' | 'submissions';
 
@@ -155,7 +156,7 @@ export function ProblemPanel({ view, signedIn, onUnlock, onLoadCode }: {
         {tab === 'submissions' && (!signedIn ? (
           <p className="text-base text-body">Sign in to see your submissions.</p>
         ) : subs === null ? (
-          <p className="text-base text-muted">Loading…</p>
+          <BrandLoader variant="inline" caption="Loading your submissions…" className="text-base text-muted" />
         ) : !subs.length ? (
           <p className="text-base text-body">No submissions yet. Press Submit to run the hidden tests.</p>
         ) : (

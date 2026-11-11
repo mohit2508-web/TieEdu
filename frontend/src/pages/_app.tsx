@@ -8,6 +8,7 @@ import { useRouter } from 'next/router';
 import '@/styles/globals.css';
 import '@/styles/diwali.css';
 import '@/styles/drops-fx.css';
+import '@/styles/brand.css';
 // The type system (body, display, serif, mono), self-hosted via next/font.
 // Replaces Carlito, the Calibri clone the whole site used to render in.
 import { fontVariablesCss } from '@/styles/fonts';
@@ -23,6 +24,7 @@ import { CookieConsent } from '@/components/legal/CookieConsent';
 import { DeviceLimitSheet } from '@/components/auth/DeviceLimitSheet';
 import { canonicalFor, isNoindexPath } from '@/lib/seo';
 import dynamic from 'next/dynamic';
+import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 
 // Diwali Utsav 2026: its own chunk, renders nothing outside the sale window.
 const FestivalLayer = dynamic(() => import('@/components/festival/FestivalLayer').then((m) => m.FestivalLayer), { ssr: false });
@@ -157,7 +159,9 @@ export default function App({ Component, pageProps }: AppProps) {
               exists to remove. Only the page between them moves.
             */}
             <RouteTransition>
-              <Component {...pageProps} />
+              <ErrorBoundary area="app" resetKey={router.asPath}>
+                <Component {...pageProps} />
+              </ErrorBoundary>
             </RouteTransition>
             <PWAInstallPrompt />
           </AppShell>

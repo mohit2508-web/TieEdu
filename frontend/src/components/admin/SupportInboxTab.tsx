@@ -33,7 +33,7 @@ export const SupportInboxTab: React.FC = () => {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-gray-600">
-          {rows === null ? 'Loading…' : `${openCount} open · ${rows.length} total`}
+          {rows === null ? 'Loading the inbox…' : `${openCount} open · ${rows.length} total`}
         </p>
         <div className="flex gap-1.5">
           {(['open', 'resolved', 'all'] as const).map((f) => (

@@ -9,6 +9,7 @@ import { Chip } from '@/components/ui/Chip';
 import { Tabs } from '@/components/ui/Tabs';
 import { fetchTestReport, LANG_LABEL, type CodeLang, type TestReport } from '@/lib/codeApi';
 import { getResultApi } from '@/lib/skillTestApi';
+import { PracticeSkeleton } from '@/components/practice/PracticeSkeleton';
 
 function Delta({ now, before }: { now: number; before: number | null }) {
   if (before == null) return null;
@@ -52,7 +53,7 @@ export default function TestReportPage() {
       intro={r ? `Attempt ${r.attempt.number} · ${new Date(r.attempt.submitted_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}` : undefined}
       actions={r ? <Link href={`/practice/test/${r.test.slug || slug}`} className="btn btn-primary focus-ring min-h-[48px] px-5"><RotateCcw className="h-4 w-4" aria-hidden /> Retake</Link> : null}>
       {error && <p className="text-base text-danger">{error}</p>}
-      {!r && !error && <p className="text-base text-muted">Loading your report…</p>}
+      {!r && !error && <PracticeSkeleton kind="report" label="Loading your report" />}
       {r && (
         <>
           {flags > 0 && (

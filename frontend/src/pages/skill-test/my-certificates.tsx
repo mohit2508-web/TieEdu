@@ -64,7 +64,7 @@ function MyCertificates() {
           <div>
             <h1 className="text-xl font-bold text-gray-900">My Certificates</h1>
             <p className="text-sm text-gray-500">
-              {loading ? 'Loading…' : `${certs.length} verified certificate${certs.length === 1 ? '' : 's'}`}
+              {loading ? 'Loading your certificates…' : `${certs.length} verified certificate${certs.length === 1 ? '' : 's'}`}
             </p>
           </div>
         </div>

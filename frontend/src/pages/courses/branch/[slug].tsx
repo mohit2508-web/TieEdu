@@ -157,7 +157,7 @@ export default function BranchPage({ initialData, branch }: { initialData: Cours
           <p className="mt-4 text-base leading-relaxed text-[var(--text-body)]">{meta.blurb}</p>
           <p className="mt-3 text-sm text-[var(--text-muted)]" role="status" aria-live="polite">
             {status === 'loading'
-              ? 'Loading…'
+              ? 'Loading courses…'
               : total === 0
                 ? 'No courses here yet'
                 : `${total} ${total === 1 ? 'course' : 'courses'}${freeCount > 0 ? ` · ${freeCount} free` : ''}`}

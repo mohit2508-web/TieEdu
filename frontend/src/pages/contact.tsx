@@ -62,6 +62,13 @@ export default function ContactPage() {
     const t = router.query.topic;
     if (typeof t === 'string' && SUPPORT_TOPICS.some((x) => x.id === t)) setF((prev) => ({ ...prev, topic: t as SupportTopic }));
   }, [router.query.topic]);
+  // From an error page: "Report this" carries the error ref, so support can find the crash in the log.
+  useEffect(() => {
+    const ref = router.query.ref;
+    if (typeof ref === 'string' && /^ERR-[A-Z0-9]{4,10}$/.test(ref)) {
+      setF((prev) => (prev.message ? prev : { ...prev, message: `Something went wrong on the site (error ref ${ref}). What I was doing: ` }));
+    }
+  }, [router.query.ref]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();

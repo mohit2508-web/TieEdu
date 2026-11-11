@@ -6,6 +6,7 @@ import {
   downloadCsv, fetchCoverage, fetchFunnel, fetchPracticeOverview, fetchPracticeStudent, fetchPracticeStudents, fetchProblemStats, fetchSubmissionCode,
   type CoverageRow, type FunnelRow, type PracticeOverview, type ProblemStat, type StudentDetail, type StudentRow,
 } from '@/lib/adminPracticeApi';
+import { BrandLoader } from '@/components/brand/BrandLoader';
 
 type Sub = 'overview' | 'students' | 'problems' | 'companies' | 'coverage';
 
@@ -64,7 +65,7 @@ function OverviewPane() {
   const [error, setError] = useState('');
   useEffect(() => { setO(null); fetchPracticeOverview(days).then(setO).catch((e) => setError(e.message)); }, [days]);
   if (error) return <p className="text-danger">{error}</p>;
-  if (!o) return <p className="text-muted">Loading…</p>;
+  if (!o) return <BrandLoader caption="Loading coding practice data…" />;
   const max = Math.max(1, ...o.series.map((s) => s.submissions));
   const r = o.runner;
   return (
@@ -166,7 +167,7 @@ function StudentDrawer({ id, onClose }: { id: string; onClose: () => void }) {
           <p className="text-lg font-semibold text-heading">{d?.student.name || 'Student'}</p>
           <button type="button" aria-label="Close" onClick={onClose} className="rounded p-1 text-muted hover:text-heading focus-ring"><X className="h-5 w-5" aria-hidden /></button>
         </div>
-        {!d ? <p className="p-5 text-muted">Loading…</p> : (
+        {!d ? <BrandLoader caption="Loading this student's work…" /> : (
           <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-5">
             <p className="text-body-md text-body">{d.student.email}{d.student.college ? ` · ${d.student.college}` : ''}{d.student.grad_year ? ` · ${d.student.grad_year}` : ''}{d.student.target ? ` · target ${d.student.target}` : ''}</p>
             {d.prep.length > 0 && (

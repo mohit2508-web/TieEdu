@@ -4,6 +4,7 @@ import { ArrowRight, Code2, Building2, ClipboardList, Flame } from 'lucide-react
 import { useAuth } from '@/context/AuthContext';
 import { PracticeLayout, Progress } from '@/components/practice/PracticeLayout';
 import { fetchPracticeHome, type PracticeHome } from '@/lib/codeApi';
+import { PracticeSkeleton } from '@/components/practice/PracticeSkeleton';
 
 /** The last 12 weeks as a grid of days; a filled cell = practised that day. */
 function Heatmap({ days }: { days: string[] }) {
@@ -31,7 +32,7 @@ export default function PracticeHomePage() {
   return (
     <PracticeLayout title="Practice" intro="Coding problems topic by topic, every company's question set, and tests in the real pattern. Pick up where you left off.">
       {error && <p className="text-base text-danger">{error}</p>}
-      {!h && !error && <p className="text-base text-muted">Loading…</p>}
+      {!h && !error && <PracticeSkeleton kind="home" label="Loading your practice" />}
       {h && (
         <div className="space-y-10">
           <section className="grid gap-4 md:grid-cols-3">

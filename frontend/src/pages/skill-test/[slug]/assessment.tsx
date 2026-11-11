@@ -20,6 +20,9 @@ import { useSections, SectionBar, SectionSubmitSheet, WritingTask, type TestSect
 import { MockCoding } from '@/components/code/MockCoding';
 
 import { nameFromSlug, withPageTitle } from '@/components/common/withPageTitle';
+import { BrandLoader } from '@/components/brand/BrandLoader';
+import { ErrorBoundary } from '@/components/common/ErrorBoundary';
+import { ErrorScreen } from '@/components/common/ErrorScreen';
 type AnswerState = Record<string, string[]>; // questionId -> selected option indexes (as strings)
 type MarkedState = Record<string, boolean>;
 
@@ -317,6 +320,7 @@ function AssessmentPage() {
           >
             {loading ? 'Preparing…' : 'Start Now'}
           </button>
+          {loading && <BrandLoader variant="fullscreen" caption="Getting your test ready…" delay={250} />}
         </div>
       </div>
     );
@@ -656,4 +660,22 @@ function AssessmentPage() {
   );
 }
 
-export default withPageTitle(AssessmentPage, (q) => `${nameFromSlug(q.slug)} test`);
+/** A crash in the test screen must not blank it mid-test (PRACTICE_POLISH_PLAN.md §3.2). */
+function AssessmentWithBoundary() {
+  return (
+    <ErrorBoundary
+      area="test"
+      fallback={({ errorRef }) => (
+        <ErrorScreen
+          errorRef={errorRef || undefined}
+          title="The test screen crashed"
+          message="Your attempt is still open. Press Try again to reload the test and carry on."
+        />
+      )}
+    >
+      <AssessmentPage />
+    </ErrorBoundary>
+  );
+}
+
+export default withPageTitle(AssessmentWithBoundary, (q) => `${nameFromSlug(q.slug)} test`);

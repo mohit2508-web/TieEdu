@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { CodingTask, pickProblems, type CodingConfig, type CodingMark } from '@/components/skill-test/Sectional';
 import { Ide } from '@/components/ide/Ide';
 import { fetchCodeProblem, type CodeProblemView } from '@/lib/codeApi';
+import { BrandLoader } from '@/components/brand/BrandLoader';
 
 const store = {
   get: (k: string) => { try { return window.localStorage.getItem(k); } catch { return null; } },
@@ -48,7 +49,7 @@ export function MockCoding({ config, attemptId, submitting, onSubmit, onFallback
   useEffect(() => { if (views && left === 0 && !submitting) onSubmit([]); }, [views, left]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (fallback) return <CodingTask config={config} attemptId={attemptId} submitting={submitting} onSubmit={onSubmit} />;
-  if (!views) return <p className="mx-auto max-w-3xl px-4 py-10 text-center text-base text-muted">Loading the coding problems…</p>;
+  if (!views) return <BrandLoader caption="Loading the coding problems…" />;
 
   const v = views[current];
   return (

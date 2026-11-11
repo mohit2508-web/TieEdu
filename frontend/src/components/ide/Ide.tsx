@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import {
-  ArrowLeft, ChevronLeft, ChevronRight, List, Play, Send, Settings2, Maximize2, Minimize2, RotateCcw, Loader2, Lock,
+  ArrowLeft, ChevronLeft, ChevronRight, List, Play, Send, Settings2, Maximize2, Minimize2, RotateCcw, Lock,
   CheckCircle2, Circle, CircleDot, X, AlertTriangle,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
@@ -14,10 +14,12 @@ import { ConsolePanel, type ConsoleCase, type ConsoleResult, type ConsoleTab } f
 import { DEFAULT_SETTINGS, type IdeSettings } from './ideSettings';
 import { parseDiagnostics, type CodeDiagnostic } from '@/lib/compileErrors';
 import { CodeApiError, LANG_LABEL, runCases, submitCode, type CodeLang, type CodeProblemView } from '@/lib/codeApi';
+import { BrandLoader } from '@/components/brand/BrandLoader';
+import { BrandMark } from '@/components/brand/BrandMark';
 
 const IdeEditor = dynamic(() => import('./IdeEditor'), {
   ssr: false,
-  loading: () => <div className="flex h-full items-center justify-center text-base text-muted">Loading editor…</div>,
+  loading: () => <div className="flex h-full items-center justify-center"><BrandLoader caption="Loading the editor…" /></div>,
 });
 
 const store = {
@@ -181,10 +183,10 @@ export function Ide({ view, onReload, query, test, onSubmitted }: {
       {wide && (
         <div className="mx-auto flex items-center gap-2">
           <button type="button" onClick={run} disabled={!!busy} title="Run (Ctrl + ')" className="btn btn-ghost focus-ring h-10 px-4 text-body-md">
-            {busy === 'run' ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Play className="h-4 w-4" aria-hidden />} Run
+            {busy === 'run' ? <BrandMark mode="pulse" size={18} /> : <Play className="h-4 w-4" aria-hidden />} Run
           </button>
           <button type="button" onClick={submit} disabled={!!busy} title="Submit (Ctrl + Enter)" className="btn btn-primary focus-ring h-10 px-5 text-body-md">
-            {busy === 'submit' ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Send className="h-4 w-4" aria-hidden />} Submit
+            {busy === 'submit' ? <BrandMark mode="pulse" size={18} /> : <Send className="h-4 w-4" aria-hidden />} Submit
           </button>
         </div>
       )}
@@ -212,10 +214,10 @@ export function Ide({ view, onReload, query, test, onSubmitted }: {
       {wide && (
         <div className="mx-auto flex items-center gap-2">
           <button type="button" onClick={run} disabled={!!busy} title="Run (Ctrl + ')" className="btn btn-ghost focus-ring h-10 px-4 text-body-md">
-            {busy === 'run' ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Play className="h-4 w-4" aria-hidden />} Run
+            {busy === 'run' ? <BrandMark mode="pulse" size={18} /> : <Play className="h-4 w-4" aria-hidden />} Run
           </button>
           <button type="button" onClick={submit} disabled={!!busy} title="Submit (Ctrl + Enter)" className="btn btn-primary focus-ring h-10 px-5 text-body-md">
-            {busy === 'submit' ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : view.access.open ? <Send className="h-4 w-4" aria-hidden /> : <Lock className="h-4 w-4" aria-hidden />} {view.access.open ? 'Submit' : 'Unlock to submit'}
+            {busy === 'submit' ? <BrandMark mode="pulse" size={18} /> : view.access.open ? <Send className="h-4 w-4" aria-hidden /> : <Lock className="h-4 w-4" aria-hidden />} {view.access.open ? 'Submit' : 'Unlock to submit'}
           </button>
         </div>
       )}
@@ -350,10 +352,10 @@ export function Ide({ view, onReload, query, test, onSubmitted }: {
           </div>
           <div className="flex shrink-0 gap-2 border-t border-line bg-card p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
             <button type="button" onClick={run} disabled={!!busy} className="btn btn-ghost focus-ring min-h-[48px] flex-1 text-base">
-              {busy === 'run' ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Play className="h-4 w-4" aria-hidden />} Run
+              {busy === 'run' ? <BrandMark mode="pulse" size={18} /> : <Play className="h-4 w-4" aria-hidden />} Run
             </button>
             <button type="button" onClick={submit} disabled={!!busy} className="btn btn-primary focus-ring min-h-[48px] flex-1 text-base">
-              {busy === 'submit' ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : view.access.open ? <Send className="h-4 w-4" aria-hidden /> : <Lock className="h-4 w-4" aria-hidden />} {view.access.open ? 'Submit' : 'Unlock'}
+              {busy === 'submit' ? <BrandMark mode="pulse" size={18} /> : view.access.open ? <Send className="h-4 w-4" aria-hidden /> : <Lock className="h-4 w-4" aria-hidden />} {view.access.open ? 'Submit' : 'Unlock'}
             </button>
           </div>
         </>

@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { PracticeLayout } from '@/components/practice/PracticeLayout';
 import { Chip } from '@/components/ui/Chip';
 import { fetchPracticeTests, type CompanyMeta, type CompanyTest } from '@/lib/codeApi';
+import { PracticeSkeleton } from '@/components/practice/PracticeSkeleton';
 
 /** Company tests (PRACTICE_MODE_PLAN.md §7): full mocks and sectional tests, by company — separate from skill tests. */
 export default function CompanyTestsPage() {
@@ -16,7 +17,7 @@ export default function CompanyTestsPage() {
   return (
     <PracticeLayout title="Company tests" intro="Full mocks in each company's real pattern, and short sectional tests to fix one weak area at a time. Skill tests (for certificates) are separate.">
       {error && <p className="text-base text-danger">{error}</p>}
-      {!list && !error && <p className="text-base text-muted">Loading…</p>}
+      {!list && !error && <PracticeSkeleton kind="cards" label="Loading company tests" />}
       {list && !list.length && <p className="text-base text-body">No company tests yet.</p>}
       <div className="space-y-10">
         {(list || []).map((c) => (

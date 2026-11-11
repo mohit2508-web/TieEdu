@@ -27,6 +27,7 @@ import {
   type EmailAnalytics, type EmailCampaign, type EmailLead, type EmailMessage,
   type EmailQueueStatus, type EmailTemplateInfo, type EmailTemplateId, type LeadTimelineEvent,
 } from '@/lib/emailApi';
+import { BrandLoader } from '@/components/brand/BrandLoader';
 
 type Section = 'leads' | 'campaigns' | 'templates' | 'analytics';
 
@@ -720,7 +721,7 @@ export const EmailTab: React.FC = () => {
               </button>
             </div>
             {!analytics && (
-              <div className="p-6 text-center text-xs text-gray-400">Loading…</div>
+              <BrandLoader caption="Loading email analytics…" />
             )}
             {analytics && (
               <>
@@ -870,7 +871,7 @@ export const EmailTab: React.FC = () => {
               <button onClick={() => { setTimelineFor(null); setTimeline(null); }} className="p-1.5 text-gray-400 hover:text-gray-600"><XCircle className="w-5 h-5" /></button>
             </div>
             <div className="p-4 overflow-y-auto space-y-3">
-              {!timeline && <div className="text-center text-xs text-gray-400 p-6">Loading…</div>}
+              {!timeline && <BrandLoader caption="Loading this timeline…" />}
               {timeline && timeline.events.length === 0 && timeline.pending.length === 0 && (
                 <div className="text-center text-xs text-gray-400 p-6">No timeline events yet.</div>
               )}

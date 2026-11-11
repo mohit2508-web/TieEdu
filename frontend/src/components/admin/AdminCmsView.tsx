@@ -17,6 +17,7 @@ import { RecruitersTab } from '@/components/admin/RecruitersTab';
 import { ExperimentsTab } from '@/components/admin/ExperimentsTab';
 import { ThreeTStatusTab } from '@/components/admin/ThreeTStatusTab';
 import { CodingPracticeTab } from '@/components/admin/CodingPracticeTab';
+import { ClientErrorsTab } from '@/components/admin/ClientErrorsTab';
 import { FestivalTab } from '@/components/admin/FestivalTab';
 import { AnalyticsTab } from '@/components/admin/AnalyticsTab';
 import { SettingsTab } from '@/components/admin/SettingsTab';
@@ -32,14 +33,15 @@ import { MessageLogTab } from '@/components/admin/MessageLogTab';
 import {
   BookOpen, Building2, BarChart3, ClipboardList, FileText, Layers, LayoutDashboard,
   LogOut, Mail, RefreshCw, Settings2, ShoppingBag, Ticket, Users, ExternalLink, Wallet,
-GraduationCap, Award, Zap, BellRing, Send, BrainCircuit, Newspaper, BadgeCheck, Briefcase, FlaskConical, ShieldCheck, ListChecks, Inbox, ScrollText, Sparkles, Code2 } from 'lucide-react';
+GraduationCap, Award, Zap, BellRing, Send, BrainCircuit, Newspaper, BadgeCheck, Briefcase, FlaskConical, ShieldCheck, ListChecks, Inbox, ScrollText, Sparkles, Code2, Bug } from 'lucide-react';
 import { AdminCoursesTab } from '@/components/admin/course/AdminCoursesTab';
 import { AdminCertificatesTab } from '@/components/admin/course/AdminCertificatesTab';
 import { AdminXpTab } from '@/components/admin/course/AdminXpTab';
 import { NotificationBell } from '@/components/layout/NotificationBell';
 import { AccountMenu } from '@/components/layout/AccountMenu';
+import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 
-type TabId = 'overview' | 'orders' | 'payments' | 'users' | 'analytics' | 'hub' | 'content' | 'pack' | 'drops' | 'coupons' | 'courses' | 'certificates' | 'xp' | 'skilltest' | 'drives' | 'reports' | 'offers' | 'guarantee' | 'recruiters' | 'experiments' | 'threet' | 'festival' | 'emails' | 'notifications' | 'broadcast' | 'settings' | 'support' | 'messagelog' | 'coding';
+type TabId = 'overview' | 'orders' | 'payments' | 'users' | 'analytics' | 'hub' | 'content' | 'pack' | 'drops' | 'coupons' | 'courses' | 'certificates' | 'xp' | 'skilltest' | 'drives' | 'reports' | 'offers' | 'guarantee' | 'recruiters' | 'experiments' | 'threet' | 'festival' | 'emails' | 'notifications' | 'broadcast' | 'settings' | 'support' | 'messagelog' | 'coding' | 'errors';
 type SectionId = 'home' | 'students' | 'sales' | 'content' | 'practice' | 'messaging' | 'settings';
 
 /**
@@ -88,6 +90,7 @@ const NAV: { id: TabId; label: string; icon: any; section: SectionId }[] = [
   { id: 'messagelog', label: 'Message log', icon: ScrollText, section: 'messaging' },
   { id: 'settings', label: 'Site settings', icon: Settings2, section: 'settings' },
   { id: 'experiments', label: 'Experiments', icon: FlaskConical, section: 'settings' },
+  { id: 'errors', label: 'Site errors', icon: Bug, section: 'settings' },
 ];
 
 const isTab = (v: string): v is TabId => NAV.some((n) => n.id === v);
@@ -321,6 +324,8 @@ export const AdminCmsView: React.FC = () => {
 
         <main className="flex-1 px-4 sm:px-6 lg:px-10 py-8">
           <div className="max-w-[1700px] mx-auto">
+          {/* One broken tab must not take the whole console down (PRACTICE_POLISH_PLAN.md §3.2). */}
+          <ErrorBoundary area={`admin-${activeTab}`} resetKey={activeTab}>
             {/* TAB: OVERVIEW */}
             {activeTab === 'overview' && <OverviewTab companiesCount={companiesList.length} pendingReportsCount={pendingReports.length} />}
 
@@ -441,6 +446,8 @@ export const AdminCmsView: React.FC = () => {
 
       {/* TAB: SETTINGS */}
       {activeTab === 'settings' && <SettingsTab />}
+      {activeTab === 'errors' && <ClientErrorsTab />}
+          </ErrorBoundary>
           </div>
         </main>
       </div>

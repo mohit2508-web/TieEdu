@@ -11,6 +11,7 @@ import { useAuth } from '@/context/AuthContext';
 import { formatDate, formatRelative } from '@/lib/date';
 import { formatLevel } from '@/lib/courseFormat';
 import type { MyCoursesCourse, MyCertificate } from '@/types';
+import { BrandLoader } from '@/components/brand/BrandLoader';
 
 /** Small colour-coded chip used for level, tier and distinction labels. */
 const Chip: React.FC<{ label: string; color?: string; soft?: string }> = ({ label, color, soft }) => (
@@ -117,7 +118,7 @@ export default function MyCoursesPage() {
           </div>
         )}
 
-        {loading && user && <p className="mt-12 text-sm text-[var(--text-muted)]">Loading…</p>}
+        {loading && user && <BrandLoader caption="Loading your courses…" className="mt-6" />}
 
         {error && (
           <p className="mt-8 rounded-xl border border-[var(--color-error)]/30 bg-[var(--color-error)]/5 px-4 py-3 text-sm text-[var(--color-error)]">

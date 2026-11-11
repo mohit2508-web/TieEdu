@@ -5,6 +5,7 @@ import {
   fetchDriveConfigApi, fetchDrivePaymentApi, submitPaymentProofApi,
   type DriveConfig, type DrivePaymentState,
 } from '@/lib/drivesApi';
+import { BrandLoader } from '@/components/brand/BrandLoader';
 
 const inr = (paise: number) =>
   new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(paise / 100);
@@ -112,7 +113,7 @@ export const PaymentSheet: React.FC<{
     <Sheet open={open} onClose={onClose} title="Drive payment">
       <div className="px-5 pb-5 pt-1">
         {loading ? (
-          <p className="py-6 text-center text-sm" style={{ color: 'var(--apple-label-2)' }}>Loading…</p>
+          <BrandLoader caption="Loading payment details…" />
         ) : approved ? (
           <div>
             <div className="flex items-center gap-2.5 rounded-[12px] px-4 py-3" style={{ background: 'var(--apple-green-soft)' }}>

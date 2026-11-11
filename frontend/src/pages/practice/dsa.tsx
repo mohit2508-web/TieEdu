@@ -6,6 +6,7 @@ import { ProblemRow } from '@/components/practice/ProblemRow';
 import { BuyPackSheet } from '@/components/prep/BuyPackSheet';
 import { Chip } from '@/components/ui/Chip';
 import { fetchDsaSheet, type DsaSheet } from '@/lib/codeApi';
+import { PracticeSkeleton } from '@/components/practice/PracticeSkeleton';
 
 type Diff = 'all' | 'easy' | 'medium' | 'hard';
 type Stat = 'all' | 'todo' | 'attempted' | 'solved';
@@ -40,7 +41,7 @@ export default function DsaSheetPage() {
   return (
     <PracticeLayout title="DSA sheet" intro="Every problem runs on real test cases in C, C++, Java or Python. Go topic by topic: each starts easy and builds to the level companies ask.">
       {error && <p className="text-base text-danger">{error}</p>}
-      {!d && !error && <p className="text-base text-muted">Loading…</p>}
+      {!d && !error && <PracticeSkeleton kind="list" label="Loading the DSA sheet" />}
       {d && (
         <>
           <div className="sticky top-0 z-10 -mx-4 space-y-3 border-b border-line bg-surface/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">

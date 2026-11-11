@@ -9,6 +9,7 @@ import { BuyPackSheet } from '@/components/prep/BuyPackSheet';
 import { Tabs } from '@/components/ui/Tabs';
 import { Chip } from '@/components/ui/Chip';
 import { fetchCompanyPractice, type CompanyPractice } from '@/lib/codeApi';
+import { PracticeSkeleton } from '@/components/practice/PracticeSkeleton';
 
 type Tab = 'coding' | 'tests';
 
@@ -36,7 +37,7 @@ export default function CompanyPracticePage() {
     <PracticeLayout title={c ? `${c.name} practice` : 'Company practice'} crumb={{ href: '/practice/companies', label: 'Company sets' }} actions={actions}
       intro={c ? <>Solve the set level by level, then take the tests. {d!.prep && <Link href={`/prep/${slug}`} className="font-semibold text-link hover:underline">Your {c.name} plan and readiness →</Link>}</> : undefined}>
       {error && <p className="text-base text-danger">{error}</p>}
-      {!d && !error && <p className="text-base text-muted">Loading…</p>}
+      {!d && !error && <PracticeSkeleton kind="list" label="Loading this company's questions" />}
       {d && (
         <>
           <div className="max-w-md">

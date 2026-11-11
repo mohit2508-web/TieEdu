@@ -1,7 +1,8 @@
 import React from 'react';
-import { Plus, X, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { Plus, X, CheckCircle2, XCircle } from 'lucide-react';
 import { Tabs } from '@/components/ui/Tabs';
 import { VERDICT_LABEL, type CaseRun, type SuiteResult } from '@/lib/codeApi';
+import { BrandLoader } from '@/components/brand/BrandLoader';
 
 export interface ConsoleCase { input: string; expected: string; sample: boolean }
 export type ConsoleResult = { kind: 'run'; data: CaseRun } | { kind: 'submit'; data: SuiteResult } | null;
@@ -67,7 +68,7 @@ export function ConsolePanel({ tab, onTab, cases, onCases, active, onActive, res
         )}
 
         {tab === 'result' && (busy ? (
-          <p className="flex items-center gap-2 text-base text-muted"><Loader2 className="h-5 w-5 animate-spin" aria-hidden /> {busy === 'submit' ? 'Running all tests…' : 'Running your cases…'}</p>
+          <BrandLoader mode="pulse" delay={0} caption={busy === 'submit' ? 'Running all the hidden tests…' : 'Running your cases…'} />
         ) : !result ? (
           <p className="text-base text-muted">Run your code to see the output here.</p>
         ) : (

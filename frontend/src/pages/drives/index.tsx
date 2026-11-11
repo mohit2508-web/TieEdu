@@ -8,6 +8,7 @@ import { fetchDrivesApi, DriveSummary } from '@/lib/drivesApi';
 import { formatDate } from '@/lib/date';
 import StatusPill, { driveStatusTone } from '@/components/apple/StatusPill';
 import EmptyState from '@/components/apple/EmptyState';
+import { BrandLoader } from '@/components/brand/BrandLoader';
 
 /**
  * Student landing for company mock drives. Apple-touch: iOS grouped cards,
@@ -64,7 +65,7 @@ export default function DrivesPage() {
           </div>
         )}
 
-        {loading && user && <p className="mt-10 px-2 text-sm" style={{ color: 'var(--apple-label-2)' }}>Loading…</p>}
+        {loading && user && <BrandLoader caption="Loading drives…" className="mt-6" />}
 
         {error && user && (
           <div className="mt-6 rounded-2xl px-4 py-3 text-sm font-medium" style={{ background: 'var(--apple-red-soft)', color: 'var(--apple-red)' }}>{error}</div>

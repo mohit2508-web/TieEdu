@@ -137,7 +137,7 @@ function DrivesBody() {
             <div className="min-w-0">
               <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--apple-label)' }}>Mock drives</h1>
               <p className="text-sm" style={{ color: 'var(--apple-label-2)' }}>
-                {loaded ? `${drives.length} drive${drives.length === 1 ? '' : 's'} · live analytics` : 'Loading…'}
+                {loaded ? `${drives.length} drive${drives.length === 1 ? '' : 's'} · live analytics` : 'Loading drives…'}
               </p>
             </div>
           </header>

@@ -4,6 +4,7 @@ import { tpoRegistrations, tpoImportRoster, parseRosterText, tpoDriveFetch } fro
 import StatusPill, { driveStatusTone } from '@/components/apple/StatusPill';
 import EmptyState from '@/components/apple/EmptyState';
 import { GroupedCard } from '@/components/apple/GroupedCard';
+import { BrandLoader } from '@/components/brand/BrandLoader';
 
 const field =
   'rounded-[10px] border-0 bg-[var(--apple-fill)] px-3 py-2 text-sm text-[var(--apple-label)] placeholder:text-[var(--apple-placeholder)] focus:outline-none';
@@ -137,7 +138,7 @@ export default function RegistrationsTab(props: { collegeId: string; driveId: st
             </tbody>
           </table>
         </div>
-        {busy ? <div className="py-4 text-center text-sm text-[var(--apple-label-2)]">Loading…</div> : null}
+        {busy ? <BrandLoader caption="Loading registrations…" /> : null}
 
         <div className="flex items-center justify-between px-4 py-3">
           <span className="text-xs tabular-nums text-[var(--apple-label-2)]">Page {page} of {totalPages}</span>

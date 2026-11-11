@@ -5,7 +5,8 @@ import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { PlacementProvider, usePlacement } from '@/context/PlacementContext';
-import { AlertTriangle, Lock, ServerCrash, Loader2 } from 'lucide-react';
+import { AlertTriangle, Lock, ServerCrash } from 'lucide-react';
+import { BrandMark } from '@/components/brand/BrandMark';
 
 /**
  * Entry guard for every `/tpo/*` screen.
@@ -114,8 +115,8 @@ export const PermissionDeniedNote: React.FC<{ permission: string }> = ({ permiss
 );
 
 /** Loading row for data sections inside an already-guarded page. */
-export const InlineSpinner: React.FC<{ label?: string }> = ({ label = 'Loading…' }) => (
-  <div className="flex items-center gap-2 text-sm font-semibold text-[--text-muted]">
-    <Loader2 className="w-4 h-4 animate-spin" /> {label}
+export const InlineSpinner: React.FC<{ label?: string }> = ({ label = 'Loading this section…' }) => (
+  <div role="status" className="flex items-center gap-2 text-sm font-semibold text-[--text-muted]">
+    <BrandMark mode="pulse" size={20} /> {label}
   </div>
 );

@@ -45,6 +45,7 @@ import {
 import { CompanyPageV2 } from '@/components/companyPage/CompanyPageV2';
 import { packPrice } from '@/lib/packPricing';
 import { SchemaForm, SchemaFormContext } from './SchemaForm';
+import { BrandLoader } from '@/components/brand/BrandLoader';
 
 /*
  * Company Page Studio — edit, preview and publish a company's redesigned page.
@@ -933,7 +934,7 @@ export default function CompanyPageStudio({
               <div className="space-y-3">
                 <div className="text-sm font-bold px-1">Last 30 days</div>
                 {!stats ? (
-                  <p className="text-sm text-gray-500 px-1">Loading…</p>
+                  <BrandLoader variant="inline" caption="Loading the last 30 days…" className="px-1 text-sm text-muted" />
                 ) : (
                   <>
                     <div className="flex items-end gap-[2px] h-16 px-1" aria-label="Daily page views">
