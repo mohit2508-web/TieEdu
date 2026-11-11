@@ -6,7 +6,7 @@ import { runnerConfigured } from '../lib/codeRunner';
 import { BANK, BANK_BY_ID, COMPANY_SETS, DSA_TOPICS, FREE_CORE, SET_BY_SLUG, type BankProblem } from '../lib/practice/bank';
 import { istDate } from '../lib/streak';
 import { dailyProblem } from '../lib/practice/daily';
-import { accessChecker, progressFor, statusOf, type ProblemProgress } from '../lib/practice/access';
+import { accessChecker, progressFor, statusOf, visibleBank, visibleSet, visibleSets, type ProblemProgress } from '../lib/practice/access';
 import { ownsCompanyPack } from './prep.routes';
 import { buildPrep, PREP_COMPANIES } from '../lib/prep';
 
@@ -130,17 +130,18 @@ practiceRouter.get('/home', optionalAuth, (req: Request, res: Response) => {
   const days = new Set((db.code_submissions || []).filter((s: any) => s.user_id === req.userId).map((s: any) => String(s.at).slice(0, 10)));
   const access = accessChecker(db, req.userId);
   // Next: the first unsolved open problem in study order.
-  const next = BANK.slice().sort((a, b) => DSA_TOPICS.findIndex((t) => t.key === a.topic_key) - DSA_TOPICS.findIndex((t) => t.key === b.topic_key))
+  const bank = visibleBank(db);
+  const next = bank.slice().sort((a, b) => DSA_TOPICS.findIndex((t) => t.key === a.topic_key) - DSA_TOPICS.findIndex((t) => t.key === b.topic_key))
     .find((p) => !prog.get(p.id)?.solved && access(p).open);
   res.json({
     runner: runnerConfigured(),
     daily: dailyOf(db, req.userId),
-    totals: { ...counts(BANK.map((p) => p.id), prog), active_days: days.size },
+    totals: { ...counts(bank.map((p) => p.id), prog), active_days: days.size },
     continue: lastP ? { id: lastP.id, title: lastP.title, status: statusOf(prog.get(lastP.id)) } : null,
     next: next ? { id: next.id, title: next.title, topic: DSA_TOPICS.find((t) => t.key === next.topic_key)?.name || '' } : null,
     activity: [...days].sort().slice(-84),
-    topics: DSA_TOPICS.map((t) => ({ key: t.key, name: t.name, ...counts(BANK.filter((p) => p.topic_key === t.key).map((p) => p.id), prog) })).filter((t) => t.total),
-    companies: COMPANY_SETS.map((s) => ({ ...companyMeta(db, s.slug, req.userId), ...counts(s.levels.flatMap((l) => l.ids), prog), tests: testsOf(db, s.slug).length })),
+    topics: DSA_TOPICS.map((t) => ({ key: t.key, name: t.name, ...counts(bank.filter((p) => p.topic_key === t.key).map((p) => p.id), prog) })).filter((t) => t.total),
+    companies: visibleSets(db).map((s) => ({ ...companyMeta(db, s.slug, req.userId), ...counts(s.levels.flatMap((l) => l.ids), prog), tests: testsOf(db, s.slug).length })),
   });
 });
 
@@ -150,7 +151,7 @@ practiceRouter.get('/dsa', optionalAuth, (req: Request, res: Response) => {
   const access = accessChecker(db, req.userId);
   res.json({
     topics: DSA_TOPICS.map((t) => {
-      const list = BANK.filter((p) => p.topic_key === t.key);
+      const list = visibleBank(db).filter((p) => p.topic_key === t.key);
       return { key: t.key, name: t.name, blurb: t.blurb, ...counts(list.map((p) => p.id), prog), problems: list.map((p) => rowOf(p, access, prog)) };
     }).filter((t) => t.total),
     companies: COMPANY_SETS.map((s) => ({ slug: s.slug, name: s.name })),
@@ -223,7 +224,7 @@ practiceRouter.get('/companies', optionalAuth, (req: Request, res: Response) => 
   const prog = progressFor(db, req.userId);
   const access = accessChecker(db, req.userId);
   const target = req.userId ? (db.users || []).find((u: any) => u.id === req.userId)?.target_company || null : null;
-  const companies = COMPANY_SETS.map((s) => {
+  const companies = visibleSets(db).map((s) => {
     const ids = s.levels.flatMap((l) => l.ids);
     const tests = testsOf(db, s.slug, req.userId);
     const bests = tests.map((t: any) => t.best).filter((b: any) => b != null) as number[];
@@ -251,7 +252,7 @@ practiceRouter.post('/notify', requireAuth, (req: Request, res: Response) => {
 });
 
 practiceRouter.get('/companies/:slug', optionalAuth, (req: Request, res: Response) => {
-  const set = SET_BY_SLUG.get(req.params.slug);
+  const set = visibleSet(loadDb(), req.params.slug);
   if (!set) return res.status(404).json({ error: 'No practice set for this company yet' });
   const db = loadDb();
   const prog = progressFor(db, req.userId);

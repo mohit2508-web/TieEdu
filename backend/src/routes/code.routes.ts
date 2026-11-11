@@ -4,7 +4,7 @@ import { loadDb, safeSaveDb } from '../data/db';
 import { requireAuth, optionalAuth } from '../middleware/auth';
 import { RUN_LANGS, type RunLang, runCode, runSuite, runnerConfigured, allowRun, MAX_CODE_BYTES, normalizeOutput } from '../lib/codeRunner';
 import { BANK, BANK_BY_ID, COMPANY_SETS, DSA_TOPICS, SET_BY_SLUG, type BankProblem } from '../lib/practice/bank';
-import { accessChecker, accessFor, progressFor, statusOf } from '../lib/practice/access';
+import { accessChecker, accessFor, hiddenIds, progressFor, statusOf } from '../lib/practice/access';
 import { recordSetProgress, recordSolve, recordStudyDay, type CoinGain } from '../lib/coins';
 import { dailyProblem } from '../lib/practice/daily';
 import { istDate } from '../lib/streak';
@@ -71,6 +71,8 @@ codeRouter.get('/problem/:id', optionalAuth, (req: Request, res: Response) => {
   const p = BANK_BY_ID.get(req.params.id);
   if (!p) return res.status(404).json({ error: 'Problem not found' });
   const db = loadDb();
+  // Hidden by an admin (Practice access): gone for students, still openable by admins.
+  if (hiddenIds(db).has(p.id) && (db.users || []).find((u: any) => u.id === req.userId)?.role !== 'admin') return res.status(404).json({ error: 'Problem not found' });
   const inTest = req.userId ? !!testAttempt(db, req.userId, req.query.attempt, p.id) : false;
   const access = accessChecker(db, req.userId);
   const a = access(p);

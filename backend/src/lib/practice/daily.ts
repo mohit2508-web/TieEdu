@@ -10,7 +10,9 @@ export function dailyProblem(date: string, db?: any): BankProblem | null {
     const p = BANK.find((x) => x.id === forced);
     if (p) return p;
   }
-  const pool = BANK.filter((p) => FREE_CORE.has(p.id));
+  // Free core, minus anything an admin hid or moved behind the pack; plus problems an admin made free.
+  const over: Record<string, string> = db?.practice_access || {};
+  const pool = BANK.filter((p) => (FREE_CORE.has(p.id) || over[p.id] === 'free') && over[p.id] !== 'hidden' && over[p.id] !== 'pack');
   if (!pool.length) return null;
   let h = 0;
   for (const ch of `daily:${date}`) h = Math.imul(h ^ ch.charCodeAt(0), 2654435761) >>> 0;

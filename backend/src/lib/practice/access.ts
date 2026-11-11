@@ -8,7 +8,7 @@
  */
 import { isMember } from '../festival';
 import { ownsCompanyPack } from '../../routes/prep.routes';
-import { BANK_BY_ID, COMPANY_SETS, FREE_CORE, type BankProblem } from './bank';
+import { BANK, BANK_BY_ID, COMPANY_SETS, FREE_CORE, type BankProblem } from './bank';
 
 export type AccessReason = 'free' | 'pack' | 'member' | 'locked';
 export interface Access { open: boolean; reason: AccessReason; company: { slug: string; name: string } | null }
@@ -26,7 +26,9 @@ export function accessChecker(db: any, userId: string | undefined) {
     if (!p) return { open: false, reason: 'locked', company: null };
     const set = COMPANY_SETS.find((s) => p.companies.some((c) => c.slug === s.slug));
     const company = set ? { slug: set.slug, name: set.name } : null;
-    if (FREE_CORE.has(p.id) || COMPANY_SETS.some((s) => s.free_ids.includes(p.id))) return { open: true, reason: 'free', company };
+    const override = accessOverrides(db)[p.id];
+    if (override === 'free') return { open: true, reason: 'free', company };
+    if (override !== 'pack' && (FREE_CORE.has(p.id) || COMPANY_SETS.some((s) => s.free_ids.includes(p.id)))) return { open: true, reason: 'free', company };
     for (const c of p.companies) if (ownsPack(c.slug)) return { open: true, reason: 'pack', company: { slug: c.slug, name: COMPANY_SETS.find((s) => s.slug === c.slug)?.name || c.slug } };
     if (member) return { open: true, reason: 'member', company };
     return { open: false, reason: 'locked', company };
@@ -54,3 +56,25 @@ export function progressFor(db: any, userId: string | undefined): Map<string, Pr
 }
 
 export const statusOf = (pr: ProblemProgress | undefined): 'solved' | 'attempted' | 'todo' => (pr?.solved ? 'solved' : pr ? 'attempted' : 'todo');
+
+// ---- Admin overrides (TIE_COINS_STORE_PLAN.md §7, "Practice access") --------
+/** Per problem: 'free' opens it to all, 'pack' needs the pack even if it is in the free core, 'hidden' takes it off every list. */
+export type AccessOverride = 'free' | 'pack' | 'hidden';
+export function accessOverrides(db: any): Record<string, AccessOverride> {
+  return db?.practice_access && typeof db.practice_access === 'object' ? db.practice_access : {};
+}
+export function hiddenIds(db: any): Set<string> {
+  return new Set(Object.entries(accessOverrides(db)).filter(([, v]) => v === 'hidden').map(([k]) => k));
+}
+/** The bank without hidden problems. */
+export function visibleBank(db: any): BankProblem[] {
+  const h = hiddenIds(db);
+  return h.size ? BANK.filter((p) => !h.has(p.id)) : BANK;
+}
+/** Company sets with hidden problems taken out of their levels. */
+export function visibleSets(db: any): typeof COMPANY_SETS {
+  const h = hiddenIds(db);
+  if (!h.size) return COMPANY_SETS;
+  return COMPANY_SETS.map((s) => ({ ...s, levels: s.levels.map((l) => ({ ...l, ids: l.ids.filter((id) => !h.has(id)) })) }));
+}
+export const visibleSet = (db: any, slug: string) => visibleSets(db).find((s) => s.slug === slug);
