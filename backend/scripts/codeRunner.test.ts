@@ -27,6 +27,7 @@ const fake = http.createServer((req, res) => {
     res.setHeader('Content-Type', 'application/json');
     if (r.language === 'c++') return res.end(JSON.stringify({ compile: { code: 1, stderr: 'main.cpp:1: error: expected ;' }, run: null }));
     if (src.includes('LOOP_FOREVER')) return res.end(JSON.stringify({ run: { code: null, signal: 'SIGKILL', stdout: '', stderr: '' } }));
+    if (src.includes('PRINT_A_LOT')) return res.end(JSON.stringify({ run: { code: null, signal: 'SIGKILL', status: 'OL', message: 'stdout length exceeded', stdout: '', stderr: 'Sandbox keeper received fatal signal 6' } }));
     const f = path.join(os.tmpdir(), `fakepiston-${process.pid}-${calls}.py`);
     fs.writeFileSync(f, src);
     const p = spawnSync(PY, ['-I', f], { input: r.stdin, encoding: 'utf8', timeout: 10000 });
@@ -62,6 +63,8 @@ async function main() {
   const ce = await runSuite('cpp', 'int main( {', choc.tests!);
   check('compile error stops after one run and returns the message', ce.verdict === 'compile_error' && /expected/.test(ce.compile_error || '') && ce.tests.length === 0);
 
+  const ol = await runCode('python', '# PRINT_A_LOT', '');
+  check('output limit is reported as such, not as a time limit', ol.status === 'runtime_error' && /Output limit/.test(ol.stderr), JSON.stringify(ol));
   const tle = await runCode('python', '# LOOP_FOREVER', '');
   check('a killed program is a time-limit verdict', tle.status === 'time_limit');
 

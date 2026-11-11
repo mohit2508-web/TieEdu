@@ -56,7 +56,11 @@ async function viaPiston(lang: RunLang, code: string, stdin: string): Promise<Ru
   const { compile, run } = data || {};
   if (compile && compile.code !== 0 && compile.code != null) return { status: 'compile_error', stdout: '', stderr: cap(compile.stderr || compile.output), ms };
   if (!run) return { status: 'system_error', stdout: '', stderr: 'No run result from Piston', ms };
-  if (run.signal === 'SIGKILL' || /timed? ?out/i.test(String(run.message || ''))) return { status: 'time_limit', stdout: cap(run.stdout), stderr: cap(run.stderr), ms };
+  // Piston's own status: OL/EL = output limit (its sandbox then reports SIGKILL too, so check this first), TO = timeout.
+  if (run.status === 'OL' || run.status === 'EL' || /length exceeded/i.test(String(run.message || ''))) {
+    return { status: 'runtime_error', stdout: cap(run.stdout), stderr: 'Output limit exceeded: the program printed more than the runner allows.', ms };
+  }
+  if (run.status === 'TO' || run.signal === 'SIGKILL' || /timed? ?out/i.test(String(run.message || ''))) return { status: 'time_limit', stdout: cap(run.stdout), stderr: cap(run.stderr), ms };
   if (run.code !== 0) return { status: 'runtime_error', stdout: cap(run.stdout), stderr: cap(run.stderr || `Exit code ${run.code}`), ms };
   return { status: 'ok', stdout: cap(run.stdout), stderr: cap(run.stderr), ms };
 }
