@@ -48,7 +48,7 @@ export default function RewardsPage() {
       <main className="w-full max-w-[1200px] px-4 pb-14 pt-6 sm:px-6 lg:px-0 lg:pt-0">
         {/* Hero */}
         <section className="overflow-hidden rounded-3xl border border-line bg-card">
-          <div className="grid gap-6 p-6 sm:p-8 lg:grid-cols-[1.2fr_1fr] lg:items-center">
+          <div className="grid gap-6 p-5 sm:p-8 lg:grid-cols-[1.2fr_1fr] lg:items-center [&>*]:min-w-0">
             <div>
               <p className="inline-flex items-center gap-2 rounded-full bg-signal-soft px-3 py-1 text-sm font-semibold text-signal-ink"><CoinIcon size={16} /> TiE Coins</p>
               <h1 className="mt-3 font-display text-3xl font-bold leading-tight text-heading sm:text-4xl">Practise daily. Earn coins. Get the hoodie.</h1>
