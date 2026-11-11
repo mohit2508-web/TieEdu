@@ -14,6 +14,7 @@
 import crypto from 'crypto';
 import { istDate, touchStreak, type StreakRecord } from './streak';
 import { badgeName, checkStreakBadges } from './streakBadges';
+import { unlockOpportunities } from './opportunities';
 
 export type CoinRuleId =
   | 'checkin' | 'daily_problem' | 'daily_mcq' | 'solve' | 'streak' | 'month_perfect' | 'month_25'
@@ -58,7 +59,7 @@ export interface CoinEvent {
   user_id: string;
   key: string;
   coins: number;
-  rule: CoinRuleId | 'spend' | 'refund' | 'admin';
+  rule: CoinRuleId | 'spend' | 'refund' | 'admin' | 'opportunity';
   note: string;
   ref?: string | null;
   at: string;
@@ -98,10 +99,11 @@ function syncUser(db: any, userId: string) {
 const hasKey = (db: any, key: string) => ledgerOf(db).some((e) => e.key === key);
 
 /** Pay `coins` once for `key`. Returns the row, or null when the key was paid before, the rule is off, or the amount is 0. */
-export function grant(db: any, userId: string, rule: CoinRuleId | 'admin' | 'refund', key: string, coins: number, note: string, ref: string | null = null, now = new Date()): CoinEvent | null {
+export function grant(db: any, userId: string, rule: CoinRuleId | 'admin' | 'refund' | 'opportunity', key: string, coins: number, note: string, ref: string | null = null, now = new Date()): CoinEvent | null {
   if (!userId || !(coins > 0) || hasKey(db, key)) return null;
-  if (rule !== 'admin' && rule !== 'refund' && !ruleOf(db, rule).on) return null;
-  const cap = rule !== 'admin' && rule !== 'refund' ? ruleOf(db, rule).cap_day : undefined;
+  const fixed = rule === 'admin' || rule === 'refund' || rule === 'opportunity';
+  if (!fixed && !ruleOf(db, rule as CoinRuleId).on) return null;
+  const cap = !fixed ? ruleOf(db, rule as CoinRuleId).cap_day : undefined;
   if (cap) {
     const today = istDate(now);
     const got = ledgerOf(db).filter((e) => e.user_id === userId && e.rule === rule && istDate(new Date(e.at)) === today).reduce((s, e) => s + e.coins, 0);
@@ -153,6 +155,11 @@ export function recordStudyDay(db: any, userId: string, now = new Date()): { str
     if (r.current >= Number(days)) gains.push(...gainOf(grant(db, userId, 'streak', `streak:${userId}:${days}:${runStart}`, coins, `${days}-day streak`, null, now)));
   }
   gains.push(...badgeGains(db, userId, now));
+  // Opportunities the best streak now reaches (lib/opportunities).
+  const titles = unlockOpportunities(db, userId, Math.max(r.current || 0, r.best || 0), (key, coins, note) => {
+    gains.push(...gainOf(grant(db, userId, 'opportunity', key, coins, note, null, now)));
+  }, now);
+  for (const t of titles) if (!gains.some((g) => g.note === `Unlocked: ${t}`)) gains.push({ rule: 'opportunity', coins: 0, note: `Unlocked: ${t}` });
   return { streak: r, gains };
 }
 

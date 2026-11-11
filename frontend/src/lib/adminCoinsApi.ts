@@ -32,3 +32,10 @@ export const fetchPracticeAccess = () => call<{ problems: PracticeAccessRow[] }>
 export const setPracticeAccess = (id: string, access: PracticeAccessRow['override']) => call<{ id: string; override: PracticeAccessRow['override'] }>(`/practice/${encodeURIComponent(id)}`, send('PUT', { access }));
 export const fetchDailySchedule = () => call<{ today: string; schedule: Array<{ date: string; id: string | null; title: string; overridden: boolean }> }>('/daily');
 export const setDailyProblem = (date: string, problem_id: string | null) => call<{ date: string; id: string | null; title: string; overridden: boolean }>('/daily', send('PUT', { date, problem_id }));
+
+export interface AdminOpportunity { key: string; days: number; title: string; blurb: string; kind: string; on: boolean; unlocked: number; claimed: number }
+export const fetchOpportunitiesAdmin = () => call<{ opportunities: AdminOpportunity[] }>('/opportunities');
+export const saveOpportunity = (key: string, patch: { on?: boolean; days?: number }) => call<{ opportunity: AdminOpportunity }>(`/opportunities/${encodeURIComponent(key)}`, send('PUT', patch));
+export interface TopRow { rank: number; user_id: string; name: string; earned: number; prize: number; paid: boolean }
+export const fetchMonthlyTop = (month: string) => call<{ month: string; top: TopRow[] }>(`/monthly-top?month=${month}`);
+export const payMonthlyTop = (month: string) => call<{ month: string; top: TopRow[] }>('/monthly-top', send('POST', { month }));

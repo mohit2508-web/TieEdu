@@ -123,7 +123,7 @@ export default function RegistrationsTab(props: { collegeId: string; driveId: st
             <tbody>
               {rows.map((r) => (
                 <tr key={r.registration_id} style={{ borderTop: '0.5px solid var(--apple-separator)' }}>
-                  <td className="px-4 py-2.5 font-semibold tabular-nums">{r.roll_no || '—'}</td>
+                  <td className="px-4 py-2.5 font-semibold tabular-nums">{r.roll_no || '—'}{r.streak_priority && <span className="ml-2 rounded-full bg-signal-soft px-2 py-0.5 text-xs font-semibold text-signal-ink" title="30+ day practice streak on TiEEdu: give priority when seats are tight">Streak Star</span>}</td>
                   <td className="px-4 py-2.5 text-[var(--apple-label-2)]">{r.user_id?.slice(0, 10)}…</td>
                   <td className="px-4 py-2.5"><StatusPill label={r.status} tone={driveStatusTone(r.status)} /></td>
                   <td className="px-4 py-2.5 tabular-nums">{r.completed_tests ?? 0}</td>

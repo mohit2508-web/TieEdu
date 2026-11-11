@@ -158,6 +158,9 @@ export function candidateCard(db: any, user: any) {
     city: user.talent.city,
     skills: p.skills.map((s) => ({ name: s.name, slug: s.slug, score: Math.round(s.score), level: s.level, certified: !!s.certificate })),
     certificates: p.certificates.map((c) => ({ title: c.title, verified: true })),
+    // 60-day streak (lib/opportunities): consistency recruiters can see; still anonymous.
+    streak_star: !!user.streak_star,
+    best_streak: user.streak_star ? Math.max(0, Number((db.user_streaks || []).find((s: any) => s.user_id === user.id)?.best) || 0) : null,
   };
 }
 

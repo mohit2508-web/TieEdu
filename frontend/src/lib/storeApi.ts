@@ -9,6 +9,8 @@ export interface StoreItemView {
 export interface StoreView {
   items: StoreItemView[]; signed_in: boolean; coins?: number; swag_ok?: boolean; swag_reason?: string | null;
   repairable_days?: string[]; repairs_left?: number; pack_companies?: Array<{ slug: string; name: string; price: number }>; goal_item_id?: string | null;
+  /** Streak rewards ready to claim for free. */
+  claims?: Array<{ key: string; title: string; days: number; item: StoreItemView }>;
 }
 export type OrderStatus = 'placed' | 'approved' | 'packed' | 'shipped' | 'delivered' | 'rejected' | 'cancelled';
 export interface Address { name: string; line1: string; line2?: string; city: string; state: string; pincode: string }
@@ -30,7 +32,7 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
 const json = (method: string, body: unknown): RequestInit => ({ method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 
 export const fetchStore = () => call<StoreView>('/store');
-export const redeemItem = (body: { item_id: string; size?: string; address?: Address; phone?: string; company_slug?: string; day?: string }) =>
+export const redeemItem = (body: { item_id: string; size?: string; address?: Address; phone?: string; company_slug?: string; day?: string; claim?: string }) =>
   call<{ order: StoreOrder; coins: number }>('/store/redeem', json('POST', body));
 export const fetchMyOrders = () => call<{ orders: StoreOrder[] }>('/store/orders');
 export const cancelOrder = (id: string) => call<{ order: StoreOrder; coins: number }>(`/store/orders/${encodeURIComponent(id)}/cancel`, { method: 'POST' });

@@ -5,6 +5,7 @@ import { balanceOf, CoinError } from '../lib/coins';
 import { repairableDays } from '../lib/streak';
 import { inStock, itemById, ordersOf, packCompanies, redeem, setOrderStatus, stockLeft, storeItems, updateItem, PHYSICAL_MIN_AGE_DAYS, type OrderStatus } from '../lib/store';
 import { appendAudit } from '../store/audit';
+import { opportunitiesOf, unlocksOf } from '../lib/opportunities';
 
 /**
  * The TiEEdu Store (TIE_COINS_STORE_PLAN.md §4).
@@ -49,6 +50,9 @@ storeRouter.get('/', optionalAuth, (req: Request, res: Response) => {
     repairs_left: 3 - (db.streak_repairs || []).filter((r: any) => r.user_id === req.userId && String(r.day).slice(0, 7) === new Date(Date.now() + 5.5 * 3_600_000).toISOString().slice(0, 7)).length,
     pack_companies: packCompanies(db),
     goal_item_id: user?.coin_goal || null,
+    // Streak rewards ready to claim for free (lib/opportunities), with their item even if it is not on sale.
+    claims: opportunitiesOf(db).filter((o) => o.on && o.kind === 'claim' && unlocksOf(db).some((u) => u.user_id === req.userId && u.key === o.key && !u.claimed_order))
+      .map((o) => { const it = itemById(db, o.item!); return it ? { key: o.key, title: o.title, days: o.days, item: publicItem(db, it) } : null; }).filter(Boolean),
   });
 });
 

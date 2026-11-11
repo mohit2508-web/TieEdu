@@ -9,6 +9,9 @@ export interface CandidateCard {
   city: string | null;
   skills: Array<{ name: string; slug: string; score: number; level: string | null; certified: boolean }>;
   certificates: Array<{ title: string; verified: boolean }>;
+  /** 60-day streak on TiEEdu (consistency), shown to recruiters; still anonymous. */
+  streak_star?: boolean;
+  best_streak?: number | null;
 }
 export interface TalentProfile { visible: boolean; handle: string; branch: string | null; grad_year: number | null; city: string | null; opted_in_at: string }
 export interface StudentTalent {

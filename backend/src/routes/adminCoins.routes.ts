@@ -8,6 +8,8 @@ import { BANK, FREE_CORE } from '../lib/practice/bank';
 import { accessOverrides, type AccessOverride } from '../lib/practice/access';
 import { dailyProblem } from '../lib/practice/daily';
 import { ordersOf } from '../lib/store';
+import { opportunitiesOf, unlocksOf } from '../lib/opportunities';
+import { grantBadge } from '../lib/perks';
 
 /**
  * Admin → TiE Coins and practice access (TIE_COINS_STORE_PLAN.md §7). Mounted behind requireAdmin.
@@ -127,6 +129,63 @@ adminCoinsRouter.get('/stats', (req: Request, res: Response) => {
     flagged,
     orders: ordersOf(db).reduce((m: Record<string, number>, o) => { m[o.status] = (m[o.status] || 0) + 1; return m; }, {}),
   });
+});
+
+/** Opportunities: on/off, threshold, how many students unlocked and claimed each. */
+adminCoinsRouter.get('/opportunities', (_req: Request, res: Response) => {
+  const db: any = loadDb();
+  const un = unlocksOf(db);
+  res.json({ opportunities: opportunitiesOf(db).map((o) => ({ ...o, unlocked: un.filter((u) => u.key === o.key).length, claimed: un.filter((u) => u.key === o.key && u.claimed_order).length })) });
+});
+
+adminCoinsRouter.put('/opportunities/:key', (req: Request, res: Response) => {
+  const db: any = loadDb();
+  if (!opportunitiesOf(db).some((o) => o.key === req.params.key)) return res.status(404).json({ error: 'Unknown opportunity' });
+  const cur = { ...(db.opportunity_rules || {}) };
+  const next: any = { ...(cur[req.params.key] || {}) };
+  if (typeof req.body?.on === 'boolean') next.on = req.body.on;
+  if (Number.isFinite(Number(req.body?.days)) && Number(req.body.days) > 0) next.days = Math.round(Number(req.body.days));
+  cur[req.params.key] = next;
+  db.opportunity_rules = cur;
+  void appendAudit(db, { actor: actor(req), action: 'coins.opportunity', detail: `${req.params.key}: ${JSON.stringify(req.body || {})}` }).catch(() => undefined);
+  safeSaveDb(db);
+  res.json({ opportunity: opportunitiesOf(db).find((o) => o.key === req.params.key) });
+});
+
+/** Monthly top 10 by coins earned that month (practice only: no admin, refunds or rewards). */
+const TOP_PRIZES = [500, 400, 300, 250, 200, 150, 150, 100, 100, 100];
+function monthlyTop(db: any, month: string) {
+  const earned = new Map<string, number>();
+  for (const e of ledgerOf(db)) {
+    if (e.coins <= 0 || ['admin', 'refund', 'opportunity', 'monthly_top', 'spend'].includes(e.rule)) continue;
+    if (istDate(new Date(e.at)).slice(0, 7) !== month) continue;
+    earned.set(e.user_id, (earned.get(e.user_id) || 0) + e.coins);
+  }
+  const users = new Map<string, any>((db.users || []).map((u: any) => [u.id, u]));
+  return [...earned.entries()].filter(([id]) => users.get(id)?.role !== 'admin').sort((a, b) => b[1] - a[1]).slice(0, 10)
+    .map(([id, coins], i) => ({ rank: i + 1, user_id: id, name: users.get(id)?.name || users.get(id)?.email || id, earned: coins, prize: TOP_PRIZES[i], paid: ledgerOf(db).some((e) => e.key === `top:${month}:${id}`) }));
+}
+
+adminCoinsRouter.get('/monthly-top', (req: Request, res: Response) => {
+  const db: any = loadDb();
+  const month = /^\d{4}-\d{2}$/.test(String(req.query.month || '')) ? String(req.query.month) : istDate().slice(0, 7);
+  res.json({ month, top: monthlyTop(db, month) });
+});
+
+/** Pay the month's top 10 (once each) and give the "Top 10" badge. Only for a finished month. */
+adminCoinsRouter.post('/monthly-top', (req: Request, res: Response) => {
+  const db: any = loadDb();
+  const month = String(req.body?.month || '');
+  if (!/^\d{4}-\d{2}$/.test(month)) return res.status(400).json({ error: 'Pick a month' });
+  if (month >= istDate().slice(0, 7)) return res.status(400).json({ error: 'Wait until the month is over' });
+  const top = monthlyTop(db, month);
+  for (const t of top) {
+    grant(db, t.user_id, 'monthly_top', `top:${month}:${t.user_id}`, t.prize, `Top 10 in ${month} (#${t.rank})`);
+    grantBadge(db, t.user_id, `top10-${month}`);
+  }
+  void appendAudit(db, { actor: actor(req), action: 'coins.monthly_top', detail: `${month}: ${top.length} paid` }).catch(() => undefined);
+  safeSaveDb(db);
+  res.json({ month, top: monthlyTop(db, month) });
 });
 
 adminCoinsRouter.get('/practice', (_req: Request, res: Response) => {

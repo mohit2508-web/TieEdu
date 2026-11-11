@@ -49,5 +49,13 @@ export interface StreakPage {
   milestones: Array<{ days: number; key: string; name: string; earned: boolean }>;
   earned: Array<{ key: string; name: string; earned_at: string }>;
   daily_today_done: boolean; repairable_days: string[]; repairs_left: number;
+  opportunities: Array<{ key: string; days: number; title: string; blurb: string; kind: string; item: string | null; state: 'locked' | 'unlocked' | 'claimable' | 'claimed'; progress: number; unlocked_at: string | null; note: string | null }>;
+  nudges_on: boolean;
+}
+export async function setStreakNudges(on: boolean): Promise<{ nudges_on: boolean }> {
+  const res = await apiFetch(`${API_BASE_URL}/coins/nudges`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ on }) });
+  const body = await res.json().catch(() => null);
+  if (!res.ok) throw new Error(body?.error || `Request failed (${res.status})`);
+  return body;
 }
 export const fetchStreakPage = (month?: string) => get<StreakPage>(`/streak${month ? `?month=${month}` : ''}`);

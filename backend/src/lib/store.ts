@@ -14,6 +14,7 @@ import crypto from 'crypto';
 import { balanceOf, grant, spend, CoinError } from './coins';
 import { repairStreakDay } from './streak';
 import { checkStreakBadges } from './streakBadges';
+import { opportunitiesOf, unlocksOf, useClaim } from './opportunities';
 import { istDate } from './streak';
 import { packPrice } from './pricing';
 import { SET_BY_SLUG } from './practice/bank';
@@ -96,17 +97,28 @@ export function packCompanies(db: any): Array<{ slug: string; name: string; pric
 
 const clean = (v: unknown, n: number) => (typeof v === 'string' ? v.trim().slice(0, n) : '');
 
-export interface RedeemInput { item_id?: unknown; size?: unknown; address?: any; phone?: unknown; company_slug?: unknown; day?: unknown }
+export interface RedeemInput { item_id?: unknown; size?: unknown; address?: any; phone?: unknown; company_slug?: unknown; day?: unknown; /** An opportunity key (e.g. opp-200-kit): the item is free. */ claim?: unknown }
 
 /** Redeem an item. Validates everything first, then pays, then delivers (digital) or queues (physical). */
 export function redeem(db: any, userId: string, input: RedeemInput, now = new Date()): StoreOrder {
   const item = itemById(db, String(input.item_id || ''));
-  if (!item || !item.active) throw new CoinError(404, 'This item is not available');
+  const claim = typeof input.claim === 'string' && input.claim ? input.claim : null;
+  // A claimed opportunity reward is free and may be an item not on sale (e.g. the hoodie).
+  if (!item || (!item.active && !claim)) throw new CoinError(404, 'This item is not available');
   const user = (db.users || []).find((u: any) => u.id === userId);
   if (!user) throw new CoinError(404, 'Account not found');
-  const mine = ordersOf(db).filter((o) => o.user_id === userId && o.item_id === item.id && !['rejected', 'cancelled'].includes(o.status));
-  if (item.limit_per_user && mine.length >= item.limit_per_user) throw new CoinError(409, item.limit_per_user === 1 ? 'You already have this one' : `You can redeem this ${item.limit_per_user} times`);
-  if (balanceOf(db, userId) < item.coins) throw new CoinError(402, `You need ${item.coins - balanceOf(db, userId)} more TiE Coins`);
+  if (claim) {
+    const o = opportunitiesOf(db).find((x) => x.key === claim);
+    const u = unlocksOf(db).find((x) => x.user_id === userId && x.key === claim);
+    if (!o || o.kind !== 'claim' || o.item !== item.id) throw new CoinError(400, 'This reward cannot be claimed here');
+    if (!u) throw new CoinError(403, `Unlocks at a ${o.days}-day streak`);
+    if (u.claimed_order) throw new CoinError(409, 'Already claimed');
+  } else {
+    const mine = ordersOf(db).filter((o) => o.user_id === userId && o.item_id === item.id && !['rejected', 'cancelled'].includes(o.status) && o.coins > 0);
+    if (item.limit_per_user && mine.length >= item.limit_per_user) throw new CoinError(409, item.limit_per_user === 1 ? 'You already have this one' : `You can redeem this ${item.limit_per_user} times`);
+    if (balanceOf(db, userId) < item.coins) throw new CoinError(402, `You need ${item.coins - balanceOf(db, userId)} more TiE Coins`);
+  }
+  const price = claim ? 0 : item.coins;
 
   let size: string | null = null;
   let address: Address | null = null;
@@ -145,10 +157,10 @@ export function redeem(db: any, userId: string, input: RedeemInput, now = new Da
   }
 
   const id = `ord-${now.getTime()}-${crypto.randomBytes(3).toString('hex')}`;
-  spend(db, userId, `spend:${id}`, item.coins, `${item.name}${size ? ` (${size})` : ''}`, id);
+  if (price > 0) spend(db, userId, `spend:${id}`, price, `${item.name}${size ? ` (${size})` : ''}`, id);
 
   const order: StoreOrder = {
-    id, user_id: userId, item_id: item.id, item_name: item.name, kind: item.kind, size, coins: item.coins,
+    id, user_id: userId, item_id: item.id, item_name: claim ? `${item.name} (streak reward)` : item.name, kind: item.kind, size, coins: price,
     status: item.kind === 'digital' ? 'delivered' : 'placed', address, phone, courier: null, tracking: null, result: null,
     history: [{ status: item.kind === 'digital' ? 'delivered' : 'placed', at: now.toISOString(), by: userId }], created_at: now.toISOString(),
   };
@@ -184,6 +196,7 @@ export function redeem(db: any, userId: string, input: RedeemInput, now = new Da
     user.profile_frame = item.value?.frame || 'bronze';
     order.result = { frame: user.profile_frame };
   }
+  if (claim) { useClaim(db, userId, claim, item.id, id); order.result = { ...(order.result || {}), claim }; }
   ordersOf(db).push(order);
   return order;
 }
@@ -207,6 +220,8 @@ export function setOrderStatus(db: any, orderId: string, to: OrderStatus, by: { 
   o.history.push({ status: to, at: new Date().toISOString(), by: by.id, ...(extra.note ? { note: clean(extra.note, 300) } : {}) });
   if (to === 'rejected' || to === 'cancelled') {
     grant(db, o.user_id, 'refund', `refund:${o.id}`, o.coins, `Refund: ${o.item_name}`, o.id);
+    // A free streak-reward claim becomes claimable again.
+    if (o.result?.claim) { const u = unlocksOf(db).find((x) => x.user_id === o.user_id && x.key === o.result!.claim); if (u) u.claimed_order = null; }
     const item = itemById(db, o.item_id);
     if (item?.stock && o.kind === 'physical') item.stock[o.size || 'one'] = stockLeft(item, o.size) + 1;
   }

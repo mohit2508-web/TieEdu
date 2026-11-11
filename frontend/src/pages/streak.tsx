@@ -7,7 +7,7 @@ import { BrandLoader } from '@/components/brand/BrandLoader';
 import { ErrorState } from '@/components/common/ErrorState';
 import { CoinIcon } from '@/components/coins/CoinIcon';
 import { ShareCard } from '@/components/coins/ShareCard';
-import { announceCoins, fetchCoinRules, fetchStreakPage, type StreakDayState, type StreakPage } from '@/lib/coinsApi';
+import { announceCoins, fetchCoinRules, fetchStreakPage, setStreakNudges, type StreakDayState, type StreakPage } from '@/lib/coinsApi';
 import { redeemItem } from '@/lib/storeApi';
 import { cn } from '@/lib/cn';
 
@@ -152,6 +152,42 @@ export default function StreakPageView() {
                   <Medal key={m.key} name={m.name} earned={m.earned} sub={`${m.days} days${bonus[String(m.days)] ? ` · +${bonus[String(m.days)]} coins` : ''}`} />
                 ))}
               </div>
+            </section>
+
+            {/* Opportunities: earned by the streak, not bought (plan §5). */}
+            <section className="mt-8">
+              <h2 className="font-display text-2xl font-semibold text-heading">What your streak unlocks</h2>
+              <p className="mt-1 text-body-md text-body">Real things TiEEdu does for students who keep going. Coins cannot buy these.</p>
+              <ol className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                {p.opportunities.map((o) => (
+                  <li key={o.key} className={cn('flex flex-col rounded-2xl border p-4', o.state === 'locked' ? 'border-line bg-card' : 'border-success/40 bg-success-soft/40')}>
+                    <div className="flex items-start gap-3">
+                      <span className={cn('grid h-10 w-10 shrink-0 place-items-center rounded-xl text-sm font-bold tabular-nums', o.state === 'locked' ? 'bg-surface-hover text-muted' : 'bg-success text-white')}>{o.days}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-body-md font-semibold text-heading">{o.title}</p>
+                        <p className="text-sm text-body">{o.blurb}</p>
+                      </div>
+                    </div>
+                    <div className="mt-3">
+                      {o.state === 'locked' ? (
+                        <>
+                          <div className="h-1.5 overflow-hidden rounded-full bg-surface-hover"><div className="h-full rounded-full bg-signal" style={{ width: `${(o.progress / o.days) * 100}%` }} /></div>
+                          <p className="mt-1 text-sm text-muted">Best streak {o.progress} of {o.days} days</p>
+                        </>
+                      ) : o.state === 'claimable' ? (
+                        <Link href="/rewards#store" className="btn btn-primary focus-ring inline-flex min-h-[40px] items-center gap-2 px-4">Claim it <ArrowRight className="h-4 w-4" aria-hidden /></Link>
+                      ) : (
+                        <p className="inline-flex items-center gap-1.5 text-body-md font-semibold text-success"><CheckCircle2 className="h-4 w-4" aria-hidden /> {o.state === 'claimed' ? 'Claimed' : 'Unlocked'}</p>
+                      )}
+                      {o.note && <p className="mt-1 text-sm text-muted">{o.note} <Link href="/talent" className="font-semibold text-link underline">Talent pool</Link></p>}
+                    </div>
+                  </li>
+                ))}
+              </ol>
+              <label className="mt-5 flex items-center gap-3 rounded-2xl border border-line bg-card p-4 text-body-md text-heading">
+                <input type="checkbox" className="h-5 w-5" checked={p.nudges_on} onChange={(e) => setStreakNudges(e.target.checked).then((r) => setP({ ...p, nudges_on: r.nudges_on })).catch(() => undefined)} />
+                <span><span className="font-semibold">Remind me at 9 PM</span> if my streak is about to end. <span className="text-muted">Needs notifications turned on in your account.</span></span>
+              </label>
             </section>
 
             {p.earned.length > 0 && (

@@ -96,7 +96,7 @@ const user = (db: any) => db.users[0];
   const m = plan[0];
   check('to the parent’s number', m.phone, '919876543210');
   check('links point at the parent page and its stop link', [m.params[2], m.params[3]], [`https://site.test/parent/${TOKEN}`, `https://site.test/parent/${TOKEN}?stop=1`]);
-  check('full text fills the template', m.text.startsWith('Hello! Rahul’s week on TieEdu:') && m.text.includes('To stop these messages:'), true);
+  check('full text fills the template', m.text.startsWith('Hello! Rahul’s week on TiEEdu:') && m.text.includes('To stop these messages:'), true);
   check('no email in the message', m.text.includes('r@x.test'), false);
   markSent(db, m);
   check('once a week', planWeekly(db, 'https://site.test', SUNDAY).length, 0);

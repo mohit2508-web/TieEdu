@@ -26,6 +26,8 @@ export function badgeName(key: string): string {
   if (s) return s.name;
   let m = /^month-(\d{4})-(\d{2})$/.exec(key);
   if (m) return `${MONTHS[Number(m[2]) - 1]} ${m[1]} Daily Coder`;
+  m = /^top10-(\d{4})-(\d{2})$/.exec(key);
+  if (m) return `Top 10 · ${MONTHS[Number(m[2]) - 1]} ${m[1]}`;
   m = /^year-(\d+)-(\d{4})$/.exec(key);
   if (m) return `${m[1]} days in ${m[2]}`;
   return key;
@@ -78,7 +80,7 @@ export function streakPage(db: any, userId: string, monthParam: string | undefin
   const dailyThisMonth = days.filter((d) => d.daily || repaired.has(d.day)).length;
   const year = month.slice(0, 4);
   const activeYear = new Set([...done, ...frozen, ...repaired].filter((d) => d.startsWith(year))).size;
-  const earned = (db.user_badges || []).filter((b: any) => b.user_id === userId && (/^streak-|^month-|^year-/.test(b.badge_key)))
+  const earned = (db.user_badges || []).filter((b: any) => b.user_id === userId && (/^streak-|^month-|^year-|^top10-/.test(b.badge_key)))
     .map((b: any) => ({ key: b.badge_key, name: badgeName(b.badge_key), earned_at: b.earned_at }));
   return {
     month, today,

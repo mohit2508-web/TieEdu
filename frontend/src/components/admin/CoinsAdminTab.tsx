@@ -6,11 +6,12 @@ import { ErrorState } from '@/components/common/ErrorState';
 import { CoinIcon } from '@/components/coins/CoinIcon';
 import {
   adjustCoins, fetchCoinRulesAdmin, fetchCoinStats, fetchCoinStudent, fetchDailySchedule, fetchPracticeAccess, saveCoinRule, searchCoinStudents,
-  setDailyProblem, setPracticeAccess, type AdminCoinRule, type CoinLedgerRow, type CoinStats, type CoinStudent, type PracticeAccessRow,
+  setDailyProblem, setPracticeAccess, fetchOpportunitiesAdmin, saveOpportunity, fetchMonthlyTop, payMonthlyTop,
+  type AdminCoinRule, type CoinLedgerRow, type CoinStats, type CoinStudent, type PracticeAccessRow, type AdminOpportunity, type TopRow,
 } from '@/lib/adminCoinsApi';
 import { cn } from '@/lib/cn';
 
-type View = 'stats' | 'students' | 'rules' | 'access' | 'daily';
+type View = 'stats' | 'students' | 'rules' | 'opps' | 'top' | 'access' | 'daily';
 const input = 'h-9 rounded-md border border-line bg-card px-2 text-body-md text-heading focus:border-signal focus:outline-none';
 const n = (v: number) => v.toLocaleString('en-IN');
 const card = 'rounded-2xl border border-line bg-card p-5';
@@ -242,6 +243,63 @@ function DailyView() {
   );
 }
 
+function OppsView() {
+  const [rows, setRows] = useState<AdminOpportunity[] | null>(null);
+  const [err, setErr] = useState('');
+  useEffect(() => { fetchOpportunitiesAdmin().then((r) => setRows(r.opportunities)).catch((e) => setErr(e.message)); }, []);
+  const save = (key: string, patch: { on?: boolean; days?: number }) => saveOpportunity(key, patch).then((r) => setRows((l) => l && l.map((x) => (x.key === key ? { ...x, ...r.opportunity } : x)))).catch((e) => setErr(e.message));
+  if (err) return <ErrorState message={err} />;
+  if (!rows) return <BrandLoader caption="Loading opportunities…" />;
+  return (
+    <>
+      <p className="rounded-xl bg-surface-hover p-3 text-body-md text-body">Unlocked once, when a student&apos;s best streak reaches the days. Switching one off stops new unlocks; students who already have it keep it.</p>
+      <ul className="mt-3 space-y-3">
+        {rows.map((o) => (
+          <li key={o.key} className={cn(card, 'flex flex-wrap items-center gap-4')}>
+            <label className="flex items-center gap-2"><input type="checkbox" checked={o.on} onChange={(e) => save(o.key, { on: e.target.checked })} /><span className="sr-only">On</span></label>
+            <div className="min-w-0 flex-1"><p className="font-semibold text-heading">{o.title}</p><p className="text-sm text-muted">{o.blurb}</p></div>
+            <label className="text-sm text-muted">Days <input type="number" min={1} defaultValue={o.days} onBlur={(e) => Number(e.target.value) !== o.days && save(o.key, { days: Number(e.target.value) })} className={cn(input, 'ml-1 w-20')} /></label>
+            <span className="text-sm tabular-nums text-muted">{o.unlocked} unlocked{o.kind === 'claim' ? ` · ${o.claimed} claimed` : ''}</span>
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+}
+
+function TopView() {
+  const last = (() => { const d = new Date(); d.setUTCDate(1); d.setUTCMonth(d.getUTCMonth() - 1); return d.toISOString().slice(0, 7); })();
+  const [month, setMonth] = useState(last);
+  const [rows, setRows] = useState<TopRow[] | null>(null);
+  const [msg, setMsg] = useState('');
+  useEffect(() => { setRows(null); fetchMonthlyTop(month).then((r) => setRows(r.top)).catch((e) => setMsg(e.message)); }, [month]);
+  const pay = () => { if (window.confirm(`Pay the ${month} top 10 and give their badge?`)) payMonthlyTop(month).then((r) => { setRows(r.top); setMsg('Paid'); }).catch((e) => setMsg(e.message)); };
+  return (
+    <>
+      <div className="flex flex-wrap items-center gap-3">
+        <label className="text-body-md text-body">Month <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} className={cn(input, 'ml-1')} /></label>
+        <button type="button" onClick={pay} disabled={!rows?.length || rows.every((r) => r.paid)} className="btn btn-primary focus-ring min-h-[36px] px-4 disabled:opacity-40">Pay prizes + badge</button>
+        {msg && <span className="text-sm text-muted">{msg}</span>}
+      </div>
+      <p className="mt-2 text-sm text-muted">Ranks coins earned from practice that month (no admin grants, refunds or rewards). Each student is paid once.</p>
+      {!rows ? <BrandLoader caption="Loading the leaderboard…" /> : (
+        <ol className="mt-3 divide-y divide-line overflow-hidden rounded-2xl border border-line bg-card">
+          {rows.map((r) => (
+            <li key={r.user_id} className="flex items-center gap-3 px-4 py-2.5 text-body-md">
+              <span className="w-8 font-bold tabular-nums text-heading">#{r.rank}</span>
+              <span className="min-w-0 flex-1 truncate text-heading">{r.name}</span>
+              <span className="tabular-nums text-muted">{n(r.earned)} earned</span>
+              <span className="inline-flex w-24 items-center justify-end gap-1 font-semibold tabular-nums text-heading"><CoinIcon size={14} />+{r.prize}</span>
+              <span className={cn('w-16 text-right text-sm font-semibold', r.paid ? 'text-success' : 'text-muted')}>{r.paid ? 'Paid' : 'Not yet'}</span>
+            </li>
+          ))}
+          {!rows.length && <li className="px-4 py-3 text-body-md text-muted">No practice coins earned that month.</li>}
+        </ol>
+      )}
+    </>
+  );
+}
+
 /** Admin → TiE Coins (TIE_COINS_STORE_PLAN.md §7): stats, students and their ledger, earning rules, practice access, the daily problem. */
 export const CoinsAdminTab: React.FC = () => {
   const [view, setView] = useState<View>('stats');
@@ -253,11 +311,13 @@ export const CoinsAdminTab: React.FC = () => {
           <p className="text-body-md text-body">What students earn and hold, the earning rules, who can open which problem, and the daily problem.</p>
         </div>
         <Segmented label="Section" value={view} onChange={setView}
-          items={[{ key: 'stats', label: 'Stats' }, { key: 'students', label: 'Students' }, { key: 'rules', label: 'Earning rules' }, { key: 'access', label: 'Practice access' }, { key: 'daily', label: 'Daily problem' }]} />
+          items={[{ key: 'stats', label: 'Stats' }, { key: 'students', label: 'Students' }, { key: 'rules', label: 'Earning rules' }, { key: 'opps', label: 'Opportunities' }, { key: 'top', label: 'Top 10' }, { key: 'access', label: 'Practice access' }, { key: 'daily', label: 'Daily problem' }]} />
       </div>
       {view === 'stats' && <StatsView />}
       {view === 'students' && <StudentsView />}
       {view === 'rules' && <RulesView />}
+      {view === 'opps' && <OppsView />}
+      {view === 'top' && <TopView />}
       {view === 'access' && <AccessView />}
       {view === 'daily' && <DailyView />}
     </div>

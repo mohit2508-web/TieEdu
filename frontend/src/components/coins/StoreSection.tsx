@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { X, CheckCircle2, Copy, Package, Truck, Lock, Target } from 'lucide-react';
+import { X, CheckCircle2, Copy, Package, Truck, Lock, Target, Gift } from 'lucide-react';
 import { CoinIcon } from './CoinIcon';
 import { SwagArt } from './SwagArt';
 import { Segmented } from '@/components/ui/Segmented';
@@ -62,7 +62,7 @@ function ItemCard({ item, view, onPick, isGoal, onGoal }: { item: StoreItemView;
 }
 
 /** The redeem dialog: asks only what this item needs (day / company / size + address), then shows what you got. */
-function RedeemDialog({ item, view, onClose, onDone }: { item: StoreItemView; view: StoreView; onClose: () => void; onDone: (o: StoreOrder, coins: number) => void }) {
+function RedeemDialog({ item, view, onClose, onDone, claim }: { item: StoreItemView; view: StoreView; onClose: () => void; onDone: (o: StoreOrder, coins: number) => void; claim?: string }) {
   const [day, setDay] = useState(view.repairable_days?.slice(-1)[0] || '');
   const [company, setCompany] = useState('');
   const [size, setSize] = useState('');
@@ -79,7 +79,7 @@ function RedeemDialog({ item, view, onClose, onDone }: { item: StoreItemView; vi
     e.preventDefault();
     setBusy(true); setError('');
     try {
-      const r = await redeemItem({ item_id: item.id, ...(item.action === 'repair' ? { day } : {}), ...(item.action === 'pack' ? { company_slug: company } : {}),
+      const r = await redeemItem({ item_id: item.id, ...(claim ? { claim } : {}), ...(item.action === 'repair' ? { day } : {}), ...(item.action === 'pack' ? { company_slug: company } : {}),
         ...(physical ? { size: size || undefined, address: addr, phone } : {}) });
       setDone(r.order);
       onDone(r.order, r.coins);
@@ -93,7 +93,7 @@ function RedeemDialog({ item, view, onClose, onDone }: { item: StoreItemView; vi
           <div className="grid h-20 w-24 shrink-0 place-items-center rounded-xl bg-surface-hover"><SwagArt art={item.art} image={item.image} label="" className="h-full w-full" /></div>
           <div className="min-w-0 flex-1">
             <p className="text-lg font-semibold text-heading">{item.name}</p>
-            <p className="flex items-center gap-1 font-bold text-heading"><CoinIcon size={16} />{inr(item.coins)}</p>
+            {claim ? <p className="font-bold text-success">Free · your streak reward</p> : <p className="flex items-center gap-1 font-bold text-heading"><CoinIcon size={16} />{inr(item.coins)}</p>}
           </div>
           <button type="button" onClick={onClose} aria-label="Close" className="rounded p-1 text-muted hover:text-heading focus-ring"><X className="h-5 w-5" aria-hidden /></button>
         </div>
@@ -168,7 +168,7 @@ function RedeemDialog({ item, view, onClose, onDone }: { item: StoreItemView; vi
             {error && <p role="alert" className="rounded-lg bg-danger-soft px-3 py-2 text-body-md text-danger">{error}</p>}
             <button type="submit" disabled={busy || (item.action === 'repair' && !view.repairable_days?.length) || (physical && !!item.sizes && !size)}
               className="btn btn-primary focus-ring flex min-h-[48px] w-full items-center justify-center gap-2 disabled:opacity-50">
-              {busy ? 'Working…' : <>Pay <CoinIcon size={16} /> {inr(item.coins)}</>}
+              {busy ? 'Working…' : claim ? 'Claim it free' : <>Pay <CoinIcon size={16} /> {inr(item.coins)}</>}
             </button>
           </form>
         )}
@@ -210,6 +210,7 @@ export function StoreSection({ signedIn }: { signedIn: boolean }) {
   const [error, setError] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
   const [pick, setPick] = useState<StoreItemView | null>(null);
+  const [claim, setClaim] = useState<string | undefined>(undefined);
   const load = () => { setError(''); fetchStore().then(setView).catch((e) => setError(e.message)); if (signedIn) fetchMyOrders().then((r) => setOrders(r.orders)).catch(() => setOrders([])); };
   useEffect(load, [signedIn]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -226,10 +227,24 @@ export function StoreSection({ signedIn }: { signedIn: boolean }) {
       </div>
       {error && <ErrorState className="mt-4" message={error} onRetry={load} />}
       {!view && !error && <BrandLoader caption="Opening the store…" />}
+      {view?.claims && view.claims.length > 0 && (
+        <div className="mt-5 rounded-2xl border-2 border-signal bg-signal-soft/40 p-4">
+          <p className="flex items-center gap-2 text-lg font-semibold text-heading"><Gift className="h-5 w-5 text-signal-ink" aria-hidden /> Your streak rewards</p>
+          <ul className="mt-3 grid gap-3 sm:grid-cols-2">
+            {view.claims.map((c) => (
+              <li key={c.key} className="flex items-center gap-3 rounded-xl bg-card p-3">
+                <span className="grid h-16 w-20 shrink-0 place-items-center rounded-lg bg-surface-hover"><SwagArt art={c.item.art} image={c.item.image} label="" className="h-full w-full" /></span>
+                <span className="min-w-0 flex-1"><span className="block font-semibold text-heading">{c.title}</span><span className="block text-sm text-muted">Earned with a {c.days}-day streak</span></span>
+                <button type="button" disabled={!c.item.in_stock} onClick={() => { setClaim(c.key); setPick(c.item); }} className="btn btn-primary focus-ring min-h-[40px] px-4 disabled:opacity-50">{c.item.in_stock ? 'Claim' : 'Stock soon'}</button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       {view && (
         <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {items.map((i) => (
-            <ItemCard key={i.id} item={i} view={view} onPick={() => setPick(i)} isGoal={view.goal_item_id === i.id}
+            <ItemCard key={i.id} item={i} view={view} onPick={() => { setClaim(undefined); setPick(i); }} isGoal={view.goal_item_id === i.id}
               onGoal={() => setCoinGoal(i.id).then(() => { setView({ ...view, goal_item_id: i.id }); announceCoins([{ rule: 'goal', coins: 0, note: i.name }]); }).catch(() => undefined)} />
           ))}
         </div>
@@ -243,8 +258,8 @@ export function StoreSection({ signedIn }: { signedIn: boolean }) {
         </div>
       )}
       {pick && view && (
-        <RedeemDialog item={pick} view={view} onClose={() => { setPick(null); load(); }}
-          onDone={(o, coins) => { setView({ ...view, coins }); announceCoins([{ rule: 'spend', coins: -o.coins, note: o.item_name }]); }} />
+        <RedeemDialog item={pick} view={view} claim={claim} onClose={() => { setPick(null); setClaim(undefined); load(); }}
+          onDone={(o, coins) => { setView({ ...view, coins }); if (o.coins) announceCoins([{ rule: 'spend', coins: -o.coins, note: o.item_name }]); }} />
       )}
     </section>
   );

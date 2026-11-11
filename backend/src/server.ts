@@ -65,6 +65,7 @@ import { seedMissing3T } from './lib/seed3T';
 import { festivalRouter, festivalAdminRouter } from './routes/festival.routes';
 import { seedTieEduInternshipDrafts } from './lib/internships';
 import { startStudyReminderScheduler } from './lib/studyReminderScheduler';
+import { startStreakNudgeScheduler } from './lib/streakNudges';
 import { collegesRouter, collegesAdminRouter } from './routes/colleges.routes';
 import { campusPagesRouter } from './routes/campusPages.routes';
 import driveAdminRouter from './routes/driveAdmin.routes';
@@ -457,6 +458,7 @@ export const httpServer = app.listen(PORT, async () => {
     console.warn('[Diwali] internship seeding skipped:', e?.message);
   }
   startStudyReminderScheduler();
+  startStreakNudgeScheduler();
   startPulseScheduler();
   if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
     console.warn('🔐 [Auth] JWT_SECRET env missing in production — auth is FAIL-CLOSED. Set JWT_SECRET (32+ chars) now.');

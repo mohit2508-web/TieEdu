@@ -411,7 +411,8 @@ driveAdminRouter.get('/:driveId/registrations', async (req: Request, res: Respon
     } catch { /* listing must not fail on the JSON store */ }
     const registrations = rows.rows.map((r: any) => {
       const u = users.get(r.user_id);
-      return { ...r, name: u?.name || '', email: u?.email || '' };
+      // 30-day streak (lib/opportunities): organisers see it when seats are tight.
+      return { ...r, name: u?.name || '', email: u?.email || '', streak_priority: !!(u as any)?.mock_drive_priority };
     });
     return res.json({ registrations, total: total.rows[0].n, page, limit });
   } catch (err: any) {

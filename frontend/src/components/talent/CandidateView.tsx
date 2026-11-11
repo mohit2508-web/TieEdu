@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { BadgeCheck } from 'lucide-react';
+import { BadgeCheck, Flame } from 'lucide-react';
 import { Card } from '@/components/ui';
 import type { CandidateCard } from '@/lib/talentApi';
 
@@ -10,7 +10,9 @@ export function CandidateView({ card, action }: { card: CandidateCard; action?: 
     <Card className="mt-3">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <p className="font-bold text-heading">{card.handle}</p>
+          <p className="flex flex-wrap items-center gap-2 font-bold text-heading">{card.handle}
+            {card.streak_star && <span className="inline-flex items-center gap-1 rounded-full bg-signal-soft px-2 py-0.5 text-xs font-semibold text-signal-ink" title="Practised every day for 60+ days on TiEEdu"><Flame className="h-3.5 w-3.5" aria-hidden /> Streak Star{card.best_streak ? ` · ${card.best_streak} days` : ''}</span>}
+          </p>
           <p className="text-sm text-muted">{[card.branch, card.grad_year ? `graduating ${card.grad_year}` : null, card.city].filter(Boolean).join(' · ') || 'No details added'}</p>
         </div>
         {action}

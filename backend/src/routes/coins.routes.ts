@@ -6,6 +6,7 @@ import { istDate, repairableDays, streakView } from '../lib/streak';
 import { dailyProblem } from '../lib/practice/daily';
 import { itemById } from '../lib/store';
 import { streakPage } from '../lib/streakBadges';
+import { opportunityView } from '../lib/opportunities';
 
 /**
  * TiE Coins (TIE_COINS_STORE_PLAN.md).
@@ -66,7 +67,19 @@ coinsRouter.get('/streak', requireAuth, (req: Request, res: Response) => {
     ...page,
     repairable_days: repairableDays(db, req.userId!),
     repairs_left: 3 - (db.streak_repairs || []).filter((r: any) => r.user_id === req.userId && String(r.day).slice(0, 7) === month).length,
+    opportunities: opportunityView(db, req.userId!, page.best),
+    nudges_on: !(db.users || []).find((u: any) => u.id === req.userId)?.streak_nudges_off,
   });
+});
+
+/** The 9 PM "streak ends at midnight" push, on or off for this student. */
+coinsRouter.post('/nudges', requireAuth, (req: Request, res: Response) => {
+  const db: any = loadDb();
+  const user = (db.users || []).find((u: any) => u.id === req.userId);
+  if (!user) return res.status(404).json({ error: 'Account not found' });
+  user.streak_nudges_off = req.body?.on === false;
+  safeSaveDb(db);
+  res.json({ nudges_on: !user.streak_nudges_off });
 });
 
 /** Signed-out visitors still see the earning table; this keeps one call for the header. */
