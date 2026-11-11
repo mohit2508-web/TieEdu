@@ -90,6 +90,13 @@ export const pulseApi = {
     if (!res.ok) throw new Error('Export failed');
     return res.blob();
   },
+  /** Wipro iOS lab report (Excel, CSV zip or PDF), built on the server from live data. */
+  wiproReport: async (format: 'xlsx' | 'csv' | 'pdf', classId: string | null) => {
+    const res = await apiFetch(`${API_BASE_URL}/pulse/reports/wipro?format=${format}&class=${encodeURIComponent(classId || 'all')}`);
+    if (!res.ok) { const j = await res.json().catch(() => null); throw new Error(j?.error || 'Could not build the report.'); }
+    const name = /filename="?([^";]+)"?/.exec(res.headers.get('content-disposition') || '')?.[1] || `wipro-lab-report.${format === 'csv' ? 'zip' : format}`;
+    return { blob: await res.blob(), name };
+  },
   student: async (taskId: string, rid: string) => bundle(await call<Raw>(`/tasks/${taskId}/students/${rid}`)),
   syncStudent: (taskId: string, rid: string, force = false) => post(`/tasks/${taskId}/students/${rid}/sync`, { force }),
   verify: (taskId: string, rid: string, verified: boolean) => post(`/tasks/${taskId}/students/${rid}/verify`, { verified }),

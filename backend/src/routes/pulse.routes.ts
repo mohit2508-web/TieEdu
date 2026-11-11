@@ -14,6 +14,8 @@ import { parseRepo, workflowYaml, GRADER_JS } from '../lib/pulse/github';
 import { syncRepo, syncTask, releaseOthers } from '../lib/pulse/sync';
 import { TEMPLATES, templateInput } from '../lib/pulse/templates';
 import { PACKS, addPack } from '../lib/pulse/packs';
+import { buildWiproReport, wiproClasses } from '../lib/pulse/wiproReport';
+import { reportXlsx, reportCsvZip, reportPdf } from '../lib/pulse/wiproReportFiles';
 
 /**
  * Project Pulse API (PROJECT_PULSE_PLAN.md §8, §12). Everything is signed-in except
@@ -390,6 +392,28 @@ pulseRouter.get('/tasks/:id/export.csv', h((req, res) => {
   const { task, cls } = teachTask(db, u(req), String(req.params.id));
   const rows = rosterOf(db, cls).map((r) => csvRow(task, studentView(db, task, r, 'teacher')));
   res.type('text/csv').attachment(`pulse-${task.folder}.csv`).send(toCsv([CSV_HEAD(task), ...rows]));
+}));
+
+// Wipro iOS lab report (WIPRO_LAB_REPORT_PLAN.md): Excel, CSV bundle or PDF. Admins: every Wipro
+// lab class plus learners outside one; teachers: only their classes. Built on request, never stored.
+pulseRouter.get('/reports/wipro', rateLimit(20), h(async (req, res) => {
+  const db = loadDb();
+  const format = String(req.query.format || 'xlsx');
+  if (!['xlsx', 'csv', 'pdf', 'json'].includes(format)) throw new PulseError(400, 'Format must be xlsx, csv or pdf.');
+  const classId = req.query.class && req.query.class !== 'all' ? String(req.query.class) : null;
+  const report = buildWiproReport(db, u(req), { classId });
+  pushAudit(db, { actor: actor(req), action: 'pulse.wipro_report', target: classId || 'all', detail: `format=${format}` });
+  saveDb(db);
+  const name = `wipro-lab-report-${report.today}${classId ? `-${classId.slice(-6)}` : ''}`;
+  if (format === 'json') return res.json(report);
+  if (format === 'pdf') return res.type('application/pdf').attachment(`${name}.pdf`).send(await reportPdf(report));
+  if (format === 'csv') return res.type('application/zip').attachment(`${name}-csv.zip`).send(reportCsvZip(report));
+  res.type('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet').attachment(`${name}.xlsx`).send(reportXlsx(report));
+}));
+pulseRouter.get('/reports/wipro/classes', h((req, res) => {
+  const db = loadDb();
+  if (!isTeacher(db, u(req))) throw new PulseError(403, 'Only admins and teachers can download the report.');
+  res.json({ classes: wiproClasses(db).filter((c) => canTeach(db, u(req), c)).map((c) => ({ id: c.id, name: c.name })), admin: isAdmin(u(req)) });
 }));
 
 pulseRouter.post('/tasks/:id/sync', rateLimit(6), h(async (req, res) => {

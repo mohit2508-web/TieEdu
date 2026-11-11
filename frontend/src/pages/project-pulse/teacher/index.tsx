@@ -5,6 +5,7 @@ import { PulseShell } from '@/components/pulse/PulseUi';
 import { PulseGate, PulseLoadState, usePulseLoad } from '@/components/pulse/PulseGate';
 import { pulseApi, type PulseMe } from '@/lib/pulse/api';
 import { usePulseNav } from '@/lib/pulse/scope';
+import { WiproReportDownload } from '@/components/pulse/WiproReportDownload';
 
 /**
  * Project Pulse — teacher home: my classes, create a class; for admins also
@@ -174,6 +175,7 @@ const Home: React.FC = () => {
           <button className={`${primary} mt-3 w-full`} disabled={busy}><Plus className="h-4 w-4" /> Create class</button>
         </form>
       </div>
+      <WiproReportDownload classes={me.classes.filter((c) => c.pack === 'wipro-ios')} isAdmin={!!me.is_admin} />
       {me.is_admin && !pack ? <AdminPanel /> : null}
     </PulseShell>
   );
