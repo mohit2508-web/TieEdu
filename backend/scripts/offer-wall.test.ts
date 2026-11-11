@@ -28,8 +28,8 @@ const mkDb = (): any => ({
 // --- names ----------------------------------------------------------------------
 check('first name', displayName('Asha Verma', 'first_name'), 'Asha');
 check('initials', displayName('Rahul Kumar Singh', 'initials'), 'R. K. S.');
-check('anonymous', displayName('Asha Verma', 'anonymous'), 'A TieEdu student');
-check('no name on file falls back to anonymous', displayName('', 'first_name'), 'A TieEdu student');
+check('anonymous', displayName('Asha Verma', 'anonymous'), 'A TiEEdu student');
+check('no name on file falls back to anonymous', displayName('', 'first_name'), 'A TiEEdu student');
 
 // --- submit ----------------------------------------------------------------------
 {

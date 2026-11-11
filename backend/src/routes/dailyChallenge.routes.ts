@@ -2,8 +2,9 @@ import { Router, Request, Response } from 'express';
 import { loadDb, saveDb } from '../data/db';
 import { requireAuth, optionalAuth } from '../middleware/auth';
 import { answerToday, challengeView, ChallengeError, DAILY_XP } from '../lib/dailyChallenge';
-import { touchStreak, streakView } from '../lib/streak';
+import { streakView } from '../lib/streak';
 import { awardXp, syncUserXp } from '../lib/xp';
+import { grant, recordStudyDay, ruleOf } from '../lib/coins';
 
 /**
  * The daily 10-minute challenge (lib/dailyChallenge).
@@ -27,7 +28,8 @@ dailyChallengeRouter.post('/answer', requireAuth, (req: Request, res: Response) 
     const result = answerToday(db, userId, req.body || {});
     let xp = 0;
     if (result.finished) {
-      touchStreak(db, userId);
+      recordStudyDay(db, userId);
+      grant(db, userId, 'daily_mcq', `dailymcq:${userId}:${result.day}`, ruleOf(db, 'daily_mcq').coins, `Daily MCQ challenge ${result.day}`);
       const award = awardXp(db, {
         userId,
         // One award per student per day, whatever happens on retry.

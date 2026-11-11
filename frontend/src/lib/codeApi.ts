@@ -27,6 +27,8 @@ export interface TestOutcome { index: number; sample: boolean; passed: boolean; 
 export interface SuiteResult {
   verdict: 'accepted' | 'wrong_answer' | 'compile_error' | 'runtime_error' | 'time_limit' | 'system_error';
   passed: number; total: number; tests: TestOutcome[]; compile_error?: string; best?: CodeBest | null; mode?: string;
+  /** TiE Coins paid for this submit (practice only). */
+  coins?: Array<{ rule: string; coins: number; note: string }>;
 }
 export interface CustomRun { mode: 'custom'; status: string; stdout: string; stderr: string; ms: number }
 export interface CaseRun {
@@ -55,6 +57,8 @@ export const fetchCodeProblem = (id: string, opts: { attempt?: string; company?:
   const o = typeof opts === 'string' ? { attempt: opts } : opts;
   return call<CodeProblemView>('code', `/problem/${encodeURIComponent(id)}${qs(o)}`);
 };
+/** The approach and solutions; opening them before solving means no solve coins for this problem. */
+export const fetchSolution = (id: string) => call<{ approach: string; complexity: string; solutions: Partial<Record<CodeLang, string>>; forfeits_coins: boolean }>('code', `/problem/${encodeURIComponent(id)}/solution`);
 export const fetchSubmissions = (id: string) => call<{ submissions: Submission[] }>('code', `/submissions/${encodeURIComponent(id)}`);
 export const runSamples = (problemId: string, language: CodeLang, code: string, attemptId?: string) =>
   call<SuiteResult>('code', '/run', post({ problem_id: problemId, language, code, attempt_id: attemptId }));

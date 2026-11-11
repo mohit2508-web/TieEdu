@@ -4,6 +4,8 @@ import { Tabs } from '@/components/ui/Tabs';
 import { VERDICT_LABEL, type CaseRun, type SuiteResult } from '@/lib/codeApi';
 import { BrandLoader } from '@/components/brand/BrandLoader';
 import { firstDiff } from '@/lib/outputDiff';
+import { CoinIcon } from '@/components/coins/CoinIcon';
+import { sumCoins } from '@/lib/coinsApi';
 
 export interface ConsoleCase { input: string; expected: string; sample: boolean }
 export type ConsoleResult = { kind: 'run'; data: CaseRun } | { kind: 'submit'; data: SuiteResult } | null;
@@ -100,6 +102,12 @@ export function ConsolePanel({ tab, onTab, cases, onCases, active, onActive, res
                 <span className="ide-accepted-badge grid h-12 w-12 shrink-0 place-items-center rounded-full bg-success text-white"><CheckCircle2 className="h-7 w-7" aria-hidden /></span>
                 <div className="min-w-0 flex-1">
                   <p className="text-lg font-bold text-heading">Accepted. All {suite.total} tests passed.</p>
+                  {sumCoins(suite.coins) > 0 && (
+                    <p className="coin-earned mt-1 inline-flex items-center gap-1.5 rounded-full bg-card px-3 py-1 text-body-md font-bold text-signal-ink">
+                      <CoinIcon size={18} /> +{sumCoins(suite.coins)} TiE Coins
+                      <span className="font-medium text-muted">· {suite.coins!.map((c) => c.note).join(' · ')}</span>
+                    </p>
+                  )}
                   {milestone && <p className="text-body-md font-semibold text-success">{milestone}</p>}
                   <p className="text-body-md text-body">{next ? 'Nicely done. Keep the streak going with the next one.' : 'Nicely done. That was the last problem in this list.'}</p>
                 </div>

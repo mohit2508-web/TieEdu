@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { Copy, Check, Lightbulb, Lock, BookOpen, History, FileText, CheckCircle2, XCircle } from 'lucide-react';
 import { Chip } from '@/components/ui/Chip';
 import { Tabs } from '@/components/ui/Tabs';
-import { fetchSubmissions, LANG_LABEL, VERDICT_LABEL, type CodeLang, type CodeProblemView, type Submission } from '@/lib/codeApi';
+import { fetchSolution, fetchSubmissions, LANG_LABEL, VERDICT_LABEL, type CodeLang, type CodeProblemView, type Submission } from '@/lib/codeApi';
 import { BrandLoader } from '@/components/brand/BrandLoader';
+import { CoinIcon } from '@/components/coins/CoinIcon';
 
 type Tab = 'description' | 'hints' | 'solution' | 'submissions';
 
@@ -38,12 +39,25 @@ export function ProblemPanel({ view, signedIn, onUnlock, onLoadCode }: {
   const [reveal, setReveal] = useState(false);
   const [solLang, setSolLang] = useState<CodeLang>('cpp');
   const [subs, setSubs] = useState<Submission[] | null>(null);
+  const [sol, setSol] = useState<{ approach: string; complexity: string; solutions: Partial<Record<CodeLang, string>> } | null>(null);
+  const [solErr, setSolErr] = useState('');
 
-  useEffect(() => { setTab('description'); setHints(0); setReveal(false); setSubs(null); }, [p.id]);
+  useEffect(() => { setTab('description'); setHints(0); setReveal(false); setSubs(null); setSol(null); setSolErr(''); }, [p.id]);
+  // The solution is fetched only when it is shown: the server records the view (no solve coins after it).
+  const showSolution = tab === 'solution' && view.access.open && (reveal || view.status === 'solved');
+  useEffect(() => {
+    if (!showSolution || sol) return;
+    fetchSolution(p.id).then(setSol).catch((e) => {
+      // An older API still sends the solution with the problem.
+      if (p.solutions) setSol({ approach: p.approach || '', complexity: p.complexity || '', solutions: p.solutions });
+      else setSolErr(e.message);
+    });
+  }, [showSolution, sol, p]);
+  const solutions = sol?.solutions || {};
   useEffect(() => {
     if (tab === 'submissions' && signedIn && subs === null) fetchSubmissions(p.id).then((r) => setSubs(r.submissions)).catch(() => setSubs([]));
   }, [tab, signedIn, subs, p.id]);
-  const sols = (Object.keys(LANG_LABEL) as CodeLang[]).filter((l) => p.solutions?.[l]);
+  const sols = (Object.keys(LANG_LABEL) as CodeLang[]).filter((l) => solutions[l]);
   useEffect(() => { if (sols.length && !sols.includes(solLang)) setSolLang(sols[0]); }, [sols, solLang]);
 
   const tabs = [
@@ -128,6 +142,7 @@ export function ProblemPanel({ view, signedIn, onUnlock, onLoadCode }: {
           <div className="rounded-xl border border-line bg-surface p-6">
             <p className="text-lg font-semibold text-heading">You have not solved this one yet</p>
             <p className="mt-1 text-base text-body">Reading the solution now teaches less than one more try. Use a hint first?</p>
+            {signedIn && <p className="mt-2 inline-flex items-center gap-1.5 text-body-md font-medium text-signal-ink"><CoinIcon size={16} /> Opening it before you solve means no TiE Coins for solving this one.</p>}
             <div className="mt-4 flex flex-wrap gap-2">
               <button type="button" onClick={() => setTab('hints')} className="btn btn-ghost focus-ring min-h-[44px]">Show me a hint</button>
               <button type="button" onClick={() => setReveal(true)} className="btn btn-primary focus-ring min-h-[44px]">Show the solution</button>
@@ -137,18 +152,20 @@ export function ProblemPanel({ view, signedIn, onUnlock, onLoadCode }: {
           <div className="space-y-4">
             <section>
               <h2 className="text-base font-semibold text-heading">Approach</h2>
-              <p className="mt-1 text-base leading-relaxed text-body">{p.approach}</p>
-              <p className="mt-2 text-body-md text-muted">Complexity: <span className="font-mono">{p.complexity}</span></p>
+              {!sol && !solErr && <div className="mt-2 h-16 animate-pulse rounded-lg bg-surface-hover" aria-hidden />}
+              {solErr && <p className="mt-1 text-base text-danger">{solErr}</p>}
+              {sol && <p className="mt-1 text-base leading-relaxed text-body">{sol.approach}</p>}
+              {sol && <p className="mt-2 text-body-md text-muted">Complexity: <span className="font-mono">{sol.complexity}</span></p>}
             </section>
             <section className="overflow-hidden rounded-xl border border-line">
               <div className="flex items-center justify-between border-b border-line bg-surface px-2">
                 <Tabs size="sm" label="Solution language" className="border-0" items={sols.map((l) => ({ key: l, label: LANG_LABEL[l] }))} value={solLang} onChange={setSolLang} />
                 <div className="flex items-center gap-1">
-                  <CopyButton text={p.solutions?.[solLang] || ''} label="Copy solution" />
-                  <button type="button" onClick={() => onLoadCode(solLang, p.solutions?.[solLang] || '')} className="h-8 rounded-md px-2 text-sm text-muted hover:bg-surface-hover hover:text-heading focus-ring">Open in editor</button>
+                  <CopyButton text={solutions[solLang] || ''} label="Copy solution" />
+                  <button type="button" onClick={() => onLoadCode(solLang, solutions[solLang] || '')} className="h-8 rounded-md px-2 text-sm text-muted hover:bg-surface-hover hover:text-heading focus-ring">Open in editor</button>
                 </div>
               </div>
-              <pre className="max-h-[60vh] overflow-auto bg-card p-4 font-mono text-sm leading-relaxed text-heading">{p.solutions?.[solLang]}</pre>
+              <pre className="max-h-[60vh] overflow-auto bg-card p-4 font-mono text-sm leading-relaxed text-heading">{solutions[solLang]}</pre>
             </section>
           </div>
         ))}

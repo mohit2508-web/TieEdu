@@ -70,3 +70,8 @@
 @keyframes ide-rise { from { opacity: 0; transform: translateY(8px); } }
 @keyframes ide-burst { 0% { transform: scale(.4); box-shadow: 0 0 0 0 rgb(var(--rgb-success, 22 163 74) / .5); } 70% { transform: scale(1.12); box-shadow: 0 0 0 14px rgb(var(--rgb-success, 22 163 74) / 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 transparent; } }
 @media (prefers-reduced-motion: reduce) { .ide-accepted, .ide-accepted-badge { animation: none; } }
+
+/* TiE Coins: the header chip gives a small bump when coins arrive. */
+.coin-bump { animation: coin-bump .9s cubic-bezier(.3, 1.6, .5, 1); }
+@keyframes coin-bump { 0% { transform: scale(1); } 30% { transform: scale(1.12); box-shadow: 0 0 0 6px rgb(var(--rgb-signal) / .25); } 100% { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .coin-bump { animation: none; } }

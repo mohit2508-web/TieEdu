@@ -11,6 +11,7 @@ import { HeaderDiya, HeaderFestival } from '@/components/festival/HeaderFestival
 import { PWAInstallButton } from '@/components/common/PWAInstallButton';
 import { PrefsControl } from '@/components/common/PrefsControl';
 import { useAuth } from '@/context/AuthContext';
+import { CoinChip } from '@/components/coins/CoinChip';
 import { useShell } from '@/context/ShellContext';
 import { useCart } from '@/context/CartContext';
 import {
@@ -413,6 +414,8 @@ export const Header: React.FC = () => {
             square 40px box comes from `.chip--icon` so it lines up with the bell
             and the account button.
           */}
+          {/* Streak + TiE Coins (TIE_COINS_STORE_PLAN.md §6.2); signed-in only. */}
+          <CoinChip className="hidden sm:block" />
           <button
             type="button"
             onClick={() => toggleOverlay('leaderboard')}

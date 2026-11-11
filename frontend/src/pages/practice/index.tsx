@@ -6,6 +6,7 @@ import { PracticeLayout, Progress } from '@/components/practice/PracticeLayout';
 import { fetchPracticeHome, type PracticeHome } from '@/lib/codeApi';
 import { PracticeSkeleton } from '@/components/practice/PracticeSkeleton';
 import { ErrorState } from '@/components/common/ErrorState';
+import { CoinIcon } from '@/components/coins/CoinIcon';
 
 /** The last 12 weeks as a grid of days; a filled cell = practised that day. */
 function Heatmap({ days }: { days: string[] }) {
@@ -40,7 +41,7 @@ export default function PracticeHomePage() {
             <section aria-label="Daily problem" className="flex flex-wrap items-center gap-4 rounded-2xl border border-signal/40 bg-signal-soft/50 p-5">
               <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-card text-signal-ink shadow-sm"><CalendarCheck className="h-6 w-6" aria-hidden /></span>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-signal-ink">Today&apos;s problem · same for everyone</p>
+                <p className="flex flex-wrap items-center gap-x-2 text-sm font-semibold text-signal-ink">Today&apos;s problem · same for everyone <span className="inline-flex items-center gap-1 rounded-full bg-card px-2 py-0.5"><CoinIcon size={14} /> +10 TiE Coins</span></p>
                 <p className="text-lg font-semibold text-heading">{h.daily.title}</p>
                 <p className="text-body-md text-body">
                   {h.daily.topic} · {h.daily.difficulty} · {h.daily.solved_today ? `${h.daily.solved_today} student${h.daily.solved_today === 1 ? '' : 's'} solved it today` : 'Be the first to solve it today'}

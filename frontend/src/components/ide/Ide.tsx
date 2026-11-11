@@ -17,6 +17,7 @@ import { CodeApiError, LANG_LABEL, fetchPracticeHome, runCases, submitCode, type
 import { milestoneFor } from '@/lib/milestones';
 import { BrandLoader } from '@/components/brand/BrandLoader';
 import { BrandMark } from '@/components/brand/BrandMark';
+import { announceCoins } from '@/lib/coinsApi';
 
 const IdeEditor = dynamic(() => import('./IdeEditor'), {
   ssr: false,
@@ -160,6 +161,7 @@ export function Ide({ view, onReload, query, test, onSubmitted }: {
       const r = await submitCode(p.id, lang, code, attemptId);
       setResult({ kind: 'submit', data: r });
       setMilestone(null);
+      announceCoins(r.coins);
       onSubmitted?.(r);
       setDiags(r.compile_error ? parseDiagnostics(lang, r.compile_error) : []);
       if (r.verdict === 'accepted') {

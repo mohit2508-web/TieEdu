@@ -4,12 +4,12 @@ import { Router, Request, Response } from 'express';
 import { ownedModuleIdsFor, unlockedCompanyIds } from '../payments/orders';
 import crypto from 'crypto';
 import { loadDb, saveDb } from '../data/db';
-import { touchStreak } from '../lib/streak';
 import type { Skill, Topic, Question, Assessment, Attempt, AttemptAnswer, SkillCertificate, Recommendation } from '../data/skillTestTypes';
 import { requireAuth } from '../middleware/auth';
 import { orderRight, shownOrder, typedRight } from '../lib/answerKinds';
 import { buildSkillCertPdf } from '../lib/skillCertPdf';
 import { events as msgEvents, sendToUser } from '../lib/messaging';
+import { grant, recordStudyDay, ruleOf } from '../lib/coins';
 
 export const skillTestRouter = Router();
 
@@ -325,8 +325,15 @@ skillTestRouter.post('/attempts/:attemptId/submit', requireAuth, (req: Request, 
   attempt.topicPerformance = topicPerf;
   attempt.difficultyPerformance = diffPerf;
   attempt.updated_at = new Date().toISOString();
-  // A submitted test is a study day (lib/streak).
-  touchStreak(db, req.userId!);
+  // A submitted test is a study day (lib/streak) and, for a company mock, earns TiE Coins.
+  recordStudyDay(db, req.userId!);
+  {
+    const sk = (db.skills || []).find((s: Skill) => s.id === attempt.skillId) as (Skill & { company_slug?: string }) | undefined;
+    if (sk?.company_slug) {
+      grant(db, req.userId!, 'mock_submit', `mock:${req.userId}:${sk.id}`, ruleOf(db, 'mock_submit').coins, `Submitted ${sk.name}`, sk.id);
+      if (score >= 70) grant(db, req.userId!, 'mock_70', `mock70:${req.userId}:${sk.id}`, ruleOf(db, 'mock_70').coins, `70%+ in ${sk.name}`, sk.id);
+    }
+  }
 
   // Certificate eligibility
   const certThresholds = assessment?.certificateThresholds || { pass: 60, proficient: 75, advanced: 85, expert: 90 };

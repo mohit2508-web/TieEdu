@@ -5,6 +5,7 @@ import { packPrice } from '../lib/pricing';
 import { runnerConfigured } from '../lib/codeRunner';
 import { BANK, BANK_BY_ID, COMPANY_SETS, DSA_TOPICS, FREE_CORE, SET_BY_SLUG, type BankProblem } from '../lib/practice/bank';
 import { istDate } from '../lib/streak';
+import { dailyProblem } from '../lib/practice/daily';
 import { accessChecker, progressFor, statusOf, type ProblemProgress } from '../lib/practice/access';
 import { ownsCompanyPack } from './prep.routes';
 import { buildPrep, PREP_COMPANIES } from '../lib/prep';
@@ -105,20 +106,10 @@ function testsOf(db: any, slug: string, userId?: string) {
   }).sort((a: any, b: any) => (a.kind === b.kind ? 0 : a.kind === 'full' ? -1 : 1));
 }
 
-/**
- * Daily problem (PRACTICE_POLISH_PLAN.md §7, owner decision L6): one free problem a day, the same for
- * everyone (picked from the free core by the IST date), with how many students solved it today.
- */
-export function dailyProblem(date: string): BankProblem | null {
-  const pool = BANK.filter((p) => FREE_CORE.has(p.id));
-  if (!pool.length) return null;
-  let h = 0;
-  for (const ch of `daily:${date}`) h = Math.imul(h ^ ch.charCodeAt(0), 2654435761) >>> 0;
-  return pool[h % pool.length];
-}
+export { dailyProblem };
 function dailyOf(db: any, userId?: string) {
   const today = istDate();
-  const p = dailyProblem(today);
+  const p = dailyProblem(today, db);
   if (!p) return null;
   const solvers = new Set<string>();
   for (const x of db.code_submissions || []) {

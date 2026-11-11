@@ -33,6 +33,8 @@ export interface StreakRecord {
   freezes_used: string[];
   /** Days a freeze covered, for the calendar. */
   frozen_days: string[];
+  /** IST day the current run started (keys streak-milestone coins to one run). */
+  run_start?: string;
   /** Recent active days, newest last; capped. */
   days: string[];
 }
@@ -84,7 +86,9 @@ export function touchStreak(db: any, userId: string, now = new Date()): StreakRe
     r.current += 1;
   } else {
     r.current = 1;
+    r.run_start = today;
   }
+  if (!r.run_start) r.run_start = addDays(today, -(r.current - 1));
   r.best = Math.max(r.best, r.current);
   r.last_day = today;
   r.days = [...r.days.filter((d) => d !== today), today].slice(-KEEP_DAYS);

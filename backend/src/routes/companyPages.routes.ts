@@ -1,5 +1,4 @@
 import { Router, Request, Response } from 'express';
-import { touchStreak } from '../lib/streak';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
@@ -49,6 +48,7 @@ import {
 } from '../lib/companyPageStudent';
 import { studentPage } from '../lib/companyPageDerive';
 import { pingIndexNow } from '../lib/indexNow';
+import { recordStudyDay } from '../lib/coins';
 
 // Evening streak reminders for live pages that opt in. Idempotent; unref'd.
 startStreakReminderScheduler();
@@ -178,7 +178,7 @@ companyPagesRouter.post('/:slug/me/daily', requireAuth, (req: Request, res: Resp
   const ctx = liveOr404(req, res);
   if (!ctx) return;
   recordDaily(ctx.db, req.userId!, ctx.company.id);
-  touchStreak(ctx.db, req.userId!);
+  recordStudyDay(ctx.db, req.userId!);
   saveDb(ctx.db);
   res.json(meView(ctx.db, req.userId!, ctx.company.id, ctx.page));
 });

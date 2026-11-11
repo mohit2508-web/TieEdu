@@ -16,7 +16,6 @@
 // ============================================================================
 
 import { Request, Response } from 'express';
-import { touchStreak } from '../lib/streak';
 import { Router } from 'express';
 import { loadDb, saveDb, Course, CourseLesson, Certificate, CourseFeedback, Instructor } from '../data/db';
 import { optionalAuth, requireAuth, rateLimit } from '../middleware/auth';
@@ -85,6 +84,7 @@ import {
   verifyCertificate,
 } from '../lib/certificate';
 import { events as msgEvents, sendToUser } from '../lib/messaging';
+import { grant, recordStudyDay, ruleOf } from '../lib/coins';
 
 export const coursesRouter = Router();
 
@@ -394,7 +394,7 @@ function settleCompletion(
   if (!progress.completed_lesson_ids.includes(lesson.id)) {
     progress.completed_lesson_ids.push(lesson.id);
     // A finished lesson is a study day (lib/streak). Idempotent within a day.
-    touchStreak(db, userId);
+    recordStudyDay(db, userId);
     const res = awardAndCommit(db, {
       userId,
       key: `lesson:${lesson.id}:${userId}`,
@@ -419,6 +419,7 @@ function settleCompletion(
       note: `Finished course: ${course.title}`,
     });
     xp.push({ reason: 'course_complete', xp: res.event.xp, awarded: res.awarded });
+    grant(db, userId, 'course_done', `course:${userId}:${course.id}`, ruleOf(db, 'course_done').coins, `Finished course: ${course.title}`, course.id);
 
     // Perks are granted in THIS commit path, not in a later request: a reward
     // that can be issued separately from the completion that earned it is a

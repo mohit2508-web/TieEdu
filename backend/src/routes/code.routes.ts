@@ -3,8 +3,11 @@ import crypto from 'crypto';
 import { loadDb, safeSaveDb } from '../data/db';
 import { requireAuth, optionalAuth } from '../middleware/auth';
 import { RUN_LANGS, type RunLang, runCode, runSuite, runnerConfigured, allowRun, MAX_CODE_BYTES, normalizeOutput } from '../lib/codeRunner';
-import { BANK, BANK_BY_ID, DSA_TOPICS, SET_BY_SLUG, type BankProblem } from '../lib/practice/bank';
+import { BANK, BANK_BY_ID, COMPANY_SETS, DSA_TOPICS, SET_BY_SLUG, type BankProblem } from '../lib/practice/bank';
 import { accessChecker, accessFor, progressFor, statusOf } from '../lib/practice/access';
+import { recordSetProgress, recordSolve, recordStudyDay, type CoinGain } from '../lib/coins';
+import { dailyProblem } from '../lib/practice/daily';
+import { istDate } from '../lib/streak';
 
 /**
  * The code runner API (PRACTICE_MODE_PLAN.md §6) for the IDE and the tests.
@@ -82,7 +85,7 @@ codeRouter.get('/problem/:id', optionalAuth, (req: Request, res: Response) => {
       kind: p.kind, source: p.source, companies: p.companies.map((c) => ({ ...c, name: SET_BY_SLUG.get(c.slug)?.name || c.slug })),
       statement: p.statement, input_format: p.input_format, output_format: p.output_format, constraints: p.constraints,
       samples: p.samples, hints: inTest ? [] : p.hints, tests_total: (p.tests || []).length,
-      ...(open ? { approach: p.approach, complexity: p.complexity, solutions: p.solutions } : {}),
+      // The approach and solutions come from GET /problem/:id/solution, which records the view (no solve coins after it).
     },
     access: inTest ? { open: true, reason: 'test', company: a.company } : a,
     locked: !a.open && !inTest, in_mock: inTest, runner: runnerConfigured(), languages: RUN_LANGS, starter: STARTER,
@@ -95,6 +98,24 @@ codeRouter.get('/problem/:id', optionalAuth, (req: Request, res: Response) => {
     },
     prev: !inTest && i > 0 ? ctx.ids[i - 1] : null, next: !inTest && i >= 0 && i < ctx.ids.length - 1 ? ctx.ids[i + 1] : null,
   });
+});
+
+/** The approach and solutions. Opening them before solving means no TiE Coins for solving it later (TIE_COINS_STORE_PLAN.md §3, E4). */
+codeRouter.get('/problem/:id/solution', optionalAuth, (req: Request, res: Response) => {
+  const p = BANK_BY_ID.get(req.params.id);
+  if (!p) return res.status(404).json({ error: 'Problem not found' });
+  const db = loadDb();
+  if (!accessChecker(db, req.userId)(p).open) return res.status(403).json({ error: 'The solution is in the company pack', code: 'pack_required' });
+  let forfeits = false;
+  if (req.userId && !progressFor(db, req.userId).get(p.id)?.solved) {
+    db.solution_views = Array.isArray(db.solution_views) ? db.solution_views : [];
+    if (!db.solution_views.some((v: any) => v.user_id === req.userId && v.problem_id === p.id)) {
+      db.solution_views.push({ user_id: req.userId, problem_id: p.id, at: new Date().toISOString() });
+      safeSaveDb(db);
+    }
+    forfeits = true;
+  }
+  res.json({ approach: p.approach, complexity: p.complexity, solutions: p.solutions, forfeits_coins: forfeits });
 });
 
 codeRouter.get('/submissions/:id', requireAuth, (req: Request, res: Response) => {
@@ -130,6 +151,12 @@ const MAX_CASES = 8;
 codeRouter.post('/run', requireAuth, async (req: Request, res: Response) => {
   const g = guard(req, res);
   if (!g) return;
+  // A practice run is a study day (streak + daily check-in coin); a run inside a test is not.
+  if (!g.attempt) {
+    const before = (g.db.user_streaks || []).find((s: any) => s.user_id === req.userId)?.last_day;
+    const { streak, gains } = recordStudyDay(g.db, req.userId!);
+    if (gains.length || streak.last_day !== before) safeSaveDb(g.db);
+  }
   // Test cases from the console (samples, edited or added); expected output is optional.
   if (Array.isArray(req.body?.cases)) {
     const cases = req.body.cases.slice(0, MAX_CASES).map((c: any) => ({ input: String(c?.input ?? '').slice(0, 64 * 1024), expected: c?.expected == null ? null : String(c.expected) }));
@@ -171,7 +198,23 @@ codeRouter.post('/submit', requireAuth, async (req: Request, res: Response) => {
     verdict: r.verdict, passed: r.passed, total: r.total, attempt_id: g.attempt ? g.attempt.id : null, source: g.attempt ? 'test' : 'practice',
     ms_total: Date.now() - t0, at: new Date().toISOString(), code: g.code,
   };
-  db.code_submissions.push(sub);
+  // Practice (not a test): a study day, and coins for a first Accepted (lib/coins).
+  const coins: CoinGain[] = [];
+  if (!g.attempt) {
+    const firstAccept = r.verdict === 'accepted' && !db.code_submissions.some((s: any) => s.user_id === req.userId && s.problem_id === g.p!.id && s.verdict === 'accepted');
+    coins.push(...recordStudyDay(db, req.userId!).gains);
+    if (firstAccept) {
+      const seen = (db.solution_views || []).some((v: any) => v.user_id === req.userId && v.problem_id === g.p!.id);
+      coins.push(...recordSolve(db, req.userId!, g.p, { daily: dailyProblem(istDate(), db)?.id === g.p.id, solutionSeen: seen }));
+    }
+    db.code_submissions.push(sub);
+    if (firstAccept) {
+      const solved = new Set([...progressFor(db, req.userId).entries()].filter(([, v]) => v.solved).map(([k]) => k));
+      coins.push(...recordSetProgress(db, req.userId!, COMPANY_SETS, solved, g.p.id));
+    }
+  } else {
+    db.code_submissions.push(sub);
+  }
   // Keep each student's latest 300 submissions.
   const mine = db.code_submissions.filter((s: any) => s.user_id === req.userId);
   if (mine.length > 300) {
@@ -180,7 +223,7 @@ codeRouter.post('/submit', requireAuth, async (req: Request, res: Response) => {
   }
   safeSaveDb(db);
   const pr = progressFor(db, req.userId).get(g.p.id);
-  res.json({ submission_id: sub.id, ...r, best: pr ? { verdict: pr.solved ? 'accepted' : 'attempted', passed: pr.best_passed, total: pr.total, at: pr.last_at, solved: pr.solved } : null });
+  res.json({ submission_id: sub.id, ...r, coins, best: pr ? { verdict: pr.solved ? 'accepted' : 'attempted', passed: pr.best_passed, total: pr.total, at: pr.last_at, solved: pr.solved } : null });
 });
 
 /**
