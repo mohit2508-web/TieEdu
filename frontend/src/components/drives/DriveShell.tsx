@@ -5,10 +5,9 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
 import { ChevronLeft, Bell, ClipboardList } from 'lucide-react';
-import { DRIVE_TABS, resolveDriveTab, isDriveRootPath, driveBackHref } from '@/lib/mockDriveNav';
+import { resolveDriveTab, isDriveRootPath, driveBackHref } from '@/lib/mockDriveNav';
 import { useAuth } from '@/context/AuthContext';
 import { fetchUnreadCountApi } from '@/lib/drivesApi';
-import { cn } from '@/lib/cn';
 
 /*
  * Mock Drives inside the site (UI_REDESIGN_PLAN_V2 Phase 5).
@@ -108,7 +107,7 @@ export const DriveShell: React.FC<{ children: React.ReactNode; title?: string; s
     // The screens render no landmark of their own and the site shell adds none.
     <main id="main" className="mock-drive-scope">
       {head}
-      <div className="mx-auto w-full max-w-[880px] px-4 pt-5 sm:pt-7">
+      <div className="w-full px-4 pt-5 sm:px-6 sm:pt-7 lg:px-0 lg:pt-0">
         {atRoot ? (
           <>
             <div className="flex items-end justify-between gap-3">
@@ -118,30 +117,7 @@ export const DriveShell: React.FC<{ children: React.ReactNode; title?: string; s
               </div>
               {bell}
             </div>
-            {/* The five screens. One row at every width; scrolls on a narrow phone. */}
-            <nav aria-label="Mock Drive pages" className="-mx-4 mt-4 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              <ul className="flex gap-2">
-                {DRIVE_TABS.map((tab) => {
-                  const on = tab.id === active.id;
-                  const Icon = tab.icon;
-                  return (
-                    <li key={tab.id} className="shrink-0">
-                      <Link
-                        href={tab.href}
-                        aria-current={on ? 'page' : undefined}
-                        className={cn(
-                          'focus-ring inline-flex min-h-[40px] items-center gap-1.5 rounded-full border px-3.5 text-sm font-semibold transition-colors',
-                          on ? 'border-heading bg-heading text-card' : 'border-line bg-card text-body hover:border-line-strong hover:text-heading'
-                        )}
-                      >
-                        <Icon size={15} strokeWidth={2.1} aria-hidden />
-                        {tab.label}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </nav>
+            {/* The five screens are in the Practise rail (desktop) and the section switcher (phone): UI_FIX_PLAN.md §3. */}
           </>
         ) : (
           <div className="flex items-center gap-2">

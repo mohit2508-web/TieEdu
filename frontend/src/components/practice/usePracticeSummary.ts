@@ -10,12 +10,13 @@ import { fetchPracticeHome, type PracticeHome } from '@/lib/codeApi';
 let cache: { key: string; at: number; data: PracticeHome } | null = null;
 let inflight: { key: string; p: Promise<PracticeHome> } | null = null;
 
-export function usePracticeSummary(): PracticeHome | null {
+export function usePracticeSummary(enabled = true): PracticeHome | null {
   const { user } = useAuth();
   const key = user?.id || 'guest';
   const fresh = cache && cache.key === key && Date.now() - cache.at < 30_000 ? cache.data : null;
   const [data, setData] = useState<PracticeHome | null>(fresh);
   useEffect(() => {
+    if (!enabled) return;
     if (fresh) { setData(fresh); return; }
     let live = true;
     if (!inflight || inflight.key !== key) {
@@ -25,7 +26,7 @@ export function usePracticeSummary(): PracticeHome | null {
     }
     inflight.p.then((d) => { if (live) setData(d); }).catch(() => undefined);
     return () => { live = false; };
-  }, [key, fresh]);
+  }, [key, fresh, enabled]);
   return data;
 }
 

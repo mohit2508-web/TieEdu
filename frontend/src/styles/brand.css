@@ -75,3 +75,7 @@
 .coin-bump { animation: coin-bump .9s cubic-bezier(.3, 1.6, .5, 1); }
 @keyframes coin-bump { 0% { transform: scale(1); } 30% { transform: scale(1.12); box-shadow: 0 0 0 6px rgb(var(--rgb-signal) / .25); } 100% { transform: scale(1); } }
 @media (prefers-reduced-motion: reduce) { .coin-bump { animation: none; } }
+
+/* Section shell (UI_FIX_PLAN.md §3): pages keep rendering their own footer; inside the rail
+   column it is hidden so the shell's single full-width footer is the only one. */
+.section-main footer { display: none; }

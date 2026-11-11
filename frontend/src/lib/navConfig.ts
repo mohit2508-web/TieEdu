@@ -26,6 +26,7 @@ import {
   CalendarCheck,
   CalendarClock,
   ClipboardList,
+  ClipboardCheck,
   Droplets,
   Flame,
   GraduationCap,
@@ -259,7 +260,7 @@ export const NAV_ITEMS: Record<string, NavItem> = {
     id: 'companyTests',
     href: '/practice/tests',
     label: 'Company tests',
-    icon: ClipboardList,
+    icon: ClipboardCheck,
     match: 'prefix',
     description: 'Full mocks and sectional tests in the real pattern of each company',
     primary: true,
@@ -397,6 +398,26 @@ export const NAV_ITEMS: Record<string, NavItem> = {
     primary: false,
     keywords: ['english', 'spoken english', 'speaking', 'communication', 'fluency', 'confidence', 'hinglish', 'grammar', 'pronunciation', 'english practice'],
   },
+  streak: {
+    id: 'streak',
+    href: '/streak',
+    label: 'Your streak',
+    icon: Flame,
+    match: 'exact',
+    description: 'Your practice calendar, badges and what your streak unlocks',
+    primary: false,
+    keywords: ['streak', 'badges', 'calendar', 'repair', 'opportunities'],
+  },
+  rewards: {
+    id: 'rewards',
+    href: '/rewards',
+    label: 'Coins & store',
+    icon: ShoppingBag,
+    match: 'exact',
+    description: 'Earn TiE Coins by practising and spend them on packs, membership and swag',
+    primary: false,
+    keywords: ['coins', 'tie coins', 'store', 'rewards', 'swag', 'hoodie', 'redeem'],
+  },
   drops: {
     id: 'drops',
     href: '/drops',
@@ -532,7 +553,7 @@ export const PRIMARY_NAV: NavItem[] = ALL_NAV_ITEMS.filter((i) => i.primary);
 // Eight flat links became five sections, so the product is understandable in
 // five seconds: Home, Learn, Practise, Companies, Feed. The desktop bar and the
 // phone tab bar both show exactly these five; a section's other items appear as
-// sub-tabs (`SectionSubnav`) on that section's pages and as a drawer group.
+// items in the section rail (`SectionShell`) and as a drawer group.
 //
 // A section's first item is its landing page. Items keep their own matching,
 // depth and back-target rules — a section is only a grouping on top of them.
@@ -551,12 +572,44 @@ export interface NavSection {
 export const NAV_SECTIONS: NavSection[] = [
   { id: 'home', label: 'Home', icon: House, itemIds: ['home'] },
   { id: 'learn', label: 'Learn', icon: BookOpen, itemIds: ['courses', 'tracks', 'freeCourse', 'calendar', 'myCourses', 'myCertificates'] },
-  { id: 'practise', label: 'Practise', icon: Target, itemIds: ['practice', 'dsa', 'companySets', 'companyTests', 'skillTest', 'daily', 'mockInterview', 'peerMock', 'englishCoach', 'drives'], extraPrefixes: ['/practice'] },
+  { id: 'practise', label: 'Practise', icon: Target, itemIds: ['practice', 'dsa', 'companySets', 'companyTests', 'skillTest', 'daily', 'mockInterview', 'peerMock', 'englishCoach', 'drives', 'streak', 'rewards'], extraPrefixes: ['/practice', '/mock-drive'] },
   { id: 'companies', label: 'Companies', icon: Building2, itemIds: ['companies', 'compare', 'talent'], extraPrefixes: ['/company'] },
   { id: 'feed', label: 'Drops', icon: Droplets, itemIds: ['drops'] },
 ];
 
 export const sectionHref = (section: NavSection): string => NAV_ITEMS[section.itemIds[0]].href;
+
+/**
+ * The section rail (UI_FIX_PLAN.md §3): the one navigation inside a section, as a left rail
+ * on desktop and a "Section ▾" switcher on phones. Grouped so a long section scans fast.
+ * `personal` items are hidden from signed-out visitors (they are only a sign-in prompt).
+ */
+export interface RailGroup { title?: string; itemIds: string[] }
+export const SECTION_RAILS: Partial<Record<NavSection['id'], RailGroup[]>> = {
+  learn: [{ itemIds: ['courses', 'tracks', 'freeCourse', 'calendar'] }, { title: 'Mine', itemIds: ['myCourses', 'myCertificates'] }],
+  practise: [
+    { title: 'Coding', itemIds: ['practice', 'dsa', 'companySets', 'companyTests'] },
+    { title: 'Tests & interviews', itemIds: ['skillTest', 'daily', 'mockInterview', 'peerMock', 'drives'] },
+    { title: 'Skills', itemIds: ['englishCoach'] },
+    { title: 'Rewards', itemIds: ['streak', 'rewards'] },
+  ],
+  companies: [{ itemIds: ['companies', 'compare', 'talent'] }],
+};
+export const RAIL_PERSONAL = new Set(['myCourses', 'myCertificates', 'calendar', 'streak']);
+
+/**
+ * The section whose rail this page shows, or null. A section's own pages get it; a pushed
+ * detail (a course, a company vault, one skill test) keeps its own page chrome, except inside
+ * Practice and Mock Drives, whose sub-pages are part of the same workspace.
+ */
+export const railSectionFor = (pathname: string): NavSection | null => {
+  const current = normalizePath(pathname);
+  if (isShellExcluded(current)) return null;
+  const section = resolveSection(current);
+  if (!section || !SECTION_RAILS[section.id]) return null;
+  const workspace = current === '/practice' || current.startsWith('/practice/') || current === '/mock-drive' || current.startsWith('/mock-drive/');
+  return workspace || isRootDepth(current) ? section : null;
+};
 
 /**
  * Drawer groups: every section except Home (the logo already goes home).

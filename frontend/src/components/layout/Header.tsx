@@ -348,7 +348,7 @@ export const Header: React.FC = () => {
           </Link>
 
           {/* The five sections (§5). A section is active anywhere inside it; its
-              other pages are the sub-tabs `SectionSubnav` draws under the bar. */}
+              other pages are in the section rail (SectionShell, UI_FIX_PLAN.md §3). */}
           {/* Warm Paper E2: the links sit in one white pill group with an edge. */}
           <nav aria-label="Primary" className="nav-pill hidden md:flex">
             {NAV_SECTIONS.map((section) => {
@@ -365,7 +365,7 @@ export const Header: React.FC = () => {
                   {/* Signed in, home is the Today screen (§5). */}
                   {section.id === 'home' && user ? sectionLabel(lang, 'today', 'Today') : sectionLabel(lang, section.id, section.label)}
                   {fresh > 0 && (
-                    <span className="chrome-badge absolute -right-1 -top-1" aria-hidden>
+                    <span className="chrome-badge ml-1.5 align-middle" aria-hidden>
                       {formatBadgeCount(fresh)}
                     </span>
                   )}

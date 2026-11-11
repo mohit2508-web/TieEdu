@@ -7,7 +7,7 @@ import { Header } from '@/components/layout/Header';
 import { TargetSheet } from '@/components/prep/TargetSheet';
 import { MobileTabBar } from '@/components/layout/MobileTabBar';
 import { MobileNavDrawer } from '@/components/layout/MobileNavDrawer';
-import { SectionSubnav } from '@/components/layout/SectionSubnav';
+import { SectionShell } from '@/components/layout/SectionShell';
 import dynamic from 'next/dynamic';
 
 /*
@@ -132,9 +132,9 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
         state; the rule lives in `globals.css` next to the bar's own.
       */}
       <div className="page-body flex-1" data-tabbar={atRoot ? 'on' : 'off'}>
-        <SectionSubnav />
         <div id="content" tabIndex={-1} className="outline-none" />
-        {children}
+        {/* One navigation per section: a left rail on desktop, a switcher on phones (UI_FIX_PLAN.md §3). */}
+        <SectionShell>{children}</SectionShell>
       </div>
 
       <MobileTabBar />
