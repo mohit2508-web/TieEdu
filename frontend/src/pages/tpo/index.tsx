@@ -54,7 +54,7 @@ const TpoDashboardBody: React.FC = () => {
           <DashboardCard>
             <div className="flex items-center gap-3">
               <span
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm font-black shrink-0"
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm font-extrabold shrink-0"
                 style={{ background: college?.theme_color || 'rgb(var(--rgb-brand-ink))' }}
               >
                 {(college?.short_name || college?.name || '??').slice(0, 2).toUpperCase()}
@@ -104,7 +104,7 @@ const TpoDashboardBody: React.FC = () => {
           <div className="flex items-start gap-3 mb-4">
             <CalendarDays className="w-5 h-5 text-amber-deep mt-0.5 shrink-0" />
             <div>
-              <h2 className="text-base font-black text-heading">Placement season 2026-27</h2>
+              <h2 className="text-base font-extrabold text-heading">Placement season 2026-27</h2>
               <p className="text-sm text-[--text-muted]">
                 Welcome, {user?.name || user?.email}. This is the P0 foundation of the Campus TPO portal —
                 identity, college scoping and permissions are live; metric screens arrive with the analytics
@@ -128,7 +128,7 @@ const TpoDashboardBody: React.FC = () => {
           <div className="flex items-center gap-3 mb-3">
             <KeyRound className="w-5 h-5 text-brand-ink" />
             <div>
-              <h2 className="text-base font-black text-heading">Your resolved permissions</h2>
+              <h2 className="text-base font-extrabold text-heading">Your resolved permissions</h2>
               <p className="text-sm text-[--text-muted]">
                 Read from the database for this college on every request — a revoked grant takes effect
                 immediately, not at token expiry.

@@ -173,36 +173,36 @@ export function Ide({ view, onReload, query, test, onSubmitted }: {
       <div role="tablist" aria-label="Coding problems" className="flex min-w-0 gap-1 overflow-x-auto">
         {test.problems.map((x, i) => (
           <button key={x.id} type="button" role="tab" aria-selected={x.id === p.id} onClick={() => test.onSwitch(x.id)}
-            className={`inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg px-3 text-[15px] font-semibold focus-ring ${x.id === p.id ? 'bg-surface-hover text-heading' : 'text-muted hover:text-heading'}`}>
+            className={`inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg px-3 text-body-md font-semibold focus-ring ${x.id === p.id ? 'bg-surface-hover text-heading' : 'text-muted hover:text-heading'}`}>
             {x.done && <CheckCircle2 className="h-4 w-4 text-success" aria-hidden />}Problem {i + 1}
           </button>
         ))}
       </div>
       {wide && (
         <div className="mx-auto flex items-center gap-2">
-          <button type="button" onClick={run} disabled={!!busy} title="Run (Ctrl + ')" className="btn btn-ghost focus-ring h-10 px-4 text-[15px]">
+          <button type="button" onClick={run} disabled={!!busy} title="Run (Ctrl + ')" className="btn btn-ghost focus-ring h-10 px-4 text-body-md">
             {busy === 'run' ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Play className="h-4 w-4" aria-hidden />} Run
           </button>
-          <button type="button" onClick={submit} disabled={!!busy} title="Submit (Ctrl + Enter)" className="btn btn-primary focus-ring h-10 px-5 text-[15px]">
+          <button type="button" onClick={submit} disabled={!!busy} title="Submit (Ctrl + Enter)" className="btn btn-primary focus-ring h-10 px-5 text-body-md">
             {busy === 'submit' ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Send className="h-4 w-4" aria-hidden />} Submit
           </button>
         </div>
       )}
       <div className="ml-auto flex items-center gap-2">
         <span className={`inline-flex h-10 items-center rounded-lg px-3 font-mono text-base font-semibold tabular-nums ${test.secondsLeft < 300 ? 'bg-danger-soft text-danger' : 'bg-surface-hover text-heading'}`} aria-label="Time left">{clock(test.secondsLeft)}</span>
-        <button type="button" disabled={test.submitting} onClick={test.onFinish} className="btn btn-ghost focus-ring h-10 px-4 text-[15px]">{test.submitting ? 'Submitting…' : 'Finish test'}</button>
+        <button type="button" disabled={test.submitting} onClick={test.onFinish} className="btn btn-ghost focus-ring h-10 px-4 text-body-md">{test.submitting ? 'Submitting…' : 'Finish test'}</button>
       </div>
     </header>
   );
 
   const header = testHeader || (
     <header className="flex h-14 shrink-0 items-center gap-2 border-b border-line bg-card px-3">
-      <Link href={back} className="inline-flex h-10 items-center gap-1 rounded-lg px-2 text-[15px] font-semibold text-heading hover:bg-surface-hover focus-ring" aria-label="Back to the problem list">
+      <Link href={back} className="inline-flex h-10 items-center gap-1 rounded-lg px-2 text-body-md font-semibold text-heading hover:bg-surface-hover focus-ring" aria-label="Back to the problem list">
         <ArrowLeft className="h-5 w-5" aria-hidden /><span className="hidden sm:inline">{view.context?.name || 'Practice'}</span>
       </Link>
       {view.context && (
         <div className="flex items-center">
-          <button type="button" onClick={() => setDrawer(true)} className="inline-flex h-10 items-center gap-1.5 rounded-lg px-3 text-[15px] font-semibold text-heading hover:bg-surface-hover focus-ring">
+          <button type="button" onClick={() => setDrawer(true)} className="inline-flex h-10 items-center gap-1.5 rounded-lg px-3 text-body-md font-semibold text-heading hover:bg-surface-hover focus-ring">
             <List className="h-5 w-5" aria-hidden /><span className="hidden md:inline">Problems</span><span className="text-sm font-medium text-muted">{pos}/{view.context.items.length}</span>
           </button>
           <button type="button" aria-label="Previous problem" disabled={!view.prev} onClick={() => go(view.prev)} className="h-10 w-10 rounded-lg text-heading hover:bg-surface-hover disabled:opacity-40 focus-ring"><ChevronLeft className="mx-auto h-5 w-5" aria-hidden /></button>
@@ -211,10 +211,10 @@ export function Ide({ view, onReload, query, test, onSubmitted }: {
       )}
       {wide && (
         <div className="mx-auto flex items-center gap-2">
-          <button type="button" onClick={run} disabled={!!busy} title="Run (Ctrl + ')" className="btn btn-ghost focus-ring h-10 px-4 text-[15px]">
+          <button type="button" onClick={run} disabled={!!busy} title="Run (Ctrl + ')" className="btn btn-ghost focus-ring h-10 px-4 text-body-md">
             {busy === 'run' ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Play className="h-4 w-4" aria-hidden />} Run
           </button>
-          <button type="button" onClick={submit} disabled={!!busy} title="Submit (Ctrl + Enter)" className="btn btn-primary focus-ring h-10 px-5 text-[15px]">
+          <button type="button" onClick={submit} disabled={!!busy} title="Submit (Ctrl + Enter)" className="btn btn-primary focus-ring h-10 px-5 text-body-md">
             {busy === 'submit' ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : view.access.open ? <Send className="h-4 w-4" aria-hidden /> : <Lock className="h-4 w-4" aria-hidden />} {view.access.open ? 'Submit' : 'Unlock to submit'}
           </button>
         </div>
@@ -230,7 +230,7 @@ export function Ide({ view, onReload, query, test, onSubmitted }: {
   const toolbar = (
     <div className="relative flex h-11 shrink-0 items-center gap-2 border-b border-line bg-card px-3">
       <label htmlFor="ide-lang" className="sr-only">Language</label>
-      <select id="ide-lang" value={lang} onChange={(e) => switchLang(e.target.value as CodeLang)} className="h-9 rounded-lg border border-line bg-card px-2 text-[15px] font-semibold text-heading focus-ring">
+      <select id="ide-lang" value={lang} onChange={(e) => switchLang(e.target.value as CodeLang)} className="h-9 rounded-lg border border-line bg-card px-2 text-body-md font-semibold text-heading focus-ring">
         {view.languages.map((l) => <option key={l} value={l}>{LANG_LABEL[l]}</option>)}
       </select>
       {lang === 'java' && <span className="hidden text-sm text-muted xl:inline">Class name must be <code className="font-mono">Main</code></span>}
@@ -241,20 +241,20 @@ export function Ide({ view, onReload, query, test, onSubmitted }: {
       {menu && (
         <div className="absolute right-2 top-11 z-20 w-72 space-y-3 rounded-xl border border-line bg-card p-4 shadow-lg" role="dialog" aria-label="Editor settings">
           <div className="flex items-center justify-between"><p className="text-base font-semibold text-heading">Editor settings</p><button type="button" aria-label="Close" onClick={() => setMenu(false)} className="rounded p-1 text-muted hover:text-heading focus-ring"><X className="h-4 w-4" aria-hidden /></button></div>
-          <div className="flex items-center justify-between text-[15px] text-body">Font size
+          <div className="flex items-center justify-between text-body-md text-body">Font size
             <span className="flex items-center gap-1">
               <button type="button" className="h-8 w-8 rounded-md border border-line focus-ring" aria-label="Smaller font" onClick={() => saveSettings({ ...settings, fontSize: Math.max(12, settings.fontSize - 1) })}>−</button>
               <span className="w-8 text-center font-semibold tabular-nums text-heading">{settings.fontSize}</span>
               <button type="button" className="h-8 w-8 rounded-md border border-line focus-ring" aria-label="Larger font" onClick={() => saveSettings({ ...settings, fontSize: Math.min(22, settings.fontSize + 1) })}>+</button>
             </span>
           </div>
-          <label className="flex items-center justify-between text-[15px] text-body">Tab size
+          <label className="flex items-center justify-between text-body-md text-body">Tab size
             <select value={settings.tabSize} onChange={(e) => saveSettings({ ...settings, tabSize: Number(e.target.value) as 2 | 4 })} className="h-8 rounded-md border border-line bg-card px-2 focus-ring"><option value={2}>2 spaces</option><option value={4}>4 spaces</option></select>
           </label>
-          <label className="flex items-center justify-between text-[15px] text-body">Theme
+          <label className="flex items-center justify-between text-body-md text-body">Theme
             <select value={settings.theme} onChange={(e) => saveSettings({ ...settings, theme: e.target.value as IdeSettings['theme'] })} className="h-8 rounded-md border border-line bg-card px-2 focus-ring"><option value="auto">Same as site</option><option value="light">Light</option><option value="dark">Dark</option></select>
           </label>
-          <label className="flex items-center justify-between text-[15px] text-body">Wrap long lines
+          <label className="flex items-center justify-between text-body-md text-body">Wrap long lines
             <input type="checkbox" checked={settings.wrap} onChange={(e) => saveSettings({ ...settings, wrap: e.target.checked })} />
           </label>
           <p className="border-t border-line pt-3 text-sm text-muted">Run: Ctrl + &apos; · Submit: Ctrl + Enter</p>
@@ -265,14 +265,14 @@ export function Ide({ view, onReload, query, test, onSubmitted }: {
 
   const notices = (
     <>
-      {!view.runner && <p className="flex shrink-0 items-center gap-2 border-b border-line bg-warning-soft px-3 py-2 text-[15px] text-heading"><AlertTriangle className="h-4 w-4 shrink-0" aria-hidden /> The code runner is offline. Your code is saved in this browser.</p>}
+      {!view.runner && <p className="flex shrink-0 items-center gap-2 border-b border-line bg-warning-soft px-3 py-2 text-body-md text-heading"><AlertTriangle className="h-4 w-4 shrink-0" aria-hidden /> The code runner is offline. Your code is saved in this browser.</p>}
       {!view.access.open && (
-        <p className="flex shrink-0 flex-wrap items-center gap-2 border-b border-line bg-surface px-3 py-2 text-[15px] text-heading">
+        <p className="flex shrink-0 flex-wrap items-center gap-2 border-b border-line bg-surface px-3 py-2 text-body-md text-heading">
           <Lock className="h-4 w-4 shrink-0" aria-hidden /> Running and submitting this problem is in the {view.access.company?.name || 'company'} pack.
           <button type="button" onClick={() => setPack(true)} className="font-semibold text-link underline">Unlock</button>
         </p>
       )}
-      {error && <p role="alert" className="flex shrink-0 items-center justify-between gap-2 border-b border-line bg-danger-soft px-3 py-2 text-[15px] text-danger">{error}<button type="button" aria-label="Dismiss" onClick={() => setError('')}><X className="h-4 w-4" aria-hidden /></button></p>}
+      {error && <p role="alert" className="flex shrink-0 items-center justify-between gap-2 border-b border-line bg-danger-soft px-3 py-2 text-body-md text-danger">{error}<button type="button" aria-label="Dismiss" onClick={() => setError('')}><X className="h-4 w-4" aria-hidden /></button></p>}
     </>
   );
 
@@ -301,7 +301,7 @@ export function Ide({ view, onReload, query, test, onSubmitted }: {
           {view.context.items.map((x, i) => (
             <li key={x.id}>
               <Link href={`/practice/problem/${x.id}${ctxQuery}`} onClick={() => setDrawer(false)}
-                className={`flex min-h-[48px] items-center gap-3 px-4 py-2 text-[15px] hover:bg-surface-hover ${x.id === p.id ? 'bg-surface-hover font-semibold text-heading' : 'text-body'}`}>
+                className={`flex min-h-[48px] items-center gap-3 px-4 py-2 text-body-md hover:bg-surface-hover ${x.id === p.id ? 'bg-surface-hover font-semibold text-heading' : 'text-body'}`}>
                 <span className="w-6 text-right text-sm tabular-nums text-muted">{i + 1}</span>
                 <StatusIcon s={x.status} />
                 <span className="min-w-0 flex-1 truncate">{x.title}</span>
@@ -337,7 +337,7 @@ export function Ide({ view, onReload, query, test, onSubmitted }: {
           <div role="tablist" aria-label="IDE" className="flex shrink-0 border-b border-line bg-card">
             {(['problem', 'code', 'console'] as const).map((t) => (
               <button key={t} type="button" role="tab" aria-selected={mobileTab === t} onClick={() => setMobileTab(t)}
-                className={`relative h-11 flex-1 text-[15px] font-semibold ${mobileTab === t ? 'text-heading' : 'text-muted'}`}>
+                className={`relative h-11 flex-1 text-body-md font-semibold ${mobileTab === t ? 'text-heading' : 'text-muted'}`}>
                 {t === 'problem' ? 'Problem' : t === 'code' ? 'Code' : 'Console'}
                 {mobileTab === t && <span className="absolute inset-x-6 bottom-0 h-0.5 rounded-full bg-signal" aria-hidden />}
               </button>

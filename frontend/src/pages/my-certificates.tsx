@@ -140,7 +140,7 @@ export default function MyCertificatesPage() {
                   </div>
                   <span
                     className={[
-                      'rounded-full px-2 py-0.5 text-xs font-bold uppercase tracking-wide',
+                      'rounded-full px-2 py-0.5 text-chip capitalize font-semibold ',
                       c.status === 'active'
                         ? 'bg-[var(--bg-sky-soft)] text-[var(--color-success)]'
                         : 'bg-[var(--color-error)]/10 text-[var(--color-error)]',

@@ -250,7 +250,7 @@ function SkillTestsView({
                   {isPass ? <CheckCircle2 className="w-3 h-3 mr-0.5" /> : <XCircle className="w-3 h-3 mr-0.5" />}
                   {isPass ? 'Passed' : 'Failed'}
                 </span>
-                <span className="px-2 py-0.5 rounded-md bg-surface-hover text-[--text-muted] text-xs font-extrabold uppercase tracking-wide">
+                <span className="px-2 py-0.5 rounded-md bg-surface-hover text-[--text-muted] text-chip capitalize font-semibold ">
                   {a.skillLevel}
                 </span>
                 <span className="font-extrabold text-brand-ink text-sm stat-num w-10 text-right">{score}</span>
@@ -560,7 +560,7 @@ const AccountPageContent: React.FC = () => {
                           <h1 className="font-serif-heading text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-2">
                             {account.user.name}
                             {account.user.badge && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-warning-soft text-amber-deep text-xs font-extrabold uppercase tracking-wide">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-warning-soft text-amber-deep text-chip capitalize font-semibold ">
                                 <Trophy className="w-3 h-3" /> {account.user.badge}
                               </span>
                             )}
@@ -813,7 +813,7 @@ const AccountPageContent: React.FC = () => {
 
               <div className="flex items-center gap-2 text-xs text-text-light">
                 <UserRound className="w-3.5 h-3.5" /> Signed in as {account.user.email}
-                <span className="inline-block px-1.5 py-0.5 rounded-md bg-signal-soft text-link text-xs font-extrabold uppercase tracking-wide">Student</span>
+                <span className="inline-block px-1.5 py-0.5 rounded-md bg-signal-soft text-link text-chip capitalize font-semibold ">Student</span>
               </div>
             </>
           )}

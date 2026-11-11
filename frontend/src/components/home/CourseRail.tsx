@@ -78,9 +78,9 @@ const CourseRailCard: React.FC<{ course: CourseCard }> = ({ course }) => {
 
         <div className="mt-auto flex items-center justify-between pt-2 border-t border-line">
           {course.is_free || course.price_inr === 0 ? (
-            <span className="text-base font-black text-success">Free</span>
+            <span className="text-base font-extrabold text-success">Free</span>
           ) : (
-            <SalePrice list={course.price_inr} className="text-base font-black text-heading" />
+            <SalePrice list={course.price_inr} className="text-base font-extrabold text-heading" />
           )}
           <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-paper text-link transition-colors group-hover:bg-signal group-hover:text-white">
             <ArrowRight className="w-4 h-4" aria-hidden />

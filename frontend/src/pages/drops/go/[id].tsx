@@ -67,12 +67,12 @@ export default function DropGoPage() {
             <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-[var(--brand-sky-soft)] text-link">
               <ExternalLink size={26} strokeWidth={2.2} aria-hidden />
             </div>
-            <h1 className="mt-4 text-center font-display text-xl font-black text-[var(--text-heading)]">You are leaving TiEEdu</h1>
+            <h1 className="mt-4 text-center font-display text-xl font-extrabold text-[var(--text-heading)]">You are leaving TiEEdu</h1>
             <p className="mt-1 text-center text-sm text-[var(--text-muted)]">for an outside website</p>
 
             <div className="mt-5 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-app)] p-4">
               <p className="text-xs font-bold uppercase tracking-wide text-[var(--text-muted)]">Going to</p>
-              <p className="mt-0.5 break-all text-lg font-black text-[var(--text-heading)]">{host}</p>
+              <p className="mt-0.5 break-all text-lg font-extrabold text-[var(--text-heading)]">{host}</p>
               {drop.source_name && wantSource && <p className="text-sm font-semibold text-[var(--text-body)]">{drop.source_name}</p>}
               <p className="mt-3 flex items-start gap-1.5 text-xs font-semibold text-[var(--text-muted)]">
                 <ShieldCheck size={15} className="mt-px flex-none text-emerald-600" aria-hidden />

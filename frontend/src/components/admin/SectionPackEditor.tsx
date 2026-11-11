@@ -700,7 +700,7 @@ const PackPreview: React.FC<{ data: ModuleSectionData; active: SectionId; compan
           {qs.map((q, idx) => (
             <div key={idx} className="p-5 bg-gray-50/80 border border-gray-200 rounded-2xl space-y-3">
               <div className="flex items-center gap-2.5">
-                <span className="px-3 py-0.5 rounded-md text-xs font-bold uppercase bg-signal-soft text-link">{q.category}</span>
+                <span className="px-3 py-0.5 rounded-md text-chip capitalize font-semibold bg-signal-soft text-link">{q.category}</span>
                 <h3 className="font-bold text-gray-900 text-lg">{q.title}</h3>
               </div>
               <MarkdownContent className="text-base text-gray-900 font-bold">{q.question}</MarkdownContent>
@@ -742,7 +742,7 @@ const PackPreview: React.FC<{ data: ModuleSectionData; active: SectionId; compan
             <div key={idx} className="p-4 bg-red-50/70 border border-red-200 rounded-2xl flex items-start gap-3">
               <Flame className="w-5 h-5 text-red-600 shrink-0 mt-1" />
               <div>
-                <span className="font-extrabold text-gray-900 text-lg mr-2">{t.topic}<span className="ml-2 px-2.5 py-0.5 bg-red-600 text-white rounded-md text-xs font-extrabold uppercase">{t.priority}</span></span>
+                <span className="font-extrabold text-gray-900 text-lg mr-2">{t.topic}<span className="ml-2 px-2.5 py-0.5 bg-red-600 text-white rounded-md text-chip capitalize font-semibold ">{t.priority}</span></span>
                 <MarkdownContent compact className="text-base text-gray-700 mt-1">{t.notes}</MarkdownContent>
               </div>
             </div>

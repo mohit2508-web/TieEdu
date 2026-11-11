@@ -8,13 +8,13 @@ export type ConsoleResult = { kind: 'run'; data: CaseRun } | { kind: 'submit'; d
 export type ConsoleTab = 'cases' | 'result';
 export const MAX_CASES = 8;
 
-const area = 'w-full resize-y rounded-lg border border-line bg-surface p-3 font-mono text-[14px] leading-relaxed text-heading focus:border-signal focus:outline-none';
+const area = 'w-full resize-y rounded-lg border border-line bg-surface p-3 font-mono text-sm leading-relaxed text-heading focus:border-signal focus:outline-none';
 
 function Out({ title, text, tone }: { title: string; text: string; tone?: 'bad' | 'good' }) {
   return (
     <div>
       <p className="text-sm font-medium text-muted">{title}</p>
-      <pre className={`mt-1 max-h-48 overflow-auto rounded-lg p-3 font-mono text-[14px] leading-relaxed ${tone === 'bad' ? 'bg-danger-soft text-danger' : tone === 'good' ? 'bg-success-soft text-heading' : 'bg-surface text-heading'}`}>{text || ' '}</pre>
+      <pre className={`mt-1 max-h-48 overflow-auto rounded-lg p-3 font-mono text-sm leading-relaxed ${tone === 'bad' ? 'bg-danger-soft text-danger' : tone === 'good' ? 'bg-success-soft text-heading' : 'bg-surface text-heading'}`}>{text || ' '}</pre>
     </div>
   );
 }
@@ -79,7 +79,7 @@ export function ConsolePanel({ tab, onTab, cases, onCases, active, onActive, res
             </div>
 
             {(runCases?.compile_error || suite?.compile_error) && (
-              <pre className="max-h-72 overflow-auto rounded-lg bg-danger-soft p-3 font-mono text-[13px] leading-relaxed text-danger">
+              <pre className="max-h-72 overflow-auto rounded-lg bg-danger-soft p-3 font-mono text-xs leading-relaxed text-danger">
                 {(runCases?.compile_error || suite?.compile_error || '').split('\n').map((line, i) => {
                   const m = line.match(/(?:main\.\w+|Main\.java):(\d+)/);
                   return <span key={i} className="block">{m && onJumpLine ? <button type="button" className="underline" onClick={() => onJumpLine(+m[1])}>{line}</button> : line}</span>;
@@ -133,7 +133,7 @@ export function ConsolePanel({ tab, onTab, cases, onCases, active, onActive, res
                       </span>
                     ))}
                   </div>
-                  {!good && <p className="mt-3 text-[15px] text-body">Hidden tests check edge cases: one element, all equal, zeros, negatives and the largest input. Re-read the constraints.</p>}
+                  {!good && <p className="mt-3 text-body-md text-body">Hidden tests check edge cases: one element, all equal, zeros, negatives and the largest input. Re-read the constraints.</p>}
                 </div>
               </>
             )}

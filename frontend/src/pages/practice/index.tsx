@@ -50,13 +50,13 @@ export default function PracticeHomePage() {
                 </>
               ) : null}
               {h.continue && h.next && h.next.id !== h.continue.id && (
-                <p className="mt-4 text-[15px] text-body">Next up: <Link href={`/practice/problem/${h.next.id}`} className="font-semibold text-link hover:underline">{h.next.title}</Link> · {h.next.topic}</p>
+                <p className="mt-4 text-body-md text-body">Next up: <Link href={`/practice/problem/${h.next.id}`} className="font-semibold text-link hover:underline">{h.next.title}</Link> · {h.next.topic}</p>
               )}
             </div>
             <div className="rounded-2xl border border-line bg-card p-5">
               <p className="flex items-center gap-2 text-sm font-medium text-muted"><Flame className="h-4 w-4" aria-hidden /> Your practice</p>
               <p className="mt-1 text-3xl font-bold tabular-nums text-heading">{h.totals.solved}<span className="text-lg font-semibold text-muted"> / {h.totals.total} solved</span></p>
-              <p className="text-[15px] text-body">{h.totals.attempted} in progress · {h.totals.active_days} active days</p>
+              <p className="text-body-md text-body">{h.totals.attempted} in progress · {h.totals.active_days} active days</p>
               <div className="mt-4 overflow-x-auto"><Heatmap days={h.activity} /></div>
             </div>
           </section>
@@ -64,13 +64,13 @@ export default function PracticeHomePage() {
           <section>
             <div className="flex items-end justify-between gap-4">
               <h2 className="flex items-center gap-2 font-display text-2xl font-semibold text-heading"><Code2 className="h-6 w-6" aria-hidden /> DSA sheet</h2>
-              <Link href="/practice/dsa" className="text-[15px] font-semibold text-link hover:underline">All topics →</Link>
+              <Link href="/practice/dsa" className="text-body-md font-semibold text-link hover:underline">All topics →</Link>
             </div>
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {h.topics.map((t) => (
                 <Link key={t.key} href={`/practice/dsa#${t.key}`} className="rounded-xl border border-line bg-card p-4 hover:border-signal focus-ring">
                   <p className="text-base font-semibold text-heading">{t.name}</p>
-                  <p className="mt-1 text-[15px] text-muted">{t.solved} of {t.total} solved</p>
+                  <p className="mt-1 text-body-md text-muted">{t.solved} of {t.total} solved</p>
                   <div className="mt-3"><Progress done={t.solved} total={t.total} label={`${t.name} progress`} /></div>
                 </Link>
               ))}
@@ -80,14 +80,14 @@ export default function PracticeHomePage() {
           <section>
             <div className="flex items-end justify-between gap-4">
               <h2 className="flex items-center gap-2 font-display text-2xl font-semibold text-heading"><Building2 className="h-6 w-6" aria-hidden /> Company sets</h2>
-              <Link href="/practice/companies" className="text-[15px] font-semibold text-link hover:underline">All companies →</Link>
+              <Link href="/practice/companies" className="text-body-md font-semibold text-link hover:underline">All companies →</Link>
             </div>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               {h.companies.map((c) => (
                 <Link key={c.slug} href={`/practice/companies/${c.slug}`} className="flex items-center gap-4 rounded-xl border border-line bg-card p-4 hover:border-signal focus-ring">
                   <div className="min-w-0 flex-1">
                     <p className="text-lg font-semibold text-heading">{c.name}</p>
-                    <p className="text-[15px] text-muted">{c.solved} / {c.total} coding solved · {c.tests} tests{c.owned ? ' · pack active' : ''}</p>
+                    <p className="text-body-md text-muted">{c.solved} / {c.total} coding solved · {c.tests} tests{c.owned ? ' · pack active' : ''}</p>
                     <div className="mt-3"><Progress done={c.solved} total={c.total} label={`${c.name} progress`} /></div>
                   </div>
                   <ArrowRight className="h-5 w-5 shrink-0 text-muted" aria-hidden />
@@ -99,7 +99,7 @@ export default function PracticeHomePage() {
           <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-line bg-surface p-5">
             <div>
               <p className="flex items-center gap-2 text-lg font-semibold text-heading"><ClipboardList className="h-5 w-5" aria-hidden /> Ready for a full test?</p>
-              <p className="text-[15px] text-body">Company mocks in the real pattern, with coding on real test cases.</p>
+              <p className="text-body-md text-body">Company mocks in the real pattern, with coding on real test cases.</p>
             </div>
             <Link href="/practice/tests" className="btn btn-ghost focus-ring min-h-[48px] px-5">See company tests</Link>
           </section>

@@ -273,7 +273,7 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({ data, preview, stu
               </div>
             ))}
           </div>
-          <div className="mt-2 hidden gap-[2px] pl-[9.5rem] text-[10px] font-mono text-muted md:flex">
+          <div className="mt-2 hidden gap-[2px] pl-[9.5rem] text-xs font-mono text-muted md:flex">
             {task.requirements.map((r) => <span key={r.id} className="w-9 text-center">{r.id}</span>)}
           </div>
         </div>

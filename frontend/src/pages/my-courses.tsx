@@ -15,7 +15,7 @@ import type { MyCoursesCourse, MyCertificate } from '@/types';
 /** Small colour-coded chip used for level, tier and distinction labels. */
 const Chip: React.FC<{ label: string; color?: string; soft?: string }> = ({ label, color, soft }) => (
   <span
-    className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-bold uppercase tracking-wide"
+    className="inline-flex items-center rounded-full px-2 py-0.5 text-chip capitalize font-semibold "
     style={color ? { color, background: soft } : undefined}
   >
     {label}
@@ -294,7 +294,7 @@ export default function MyCoursesPage() {
                           <td className="px-4 py-2.5">
                             <span
                               className={[
-                                'rounded-full px-2 py-0.5 text-xs font-bold uppercase tracking-wide',
+                                'rounded-full px-2 py-0.5 text-chip capitalize font-semibold ',
                                 c.status === 'active'
                                   ? 'bg-[var(--bg-sky-soft)] text-[var(--color-success)]'
                                   : 'bg-[var(--color-error)]/10 text-[var(--color-error)]',

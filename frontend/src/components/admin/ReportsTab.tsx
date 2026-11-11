@@ -128,7 +128,7 @@ export const ReportsTab: React.FC<{ companies: Company[]; onChanged?: () => void
                     <p className="text-xs font-mono text-gray-400">{companyName(r.company_id)} · {new Date(r.created_at).toLocaleDateString()}</p>
                   </div>
                 </div>
-                <span className={`px-2 py-1 rounded-full text-xs font-bold uppercase ${outcomeChip(r.outcome)}`}>{r.outcome || 'pending'}</span>
+                <span className={`px-2 py-1 rounded-full text-chip capitalize font-semibold ${outcomeChip(r.outcome)}`}>{r.outcome || 'pending'}</span>
               </div>
 
               <div className="space-y-1">

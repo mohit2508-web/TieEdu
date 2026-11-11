@@ -41,7 +41,7 @@ const Body: React.FC<{ classId: string }> = ({ classId }) => {
               {templates.map((t) => (
                 <button key={t.id} type="button" onClick={() => setStart({ key: t.id, input: t.input })}
                   className="rounded-cell border border-line p-4 text-left transition-shadow hover:shadow-pop">
-                  <span className="text-[11px] font-bold uppercase tracking-widest text-muted">{t.level}</span>
+                  <span className="text-xs font-bold uppercase tracking-widest text-muted">{t.level}</span>
                   <span className="mt-0.5 block font-semibold text-heading">{t.title}</span>
                   <span className="mt-1 line-clamp-3 block text-xs text-body">{t.summary}</span>
                 </button>

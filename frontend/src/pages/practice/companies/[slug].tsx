@@ -27,7 +27,7 @@ export default function CompanyPracticePage() {
   const c = d?.company;
   const actions = c && !c.owned && d!.progress.locked > 0 ? (
     <div className="rounded-2xl border border-line bg-card p-4">
-      <p className="flex items-center gap-2 text-[15px] text-body"><Lock className="h-4 w-4" aria-hidden /> {d!.progress.locked} problems and the full tests are in the pack</p>
+      <p className="flex items-center gap-2 text-body-md text-body"><Lock className="h-4 w-4" aria-hidden /> {d!.progress.locked} problems and the full tests are in the pack</p>
       <button type="button" onClick={() => setPack(true)} className="btn btn-primary focus-ring mt-3 min-h-[44px] w-full">Unlock {c.name}{c.price ? ` · ₹${c.price}` : ''}</button>
     </div>
   ) : c?.owned ? <Chip tone="success">Pack active</Chip> : null;
@@ -40,7 +40,7 @@ export default function CompanyPracticePage() {
       {d && (
         <>
           <div className="max-w-md">
-            <p className="text-[15px] text-body"><span className="font-semibold text-heading">{d.progress.solved}</span> of {d.progress.total} coding problems solved</p>
+            <p className="text-body-md text-body"><span className="font-semibold text-heading">{d.progress.solved}</span> of {d.progress.total} coding problems solved</p>
             <div className="mt-2"><Progress done={d.progress.solved} total={d.progress.total} label="Set progress" /></div>
           </div>
           <Tabs className="mt-6" label="Company practice" value={tab} onChange={setTab}
@@ -53,9 +53,9 @@ export default function CompanyPracticePage() {
                   <div className="flex flex-wrap items-end justify-between gap-3">
                     <div>
                       <h2 className="font-display text-xl font-semibold text-heading">{l.name}</h2>
-                      <p className="text-[15px] text-body">{l.blurb}</p>
+                      <p className="text-body-md text-body">{l.blurb}</p>
                     </div>
-                    <p className="text-[15px] text-muted">{l.solved} / {l.total} solved</p>
+                    <p className="text-body-md text-muted">{l.solved} / {l.total} solved</p>
                   </div>
                   <ul className="mt-3 divide-y divide-line overflow-hidden rounded-xl border border-line bg-card">
                     {l.problems.map((p, i) => (
@@ -75,7 +75,7 @@ export default function CompanyPracticePage() {
                 <div key={t.slug} className="flex flex-wrap items-center gap-4 rounded-xl border border-line bg-card p-4">
                   <div className="min-w-0 flex-1">
                     <p className="text-lg font-semibold text-heading">{t.name}</p>
-                    <p className="flex flex-wrap items-center gap-x-3 text-[15px] text-muted">
+                    <p className="flex flex-wrap items-center gap-x-3 text-body-md text-muted">
                       <span>{t.kind === 'full' ? 'Full mock' : 'Sectional test'}</span>
                       <span>{t.questions} questions{t.coding ? ' + coding' : ''}</span>
                       <span className="inline-flex items-center gap-1"><Clock className="h-4 w-4" aria-hidden />{t.minutes} min</span>

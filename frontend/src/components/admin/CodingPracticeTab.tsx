@@ -31,7 +31,7 @@ function CsvButton({ path, name }: { path: '/students' | '/problems' | '/compani
 }
 
 const th = 'px-3 py-2 text-left text-sm font-semibold text-muted';
-const td = 'px-3 py-2.5 text-[15px] text-body';
+const td = 'px-3 py-2.5 text-body-md text-body';
 
 /**
  * Admin → Coding practice (PRACTICE_MODE_PLAN.md §9): activity, students with
@@ -43,7 +43,7 @@ export const CodingPracticeTab: React.FC = () => {
     <div className="space-y-6">
       <div>
         <h2 className="font-display text-2xl font-bold text-heading">Coding practice</h2>
-        <p className="mt-1 text-[15px] text-body">Who practises what, how well, and where the content is thin.</p>
+        <p className="mt-1 text-body-md text-body">Who practises what, how well, and where the content is thin.</p>
       </div>
       <Tabs label="Coding practice" value={sub} onChange={setSub} items={[
         { key: 'overview', label: 'Overview' }, { key: 'students', label: 'Students' }, { key: 'problems', label: 'Problems' },
@@ -93,10 +93,10 @@ function OverviewPane() {
       </section>
       <section className="rounded-xl border border-line bg-card p-4">
         <p className="flex items-center gap-2 text-base font-semibold text-heading"><Activity className="h-5 w-5" aria-hidden /> Code runner</p>
-        {!r.configured ? <p className="mt-2 text-[15px] text-danger">Not configured: set PISTON_API_URL on the server.</p>
-          : r.up ? <p className="mt-2 text-[15px] text-body"><span className="font-semibold text-success">Up</span> · answered in {r.ms} ms · languages: {r.languages.join(', ') || '—'}</p>
-          : <p className="mt-2 flex items-center gap-2 text-[15px] text-danger"><AlertTriangle className="h-4 w-4" aria-hidden /> Down: Piston did not answer. Students see &quot;runner offline&quot;.</p>}
-        {r.avg_grade_ms != null && <p className="mt-1 text-[15px] text-muted">Average time to grade a submission: {(r.avg_grade_ms / 1000).toFixed(1)} s</p>}
+        {!r.configured ? <p className="mt-2 text-body-md text-danger">Not configured: set PISTON_API_URL on the server.</p>
+          : r.up ? <p className="mt-2 text-body-md text-body"><span className="font-semibold text-success">Up</span> · answered in {r.ms} ms · languages: {r.languages.join(', ') || '—'}</p>
+          : <p className="mt-2 flex items-center gap-2 text-body-md text-danger"><AlertTriangle className="h-4 w-4" aria-hidden /> Down: Piston did not answer. Students see &quot;runner offline&quot;.</p>}
+        {r.avg_grade_ms != null && <p className="mt-1 text-body-md text-muted">Average time to grade a submission: {(r.avg_grade_ms / 1000).toFixed(1)} s</p>}
         <p className="mt-1 text-sm text-muted">{o.totals.all_time_submissions} submissions stored in total.</p>
       </section>
     </div>
@@ -117,9 +117,9 @@ function StudentsPane() {
         <label className="relative w-full max-w-sm">
           <span className="sr-only">Search students</span>
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden />
-          <input value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} placeholder="Name, email or college" className="h-10 w-full rounded-lg border border-line bg-card pl-9 pr-3 text-[15px] text-heading focus:border-signal focus:outline-none" />
+          <input value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} placeholder="Name, email or college" className="h-10 w-full rounded-lg border border-line bg-card pl-9 pr-3 text-body-md text-heading focus:border-signal focus:outline-none" />
         </label>
-        <p className="text-[15px] text-muted">{total} students</p>
+        <p className="text-body-md text-muted">{total} students</p>
         <div className="ml-auto"><CsvButton path="/students" name="practice-students" /></div>
       </div>
       <div className="overflow-x-auto rounded-xl border border-line bg-card">
@@ -145,7 +145,7 @@ function StudentsPane() {
       {total > 50 && (
         <div className="flex items-center gap-2">
           <button type="button" disabled={page === 1} onClick={() => setPage(page - 1)} className="btn btn-ghost min-h-[40px] px-3">Previous</button>
-          <span className="text-[15px] text-muted">Page {page} of {Math.ceil(total / 50)}</span>
+          <span className="text-body-md text-muted">Page {page} of {Math.ceil(total / 50)}</span>
           <button type="button" disabled={page * 50 >= total} onClick={() => setPage(page + 1)} className="btn btn-ghost min-h-[40px] px-3">Next</button>
         </div>
       )}
@@ -168,31 +168,31 @@ function StudentDrawer({ id, onClose }: { id: string; onClose: () => void }) {
         </div>
         {!d ? <p className="p-5 text-muted">Loading…</p> : (
           <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-5">
-            <p className="text-[15px] text-body">{d.student.email}{d.student.college ? ` · ${d.student.college}` : ''}{d.student.grad_year ? ` · ${d.student.grad_year}` : ''}{d.student.target ? ` · target ${d.student.target}` : ''}</p>
+            <p className="text-body-md text-body">{d.student.email}{d.student.college ? ` · ${d.student.college}` : ''}{d.student.grad_year ? ` · ${d.student.grad_year}` : ''}{d.student.target ? ` · target ${d.student.target}` : ''}</p>
             {d.prep.length > 0 && (
               <section>
                 <h3 className="text-base font-semibold text-heading">Plans</h3>
-                <ul className="mt-2 space-y-1 text-[15px] text-body">{d.prep.map((p) => <li key={p.company}>{p.company}: {p.lessons_done} lessons · readiness {p.readiness ?? '—'}% · {p.active_days} active days{p.test_date ? ` · test ${p.test_date}` : ''}</li>)}</ul>
+                <ul className="mt-2 space-y-1 text-body-md text-body">{d.prep.map((p) => <li key={p.company}>{p.company}: {p.lessons_done} lessons · readiness {p.readiness ?? '—'}% · {p.active_days} active days{p.test_date ? ` · test ${p.test_date}` : ''}</li>)}</ul>
               </section>
             )}
             <section>
               <h3 className="text-base font-semibold text-heading">DSA topics</h3>
-              <div className="mt-2 grid gap-2 sm:grid-cols-2">{d.topics.map((t) => <p key={t.key} className="text-[15px] text-body">{t.name}: <span className="font-semibold text-heading">{t.solved}</span> / {t.total}</p>)}</div>
+              <div className="mt-2 grid gap-2 sm:grid-cols-2">{d.topics.map((t) => <p key={t.key} className="text-body-md text-body">{t.name}: <span className="font-semibold text-heading">{t.solved}</span> / {t.total}</p>)}</div>
             </section>
             <section>
               <h3 className="text-base font-semibold text-heading">Company tests</h3>
-              {!d.tests.length ? <p className="mt-1 text-[15px] text-muted">None yet.</p> : (
-                <ul className="mt-2 divide-y divide-line rounded-lg border border-line">{d.tests.map((t) => <li key={t.id} className="flex justify-between gap-3 px-3 py-2 text-[15px]"><span className="text-heading">{t.name}</span><span className="tabular-nums text-body">{t.score}% · {when(t.at)}</span></li>)}</ul>
+              {!d.tests.length ? <p className="mt-1 text-body-md text-muted">None yet.</p> : (
+                <ul className="mt-2 divide-y divide-line rounded-lg border border-line">{d.tests.map((t) => <li key={t.id} className="flex justify-between gap-3 px-3 py-2 text-body-md"><span className="text-heading">{t.name}</span><span className="tabular-nums text-body">{t.score}% · {when(t.at)}</span></li>)}</ul>
               )}
             </section>
             <section>
               <h3 className="text-base font-semibold text-heading">Submissions</h3>
-              {!d.submissions.length ? <p className="mt-1 text-[15px] text-muted">None yet.</p> : (
+              {!d.submissions.length ? <p className="mt-1 text-body-md text-muted">None yet.</p> : (
                 <ul className="mt-2 divide-y divide-line rounded-lg border border-line">
                   {d.submissions.map((s) => (
                     <li key={s.id} className="flex items-center gap-3 px-3 py-2">
                       {s.verdict === 'accepted' ? <CheckCircle2 className="h-4 w-4 shrink-0 text-success" aria-hidden /> : <XCircle className="h-4 w-4 shrink-0 text-danger" aria-hidden />}
-                      <span className="min-w-0 flex-1 text-[15px] text-heading">{s.title}<span className="block text-sm text-muted">{VERDICT[s.verdict] || s.verdict} · {s.passed}/{s.total} · {s.language} · {when(s.at)}{s.in_test ? ' · in a test' : ''}</span></span>
+                      <span className="min-w-0 flex-1 text-body-md text-heading">{s.title}<span className="block text-sm text-muted">{VERDICT[s.verdict] || s.verdict} · {s.passed}/{s.total} · {s.language} · {when(s.at)}{s.in_test ? ' · in a test' : ''}</span></span>
                       <button type="button" onClick={() => fetchSubmissionCode(s.id).then(setCode).catch(() => {})} className="btn btn-ghost min-h-[36px] px-3 text-sm">View code</button>
                     </li>
                   ))}
@@ -202,7 +202,7 @@ function StudentDrawer({ id, onClose }: { id: string; onClose: () => void }) {
             {code && (
               <section>
                 <div className="flex items-center justify-between"><h3 className="text-base font-semibold text-heading">{code.title} · {code.language}</h3><button type="button" onClick={() => setCode(null)} className="text-sm text-link">Close code</button></div>
-                <pre className="mt-2 max-h-[50vh] overflow-auto rounded-lg bg-surface p-3 font-mono text-[13px] leading-relaxed text-heading">{code.code || '(empty)'}</pre>
+                <pre className="mt-2 max-h-[50vh] overflow-auto rounded-lg bg-surface p-3 font-mono text-xs leading-relaxed text-heading">{code.code || '(empty)'}</pre>
               </section>
             )}
           </div>
@@ -263,9 +263,9 @@ function FunnelPane() {
             <div className="mt-3 space-y-2">
               {steps.map(([k, label]) => (
                 <div key={k} className="grid grid-cols-[170px_1fr_48px] items-center gap-3">
-                  <span className="text-[15px] text-body">{label}</span>
+                  <span className="text-body-md text-body">{label}</span>
                   <div className="h-3 rounded-full bg-surface-hover"><div className="h-3 rounded-full bg-signal" style={{ width: `${((Number(r[k]) || 0) / top) * 100}%` }} /></div>
-                  <span className="text-right text-[15px] font-semibold tabular-nums text-heading">{r[k]}</span>
+                  <span className="text-right text-body-md font-semibold tabular-nums text-heading">{r[k]}</span>
                 </div>
               ))}
             </div>
@@ -287,17 +287,17 @@ function CoveragePane() {
           <div className="mt-3 grid gap-4 md:grid-cols-3">
             <div>
               <p className="text-sm font-semibold text-muted">Coding set · {r.coding_total} problems</p>
-              <ul className="mt-1 text-[15px] text-body">{r.coding_by_topic.map((t) => <li key={t.topic}>{t.topic}: {t.count}</li>)}{!r.coding_by_topic.length && <li className="text-danger">No coding set yet</li>}</ul>
+              <ul className="mt-1 text-body-md text-body">{r.coding_by_topic.map((t) => <li key={t.topic}>{t.topic}: {t.count}</li>)}{!r.coding_by_topic.length && <li className="text-danger">No coding set yet</li>}</ul>
             </div>
             <div>
               <p className="text-sm font-semibold text-muted">Full mock bank (aim for 2× each section)</p>
               {r.mock ? (
-                <ul className="mt-1 text-[15px]">{r.mock.sections.map((s) => <li key={s.name} className={s.ok ? 'text-body' : 'text-danger'}>{s.name}: {s.have} / {s.needed * 2}</li>)}{r.mock.coding > 0 && <li className="text-body">Coding pool: {r.mock.coding}</li>}</ul>
-              ) : <p className="mt-1 text-[15px] text-danger">No full mock yet: the MCQ bank is not filled.</p>}
+                <ul className="mt-1 text-body-md">{r.mock.sections.map((s) => <li key={s.name} className={s.ok ? 'text-body' : 'text-danger'}>{s.name}: {s.have} / {s.needed * 2}</li>)}{r.mock.coding > 0 && <li className="text-body">Coding pool: {r.mock.coding}</li>}</ul>
+              ) : <p className="mt-1 text-body-md text-danger">No full mock yet: the MCQ bank is not filled.</p>}
             </div>
             <div>
               <p className="text-sm font-semibold text-muted">Train modules</p>
-              <ul className="mt-1 text-[15px] text-body">{r.modules.map((m) => <li key={m.title} className={m.items ? '' : 'text-danger'}>{m.title}: {m.items}</li>)}{!r.modules.length && <li className="text-danger">None</li>}</ul>
+              <ul className="mt-1 text-body-md text-body">{r.modules.map((m) => <li key={m.title} className={m.items ? '' : 'text-danger'}>{m.title}: {m.items}</li>)}{!r.modules.length && <li className="text-danger">None</li>}</ul>
             </div>
           </div>
         </section>

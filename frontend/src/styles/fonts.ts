@@ -28,6 +28,8 @@ export const fontBody = localFont({
     { path: '../../node_modules/@fontsource/mukta/files/mukta-latin-500-normal.woff2', weight: '500', style: 'normal' },
     { path: '../../node_modules/@fontsource/mukta/files/mukta-latin-600-normal.woff2', weight: '600', style: 'normal' },
     { path: '../../node_modules/@fontsource/mukta/files/mukta-latin-700-normal.woff2', weight: '700', style: 'normal' },
+    // 800: font-extrabold on body text used to be synthesised (faux bold) without this file.
+    { path: '../../node_modules/@fontsource/mukta/files/mukta-latin-800-normal.woff2', weight: '800', style: 'normal' },
   ],
   display: 'swap',
   preload: true,

@@ -167,7 +167,7 @@ export const DropMediaFitter: React.FC<{
               />
               {/* Where the headline sits on the real card — keep faces/text above it. */}
               <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[42%] border-t-2 border-dashed border-white/60 bg-gradient-to-t from-black/60 to-transparent">
-                <span className="absolute left-2 top-1 text-[11px] font-bold text-white/90">Headline area</span>
+                <span className="absolute left-2 top-1 text-xs font-bold text-white/90">Headline area</span>
               </div>
             </div>
 

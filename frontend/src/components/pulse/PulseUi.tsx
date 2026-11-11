@@ -189,7 +189,7 @@ export const CodeViewer: React.FC<{
               >
                 <FileCode2 className="h-3.5 w-3.5 shrink-0" aria-hidden />
                 <span className="truncate">{f.path}</span>
-                {isNew ? <span className="ml-auto text-[10px] font-bold text-success">NEW</span> : null}
+                {isNew ? <span className="ml-auto text-xs font-bold text-success">NEW</span> : null}
               </button>
             </li>
           );
@@ -202,7 +202,7 @@ export const CodeViewer: React.FC<{
             {stats ? <><span className="font-semibold text-success">+{stats.add}</span> <span className="font-semibold text-error">−{stats.del}</span> since assigned</> : `${lines.length} lines`}
           </span>
         </div>
-        <div ref={scroller} className="max-h-[560px] overflow-auto py-2 font-mono text-[12.5px] leading-[1.6] [font-variant-ligatures:none]">
+        <div ref={scroller} className="max-h-[560px] overflow-auto py-2 font-mono text-xs leading-[1.6] [font-variant-ligatures:none]">
           {mode === 'code'
             ? lines.map((l, i) => {
                 const n = i + 1;

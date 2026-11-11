@@ -370,7 +370,7 @@ export const DropCard: React.FC<DropCardProps> = ({
             )}
           </div>
           {item.sponsored && (
-            <span className="rounded-full bg-white/90 px-2.5 py-1 text-xs font-extrabold uppercase tracking-wide text-heading">
+            <span className="rounded-full bg-white/90 px-2.5 py-1 text-chip capitalize font-semibold text-heading">
               {item.sponsor_name || 'Sponsored'}
             </span>
           )}

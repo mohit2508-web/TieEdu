@@ -38,7 +38,7 @@ export const Stamp: React.FC<StampProps> = ({ kind, children, flat, animate, cla
   return (
     <span
       className={cn(
-        'route-stamp inline-flex items-center gap-1 rounded-md border-2 border-double bg-card/60 px-2 py-0.5 text-xs font-bold uppercase tracking-wider',
+        'route-stamp inline-flex items-center gap-1 rounded-md border-2 border-double bg-card/60 px-2 py-0.5 text-chip capitalize font-semibold ',
         !flat && '-rotate-2',
         animate && 'route-stamp-land',
         cls,

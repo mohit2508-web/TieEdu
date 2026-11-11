@@ -138,7 +138,7 @@ export const BlockEditorModal: React.FC<BlockEditorModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-gray-200 mb-4 shrink-0 px-4 sm:px-0 pt-4 sm:pt-0">
           <div className="min-w-0">
-            <span className="inline-flex items-center gap-1 text-xs font-bold uppercase bg-amber-100 text-amber-900 px-2 py-0.5 rounded">
+            <span className="inline-flex items-center gap-1 text-chip capitalize font-semibold bg-amber-100 text-amber-900 px-2 py-0.5 rounded">
               <LayoutTemplate className="w-3 h-3 text-amber-deep" /> Live CMS Block Builder
             </span>
             <h3 className="text-lg sm:text-xl font-bold text-ink-soft pt-1">Add Content Block</h3>

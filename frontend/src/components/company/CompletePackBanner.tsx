@@ -24,7 +24,7 @@ export const CompletePackBanner: React.FC<Props> = ({ companyName, premiumCount,
               <BadgeCheck className="w-7 h-7" />
             </div>
             <div className="min-w-0">
-              <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
+              <span className="text-chip capitalize font-semibold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
                 In your vault
               </span>
               <h2 className="text-xl sm:text-2xl font-extrabold text-gray-900 tracking-tight leading-tight mt-1.5">
@@ -67,15 +67,15 @@ export const CompletePackBanner: React.FC<Props> = ({ companyName, premiumCount,
           </div>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2 mb-1.5">
-              <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-400 text-brand-ink">
+              <span className="text-chip capitalize font-semibold px-2.5 py-1 rounded-full bg-amber-400 text-brand-ink">
                 {savePct > 0 ? `Best Value · ${savePct}% OFF` : packSizeLabel(roundsLeft)}
               </span>
               {ownedCount > 0 ? (
-                <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/10 text-amber-200 border border-white/20">
+                <span className="text-chip capitalize font-semibold px-2.5 py-1 rounded-full bg-white/10 text-amber-200 border border-white/20">
                   {roundsLeft} rounds left
                 </span>
               ) : (
-                <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/10 text-amber-200 border border-white/20">
+                <span className="text-chip capitalize font-semibold px-2.5 py-1 rounded-full bg-white/10 text-amber-200 border border-white/20">
                   {premiumCount} Round Pack{premiumCount === 1 ? '' : 's'}
                 </span>
               )}
@@ -107,7 +107,7 @@ export const CompletePackBanner: React.FC<Props> = ({ companyName, premiumCount,
         <div className="flex flex-col sm:flex-row lg:flex-col xl:flex-row items-stretch sm:items-center gap-3 shrink-0 lg:pl-6">
           <div className="text-white">
             <div className="flex items-baseline justify-center sm:justify-start gap-2">
-              <span className="text-3xl font-black">₹{packAmount}</span>
+              <span className="text-3xl font-extrabold">₹{packAmount}</span>
               {ownedCount === 0 && save > 0 && (
                 <>
                   <span className="text-sm text-white/70 line-through">₹{listAmount}</span>
@@ -125,7 +125,7 @@ export const CompletePackBanner: React.FC<Props> = ({ companyName, premiumCount,
           </div>
           <button
             onClick={onAddCompletePack}
-            className="inline-flex items-center justify-center gap-2 min-h-[46px] px-6 py-3.5 bg-money hover:bg-money text-brand-ink text-sm font-black rounded-xl shadow-lg transition-all"
+            className="inline-flex items-center justify-center gap-2 min-h-[46px] px-6 py-3.5 bg-money hover:bg-money text-brand-ink text-sm font-extrabold rounded-xl shadow-lg transition-all"
           >
             <ShoppingCart className="w-5 h-5" />
             {ownedCount > 0

@@ -41,7 +41,7 @@ export const DiwaliHero: React.FC<{ compact?: boolean }> = ({ compact = false })
         <p className="text-xs font-extrabold uppercase tracking-[0.35em] text-[#FFD966]">
           {peak ? '✨ Today is Diwali ✨' : 'TiEEdu Diwali Sale'}
         </p>
-        <h1 className="mt-3 font-display text-4xl font-black leading-[1.05] sm:text-6xl" style={{ color: '#FFF8EE' }}>
+        <h1 className="mt-3 font-display text-4xl font-extrabold leading-[1.05] sm:text-6xl" style={{ color: '#FFF8EE' }}>
           {peak ? 'Happy Diwali!' : 'This Diwali, light up'}{' '}
           <span className="diwali-gold-text">{peak ? 'Light up your career' : 'your career'}</span>
         </h1>
@@ -52,7 +52,7 @@ export const DiwaliHero: React.FC<{ compact?: boolean }> = ({ compact = false })
 
         <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
           <button type="button" onClick={openDiwaliGift}
-            className="inline-flex items-center gap-2 rounded-full bg-[#FFC93C] px-6 py-3 text-sm font-black text-[#2A1400] shadow-[0_10px_30px_-8px_rgba(255,201,60,0.8)] hover:bg-[#FFD966]">
+            className="inline-flex items-center gap-2 rounded-full bg-[#FFC93C] px-6 py-3 text-sm font-extrabold text-[#2A1400] shadow-[0_10px_30px_-8px_rgba(255,201,60,0.8)] hover:bg-[#FFD966]">
             <Gift size={18} aria-hidden /> Open your gift
           </button>
           <Link href="/diwali" className="inline-flex items-center rounded-full border border-white/40 px-6 py-3 text-sm font-extrabold text-white hover:bg-white/10">

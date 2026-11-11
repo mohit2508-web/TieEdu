@@ -29,7 +29,7 @@ export function PracticeLayout({ title, intro, children, actions, crumb }: {
             const on = s.exact ? pathname === s.href : pathname === s.href || pathname.startsWith(`${s.href}/`);
             return (
               <Link key={s.href} href={s.href} aria-current={on ? 'page' : undefined}
-                className={cn('relative inline-flex h-11 shrink-0 items-center px-3 text-[15px] font-semibold focus-ring', on ? 'text-heading' : 'text-muted hover:text-heading')}>
+                className={cn('relative inline-flex h-11 shrink-0 items-center px-3 text-body-md font-semibold focus-ring', on ? 'text-heading' : 'text-muted hover:text-heading')}>
                 {s.label}
                 {on && <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-signal" aria-hidden />}
               </Link>
@@ -38,7 +38,7 @@ export function PracticeLayout({ title, intro, children, actions, crumb }: {
         </nav>
         <header className="mt-6 flex flex-wrap items-end justify-between gap-4">
           <div className="min-w-0">
-            {crumb && <Link href={crumb.href} className="text-[15px] font-medium text-link hover:underline">← {crumb.label}</Link>}
+            {crumb && <Link href={crumb.href} className="text-body-md font-medium text-link hover:underline">← {crumb.label}</Link>}
             <h1 className="mt-1 font-display text-3xl font-bold text-heading">{title}</h1>
             {intro && <p className="mt-2 max-w-3xl text-base leading-relaxed text-body">{intro}</p>}
           </div>

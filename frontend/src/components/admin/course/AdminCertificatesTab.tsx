@@ -404,7 +404,7 @@ export const AdminCertificatesTab: React.FC = () => {
                           target="_blank"
                           rel="noreferrer"
                           title="Open the public verification page"
-                          className="inline-flex items-center px-2.5 py-1.5 rounded-lg border border-gray-300 text-xs font-bold uppercase tracking-wider text-body hover:bg-surface-hover"
+                          className="inline-flex items-center px-2.5 py-1.5 rounded-lg border border-gray-300 text-chip capitalize font-semibold text-body hover:bg-surface-hover"
                         >
                           <ExternalLink className="w-3.5 h-3.5" />
                         </a>

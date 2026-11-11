@@ -33,11 +33,11 @@ export default function CompanyTestsPage() {
                     <p className="text-lg font-semibold text-heading">{t.name}</p>
                     <Chip tone={t.kind === 'full' ? 'signal' : 'neutral'}>{t.kind === 'full' ? 'Full mock' : 'Sectional'}</Chip>
                   </div>
-                  <p className="mt-1 flex flex-wrap items-center gap-x-3 text-[15px] text-muted">
+                  <p className="mt-1 flex flex-wrap items-center gap-x-3 text-body-md text-muted">
                     <span>{t.questions} questions{t.coding ? ' + coding' : ''}</span>
                     <span className="inline-flex items-center gap-1"><Clock className="h-4 w-4" aria-hidden />{t.minutes} min</span>
                   </p>
-                  <p className="mt-2 text-[15px] text-body">{t.attempts ? `Best ${t.best}% after ${t.attempts} attempt${t.attempts > 1 ? 's' : ''}` : 'Not attempted yet'}</p>
+                  <p className="mt-2 text-body-md text-body">{t.attempts ? `Best ${t.best}% after ${t.attempts} attempt${t.attempts > 1 ? 's' : ''}` : 'Not attempted yet'}</p>
                   <div className="mt-4 flex gap-2">
                     <Link href={`/practice/test/${t.slug}`} className="btn btn-primary focus-ring min-h-[44px] flex-1">{t.attempts ? 'Retake' : 'Start'} <ArrowRight className="h-4 w-4" aria-hidden /></Link>
                     {t.last && <Link href={`/practice/test/${t.slug}/result/${t.last.id}`} className="btn btn-ghost focus-ring min-h-[44px] px-4">Last result</Link>}

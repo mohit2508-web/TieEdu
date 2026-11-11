@@ -40,14 +40,14 @@ function TreeContent({
       <div className="px-4 pt-4 pb-3 border-b border-[--border-subtle] shrink-0">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-amber-deep">{companyName}</p>
-            <h3 className="text-sm font-bold text-[--text-heading]">Topics</h3>
+            <p className="text-eyebrow uppercase text-amber-deep">{companyName}</p>
+            <h3 className="text-base font-semibold text-[--text-heading]">Topics</h3>
           </div>
           <button
             onClick={onBackToModules}
-            className="text-xs text-[--text-muted] hover:text-link transition-colors flex items-center gap-1"
+            className="inline-flex min-h-[40px] items-center gap-1 rounded-lg px-2 text-sm font-medium text-[--text-muted] hover:bg-paper hover:text-link transition-colors"
           >
-            <X className="w-3.5 h-3.5" />
+            <X className="w-4 h-4" />
             <span>Exit</span>
           </button>
         </div>
@@ -62,8 +62,8 @@ function TreeContent({
               enterKeyHint="search"
               autoComplete="off"
               onChange={e => onSearchChange(e.target.value)}
-            placeholder="Search topics..."
-            className="w-full pl-8 pr-3 py-1.5 text-sm bg-paper rounded-lg border border-[--border-subtle] focus:outline-none focus:ring-2 focus:ring-[--brand-accent]/40 placeholder-[--text-light]"
+            placeholder="Search topics"
+            className="w-full pl-8 pr-3 py-2 text-sm bg-paper rounded-lg border border-[--border-subtle] focus:outline-none focus:ring-2 focus:ring-[--brand-accent]/40 placeholder-[--text-light]"
           />
           {searchQuery && (
             <button onClick={() => onSearchChange('')} className="absolute right-2 top-1/2 -translate-y-1/2">
@@ -84,6 +84,12 @@ function TreeContent({
           // Hide module entirely if search has no matches
           if (searchQuery && filteredItems.length === 0) return null;
 
+          // "Coding: Digital Root" inside a "Coding round" module repeats itself: drop a prefix every item shares.
+          const prefixOf = (t: string) => (t.match(/^([^:]{2,24}):\s+/) || [])[1] || '';
+          const first = prefixOf(filteredItems[0]?.question_text || '');
+          const shared = !!first && filteredItems.length > 1 && filteredItems.every((i) => prefixOf(i.question_text || '') === first);
+          const labelOf = (t: string) => (shared ? t.slice(first.length).replace(/^:\s+/, '') : t);
+
           return (
             <div key={mod.id} className="mb-1">
               {/* Module Header */}
@@ -99,7 +105,7 @@ function TreeContent({
                     mod.round_type === 'HR' ? 'bg-emerald-500' :
                     'bg-gray-400'
                   }`} />
-                  <span className="text-xs font-semibold text-[--text-heading] leading-snug text-left">
+                  <span className="text-sm font-semibold text-[--text-heading] leading-snug text-left">
                     {mod.title}
                   </span>
                 </div>
@@ -140,17 +146,17 @@ function TreeContent({
 
                         {/* Question text — WRAPS, not truncated */}
                         <span className="flex-1 leading-snug text-left">
-                          {item.question_text}
+                          {labelOf(item.question_text || '')}
                         </span>
 
                         {/* Badges */}
-                        <div className="flex flex-col items-end gap-1 shrink-0 ml-1">
+                        <div className="flex items-center gap-1.5 shrink-0 ml-1">
                           {item.is_free_preview && !isSelected && (
-                            <span className="text-xs font-bold uppercase tracking-wide bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded">
+                            <span className="text-xs font-semibold bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded">
                               Free
                             </span>
                           )}
-                          <span className={`text-xs font-semibold capitalize ${
+                          <span className={`text-xs font-medium capitalize ${
                             item.difficulty === 'hard' ? 'text-red-500' :
                             item.difficulty === 'medium' ? 'text-amber-500' :
                             'text-emerald-500'

@@ -67,7 +67,7 @@ export const FestivalLayer: React.FC = () => {
       {party !== null && (
         <>
           <Fireworks mode="burst" count={9} fullscreen onDone={() => setParty(null)} />
-          <div role="status" className="fixed left-1/2 top-24 z-[96] -translate-x-1/2 rounded-2xl px-5 py-3 text-center text-sm font-black text-white shadow-2xl"
+          <div role="status" className="fixed left-1/2 top-24 z-[96] -translate-x-1/2 rounded-2xl px-5 py-3 text-center text-sm font-extrabold text-white shadow-2xl"
             style={{ background: 'linear-gradient(135deg, rgb(var(--diwali-maroon)), rgb(var(--diwali-rani)))' }}>
             🎆 Purchase complete!{party > 0 ? ` You saved ₹${party}` : ''} — Happy Diwali!
           </div>

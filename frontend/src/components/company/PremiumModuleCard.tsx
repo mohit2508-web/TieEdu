@@ -52,11 +52,11 @@ export const PremiumModuleCard: React.FC<Props> = ({ module, companyName, isUnlo
               {rm.label}
             </span>
           )}
-          <span className="text-xs font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-brand-ink/8 text-brand-ink border border-brand-ink/15">
+          <span className="text-chip capitalize font-semibold px-2.5 py-1 rounded-full bg-brand-ink/8 text-brand-ink border border-brand-ink/15">
             {typeLabel}
           </span>
         </div>
-        <span className="text-xs font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0">
+        <span className="text-chip capitalize font-semibold px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0">
           Premium
         </span>
       </div>

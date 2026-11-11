@@ -31,7 +31,7 @@ export const FreeCourseBanner: React.FC = () => (
           }}
         />
         <div className="relative z-10 min-w-0 flex-1 space-y-2 text-left">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 border border-white/25 px-2.5 py-1 text-xs font-extrabold uppercase tracking-wide text-white">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 border border-white/25 px-2.5 py-1 text-chip capitalize font-semibold text-white">
             100% Free
           </span>
           <h2 className="font-serif-heading text-2xl sm:text-3xl font-extrabold leading-tight text-white">

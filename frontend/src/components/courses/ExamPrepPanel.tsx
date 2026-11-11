@@ -222,7 +222,7 @@ export const ExamPrepPanel: React.FC<{
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="text-lg font-extrabold tracking-tight text-[var(--ink)]">Semester exam prep</h2>
             {prep.target && (
-              <span className="rounded-full bg-[var(--brand-sky-soft)] px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-link">
+              <span className="rounded-full bg-[var(--brand-sky-soft)] px-2.5 py-1 text-chip capitalize font-semibold text-link">
                 {prep.target}
               </span>
             )}

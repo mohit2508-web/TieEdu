@@ -226,7 +226,7 @@ function ProvidersPanel({ providers, onDone, setError }: { providers: AdminProvi
             <div key={p.provider_id} className="rounded-xl border border-gray-100 px-3 py-2 text-sm">
               <div className="flex items-center justify-between">
                 <span className="font-bold text-brand-ink">{p.name}</span>
-                <span className={`rounded-full px-2 py-0.5 text-xs font-bold uppercase ${p.status === 'active' ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>{p.status}</span>
+                <span className={`rounded-full px-2 py-0.5 text-chip font-semibold capitalize ${p.status === 'active' ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>{p.status}</span>
               </div>
               <p className="mt-0.5 font-mono text-xs text-gray-500">{p.code} · {p.launch_url}</p>
             </div>
@@ -295,7 +295,7 @@ function TestsPanel({ tests, providers, onDone, setError }: { tests: AdminDriveT
             <div key={t.test_id} className="rounded-xl border border-gray-100 px-3 py-2 text-sm">
               <div className="flex items-center justify-between">
                 <span className="font-bold text-brand-ink">{t.name}</span>
-                <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-bold uppercase text-gray-500">{t.mode}</span>
+                <span className="rounded-full bg-gray-100 px-2 py-0.5 text-chip capitalize font-semibold text-gray-500">{t.mode}</span>
               </div>
               <p className="mt-0.5 font-mono text-xs text-gray-500">{t.provider_name || t.skill_slug || '—'}</p>
             </div>
@@ -916,7 +916,7 @@ function DrivesPanel(props: {
               >
                 <div className="flex items-center justify-between">
                   <span className="truncate text-sm font-bold text-brand-ink">{d.title}</span>
-                  <span className="ml-2 flex-none rounded-full bg-gray-100 px-2 py-0.5 text-xs font-bold uppercase text-gray-500">{d.status}</span>
+                  <span className="ml-2 flex-none rounded-full bg-gray-100 px-2 py-0.5 text-chip capitalize font-semibold text-gray-500">{d.status}</span>
                 </div>
                 <p className="mt-0.5 text-xs text-gray-500">
                   {d.company_name || '—'} · {d.registration_count ?? 0} registered · {d.test_count ?? 0} rounds
@@ -940,7 +940,7 @@ function DrivesPanel(props: {
             <div className="rounded-3xl border border-line bg-white p-6 shadow-xs">
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="mr-auto text-base font-extrabold text-heading">{selected.title}</h3>
-                <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-bold uppercase text-gray-500">{status}</span>
+                <span className="rounded-full bg-gray-100 px-2.5 py-1 text-chip capitalize font-semibold text-gray-500">{status}</span>
               </div>
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 {(status === 'draft' || status === 'closed') && (
@@ -1229,16 +1229,16 @@ function DrivesPanel(props: {
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="min-w-0 flex-1 truncate font-bold text-brand-ink">
                           {r.name || r.roll_no || r.user_id}
-                          {r.status && <span className="ml-2 rounded-full bg-gray-100 px-1.5 py-0.5 text-xs font-bold uppercase text-gray-500">{String(r.status).replace('_', ' ')}</span>}
+                          {r.status && <span className="ml-2 rounded-full bg-gray-100 px-1.5 py-0.5 text-chip capitalize font-semibold text-gray-500">{String(r.status).replace('_', ' ')}</span>}
                           {r.payment_status && (
-                            <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-xs font-bold uppercase ${
+                            <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-chip font-semibold capitalize ${
                               r.payment_status === 'approved' ? 'bg-emerald-50 text-emerald-700'
                               : r.payment_status === 'rejected' ? 'bg-red-50 text-red-600'
                               : 'bg-amber-50 text-amber-700'
                             }`}>₹ {r.payment_status}</span>
                           )}
                           {r.booking_status && r.booking_status !== 'cancelled' && (
-                            <span className="ml-1.5 rounded-full bg-signal-soft px-1.5 py-0.5 text-xs font-bold uppercase text-link">slot booked</span>
+                            <span className="ml-1.5 rounded-full bg-signal-soft px-1.5 py-0.5 text-chip capitalize font-semibold text-link">slot booked</span>
                           )}
                         </span>
                         {r.slot_starts_at && (
@@ -1304,7 +1304,7 @@ function DrivesPanel(props: {
                             {p.reviewer_note ? ` · note: ${p.reviewer_note}` : ''}
                           </span>
                         </span>
-                        <span className={`rounded-full px-2 py-0.5 text-xs font-bold uppercase ${
+                        <span className={`rounded-full px-2 py-0.5 text-chip font-semibold capitalize ${
                           p.status === 'approved' ? 'bg-emerald-50 text-emerald-700'
                           : p.status === 'rejected' ? 'bg-red-50 text-red-600'
                           : 'bg-amber-50 text-amber-700'
@@ -1500,7 +1500,7 @@ function DrivesPanel(props: {
                               <span className="text-base font-extrabold text-heading">
                                 {b.user_name || b.roll_no || b.user_id}
                               </span>
-                              <span className={`rounded-full px-2.5 py-1 text-xs font-bold uppercase ${
+                              <span className={`rounded-full px-2.5 py-1 text-chip font-semibold capitalize ${
                                 b.status === 'active' ? 'bg-emerald-50 text-emerald-700'
                                 : b.status === 'link_assigned' ? 'bg-amber-50 text-amber-700'
                                 : b.status === 'cancelled' ? 'bg-gray-100 text-gray-400'
@@ -1509,7 +1509,7 @@ function DrivesPanel(props: {
                                 {b.status.replace('_', ' ')}
                               </span>
                               {b.link_active_at && (
-                                <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold uppercase text-emerald-700">● Link live</span>
+                                <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-chip capitalize font-semibold text-emerald-700">● Link live</span>
                               )}
                             </div>
                             <p className="mt-1 break-all text-sm text-gray-600">
@@ -1840,7 +1840,7 @@ export function DriveHelp({ onTab }: { onTab: (s: Section) => void }) {
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="text-base font-bold text-heading">{s.title}</p>
-                  <span className="rounded-lg bg-gray-100 px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-gray-500">{s.tab}</span>
+                  <span className="rounded-lg bg-gray-100 px-2 py-0.5 text-chip capitalize font-semibold text-gray-500">{s.tab}</span>
                 </div>
                 <p className="mt-1 text-sm leading-relaxed text-gray-600">{s.body}</p>
               </div>

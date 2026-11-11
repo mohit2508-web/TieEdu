@@ -148,7 +148,7 @@ export const ReviewMode: React.FC<ReviewModeProps> = ({ data, queue, dashboardHr
                         <button key={m} type="button" aria-pressed={v === m} onClick={(e) => { e.stopPropagation(); mark(i, m); }}
                           className={cn('inline-flex h-8 flex-1 items-center justify-center gap-1 rounded-well border text-xs font-semibold',
                             v === m ? cn(VERDICT_META[m].soft, VERDICT_META[m].ink, 'border-transparent') : 'border-line text-muted hover:text-heading')}>
-                          {VERDICT_META[m].symbol} {VERDICT_META[m].label} <kbd className="ml-0.5 hidden text-[10px] opacity-60 sm:inline">{k + 1}</kbd>
+                          {VERDICT_META[m].symbol} {VERDICT_META[m].label} <kbd className="ml-0.5 hidden text-xs opacity-60 sm:inline">{k + 1}</kbd>
                         </button>
                       ))}
                     </div>
@@ -184,7 +184,7 @@ export const ReviewMode: React.FC<ReviewModeProps> = ({ data, queue, dashboardHr
               </button>
             </div>
             {msg ? <p className="mt-2 text-xs text-muted" role="status">{msg}</p> : null}
-            <p className="mt-3 flex items-center gap-1 text-[11px] text-muted"><Keyboard className="h-3.5 w-3.5" /> 1 done · 2 partly · 3 missing · ↑↓ move · N save &amp; next · P previous</p>
+            <p className="mt-3 flex items-center gap-1 text-xs text-muted"><Keyboard className="h-3.5 w-3.5" /> 1 done · 2 partly · 3 missing · ↑↓ move · N save &amp; next · P previous</p>
           </section>
         </aside>
       </div>

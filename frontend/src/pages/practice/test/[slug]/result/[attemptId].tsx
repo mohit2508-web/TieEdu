@@ -13,9 +13,9 @@ import { getResultApi } from '@/lib/skillTestApi';
 function Delta({ now, before }: { now: number; before: number | null }) {
   if (before == null) return null;
   const d = Math.round(now - before);
-  if (!d) return <span className="text-[15px] text-muted">same as last time</span>;
+  if (!d) return <span className="text-body-md text-muted">same as last time</span>;
   return (
-    <span className={`inline-flex items-center gap-0.5 text-[15px] font-semibold ${d > 0 ? 'text-success' : 'text-danger'}`}>
+    <span className={`inline-flex items-center gap-0.5 text-body-md font-semibold ${d > 0 ? 'text-success' : 'text-danger'}`}>
       {d > 0 ? <ArrowUp className="h-4 w-4" aria-hidden /> : <ArrowDown className="h-4 w-4" aria-hidden />}{Math.abs(d)} {d > 0 ? 'up' : 'down'}
     </span>
   );
@@ -56,15 +56,15 @@ export default function TestReportPage() {
       {r && (
         <>
           {flags > 0 && (
-            <p className="mb-6 flex items-center gap-2 rounded-xl border border-line bg-warning-soft p-3 text-[15px] text-heading"><ShieldAlert className="h-5 w-5 shrink-0" aria-hidden /> You left the test window {flags} time{flags > 1 ? 's' : ''}. In the real test this can end your attempt.</p>
+            <p className="mb-6 flex items-center gap-2 rounded-xl border border-line bg-warning-soft p-3 text-body-md text-heading"><ShieldAlert className="h-5 w-5 shrink-0" aria-hidden /> You left the test window {flags} time{flags > 1 ? 's' : ''}. In the real test this can end your attempt.</p>
           )}
           <section className="grid gap-4 md:grid-cols-3">
             <div className="rounded-2xl border border-line bg-card p-5">
               <p className="text-sm font-medium text-muted">Score</p>
               <p className="mt-1 text-5xl font-bold tabular-nums text-heading">{r.attempt.score}<span className="text-2xl text-muted">%</span></p>
               <div className="mt-1"><Delta now={r.attempt.score} before={r.attempt.prev_score} /></div>
-              <p className="mt-3 text-[15px] text-body">{r.attempt.correct} correct · {r.attempt.incorrect} wrong · {r.attempt.unanswered} skipped</p>
-              <p className="mt-1 flex items-center gap-1 text-[15px] text-muted"><Clock className="h-4 w-4" aria-hidden /> {r.attempt.minutes} min</p>
+              <p className="mt-3 text-body-md text-body">{r.attempt.correct} correct · {r.attempt.incorrect} wrong · {r.attempt.unanswered} skipped</p>
+              <p className="mt-1 flex items-center gap-1 text-body-md text-muted"><Clock className="h-4 w-4" aria-hidden /> {r.attempt.minutes} min</p>
             </div>
             <div className="rounded-2xl border border-line bg-card p-5">
               <p className="text-sm font-medium text-muted">{company ? `${company.name} readiness` : 'Readiness'}</p>
@@ -72,9 +72,9 @@ export default function TestReportPage() {
                 <>
                   <p className="mt-1 text-5xl font-bold tabular-nums text-heading">{r.readiness.now}<span className="text-2xl text-muted">%</span></p>
                   <div className="mt-1 flex flex-wrap items-center gap-2"><Chip tone={r.readiness.now >= 70 ? 'success' : r.readiness.now >= 40 ? 'warning' : 'danger'}>{r.readiness.band}</Chip><Delta now={r.readiness.now} before={r.readiness.before} /></div>
-                  {r.prep && <Link href={`/prep/${company?.slug}`} className="mt-3 inline-block text-[15px] font-semibold text-link hover:underline">Open my plan →</Link>}
+                  {r.prep && <Link href={`/prep/${company?.slug}`} className="mt-3 inline-block text-body-md font-semibold text-link hover:underline">Open my plan →</Link>}
                 </>
-              ) : <p className="mt-2 text-[15px] text-body">Your readiness score appears once the {company?.name || 'company'} plan is open.</p>}
+              ) : <p className="mt-2 text-body-md text-body">Your readiness score appears once the {company?.name || 'company'} plan is open.</p>}
             </div>
             <div className="rounded-2xl border border-line bg-card p-5">
               <p className="text-sm font-medium text-muted">Your attempts</p>
@@ -83,7 +83,7 @@ export default function TestReportPage() {
                   <span key={h.id} title={`${h.score}%`} className={`flex-1 rounded-t ${h.id === r.attempt.id ? 'bg-signal' : 'bg-surface-hover'}`} style={{ height: `${Math.max(6, h.score)}%` }} />
                 ))}
               </div>
-              <p className="mt-2 text-[15px] text-body">Best {Math.max(...r.history.map((h) => h.score))}% over {r.history.length} attempt{r.history.length > 1 ? 's' : ''}</p>
+              <p className="mt-2 text-body-md text-body">Best {Math.max(...r.history.map((h) => h.score))}% over {r.history.length} attempt{r.history.length > 1 ? 's' : ''}</p>
             </div>
           </section>
 
@@ -99,7 +99,7 @@ export default function TestReportPage() {
                     <div key={s.key || s.name} className="grid items-center gap-3 px-4 py-3 sm:grid-cols-[1fr_200px_auto]">
                       <div>
                         <p className="text-base font-semibold text-heading">{s.name}</p>
-                        <p className="text-[15px] text-muted">{s.correct} of {s.total} correct</p>
+                        <p className="text-body-md text-muted">{s.correct} of {s.total} correct</p>
                       </div>
                       <div><Progress done={s.pct} total={100} label={`${s.name} score`} /></div>
                       <p className="flex items-center gap-2 text-right sm:justify-end"><span className="text-lg font-bold tabular-nums text-heading">{s.pct}%</span><Delta now={s.pct} before={s.prev_pct} /></p>
@@ -111,14 +111,14 @@ export default function TestReportPage() {
               {r.coding.length > 0 && (
                 <section>
                   <h2 className="font-display text-xl font-semibold text-heading">Coding</h2>
-                  {!r.coding[0].graded && <p className="mt-1 text-[15px] text-muted">The runner was offline, so these are your own marks.</p>}
+                  {!r.coding[0].graded && <p className="mt-1 text-body-md text-muted">The runner was offline, so these are your own marks.</p>}
                   <div className="mt-3 divide-y divide-line overflow-hidden rounded-xl border border-line bg-card">
                     {r.coding.map((c, i) => (
                       <div key={c.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
                         {c.status === 'solved' ? <CheckCircle2 className="h-5 w-5 text-success" aria-hidden /> : c.status === 'partial' ? <CircleDot className="h-5 w-5 text-warning" aria-hidden /> : <XCircle className="h-5 w-5 text-danger" aria-hidden />}
                         <div className="min-w-0 flex-1">
                           <p className="text-base font-semibold text-heading">Problem {i + 1}: {c.title}</p>
-                          <p className="text-[15px] text-muted">
+                          <p className="text-body-md text-muted">
                             {c.status === 'solved' ? 'All tests passed' : c.status === 'partial' ? 'Partly solved' : 'Not solved'}
                             {c.passed != null && c.total ? ` · ${c.passed}/${c.total} tests` : ''}{c.language ? ` · ${LANG_LABEL[c.language as CodeLang] || c.language}` : ''}
                           </p>

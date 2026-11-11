@@ -154,7 +154,7 @@ export const OrdersTab: React.FC = () => {
                         )}
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`px-2 py-1 rounded-full text-xs font-bold uppercase ${chipFor(o.status)}`}>{o.status}</span>
+                        <span className={`px-2 py-1 rounded-full text-chip capitalize font-semibold ${chipFor(o.status)}`}>{o.status}</span>
                       </td>
                     </tr>
                     {expanded === o.id && (

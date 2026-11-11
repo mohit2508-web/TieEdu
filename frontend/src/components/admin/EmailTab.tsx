@@ -57,7 +57,7 @@ const inputCls =
   'px-3 py-2 border border-gray-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-signal/30';
 
 const Badge: React.FC<{ className?: string; children: React.ReactNode }> = ({ className = '', children }) => (
-  <span className={`inline-flex px-2 py-0.5 rounded-full border text-xs font-bold uppercase tracking-wide ${className}`}>
+  <span className={`inline-flex px-2 py-0.5 rounded-full border text-chip capitalize font-semibold ${className}`}>
     {children}
   </span>
 );

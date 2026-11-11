@@ -148,7 +148,7 @@ export const AccountMenu: React.FC<{ onOpenChange?: (open: boolean) => void }> =
             <p className="truncate text-sm font-bold text-heading">{user.name}</p>
             <p className="truncate text-xs text-[var(--text-muted)]">{user.email}</p>
             <span
-              className={`mt-1 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-extrabold uppercase tracking-wide ${
+              className={`mt-1 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-chip font-semibold capitalize ${
                 isAdmin ? 'bg-brand-ink text-money' : 'bg-signal-soft text-link'
               }`}
             >

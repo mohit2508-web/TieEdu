@@ -113,7 +113,7 @@ export const ExamCard: React.FC<{
         <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
           <span className="font-extrabold tabular-nums text-[var(--ink)]">{result.score_percent}%</span>
           <span
-            className={`rounded-full px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide ${
+            className={`rounded-full px-2.5 py-0.5 text-chip font-semibold capitalize ${
               result.passed
                 ? 'bg-[var(--bg-sky-soft)] text-[var(--color-success)]'
                 : 'bg-[var(--color-error)]/10 text-[var(--color-error)]'

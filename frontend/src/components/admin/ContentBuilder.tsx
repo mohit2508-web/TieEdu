@@ -149,8 +149,8 @@ export const ContentBuilder: React.FC<ContentBuilderProps> = ({ companies, selec
                     <span className="w-8 h-8 rounded-xl bg-brand-ink text-white flex items-center justify-center font-mono font-bold text-xs shrink-0">#{idx + 1}</span>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
-                        <span className="text-xs font-mono font-bold uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-900">{mod.round_type || 'Module'}</span>
-                        <span className="text-xs font-mono bg-gray-100 px-2 py-0.5 rounded text-gray-600 uppercase">{mod.module_type}</span>
+                        <span className="text-chip capitalize font-mono font-semibold px-2 py-0.5 rounded bg-amber-100 text-amber-900">{mod.round_type || 'Module'}</span>
+                        <span className="text-chip capitalize font-mono bg-gray-100 px-2 py-0.5 rounded text-gray-600 ">{mod.module_type}</span>
                         {mod.is_premium ? <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-indigo-50 text-brand-ink" title="Charged by the pack ladder, not per module">₹{SINGLE_MODULE_PRICE}+ ladder</span> : <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">FREE</span>}
                       </div>
                       <h3 className="font-bold text-ink-soft truncate">{mod.title}</h3>

@@ -76,10 +76,10 @@ export default function DsaSheetPage() {
                   <div>
                     <p className="text-sm font-medium text-muted">Topic {ti + 1}</p>
                     <h2 className="font-display text-2xl font-semibold text-heading">{t.name}</h2>
-                    <p className="mt-1 text-[15px] text-body">{t.blurb}</p>
+                    <p className="mt-1 text-body-md text-body">{t.blurb}</p>
                   </div>
                   <div className="w-full max-w-[220px]">
-                    <p className="text-right text-[15px] text-muted">{t.solved} / {t.total} solved</p>
+                    <p className="text-right text-body-md text-muted">{t.solved} / {t.total} solved</p>
                     <div className="mt-1"><Progress done={t.solved} total={t.total} label={`${t.name} progress`} /></div>
                   </div>
                 </div>

@@ -48,7 +48,7 @@ export const StarAnswerBuilder: React.FC = () => {
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6 border-b border-slate-800 pb-6">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="bg-brand-orange/20 text-brand-orange text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5">
+            <span className="bg-brand-orange/20 text-brand-orange text-chip capitalize font-semibold px-3 py-1 rounded-full flex items-center gap-1.5">
               <ListChecks className="w-3.5 h-3.5" /> STAR Response Builder
             </span>
             <span className="text-slate-400 text-xs font-medium">100% Free Tool</span>

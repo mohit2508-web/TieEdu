@@ -86,7 +86,7 @@ const CollegePickerCard: React.FC = () => {
   return (
     <div className="max-w-[720px] mx-auto py-16 px-4">
       <div className="vault-card p-7">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-signal-soft text-brand-ink text-xs font-extrabold uppercase tracking-widest mb-4">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-signal-soft text-brand-ink text-chip capitalize font-semibold mb-4">
           <Building2 className="w-3.5 h-3.5" /> Choose a college
         </div>
         <h1 className="display-2 mb-2">Which college are you reviewing?</h1>
@@ -103,7 +103,7 @@ const CollegePickerCard: React.FC = () => {
             >
               <div className="flex items-center gap-3">
                 <span
-                  className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-black shrink-0"
+                  className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-extrabold shrink-0"
                   style={{ background: c.theme_color }}
                 >
                   {(c.short_name || c.name).slice(0, 2).toUpperCase()}
@@ -161,7 +161,7 @@ export const TpoShell: React.FC<{ children: React.ReactNode; title?: string }> =
             <Home className="w-4 h-4" />
           </button>
           <div className="flex items-baseline gap-2 min-w-0">
-            <span className="text-base font-black tracking-tight text-brand-ink whitespace-nowrap">
+            <span className="text-base font-extrabold tracking-tight text-brand-ink whitespace-nowrap">
               Campus TPO
             </span>
             {title && (
@@ -177,7 +177,7 @@ export const TpoShell: React.FC<{ children: React.ReactNode; title?: string }> =
               {user?.name || user?.email}
             </span>
             {activeRole && (
-              <span className="px-2 py-0.5 rounded-full bg-signal-soft text-brand-ink text-xs font-extrabold uppercase tracking-wider whitespace-nowrap">
+              <span className="px-2 py-0.5 rounded-full bg-signal-soft text-brand-ink text-chip capitalize font-semibold whitespace-nowrap">
                 {activeRole}
               </span>
             )}

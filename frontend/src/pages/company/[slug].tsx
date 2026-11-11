@@ -9,6 +9,7 @@ import { CompanyOverviewHeader } from '@/components/company/CompanyOverviewHeade
 import { TrustBadgeBar } from '@/components/company/TrustBadgeBar';
 import { ContentBlockRenderer } from '@/components/blocks/ContentBlockRenderer';
 import { QuestionDiscussion } from '@/components/company/QuestionDiscussion';
+import { Tabs } from '@/components/ui/Tabs';
 import { InterviewExperiences } from '@/components/company/InterviewExperiences';
 import { RelatedVaults } from '@/components/company/RelatedVaults';
 import { FeaturedFreeModuleCard } from '@/components/company/FeaturedFreeModuleCard';
@@ -645,7 +646,7 @@ export default function CompanyVaultPage({
 
                 {/* Badge row */}
                 <div className="flex flex-wrap items-center gap-2 mb-3">
-                  <span className={`inline-block px-2.5 py-0.5 rounded text-xs font-bold uppercase tracking-wide ${
+                  <span className={`inline-block px-2.5 py-0.5 rounded text-chip capitalize font-semibold ${
                     selectedItem.difficulty === 'hard' ? 'bg-red-100 text-red-700' :
                     selectedItem.difficulty === 'medium' ? 'bg-amber-100 text-amber-700' :
                     'bg-green-100 text-green-700'
@@ -653,17 +654,17 @@ export default function CompanyVaultPage({
                     {selectedItem.difficulty}
                   </span>
                   {selectedItem.role_tag && (
-                    <span className="inline-block px-2.5 py-0.5 rounded text-xs font-bold uppercase tracking-wide bg-brand-ink/8 text-brand-ink">
+                    <span className="inline-block px-2.5 py-0.5 rounded text-chip capitalize font-semibold bg-brand-ink/8 text-brand-ink">
                       {selectedItem.role_tag}
                     </span>
                   )}
                   {selectedItem.frequency_tag === 'high' && (
-                    <span className="inline-block px-2.5 py-0.5 rounded text-xs font-bold uppercase tracking-wide bg-purple-100 text-purple-700">
+                    <span className="inline-block px-2.5 py-0.5 rounded text-chip capitalize font-semibold bg-purple-100 text-purple-700">
                       Asked Often
                     </span>
                   )}
                   {(selectedItem.is_free_preview || isItemUnlocked(selectedItem)) && (
-                    <span className="inline-block px-2.5 py-0.5 rounded text-xs font-bold uppercase tracking-wide bg-emerald-100 text-emerald-700">
+                    <span className="inline-block px-2.5 py-0.5 rounded text-chip capitalize font-semibold bg-emerald-100 text-emerald-700">
                       Free Preview
                     </span>
                   )}
@@ -675,27 +676,14 @@ export default function CompanyVaultPage({
                 </h1>
 
                 {/* Tab bar + Actions */}
-                <div className="flex items-center justify-between border-b border-[var(--border-subtle)] mb-6">
-                  <div className="flex items-center gap-0">
-                    {(['content', 'discussion'] as const).map(tab => (
-                      <button
-                        key={tab}
-                        onClick={() => setActiveReaderTab(tab)}
-                        className={`px-1 pb-2.5 mr-6 text-sm font-semibold border-b-2 transition-all capitalize ${
-                          activeReaderTab === tab
-                            ? 'border-[var(--brand-accent)] text-link'
-                            : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-body)]'
-                        }`}
-                      >
-                        {tab === 'discussion' ? `Discussion (${discussionCount})` : 'Solution'}
-                      </button>
-                    ))}
-                  </div>
+                <div className="flex flex-wrap items-end justify-between gap-2 border-b border-line mb-6">
+                  <Tabs label="Reader" className="border-0" value={activeReaderTab} onChange={setActiveReaderTab}
+                    items={[{ key: 'content', label: 'Solution' }, { key: 'discussion', label: 'Discussion', badge: discussionCount || null }]} />
 
-                  <div className="flex items-center gap-2 pb-2">
+                  <div className="flex items-center gap-2 pb-1.5">
                     <button
                       onClick={() => handleToggleSolve(selectedItem.id)}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                      className={`inline-flex min-h-[40px] items-center gap-1.5 px-3 rounded-lg text-sm font-semibold border transition-all ${
                         solvedItemIds.includes(selectedItem.id)
                           ? 'bg-emerald-700 text-white border-emerald-600'
                           : 'bg-white text-[var(--text-muted)] border-[var(--border-subtle)] hover:border-gray-300'
@@ -707,7 +695,8 @@ export default function CompanyVaultPage({
 
                     <button
                       onClick={() => handleToggleBookmark(selectedItem.id)}
-                      className={`p-1.5 rounded-lg border transition-all ${
+                      aria-label={bookmarkedItemIds.includes(selectedItem.id) ? 'Remove bookmark' : 'Bookmark'}
+                      className={`inline-flex h-10 w-10 items-center justify-center rounded-lg border transition-all ${
                         bookmarkedItemIds.includes(selectedItem.id)
                           ? 'bg-amber-100 text-amber-600 border-amber-200'
                           : 'bg-white text-gray-400 border-[var(--border-subtle)] hover:border-gray-300'

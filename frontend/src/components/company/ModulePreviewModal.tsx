@@ -136,7 +136,7 @@ export const ModulePreviewModal: React.FC<ModulePreviewModalProps> = ({
               <div className="flex items-center gap-2 mb-1">
                 <span className="font-bold text-amber-400 text-base">Get the full {companyName} pack</span>
                 {typeof unlockPrice === 'number' && (
-                  <span className="bg-amber-400 text-brand-ink text-xs px-2.5 py-0.5 rounded-md font-black uppercase">₹{unlockPrice} One-Time</span>
+                  <span className="bg-amber-400 text-brand-ink text-chip capitalize px-2.5 py-0.5 rounded-md font-semibold ">₹{unlockPrice} One-Time</span>
                 )}
               </div>
               <p className="text-xs text-gray-300">

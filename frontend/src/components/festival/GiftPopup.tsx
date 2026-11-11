@@ -91,7 +91,7 @@ export const GiftPopup: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
         <div className="relative px-6 pb-6 pt-8 text-center">
           <p className="text-xs font-extrabold uppercase tracking-[0.3em] text-[#FFD966]">Happy Diwali</p>
-          <h2 className="mt-1 font-display text-3xl font-black sm:text-4xl" style={{ color: '#FFF8EE' }}>
+          <h2 className="mt-1 font-display text-3xl font-extrabold sm:text-4xl" style={{ color: '#FFF8EE' }}>
             <span className="diwali-gold-text">TiEEdu Diwali Sale</span>
           </h2>
 
@@ -125,7 +125,7 @@ export const GiftPopup: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                       style={{ background: c.bg }}
                     >
                       <div className="text-[#FFD966]">{c.icon}</div>
-                      <p className="mt-2 font-display text-xl font-black leading-tight">{c.title}</p>
+                      <p className="mt-2 font-display text-xl font-extrabold leading-tight">{c.title}</p>
                       <p className="mt-1 text-xs font-semibold text-white/85">{c.sub}</p>
                       {c.href === '#claim' ? (
                         <a href="#claim" className="mt-3 inline-block text-xs font-extrabold text-[#FFD966] underline">{c.cta} →</a>
@@ -141,7 +141,7 @@ export const GiftPopup: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 </div>
 
                 <Link href="/diwali" onClick={onClose}
-                  className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#FFC93C] px-6 py-3 text-sm font-black text-[#2A1400] shadow-lg hover:bg-[#FFD966]">
+                  className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#FFC93C] px-6 py-3 text-sm font-extrabold text-[#2A1400] shadow-lg hover:bg-[#FFD966]">
                   Grab the offer →
                 </Link>
               </motion.div>

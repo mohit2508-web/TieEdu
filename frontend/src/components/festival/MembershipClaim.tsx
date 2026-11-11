@@ -74,7 +74,7 @@ export const MembershipClaim: React.FC<{ compact?: boolean }> = ({ compact = fal
         {/* Back: the member card */}
         <div className="member-card__face member-card__back member-gold flex flex-col justify-between rounded-2xl p-5 text-[#2A1400] shadow-xl">
           <div className="flex items-center justify-between">
-            <span className="font-display text-lg font-black tracking-wide">TiEEdu Member</span>
+            <span className="font-display text-lg font-extrabold tracking-wide">TiEEdu Member</span>
             <Crown size={26} aria-hidden />
           </div>
           <div>

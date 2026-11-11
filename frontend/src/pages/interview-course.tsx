@@ -126,7 +126,7 @@ export default function InterviewCoursePage() {
                   <GraduationCap className="w-4 h-4" /> Official 50-Module Masterclass Course
                 </div>
 
-                <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white leading-tight tracking-tight">
+                <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-tight tracking-tight">
                   FREE ONLINE INTERVIEW <br />
                   <span className="bg-gradient-to-r from-brand-orange via-amber-400 to-orange-500 bg-clip-text text-transparent">
                     TRAINING COURSE
@@ -439,7 +439,7 @@ export default function InterviewCoursePage() {
                             </p>
                           </div>
                           <Link href="/login?next=/interview-course">
-                            <span className="inline-flex items-center gap-2 px-6 py-3 bg-brand-orange hover:opacity-90 text-brand-ink text-sm font-black rounded-xl transition-all">
+                            <span className="inline-flex items-center gap-2 px-6 py-3 bg-brand-orange hover:opacity-90 text-brand-ink text-sm font-extrabold rounded-xl transition-all">
                               <ArrowRight className="w-4 h-4" /> Sign in — it&apos;s free
                             </span>
                           </Link>

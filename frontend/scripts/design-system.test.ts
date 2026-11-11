@@ -54,6 +54,8 @@ const MONO_ALLOWED = [
   'components/home/landing',
   // Pseudocode questions in company mock tests are code.
   'pages/skill-test/[slug]/assessment.tsx',
+  // The code editor: problem samples, console input/output, compiler errors and solutions are code.
+  'components/ide',
 ];
 
 /**
@@ -96,6 +98,23 @@ function none(hits: string[], hint: string) {
 
 check('no arbitrary font sizes (text-[Npx])', () => {
   none(findAll(/\btext-\[\d+(?:\.\d+)?px\]/g), 'use text-xs / sm / base / lg / xl / 2xl … (12px minimum)');
+});
+
+check('no font-black (no loaded font has weight 900, so it is faked)', () => {
+  none(findAll(/className=[^>]*\bfont-black\b/g), 'use font-extrabold (800) at most');
+});
+
+/*
+ * PRACTICE_MODE_PLAN.md §10.1: pill chips are 13px sentence/title case, never
+ * UPPERCASE + letter-spacing. Allowed: the mono code badge, the language
+ * switch (EN / HI codes) and two admin controls that are inputs, not chips.
+ */
+const SHOUT_ALLOWED = ['components/ui/Badge.tsx', 'components/common/PrefsControl.tsx', 'components/admin/course/AdminXpTab.tsx', 'components/admin/DrivesTab.tsx'];
+check('no UPPERCASE pill chips', () => {
+  none(
+    findAll(/(?:className=|cn\(|cx\()[^>\n]*\brounded(?:-full|-md|-lg|-sm)?\b[^>\n]*\bpx-(?:1|1\.5|2|2\.5|3)\b[^>\n]*\buppercase\b/g, (file) => !SHOUT_ALLOWED.some((d) => file.startsWith(d))),
+    'chips use text-chip with capitalize (or plain sentence case), not uppercase'
+  );
 });
 
 check('no ad-hoc hex colour classes', () => {

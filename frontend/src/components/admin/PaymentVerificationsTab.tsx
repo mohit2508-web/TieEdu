@@ -96,7 +96,7 @@ export const PaymentVerificationsTab: React.FC = () => {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full text-xs font-bold uppercase tracking-wide">Awaiting verification</span>
+                    <span className="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full text-chip capitalize font-semibold ">Awaiting verification</span>
                     <span className="text-xs font-mono text-gray-400">{p.id}</span>
                   </div>
                   <p className="mt-1.5 font-extrabold text-heading">{p.user_name} <span className="text-sm font-semibold text-gray-400">· {p.user_email}</span></p>

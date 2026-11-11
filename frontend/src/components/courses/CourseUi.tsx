@@ -124,7 +124,7 @@ export const LessonRow: React.FC<{
             {lesson.title}
           </span>
           {isNext && !locked && !done && (
-            <span className="shrink-0 rounded-full bg-[var(--brand-sky-soft)] px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-link">
+            <span className="shrink-0 rounded-full bg-[var(--brand-sky-soft)] px-2 py-0.5 text-chip capitalize font-semibold text-link">
               Next
             </span>
           )}
@@ -289,7 +289,7 @@ export const CourseBadge: React.FC<{ kind: string; label?: string }> = ({ kind, 
   return (
     <span
       className={[
-        'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wider',
+        'inline-flex items-center rounded-full px-2.5 py-1 text-chip capitalize font-semibold ',
         BADGE_STYLES[kind] || 'bg-[var(--bg-surface-hover)] text-[var(--text-muted)]',
       ].join(' ')}
     >

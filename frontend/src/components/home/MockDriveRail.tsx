@@ -61,7 +61,7 @@ export const MockDriveRail: React.FC = () => {
                 <Briefcase className="w-5 h-5" strokeWidth={1.9} aria-hidden />
               </span>
               <div className="min-w-0 flex-1">
-                <span className="inline-flex items-center rounded-full bg-signal-soft px-2 py-0.5 text-xs font-black uppercase tracking-wide text-link">
+                <span className="inline-flex items-center rounded-full bg-signal-soft px-2 py-0.5 text-chip capitalize font-semibold text-link">
                   Mock drive
                 </span>
                 <h3 className="mt-1 line-clamp-2 text-base font-extrabold leading-snug text-heading transition-colors group-hover:text-link">

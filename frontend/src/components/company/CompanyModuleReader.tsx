@@ -784,7 +784,7 @@ export const CompanyModuleReader: React.FC<CompanyModuleReaderProps> = ({
                       <div className="space-y-2">
                         <div className="flex items-center gap-3">
                           <span className="font-extrabold text-gray-900 text-lg sm:text-xl">{item.topic}</span>
-                          <span className="px-3 py-0.5 bg-red-600 text-white rounded-md text-xs font-extrabold uppercase">
+                          <span className="px-3 py-0.5 bg-red-600 text-white rounded-md text-chip capitalize font-semibold ">
                             {item.priority}
                           </span>
                         </div>

@@ -81,7 +81,7 @@ export function ProblemPanel({ view, signedIn, onUnlock, onLoadCode }: {
             {p.constraints.length > 0 && (
               <section>
                 <h2 className="text-base font-semibold text-heading">Constraints</h2>
-                <ul className="mt-1 list-disc space-y-1 pl-5 text-base text-body">{p.constraints.map((c) => <li key={c}><code className="font-mono text-[15px]">{c}</code></li>)}</ul>
+                <ul className="mt-1 list-disc space-y-1 pl-5 text-base text-body">{p.constraints.map((c) => <li key={c}><code className="font-mono text-body-md">{c}</code></li>)}</ul>
               </section>
             )}
             {p.samples.map((s, i) => (
@@ -91,11 +91,11 @@ export function ProblemPanel({ view, signedIn, onUnlock, onLoadCode }: {
                   {[['Input', s.input], ['Output', s.output]].map(([k, v]) => (
                     <div key={k} className="bg-card p-3">
                       <div className="flex items-center justify-between"><span className="text-sm font-medium text-muted">{k}</span><CopyButton text={v} label={`Copy example ${i + 1} ${k.toLowerCase()}`} /></div>
-                      <pre className="mt-1 overflow-x-auto font-mono text-[15px] leading-relaxed text-heading">{v}</pre>
+                      <pre className="mt-1 overflow-x-auto font-mono text-body-md leading-relaxed text-heading">{v}</pre>
                     </div>
                   ))}
                 </div>
-                {s.explain && <p className="border-t border-line px-4 py-2 text-[15px] text-body"><span className="font-semibold text-heading">Why: </span>{s.explain}</p>}
+                {s.explain && <p className="border-t border-line px-4 py-2 text-body-md text-body"><span className="font-semibold text-heading">Why: </span>{s.explain}</p>}
               </section>
             ))}
           </article>
@@ -137,7 +137,7 @@ export function ProblemPanel({ view, signedIn, onUnlock, onLoadCode }: {
             <section>
               <h2 className="text-base font-semibold text-heading">Approach</h2>
               <p className="mt-1 text-base leading-relaxed text-body">{p.approach}</p>
-              <p className="mt-2 text-[15px] text-muted">Complexity: <span className="font-mono">{p.complexity}</span></p>
+              <p className="mt-2 text-body-md text-muted">Complexity: <span className="font-mono">{p.complexity}</span></p>
             </section>
             <section className="overflow-hidden rounded-xl border border-line">
               <div className="flex items-center justify-between border-b border-line bg-surface px-2">
@@ -147,7 +147,7 @@ export function ProblemPanel({ view, signedIn, onUnlock, onLoadCode }: {
                   <button type="button" onClick={() => onLoadCode(solLang, p.solutions?.[solLang] || '')} className="h-8 rounded-md px-2 text-sm text-muted hover:bg-surface-hover hover:text-heading focus-ring">Open in editor</button>
                 </div>
               </div>
-              <pre className="max-h-[60vh] overflow-auto bg-card p-4 font-mono text-[14px] leading-relaxed text-heading">{p.solutions?.[solLang]}</pre>
+              <pre className="max-h-[60vh] overflow-auto bg-card p-4 font-mono text-sm leading-relaxed text-heading">{p.solutions?.[solLang]}</pre>
             </section>
           </div>
         ))}

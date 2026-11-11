@@ -37,7 +37,7 @@ export default function DiwaliPage() {
         ) : (
           <section className="mx-auto max-w-2xl px-5 py-20 text-center">
             <Diya size={64} lit={false} />
-            <h1 className="mt-4 font-display text-3xl font-black text-heading">The Diwali Sale has ended</h1>
+            <h1 className="mt-4 font-display text-3xl font-extrabold text-heading">The Diwali Sale has ended</h1>
             <p className="mt-2 text-body">The sale ended on 10 Nov 2026. Memberships claimed during the sale are still active.</p>
             <Link href="/courses" className="mt-6 inline-block rounded-xl bg-signal px-5 py-3 font-extrabold text-on-primary">Browse courses</Link>
           </section>
@@ -47,17 +47,17 @@ export default function DiwaliPage() {
           <div className="mx-auto max-w-6xl space-y-16 px-5 py-14">
             {/* The three offers */}
             <section aria-labelledby="offers-h">
-              <h2 id="offers-h" className="font-display text-3xl font-black text-heading">Three Diwali gifts 🎁</h2>
+              <h2 id="offers-h" className="font-display text-3xl font-extrabold text-heading">Three Diwali gifts 🎁</h2>
               <div className="mt-6 grid gap-5 md:grid-cols-3">
                 <div className="offer-card" style={{ background: 'linear-gradient(135deg,#D6246E,#7A1530)' }}>
                   <BookOpen className="text-[#FFD966]" aria-hidden />
-                  <p className="mt-2 font-display text-2xl font-black">{f.discount_percent}% OFF courses</p>
+                  <p className="mt-2 font-display text-2xl font-extrabold">{f.discount_percent}% OFF courses</p>
                   <p className="mt-1 text-sm text-white/85">Every paid course — AI, coding, aptitude, interview prep.</p>
                   <Link href="/courses" className="mt-4 inline-block font-extrabold text-[#FFD966] underline">Browse courses →</Link>
                 </div>
                 <div className="offer-card" style={{ background: 'linear-gradient(135deg,#B8860B,#6B3E00)' }}>
                   <Building2 className="text-[#FFF3B0]" aria-hidden />
-                  <p className="mt-2 font-display text-2xl font-black">Company packs {f.discount_percent}% OFF</p>
+                  <p className="mt-2 font-display text-2xl font-extrabold">Company packs {f.discount_percent}% OFF</p>
                   <p className="mt-1 text-sm text-white/90">
                     Complete pack <s className="opacity-70">₹{COMPLETE_PACK_PRICE}</s> <b>₹{packPrice(4)}</b> · single round <s className="opacity-70">₹{regularPackPrice(1)}</s> <b>₹{packPrice(1)}</b>
                   </p>
@@ -65,7 +65,7 @@ export default function DiwaliPage() {
                 </div>
                 <div className="offer-card" style={{ background: 'linear-gradient(135deg,#0F6B5C,#063B33)' }}>
                   <Crown className="text-[#FFD966]" aria-hidden />
-                  <p className="mt-2 font-display text-2xl font-black">FREE Membership</p>
+                  <p className="mt-2 font-display text-2xl font-extrabold">FREE Membership</p>
                   <p className="mt-1 text-sm text-white/85">3 months — extra mocks, every prep lesson, internships.</p>
                   <a href="#membership" className="mt-4 inline-block font-extrabold text-[#FFD966] underline">Claim now →</a>
                 </div>
@@ -73,19 +73,19 @@ export default function DiwaliPage() {
             </section>
 
             <section id="membership" aria-labelledby="member-h" className="scroll-mt-32">
-              <h2 id="member-h" className="font-display text-3xl font-black text-heading">Free TiEEdu Membership</h2>
+              <h2 id="member-h" className="font-display text-3xl font-extrabold text-heading">Free TiEEdu Membership</h2>
               <p className="mt-1 text-body">Claim in one tap — no card, no auto-debit.</p>
               <div className="mt-6 max-w-md"><MembershipClaim /></div>
             </section>
 
             <section id="internships" aria-labelledby="intern-h" className="scroll-mt-32">
-              <h2 id="intern-h" className="font-display text-3xl font-black text-heading">Internship opportunities</h2>
+              <h2 id="intern-h" className="font-display text-3xl font-extrabold text-heading">Internship opportunities</h2>
               <p className="mt-1 text-body">Members apply in one tap. Every listing is real and verified by our team.</p>
               <div className="mt-6"><InternshipsBoard /></div>
             </section>
 
             <section aria-labelledby="faq-h">
-              <h2 id="faq-h" className="font-display text-3xl font-black text-heading">FAQs</h2>
+              <h2 id="faq-h" className="font-display text-3xl font-extrabold text-heading">FAQs</h2>
               <div className="mt-4 divide-y divide-[var(--border-subtle)] rounded-2xl border border-line bg-card">
                 {FAQ.map(([q, a]) => (
                   <details key={q} className="group p-5">

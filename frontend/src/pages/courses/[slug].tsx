@@ -847,13 +847,13 @@ export default function CoursePage({
                   />
 
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-white ring-1 ring-white/20">
+                    <span className="rounded-full bg-white/10 px-3 py-1 text-chip capitalize font-semibold text-white ring-1 ring-white/20">
                       {course.category}
                     </span>
-                    <span className="rounded-full bg-[var(--brand-accent)] px-3 py-1 text-xs font-extrabold uppercase tracking-widest text-[var(--accent-ink)]">
+                    <span className="rounded-full bg-[var(--brand-accent)] px-3 py-1 text-chip capitalize font-semibold text-[var(--accent-ink)]">
                       {course.is_free ? 'Free' : <SalePrice list={course.price_inr} own={course.access?.price_inr} badge />}
                     </span>
-                    <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-white/90 ring-1 ring-white/20">
+                    <span className="rounded-full bg-white/10 px-3 py-1 text-chip capitalize font-semibold text-white/90 ring-1 ring-white/20">
                       {formatLevel(course.level)}
                     </span>
                   </div>

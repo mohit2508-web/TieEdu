@@ -24,7 +24,7 @@ export default function CompanySetsPage() {
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="font-display text-xl font-semibold text-heading">{c.name}</p>
-                  {c.tagline && <p className="mt-1 text-[15px] text-body">{c.tagline}</p>}
+                  {c.tagline && <p className="mt-1 text-body-md text-body">{c.tagline}</p>}
                 </div>
                 {c.owned ? <Chip tone="success">Pack active</Chip> : c.locked > 0 ? <Chip icon={Lock}>{c.locked} locked</Chip> : <Chip tone="success">Free</Chip>}
               </div>
@@ -34,10 +34,10 @@ export default function CompanySetsPage() {
                 <div><p className="text-2xl font-bold tabular-nums text-heading">{c.tests}</p><p className="text-sm text-muted">tests</p></div>
               </div>
               <div className="mt-4"><Progress done={c.solved} total={c.total} label={`${c.name} progress`} /></div>
-              <p className="mt-4 inline-flex items-center gap-1 text-[15px] font-semibold text-link">Open the set <ArrowRight className="h-4 w-4" aria-hidden /></p>
+              <p className="mt-4 inline-flex items-center gap-1 text-body-md font-semibold text-link">Open the set <ArrowRight className="h-4 w-4" aria-hidden /></p>
             </Link>
           ))}
-          <div className="rounded-2xl border border-dashed border-line p-5 text-[15px] text-body">
+          <div className="rounded-2xl border border-dashed border-line p-5 text-body-md text-body">
             More companies are being added: Infosys, Accenture, Cognizant and Wipro sets come next.
           </div>
         </div>

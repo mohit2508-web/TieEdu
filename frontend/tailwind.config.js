@@ -115,7 +115,7 @@ const typeScale = {
   label: ['15px', { lineHeight: '20px', letterSpacing: '-0.01em', fontWeight: '600' }],
   chip: ['13px', { lineHeight: '18px', fontWeight: '500' }],
   caption: ['12px', { lineHeight: '16px', fontWeight: '500' }],
-  eyebrow: ['11px', { lineHeight: '14px', letterSpacing: '0.06em', fontWeight: '500' }],
+  eyebrow: ['12px', { lineHeight: '16px', letterSpacing: '0.06em', fontWeight: '600' }],
 };
 
 // Plan §7 radii, added as names so existing rounded-* classes keep their sizes.
@@ -194,9 +194,11 @@ module.exports = {
         serif: ['var(--font-serif)', 'Georgia', 'serif'],
         mono: ['var(--font-mono)', 'Cascadia Code', 'ui-monospace', 'monospace'],
       },
-      // One type scale: 12 · 14 · 16 · 18 · 20 · 24 · 32 · 40 · 48 · 64.
+      // One type scale: 12 · 13 · 14 · 16 · 18 · 20 · 24 · 32 · 40 · 48 · 64.
       // Nothing below 12px. The small steps keep Tailwind's defaults.
       fontSize: {
+        // 13px, not 12: text-xs carries most meta lines and labels (PRACTICE_MODE_PLAN.md §10.1). 12px stays as `caption`.
+        xs: ['0.8125rem', { lineHeight: '1.125rem' }],
         '3xl': ['2rem', { lineHeight: '2.375rem' }],
         '4xl': ['2.5rem', { lineHeight: '2.875rem' }],
         '5xl': ['3rem', { lineHeight: '3.25rem' }],

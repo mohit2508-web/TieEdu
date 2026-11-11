@@ -1679,11 +1679,12 @@ code, pre, kbd, samp, .font-mono {
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  padding: 7px 10px 7px 12px;
+  padding: 9px 10px 9px 12px;
+  min-height: 44px;
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: background 120ms ease, color 120ms ease;
-  font-size: 13.5px;
+  font-size: 15px;
   line-height: 1.45;
   color: var(--text-body);
   border-left: 3px solid transparent;
@@ -1708,8 +1709,8 @@ code, pre, kbd, samp, .font-mono {
 .sidebar-item.locked { opacity: 0.6; cursor: default; }
 
 .sidebar-module-label {
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--text-muted);

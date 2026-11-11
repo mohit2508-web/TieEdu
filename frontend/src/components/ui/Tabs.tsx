@@ -25,7 +25,7 @@ export function Tabs<K extends string>({ items, value, onChange, className, size
             onClick={() => onChange(t.key)}
             className={cn(
               'relative inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 font-semibold transition-colors focus-ring',
-              size === 'sm' ? 'h-10 text-sm' : 'h-11 text-[15px]',
+              size === 'sm' ? 'h-10 text-sm' : 'h-11 text-body-md',
               on ? 'text-heading' : 'text-muted hover:text-heading',
             )}
           >

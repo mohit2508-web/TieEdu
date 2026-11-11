@@ -125,7 +125,7 @@ export const DropStory: React.FC<DropStoryProps> = ({
           {drop.sponsored && <span className="chip text-xs">{drop.sponsor_name || 'Sponsored'}</span>}
         </div>
 
-        <h1 className="mt-3 font-display text-2xl font-black leading-tight tracking-tight text-[var(--text-heading)] sm:text-[2rem]">
+        <h1 className="mt-3 font-display text-2xl font-extrabold leading-tight tracking-tight text-[var(--text-heading)] sm:text-[2rem]">
           {drop.headline}
         </h1>
 

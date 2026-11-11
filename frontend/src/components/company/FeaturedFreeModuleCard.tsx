@@ -36,10 +36,10 @@ export const FeaturedFreeModuleCard: React.FC<Props> = ({ module, companyName, o
           </div>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2 mb-1.5">
-              <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+              <span className="text-chip capitalize font-semibold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
                 FREE — Everything in one module
               </span>
-              <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-brand-ink/10 text-brand-ink border border-brand-ink/20">
+              <span className="text-chip capitalize font-semibold px-2.5 py-1 rounded-full bg-brand-ink/10 text-brand-ink border border-brand-ink/20">
                 {itemCount} questions
               </span>
             </div>

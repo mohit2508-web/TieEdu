@@ -64,7 +64,7 @@ export const DropsStrip: React.FC = () => {
                 href={`/drops/${d.id}`}
                 className="vault-card group flex w-[260px] flex-none snap-start flex-col gap-2.5 p-4 transition-colors hover:border-signal"
               >
-                <span className="inline-flex items-center gap-1.5 self-start rounded-full bg-paper px-2.5 py-1 text-xs font-extrabold uppercase tracking-wide text-body">
+                <span className="inline-flex items-center gap-1.5 self-start rounded-full bg-paper px-2.5 py-1 text-chip capitalize font-semibold text-body">
                   <span
                     className="h-1.5 w-1.5 rounded-full"
                     style={{ background: meta.chip }}

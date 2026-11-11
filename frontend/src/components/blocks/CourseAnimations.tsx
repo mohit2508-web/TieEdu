@@ -118,7 +118,7 @@ function Frame({
             <figcaption className="text-xs font-bold text-[--text-heading]">{title}</figcaption>
           )}
           {badge && (
-            <span className="text-xs font-mono uppercase tracking-wide px-1.5 py-0.5 rounded bg-white border border-[--border-subtle] text-[--text-muted]">
+            <span className="text-chip capitalize font-mono px-1.5 py-0.5 rounded bg-white border border-[--border-subtle] text-[--text-muted]">
               {badge}
             </span>
           )}
@@ -518,7 +518,7 @@ export function CallStack({ payload }: { payload: any }) {
     >
       <div className="px-4 py-4 bg-app-warm">
         <div className="flex items-center gap-2 mb-2">
-          <span className="font-mono text-xs uppercase tracking-wide px-1.5 py-0.5 rounded bg-white border border-[--border-subtle] text-[--text-muted]">
+          <span className="font-mono text-chip capitalize px-1.5 py-0.5 rounded bg-white border border-[--border-subtle] text-[--text-muted]">
             high address
           </span>
           <div className="flex-1 h-px bg-[--border-subtle]" />
@@ -576,7 +576,7 @@ export function CallStack({ payload }: { payload: any }) {
 
         <div className="flex items-center gap-2 mt-2">
           <div className="flex-1 h-px bg-[--border-subtle]" />
-          <span className="font-mono text-xs uppercase tracking-wide px-1.5 py-0.5 rounded bg-white border border-[--border-subtle] text-[--text-muted]">
+          <span className="font-mono text-chip capitalize px-1.5 py-0.5 rounded bg-white border border-[--border-subtle] text-[--text-muted]">
             low address · stack pointer
           </span>
         </div>

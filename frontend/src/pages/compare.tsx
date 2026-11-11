@@ -244,7 +244,7 @@ export default function ComparePage() {
                     <BrandTile name={c?.name || s} src={c?.logo_url} className="w-4 h-4 rounded-full p-0" />
                     <span className="max-w-[120px] truncate">{c?.name || s}</span>
                     {cmp && cmp.premium_module_count === 0 && (
-                      <span className="text-xs font-bold uppercase bg-emerald-400/25 text-emerald-100 px-1 rounded">
+                      <span className="text-chip capitalize font-semibold bg-emerald-400/25 text-emerald-100 px-1 rounded">
                         Free
                       </span>
                     )}

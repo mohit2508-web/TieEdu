@@ -91,11 +91,11 @@ export const CoursePreviewShell: React.FC<{
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           {course.category && (
-            <span className="rounded-full bg-[var(--brand-sky-soft)] px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-link">
+            <span className="rounded-full bg-[var(--brand-sky-soft)] px-2.5 py-1 text-chip capitalize font-semibold text-link">
               {course.category}
             </span>
           )}
-          <span className="rounded-full bg-[var(--bg-sky-soft)] px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-link">
+          <span className="rounded-full bg-[var(--bg-sky-soft)] px-2.5 py-1 text-chip capitalize font-semibold text-link">
             {course.is_free ? 'Free' : <SalePrice list={course.price_inr} />}
           </span>
         </div>
@@ -184,7 +184,7 @@ export const CoursePreviewShell: React.FC<{
         {sample && (sample.blocks?.length || 0) > 0 && (
           <section aria-labelledby="preview-sample" className="mt-10 rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-success-soft px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-[var(--color-success)]">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-success-soft px-2.5 py-1 text-chip capitalize font-semibold text-[var(--color-success)]">
                 <PlayCircle size={12} /> Free sample
               </span>
               {sample.module_title && (

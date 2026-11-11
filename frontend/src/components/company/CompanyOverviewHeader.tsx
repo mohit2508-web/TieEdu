@@ -134,7 +134,7 @@ export const CompanyOverviewHeader: React.FC<CompanyOverviewHeaderProps> = ({
               </div>
             ) : (
               <div className="flex items-baseline gap-2 justify-start sm:justify-end">
-                <span className="text-2xl font-black text-brand-ink">
+                <span className="text-2xl font-extrabold text-brand-ink">
                   {typeof unlockPrice === 'number' ? `₹${unlockPrice}` : '—'}
                 </span>
                 <span className="text-xs text-gray-500">
