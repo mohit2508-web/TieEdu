@@ -1,6 +1,7 @@
 import { Html, Head, Main, NextScript } from 'next/document';
 import { THEME_BOOT } from '@/lib/theme';
 import { CONSENT_BOOT } from '@/lib/consent';
+import { SPLASH_BOOT, SPLASH_CSS, SPLASH_MOUNT } from '@/lib/splash';
 
 export default function Document() {
   return (
@@ -10,7 +11,7 @@ export default function Document() {
         <link rel="shortcut icon" href="/favicon.ico?v=2" sizes="any" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2" sizes="180x180" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=3" sizes="180x180" />
         {/* Browser chrome matches the Warm Paper ground in each theme. */}
         <meta name="theme-color" media="(prefers-color-scheme: light)" content="#FFF8EE" />
         <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#121010" />
@@ -55,6 +56,9 @@ export default function Document() {
             __html: THEME_BOOT,
           }}
         />
+        {/* App-open splash (lib/splash): installed app only, decided before first paint. */}
+        <style dangerouslySetInnerHTML={{ __html: SPLASH_CSS }} />
+        <script dangerouslySetInnerHTML={{ __html: SPLASH_BOOT }} />
         {/* Google Consent Mode v2 defaults: everything optional is denied
             until the visitor chooses (lib/consent). Must run before any Google
             tag, so it is inline in the head. A stored choice is applied at once
@@ -66,6 +70,12 @@ export default function Document() {
         />
       </Head>
       <body className="bg-paper text-heading antialiased">
+        {/* Outside #__next on purpose: React never hydrates it, so removing it after launch is safe. */}
+        <div id="tie-splash" aria-hidden="true">
+          {/* eslint-disable-next-line @next/next/no-img-element -- animated SVG; the src is set by SPLASH_MOUNT */}
+          <img id="tie-splash-img" alt="" width={2150} height={1260} />
+        </div>
+        <script dangerouslySetInnerHTML={{ __html: SPLASH_MOUNT }} />
         <Main />
         <NextScript />
       </body>

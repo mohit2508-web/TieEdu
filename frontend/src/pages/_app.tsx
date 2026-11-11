@@ -3,6 +3,7 @@ import Head from 'next/head';
 import { useEffect } from 'react';
 import { recordVisit } from '@/lib/engagement';
 import { watchSystemTheme } from '@/lib/theme';
+import { hideSplash } from '@/lib/splash';
 import { useRouter } from 'next/router';
 import '@/styles/globals.css';
 import '@/styles/diwali.css';
@@ -48,6 +49,8 @@ export default function App({ Component, pageProps }: AppProps) {
   useEffect(() => recordVisit(), []);
   // Follow OS light/dark changes on every page, not only where the footer switch is.
   useEffect(() => watchSystemTheme(), []);
+  // The app-open splash (installed app only) lifts away once the app is up and its intro has played.
+  useEffect(() => hideSplash(), []);
 
   // Every full page navigation must land at the TOP — not at the middle/bottom
   // of the previous scroll. Shallow route changes (?m/?q in-page syncs) are

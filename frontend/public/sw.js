@@ -27,7 +27,8 @@
  * keys are not configured" long after the server had been fixed.
  */
 // v3: the UI redesign (new tokens, fonts and dark theme) - retire every v2 cache.
-const VERSION = 'tieedu-v4';
+// v5: the clean logo, new app icons and the app-open splash (2026-11-11).
+const VERSION = 'tieedu-v5';
 const SHELL_CACHE = `${VERSION}-shell`;
 const DATA_CACHE = `${VERSION}-data`;
 const STATIC_CACHE = `${VERSION}-static`;
@@ -103,7 +104,13 @@ const OFFLINE_DOCUMENT = '/offline.html';
  * install at all. Treating each entry as best-effort means a missing or renamed
  * asset degrades offline support instead of taking push down with it.
  */
-const PRECACHE_URLS = [OFFLINE_DOCUMENT, '/logo.svg'];
+const PRECACHE_URLS = [
+  OFFLINE_DOCUMENT,
+  '/logo.svg?v=3',
+  // The app-open splash, so it also plays when the app is launched offline (lib/splash).
+  '/brand/tieedu-splash-light.svg?v=1',
+  '/brand/tieedu-splash-dark.svg?v=1',
+];
 
 const precacheShell = async () => {
   const cache = await caches.open(SHELL_CACHE);
